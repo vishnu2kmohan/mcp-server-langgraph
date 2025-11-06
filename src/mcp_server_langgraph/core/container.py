@@ -37,7 +37,7 @@ class ContainerConfig:
     enable_auth: bool = field(default=False)
     log_level: str = "INFO"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Adjust defaults based on environment"""
         if self.environment == "test":
             # Test mode: disable telemetry and auth by default
@@ -112,39 +112,39 @@ class StorageProvider(Protocol):
 class NoOpLogger:
     """No-op logger that doesn't output anything"""
 
-    def info(self, msg: str, *args, **kwargs):
+    def info(self, msg: str, *args, **kwargs) -> None:
         pass
 
-    def debug(self, msg: str, *args, **kwargs):
+    def debug(self, msg: str, *args, **kwargs) -> None:
         pass
 
-    def warning(self, msg: str, *args, **kwargs):
+    def warning(self, msg: str, *args, **kwargs) -> None:
         pass
 
-    def error(self, msg: str, *args, **kwargs):
+    def error(self, msg: str, *args, **kwargs) -> None:
         pass
 
-    def critical(self, msg: str, *args, **kwargs):
+    def critical(self, msg: str, *args, **kwargs) -> None:
         pass
 
 
 class NoOpMetrics:
     """No-op metrics that doesn't collect anything"""
 
-    def counter(self, name: str, value: int = 1, **kwargs):
+    def counter(self, name: str, value: int = 1, **kwargs) -> None:
         pass
 
-    def gauge(self, name: str, value: float, **kwargs):
+    def gauge(self, name: str, value: float, **kwargs) -> None:
         pass
 
-    def histogram(self, name: str, value: float, **kwargs):
+    def histogram(self, name: str, value: float, **kwargs) -> None:
         pass
 
 
 class NoOpTracer:
     """No-op tracer that doesn't trace anything"""
 
-    def start_as_current_span(self, name: str, **kwargs):
+    def start_as_current_span(self, name: str, **kwargs) -> Any:
         """Context manager that does nothing"""
         from contextlib import nullcontext
 
@@ -154,7 +154,7 @@ class NoOpTracer:
 class NoOpTelemetryProvider:
     """No-op telemetry provider for testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logger = NoOpLogger()
         self._metrics = NoOpMetrics()
         self._tracer = NoOpTracer()
@@ -187,7 +187,7 @@ class NoOpAuthProvider:
 class MemoryStorageProvider:
     """In-memory storage provider for testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._store: Dict[str, Any] = {}
 
     def get(self, key: str) -> Optional[Any]:
@@ -245,7 +245,7 @@ class ProductionTelemetryProvider:
 class InMemoryAuthProvider:
     """In-memory auth provider for development"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._tokens: Dict[str, Dict[str, Any]] = {}
 
     def create_token(self, user_id: str, username: str, **kwargs) -> str:
@@ -266,11 +266,11 @@ class InMemoryAuthProvider:
 class RedisStorageProvider:
     """Redis storage provider for production"""
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self._client: Optional[Any] = None
 
-    def _get_client(self):
+    def _get_client(self) -> Any:
         """Lazy Redis client initialization"""
         if self._client is None:
             import redis

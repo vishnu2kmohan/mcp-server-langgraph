@@ -52,7 +52,7 @@ def _is_safe_path(path: str) -> bool:
             dangerous_path = Path(dangerous) if isinstance(dangerous, str) else dangerous
             # Resolve dangerous path too (handles macOS /etc -> /private/etc symlinks)
             dangerous_path_resolved = dangerous_path.resolve()
-            if abs_path.is_relative_to(dangerous_path_resolved):  # type: ignore[arg-type]
+            if abs_path.is_relative_to(dangerous_path_resolved):
                 return False
 
         return True
@@ -61,7 +61,7 @@ def _is_safe_path(path: str) -> bool:
         return False
 
 
-@tool  # type: ignore[misc]
+@tool
 def read_file(
     file_path: Annotated[str, Field(description="Path to file to read")],
     max_bytes: Annotated[int, Field(ge=100, le=MAX_FILE_SIZE, description="Maximum bytes to read (100-1048576)")] = 10000,
@@ -129,7 +129,7 @@ def read_file(
         return f"Error: {e}"
 
 
-@tool  # type: ignore[misc]
+@tool
 def list_directory(
     directory_path: Annotated[str, Field(description="Path to directory to list")],
     show_hidden: Annotated[bool, Field(description="Whether to show hidden files (starting with .)")] = False,
@@ -200,7 +200,7 @@ def list_directory(
         return f"Error: {e}"
 
 
-@tool  # type: ignore[misc]
+@tool
 def search_files(
     directory_path: Annotated[str, Field(description="Directory to search in")],
     pattern: Annotated[str, Field(description="Filename pattern to search for (e.g., '*.py', 'config.yaml')")],

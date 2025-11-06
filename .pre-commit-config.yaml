@@ -98,6 +98,17 @@ repos:
         pass_filenames: false
         always_run: false
 
+      - id: check-doc-links
+        name: Check Documentation Internal Links
+        entry: python3 scripts/ci/check-links.py
+        language: system
+        files: \.(md|mdx)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates internal documentation links to prevent broken references.
+          Checks ADR cross-references, GitHub links, and active documentation.
+
       # Deployment Configuration Validation (TDD)
       - id: validate-deployment-secrets
         name: Validate deployment secret keys alignment
@@ -174,6 +185,27 @@ repos:
           4. L2 cache ignoring secure Redis settings
           5. Missing critical test coverage
           See ADR-0042 for details on these critical production bugs.
+
+      - id: shellcheck
+        name: Shellcheck - Bash Script Linting
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ["-x", "--severity=warning"]
+        description: |
+          Validates bash scripts for common errors and best practices.
+          Prevents runtime errors like undefined functions, integer comparison issues,
+          and improper variable handling. See staging-smoke-tests.sh fixes as examples.
+
+      - id: validate-pytest-markers
+        name: Validate Pytest Markers
+        entry: python3 scripts/validate_pytest_markers.py
+        language: system
+        pass_filenames: false
+        files: ^(tests/.*\.py|pyproject\.toml)$
+        description: |
+          Validates that all pytest.mark.* decorators used in tests are registered
+          in pyproject.toml. Prevents "PytestUnknownMarkWarning" errors in CI.
 
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform

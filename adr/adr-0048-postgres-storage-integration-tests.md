@@ -1,4 +1,4 @@
-# ADR-0046: PostgreSQL Storage Integration Tests
+# ADR-0048: PostgreSQL Storage Integration Tests
 
 **Status**: Accepted
 **Date**: 2025-11-06

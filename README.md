@@ -73,7 +73,7 @@ This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GC
 
 ```bash
 # Generate your own MCP server project
-uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph
+uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph
 
 # Answer a few questions and get a fully configured project!
 ```
@@ -89,7 +89,7 @@ Choose the approach that matches your goals:
 | **Use Case** | **As Template** | **Clone Directly** |
 |--------------|-----------------|-------------------|
 | **Best For** | Building your own custom MCP server | Learning, testing, or using reference implementation |
-| **Command** | `uvx cookiecutter gh:vishnu2kmohan/mcp_server_langgraph` | `git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git && cd mcp-server-langgraph && uv sync` |
+| **Command** | `uvx cookiecutter gh:vishnu2kmohan/mcp-server-langgraph` | `git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git && cd mcp-server-langgraph && uv sync` |
 | **You Get** | Customizable project scaffold:<br/>• Your project name, author, license<br/>• Choose features (auth, observability, deployment)<br/>• Select LLM providers<br/>• Implement custom tools | Fully working reference implementation:<br/>• Example tools (`agent_chat`, `conversation_search`, `conversation_get`)<br/>• Complete observability stack<br/>• Production-ready deployment configs<br/>• Comprehensive test suite |
 | **Next Steps** | 1. Customize tools in `agent.py`<br/>2. Update authorization in `scripts/setup/setup_openfga.py`<br/>3. Configure `.env` with your API keys<br/>4. Deploy your custom server | 1. Copy `.env.example` to `.env`<br/>2. Add API keys (GOOGLE_API_KEY, etc.)<br/>3. Run `make run-streamable`<br/>4. See [Quick Start](#quick-start) for details |
 | **Learn More** | [Cookiecutter Template Strategy (ADR-0011)](adr/adr-0011-cookiecutter-template-strategy.md) | [Quick Start Guide](#quick-start) |
@@ -605,11 +605,11 @@ We welcome contributions from the community! 🎉
    - [Development Guide](docs/reference/development/development.mdx) - Developer setup
 
 2. **Find something to work on**:
-   - [Good First Issues](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/good%20first%20issue)
-   - [Help Wanted](https://github.com/vishnu2kmohan/mcp_server_langgraph/labels/help%20wanted)
+   - [Good First Issues](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/good%20first%20issue)
+   - [Help Wanted](https://github.com/vishnu2kmohan/mcp-server-langgraph/labels/help%20wanted)
 
 3. **Get help**:
-   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp_server_langgraph/discussions)
+   - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
    - [Support Guide](.github/SUPPORT.md)
 
 ### Contribution Areas

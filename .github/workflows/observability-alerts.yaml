@@ -43,6 +43,12 @@ on:
   #     - "DORA Metrics Tracking"
   #   types: [completed]
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test mode (simulates workflow without sending alerts)'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -57,7 +63,7 @@ jobs:
     name: Collect Workflow Metrics
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name == 'workflow_run'
+    if: github.event_name == 'workflow_run' || github.event_name == 'workflow_dispatch'
     outputs:
       workflow_name: ${{ steps.metadata.outputs.workflow_name }}
       workflow_status: ${{ steps.metadata.outputs.workflow_status }}
@@ -78,7 +84,7 @@ jobs:
 
       - name: Classify alert severity
         id: classify
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
         env:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
@@ -115,7 +121,7 @@ jobs:
     steps:
       - name: Determine Slack message
         id: message
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
         env:
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
           CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
@@ -140,7 +146,7 @@ jobs:
           echo "color=$COLOR" >> $GITHUB_OUTPUT
 
       - name: Send Slack notification
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
@@ -203,7 +209,7 @@ jobs:
 
     steps:
       - name: Send PagerDuty event
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
         env:
           PAGERDUTY_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}

@@ -336,7 +336,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc]
+        @self.server.list_tools()
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -454,7 +454,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
 
-        @self.server.call_tool()  # type: ignore[misc]
+        @self.server.call_tool()
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
@@ -537,7 +537,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc]
+        @self.server.list_resources()
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -1028,7 +1028,7 @@ class RefreshTokenResponse(BaseModel):
 
 
 # FastAPI endpoints for MCP StreamableHTTP transport
-@app.get("/")  # type: ignore[misc]
+@app.get("/")
 async def root() -> dict[str, Any]:
     """Root endpoint with server info"""
     return {
@@ -1059,7 +1059,7 @@ async def root() -> dict[str, Any]:
     }
 
 
-@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])  # type: ignore[misc]
+@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
@@ -1142,7 +1142,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         )
 
 
-@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])  # type: ignore[misc]
+@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
 async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
@@ -1261,7 +1261,7 @@ async def stream_jsonrpc_response(data: dict[str, Any]) -> AsyncIterator[str]:
     yield json.dumps(data) + "\n"
 
 
-@app.post("/message", response_model=None)  # type: ignore[misc]
+@app.post("/message", response_model=None)
 async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
     """
     Handle MCP messages via StreamableHTTP POST
@@ -1426,7 +1426,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
         )
 
 
-@app.get("/tools")  # type: ignore[misc]
+@app.get("/tools")
 async def list_tools() -> dict[str, Any]:
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
@@ -1434,7 +1434,7 @@ async def list_tools() -> dict[str, Any]:
     return {"tools": [tool.model_dump(mode="json") for tool in tools]}
 
 
-@app.get("/resources")  # type: ignore[misc]
+@app.get("/resources")
 async def list_resources() -> dict[str, Any]:
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager
@@ -1480,7 +1480,7 @@ def custom_openapi() -> dict[str, Any]:
     This follows TDD principles - tests define the expected API contract first.
     """
     if app.openapi_schema:
-        return app.openapi_schema  # type: ignore[no-any-return]
+        return app.openapi_schema
 
     # Generate base OpenAPI schema
     from fastapi.openapi.utils import get_openapi
@@ -1514,7 +1514,7 @@ def custom_openapi() -> dict[str, Any]:
     # generated automatically when endpoints use them
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema  # type: ignore[no-any-return]
+    return app.openapi_schema
 
 
 # Apply custom OpenAPI schema

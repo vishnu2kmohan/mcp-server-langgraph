@@ -577,7 +577,7 @@ class RedisSessionStore(SessionStore):
 
             # Store session in Redis
             session_key = f"session:{session_id}"
-            await self.redis.hset(session_key, mapping=session_data)  # type: ignore[arg-type]
+            await self.redis.hset(session_key, mapping=session_data)
             await self.redis.expire(session_key, ttl)
 
             # Track user sessions
@@ -647,7 +647,7 @@ class RedisSessionStore(SessionStore):
         session.last_accessed = datetime.now(timezone.utc).isoformat()
 
         # Persist to Redis
-        await self.redis.hset(  # type: ignore[arg-type]
+        await self.redis.hset(
             session_key, mapping={"metadata": json.dumps(session.metadata), "last_accessed": session.last_accessed}
         )
 

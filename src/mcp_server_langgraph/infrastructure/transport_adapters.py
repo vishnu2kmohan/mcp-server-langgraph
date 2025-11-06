@@ -24,7 +24,7 @@ def create_stdio_adapter() -> Any:
     class StdioAdapter:
         """STDIO transport adapter"""
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.transport_type = "stdio"
 
     return StdioAdapter()
@@ -45,7 +45,7 @@ def create_http_adapter() -> Any:
     class HttpAdapter:
         """HTTP transport adapter"""
 
-        def __init__(self):
+        def __init__(self) -> None:
             self.transport_type = "http"
 
     return HttpAdapter()

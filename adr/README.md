@@ -104,6 +104,15 @@ What becomes easier or more difficult to do because of this change?
 | [0037](adr-0037-identity-federation.md) | Identity Federation Architecture | Accepted | 2025-01-28 |
 | [0038](adr-0038-scim-implementation.md) | SCIM 2.0 Implementation Approach | Accepted | 2025-01-28 |
 | [0039](adr-0039-openfga-permission-inheritance.md) | OpenFGA Permission Inheritance for Service Principals | Accepted | 2025-01-28 |
+| [0040](adr-0040-gcp-gke-autopilot-deployment.md) | GCP GKE Autopilot Deployment Strategy | Accepted | 2025-10-21 |
+| [0041](adr-0041-postgresql-gdpr-storage.md) | PostgreSQL GDPR Compliance Storage Backend | Accepted | 2025-10-21 |
+| [0042](adr-0042-dependency-injection-configuration-fixes.md) | Dependency Injection Configuration Fixes | Accepted | 2025-01-28 |
+| [0043](adr-0043-cost-monitoring-dashboard.md) | Cost Monitoring Dashboard Implementation | Accepted | 2025-10-21 |
+| [0044](adr-0044-test-infrastructure-quick-wins.md) | Test Infrastructure Quick Wins (Phase 1) | Accepted | 2025-11-06 |
+| [0045](adr-0045-test-infrastructure-phase-2-foundation.md) | Test Infrastructure Phase 2 - Real Infrastructure Foundation | Accepted | 2025-11-06 |
+| [0046](adr-0046-deployment-configuration-tdd-infrastructure.md) | Deployment Configuration TDD Infrastructure | Accepted | 2025-11-06 |
+| [0047](adr-0047-visual-workflow-builder.md) | Visual Workflow Builder | Accepted | 2025-11-02 |
+| [0048](adr-0048-postgres-storage-integration-tests.md) | PostgreSQL Storage Integration Tests | Accepted | 2025-11-06 |
 
 ## When to Create an ADR
 

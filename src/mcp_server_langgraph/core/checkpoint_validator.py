@@ -43,7 +43,7 @@ class CheckpointConfigValidator:
     # RFC 3986 reserved characters that MUST be percent-encoded in passwords
     RESERVED_CHARS = set(":/?#[]@!$&'()*+,;=")
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize checkpoint configuration validator."""
         pass
 

@@ -107,7 +107,7 @@ class ConsentResponse(BaseModel):
 # ==================== Endpoints ====================
 
 
-@router.get("/me/data", response_model=UserDataExport)  # type: ignore[misc]
+@router.get("/me/data", response_model=UserDataExport)
 async def get_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
@@ -162,7 +162,7 @@ async def get_user_data(
         return export
 
 
-@router.get("/me/export", response_model=None)  # type: ignore[misc]
+@router.get("/me/export", response_model=None)
 async def export_user_data(
     user: Dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
@@ -215,7 +215,7 @@ async def export_user_data(
         return Response(content=data_bytes, media_type=content_type, headers=headers)
 
 
-@router.patch("/me")  # type: ignore[misc]
+@router.patch("/me")
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     user: Dict[str, Any] = Depends(get_current_user),
@@ -272,7 +272,7 @@ async def update_user_profile(
         return updated_profile
 
 
-@router.delete("/me")  # type: ignore[misc]
+@router.delete("/me")
 async def delete_user_account(
     user: Dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
@@ -366,7 +366,7 @@ async def delete_user_account(
         }
 
 
-@router.post("/me/consent")  # type: ignore[misc]
+@router.post("/me/consent")
 async def update_consent(
     consent: ConsentRecord,
     user: Dict[str, Any] = Depends(get_current_user),
@@ -440,7 +440,7 @@ async def update_consent(
         return ConsentResponse(user_id=user_id, consents=consents_dict)
 
 
-@router.get("/me/consent")  # type: ignore[misc]
+@router.get("/me/consent")
 async def get_consent_status(
     user: Dict[str, Any] = Depends(get_current_user),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),

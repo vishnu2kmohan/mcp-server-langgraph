@@ -94,7 +94,7 @@ def create_app(
 
     # Add health check endpoint
     @app.get("/health")
-    async def health_check():
+    async def health_check() -> dict[str, str]:
         """Health check endpoint"""
         return {"status": "healthy", "service": app_settings.service_name}
 

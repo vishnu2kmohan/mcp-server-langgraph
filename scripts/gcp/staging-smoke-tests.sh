@@ -249,8 +249,11 @@ test_pod_restarts() {
 
     MAX_RESTARTS=$(kubectl get pods -n "$NAMESPACE" \
         -l app=mcp-server-langgraph \
-        -o jsonpath='{range .items[*]}{.status.containerStatuses[*].restartCount}{"\n"}{end}' | \
-        sort -nr | head -n1)
+        -o jsonpath='{range .items[*]}{.status.containerStatuses[*].restartCount}{" "}{end}' | \
+        tr ' ' '\n' | \
+        grep -v '^$' | \
+        sort -nr | \
+        head -n1 || echo "0")
 
     log_info "Max restart count: ${MAX_RESTARTS:-0}"
 
@@ -296,7 +299,7 @@ test_external_secrets() {
     if [ "$SYNC_STATUS" = "True" ]; then
         test_pass
     else
-        test_warn "ExternalSecret not synced (this is expected if External Secrets Operator is not installed)"
+        log_warn "ExternalSecret not synced (this is expected if External Secrets Operator is not installed)"
         test_pass  # Don't fail if ESO is not installed
     fi
 }

@@ -44,7 +44,7 @@ class APIVersionInfo(BaseModel):
     )
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
     "/version",
     response_model=APIVersionInfo,
     summary="Get API version information",

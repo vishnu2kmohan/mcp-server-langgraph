@@ -1,3 +1,13 @@
+---
+title: 'ADR-0042: Dependency Injection Configuration Fixes'
+description: 'OpenAI Codex identified three critical runtime failures and two high-priority configuration issues in our dependency injection system that would cause production outages.'
+icon: 'file-lines'
+seoTitle: "ADR-0042: Dependency Injection Configuration Fixes"
+seoDescription: "Architecture Decision Record 0042: OpenAI Codex identified critical runtime failures and configuration issues in dependency injection system"
+keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0042", "dependency injection", "configuration", "Keycloak", "OpenFGA", "Redis", "security"]
+contentType: "explanation"
+---
+
 # ADR-0042: Dependency Injection Configuration Fixes
 
 **Status**: Accepted
@@ -373,8 +383,8 @@ REDIS_SSL=true
 ## References
 
 - OpenAI Codex Security Review (2025-01-28)
-- [ADR-0034](./adr-0034-api-key-jwt-exchange.md): API Key JWT Exchange
-- [ADR-0033](./adr-0033-service-principal-design.md): Service Principal Design
+- [ADR-0034](./adr-0034-api-key-redis-caching.md): API Key Redis Caching (correct pattern)
+- [ADR-0033](./adr-0033-service-principal-management.md): Service Principal Management
 - Production Incident: Revision 758b8f744 (Redis password encoding)
 
 ## Verification

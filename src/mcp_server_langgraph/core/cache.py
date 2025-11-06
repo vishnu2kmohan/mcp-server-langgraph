@@ -134,7 +134,7 @@ class CacheService:
                 f"Redis cache unavailable, L2 cache disabled: {e}",
                 extra={"redis_url": redis_url},
             )
-            self.redis = None  # type: ignore[assignment]
+            self.redis = None
             self.redis_available = False
 
         # Cache stampede prevention locks
@@ -272,7 +272,7 @@ class CacheService:
                 if pattern:
                     keys = self.redis.keys(pattern)
                     if keys:
-                        self.redis.delete(*keys)  # type: ignore[misc]
+                        self.redis.delete(*keys)
                         logger.info(f"Cleared L2 cache by pattern: {pattern} ({len(cast(list[Any], keys))} keys)")
                 else:
                     self.redis.flushdb()
@@ -507,7 +507,7 @@ def cached(
                 span.set_attribute("cache.hit", False)
 
                 # Cache miss: call function
-                result = await func(*args, **kwargs)  # type: ignore[misc]
+                result = await func(*args, **kwargs)
 
                 # Store in cache
                 cache.set(key, result, ttl=ttl, level=level)

@@ -357,7 +357,7 @@
             ]
           },
           {
-            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-41, 43)",
+            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-48)",
             "pages": [
               "architecture/adr-0008-infisical-secrets-management",
               "architecture/adr-0009-feature-flag-system",
@@ -369,8 +369,13 @@
               "architecture/adr-0030-resilience-patterns",
               "architecture/adr-0040-gcp-gke-autopilot-deployment",
               "architecture/adr-0041-postgresql-gdpr-storage",
-              "architecture/adr-0042-visual-workflow-builder",
-              "architecture/adr-0043-cost-monitoring-dashboard"
+              "architecture/adr-0042-dependency-injection-configuration-fixes",
+              "architecture/adr-0043-cost-monitoring-dashboard",
+              "architecture/adr-0044-test-infrastructure-quick-wins",
+              "architecture/adr-0045-test-infrastructure-phase-2-foundation",
+              "architecture/adr-0046-deployment-configuration-tdd-infrastructure",
+              "architecture/adr-0047-visual-workflow-builder",
+              "architecture/adr-0048-postgres-storage-integration-tests"
             ]
           },
           {
