@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762467427518,
+  "lastUpdate": 1762467718503,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -34958,6 +34958,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000020479783334071167",
             "extra": "mean: 58.777353566013836 usec\nrounds: 5272"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d807e7e3502291359b9e37a65c1b536153f20c32",
+          "message": "feat(deployment): Phase 6 - Production readiness with External Secrets and Kustomize\n\nThis commit completes Phase 6 (Production Readiness) of the CI/CD remediation plan,\neliminating all production placeholder values and implementing proper secret management\nfor production deployments.\n\n## Problems Fixed\n\n### 1. Production Secret Placeholders ✅ (CRITICAL)\n**Issue**: Helm secret template contained REPLACE_ME defaults\n**Files Affected**:\n- `deployments/helm/mcp-server-langgraph/templates/secret.yaml:13,18`\n  - anthropic-api-key: REPLACE_ME\n  - jwt-secret-key: REPLACE_ME\n\n**Solution**: Created environment-specific values files with External Secrets\n**Impact**: Production deployments now use cloud secret managers (GCP Secret Manager, AWS Secrets Manager, Azure Key Vault)\n\n**TDD Validation**:\n```bash\n# RED: Test fails with REPLACE_ME in rendered template\nhelm template test deployments/helm/mcp-server-langgraph | grep REPLACE_ME\n\n# GREEN: No REPLACE_ME after using values-production.yaml\nhelm template test deployments/helm/mcp-server-langgraph \\\n  --values deployments/helm/values-production.yaml | grep REPLACE_ME\n# Result: No matches (PASS)\n```\n\n### 2. GCP Project ID Placeholders ✅ (HIGH)\n**Issue**: YOUR_PROJECT_ID hardcoded in 6 deployment files\n**Files Affected**:\n- `deployments/overlays/production-gke/otel-collector-config.yaml:54,66`\n- `deployments/overlays/production-gke/kustomization.yaml:69`\n\n**Solution**: Kustomize variable substitution with $(GCP_PROJECT_ID)\n**Impact**: OpenTelemetry exports work correctly in GCP\n\n**TDD Validation**:\n```bash\n# RED: Placeholder exists before fix\ngrep \"YOUR_PROJECT_ID\" deployments/overlays/production-gke/otel-collector-config.yaml\n\n# GREEN: Variable substitution after fix\nexport GCP_PROJECT_ID=test-project\nkustomize build deployments/overlays/production-gke | grep \"project:\" | grep \"test-project\"\n# Result: All instances correctly substituted (PASS)\n```\n\n## Files Created\n\n### Helm Values Files (Production-Ready)\n1. **`deployments/helm/values-production.yaml`** (172 lines)\n   - External Secrets integration (GCP/AWS/Azure)\n   - Production-grade resource limits\n   - High availability configuration (3 replicas)\n   - TLS enforcement\n   - Audit logging enabled\n   - No inline secrets (all references to secret managers)\n\n2. **`deployments/helm/values-staging.yaml`** (116 lines)\n   - Staging-specific configuration\n   - Debug logging enabled\n   - Reduced resource limits\n   - External Secrets for staging secrets\n   - More frequent secret refresh (15m vs 1h)\n\n### Kustomize Configuration\n3. **`deployments/overlays/production-gke/environment-vars.yaml`** (NEW)\n   - Source ConfigMap for Kustomize variable substitution\n   - Documents GCP_PROJECT_ID usage\n   - Template for environment-specific variables\n\n### Documentation\n4. **`deployments/PRODUCTION_DEPLOYMENT_GUIDE.md`** (338 lines)\n   - Complete production deployment guide\n   - External Secrets Operator setup\n   - Helm and Kustomize deployment workflows\n   - Pre-deployment validation steps\n   - Post-deployment smoke tests\n   - Troubleshooting guide\n   - CI/CD integration examples\n   - Security checklist\n\n## Files Modified\n\n### Kustomize Updates\n1. **`deployments/overlays/production-gke/otel-collector-config.yaml`**\n   - Line 54: project: YOUR_PROJECT_ID → $(GCP_PROJECT_ID)\n   - Line 66: project: YOUR_PROJECT_ID → $(GCP_PROJECT_ID)\n   - Impact: OpenTelemetry exports to GCP Cloud Trace/Logging work correctly\n\n2. **`deployments/overlays/production-gke/kustomization.yaml`**\n   - Line 69: Added $(GCP_PROJECT_ID) variable substitution for image repository\n   - Lines 75-86: Added replacements section for Kustomize variable substitution\n   - Line 14: Added environment-vars.yaml to resources\n   - Impact: Environment-specific configuration without hardcoded values\n\n## External Secrets Integration\n\n### How It Works\n```yaml\n# values-production.yaml\nexternalSecrets:\n  enabled: true  # Tells Helm template to skip creating Secret with REPLACE_ME\n  secretStore:\n    provider: gcpsm  # Or aws, azurekv\n    projectID: YOUR_GCP_PROJECT_ID\n  secrets:\n    - name: mcp-server-langgraph-secrets\n      remoteRefs:\n        - remoteKey: anthropic-api-key  # Secret name in cloud provider\n          secretKey: anthropic-api-key  # Key in Kubernetes Secret\n```\n\n### Template Logic (Already Exists)\n```yaml\n# templates/secret.yaml\n{{- if not .Values.externalSecrets.enabled }}\n# Only creates Secret with REPLACE_ME if External Secrets is disabled\napiVersion: v1\nkind: Secret\nstringData:\n  anthropic-api-key: {{ .Values.secrets.anthropicApiKey | default \"REPLACE_ME\" }}\n{{- end }}\n```\n\n**Result**: Production uses External Secrets, development can use inline secrets\n\n## Validation Results\n\n### Before Fixes\n```bash\n# Helm template with default values\nhelm template test deployments/helm/mcp-server-langgraph | grep REPLACE_ME\n# Result: 2 matches (anthropic-api-key, jwt-secret-key)\n\n# Kustomize build\nkustomize build deployments/overlays/production-gke | grep YOUR_PROJECT_ID\n# Result: 6 matches (otel-collector-config, image repo, etc.)\n```\n\n### After Fixes\n```bash\n# Helm template with production values\nhelm template test deployments/helm/mcp-server-langgraph \\\n  --values deployments/helm/values-production.yaml | grep REPLACE_ME\n# Result: 0 matches ✅\n\n# Kustomize build with GCP_PROJECT_ID\nexport GCP_PROJECT_ID=test-project\nkustomize build deployments/overlays/production-gke | grep YOUR_PROJECT_ID\n# Result: 0 matches ✅\n\n# Verify variable substitution worked\nkustomize build deployments/overlays/production-gke | grep \"project: test-project\"\n# Result: 2 matches (Cloud Trace, Cloud Logging) ✅\n```\n\n## Deployment Workflows\n\n### Production Deployment (Helm + External Secrets)\n```bash\n# 1. Create secrets in GCP Secret Manager\ngcloud secrets create anthropic-api-key --data-file=api-key.txt\n\n# 2. Deploy with Helm\nhelm upgrade --install mcp-server-langgraph \\\n  ./deployments/helm/mcp-server-langgraph \\\n  --namespace production \\\n  --values ./deployments/helm/values-production.yaml \\\n  --set externalSecrets.secretStore.projectID=my-gcp-project \\\n  --wait\n\n# 3. Verify secrets injected\nkubectl get secret mcp-server-langgraph-secrets -n production -o yaml\n```\n\n### GKE Production Deployment (Kustomize)\n```bash\n# 1. Set environment variable\nexport GCP_PROJECT_ID=my-gcp-project\n\n# 2. Deploy with Kustomize\nkustomize build deployments/overlays/production-gke | kubectl apply -f -\n\n# 3. Verify variable substitution\nkubectl get configmap otel-collector-config -n production -o yaml | grep project:\n```\n\n## Security Improvements\n\n1. **No Secrets in Git** ✅\n   - All production secrets stored in cloud secret managers\n   - values-production.yaml contains NO sensitive data\n   - Only references to external secrets\n\n2. **Workload Identity** ✅\n   - Service accounts use cloud IAM bindings\n   - No static credentials needed\n   - Automatic secret rotation supported\n\n3. **TLS Enforcement** ✅\n   - Production values require TLS for all connections\n   - Cert-manager integration for automatic certificate management\n\n4. **Audit Logging** ✅\n   - All production changes logged\n   - Compliance requirements met (SOC2, HIPAA)\n\n## Success Criteria\n\n✅ **0 REPLACE_ME placeholders** in production Helm renders\n✅ **0 YOUR_PROJECT_ID placeholders** in production Kustomize builds\n✅ **External Secrets integration** documented and working\n✅ **Kustomize variable substitution** implemented\n✅ **Production deployment guide** created (338 lines)\n✅ **Validation tests** pass\n\n## Remaining Work (Future Phases)\n\n**Deferred to Future Sprints** (not blocking production):\n- Phase 4: BATS tests for shell scripts (prevent bash regressions)\n- Phase 4: MCP server test fixture (enable 36 E2E tests)\n- Phase 4: Docker-compose CI integration (enable 147 integration tests)\n\n**Already Complete** (from analysis):\n- ✅ Phase 3: Storage backends (PostgreSQL + In-Memory implementations)\n- ✅ Phase 5: Observability (Prometheus + Alerting implemented)\n\n## Production Deployment Unblocked\n\n**Before This Commit**:\n- ❌ Cannot deploy to production (REPLACE_ME causes service failures)\n- ❌ Cannot deploy to GCP (YOUR_PROJECT_ID breaks OTel exports)\n- ❌ No documentation for production deployment\n\n**After This Commit**:\n- ✅ Production deployment ready with External Secrets\n- ✅ GCP deployment works with variable substitution\n- ✅ Comprehensive deployment guide available\n- ✅ Security best practices documented\n- ✅ CI/CD integration examples provided\n\n**Next Steps**: Deploy to staging environment, run smoke tests, promote to production\n\n---\n\n🧪 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T17:20:09-05:00",
+          "tree_id": "4b82d2a8c8105d924176cb953150a175ed55a054",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d807e7e3502291359b9e37a65c1b536153f20c32"
+        },
+        "date": 1762467717238,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.8495027147563,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00024090137301113515",
+            "extra": "mean: 7.049725102039234 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.94904537724202,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014947801381375454",
+            "extra": "mean: 6.805079933883462 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44185.81016907879,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.631699999919874 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47334.61168337222,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.12619000001814 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46108.36202795122,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.68804000007185 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.13316387764294,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.177774650000231 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.459484053722804,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.388823940000066 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.968275497710067,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.31825467000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1349728.0301589887,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 740.8899998040397 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12968.844814400913,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.10787000007713 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2991.256885164344,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.30762999984154 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2955.932922434366,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.30266999984815 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58041.033083690345,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000033685225094575475",
+            "extra": "mean: 17.229190227508237 usec\nrounds: 12443"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16964.973461568195,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019337076060330473",
+            "extra": "mean: 58.94497873900964 usec\nrounds: 5503"
           }
         ]
       }
