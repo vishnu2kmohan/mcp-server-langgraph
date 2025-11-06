@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 *.so
 .Python
@@ -220,6 +221,11 @@ _site/
 # Session-specific context should not be tracked
 .claude/context/
 .claude/handoff/
+# CRITICAL: Never commit local settings (per Claude Code documentation)
+.claude/settings.local.json
+**/. claude/settings.local.json
+*.local.json
+**/*.local.json
 .vscode/.ropeproject/
 .vscode/tags
 

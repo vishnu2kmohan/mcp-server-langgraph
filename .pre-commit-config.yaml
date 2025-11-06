@@ -106,6 +106,19 @@ repos:
         pass_filenames: true
         always_run: false
 
+      - id: prevent-local-config-commits
+        name: Prevent Local Config Files from Being Committed
+        entry: uv run pytest tests/test_gitignore_validation.py -v
+        language: system
+        pass_filenames: false
+        always_run: true  # CRITICAL: Run on every commit
+        description: |
+          Prevents accidental commits of local configuration files like:
+          - .claude/settings.local.json
+          - *.local.json
+          - .env.local
+          Per TDD best practices, this ensures local configs never reach version control.
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2

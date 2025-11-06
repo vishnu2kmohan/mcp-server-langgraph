@@ -18,13 +18,16 @@
   "transports": {
     "stdio": {
       "command": "python",
-      "args": ["mcp_server.py"],
-      "env": {}
+      "args": ["-m", "mcp_server_langgraph.mcp.server_stdio"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
     },
     "streamable-http": {
-      "url": "https://langgraph-agent.example.com",
+      "url": "http://localhost:8000",
       "endpoint": "/message",
-      "streaming": true
+      "streaming": true,
+      "note": "Local development URL. Update to production URL when deploying."
     }
   },
   "capabilities": {

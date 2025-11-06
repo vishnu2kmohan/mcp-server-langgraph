@@ -4,13 +4,12 @@
     "name": "langgraph-agent",
     "displayName": "LangGraph AI Agent",
     "shortDescription": "Production AI agent with OpenFGA authorization and full observability",
-    "icon": "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/icon.png",
-    "screenshots": [
-      "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/screenshots/dashboard.png",
-      "https://raw.githubusercontent.com/vishnu2kmohan/mcp-server-langgraph/main/.mcp/screenshots/tracing.png"
-    ],
+    "icon": null,
+    "screenshots": [],
     "featured": false,
-    "verified": false
+    "verified": false,
+    "status": "inactive",
+    "note": "Registry listing inactive pending asset creation. Icon and screenshots need to be added to .mcp/ directory before activation."
   },
   "endpoints": {
     "production": {

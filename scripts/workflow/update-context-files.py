@@ -168,27 +168,61 @@ def get_git_stats() -> Dict[str, any]:
 
 def get_test_stats() -> Dict[str, int]:
     """Get test suite statistics."""
+    # Try multiple methods to count tests, in order of preference
+
+    # Method 1: Use pytest --collect-only
     try:
         result = subprocess.run(
-            ["uv", "run", "pytest", "--collect-only", "-q"],
+            ["python3", "-m", "pytest", "--collect-only", "-q", "tests/"],
             capture_output=True,
             text=True,
             timeout=30,
+            cwd=get_repo_root(),
         )
 
         output = result.stdout + result.stderr
 
-        # Parse "X tests collected" or similar
+        # Parse "X tests collected" or similar patterns
         for line in output.split("\n"):
-            if "test" in line and "collected" in line:
+            if "test" in line.lower() and "collected" in line.lower():
                 parts = line.split()
-                if parts and parts[0].isdigit():
-                    return {"total_tests": int(parts[0])}
-
-        return {"total_tests": 0}
+                for i, part in enumerate(parts):
+                    if part.isdigit():
+                        return {"total_tests": int(part)}
     except Exception as e:
-        print(f"WARNING: Could not collect test stats: {e}", file=sys.stderr)
-        return {"total_tests": 0}
+        print(f"WARNING: pytest collection failed: {e}", file=sys.stderr)
+
+    # Method 2: Fallback to grep pattern matching
+    try:
+        result = subprocess.run(
+            ["grep", "-r", "^def test_", "tests/", "--include=*.py"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=get_repo_root(),
+        )
+
+        if result.returncode == 0:
+            test_count = len(result.stdout.strip().split("\n"))
+            return {"total_tests": test_count}
+    except Exception as e:
+        print(f"WARNING: grep test counting failed: {e}", file=sys.stderr)
+
+    # Method 3: Manual file counting with basic parsing
+    try:
+        tests_dir = get_repo_root() / "tests"
+        if tests_dir.exists():
+            test_count = 0
+            for test_file in tests_dir.rglob("test_*.py"):
+                with open(test_file, "r") as f:
+                    for line in f:
+                        if line.strip().startswith("def test_") or line.strip().startswith("async def test_"):
+                            test_count += 1
+            return {"total_tests": test_count}
+    except Exception as e:
+        print(f"WARNING: Manual test counting failed: {e}", file=sys.stderr)
+
+    return {"total_tests": 0}
 
 
 def update_recent_work(repo_root: Path) -> None:

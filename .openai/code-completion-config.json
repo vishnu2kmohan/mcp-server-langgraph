@@ -119,23 +119,26 @@
   },
 
   "files": {
-    "agent": "agent.py",
-    "mcp_servers": ["mcp_server.py", "mcp_server_streamable.py", "mcp_server_http.py"],
-    "auth": "auth.py",
-    "authorization": "openfga_client.py",
-    "config": "config.py",
-    "observability": "observability.py",
+    "agent": "src/mcp_server_langgraph/core/agent.py",
+    "mcp_servers": [
+      "src/mcp_server_langgraph/mcp/server_stdio.py",
+      "src/mcp_server_langgraph/mcp/server_streamable.py"
+    ],
+    "auth": "src/mcp_server_langgraph/auth/",
+    "authorization": "src/mcp_server_langgraph/auth/openfga/",
+    "config": "src/mcp_server_langgraph/core/config.py",
+    "observability": "src/mcp_server_langgraph/observability/",
     "tests": "tests/",
     "docs": ["README.md", "DEVELOPMENT.md", "CONTRIBUTING.md"]
   },
 
   "dependencies": {
     "core": [
-      "langgraph>=0.2.28",
-      "litellm>=1.52.3",
-      "mcp>=1.1.2",
-      "fastapi>=0.109.0",
-      "uvicorn>=0.27.0"
+      "langgraph>=1.0.1",
+      "litellm>=1.78.5",
+      "mcp>=1.18.0",
+      "fastapi>=0.120.3",
+      "uvicorn>=0.38.0"
     ],
     "security": [
       "PyJWT>=2.8.0",

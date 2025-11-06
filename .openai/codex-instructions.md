@@ -582,24 +582,31 @@ async def process_request(request):
 ## File Structure Reference
 
 ```
-mcp_server_langgraph/
-├── agent.py                  # LangGraph agent implementation
-├── mcp_server.py             # MCP stdio transport
-├── mcp_server_streamable.py # MCP StreamableHTTP transport
-├── mcp_server_http.py        # MCP HTTP/SSE transport
-├── auth.py                   # JWT authentication
-├── openfga_client.py         # Authorization client
-├── secrets_manager.py        # Infisical integration
-├── observability.py          # OpenTelemetry setup
-├── config.py                 # Configuration management
-├── llm_factory.py            # LLM client factory
+mcp-server-langgraph/
+├── src/mcp_server_langgraph/
+│   ├── core/
+│   │   ├── agent.py          # LangGraph agent implementation
+│   │   └── config.py         # Configuration management
+│   ├── mcp/
+│   │   ├── server_stdio.py   # MCP stdio transport
+│   │   └── server_streamable.py  # MCP StreamableHTTP transport
+│   ├── auth/                 # Authentication package
+│   │   ├── factory.py        # Auth provider factory
+│   │   ├── jwt/              # JWT authentication
+│   │   └── openfga/          # OpenFGA authorization
+│   ├── secrets/              # Secrets management
+│   ├── observability/        # OpenTelemetry instrumentation
+│   ├── llm/                  # LLM factory and clients
+│   ├── compliance/           # GDPR/HIPAA/SOC2 compliance
+│   ├── resilience/           # Circuit breaker, retry patterns
+│   └── api/                  # FastAPI endpoints
 ├── tests/
 │   ├── unit/                 # Unit tests
 │   ├── integration/          # Integration tests
-│   └── performance/          # Benchmark tests
+│   └── deployment/           # Deployment validation tests
 └── scripts/
-    ├── validate_production.py
-    └── generate_openapi.py
+    ├── ci/                   # CI/CD scripts
+    └── workflow/             # Workflow automation
 ```
 
 ## Useful Commands
@@ -624,14 +631,15 @@ mypy *.py --ignore-missing-imports
 # Security scan
 bandit -r . -x ./tests,./venv -ll
 
-# Run development server
-python mcp_server_streamable.py
+# Run development server (stdio)
+python -m mcp_server_langgraph.mcp.server_stdio
 
-# Generate OpenAPI schema
-python scripts/generate_openapi.py
+# Run development server (HTTP/streamable)
+python -m mcp_server_langgraph.mcp.server_streamable
 
-# Validate production readiness
-python scripts/validate_production.py
+# Or use the installed CLI
+mcp-server-langgraph          # stdio version
+mcp-server-langgraph-http     # HTTP version
 ```
 
 ## Resources
@@ -646,33 +654,38 @@ python scripts/validate_production.py
 - **docs/docs.json** - Mintlify documentation (100% coverage)
 - **API Docs** - http://localhost:8000/docs (when running)
 
-## Current Project State (2025-10-14)
+## Current Project State (2025-11-06)
 
-- **LangGraph Version**: 0.6.10 (upgraded from 0.2.28 - all 15 Dependabot PRs merged)
+- **LangGraph Version**: 1.0.1 (latest stable release)
+- **Python Version**: 3.10-3.12 supported
 - **Documentation**: Mintlify integration complete with docs/ structure
 - **Production Ready**: Full observability, security, and compliance
+- **Test Coverage**: 318+ comprehensive tests across unit, integration, and deployment suites
 
 ## Quick Reference
 
 ### Import What You Need
 ```python
 # Configuration
-from config import settings
+from mcp_server_langgraph.core.config import settings
 
 # Authentication
-from auth import AuthMiddleware, verify_token
+from mcp_server_langgraph.auth.factory import create_auth_provider
+from mcp_server_langgraph.auth.jwt.provider import JWTAuthProvider
 
 # Authorization
-from openfga_client import OpenFGAClient
+from mcp_server_langgraph.auth.openfga.client import OpenFGAClient
 
 # Observability
-from observability import tracer, logger, metrics
+from mcp_server_langgraph.observability.tracing import tracer
+from mcp_server_langgraph.observability.logging import logger
+from mcp_server_langgraph.observability.metrics import metrics
 
 # Agent
-from agent import agent_graph, AgentState
+from mcp_server_langgraph.core.agent import create_agent, AgentState
 
 # LLM
-from llm_factory import create_llm_client
+from mcp_server_langgraph.llm.factory import create_llm_client
 ```
 
 ### Common Patterns
