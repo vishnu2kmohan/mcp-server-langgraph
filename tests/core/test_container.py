@@ -289,6 +289,124 @@ class TestContainerTestHelpers:
         assert container.settings.log_level == "DEBUG"
 
 
+class TestProductionAuthValidation:
+    """Test that production environments require proper external auth"""
+
+    def test_production_validates_auth_provider_at_settings_level(self):
+        """
+        SECURITY: Production validation happens at Settings level (even better than container).
+
+        Finding #6 claimed container.get_auth() returns InMemoryAuthProvider in production.
+        ACTUAL: Settings class validates auth_provider BEFORE container initialization!
+
+        This test documents the EXISTING security feature that prevents the issue.
+        """
+        from pydantic_core import ValidationError
+
+        from mcp_server_langgraph.core.config import Settings
+
+        # Act & Assert: Settings validation should fail for production with inmemory auth
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                environment="production",
+                auth_provider="inmemory",  # Not allowed in production
+                jwt_secret_key="test-secret-key-min-32-chars-long-for-security",
+            )
+
+        # Validation error should mention the security issue
+        error_message = str(exc_info.value)
+        assert "AUTH_PROVIDER=inmemory is not allowed in production" in error_message
+        assert "keycloak" in error_message.lower()
+
+    def test_production_validates_gdpr_storage_at_settings_level(self):
+        """
+        SECURITY: Production also validates GDPR storage backend.
+
+        This ensures production uses postgres, not in-memory storage.
+        """
+        from pydantic_core import ValidationError
+
+        from mcp_server_langgraph.core.config import Settings
+
+        # Act & Assert: Settings validation should fail for production with memory storage
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                environment="production",
+                auth_provider="keycloak",
+                gdpr_storage_backend="memory",  # Not allowed in production
+                keycloak_server_url="https://keycloak.example.com",
+                jwt_secret_key="test-secret-key-min-32-chars-long-for-security",
+            )
+
+        # Validation error should mention GDPR requirement
+        error_message = str(exc_info.value)
+        assert "GDPR_STORAGE_BACKEND=memory is not allowed in production" in error_message
+        assert "postgres" in error_message.lower()
+
+    def test_production_allows_keycloak_when_configured(self):
+        """Test that production with Keycloak configuration succeeds"""
+        from mcp_server_langgraph.core.config import Settings
+
+        # Production with Keycloak AND postgres properly configured
+        settings = Settings(
+            environment="production",
+            auth_provider="keycloak",  # Required for production
+            gdpr_storage_backend="postgres",  # Required for production
+            keycloak_server_url="https://keycloak.example.com",
+            keycloak_realm="production",
+            keycloak_client_id="mcp-server",
+            keycloak_client_secret="secure-secret",
+            jwt_secret_key="test-secret-key-min-32-chars-long-for-security",
+            database_url="postgresql://user:pass@localhost/db",  # Postgres required
+        )
+
+        config = ContainerConfig(environment="production", enable_auth=True)
+        container = ApplicationContainer(config, settings=settings)
+
+        # Should NOT raise - Keycloak AND postgres are properly configured
+        auth = container.get_auth()
+        assert auth is not None
+
+    def test_development_allows_inmemory_auth(self):
+        """Test that development mode allows InMemoryAuthProvider"""
+        from mcp_server_langgraph.core.config import Settings
+        from mcp_server_langgraph.core.container import InMemoryAuthProvider
+
+        settings = Settings(environment="development", enable_auth=True)
+        config = ContainerConfig(environment="development")
+        container = ApplicationContainer(config, settings=settings)
+
+        # Development should allow InMemoryAuthProvider
+        auth = container.get_auth()
+        assert auth is not None
+        # Should be InMemoryAuthProvider in development
+        assert isinstance(auth, InMemoryAuthProvider)
+
+    def test_production_validation_enforces_security_even_with_auth_disabled(self):
+        """
+        SECURITY: Production ALWAYS requires keycloak auth_provider and postgres storage.
+
+        Even if enable_auth=False, the Settings validator ensures production
+        deployments have production-grade backends configured.
+        """
+        from pydantic_core import ValidationError
+
+        from mcp_server_langgraph.core.config import Settings
+
+        # Act & Assert: Production validation is STRICT - even with enable_auth=False
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                environment="production",
+                enable_auth=False,
+                # Defaults to auth_provider=inmemory, gdpr_storage_backend=memory
+                # Both are blocked in production
+            )
+
+        error_message = str(exc_info.value)
+        assert "AUTH_PROVIDER=inmemory is not allowed in production" in error_message
+        assert "GDPR_STORAGE_BACKEND=memory is not allowed in production" in error_message
+
+
 class TestContainerIntegrationWithExistingCode:
     """Test that container integrates with existing codebase"""
 
