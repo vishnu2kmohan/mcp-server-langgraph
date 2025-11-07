@@ -52,9 +52,7 @@ class TestAccurateTokenCounting:
 
         # Token count should be reasonable for English text (typically 1 token per 4-5 chars)
         # But NOT exactly len(text)//4
-        assert 100 < token_count < 500, (
-            f"Token count {token_count} seems unreasonable for {len(text)} character text"
-        )
+        assert 100 < token_count < 500, f"Token count {token_count} seems unreasonable for {len(text)} character text"
 
     def test_openai_token_counting_uses_tiktoken(self):
         """
@@ -71,8 +69,7 @@ class TestAccurateTokenCounting:
         # Should NOT be using the len(text)//4 fallback
         char_count_estimate = len(text) // 4
         assert token_count != char_count_estimate, (
-            f"SECURITY: Token counting appears to be using len(text)//4 fallback "
-            f"instead of tiktoken for GPT-4"
+            f"SECURITY: Token counting appears to be using len(text)//4 fallback " f"instead of tiktoken for GPT-4"
         )
 
     def test_anthropic_token_counting_for_claude(self):
@@ -89,9 +86,7 @@ class TestAccurateTokenCounting:
 
         # Should not use fallback
         char_count_estimate = len(text) // 4
-        assert token_count != char_count_estimate, (
-            "Token counting should not use len(text)//4 fallback for Claude models"
-        )
+        assert token_count != char_count_estimate, "Token counting should not use len(text)//4 fallback for Claude models"
 
     def test_token_counting_deterministic_for_same_text(self):
         """
@@ -107,9 +102,7 @@ class TestAccurateTokenCounting:
         count2 = optimizer.count_tokens(text)
         count3 = optimizer.count_tokens(text)
 
-        assert count1 == count2 == count3, (
-            "Token counting must be deterministic for the same input"
-        )
+        assert count1 == count2 == count3, "Token counting must be deterministic for the same input"
 
     def test_empty_string_returns_zero_tokens(self):
         """
@@ -294,6 +287,4 @@ class TestTokenCountingAccuracy:
         count1 = optimizer1.count_tokens(text)
         count2 = optimizer2.count_tokens(text)
 
-        assert count1 == count2, (
-            f"Token counts differ between instances: {count1} vs {count2}"
-        )
+        assert count1 == count2, f"Token counts differ between instances: {count1} vs {count2}"

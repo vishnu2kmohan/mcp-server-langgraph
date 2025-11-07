@@ -67,30 +67,70 @@ def scim_error(status_code: int, detail: str, scim_type: Optional[str] = None) -
 # Authorization Helpers
 
 
-def _require_admin_or_scim_role(current_user: Dict[str, Any]) -> None:
+async def _require_admin_or_scim_role(
+    current_user: Dict[str, Any],
+    openfga: Optional[Any] = None,
+    resource: str = "scim:users"
+) -> None:
     """
     Validate that the current user has admin or SCIM provisioner role.
 
-    SECURITY: Prevents CWE-862 (Missing Authorization) by enforcing role-based
-    access control for SCIM identity management endpoints.
+    SECURITY (OpenAI Codex Finding #6):
+    Enhanced to support OpenFGA relation-based authorization for fine-grained control.
 
-    Authorization rules:
-    1. Users with 'admin' role can perform SCIM operations
-    2. Service accounts with 'scim-provisioner' role can perform SCIM operations
-    3. All other users are denied
+    Authorization rules (checked in order):
+    1. OpenFGA: Check can_provision_users relation (if OpenFGA available)
+    2. Admin role: Users with 'admin' role can perform SCIM operations
+    3. SCIM provisioner role: Service accounts with 'scim-provisioner' role
+    4. Deny: All other cases
 
     Args:
         current_user: The authenticated user making the request
+        openfga: Optional OpenFGA client for relation-based checks
+        resource: Resource identifier for OpenFGA (default: "scim:users")
 
     Raises:
-        HTTPException: 403 Forbidden if user lacks required role
+        HTTPException: 403 Forbidden if user lacks required permissions
 
-    TODO: Integrate with OpenFGA for fine-grained permission checks
-          (e.g., check for 'scim:write' relation on tenant resource)
+    References:
+        - OpenAI Codex Finding #6: Ad-hoc role lists → OpenFGA relations
+        - CWE-863: Incorrect Authorization
     """
+    user_id = current_user.get("user_id", f"user:{current_user.get('username', '')}")
     user_roles = current_user.get("roles", [])
 
-    # Check for admin or SCIM provisioner role
+    # ENHANCEMENT (OpenAI Codex Finding #6): Check OpenFGA relation first
+    if openfga is not None:
+        try:
+            # Check can_provision_users relation
+            authorized = await openfga.check_permission(
+                user=user_id,
+                relation="can_provision_users",
+                object=resource,
+                context=None
+            )
+
+            if authorized:
+                from mcp_server_langgraph.observability.telemetry import logger
+                logger.info(
+                    "SCIM authorization granted via OpenFGA relation",
+                    extra={
+                        "user_id": user_id,
+                        "relation": "can_provision_users",
+                        "resource": resource,
+                    }
+                )
+                return  # Authorized via OpenFGA
+
+        except Exception as e:
+            # Log error but continue to role-based fallback
+            from mcp_server_langgraph.observability.telemetry import logger
+            logger.warning(
+                f"OpenFGA check failed for SCIM authorization, falling back to roles: {e}",
+                extra={"user_id": user_id, "resource": resource}
+            )
+
+    # FALLBACK: Check for admin or SCIM provisioner role
     if "admin" in user_roles or "scim-provisioner" in user_roles:
         return  # Authorized
 
@@ -98,8 +138,8 @@ def _require_admin_or_scim_role(current_user: Dict[str, Any]) -> None:
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
-            "SCIM identity management operations require admin privileges or SCIM provisioner role. "
-            f"Your roles: {user_roles}. Required: ['admin'] or ['scim-provisioner']."
+            "SCIM identity management operations require admin privileges, SCIM provisioner role, "
+            f"or can_provision_users OpenFGA relation. Your roles: {user_roles}."
         ),
     )
 
@@ -137,7 +177,7 @@ async def create_user(
         ```
     """
     # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
-    _require_admin_or_scim_role(current_user)
+    await _require_admin_or_scim_role(current_user, openfga=openfga, resource="scim:users")
 
     try:
         # Validate SCIM schema
@@ -216,7 +256,7 @@ async def replace_user(
     Replaces entire user resource.
     """
     # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
-    _require_admin_or_scim_role(current_user)
+    await _require_admin_or_scim_role(current_user, openfga=openfga, resource="scim:users")
 
     try:
         # Validate SCIM schema
@@ -269,7 +309,7 @@ async def update_user(
         ```
     """
     # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
-    _require_admin_or_scim_role(current_user)
+    await _require_admin_or_scim_role(current_user, openfga=openfga, resource="scim:users")
 
     try:
         # Get current user
@@ -315,7 +355,7 @@ async def delete_user(
     Deactivates user in Keycloak and removes OpenFGA tuples.
     """
     # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
-    _require_admin_or_scim_role(current_user)
+    await _require_admin_or_scim_role(current_user, openfga=openfga, resource="scim:users")
 
     try:
         # Soft delete - disable user
@@ -431,7 +471,7 @@ async def create_group(
         ```
     """
     # SECURITY FIX (CWE-862): Require admin or SCIM provisioner role
-    _require_admin_or_scim_role(current_user)
+    await _require_admin_or_scim_role(current_user, openfga=openfga, resource="scim:users")
 
     try:
         # Validate SCIM schema

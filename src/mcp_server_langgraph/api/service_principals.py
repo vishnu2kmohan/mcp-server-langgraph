@@ -81,45 +81,82 @@ class RotateSecretResponse(BaseModel):
 async def _validate_user_association_permission(
     current_user: Dict[str, Any],
     target_user_id: str,
+    openfga: Optional[Any] = None,
 ) -> None:
     """
     Validate that the current user has permission to create service principals
     that act as the target user.
 
-    SECURITY: Prevents CWE-269 (Improper Privilege Management) by enforcing
-    authorization checks before allowing user impersonation.
+    SECURITY (OpenAI Codex Finding #6):
+    Enhanced to support OpenFGA relation-based delegation for fine-grained control.
 
-    Authorization rules:
-    1. Users can create SPs that act as themselves
+    Authorization rules (checked in order):
+    1. Users can create SPs that act as themselves (self-service)
     2. Admin users can create SPs for any user
-    3. All other cases are denied
+    3. OpenFGA: can_manage_service_principals relation (delegation)
+    4. All other cases are denied
 
     Args:
         current_user: The authenticated user making the request
         target_user_id: The user ID to associate with the service principal
+        openfga: Optional OpenFGA client for relation-based delegation
 
     Raises:
         HTTPException: 403 Forbidden if user is not authorized
 
-    TODO: Integrate with OpenFGA for fine-grained permission checks
-          (e.g., check for 'can_impersonate' relation)
+    References:
+        - OpenAI Codex Finding #6: Ad-hoc role lists → OpenFGA relations
+        - CWE-863: Incorrect Authorization (was CWE-269)
     """
+    user_id = current_user["user_id"]
+    user_roles = current_user.get("roles", [])
+
     # Rule 1: Users can create SPs for themselves
-    if current_user["user_id"] == target_user_id:
-        return  # Authorized
+    if user_id == target_user_id:
+        return  # Authorized (self-service)
 
     # Rule 2: Admin users can create SPs for anyone
-    user_roles = current_user.get("roles", [])
     if "admin" in user_roles:
-        return  # Authorized
+        return  # Authorized (admin override)
 
-    # Rule 3: All other cases are denied
+    # Rule 3 (ENHANCEMENT - OpenAI Codex Finding #6): Check OpenFGA delegation
+    if openfga is not None:
+        try:
+            # Check can_manage_service_principals relation
+            authorized = await openfga.check_permission(
+                user=user_id,
+                relation="can_manage_service_principals",
+                object=target_user_id,
+                context=None
+            )
+
+            if authorized:
+                from mcp_server_langgraph.observability.telemetry import logger
+                logger.info(
+                    "Service Principal authorization granted via OpenFGA delegation",
+                    extra={
+                        "user_id": user_id,
+                        "target_user_id": target_user_id,
+                        "relation": "can_manage_service_principals",
+                    }
+                )
+                return  # Authorized via OpenFGA delegation
+
+        except Exception as e:
+            # Log error but continue to denial
+            from mcp_server_langgraph.observability.telemetry import logger
+            logger.warning(
+                f"OpenFGA check failed for Service Principal authorization: {e}",
+                extra={"user_id": user_id, "target_user_id": target_user_id}
+            )
+
+    # Rule 4: All other cases are denied
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=(
             f"You are not authorized to create service principals that act as '{target_user_id}'. "
-            f"You can only create service principals for yourself ('{current_user['user_id']}') "
-            f"unless you have admin privileges."
+            f"You can create SPs for yourself ('{user_id}'), or with admin privileges, "
+            f"or can_manage_service_principals OpenFGA relation."
         ),
     )
 
@@ -167,6 +204,7 @@ async def create_service_principal(
         await _validate_user_association_permission(
             current_user=current_user,
             target_user_id=request.associated_user_id,
+            openfga=openfga,
         )
 
     # Generate service ID from name
@@ -391,6 +429,7 @@ async def associate_service_principal_with_user(
         await _validate_user_association_permission(
             current_user=current_user,
             target_user_id=user_id,
+            openfga=openfga,
         )
 
     # Associate with user

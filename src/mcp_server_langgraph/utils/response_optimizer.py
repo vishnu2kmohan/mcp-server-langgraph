@@ -82,7 +82,7 @@ class ResponseOptimizer:
                     "text_length": len(text),
                     "estimated_tokens": len(text) // 4,
                     "error_type": type(e).__name__,
-                }
+                },
             )
             return len(text) // 4
 

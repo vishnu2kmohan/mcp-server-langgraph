@@ -298,7 +298,7 @@ class APIKeyManager:
                 "cache_enabled": self.cache_enabled,
                 "mitigation": "Redis cache provides O(1) for cache hits (ADR-0034)",
                 "recommendation": "Implement indexed Keycloak attribute search for cold starts",
-            }
+            },
         )
 
         # Paginate through all users to find matching key hash
@@ -367,7 +367,7 @@ class APIKeyManager:
                 "users_scanned": users_scanned,
                 "performance_impact": "HIGH" if users_scanned > 1000 else "MEDIUM" if users_scanned > 100 else "LOW",
                 "recommendation": "Implement Keycloak indexed search if users_scanned > 1000",
-            }
+            },
         )
 
         return None  # Invalid key

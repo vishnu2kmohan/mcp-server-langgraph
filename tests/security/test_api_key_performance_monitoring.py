@@ -41,14 +41,14 @@ class TestAPIKeyPerformanceMonitoring:
         source = inspect.getsource(APIKeyManager.validate_and_get_user)
 
         # Should document the O(n) performance issue
-        assert "O(n)" in source or "enumeration" in source.lower(), (
-            "validate_and_get_user should document O(n) enumeration performance issue"
-        )
+        assert (
+            "O(n)" in source or "enumeration" in source.lower()
+        ), "validate_and_get_user should document O(n) enumeration performance issue"
 
         # Should mention recommended optimization
-        assert "indexed" in source.lower() or "index" in source.lower(), (
-            "validate_and_get_user should document indexed search recommendation"
-        )
+        assert (
+            "indexed" in source.lower() or "index" in source.lower()
+        ), "validate_and_get_user should document indexed search recommendation"
 
     def test_api_keys_module_references_adr_0034(self):
         """
@@ -61,9 +61,9 @@ class TestAPIKeyPerformanceMonitoring:
         api_keys_file = pathlib.Path("src/mcp_server_langgraph/auth/api_keys.py")
         content = api_keys_file.read_text()
 
-        assert "ADR-0034" in content or "adr-0034" in content.lower(), (
-            "api_keys.py should reference ADR-0034 documenting cache mitigation"
-        )
+        assert (
+            "ADR-0034" in content or "adr-0034" in content.lower()
+        ), "api_keys.py should reference ADR-0034 documenting cache mitigation"
 
     def test_api_key_manager_accepts_redis_client(self):
         """
@@ -77,9 +77,7 @@ class TestAPIKeyPerformanceMonitoring:
         sig = inspect.signature(APIKeyManager.__init__)
         params = sig.parameters
 
-        assert "redis_client" in params, (
-            "APIKeyManager must accept redis_client for cache mitigation"
-        )
+        assert "redis_client" in params, "APIKeyManager must accept redis_client for cache mitigation"
 
     def test_cache_enabled_by_default_when_redis_available(self):
         """
@@ -98,9 +96,7 @@ class TestAPIKeyPerformanceMonitoring:
         )
 
         # Cache should be enabled
-        assert manager.cache_enabled is True, (
-            "Cache must be enabled by default when Redis client is provided"
-        )
+        assert manager.cache_enabled is True, "Cache must be enabled by default when Redis client is provided"
 
 
 @pytest.mark.security
@@ -160,9 +156,9 @@ class TestAPIKeyEnumerationDocumentation:
         """
         docstring = APIKeyManager.validate_and_get_user.__doc__ or ""
 
-        assert "cache" in docstring.lower() or "performance" in docstring.lower(), (
-            "validate_and_get_user should document cache/performance considerations"
-        )
+        assert (
+            "cache" in docstring.lower() or "performance" in docstring.lower()
+        ), "validate_and_get_user should document cache/performance considerations"
 
     def test_source_code_has_performance_comments(self):
         """
@@ -175,11 +171,9 @@ class TestAPIKeyEnumerationDocumentation:
         source = inspect.getsource(APIKeyManager.validate_and_get_user)
 
         # Should have comments about performance
-        assert "PERFORMANCE" in source or "performance" in source.lower(), (
-            "validate_and_get_user should include performance comments/warnings"
-        )
+        assert (
+            "PERFORMANCE" in source or "performance" in source.lower()
+        ), "validate_and_get_user should include performance comments/warnings"
 
         # Should mention the Codex finding
-        assert "Finding #5" in source or "Codex" in source, (
-            "Source should reference OpenAI Codex Finding #5"
-        )
+        assert "Finding #5" in source or "Codex" in source, "Source should reference OpenAI Codex Finding #5"
