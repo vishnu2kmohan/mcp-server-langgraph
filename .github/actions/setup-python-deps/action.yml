@@ -8,16 +8,6 @@ inputs:
     required: false
     default: '3.12'
 
-  install-dev:
-    description: 'Install development dependencies'
-    required: false
-    default: 'false'
-
-  install-test:
-    description: 'Install test dependencies'
-    required: false
-    default: 'false'
-
   extras:
     description: 'Space-separated list of optional dependency groups (e.g., "dev builder")'
     required: false

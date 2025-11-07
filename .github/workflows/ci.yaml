@@ -6,26 +6,23 @@ name: CI/CD Pipeline (Optimized)
 #
 # WORKFLOW DEPENDENCY GRAPH:
 #
-#   test (3.10, 3.11, 3.12) ──┐
-#                              ├──> lint ──> verify ──> docker-build (base, full, test)
-#   integration-tests ─────────┘
+#   test (3.10, 3.11, 3.12) ──> docker-build (base, full, test)
 #
-#   All jobs run in parallel except:
-#   - lint depends on: test, integration-tests
-#   - verify depends on: lint
-#   - docker-build depends on: verify
+# Jobs:
+#   - test: Unit tests across Python versions with parallel execution
+#   - pre-commit: Code quality hooks (formatting, linting, security)
+#   - docker-build: Multi-variant image builds (depends on tests passing)
+#   - docker-compose-smoke-test: Validate stack configurations
+#   - docker-multiplatform: amd64 + arm64 builds (main branch only)
 #
-# OPTIMIZATIONS:
-#   1. Parallel Docker builds (base, full, test variants)
-#   2. Optimized dependency caching (setup-uv built-in cache)
-#   3. Faster dependency installation (uv sync with lockfile)
-#   4. Multi-platform builds in parallel
-#   5. Reduced build time: 35min → 12min (-66%)
+# Key Features:
+#   - Parallel matrix builds for efficiency
+#   - GitHub Actions cache for dependencies and Docker layers
+#   - Automated test dependency enforcement (docker-build waits for tests)
+#   - Multi-platform support for production deployments
 #
-# COST SAVINGS:
-#   - GitHub Actions minutes: $150/month saved
-#   - Container registry storage: $500/month saved
-#   - Developer time: 23min saved per build × 500 builds/month = 190 hours/month
+# For optimization metrics and benchmarks, see:
+#   docs/workflows/optimization-history.md
 #
 # ==============================================================================
 
@@ -274,6 +271,7 @@ jobs:
   docker-build:
     name: Build ${{ matrix.variant }} image
     runs-on: ubuntu-latest
+    needs: [test]  # Prevent pushing images when tests fail
     timeout-minutes: 45
     permissions:
       contents: read
