@@ -281,6 +281,79 @@ class TestWorkflowValidation:
                 )
             print(warning_msg)
 
+    def test_docker_build_actions_are_consistent(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+        """
+        Test that Docker build actions use consistent versions across all workflows.
+
+        Context: OpenAI Codex Finding - Docker build duplication
+        Issue: Multiple workflows duplicate Docker build logic with potential version drift
+
+        This test ensures all Docker builds use the same action versions, even if
+        the build logic itself is intentionally different (matrix vs single, SBOM, etc.)
+        """
+        docker_actions_used = {}
+
+        # Track which workflows use which Docker action versions
+        for workflow_name, workflow_data in parsed_workflows.items():
+            jobs = workflow_data.get("jobs", {})
+
+            for job_name, job_config in jobs.items():
+                steps = job_config.get("steps", [])
+
+                for step in steps:
+                    uses = step.get("uses", "")
+                    if not uses:
+                        continue
+
+                    # Check for Docker-related actions
+                    if any(
+                        action in uses
+                        for action in [
+                            "docker/setup-buildx-action",
+                            "docker/login-action",
+                            "docker/build-push-action",
+                            "docker/setup-qemu-action",
+                        ]
+                    ):
+                        if "@" in uses:
+                            action, version = uses.rsplit("@", 1)
+
+                            if action not in docker_actions_used:
+                                docker_actions_used[action] = {}
+
+                            if version not in docker_actions_used[action]:
+                                docker_actions_used[action][version] = []
+
+                            docker_actions_used[action][version].append(f"{workflow_name}::{job_name}")
+
+        # Check for version inconsistencies
+        issues_found = []
+        for action, versions in docker_actions_used.items():
+            if len(versions) > 1:
+                issues_found.append(
+                    {
+                        "action": action,
+                        "versions": versions,
+                        "issue": f"Multiple versions in use: {list(versions.keys())}",
+                    }
+                )
+
+        if issues_found:
+            error_msg = "Docker build actions have inconsistent versions across workflows:\n"
+            for issue in issues_found:
+                error_msg += f"\n  Action: {issue['action']}\n"
+                error_msg += f"  Issue: {issue['issue']}\n"
+                error_msg += "  Usage:\n"
+                for version, locations in issue["versions"].items():
+                    error_msg += f"    - {version}:\n"
+                    for location in locations:
+                        error_msg += f"      - {location}\n"
+                error_msg += (
+                    "  Fix: Standardize on a single version across all workflows\n"
+                    "  This prevents version drift and ensures consistent behavior\n"
+                )
+            pytest.fail(error_msg)
+
     def test_action_versions_are_valid(self, parsed_workflows: Dict[str, Dict[str, Any]]):
         """
         Test that all GitHub Actions use valid version tags.
