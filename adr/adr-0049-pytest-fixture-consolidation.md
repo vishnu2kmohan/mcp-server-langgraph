@@ -1,4 +1,4 @@
-# ADR-0043: Pytest Fixture Consolidation and Organization
+# ADR-0049: Pytest Fixture Consolidation and Organization
 
 **Status:** Accepted
 **Date:** 2025-11-07
