@@ -280,9 +280,31 @@ class APIKeyManager:
 
             # No expiration or still valid
             return cached_user
+        # PERFORMANCE WARNING (OpenAI Codex Finding #5):
+        # This O(n) pagination fallback is inefficient for large user bases.
+        # The Redis cache mitigates this (ADR-0034), but cold starts are slow.
+        #
+        # RECOMMENDED FUTURE OPTIMIZATION:
+        # 1. Add indexed Keycloak user attribute: api_key_hash
+        # 2. Use: keycloak.search_users(query=f"api_key_hash:{hash}")
+        # 3. This provides O(1) lookup instead of O(n) enumeration
+        #
+        # Until then, monitor cache hit rate and user count:
+        logger.warning(
+            "API key validation: Cache miss triggered user enumeration (O(n) fallback). "
+            "For production deployments with >1000 users, consider implementing Keycloak "
+            "indexed attribute search (see OpenAI Codex Finding #5).",
+            extra={
+                "cache_enabled": self.cache_enabled,
+                "mitigation": "Redis cache provides O(1) for cache hits (ADR-0034)",
+                "recommendation": "Implement indexed Keycloak attribute search for cold starts",
+            }
+        )
+
         # Paginate through all users to find matching key hash
         first = 0
         max_per_page = 100
+        users_scanned = 0
 
         while True:
             # Fetch page of users
@@ -291,6 +313,8 @@ class APIKeyManager:
             # No more users, key not found
             if not users:
                 break
+
+            users_scanned += len(users)
 
             # Search this page for matching key
             for user in users:
@@ -334,6 +358,17 @@ class APIKeyManager:
 
             # Move to next page
             first += max_per_page
+
+        # PERFORMANCE MONITORING (OpenAI Codex Finding #5):
+        # Log how many users were scanned to identify performance issues
+        logger.info(
+            "API key validation: User enumeration completed (key not found)",
+            extra={
+                "users_scanned": users_scanned,
+                "performance_impact": "HIGH" if users_scanned > 1000 else "MEDIUM" if users_scanned > 100 else "LOW",
+                "recommendation": "Implement Keycloak indexed search if users_scanned > 1000",
+            }
+        )
 
         return None  # Invalid key
 

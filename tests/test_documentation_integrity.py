@@ -283,3 +283,48 @@ class TestDocumentationCompleteness:
         assert not small_files, "Suspiciously small MDX files (potential stubs):\n" + "\n".join(
             f"  - {f}" for f in sorted(small_files)
         )
+
+    def test_monitoring_subdirectories_have_readmes(self):
+        """Test that monitoring subdirectories have README.md files."""
+        monitoring_dir = PROJECT_ROOT / "monitoring"
+
+        # Define subdirectories that should have READMEs
+        required_readmes = {
+            "gcp/README.md": "GCP monitoring configuration",
+            "otel-collector/README.md": "OpenTelemetry collector configuration",
+        }
+
+        missing_readmes = []
+        for readme_path, description in required_readmes.items():
+            full_path = monitoring_dir / readme_path
+            if not full_path.exists():
+                missing_readmes.append(f"{readme_path} ({description})")
+
+        assert not missing_readmes, "Missing README files in monitoring subdirectories:\n" + "\n".join(
+            f"  - {f}" for f in sorted(missing_readmes)
+        )
+
+    def test_monitoring_readmes_are_comprehensive(self):
+        """Test that monitoring READMEs are comprehensive (>50 lines)."""
+        monitoring_dir = PROJECT_ROOT / "monitoring"
+
+        readmes_to_check = [
+            monitoring_dir / "gcp" / "README.md",
+            monitoring_dir / "otel-collector" / "README.md",
+        ]
+
+        inadequate_readmes = []
+        for readme_path in readmes_to_check:
+            if not readme_path.exists():
+                continue  # Skip if doesn't exist (caught by other test)
+
+            line_count = len(readme_path.read_text().splitlines())
+            if line_count < 50:
+                inadequate_readmes.append(
+                    f"{readme_path.relative_to(PROJECT_ROOT)} ({line_count} lines, minimum 50)"
+                )
+
+        assert not inadequate_readmes, (
+            "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n"
+            + "\n".join(f"  - {f}" for f in sorted(inadequate_readmes))
+        )
