@@ -7,6 +7,8 @@ Following TDD best practices - these tests should FAIL until implementation is c
 NOTE: These tests require Docker to be running.
 """
 
+import os
+
 import pytest
 
 # These imports will fail initially - that's expected in TDD!
