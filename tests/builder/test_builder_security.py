@@ -199,8 +199,8 @@ class TestPathTraversalProtection:
             "entry_point": "start",
         }
 
-        # Use the default safe directory from environment
-        default_dir = os.getenv("BUILDER_OUTPUT_DIR", "/tmp/workflows")  # nosec B108 - Test fixture
+        # Use the actual default safe directory (matches validator)
+        default_dir = f"{tempfile.gettempdir()}/mcp-server-workflows"  # nosec B108 - Test fixture
         os.makedirs(default_dir, exist_ok=True)
         safe_path = os.path.join(default_dir, "my_workflow.py")
 

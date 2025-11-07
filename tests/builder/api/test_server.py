@@ -28,7 +28,18 @@ from mcp_server_langgraph.builder.api.server import app
 @pytest.fixture
 def client():
     """FastAPI test client for builder API."""
-    return TestClient(app)
+    # Override auth dependency for tests
+    from mcp_server_langgraph.builder.api.server import verify_builder_auth
+
+    async def mock_auth():
+        return None  # Auth bypassed for tests
+
+    app.dependency_overrides[verify_builder_auth] = mock_auth
+
+    yield TestClient(app)
+
+    # Cleanup
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -377,7 +388,8 @@ def test_save_workflow_with_valid_workflow_saves_to_file(client, valid_workflow)
     # Arrange
     import tempfile
 
-    output_path = f"{tempfile.gettempdir()}/test_agent.py"  # nosec B108
+    # Use allowed directory for builder output (security validation)
+    output_path = f"{tempfile.gettempdir()}/mcp-server-workflows/test_agent.py"  # nosec B108
     request = {"workflow": valid_workflow, "output_path": output_path}
 
     # Mock file operations
@@ -400,7 +412,11 @@ def test_save_workflow_with_valid_workflow_saves_to_file(client, valid_workflow)
 def test_save_workflow_with_io_error_returns_500(client, valid_workflow):
     """Test POST /api/builder/save handles IO errors."""
     # Arrange
-    request = {"workflow": valid_workflow, "output_path": "/invalid/path/test.py"}
+    import tempfile
+
+    # Use allowed directory but mock will fail
+    output_path = f"{tempfile.gettempdir()}/mcp-server-workflows/test.py"
+    request = {"workflow": valid_workflow, "output_path": output_path}
 
     # Mock file operations to raise exception
     with patch("builtins.open", side_effect=IOError("Permission denied")):
@@ -570,7 +586,7 @@ def test_import_workflow_with_import_error_returns_500(client):
 
     # Mock import to raise generic exception
     with patch(
-        "mcp_server_langgraph.builder.api.server.import_from_code",
+        "mcp_server_langgraph.builder.importer.importer.import_from_code",
         side_effect=Exception("Import failed"),
     ):
         # Act
