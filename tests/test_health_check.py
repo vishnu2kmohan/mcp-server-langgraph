@@ -8,6 +8,24 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.fixture(scope="module", autouse=True)
+def init_test_observability():
+    """Initialize observability for health check tests"""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
 @pytest.fixture
 def test_client() -> Generator[TestClient, None, None]:
     """Create a test client for the health check app"""
@@ -22,7 +40,7 @@ class TestHealthCheckEndpoints:
 
     def test_health_check_success(self, test_client: TestClient) -> None:
         """Test basic health check returns healthy status"""
-        response = test_client.get("/health")
+        response = test_client.get("/")
 
         assert response.status_code == 200
         data = response.json()
@@ -34,7 +52,7 @@ class TestHealthCheckEndpoints:
 
     def test_health_check_response_format(self, test_client: TestClient) -> None:
         """Test health check response has correct format"""
-        response = test_client.get("/health")
+        response = test_client.get("/")
         data = response.json()
 
         # Verify required fields
@@ -71,7 +89,7 @@ class TestHealthCheckEndpoints:
             mock_secrets_mgr.get_secret.return_value = "ok"
             mock_get_secrets.return_value = mock_secrets_mgr
 
-            response = test_client.get("/health/ready")
+            response = test_client.get("/ready")
 
             assert response.status_code == 200
             data = response.json()
@@ -104,7 +122,7 @@ class TestHealthCheckEndpoints:
             mock_secrets_mgr.get_secret.return_value = "ok"
             mock_get_secrets.return_value = mock_secrets_mgr
 
-            response = test_client.get("/health/ready")
+            response = test_client.get("/ready")
 
             assert response.status_code == 503
             data = response.json()
@@ -128,7 +146,7 @@ class TestHealthCheckEndpoints:
             mock_secrets_mgr.client = None
             mock_get_secrets.return_value = mock_secrets_mgr
 
-            response = test_client.get("/health/ready")
+            response = test_client.get("/ready")
 
             assert response.status_code == 503
             data = response.json()
@@ -153,7 +171,7 @@ class TestHealthCheckEndpoints:
             mock_secrets_mgr.client = None
             mock_get_secrets.return_value = mock_secrets_mgr
 
-            response = test_client.get("/health/ready")
+            response = test_client.get("/ready")
 
             assert response.status_code == 200
             data = response.json()
@@ -173,7 +191,7 @@ class TestHealthCheckEndpoints:
         with patch("mcp_server_langgraph.health.checks.get_secrets_manager") as mock_get_secrets:
             mock_get_secrets.side_effect = Exception("Infisical connection failed")
 
-            response = test_client.get("/health/ready")
+            response = test_client.get("/ready")
 
             # Should still be healthy (degraded mode with fallback)
             assert response.status_code == 200
@@ -189,7 +207,7 @@ class TestHealthCheckEndpoints:
         mock_settings.service_name = "mcp-server-langgraph"
         mock_settings.service_version = "1.0.0"
 
-        response = test_client.get("/health/startup")
+        response = test_client.get("/startup")
 
         assert response.status_code == 200
         data = response.json()
@@ -208,7 +226,7 @@ class TestHealthCheckEndpoints:
         mock_settings.service_name = "mcp-server-langgraph"
         mock_logger.info.side_effect = Exception("Logger initialization failed")
 
-        response = test_client.get("/health/startup")
+        response = test_client.get("/startup")
 
         assert response.status_code == 503
         data = response.json()
@@ -244,7 +262,7 @@ class TestHealthCheckIntegration:
     def test_full_health_check_with_infrastructure(self, test_client: TestClient) -> None:
         """Test health checks with real infrastructure components"""
         # This test would run with actual OpenFGA, Infisical, etc.
-        response = test_client.get("/health/ready")
+        response = test_client.get("/ready")
 
         assert response.status_code == 200
         data = response.json()

@@ -29,16 +29,20 @@ class TestAppCreation:
         assert app.version == "2.8.0"
 
     def test_create_app_without_observability_initialized(self):
-        """Test app creation when observability is not initialized"""
-        # This should not raise RuntimeError anymore
-        with patch("mcp_server_langgraph.app.logger") as mock_logger:
-            # Make logger raise RuntimeError to simulate uninitialized observability
-            mock_logger.info.side_effect = RuntimeError("Observability not initialized")
+        """Test app creation initializes observability automatically"""
+        # Since the fix (OpenAI Codex Finding #2), create_app() now calls
+        # init_observability() before any logger usage, so this scenario
+        # no longer occurs in practice.
 
-            # App creation should succeed despite logger errors
-            app = create_app()
+        # Verify that create_app calls init_observability first
+        with patch("mcp_server_langgraph.app.init_observability") as mock_init:
+            with patch("mcp_server_langgraph.app.setup_rate_limiting"):
+                with patch("mcp_server_langgraph.app.register_exception_handlers"):
+                    app = create_app()
 
-            assert isinstance(app, FastAPI)
+                    # Observability should be initialized, preventing logger errors
+                    mock_init.assert_called_once()
+                    assert isinstance(app, FastAPI)
 
 
 @pytest.mark.unit

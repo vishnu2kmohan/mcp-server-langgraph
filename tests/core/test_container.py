@@ -26,6 +26,24 @@ from mcp_server_langgraph.core.container import (
 )
 
 
+@pytest.fixture(scope="module", autouse=True)
+def init_test_observability():
+    """Initialize observability for tests"""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
 class TestContainerConfig:
     """Test container configuration"""
 
@@ -182,7 +200,14 @@ class TestTelemetryProvider:
         from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import ProductionTelemetryProvider
 
-        settings = Settings(environment="production", enable_tracing=True, enable_metrics=True)
+        settings = Settings(
+            environment="production",
+            auth_provider="keycloak",
+            gdpr_storage_backend="postgres",
+            jwt_secret_key="test-secret-key-min-32-chars-long-for-security",
+            enable_tracing=True,
+            enable_metrics=True,
+        )
 
         provider = ProductionTelemetryProvider(settings)
 

@@ -17,6 +17,24 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 )
 
 
+@pytest.fixture(scope="class", autouse=True)
+def init_test_observability():
+    """Initialize observability for rate limiter tests that use logger"""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
 @pytest.mark.unit
 @pytest.mark.api
 class TestRateLimiterUserExtraction:
@@ -93,95 +111,56 @@ class TestRateLimiterTierExtraction:
     """Test tier extraction for tiered rate limiting"""
 
     def test_get_user_tier_for_premium_user(self):
-        """Test extracting premium tier from JWT"""
+        """Test extracting premium tier from request.state.user"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:alice",
-            "tier": "premium",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user with premium tier in roles
+        request.state.user = {"user_id": "user:alice", "roles": ["premium"]}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
+        tier = get_user_tier(request)
 
         assert tier == "premium"
 
     def test_get_user_tier_for_enterprise_user(self):
-        """Test extracting enterprise tier from JWT"""
+        """Test extracting enterprise tier from request.state.user"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:admin",
-            "tier": "enterprise",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user with enterprise role
+        request.state.user = {"user_id": "user:admin", "roles": ["enterprise"]}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
+        tier = get_user_tier(request)
 
         assert tier == "enterprise"
 
     def test_get_user_tier_defaults_to_free(self):
-        """Test default tier when tier not specified in JWT"""
+        """Test default tier when user has no roles or tier field"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:newuser",
-            # No tier claim
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user without roles or tier fields
+        request.state.user = {"user_id": "user:newuser"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
+        tier = get_user_tier(request)
 
         assert tier == "free"
 
     def test_get_user_tier_for_anonymous_user(self):
-        """Test anonymous tier when no JWT provided"""
+        """Test anonymous tier when no user in state"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = None
+        # No user in state
+        request.state.user = None
 
         tier = get_user_tier(request)
 
         assert tier == "anonymous"
 
     def test_get_user_tier_with_plan_claim(self):
-        """Test extracting tier from 'plan' claim (alternative to 'tier')"""
+        """Test extracting tier from 'plan' field (fallback from roles)"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:alice",
-            "plan": "standard",  # Use 'plan' instead of 'tier'
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user with plan field instead of roles
+        request.state.user = {"user_id": "user:alice", "plan": "standard"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
+        tier = get_user_tier(request)
 
         assert tier == "standard"
 
@@ -189,20 +168,10 @@ class TestRateLimiterTierExtraction:
         """Test that invalid tier names default to free"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:hacker",
-            "tier": "super_mega_unlimited",  # Invalid tier
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user with invalid tier value
+        request.state.user = {"user_id": "user:hacker", "tier": "super_mega_unlimited"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
+        tier = get_user_tier(request)
 
         # Should default to free for invalid tiers
         assert tier == "free"
@@ -217,26 +186,18 @@ class TestRateLimiterKeyGeneration:
         """Test rate limit key uses user ID for authenticated users"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:alice",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock authenticated user in request.state
+        request.state.user = {"user_id": "user:alice"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            key = get_rate_limit_key(request)
+        key = get_rate_limit_key(request)
 
         assert key == "user:user:alice"
 
     def test_get_rate_limit_key_for_anonymous_by_ip(self):
         """Test rate limit key uses IP address for anonymous users"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = None  # No JWT
+        # No user in state
+        request.state.user = None
 
         with patch("mcp_server_langgraph.middleware.rate_limiter.get_remote_address") as mock_get_ip:
             mock_get_ip.return_value = "192.168.1.100"
@@ -248,7 +209,8 @@ class TestRateLimiterKeyGeneration:
     def test_get_rate_limit_key_fallback_to_global(self):
         """Test rate limit key falls back to global when no user ID or IP"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = None  # No JWT
+        # No user in state
+        request.state.user = None
 
         with patch("mcp_server_langgraph.middleware.rate_limiter.get_remote_address") as mock_get_ip:
             mock_get_ip.return_value = None  # No IP either
@@ -303,27 +265,18 @@ class TestDynamicRateLimiting:
         """Test dynamic rate limiting applies premium limits"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:premium_user",
-            "tier": "premium",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock premium user in request.state
+        request.state.user = {"user_id": "user:premium_user", "roles": ["premium"]}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            limit = get_dynamic_limit(request)
+        limit = get_dynamic_limit(request)
 
         assert limit == "1000/minute"
 
     def test_get_dynamic_limit_for_anonymous_user(self):
         """Test dynamic rate limiting applies anonymous limits"""
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = None  # No JWT
+        # No user in state
+        request.state.user = None
 
         limit = get_dynamic_limit(request)
 
@@ -333,20 +286,10 @@ class TestDynamicRateLimiting:
         """Test dynamic rate limiting applies enterprise limits"""
         request = MagicMock(spec=Request)
 
-        payload = {
-            "sub": "user:enterprise_user",
-            "tier": "enterprise",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock enterprise user in request.state
+        request.state.user = {"user_id": "user:enterprise_user", "roles": ["enterprise"]}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            limit = get_dynamic_limit(request)
+        limit = get_dynamic_limit(request)
 
         assert limit == "999999/minute"
 
@@ -363,7 +306,8 @@ class TestRateLimiterSecurityProperties:
         Rate limiting should gracefully handle errors without leaking sensitive info.
         """
         request = MagicMock(spec=Request)
-        request.headers.get.return_value = "Bearer malformed_token"
+        # No user in state (malformed token rejected by AuthMiddleware)
+        request.state.user = None
 
         # Should not raise exception or expose secret
         user_id = get_user_id_from_jwt(request)
@@ -380,22 +324,11 @@ class TestRateLimiterSecurityProperties:
         """
         request = MagicMock(spec=Request)
 
-        # Attacker tries to set tier to "super_admin"
-        payload = {
-            "sub": "user:attacker",
-            "tier": "super_admin",  # Invalid tier
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        # Mock user with invalid tier (AuthMiddleware would have validated signature but tier is invalid)
+        request.state.user = {"user_id": "user:attacker", "tier": "super_admin"}
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
-            limit = get_rate_limit_for_tier(tier)
+        tier = get_user_tier(request)
+        limit = get_rate_limit_for_tier(tier)
 
         # Should get free tier, not enterprise
         assert tier == "free"
@@ -406,26 +339,16 @@ class TestRateLimiterSecurityProperties:
         """
         SECURITY: Ensure rate limiter handles JWT signature verification failures.
 
-        Tokens signed with wrong key should be rejected (treated as anonymous).
+        Tokens signed with wrong key should be rejected by AuthMiddleware (treated as anonymous).
         """
         request = MagicMock(spec=Request)
 
-        # Create JWT with different secret
-        payload = {
-            "sub": "user:hacker",
-            "tier": "enterprise",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "wrong-secret", algorithm="HS256")
+        # AuthMiddleware would have rejected token with wrong signature
+        # So request.state.user is None
+        request.state.user = None
 
-        request.headers.get.return_value = f"Bearer {token}"
-
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "correct-secret"  # Different secret
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
-            tier = get_user_tier(request)
+        user_id = get_user_id_from_jwt(request)
+        tier = get_user_tier(request)
 
         # Should be treated as anonymous
         assert user_id is None

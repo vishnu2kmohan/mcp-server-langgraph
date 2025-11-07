@@ -165,13 +165,15 @@ class TestCORSValidation:
 
     def test_cors_validation_wildcard_in_production(self):
         """Test that wildcard CORS is rejected in production."""
-        settings = Settings(
-            environment="production",
-            cors_allowed_origins=["*"],  # Wildcard
-        )
-
+        # Wildcard CORS is rejected during Settings initialization
         with pytest.raises(ValueError, match="Wildcard CORS.*not allowed in production"):
-            settings.validate_cors_config()
+            settings = Settings(
+                environment="production",
+                cors_allowed_origins=["*"],  # Wildcard
+                auth_provider="keycloak",  # Required for production
+                gdpr_storage_backend="postgres",  # Required for production
+                jwt_secret_key="test-secret-key-min-32-chars-long-for-security",  # Required for production
+            )
 
     def test_cors_validation_wildcard_in_development(self, caplog):
         """Test that wildcard CORS is allowed but warned in development."""
@@ -191,6 +193,9 @@ class TestCORSValidation:
         settings = Settings(
             environment="production",
             cors_allowed_origins=["https://example.com", "https://app.example.com"],
+            auth_provider="keycloak",  # Required for production
+            gdpr_storage_backend="postgres",  # Required for production
+            jwt_secret_key="test-secret-key-min-32-chars-long-for-security",  # Required for production
         )
 
         # Should not raise

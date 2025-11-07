@@ -249,6 +249,9 @@ class TestCodeExecutionSettingsDefaults:
     def test_production_defaults(self, monkeypatch):
         """Test production environment defaults"""
         monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("AUTH_PROVIDER", "keycloak")
+        monkeypatch.setenv("GDPR_STORAGE_BACKEND", "postgres")
+        monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-min-32-chars-long-for-security")
         settings = Settings()
 
         # Production must have code execution disabled by default
