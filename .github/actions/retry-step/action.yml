@@ -1,0 +1,128 @@
+name: 'Retry Command with Exponential Backoff'
+description: 'Retry a command with exponential backoff for transient failures'
+author: 'MCP Server LangGraph Team'
+
+inputs:
+  command:
+    description: 'Command to execute (will be retried on failure)'
+    required: true
+
+  max-attempts:
+    description: 'Maximum number of retry attempts'
+    required: false
+    default: '3'
+
+  initial-delay:
+    description: 'Initial delay in seconds before first retry'
+    required: false
+    default: '2'
+
+  max-delay:
+    description: 'Maximum delay in seconds between retries'
+    required: false
+    default: '60'
+
+  timeout:
+    description: 'Timeout in seconds for each attempt (0 for no timeout)'
+    required: false
+    default: '0'
+
+outputs:
+  attempts:
+    description: 'Number of attempts made before success'
+    value: ${{ steps.retry.outputs.attempts }}
+
+  success:
+    description: 'Whether the command eventually succeeded (true/false)'
+    value: ${{ steps.retry.outputs.success }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Retry command with exponential backoff
+      id: retry
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Configuration
+        MAX_ATTEMPTS=${{ inputs.max-attempts }}
+        INITIAL_DELAY=${{ inputs.initial-delay }}
+        MAX_DELAY=${{ inputs.max-delay }}
+        TIMEOUT=${{ inputs.timeout }}
+
+        # Counter
+        attempt=1
+        success=false
+
+        echo "🔄 Retry Configuration:"
+        echo "  Max attempts: $MAX_ATTEMPTS"
+        echo "  Initial delay: ${INITIAL_DELAY}s"
+        echo "  Max delay: ${MAX_DELAY}s"
+        echo "  Timeout per attempt: ${TIMEOUT}s (0 = no timeout)"
+        echo ""
+
+        while [ $attempt -le $MAX_ATTEMPTS ]; do
+          echo "▶️  Attempt $attempt/$MAX_ATTEMPTS"
+          echo "Command: ${{ inputs.command }}"
+          echo ""
+
+          # Execute with or without timeout
+          if [ "$TIMEOUT" -gt 0 ]; then
+            if timeout ${TIMEOUT}s bash -c "${{ inputs.command }}"; then
+              success=true
+              echo ""
+              echo "✅ Command succeeded on attempt $attempt"
+              break
+            else
+              exit_code=$?
+              if [ $exit_code -eq 124 ]; then
+                echo "⏱️  Command timed out after ${TIMEOUT}s"
+              else
+                echo "❌ Command failed with exit code: $exit_code"
+              fi
+            fi
+          else
+            if bash -c "${{ inputs.command }}"; then
+              success=true
+              echo ""
+              echo "✅ Command succeeded on attempt $attempt"
+              break
+            else
+              echo "❌ Command failed with exit code: $?"
+            fi
+          fi
+
+          # Check if we should retry
+          if [ $attempt -lt $MAX_ATTEMPTS ]; then
+            # Calculate delay with exponential backoff
+            delay=$((INITIAL_DELAY * (2 ** (attempt - 1))))
+
+            # Cap at max delay
+            if [ $delay -gt $MAX_DELAY ]; then
+              delay=$MAX_DELAY
+            fi
+
+            echo "⏳ Waiting ${delay}s before retry..."
+            sleep $delay
+            echo ""
+          fi
+
+          attempt=$((attempt + 1))
+        done
+
+        # Set outputs
+        echo "attempts=$attempt" >> $GITHUB_OUTPUT
+        echo "success=$success" >> $GITHUB_OUTPUT
+
+        # Final result
+        if [ "$success" = true ]; then
+          echo ""
+          echo "✅ Command completed successfully after $attempt attempt(s)"
+          exit 0
+        else
+          echo ""
+          echo "❌ Command failed after $MAX_ATTEMPTS attempts"
+          echo "::error::Retry exhausted: Command failed after $MAX_ATTEMPTS attempts"
+          exit 1
+        fi

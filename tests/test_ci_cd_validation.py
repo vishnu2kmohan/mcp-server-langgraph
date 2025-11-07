@@ -307,6 +307,67 @@ class TestGitHubActionsWorkflows:
             f"\nRecommendation: Use at least 150 iterations with 3s sleep (7.5 min total)"
         )
 
+    def test_ci_workflow_validates_lockfile(self, workflow_files: List[Path]):
+        """
+        Test that CI workflow validates UV lockfile is up-to-date.
+
+        PREVENTION: Lockfile drift detection
+        Pattern: Ensure dependencies match lockfile for reproducible builds
+        Solution: Add 'uv lock --check' validation step in CI
+        """
+        ci_workflow = None
+        for workflow_file in workflow_files:
+            if "ci.yaml" in workflow_file.name or "ci.yml" in workflow_file.name:
+                ci_workflow = workflow_file
+                break
+
+        if not ci_workflow:
+            pytest.skip("CI workflow not found")
+
+        with open(ci_workflow) as f:
+            workflow = yaml.safe_load(f)
+
+        # Check if any job has lockfile validation
+        has_lockfile_validation = False
+
+        jobs = workflow.get("jobs", {})
+        for job_name, job_config in jobs.items():
+            steps = job_config.get("steps", [])
+
+            for step in steps:
+                if "run" not in step:
+                    continue
+
+                run_script = step["run"]
+
+                # Check for uv lock --check command
+                if "uv lock --check" in run_script or "uv lock --frozen-check" in run_script:
+                    has_lockfile_validation = True
+                    break
+
+            if has_lockfile_validation:
+                break
+
+        assert has_lockfile_validation, (
+            "CI workflow must validate lockfile is up-to-date.\n"
+            "\n"
+            "Add a step that runs 'uv lock --check' to ensure:\n"
+            "1. uv.lock matches pyproject.toml dependencies\n"
+            "2. Prevents dependency drift\n"
+            "3. Ensures reproducible builds\n"
+            "\n"
+            "Example:\n"
+            "  - name: Validate lockfile is up-to-date\n"
+            "    run: |\n"
+            "      uv lock --check || {\n"
+            "        echo '::error::uv.lock is out of date'\n"
+            "        exit 1\n"
+            "      }\n"
+            "\n"
+            "This prevents issues where dependencies are updated in pyproject.toml\n"
+            "but the lockfile is not regenerated, leading to inconsistent builds."
+        )
+
     def test_workflow_bash_steps_have_error_handling(self, workflow_files: List[Path]):
         """
         Test that workflow bash steps with multiple commands have error handling.

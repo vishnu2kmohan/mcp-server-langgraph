@@ -106,6 +106,23 @@ jobs:
 
         echo "✓ Dependencies installed from lockfile with dev+builder extras"
 
+    - name: Validate lockfile is up-to-date
+      run: |
+        # Verify uv.lock is current and matches pyproject.toml
+        # This prevents dependency drift and ensures reproducible builds
+        # uv lock --check will fail if lockfile is out of sync
+        uv lock --check || {
+          echo "::error::uv.lock is out of date with pyproject.toml"
+          echo "Run 'uv lock' locally and commit the updated lockfile"
+          echo ""
+          echo "This commonly happens when:"
+          echo "  1. pyproject.toml dependencies were updated without running 'uv lock'"
+          echo "  2. Dependency versions changed upstream without updating the lock"
+          echo "  3. Lock was generated on a different platform"
+          exit 1
+        }
+        echo "✓ Lockfile is current and valid"
+
     - name: Run unit tests
       run: |
         source .venv/bin/activate

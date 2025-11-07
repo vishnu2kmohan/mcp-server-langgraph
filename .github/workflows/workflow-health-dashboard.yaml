@@ -1,0 +1,224 @@
+name: Workflow Health Dashboard
+
+# ==============================================================================
+# Workflow Health Monitoring and Dashboard
+# ==============================================================================
+#
+# PURPOSE:
+#   Track CI/CD workflow health metrics and generate status dashboard
+#   to enable proactive detection of workflow failures and trends
+#
+# METRICS COLLECTED:
+#   - Success/failure rates per workflow (last 100 runs)
+#   - Average execution time per workflow
+#   - Failure patterns and trends
+#   - Most frequently failing workflows
+#
+# OUTPUTS:
+#   - GitHub Step Summary with dashboard
+#   - JSON artifact with detailed metrics
+#   - Optional: Update GitHub Issue with status
+#
+# SCHEDULE:
+#   - Every 6 hours for continuous monitoring
+#   - Manual trigger for on-demand reports
+#
+# CREATED:
+#   2025-11-07 - Initial implementation from CI/CD audit
+#
+# ==============================================================================
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Number of runs to analyze per workflow'
+        required: false
+        default: '100'
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  generate-dashboard:
+    name: Generate Workflow Health Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Collect workflow metrics
+        id: metrics
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          echo "# Workflow Health Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get list of all workflows
+          workflows=$(gh api repos/${{ github.repository }}/actions/workflows --jq '.workflows[] | select(.state == "active") | .name')
+
+          # Initialize counters
+          total_workflows=0
+          healthy_workflows=0
+          degraded_workflows=0
+          failing_workflows=0
+
+          echo "## Workflow Status Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Workflow | Success Rate | Avg Duration | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          # Create JSON output file
+          echo "{\"workflows\": [" > workflow-metrics.json
+
+          first=true
+
+          # Analyze each workflow
+          while IFS= read -r workflow_name; do
+            total_workflows=$((total_workflows + 1))
+
+            # Get workflow ID
+            workflow_id=$(gh api repos/${{ github.repository }}/actions/workflows --jq ".workflows[] | select(.name == \"$workflow_name\") | .id")
+
+            # Get last 100 runs
+            runs=$(gh api "repos/${{ github.repository }}/actions/workflows/${workflow_id}/runs?per_page=${{ github.event.inputs.limit || 100 }}" --jq '.workflow_runs')
+
+            # Calculate metrics
+            total_runs=$(echo "$runs" | jq 'length')
+
+            if [ "$total_runs" -eq 0 ]; then
+              continue
+            fi
+
+            successful_runs=$(echo "$runs" | jq '[.[] | select(.conclusion == "success")] | length')
+            failed_runs=$(echo "$runs" | jq '[.[] | select(.conclusion == "failure")] | length')
+            cancelled_runs=$(echo "$runs" | jq '[.[] | select(.conclusion == "cancelled")] | length')
+
+            success_rate=$(echo "scale=1; $successful_runs * 100 / $total_runs" | bc)
+
+            # Calculate average duration (in seconds)
+            avg_duration=$(echo "$runs" | jq '[.[] | select(.run_duration_ms != null) | .run_duration_ms] | add / length / 1000 | floor')
+
+            # Format duration
+            if [ "$avg_duration" -gt 3600 ]; then
+              duration_str="$(echo "scale=1; $avg_duration / 3600" | bc)h"
+            elif [ "$avg_duration" -gt 60 ]; then
+              duration_str="$(echo "scale=0; $avg_duration / 60" | bc)m"
+            else
+              duration_str="${avg_duration}s"
+            fi
+
+            # Determine status
+            status_icon="✅"
+            status_text="Healthy"
+            if (( $(echo "$success_rate >= 95" | bc -l) )); then
+              healthy_workflows=$((healthy_workflows + 1))
+            elif (( $(echo "$success_rate >= 80" | bc -l) )); then
+              degraded_workflows=$((degraded_workflows + 1))
+              status_icon="⚠️"
+              status_text="Degraded"
+            else
+              failing_workflows=$((failing_workflows + 1))
+              status_icon="🔴"
+              status_text="Failing"
+            fi
+
+            # Add to summary table
+            echo "| $workflow_name | ${success_rate}% | $duration_str | $status_icon $status_text |" >> $GITHUB_STEP_SUMMARY
+
+            # Add to JSON
+            if [ "$first" = false ]; then
+              echo "," >> workflow-metrics.json
+            fi
+            first=false
+
+            cat >> workflow-metrics.json <<EOF
+          {
+            "name": "$workflow_name",
+            "id": $workflow_id,
+            "total_runs": $total_runs,
+            "successful_runs": $successful_runs,
+            "failed_runs": $failed_runs,
+            "cancelled_runs": $cancelled_runs,
+            "success_rate": $success_rate,
+            "avg_duration_seconds": $avg_duration,
+            "status": "$status_text"
+          }
+          EOF
+
+          done <<< "$workflows"
+
+          echo "]," >> workflow-metrics.json
+          echo "\"summary\": {" >> workflow-metrics.json
+          echo "  \"total_workflows\": $total_workflows," >> workflow-metrics.json
+          echo "  \"healthy_workflows\": $healthy_workflows," >> workflow-metrics.json
+          echo "  \"degraded_workflows\": $degraded_workflows," >> workflow-metrics.json
+          echo "  \"failing_workflows\": $failing_workflows," >> workflow-metrics.json
+          echo "  \"generated_at\": \"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\"" >> workflow-metrics.json
+          echo "}" >> workflow-metrics.json
+          echo "}" >> workflow-metrics.json
+
+          # Add summary statistics
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Overall Health" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 🟢 **Healthy** (≥95% success): $healthy_workflows workflows" >> $GITHUB_STEP_SUMMARY
+          echo "- 🟡 **Degraded** (80-95% success): $degraded_workflows workflows" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔴 **Failing** (<80% success): $failing_workflows workflows" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Set output for next steps
+          echo "total_workflows=$total_workflows" >> $GITHUB_OUTPUT
+          echo "healthy_workflows=$healthy_workflows" >> $GITHUB_OUTPUT
+          echo "degraded_workflows=$degraded_workflows" >> $GITHUB_OUTPUT
+          echo "failing_workflows=$failing_workflows" >> $GITHUB_OUTPUT
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: workflow-health-metrics
+          path: workflow-metrics.json
+          retention-days: 90
+
+      - name: Check for failing workflows
+        if: steps.metrics.outputs.failing_workflows > 0
+        run: |
+          echo "::warning::${{ steps.metrics.outputs.failing_workflows }} workflow(s) have success rate below 80%"
+          echo "Review the dashboard above for details"
+
+      - name: Add summary comment
+        run: |
+          echo "## Dashboard Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Workflows Analyzed**: ${{ steps.metrics.outputs.total_workflows }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.metrics.outputs.failing_workflows }}" -gt 0 ]; then
+            echo "⚠️ **Action Required**: ${{ steps.metrics.outputs.failing_workflows }} workflow(s) need attention" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.metrics.outputs.degraded_workflows }}" -gt 0 ]; then
+            echo "⚠️ **Watch**: ${{ steps.metrics.outputs.degraded_workflows }} workflow(s) showing degraded performance" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **All systems operational**: All workflows healthy" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Dashboard generated by Workflow Health Monitor*" >> $GITHUB_STEP_SUMMARY
