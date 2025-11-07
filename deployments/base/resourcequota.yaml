@@ -28,29 +28,3 @@ spec:
     replicationcontrollers: "20"
     services.loadbalancers: "5"
     services.nodeports: "10"
-
----
-# Resource Quota for monitoring namespace (if separate)
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: monitoring-quota
-  namespace: monitoring
-spec:
-  hard:
-    # CPU limits (monitoring needs more resources)
-    requests.cpu: "20"
-    limits.cpu: "40"
-
-    # Memory limits
-    requests.memory: 40Gi
-    limits.memory: 80Gi
-
-    # Storage limits
-    requests.storage: 200Gi
-    persistentvolumeclaims: "10"
-
-    # Object count limits
-    pods: "50"
-    services: "20"
-    configmaps: "50"

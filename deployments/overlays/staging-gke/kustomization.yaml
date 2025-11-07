@@ -75,12 +75,12 @@ patches:
 
   - patch: |-
       apiVersion: apps/v1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         name: redis-session
       $patch: delete
     target:
-      kind: Deployment
+      kind: StatefulSet
       name: redis-session
 
   # Replace redis-session Service with headless service pointing to Memorystore Redis

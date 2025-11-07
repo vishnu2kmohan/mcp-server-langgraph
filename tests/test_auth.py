@@ -15,7 +15,35 @@ from mcp_server_langgraph.auth.middleware import (
     set_global_auth_middleware,
     verify_token,
 )
-from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider, UserData
+from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider, UserData
+
+
+@pytest.fixture
+def auth_middleware_with_users():
+    """Create AuthMiddleware with test users"""
+    user_provider = InMemoryUserProvider(use_password_hashing=False)
+
+    # Add test users explicitly (no more hard-coded defaults as of Finding #2 fix)
+    user_provider.add_user(
+        username="alice",
+        password="alice123",
+        email="alice@acme.com",
+        roles=["user", "premium"]
+    )
+    user_provider.add_user(
+        username="bob",
+        password="bob123",
+        email="bob@acme.com",
+        roles=["user"]
+    )
+    user_provider.add_user(
+        username="admin",
+        password="admin123",
+        email="admin@acme.com",
+        roles=["admin"]
+    )
+
+    return AuthMiddleware(secret_key="test-key", user_provider=user_provider)
 
 
 @pytest.mark.auth
@@ -23,9 +51,9 @@ from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider, UserDa
 class TestAuthMiddleware:
     """Test AuthMiddleware class"""
 
-    def test_init(self):
+    def test_init(self, auth_middleware_with_users):
         """Test AuthMiddleware initialization"""
-        auth = AuthMiddleware(secret_key="test-key")
+        auth = auth_middleware_with_users
         assert auth.secret_key == "test-key"
         assert auth.openfga is None
         assert len(auth.users_db) == 3
@@ -34,9 +62,9 @@ class TestAuthMiddleware:
         assert "admin" in auth.users_db
 
     @pytest.mark.asyncio
-    async def test_authenticate_success(self):
+    async def test_authenticate_success(self, auth_middleware_with_users):
         """Test successful user authentication with password"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authenticate("alice", "alice123")
 
         assert result.authorized is True
@@ -48,7 +76,7 @@ class TestAuthMiddleware:
     @pytest.mark.asyncio
     async def test_authenticate_missing_password(self):
         """Test authentication without password fails"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authenticate("alice")
 
         assert result.authorized is False
@@ -57,7 +85,7 @@ class TestAuthMiddleware:
     @pytest.mark.asyncio
     async def test_authenticate_invalid_password(self):
         """Test authentication with wrong password fails"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authenticate("alice", "wrongpassword")
 
         assert result.authorized is False
@@ -66,16 +94,16 @@ class TestAuthMiddleware:
     @pytest.mark.asyncio
     async def test_authenticate_user_not_found(self):
         """Test authentication with non-existent user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authenticate("nonexistent", "anypassword")
 
         assert result.authorized is False
         assert result.reason == "invalid_credentials"  # Same error as invalid password (security)
 
     @pytest.mark.asyncio
-    async def test_authenticate_inactive_user(self):
+    async def test_authenticate_inactive_user(self, auth_middleware_with_users):
         """Test authentication with inactive user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         auth.users_db["alice"]["active"] = False
 
         result = await auth.authenticate("alice", "alice123")
@@ -121,58 +149,58 @@ class TestAuthMiddleware:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_admin_access(self):
+    async def test_authorize_fallback_admin_access(self, auth_middleware_with_users):
         """Test fallback authorization grants admin full access"""
-        auth = AuthMiddleware()  # No OpenFGA client
+        auth = auth_middleware_with_users  # No OpenFGA client
         result = await auth.authorize(user_id="user:admin", relation="executor", resource="tool:chat")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_premium_user(self):
+    async def test_authorize_fallback_premium_user(self, auth_middleware_with_users):
         """Test fallback authorization for premium user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_standard_user(self):
+    async def test_authorize_fallback_standard_user(self, auth_middleware_with_users):
         """Test fallback authorization for standard user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authorize(user_id="user:bob", relation="executor", resource="tool:chat")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_viewer_access(self):
+    async def test_authorize_fallback_viewer_access(self, auth_middleware_with_users):
         """Test fallback authorization for viewer relation on default conversation"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         # Users can view the default conversation
         result = await auth.authorize(user_id="user:alice", relation="viewer", resource="conversation:default")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_editor_access_default(self):
+    async def test_authorize_fallback_editor_access_default(self, auth_middleware_with_users):
         """Test fallback authorization for editor relation on default conversation"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         # Users should be able to edit the default conversation
         result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:default")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_editor_access_owned(self):
+    async def test_authorize_fallback_editor_access_owned(self, auth_middleware_with_users):
         """Test fallback authorization allows access to user-owned conversations"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         # Alice should be able to access conversation:alice_thread1
         result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:alice_thread1")
 
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_editor_access_denied_other_user(self):
+    async def test_authorize_fallback_editor_access_denied_other_user(self, auth_middleware_with_users):
         """
         Test fallback authorization DENIES access to conversations owned by other users.
 
@@ -180,25 +208,25 @@ class TestAuthMiddleware:
         access to ANY conversation:* resource. This test ensures users can only access
         their own conversations.
         """
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         # Alice should NOT be able to access conversation:bob_thread1
         result = await auth.authorize(user_id="user:alice", relation="editor", resource="conversation:bob_thread1")
 
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_viewer_access_denied_other_user(self):
+    async def test_authorize_fallback_viewer_access_denied_other_user(self, auth_middleware_with_users):
         """Test fallback authorization DENIES viewer access to other users' conversations"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         # Bob should NOT be able to view conversation:alice_private
         result = await auth.authorize(user_id="user:bob", relation="viewer", resource="conversation:alice_private")
 
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_unknown_user(self):
+    async def test_authorize_fallback_unknown_user(self, auth_middleware_with_users):
         """Test fallback authorization denies unknown user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
         result = await auth.authorize(user_id="user:unknown", relation="executor", resource="tool:chat")
 
         assert result is False
@@ -218,9 +246,9 @@ class TestAuthMiddleware:
         mock_openfga.list_objects.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_list_accessible_resources_no_openfga(self):
+    async def test_list_accessible_resources_no_openfga(self, auth_middleware_with_users):
         """Test listing resources without OpenFGA returns mock resources in development mode"""
-        auth = AuthMiddleware()  # No OpenFGA
+        auth = auth_middleware_with_users  # No OpenFGA
         resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
         # In development mode (default in tests), returns mock resources for better developer experience
@@ -271,13 +299,13 @@ class TestAuthMiddleware:
 
     def test_create_token_user_not_found(self):
         """Test token creation fails for non-existent user"""
-        auth = AuthMiddleware()
+        auth = auth_middleware_with_users
 
         with pytest.raises(ValueError, match="User not found"):
             auth.create_token("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_verify_token_success(self):
+    async def test_verify_token_success(self, auth_middleware_with_users):
         """Test successful token verification"""
         auth = AuthMiddleware(secret_key="test-secret")
         token = auth.create_token("alice", expires_in=3600)
@@ -318,7 +346,7 @@ class TestAuthMiddleware:
         assert result.error == "Invalid token"
 
     @pytest.mark.asyncio
-    async def test_verify_token_wrong_secret(self):
+    async def test_verify_token_wrong_secret(self, auth_middleware_with_users):
         """Test verification with wrong secret key"""
         auth1 = AuthMiddleware(secret_key="secret-1")
         token = auth1.create_token("alice")
@@ -336,7 +364,7 @@ class TestRequireAuthDecorator:
     """Test require_auth decorator"""
 
     @pytest.mark.asyncio
-    async def test_require_auth_success(self):
+    async def test_require_auth_success(self, auth_middleware_with_users):
         """Test decorator allows authorized request"""
 
         @require_auth()
@@ -679,7 +707,7 @@ class TestAuthFallbackWithExternalProviders:
     """
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_admin_user(self):
+    async def test_authorize_fallback_keycloak_admin_user(self, auth_middleware_with_users):
         """
         Test fallback authorization grants admin access for Keycloak users.
 
@@ -708,7 +736,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_admin")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_premium_user(self):
+    async def test_authorize_fallback_keycloak_premium_user(self, auth_middleware_with_users):
         """
         Test fallback authorization for Keycloak premium user.
 
@@ -737,7 +765,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_alice")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_standard_user(self):
+    async def test_authorize_fallback_keycloak_standard_user(self, auth_middleware_with_users):
         """Test fallback authorization for Keycloak standard user."""
         # Mock Keycloak provider
         mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
@@ -761,7 +789,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_user_not_found(self):
+    async def test_authorize_fallback_keycloak_user_not_found(self, auth_middleware_with_users):
         """
         Test fallback authorization denies access for non-existent Keycloak user.
 
@@ -783,7 +811,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_provider_error(self):
+    async def test_authorize_fallback_keycloak_provider_error(self, auth_middleware_with_users):
         """
         Test fallback authorization fails closed when provider lookup fails.
 
@@ -804,7 +832,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_conversation_ownership(self):
+    async def test_authorize_fallback_keycloak_conversation_ownership(self, auth_middleware_with_users):
         """
         Test fallback authorization respects conversation ownership for Keycloak users.
 
@@ -839,7 +867,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_user_without_required_role(self):
+    async def test_authorize_fallback_keycloak_user_without_required_role(self, auth_middleware_with_users):
         """Test fallback authorization denies access when user lacks required role."""
         # Mock Keycloak provider
         mock_keycloak = AsyncMock(spec=KeycloakUserProvider)

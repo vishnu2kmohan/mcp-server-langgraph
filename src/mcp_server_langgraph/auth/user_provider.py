@@ -276,9 +276,10 @@ class InMemoryUserProvider(UserProvider):
 
         self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
 
-        # Initialize users with hashed or plaintext passwords
+        # SECURITY (OpenAI Codex Finding #2): Start with empty user database
+        # No hard-coded credentials. Users must be explicitly created via add_user() or configuration.
+        # This prevents CWE-798: Use of Hard-coded Credentials
         self.users_db: Dict[str, UserDBEntry] = {}
-        self._init_users()
 
         if self.use_password_hashing:
             logger.info(
@@ -345,36 +346,31 @@ class InMemoryUserProvider(UserProvider):
         hash_bytes = password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hash_bytes)
 
-    def _init_users(self) -> None:
-        """Initialize user database with default users"""
-        # Default plaintext passwords for development
-        default_users = {
-            "alice": ("alice123", ["user", "premium"]),
-            "bob": ("bob123", ["user"]),
-            "admin": ("admin123", ["admin"]),
-        }
-
-        for username, (password, roles) in default_users.items():
-            # Hash password if hashing enabled
-            stored_password = self._hash_password(password) if self.use_password_hashing else password
-
-            self.users_db[username] = UserDBEntry(
-                user_id=f"user:{username}",
-                email=f"{username}@acme.com",
-                password=stored_password,
-                roles=roles,
-                active=True,
-            )
-
     def add_user(self, username: str, password: str, email: str, roles: list[str]) -> None:
         """
-        Add a new user (helper for testing/development)
+        Add a new user to the in-memory database
+
+        IMPORTANT: InMemoryUserProvider no longer seeds default users for security.
+        You must explicitly create users for testing/development using this method.
+
+        Example:
+            provider = InMemoryUserProvider(use_password_hashing=True)
+            provider.add_user(
+                username="testuser",
+                password="secure-password-123",
+                email="testuser@example.com",
+                roles=["user", "premium"]
+            )
 
         Args:
-            username: Username
-            password: Plaintext password (will be hashed if hashing enabled)
+            username: Username (unique identifier)
+            password: Plaintext password (will be hashed if use_password_hashing=True)
             email: Email address
-            roles: List of role names
+            roles: List of role names (e.g., ["user"], ["admin"], ["user", "premium"])
+
+        Security:
+            - Passwords are automatically hashed with bcrypt if use_password_hashing=True
+            - For production, use KeycloakUserProvider instead of InMemoryUserProvider
         """
         stored_password = self._hash_password(password) if self.use_password_hashing else password
 

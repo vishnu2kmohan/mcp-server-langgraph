@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mcp-server-langgraph-streamable
-  namespace: dev-mcp-server-langgraph
+  # Note: namespace omitted - Kustomize handles namespace transformation
   annotations:
     # Development only: Allow all origins for local testing
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
@@ -16,7 +16,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mcp-server-langgraph-sse
-  namespace: dev-mcp-server-langgraph
+  # Note: namespace omitted - Kustomize handles namespace transformation
   annotations:
     # Development only: Allow all origins for local testing
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"

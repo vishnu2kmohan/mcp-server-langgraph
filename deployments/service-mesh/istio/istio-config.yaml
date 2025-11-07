@@ -16,7 +16,8 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-        - "mcp.${DOMAIN}  # TODO: Replace with actual domain"
+        # TODO: Replace with actual domain
+        - "mcp.${DOMAIN}"
       tls:
         httpsRedirect: true
     - port:
@@ -24,7 +25,8 @@ spec:
         name: https
         protocol: HTTPS
       hosts:
-        - "mcp.${DOMAIN}  # TODO: Replace with actual domain"
+        # TODO: Replace with actual domain
+        - "mcp.${DOMAIN}"
       tls:
         mode: SIMPLE
         credentialName: mcp-server-tls
@@ -38,7 +40,8 @@ metadata:
   namespace: mcp-server-langgraph
 spec:
   hosts:
-    - "mcp.${DOMAIN}  # TODO: Replace with actual domain"
+    # TODO: Replace with actual domain
+    - "mcp.${DOMAIN}"
   gateways:
     - mcp-server-gateway
   http:

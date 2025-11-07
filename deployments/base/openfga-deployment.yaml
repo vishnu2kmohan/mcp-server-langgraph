@@ -29,7 +29,7 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: mcp-server-langgraph
+      serviceAccountName: openfga-sa
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

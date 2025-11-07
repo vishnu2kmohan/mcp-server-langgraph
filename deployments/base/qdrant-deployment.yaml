@@ -17,6 +17,7 @@ spec:
         app: qdrant
         component: vector-database
     spec:
+      serviceAccountName: qdrant-sa
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

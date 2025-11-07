@@ -65,7 +65,7 @@ spec:
         cidr: 10.0.0.0/8  # GCP private IP range
     ports:
     - protocol: TCP
-      port: 3307  # Cloud SQL database port (PostgreSQL over private IP)
+      port: 5432  # Cloud SQL database port (PostgreSQL over private IP)
     - protocol: TCP
       port: 443   # Cloud SQL control plane & health checks
 
@@ -253,7 +253,7 @@ spec:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 3307  # Database port
+      port: 5432  # Database port (PostgreSQL)
   # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
   - to:
     - ipBlock:
@@ -323,7 +323,7 @@ spec:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 3307  # Database port
+      port: 5432  # Database port (PostgreSQL)
   # Allow Cloud SQL Auth Proxy API access (sqladmin.googleapis.com)
   - to:
     - ipBlock:

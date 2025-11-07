@@ -71,7 +71,7 @@ spec:
         app: redis-session
         component: session-store
     spec:
-      serviceAccountName: mcp-server-langgraph
+      serviceAccountName: redis-sa
       securityContext:
         runAsNonRoot: true
         runAsUser: 999  # Redis user

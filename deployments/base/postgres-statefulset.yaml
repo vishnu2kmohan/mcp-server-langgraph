@@ -103,7 +103,7 @@ spec:
         app: postgres
         component: database
     spec:
-      serviceAccountName: mcp-server-langgraph
+      serviceAccountName: postgres-sa
       securityContext:
         runAsNonRoot: true
         runAsUser: 999  # PostgreSQL user

@@ -195,6 +195,9 @@ spec:
           - "--port=5432"
           - "--private-ip"
           - "$(CLOUDSQL_CONNECTION_NAME)"
+          - "--health-check"
+          - "--http-port=9801"
+          - "--http-address=0.0.0.0"
 
         env:
         - name: CLOUDSQL_CONNECTION_NAME

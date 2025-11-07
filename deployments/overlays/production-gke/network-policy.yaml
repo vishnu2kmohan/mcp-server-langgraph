@@ -52,9 +52,9 @@ spec:
     - namespaceSelector: {}
     ports:
     - protocol: TCP
-      port: 3307  # Cloud SQL Proxy health check
+      port: 5432  # Cloud SQL database (PostgreSQL)
     - protocol: TCP
-      port: 9801  # Cloud SQL Proxy metrics
+      port: 9801  # Cloud SQL Proxy health check and metrics
 
   # Allow egress to PostgreSQL via Cloud SQL Proxy (localhost)
   - to:

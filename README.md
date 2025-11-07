@@ -268,6 +268,36 @@ curl http://localhost:8000/health    # Test
 
 **See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx)
 
+### 👤 Creating Test Users
+
+**SECURITY NOTE**: As of version 2.8.0, InMemoryUserProvider no longer seeds default users (alice, bob, admin) to prevent hard-coded credential vulnerabilities (CWE-798).
+
+For testing/development with InMemoryUserProvider, explicitly create users:
+
+```python
+from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
+
+# Create provider with password hashing
+provider = InMemoryUserProvider(use_password_hashing=True)
+
+# Add test users
+provider.add_user(
+    username="testuser",
+    password="secure-password-123",
+    email="testuser@example.com",
+    roles=["user", "premium"]
+)
+
+provider.add_user(
+    username="admin",
+    password="admin-secure-password",
+    email="admin@example.com",
+    roles=["admin"]
+)
+```
+
+**For Production**: Use `KeycloakUserProvider` instead of `InMemoryUserProvider`. See [Authentication](#authentication-authorization) for configuration details.
+
 ## Usage
 
 ### Running the MCP Server
