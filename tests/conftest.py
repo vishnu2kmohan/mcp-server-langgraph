@@ -59,27 +59,29 @@ logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
 
 
 # Configure Hypothesis profiles for property-based testing
-# Register CI profile with comprehensive testing (100 examples)
-settings.register_profile(
-    "ci",
-    max_examples=100,
-    deadline=None,  # No deadline in CI for comprehensive testing
-    print_blob=True,  # Print failing examples for debugging
-    derandomize=True,  # Deterministic test execution in CI
-)
+# Only configure if Hypothesis is available to prevent AttributeError
+if HYPOTHESIS_AVAILABLE:
+    # Register CI profile with comprehensive testing (100 examples)
+    settings.register_profile(
+        "ci",
+        max_examples=100,
+        deadline=None,  # No deadline in CI for comprehensive testing
+        print_blob=True,  # Print failing examples for debugging
+        derandomize=True,  # Deterministic test execution in CI
+    )
 
-# Register dev profile for fast iteration (25 examples)
-settings.register_profile(
-    "dev",
-    max_examples=25,
-    deadline=2000,  # 2 second deadline for fast feedback
-    print_blob=False,  # No blob printing in dev for clean output
-    derandomize=False,  # Randomized for better coverage
-)
+    # Register dev profile for fast iteration (25 examples)
+    settings.register_profile(
+        "dev",
+        max_examples=25,
+        deadline=2000,  # 2 second deadline for fast feedback
+        print_blob=False,  # No blob printing in dev for clean output
+        derandomize=False,  # Randomized for better coverage
+    )
 
-# Load appropriate profile based on environment
-# CI sets HYPOTHESIS_PROFILE=ci, defaults to dev otherwise
-settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
+    # Load appropriate profile based on environment
+    # CI sets HYPOTHESIS_PROFILE=ci, defaults to dev otherwise
+    settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
 
 
 # ==============================================================================

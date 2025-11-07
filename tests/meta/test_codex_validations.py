@@ -328,6 +328,53 @@ class TestCodexFindingsRemediation:
         # but that test is actually fully implemented (not a placeholder).
         # The general TODO placeholder check above is sufficient.
 
+    def test_hypothesis_configuration_is_guarded(self, project_root: Path):
+        """
+        GIVEN: tests/conftest.py with Hypothesis configuration
+        WHEN: Hypothesis is not available (import fails)
+        THEN: Hypothesis profile configuration should be wrapped in availability check
+        AND: Should not cause AttributeError when settings is None
+
+        Codex Finding #3 (New): Hypothesis configuration runs unconditionally
+        even when import fails, causing AttributeError on machines without Hypothesis.
+        """
+        conftest_file = project_root / "tests" / "conftest.py"
+
+        # Read file content for analysis
+        with open(conftest_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Verify Hypothesis import has try/except guard with HYPOTHESIS_AVAILABLE flag
+        assert "try:" in content, "Expected try/except block for Hypothesis import"
+        assert "from hypothesis import settings" in content, "Expected Hypothesis import"
+        assert "HYPOTHESIS_AVAILABLE = True" in content, "Expected HYPOTHESIS_AVAILABLE flag"
+        assert "except ImportError:" in content, "Expected ImportError handler"
+        assert "HYPOTHESIS_AVAILABLE = False" in content, "Expected HYPOTHESIS_AVAILABLE = False in except"
+        assert "settings = None" in content, "Expected settings = None when import fails"
+
+        # Verify settings.register_profile is guarded by if HYPOTHESIS_AVAILABLE
+        lines = content.split("\n")
+        for i, line in enumerate(lines):
+            if "settings.register_profile" in line or "settings.load_profile" in line:
+                # Search backwards to find if block guard
+                found_guard = self._find_availability_guard(lines, i)
+                assert found_guard, (
+                    f"Hypothesis configuration at line {i + 1} is not guarded. "
+                    f"settings.register_profile() and settings.load_profile() calls "
+                    f"MUST be wrapped in 'if HYPOTHESIS_AVAILABLE:' block to prevent "
+                    f"AttributeError when Hypothesis is not installed."
+                )
+
+    def _find_availability_guard(self, lines: List[str], current_line: int) -> bool:
+        """Helper: Check if line is inside 'if HYPOTHESIS_AVAILABLE:' block."""
+        for j in range(current_line - 1, max(0, current_line - 50), -1):
+            if re.match(r"^if\s+HYPOTHESIS_AVAILABLE\s*:", lines[j]):
+                return True
+            # Stop at other top-level statements
+            if lines[j] and not lines[j].startswith((" ", "\t", "#")) and lines[j].strip():
+                break
+        return False
+
 
 class TestCodexValidationMetaTest:
     """Meta-test the meta-tests themselves."""
