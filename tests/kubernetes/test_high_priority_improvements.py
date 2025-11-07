@@ -56,9 +56,7 @@ class TestPostgreSQLHighAvailability:
         has_ha_docs = any(keyword in content for keyword in ha_keywords)
 
         if not has_ha_docs:
-            violations.append(
-                "No documentation for managed database or HA configuration"
-            )
+            violations.append("No documentation for managed database or HA configuration")
 
         # Check for backup documentation
         backup_keywords = ["backup", "WAL", "archive", "snapshot", "pg_dump"]
@@ -73,9 +71,7 @@ class TestPostgreSQLHighAvailability:
             for v in violations:
                 error_msg += f"  - {v}\n"
             error_msg += "\nRecommendations:\n"
-            error_msg += (
-                "  1. Document migration path to CloudSQL/RDS for production\n"
-            )
+            error_msg += "  1. Document migration path to CloudSQL/RDS for production\n"
             error_msg += "  2. Add backup job configuration or reference\n"
             error_msg += "  3. Include comments about WAL archiving for self-hosted\n"
 
@@ -162,9 +158,7 @@ class TestRedisStatefulSetWithPersistence:
 
         # For StatefulSet, check volumeClaimTemplates
         if redis_config.get("kind") == "StatefulSet":
-            volume_claim_templates = redis_config.get("spec", {}).get(
-                "volumeClaimTemplates", []
-            )
+            volume_claim_templates = redis_config.get("spec", {}).get("volumeClaimTemplates", [])
             if not volume_claim_templates:
                 error_msg = "\n\nRedis StatefulSet has no volumeClaimTemplates:\n"
                 error_msg += f"File: {redis_path.relative_to(PROJECT_ROOT)}\n"
@@ -173,12 +167,7 @@ class TestRedisStatefulSetWithPersistence:
                 pytest.fail(error_msg)
         else:
             # For Deployment, check volumes
-            volumes = (
-                redis_config.get("spec", {})
-                .get("template", {})
-                .get("spec", {})
-                .get("volumes", [])
-            )
+            volumes = redis_config.get("spec", {}).get("template", {}).get("spec", {}).get("volumes", [])
 
             data_volume = None
             for vol in volumes:
@@ -312,20 +301,14 @@ class TestRBACLeastPrivilege:
 
             # Check for wildcard permissions
             if "*" in verbs:
-                violations.append(
-                    f"Grants wildcard (*) verb permission for {resources}"
-                )
+                violations.append(f"Grants wildcard (*) verb permission for {resources}")
 
             if "*" in resources:
                 violations.append("Grants wildcard (*) resource permission")
 
             # Check for dangerous combinations
-            if "secrets" in resources and any(
-                v in verbs for v in ["create", "delete", "patch"]
-            ):
-                violations.append(
-                    "Grants write access to secrets (create/delete/patch)"
-                )
+            if "secrets" in resources and any(v in verbs for v in ["create", "delete", "patch"]):
+                violations.append("Grants write access to secrets (create/delete/patch)")
 
         if violations:
             error_msg = "\n\nRBAC grants excessive permissions:\n"
@@ -361,12 +344,7 @@ class TestContainerImageBestPractices:
 
         deployment = self._load_yaml_file(deployment_path)
 
-        containers = (
-            deployment.get("spec", {})
-            .get("template", {})
-            .get("spec", {})
-            .get("containers", [])
-        )
+        containers = deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
 
         violations = []
 
@@ -375,9 +353,7 @@ class TestContainerImageBestPractices:
             container_name = container.get("name", "unknown")
 
             # Check if image is unqualified (no registry)
-            if "/" not in image or not image.startswith(
-                ("ghcr.io/", "gcr.io/", "docker.io/", "quay.io/")
-            ):
+            if "/" not in image or not image.startswith(("ghcr.io/", "gcr.io/", "docker.io/", "quay.io/")):
                 violations.append(
                     {
                         "container": container_name,
@@ -424,12 +400,7 @@ class TestContainerImageBestPractices:
 
         deployment = self._load_yaml_file(deployment_path)
 
-        init_containers = (
-            deployment.get("spec", {})
-            .get("template", {})
-            .get("spec", {})
-            .get("initContainers", [])
-        )
+        init_containers = deployment.get("spec", {}).get("template", {}).get("spec", {}).get("initContainers", [])
 
         violations = []
 
@@ -438,9 +409,7 @@ class TestContainerImageBestPractices:
             container_name = container.get("name", "unknown")
 
             # Check if image is unqualified
-            if "/" not in image or not image.startswith(
-                ("docker.io/", "ghcr.io/", "gcr.io/", "quay.io/")
-            ):
+            if "/" not in image or not image.startswith(("docker.io/", "ghcr.io/", "gcr.io/", "quay.io/")):
                 violations.append(
                     {
                         "container": container_name,

@@ -40,20 +40,22 @@ class FixtureOrganizationPlugin:
 
         # If violations found, fail immediately
         if self.violations:
-            violation_report = "\n".join([
-                "",
-                "=" * 70,
-                "FIXTURE ORGANIZATION VIOLATIONS",
-                "=" * 70,
-                "",
-                *self.violations,
-                "",
-                "=" * 70,
-                "",
-                "Fix: Move autouse fixtures to tests/conftest.py",
-                "See: tests/test_fixture_organization.py for validation",
-                ""
-            ])
+            violation_report = "\n".join(
+                [
+                    "",
+                    "=" * 70,
+                    "FIXTURE ORGANIZATION VIOLATIONS",
+                    "=" * 70,
+                    "",
+                    *self.violations,
+                    "",
+                    "=" * 70,
+                    "",
+                    "Fix: Move autouse fixtures to tests/conftest.py",
+                    "See: tests/test_fixture_organization.py for validation",
+                    "",
+                ]
+            )
             pytest.exit(violation_report, returncode=1)
 
     def _scan_autouse_fixtures(self, test_dir: Path):
@@ -91,9 +93,7 @@ class FixtureOrganizationPlugin:
                 # Allow duplicates only if all in conftest.py files
                 non_conftest = [loc for loc in locations if not loc[0].endswith("conftest.py")]
                 if non_conftest:
-                    self.violations.append(
-                        f"DUPLICATE autouse fixture '{fixture_name}' found in {len(locations)} files:"
-                    )
+                    self.violations.append(f"DUPLICATE autouse fixture '{fixture_name}' found in {len(locations)} files:")
                     for file_path, line_num in locations:
                         self.violations.append(f"  - {file_path}:{line_num}")
                     self.violations.append("")
@@ -101,13 +101,9 @@ class FixtureOrganizationPlugin:
             # Check that non-conftest files don't have module/session autouse fixtures
             for file_path, line_num in locations:
                 if not file_path.endswith("conftest.py"):
-                    self.violations.append(
-                        f"Autouse fixture '{fixture_name}' found outside conftest.py:"
-                    )
+                    self.violations.append(f"Autouse fixture '{fixture_name}' found outside conftest.py:")
                     self.violations.append(f"  - {file_path}:{line_num}")
-                    self.violations.append(
-                        f"  RULE: Module/session-scoped autouse fixtures must be in conftest.py"
-                    )
+                    self.violations.append(f"  RULE: Module/session-scoped autouse fixtures must be in conftest.py")
                     self.violations.append("")
 
 

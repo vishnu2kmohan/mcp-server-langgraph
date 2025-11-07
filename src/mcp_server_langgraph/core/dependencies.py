@@ -138,14 +138,16 @@ def get_api_key_manager(
                 new_path = f"/{settings.api_key_cache_db}"
 
                 # Reconstruct URL with new database number
-                redis_url_with_db = urlunparse((
-                    parsed.scheme,      # redis:// or rediss://
-                    parsed.netloc,      # host:port
-                    new_path,           # /db_number
-                    parsed.params,      # unused in Redis URLs
-                    parsed.query,       # query parameters (if any)
-                    parsed.fragment     # fragment (if any)
-                ))
+                redis_url_with_db = urlunparse(
+                    (
+                        parsed.scheme,  # redis:// or rediss://
+                        parsed.netloc,  # host:port
+                        new_path,  # /db_number
+                        parsed.params,  # unused in Redis URLs
+                        parsed.query,  # query parameters (if any)
+                        parsed.fragment,  # fragment (if any)
+                    )
+                )
 
                 # Create Redis client with configured credentials
                 redis_client = redis.from_url(

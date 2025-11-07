@@ -286,7 +286,6 @@ class TestAPIKeyManagerRedisCacheWiring:
                 # Manager should have cache enabled
                 assert _manager.cache_enabled is True
 
-
     def test_redis_url_handles_trailing_slash(self):
         """
         Test that Redis URL construction handles trailing slashes correctly.
@@ -321,7 +320,9 @@ class TestAPIKeyManagerRedisCacheWiring:
                 assert called_url == "redis://localhost:6379/2"
                 assert "//" not in called_url.split("://")[1]  # No double slashes after protocol
 
-    @pytest.mark.skip(reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test")
+    @pytest.mark.skip(
+        reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test"
+    )
     def test_redis_url_handles_existing_database_number(self):
         """
         Test that Redis URL with existing database number doesn't produce invalid URL.
@@ -347,8 +348,10 @@ class TestAPIKeyManagerRedisCacheWiring:
             mock_settings.keycloak_admin_username = "admin"
             mock_settings.keycloak_admin_password = "admin-password"
 
-            with patch("redis.asyncio.from_url") as mock_redis, \
-                 patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class:
+            with (
+                patch("redis.asyncio.from_url") as mock_redis,
+                patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class,
+            ):
                 mock_redis.return_value = Mock()
                 mock_manager = Mock()
                 mock_manager.cache_enabled = True
@@ -362,7 +365,9 @@ class TestAPIKeyManagerRedisCacheWiring:
                 assert called_url == "redis://localhost:6379/2"
                 assert "/0/2" not in called_url  # Should not have double database
 
-    @pytest.mark.skip(reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test")
+    @pytest.mark.skip(
+        reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test"
+    )
     def test_redis_url_handles_query_parameters(self):
         """
         Test that Redis URLs with query parameters are preserved.
@@ -386,8 +391,10 @@ class TestAPIKeyManagerRedisCacheWiring:
             mock_settings.keycloak_admin_username = "admin"
             mock_settings.keycloak_admin_password = "admin-password"
 
-            with patch("redis.asyncio.from_url") as mock_redis, \
-                 patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class:
+            with (
+                patch("redis.asyncio.from_url") as mock_redis,
+                patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class,
+            ):
                 mock_redis.return_value = Mock()
                 mock_manager = Mock()
                 mock_manager.cache_enabled = True
