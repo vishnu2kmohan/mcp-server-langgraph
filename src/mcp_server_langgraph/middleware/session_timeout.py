@@ -149,6 +149,51 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
             },
         )
 
+    def _decode_jwt_token(self, token: str) -> Optional[dict[str, Any]]:
+        """
+        Decode JWT token and extract payload
+
+        Handles both symmetric (HS256) and asymmetric (RS256, ES256, etc.) algorithms.
+
+        Args:
+            token: JWT token string
+
+        Returns:
+            Decoded payload dict, or None if decoding fails
+        """
+        try:
+            # Select the correct key based on the algorithm
+            # Asymmetric algorithms (RS256, RS384, RS512, ES256, etc.) use public key
+            # Symmetric algorithms (HS256, HS384, HS512) use secret key
+            algorithm = settings.jwt_algorithm
+            if algorithm.startswith(("RS", "ES", "PS")):
+                # Asymmetric algorithm - use public key for verification
+                key = settings.jwt_public_key or ""
+            else:
+                # Symmetric algorithm - use secret key
+                key = str(settings.jwt_secret_key) if settings.jwt_secret_key else ""
+
+            # Decode JWT to extract session ID
+            # Note: We don't verify expiration here (verify_exp=False) because
+            # session timeout is independent of JWT expiration
+            payload: dict[str, Any] = jwt.decode(
+                token,
+                key,
+                algorithms=[algorithm],
+                options={"verify_exp": False},  # Don't verify expiration
+            )
+
+            return payload
+
+        except jwt.InvalidTokenError as e:
+            # Invalid JWT - log and continue to other methods
+            logger.debug(f"Failed to decode JWT for session timeout: {e}")
+            return None
+        except Exception as e:
+            # Unexpected error (e.g., missing jwt_secret_key)
+            logger.warning(f"Unexpected error decoding JWT: {e}")
+            return None
+
     def _get_session_id(self, request: Request) -> str | None:
         """
         Extract session ID from request
@@ -168,32 +213,15 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
         auth_header = request.headers.get("authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header.replace("Bearer ", "").strip()
+            payload = self._decode_jwt_token(token)
 
-            try:
-                # Decode JWT to extract session ID
-                # Note: We don't verify expiration here (verify_exp=False) because
-                # session timeout is independent of JWT expiration
-                payload: dict[str, Any] = jwt.decode(
-                    token,
-                    str(settings.jwt_secret_key) if settings.jwt_secret_key else "",
-                    algorithms=[settings.jwt_algorithm],
-                    options={"verify_exp": False},  # Don't verify expiration
-                )
-
+            if payload:
                 # Try multiple possible session ID claim names
                 # Standard claims: 'sid' (session ID), 'jti' (JWT ID), or custom 'session_id'
                 session_id_from_jwt: Optional[str] = payload.get("sid") or payload.get("session_id") or payload.get("jti")
 
                 if session_id_from_jwt:
                     return str(session_id_from_jwt)
-
-            except jwt.InvalidTokenError as e:
-                # Invalid JWT - log and continue to other methods
-                logger.debug(f"Failed to decode JWT for session timeout: {e}")
-            except Exception as e:
-                # Unexpected error (e.g., missing jwt_secret_key)
-                logger.warning(f"Unexpected error decoding JWT: {e}")
-                # Continue to other session ID sources
 
         # Try cookie
         session_id: str | None = request.cookies.get("session_id")

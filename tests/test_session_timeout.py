@@ -395,22 +395,17 @@ class TestSessionTimeoutHelpers:
         middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
 
         # Generate RSA key pair for testing
-        private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048,
-            backend=default_backend()
-        )
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
         public_key = private_key.public_key()
 
         # Serialize keys to PEM format
         private_pem = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
+            encryption_algorithm=serialization.NoEncryption(),
         )
         public_pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
+            encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
         # Create RS256 JWT
@@ -427,7 +422,7 @@ class TestSessionTimeoutHelpers:
 
         with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
             mock_settings.jwt_algorithm = "RS256"
-            mock_settings.jwt_public_key = public_pem.decode('utf-8')
+            mock_settings.jwt_public_key = public_pem.decode("utf-8")
             mock_settings.jwt_secret_key = None  # RS256 doesn't use secret key
 
             session_id = middleware._get_session_id(mock_request)

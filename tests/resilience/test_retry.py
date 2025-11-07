@@ -312,12 +312,13 @@ class TestRedisOptionalDependency:
     def test_should_retry_exception_works_without_redis(self):
         """Test that should_retry_exception works even when redis is not installed"""
         import sys
+
         import httpx
 
         # Simulate redis not being installed by temporarily removing it from sys.modules
-        redis_module = sys.modules.get('redis')
+        redis_module = sys.modules.get("redis")
         if redis_module:
-            sys.modules['redis'] = None
+            sys.modules["redis"] = None
 
         try:
             # Create a network error that should be retried
@@ -335,19 +336,19 @@ class TestRedisOptionalDependency:
         finally:
             # Restore redis module
             if redis_module:
-                sys.modules['redis'] = redis_module
+                sys.modules["redis"] = redis_module
 
     @pytest.mark.unit
     def test_should_retry_exception_handles_redis_import_error(self):
         """Test that ImportError from redis module doesn't crash the retry logic"""
-        import sys
         import builtins
+        import sys
 
         # Store original import
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
-            if name == 'redis':
+            if name == "redis":
                 raise ImportError("No module named 'redis'")
             return original_import(name, *args, **kwargs)
 
@@ -357,11 +358,14 @@ class TestRedisOptionalDependency:
         try:
             # Force reimport of the retry module to trigger the import error
             import importlib
+
             from mcp_server_langgraph.resilience import retry as retry_module
+
             importlib.reload(retry_module)
 
             # This should not raise an exception even though redis import fails
             import httpx
+
             network_error = httpx.TimeoutException("Timeout")
             result = retry_module.should_retry_exception(network_error)
             assert result is True, "Should still retry network errors without redis"
@@ -371,5 +375,7 @@ class TestRedisOptionalDependency:
             builtins.__import__ = original_import
             # Reload the module again to restore normal behavior
             import importlib
+
             from mcp_server_langgraph.resilience import retry as retry_module
+
             importlib.reload(retry_module)
