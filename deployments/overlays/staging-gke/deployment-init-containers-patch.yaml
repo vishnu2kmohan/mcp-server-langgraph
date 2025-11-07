@@ -11,6 +11,13 @@ spec:
     spec:
       initContainers:
       - name: wait-for-openfga
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
         args:
         - |
           until nc -z staging-openfga 8080; do
@@ -19,6 +26,13 @@ spec:
           done
           echo "OpenFGA is ready!"
       - name: wait-for-keycloak
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
         args:
         - |
           until nc -z staging-keycloak 8080; do
@@ -27,6 +41,13 @@ spec:
           done
           echo "Keycloak is ready!"
       - name: wait-for-redis
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
         args:
         - |
           until nc -z staging-redis-session 6378; do

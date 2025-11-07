@@ -8,6 +8,15 @@ spec:
       # GKE Autopilot resource requirements
       containers:
       - name: qdrant
+        # Security context for Qdrant container
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+
         # Configure snapshots directory to use the PVC mount
         env:
         - name: QDRANT__STORAGE__SNAPSHOTS_PATH

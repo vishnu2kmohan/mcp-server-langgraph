@@ -10,6 +10,16 @@ spec:
       initContainers: []
 
       containers:
+      # Main OpenFGA container - add security context
+      - name: openfga
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1

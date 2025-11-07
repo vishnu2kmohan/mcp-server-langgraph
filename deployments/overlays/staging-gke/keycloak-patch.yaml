@@ -18,6 +18,15 @@ spec:
           containerPort: 9000
           protocol: TCP
 
+        # Security context for Keycloak container
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+
         env:
         # Update database connection to use Cloud SQL via localhost
         - name: KC_DB_URL
