@@ -36,9 +36,12 @@ spec:
           type: RuntimeDefault
 
       # Init containers to wait for dependencies
+      # NOTE: For production, consider replacing with native readiness checks
+      # or using distroless/minimal images for better security
       initContainers:
       - name: wait-for-openfga
-        image: busybox:1.36
+        # Using fully-qualified Docker Hub reference for security and reliability
+        image: docker.io/library/busybox:1.36
         command: ['sh', '-c']
         args:
         - |
@@ -56,7 +59,8 @@ spec:
             drop:
             - ALL
       - name: wait-for-keycloak
-        image: busybox:1.36
+        # Using fully-qualified Docker Hub reference for security and reliability
+        image: docker.io/library/busybox:1.36
         command: ['sh', '-c']
         args:
         - |
@@ -74,7 +78,8 @@ spec:
             drop:
             - ALL
       - name: wait-for-redis
-        image: busybox:1.36
+        # Using fully-qualified Docker Hub reference for security and reliability
+        image: docker.io/library/busybox:1.36
         command: ['sh', '-c']
         args:
         - |
@@ -106,7 +111,11 @@ spec:
 
       containers:
       - name: mcp-server-langgraph
-        image: mcp-server-langgraph:2.8.0
+        # Image reference should be overridden by kustomize overlays with fully-qualified registry
+        # Production example: ghcr.io/your-org/mcp-server-langgraph:2.8.0
+        # GKE example: us-central1-docker.pkg.dev/project-id/mcp-production/mcp-server-langgraph:2.8.0
+        # For local dev, build and tag as: docker build -t mcp-server-langgraph:2.8.0 .
+        image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.8.0
         imagePullPolicy: IfNotPresent
 
         ports:

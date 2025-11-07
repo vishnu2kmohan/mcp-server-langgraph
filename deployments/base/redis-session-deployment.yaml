@@ -30,8 +30,29 @@ data:
     tcp-keepalive 300
 
 ---
+# ==============================================================================
+# Redis StatefulSet - Session Storage with Persistence
+# ==============================================================================
+#
+# IMPORTANT: This configuration uses StatefulSet with persistent volumes to
+# ensure session data survives pod restarts and rescheduling.
+#
+# For production high availability, consider:
+# 1. Managed Redis services (Google Cloud Memorystore, AWS ElastiCache, Azure Cache)
+# 2. Redis Sentinel for automatic failover (3+ nodes)
+# 3. Redis Cluster for horizontal scaling
+#
+# This single-instance configuration is suitable for:
+# - Development and testing environments
+# - Small production deployments with acceptable brief downtime
+#
+# Persistence strategy:
+# - AOF (Append-Only File) enabled for durability
+# - PersistentVolumeClaim for data storage
+# - Survives pod restarts and upgrades
+# ==============================================================================
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis-session
   namespace: mcp-server-langgraph
@@ -39,7 +60,8 @@ metadata:
     app: redis-session
     component: session-store
 spec:
-  replicas: 1  # For HA, consider Redis Sentinel or cluster mode
+  serviceName: redis-session  # Required for StatefulSet
+  replicas: 1  # For HA, use Redis Sentinel or managed Redis
   selector:
     matchLabels:
       app: redis-session
@@ -144,25 +166,43 @@ spec:
       - name: config
         configMap:
           name: redis-session-config
-      - name: data
-        emptyDir: {}  # For production, use PersistentVolumeClaim
-        # persistentVolumeClaim:
-        #   claimName: redis-session-data
+      # data volume is now provided by volumeClaimTemplates below
 
----
-# Optional: PersistentVolumeClaim for production
-# Uncomment for persistent session storage
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: redis-session-data
-#   namespace: mcp-server-langgraph
-#   labels:
-#     app: redis-session
-# spec:
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 5Gi
-#   storageClassName: standard  # Adjust based on your cluster
+  # ==============================================================================
+  # Persistent Volume Claims for Redis Data
+  # ==============================================================================
+  # StatefulSet volumeClaimTemplates automatically create PVCs for each replica
+  # Data persists across pod restarts, upgrades, and rescheduling
+  # ==============================================================================
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      labels:
+        app: redis-session
+        component: session-store
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+      # ========================================================================
+      # Storage Class Configuration for Redis
+      # ========================================================================
+      # Uncomment and set appropriate storage class for your environment:
+      #
+      # Google Cloud (GKE):
+      # storageClassName: pd-ssd          # Recommended for low latency
+      # storageClassName: pd-balanced     # Good balance of cost/performance
+      #
+      # AWS (EKS):
+      # storageClassName: gp3             # General Purpose SSD (recommended)
+      # storageClassName: gp2             # Older General Purpose SSD
+      #
+      # Azure (AKS):
+      # storageClassName: managed-csi-premium  # Premium SSD
+      # storageClassName: managed-csi         # Standard SSD
+      #
+      # Note: Redis performance depends on storage latency.
+      # Use SSD-backed storage for production workloads.
+      # ========================================================================
+      # storageClassName: pd-ssd  # Uncomment for your environment

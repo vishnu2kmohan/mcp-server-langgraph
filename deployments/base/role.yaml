@@ -1,0 +1,78 @@
+---
+# ==============================================================================
+# RBAC Role - Least-Privilege Permissions for MCP Server
+# ==============================================================================
+#
+# This Role grants minimal required permissions following the principle of
+# least privilege. The MCP server needs:
+# - Read access to ConfigMaps for configuration
+# - Read access to Secrets for credentials (mounted as env vars)
+# - Create access to Events for observability
+#
+# SECURITY NOTE: This Role does NOT grant:
+# - Write access to Secrets or ConfigMaps (immutable configuration)
+# - Delete permissions (prevents accidental data loss)
+# - Access to other namespaces (namespace-scoped)
+# - Cluster-level permissions (no ClusterRole)
+#
+# ==============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+    component: rbac
+rules:
+# ConfigMaps - Read-only access for configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+
+# Secrets - Read-only access (credentials are mounted as environment variables)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+
+# Events - Create access for application events and observability
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+
+# Services - Read-only access for service discovery
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+
+# Endpoints - Read-only access for service endpoint discovery
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["get", "list", "watch"]
+
+# Pods - Read-only self-inspection for health checks and metadata
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+  # Optional: Restrict to self-inspection only using resourceNames
+  # resourceNames: ["<pod-name>"]  # Can be templated in overlays if needed
+---
+# ==============================================================================
+# RoleBinding - Bind mcp-server-langgraph ServiceAccount to Role
+# ==============================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph
+  labels:
+    app: mcp-server-langgraph
+    component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mcp-server-langgraph
+subjects:
+- kind: ServiceAccount
+  name: mcp-server-langgraph
+  namespace: mcp-server-langgraph

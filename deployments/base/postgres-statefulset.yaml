@@ -42,6 +42,47 @@ data:
     fi
 
 ---
+# ============================================================================
+# PostgreSQL StatefulSet - Development/Testing Configuration
+# ============================================================================
+#
+# ⚠️  PRODUCTION DEPLOYMENT RECOMMENDATIONS:
+#
+# This is a single-instance PostgreSQL suitable for development and testing.
+# For production deployments, use managed database services or HA solutions:
+#
+# 1. **RECOMMENDED: Managed Databases (Highest Availability)**
+#    - Google Cloud SQL (GKE): https://cloud.google.com/sql/docs/postgres
+#    - AWS RDS (EKS): https://aws.amazon.com/rds/postgresql/
+#    - Azure Database for PostgreSQL (AKS)
+#    - Benefits: Automated backups, point-in-time recovery, HA, read replicas
+#
+# 2. **Self-Hosted High Availability Options:**
+#    - Patroni: https://github.com/zalando/patroni
+#    - Crunchy Data PGO: https://www.crunchydata.com/products/crunchy-postgresql-for-kubernetes
+#    - Stolon: https://github.com/sorintlab/stolon
+#    - CloudNativePG: https://cloudnative-pg.io/
+#
+# 3. **Backup Strategy (Required for Production):**
+#    - WAL archiving to cloud storage (S3, GCS, Azure Blob)
+#    - Automated pg_dump/pg_basebackup to persistent storage
+#    - Point-in-time recovery (PITR) capability
+#    - Regular backup testing and restore validation
+#    - Example: Use WAL-G (https://github.com/wal-g/wal-g) for backup automation
+#
+# 4. **Storage Configuration:**
+#    - Use SSD-backed storage classes (pd-ssd on GKE, gp3 on EKS)
+#    - Enable volume snapshots for disaster recovery
+#    - Set appropriate storage size based on data growth projections
+#
+# 5. **Migration Path to Managed Database:**
+#    - Use pg_dump to export data from this instance
+#    - Create Cloud SQL/RDS instance with same PostgreSQL version
+#    - Import data using pg_restore
+#    - Update application connection strings to point to managed instance
+#    - Remove this StatefulSet from production deployments
+#
+# ============================================================================
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -52,7 +93,7 @@ metadata:
     component: database
 spec:
   serviceName: postgres
-  replicas: 1  # Single instance for now; use PostgreSQL HA for production
+  replicas: 1  # Single instance - NOT suitable for production without HA configuration
   selector:
     matchLabels:
       app: postgres
@@ -178,4 +219,29 @@ spec:
       resources:
         requests:
           storage: 10Gi
-      # storageClassName: standard  # Adjust based on your cluster
+      # ========================================================================
+      # Storage Class Configuration - IMPORTANT for Production Performance
+      # ========================================================================
+      # Uncomment and set appropriate storage class for your environment:
+      #
+      # Google Cloud (GKE):
+      # storageClassName: pd-ssd          # SSD persistent disk (recommended)
+      # storageClassName: pd-balanced     # Balanced persistent disk
+      # storageClassName: pd-standard     # Standard persistent disk (HDD)
+      #
+      # AWS (EKS):
+      # storageClassName: gp3             # General Purpose SSD (recommended)
+      # storageClassName: gp2             # General Purpose SSD (older)
+      # storageClassName: io2             # Provisioned IOPS SSD (high performance)
+      #
+      # Azure (AKS):
+      # storageClassName: managed-csi-premium  # Premium SSD (recommended)
+      # storageClassName: managed-csi         # Standard SSD
+      #
+      # On-premises/Other:
+      # storageClassName: fast-ssd        # Configure based on your CSI driver
+      #
+      # Note: Database performance heavily depends on storage IOPS and latency.
+      # Always use SSD-backed storage for production PostgreSQL workloads.
+      # ========================================================================
+      # storageClassName: pd-ssd  # Uncomment and adjust for your environment

@@ -18,6 +18,7 @@ resources:
   # 4. Manual overlay patches with actual values (dev/testing only)
   # See secret.yaml for template and required keys
   - serviceaccount.yaml
+  - role.yaml
   - hpa.yaml
   - pdb.yaml
   - networkpolicy.yaml
