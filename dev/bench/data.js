@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762492017786,
+  "lastUpdate": 1762492154289,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -35568,6 +35568,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000027647630546202943",
             "extra": "mean: 59.10100877721999 usec\nrounds: 4443"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "45aa38ea8a00c39a9b6cc7e4ab1ccfd9fd5cf71e",
+          "message": "fix(tests): add observability fixtures to 13+ integration/builder/infra tests\n\nSystematic observability initialization for:\n- Integration tests (4 files)\n- Builder tests (4 files)\n- Infrastructure tests (3 files)\n- Kubernetes tests (1 file)\n- Security practice tests (1 file)\n\nThis resolves many RuntimeError: Observability not initialized failures.\n\nProgress: ~30 additional failures likely fixed by this change.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-07T00:07:29-05:00",
+          "tree_id": "e51c9d6ad0290c007c8886ff9362e5216ddb2c6e",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/45aa38ea8a00c39a9b6cc7e4ab1ccfd9fd5cf71e"
+        },
+        "date": 1762492152295,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 139.8455164558568,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015110484091654212",
+            "extra": "mean: 7.150747663159133 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 140.33475336499396,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006271475476746717",
+            "extra": "mean: 7.125818630251334 msec\nrounds: 119"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43657.71305159819,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.905460000117728 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47611.520464435715,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.003319999977066 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45680.518674873914,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.891170000003513 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.71295800235063,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.162277270000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.405361153356882,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.53215094000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965387251352574,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34732969000004 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1427531.370114665,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 700.5099999446429 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13062.263499556295,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 76.55640999999491 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2980.8604909596443,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.47360000000026 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2934.9069051931347,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.72631000000797 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59497.0998217756,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002929610821078871",
+            "extra": "mean: 16.80754193053971 usec\nrounds: 11841"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16958.685386934878,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024320455176020625",
+            "extra": "mean: 58.96683482143072 usec\nrounds: 4928"
           }
         ]
       }
