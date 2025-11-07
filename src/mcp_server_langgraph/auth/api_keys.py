@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import bcrypt
-import redis.asyncio as redis
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.observability.telemetry import logger
