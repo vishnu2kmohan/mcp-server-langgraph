@@ -3,8 +3,7 @@ Comprehensive tests for GDPR compliance endpoints and services
 """
 
 import json
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI, Request

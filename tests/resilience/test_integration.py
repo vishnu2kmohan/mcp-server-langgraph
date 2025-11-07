@@ -5,11 +5,10 @@ Tests full resilience stack with all patterns composed together.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from mcp_server_langgraph.core.exceptions import BulkheadRejectedError, CircuitBreakerOpenError, RetryExhaustedError
+from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError, RetryExhaustedError
 from mcp_server_langgraph.core.exceptions import TimeoutError as MCPTimeoutError
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_fallback, with_timeout
 

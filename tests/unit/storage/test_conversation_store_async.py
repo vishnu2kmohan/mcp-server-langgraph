@@ -32,8 +32,9 @@ These tests validate the ASYNC INTERFACE works correctly with memory backend.
 Full async Redis migration deferred to future PR (lower priority fallback feature).
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 def test_conversation_store_uses_async_redis_client():
@@ -84,9 +85,7 @@ async def test_record_conversation_does_not_block_event_loop():
     store = ConversationStore(backend="memory")
 
     # This should complete without blocking
-    await store.record_conversation(
-        thread_id="test-thread", user_id="user-123", message_count=5, title="Test Conversation"
-    )
+    await store.record_conversation(thread_id="test-thread", user_id="user-123", message_count=5, title="Test Conversation")
 
     # If this was using sync Redis calls inside, it would block the event loop
     # The test passing means it's either using memory (non-blocking) or async Redis

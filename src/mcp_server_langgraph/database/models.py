@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from sqlalchemy import JSON, Column, DateTime, Index, Integer, Numeric, String, Text
+from sqlalchemy import JSON, DateTime, Index, Integer, Numeric, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column
 

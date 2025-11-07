@@ -10,8 +10,6 @@ Following TDD:
 3. Verify no regressions - REFACTOR
 """
 
-from unittest.mock import Mock, patch
-
 import pytest
 
 

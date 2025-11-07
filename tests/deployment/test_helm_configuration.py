@@ -11,7 +11,6 @@ These tests ensure deployment configuration issues can never occur again by:
 
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 import yaml

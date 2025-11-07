@@ -119,8 +119,6 @@ class TestGDPREndpoints:
         # Create client without dependency override
         from fastapi import FastAPI
 
-        from mcp_server_langgraph.auth.middleware import get_current_user
-
         app = FastAPI()
         from mcp_server_langgraph.api.gdpr import router
 
@@ -307,7 +305,6 @@ class TestGDPRProductionGuard:
         # Importing should raise RuntimeError
         with pytest.raises(RuntimeError, match="CRITICAL.*in-memory storage"):
             # Force reimport to trigger guard
-            import importlib
             import sys
 
             if "mcp_server_langgraph.api.gdpr" in sys.modules:
@@ -325,7 +322,6 @@ class TestGDPRProductionGuard:
 
         try:
             # Force reimport
-            import importlib
             import sys
 
             if "mcp_server_langgraph.api.gdpr" in sys.modules:

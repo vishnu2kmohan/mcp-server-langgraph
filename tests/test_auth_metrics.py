@@ -5,7 +5,7 @@ Verifies that all authentication metrics are properly defined
 and helper functions work correctly.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

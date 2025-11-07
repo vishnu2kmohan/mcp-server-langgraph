@@ -5,11 +5,10 @@ Tests dependency resolution, parallel execution, and error handling.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation, ToolResult
+from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 """Unit tests for auth.py - Authentication and Authorization"""
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import jwt
 import pytest

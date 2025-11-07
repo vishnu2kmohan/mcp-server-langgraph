@@ -6,8 +6,6 @@ This module tests the sanitization of sensitive data in logs, specifically:
 - Hash/truncation of large text fields
 """
 
-import pytest
-
 from mcp_server_langgraph.core.security import sanitize_for_logging
 
 

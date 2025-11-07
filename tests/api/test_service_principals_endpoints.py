@@ -9,8 +9,7 @@ See ADR-0033 for service principal design decisions.
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import status
@@ -682,4 +681,3 @@ class TestServicePrincipalEndpointsIntegration:
         # Implementation pending - needs test_infrastructure with FastAPI app
         # The test_infrastructure fixture provides docker services, but we also need
         # the FastAPI app running with those services for full E2E testing.
-        pass

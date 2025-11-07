@@ -52,7 +52,7 @@ class TestRateLimiterSetup:
     def test_app_calls_setup_rate_limiting(self):
         """Test that app.py calls setup_rate_limiting function"""
         with patch("mcp_server_langgraph.app.setup_rate_limiting") as mock_setup:
-            app = create_app()
+            _ = create_app()
 
             # Verify setup_rate_limiting was called with the app
             mock_setup.assert_called_once()
@@ -69,7 +69,7 @@ class TestRateLimiterSetup:
     def test_rate_limiting_does_not_use_ratelimiter_class(self):
         """Test that app does not try to import non-existent RateLimiter class"""
         # This test verifies the fix - if RateLimiter class was imported, this would fail
-        with patch("mcp_server_langgraph.app.setup_rate_limiting") as mock_setup:
+        with patch("mcp_server_langgraph.app.setup_rate_limiting"):
             # If the code tried to import RateLimiter class, it would fail before getting here
             app = create_app()
 
@@ -89,9 +89,6 @@ class TestCORSConfiguration:
             app = create_app()
 
             # Check that CORS middleware was not added
-            # Count CORSMiddleware in middleware stack
-            cors_middleware_count = sum(1 for middleware in app.user_middleware if "CORS" in str(middleware))
-
             # With empty origins, CORS should not be added
             # Note: FastAPI might have default CORS, so we just check our config wasn't added
             assert isinstance(app, FastAPI)
@@ -114,7 +111,7 @@ class TestCORSConfiguration:
 
             with patch("mcp_server_langgraph.app.CORSMiddleware") as mock_cors_middleware:
                 with patch("mcp_server_langgraph.app.setup_rate_limiting"):
-                    app = create_app()
+                    _ = create_app()
 
                     # If CORS was added, it should use settings, not ["*"]
                     if mock_cors_middleware.called:
@@ -137,7 +134,7 @@ class TestLoggerGracefulDegradation:
 
             # App creation should succeed
             try:
-                app = create_app()
+                _ = create_app()
                 success = True
             except RuntimeError:
                 success = False
@@ -184,7 +181,7 @@ class TestRouterRegistration:
     def test_exception_handlers_registered(self):
         """Test that exception handlers are registered"""
         with patch("mcp_server_langgraph.app.register_exception_handlers") as mock_register:
-            app = create_app()
+            _ = create_app()
 
             # Verify exception handlers were registered
             mock_register.assert_called_once()
@@ -255,7 +252,7 @@ class TestObservabilityInitialization:
         with patch("mcp_server_langgraph.app.init_observability") as mock_init:
             with patch("mcp_server_langgraph.app.setup_rate_limiting"):
                 with patch("mcp_server_langgraph.app.register_exception_handlers"):
-                    app = create_app()
+                    _ = create_app()
 
                     # CRITICAL: Verify observability was initialized
                     mock_init.assert_called_once()
@@ -273,7 +270,7 @@ class TestObservabilityInitialization:
                         mock_init.side_effect = lambda *args, **kwargs: call_order.append("init_observability")
                         mock_logger.info.side_effect = lambda *args, **kwargs: call_order.append("logger.info")
 
-                        app = create_app()
+                        _ = create_app()
 
                         # init_observability must be called BEFORE any logger calls
                         if len(call_order) >= 2:

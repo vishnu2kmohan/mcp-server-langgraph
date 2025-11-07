@@ -16,12 +16,9 @@ References:
 - OpenAI Codex finding: Missing startsWith operator support
 """
 
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
-from fastapi import status
-from httpx import AsyncClient
 
 from mcp_server_langgraph.api.scim import list_users
 

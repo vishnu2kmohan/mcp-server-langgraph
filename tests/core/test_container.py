@@ -10,8 +10,7 @@ Following TDD principles:
 These tests define the behavior we want from the container pattern.
 """
 
-from typing import Optional
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 

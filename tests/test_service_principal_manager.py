@@ -10,8 +10,7 @@ Tests cover:
 - OpenFGA tuple synchronization
 """
 
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 

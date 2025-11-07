@@ -14,9 +14,7 @@ Tests cover:
 - GET / - API information
 """
 
-import json
-from typing import Any, Dict
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pytest
 from fastapi import status

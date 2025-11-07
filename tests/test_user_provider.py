@@ -4,12 +4,12 @@ Tests InMemoryUserProvider, KeycloakUserProvider, and the factory function.
 """
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
 
-from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, KeycloakUser
+from mcp_server_langgraph.auth.keycloak import KeycloakConfig, KeycloakUser
 from mcp_server_langgraph.auth.user_provider import (
     InMemoryUserProvider,
     KeycloakUserProvider,

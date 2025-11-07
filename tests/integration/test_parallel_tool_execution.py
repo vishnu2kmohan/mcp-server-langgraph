@@ -7,7 +7,6 @@ that parallel execution provides performance improvements.
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

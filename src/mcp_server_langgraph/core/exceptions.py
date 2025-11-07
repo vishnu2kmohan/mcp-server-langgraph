@@ -282,8 +282,6 @@ class RateLimitError(MCPServerException):
 class RateLimitExceededError(RateLimitError):
     """Request rate limit exceeded"""
 
-    pass
-
 
 class QuotaExceededError(RateLimitError):
     """Usage quota exceeded"""

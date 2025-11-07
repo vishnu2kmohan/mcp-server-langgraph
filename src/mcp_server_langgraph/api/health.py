@@ -30,8 +30,6 @@ class HealthCheckResult(BaseModel):
 class SystemValidationError(Exception):
     """Raised when critical system validation fails at startup"""
 
-    pass
-
 
 def validate_observability_initialized() -> tuple[bool, str]:
     """

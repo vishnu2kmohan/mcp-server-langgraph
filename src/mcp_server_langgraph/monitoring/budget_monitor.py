@@ -548,7 +548,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
         Returns:
             Tuple of (period_start, period_end)
         """
-        budget_start = budget.start_date
+        budget.start_date
 
         if budget.period == BudgetPeriod.DAILY:
             # Find current day boundary

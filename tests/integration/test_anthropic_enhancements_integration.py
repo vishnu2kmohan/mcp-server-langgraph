@@ -21,7 +21,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
+from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader, search_and_load_context
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation

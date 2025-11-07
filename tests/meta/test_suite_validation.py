@@ -413,7 +413,6 @@ class TestMarkerConsistency:
             try:
                 with open(test_file, "r", encoding="utf-8") as f:
                     content = f.read()
-                    lines = content.split("\n")
                     tree = ast.parse(content, filename=str(test_file))
 
                 for node in ast.walk(tree):

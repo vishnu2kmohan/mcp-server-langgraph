@@ -12,12 +12,12 @@ Tests cover:
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import bcrypt
 import pytest
 
-from mcp_server_langgraph.auth.api_keys import APIKey, APIKeyManager
+from mcp_server_langgraph.auth.api_keys import APIKeyManager
 
 
 @pytest.fixture

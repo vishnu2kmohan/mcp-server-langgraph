@@ -8,8 +8,7 @@ See ADR-0034 for API key to JWT exchange pattern.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import status
@@ -526,4 +525,3 @@ class TestAPIKeyEndpointsIntegration:
         """
         # TODO: Implement full lifecycle test
         # infrastructure is available via fixtures
-        pass

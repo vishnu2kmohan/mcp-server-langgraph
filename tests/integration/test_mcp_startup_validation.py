@@ -60,7 +60,6 @@ class TestMCPServerStartupValidation:
                 if "AttributeError" in str(e):
                     pytest.fail(f"Dependency wiring issue: {e}")
                 # Other errors are acceptable in test environment
-                pass
 
         except ImportError:
             # MCP server might have additional dependencies
@@ -100,7 +99,6 @@ class TestMCPServerStartupValidation:
             if "AttributeError" in str(e):
                 pytest.fail(f"Bug #3 regression: Service principal crashed with None OpenFGA: {e}")
             # Other initialization errors might be expected
-            pass
 
 
 @pytest.mark.integration
@@ -118,7 +116,7 @@ class TestEndToEndDependencyWiring:
         3. ServicePrincipalManager handles None OpenFGA
         4. create_service_principal() succeeds without crashing
         """
-        from unittest.mock import AsyncMock, Mock, patch
+        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
@@ -160,7 +158,7 @@ class TestEndToEndDependencyWiring:
         2. Redis cache configured with password/SSL (Bug #4)
         3. API key manager can be instantiated
         """
-        from unittest.mock import AsyncMock, Mock, patch
+        from unittest.mock import Mock, patch
 
         # Arrange: Set config
         monkeypatch.setenv("API_KEY_CACHE_ENABLED", "true")

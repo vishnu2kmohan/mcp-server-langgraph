@@ -5,8 +5,6 @@ Verifies that the application gracefully handles cases where infisical-python
 is not installed, falling back to environment variables.
 """
 
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest

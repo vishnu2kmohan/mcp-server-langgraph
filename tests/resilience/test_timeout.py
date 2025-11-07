@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from mcp_server_langgraph.core.exceptions import TimeoutError as MCPTimeoutError
-from mcp_server_langgraph.resilience.timeout import TimeoutConfig, TimeoutContext, get_timeout_for_operation, with_timeout
+from mcp_server_langgraph.resilience.timeout import TimeoutContext, get_timeout_for_operation, with_timeout
 
 
 class TestTimeoutBasics:

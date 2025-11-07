@@ -62,7 +62,6 @@ def test_telemetry_version_matches():
     # The telemetry config should use settings.service_version
     # which should match __version__
     from mcp_server_langgraph.core.config import settings
-    from mcp_server_langgraph.observability.telemetry import config
 
     assert settings.service_version == __version__, (
         f"Telemetry will use incorrect version: settings.service_version is {settings.service_version}, "

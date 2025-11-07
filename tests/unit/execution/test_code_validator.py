@@ -5,8 +5,6 @@ Tests AST-based validation, import whitelisting, and security controls.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
-import ast
-
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st

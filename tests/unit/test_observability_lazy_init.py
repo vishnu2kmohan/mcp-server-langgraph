@@ -5,12 +5,9 @@ Tests verify that observability can be imported without triggering
 filesystem operations or requiring configuration at import time.
 """
 
-import importlib
 import os
-import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 

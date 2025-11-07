@@ -4,7 +4,7 @@ from .sla import SLAMeasurement, SLAMetric, SLAMonitor, SLAReport, SLAStatus, SL
 
 # Cost monitoring (if available)
 try:
-    from .pricing import PRICING_TABLE, calculate_cost
+    pass
 
     __all__ = [
         "SLAMonitor",

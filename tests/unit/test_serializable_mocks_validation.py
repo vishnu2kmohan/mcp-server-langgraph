@@ -20,7 +20,6 @@ from dataclasses import is_dataclass
 from typing import get_type_hints
 
 import pytest
-from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel
 
 from tests.fixtures.serializable_mocks import SerializableLLMMock, SerializableToolMock

@@ -9,8 +9,6 @@ Tests:
 - Enhanced error messages
 """
 
-from unittest.mock import AsyncMock
-
 import pytest
 from langchain_core.messages import AIMessage
 from mcp.types import TextContent

@@ -11,11 +11,7 @@ Following TDD practices - tests written before implementation.
 """
 
 import json
-from datetime import datetime, timedelta
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 
 class TestDORAMetricsCalculation:

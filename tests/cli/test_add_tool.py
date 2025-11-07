@@ -12,8 +12,6 @@ Tests cover:
 - Edge cases (special characters, empty inputs)
 """
 
-from pathlib import Path
-
 import pytest
 
 from mcp_server_langgraph.cli.add_tool import TOOL_TEMPLATE, generate_tool

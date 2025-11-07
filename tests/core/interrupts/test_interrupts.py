@@ -15,9 +15,7 @@ Tests cover:
 - Edge cases
 """
 
-from datetime import datetime
 from typing import Any, Dict
-from unittest.mock import patch
 
 import pytest
 from freezegun import freeze_time

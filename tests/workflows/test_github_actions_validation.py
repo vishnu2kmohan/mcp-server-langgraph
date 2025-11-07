@@ -23,7 +23,7 @@ Created: 2025-11-06
 
 import re
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict
 
 import pytest
 import yaml

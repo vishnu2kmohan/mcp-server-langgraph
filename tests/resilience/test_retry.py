@@ -4,14 +4,13 @@ Unit tests for retry logic with exponential backoff.
 Tests retry behavior, backoff calculation, and exception handling.
 """
 
-import asyncio
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from mcp_server_langgraph.core.exceptions import AuthorizationError, ExternalServiceError, RetryExhaustedError, ValidationError
-from mcp_server_langgraph.resilience.retry import RetryPolicy, RetryStrategy, retry_with_backoff, should_retry_exception
+from mcp_server_langgraph.resilience.retry import RetryStrategy, retry_with_backoff, should_retry_exception
 
 
 class TestRetryBasics:
@@ -342,7 +341,6 @@ class TestRedisOptionalDependency:
     def test_should_retry_exception_handles_redis_import_error(self):
         """Test that ImportError from redis module doesn't crash the retry logic"""
         import builtins
-        import sys
 
         # Store original import
         original_import = builtins.__import__

@@ -8,9 +8,6 @@ before implementation.
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
-
-import pytest
 
 
 def test_generate_report_creates_markdown_file():

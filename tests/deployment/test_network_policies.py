@@ -11,10 +11,10 @@ Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
 import subprocess
-import yaml
-import pytest
 from pathlib import Path
 
+import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -32,12 +32,7 @@ class TestNetworkPolicyPorts:
     def staging_network_policies(self):
         """Load NetworkPolicies from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Staging build failed: {result.stderr}")
 
@@ -48,12 +43,7 @@ class TestNetworkPolicyPorts:
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -191,12 +181,7 @@ class TestNetworkPolicySelectors:
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -239,9 +224,8 @@ class TestNetworkPolicySelectors:
         # For now, just warn (not fail) as this might be intentional for health checks
         if warnings:
             import warnings as warn_module
-            warn_module.warn(
-                "Potentially overly permissive NetworkPolicy selectors:\n" + "\n".join(warnings)
-            )
+
+            warn_module.warn("Potentially overly permissive NetworkPolicy selectors:\n" + "\n".join(warnings))
 
 
 class TestNetworkPolicyComments:
@@ -273,10 +257,8 @@ class TestNetworkPolicyComments:
 
                 if not has_comment:
                     # Extract line context for better error message
-                    context = "\n".join(lines[max(0, i - 2):i + 3])
-                    pytest.fail(
-                        f"Port specification at line {i + 1} lacks explanatory comment:\n{context}"
-                    )
+                    context = "\n".join(lines[max(0, i - 2) : i + 3])
+                    pytest.fail(f"Port specification at line {i + 1} lacks explanatory comment:\n{context}")
 
 
 def test_network_policy_coverage():
@@ -290,12 +272,7 @@ def test_network_policy_coverage():
     - OpenFGA
     """
     base_path = REPO_ROOT / "deployments/base"
-    result = subprocess.run(
-        ["kustomize", "build", str(base_path)],
-        capture_output=True,
-        text=True,
-        cwd=REPO_ROOT
-    )
+    result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
 
     if result.returncode != 0:
         pytest.skip(f"Base build failed: {result.stderr}")
@@ -309,20 +286,9 @@ def test_network_policy_coverage():
         if doc and doc.get("kind") == "NetworkPolicy"
     ]
 
-    # Collect Deployments/StatefulSets
-    workloads = [
-        doc.get("metadata", {}).get("labels", {})
-        for doc in documents
-        if doc and doc.get("kind") in ["Deployment", "StatefulSet"]
-    ]
-
     # Check that main app has a network policy
-    app_labels_in_policies = any(
-        "mcp-server-langgraph" in str(policy)
-        for policy in network_policies
-    )
+    app_labels_in_policies = any("mcp-server-langgraph" in str(policy) for policy in network_policies)
 
-    assert app_labels_in_policies, (
-        "Main application workload should have a NetworkPolicy defined. "
-        "Found policies: " + str(network_policies)
+    assert app_labels_in_policies, "Main application workload should have a NetworkPolicy defined. " "Found policies: " + str(
+        network_policies
     )

@@ -5,9 +5,6 @@ Tests Settings class code execution configuration following TDD best practices.
 These tests should FAIL until config.py is updated with execution settings.
 """
 
-import os
-from typing import Literal
-
 import pytest
 
 # This import will work but settings won't have execution fields yet

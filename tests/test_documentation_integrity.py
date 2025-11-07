@@ -12,7 +12,7 @@ This test suite validates:
 import json
 import re
 from pathlib import Path
-from typing import List, Set
+from typing import List
 
 import pytest
 

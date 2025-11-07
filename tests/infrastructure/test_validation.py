@@ -6,7 +6,6 @@ Tests all 11 items to ensure configurations are valid and complete.
 
 import glob
 import os
-from pathlib import Path
 
 import pytest
 import yaml

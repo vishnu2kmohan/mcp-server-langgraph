@@ -4,9 +4,6 @@ Unit tests for filesystem tools
 Tests read-only file operations with security controls.
 """
 
-import tempfile
-from pathlib import Path
-
 import pytest
 
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files

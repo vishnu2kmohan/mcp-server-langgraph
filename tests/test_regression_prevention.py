@@ -13,7 +13,7 @@ Following TDD principles, these tests will FAIL if regressions are introduced.
 import ast
 import re
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Tuple
 
 import pytest
 import yaml

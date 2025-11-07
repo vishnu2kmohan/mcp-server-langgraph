@@ -8,8 +8,6 @@ Related Issue: Staging deployment revision 758b8f744 crash
 Root Cause: Password with / and + characters not percent-encoded in Redis URL
 """
 
-import pytest
-
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 
 

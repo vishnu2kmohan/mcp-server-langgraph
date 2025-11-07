@@ -7,8 +7,6 @@ These tests don't require Docker to be installed.
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 def test_allowlist_mode_fails_closed_with_domains():
     """

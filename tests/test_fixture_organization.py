@@ -8,9 +8,8 @@ This test module validates that test fixtures follow best practices:
 """
 
 import ast
-import os
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Tuple
 
 
 def find_autouse_fixtures(test_dir: Path) -> Dict[str, List[Tuple[str, int]]]:

@@ -35,8 +35,6 @@ class CheckpointValidationError(Exception):
     before the application can start safely.
     """
 
-    pass
-
 
 class CheckpointConfigValidator:
     """Validator for checkpoint configuration with fail-fast semantics."""
@@ -46,7 +44,6 @@ class CheckpointConfigValidator:
 
     def __init__(self) -> None:
         """Initialize checkpoint configuration validator."""
-        pass
 
     def validate_redis_url(
         self,

@@ -16,7 +16,7 @@ Tests cover:
 
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import patch
 
 import pytest
 

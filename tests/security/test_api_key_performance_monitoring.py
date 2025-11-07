@@ -18,8 +18,6 @@ References:
 - CWE-407: Inefficient Algorithmic Complexity
 """
 
-import logging
-
 import pytest
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager

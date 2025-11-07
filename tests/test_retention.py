@@ -4,9 +4,8 @@ Tests for Data Retention Service (GDPR Article 5(1)(e) Storage Limitation)
 Covers automated data retention policies and cleanup schedules.
 """
 
-from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pytest
 import yaml

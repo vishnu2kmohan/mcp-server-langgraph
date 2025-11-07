@@ -11,8 +11,6 @@ Expected to FAIL until core/config.py:216 is fixed to default to "none".
 
 import os
 
-import pytest
-
 
 def test_default_network_mode_is_secure_none():
     """

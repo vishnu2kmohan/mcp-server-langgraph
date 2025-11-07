@@ -81,7 +81,6 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
 
     def before_call(self, breaker: pybreaker.CircuitBreaker, func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
         """Called before calling the protected function"""
-        pass
 
     def success(self, breaker: pybreaker.CircuitBreaker) -> None:
         """Called on successful call"""

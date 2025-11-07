@@ -7,7 +7,7 @@ Tests the CustomJSONFormatter class and structured logging functionality.
 import json
 import logging
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from opentelemetry import trace

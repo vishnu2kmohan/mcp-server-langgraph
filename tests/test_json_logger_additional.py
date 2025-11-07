@@ -10,12 +10,7 @@ These tests target uncovered code paths in json_logger.py:
 
 import json
 import logging
-import sys
 from unittest.mock import Mock, patch
-
-import pytest
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, setup_json_logging
 

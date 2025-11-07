@@ -283,8 +283,6 @@ class TestMCPServerContractCompliance:
         """Actual server tools/call should match schema"""
         from unittest.mock import Mock
 
-        from mcp.types import TextContent
-
         # Test calling a tool (conversation_get with minimal args)
         # Mock the auth and graph to avoid actual LLM calls
         with pytest.raises((PermissionError, Exception)):

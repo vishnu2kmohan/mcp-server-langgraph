@@ -5,8 +5,9 @@ Implements search_tools endpoint following Anthropic's MCP best practices
 for token-efficient tool discovery.
 """
 
+import json
 import logging
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
@@ -30,6 +31,95 @@ class SearchToolsInput(BaseModel):
         default="minimal",
         description="Level of detail: minimal (name+desc), standard (+params), full (+examples)",
     )
+
+
+def _filter_tools_by_category(category: str) -> List[BaseTool]:
+    """Filter tools by category."""
+    category_lower = category.lower()
+    if category_lower == "calculator":
+        from mcp_server_langgraph.tools import CALCULATOR_TOOLS
+
+        return CALCULATOR_TOOLS
+    elif category_lower == "search":
+        from mcp_server_langgraph.tools import SEARCH_TOOLS
+
+        return SEARCH_TOOLS
+    elif category_lower == "filesystem":
+        from mcp_server_langgraph.tools import FILESYSTEM_TOOLS
+
+        return FILESYSTEM_TOOLS
+    elif category_lower == "execution":
+        from mcp_server_langgraph.tools import CODE_EXECUTION_TOOLS
+
+        return CODE_EXECUTION_TOOLS
+    return ALL_TOOLS
+
+
+def _filter_tools_by_query(tools: List[BaseTool], query: str) -> List[BaseTool]:
+    """Filter tools by search query."""
+    query_lower = query.lower()
+    return [t for t in tools if query_lower in t.name.lower() or query_lower in (t.description or "").lower()]
+
+
+def _format_tool_minimal(t: BaseTool) -> str:
+    """Format tool in minimal mode."""
+    return f"- **{t.name}**: {t.description}\n"
+
+
+def _format_tool_standard(t: BaseTool) -> str:
+    """Format tool in standard mode."""
+    result = f"### {t.name}\n{t.description}\n\n"
+
+    if hasattr(t, "args_schema") and t.args_schema:
+        schema = t.args_schema.model_json_schema()
+        if "properties" in schema:
+            result += "**Parameters:**\n"
+            for param_name, param_info in schema["properties"].items():
+                param_desc = param_info.get("description", "No description")
+                param_type = param_info.get("type", "any")
+                result += f"- `{param_name}` ({param_type}): {param_desc}\n"
+        result += "\n"
+
+    return result
+
+
+def _format_tool_full(t: BaseTool) -> str:
+    """Format tool in full mode."""
+    result = f"### {t.name}\n{t.description}\n\n"
+
+    if hasattr(t, "args_schema") and t.args_schema:
+        schema = t.args_schema.model_json_schema()
+        if "properties" in schema:
+            result += "**Parameters:**\n"
+            for param_name, param_info in schema["properties"].items():
+                param_desc = param_info.get("description", "No description")
+                param_type = param_info.get("type", "any")
+                required = param_name in schema.get("required", [])
+                req_str = "required" if required else "optional"
+                result += f"- `{param_name}` ({param_type}, {req_str}): {param_desc}\n"
+
+            result += "\n**Full Schema:**\n```json\n"
+            result += json.dumps(schema, indent=2)
+            result += "\n```\n\n"
+
+    return result
+
+
+def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
+    """Format tool results based on detail level."""
+    result = f"Found {len(tools)} tool(s):\n\n"
+
+    if detail_level == "minimal":
+        for t in tools:
+            result += _format_tool_minimal(t)
+    elif detail_level == "standard":
+        for t in tools:
+            result += _format_tool_standard(t)
+    else:  # full
+        for t in tools:
+            result += _format_tool_full(t)
+
+    return result
 
 
 @tool
@@ -57,89 +147,15 @@ def search_tools(
         >>> search_tools.invoke({"category": "calculator", "detail_level": "minimal"})
         "Found 5 tools:\\n- calculator: Evaluate mathematical expressions\\n..."
     """
-    # Get all tools
-    tools = ALL_TOOLS
+    # Get all tools or filter by category
+    tools = _filter_tools_by_category(category) if category else ALL_TOOLS
 
-    # Filter by category
-    if category:
-        category_lower = category.lower()
-        if category_lower == "calculator":
-            from mcp_server_langgraph.tools import CALCULATOR_TOOLS
-
-            tools = CALCULATOR_TOOLS
-        elif category_lower == "search":
-            from mcp_server_langgraph.tools import SEARCH_TOOLS
-
-            tools = SEARCH_TOOLS
-        elif category_lower == "filesystem":
-            from mcp_server_langgraph.tools import FILESYSTEM_TOOLS
-
-            tools = FILESYSTEM_TOOLS
-        elif category_lower == "execution":
-            from mcp_server_langgraph.tools import CODE_EXECUTION_TOOLS
-
-            tools = CODE_EXECUTION_TOOLS
-
-    # Filter by query
+    # Filter by query if provided
     if query:
-        query_lower = query.lower()
-        filtered_tools = []
-        for tool in tools:
-            if query_lower in tool.name.lower() or query_lower in (tool.description or "").lower():
-                filtered_tools.append(tool)
-        tools = filtered_tools
+        tools = _filter_tools_by_query(tools, query)
 
     if not tools:
         return f"No tools found matching criteria (query={query}, category={category})"
 
-    # Format results based on detail level
-    if detail_level == "minimal":
-        result = f"Found {len(tools)} tool(s):\n\n"
-        for tool in tools:
-            result += f"- **{tool.name}**: {tool.description}\n"
-        return result
-
-    elif detail_level == "standard":
-        result = f"Found {len(tools)} tool(s):\n\n"
-        for tool in tools:
-            result += f"### {tool.name}\n"
-            result += f"{tool.description}\n\n"
-
-            # Add parameter info
-            if hasattr(tool, "args_schema") and tool.args_schema:
-                schema = tool.args_schema.model_json_schema()
-                if "properties" in schema:
-                    result += "**Parameters:**\n"
-                    for param_name, param_info in schema["properties"].items():
-                        param_desc = param_info.get("description", "No description")
-                        param_type = param_info.get("type", "any")
-                        result += f"- `{param_name}` ({param_type}): {param_desc}\n"
-                result += "\n"
-
-        return result
-
-    else:  # full
-        result = f"Found {len(tools)} tool(s):\n\n"
-        for tool in tools:
-            result += f"### {tool.name}\n"
-            result += f"{tool.description}\n\n"
-
-            # Add full schema
-            if hasattr(tool, "args_schema") and tool.args_schema:
-                schema = tool.args_schema.model_json_schema()
-                if "properties" in schema:
-                    result += "**Parameters:**\n"
-                    for param_name, param_info in schema["properties"].items():
-                        param_desc = param_info.get("description", "No description")
-                        param_type = param_info.get("type", "any")
-                        required = param_name in schema.get("required", [])
-                        req_str = "required" if required else "optional"
-                        result += f"- `{param_name}` ({param_type}, {req_str}): {param_desc}\n"
-
-                    result += "\n**Full Schema:**\n```json\n"
-                    import json
-
-                    result += json.dumps(schema, indent=2)
-                    result += "\n```\n\n"
-
-        return result
+    # Format and return results
+    return _format_tool_results(tools, detail_level)

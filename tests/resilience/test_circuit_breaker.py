@@ -5,7 +5,7 @@ Tests circuit breaker behavior, state transitions, fallback, and metrics.
 """
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 import pybreaker
 import pytest

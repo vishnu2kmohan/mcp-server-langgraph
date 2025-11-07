@@ -6,7 +6,7 @@ Provides reusable middleware creation functions for FastAPI applications.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -62,7 +62,7 @@ def create_auth_middleware(container: ApplicationContainer) -> Any:
     Example:
         middleware = create_auth_middleware(container)
     """
-    auth_provider = container.get_auth()
+    container.get_auth()
 
     # For test mode, return a no-op middleware
     if container.settings.environment == "test":

@@ -4,8 +4,6 @@ This module tests the sanitization of user-controlled data in HTTP headers,
 specifically preventing CWE-113 (HTTP Response Splitting) vulnerabilities.
 """
 
-import pytest
-
 from mcp_server_langgraph.core.security import sanitize_header_value
 
 

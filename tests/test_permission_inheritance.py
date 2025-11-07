@@ -5,7 +5,7 @@ Following TDD principles - these tests define the expected behavior
 of service principals inheriting permissions from associated users.
 """
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 

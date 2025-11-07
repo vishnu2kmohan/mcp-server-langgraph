@@ -5,7 +5,6 @@ without blocking other tool executions.
 """
 
 import asyncio
-from unittest.mock import AsyncMock
 
 import pytest
 

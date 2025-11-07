@@ -8,7 +8,6 @@ Tests comprehensive alerting functionality including:
 - Error handling and retries
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

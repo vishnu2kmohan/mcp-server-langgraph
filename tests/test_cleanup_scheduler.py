@@ -4,11 +4,9 @@ Tests for data cleanup scheduler
 Covers scheduled background jobs for data retention policy enforcement.
 """
 
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from apscheduler.triggers.cron import CronTrigger
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.compliance.retention import RetentionResult

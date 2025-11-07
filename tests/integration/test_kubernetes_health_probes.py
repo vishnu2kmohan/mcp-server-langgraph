@@ -190,4 +190,3 @@ def test_kubernetes_probe_paths_match_deployment():
 
     # Actual validation would use kubectl to verify probe paths
     # For now, this serves as a placeholder for CI/CD integration
-    pass

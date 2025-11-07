@@ -12,10 +12,9 @@ These tests validate authentication and path traversal protections.
 
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.builder.api.server import SaveWorkflowRequest, app, save_workflow

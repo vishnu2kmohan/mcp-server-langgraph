@@ -61,7 +61,7 @@ class TestAPIKeyIndexedLookup:
         )
 
         # Create API key
-        result = await manager.create_api_key(username="testuser", description="Test key", expires_in_days=90)
+        _ = await manager.create_api_key(username="testuser", description="Test key", expires_in_days=90)
 
         # Verify Keycloak update_user was called with api_key_hash attribute
         assert mock_keycloak.update_user.called, "create_api_key must call update_user to store API key hash in Keycloak"
@@ -104,7 +104,7 @@ class TestAPIKeyIndexedLookup:
 
             # Validate API key
             api_key = "test-api-key-12345"
-            result = await manager.validate_and_get_user(api_key)
+            _ = await manager.validate_and_get_user(api_key)
 
             # Verify that search_users was called (indexed search)
             # NOT search_users with pagination (first=0, max=100)
@@ -249,7 +249,7 @@ class TestKeycloakAttributeIndexing:
         with patch("secrets.token_urlsafe", return_value="test-key-12345"):
             with patch("bcrypt.gensalt", return_value=b"$2b$12$saltsaltsa"):
                 with patch("bcrypt.hashpw", return_value=b"$2b$12$hashed"):
-                    result = await manager.create_api_key(username="testuser", description="Test", expires_in_days=90)
+                    _ = await manager.create_api_key(username="testuser", description="Test", expires_in_days=90)
 
         # Should have called update_user with attributes containing hash
         if mock_keycloak.update_user.called:

@@ -7,13 +7,11 @@ authorization, and tool handlers for the stdio-based MCP server.
 Target coverage: 85%+ on src/mcp_server_langgraph/mcp/server_stdio.py
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
-from mcp.types import TextContent, Tool
+from mcp.types import TextContent
 
 
 @pytest.fixture
@@ -270,7 +268,6 @@ class TestToolAuthentication:
         self, mock_metrics, mock_tracer_module, mock_create_auth, mock_settings_patch, mock_settings, mock_tracer
     ):
         """Test tool call fails without authentication token"""
-        from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
         mock_settings_patch.jwt_secret_key = mock_settings.jwt_secret_key
         mock_settings_patch.environment = mock_settings.environment

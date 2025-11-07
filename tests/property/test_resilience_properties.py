@@ -10,19 +10,13 @@ Tests resilience invariants:
 """
 
 import asyncio
-from unittest.mock import AsyncMock, Mock
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from mcp_server_langgraph.resilience.bulkhead import get_bulkhead, get_bulkhead_stats, reset_bulkhead, with_bulkhead
-from mcp_server_langgraph.resilience.circuit_breaker import (
-    circuit_breaker,
-    get_circuit_breaker,
-    get_circuit_breaker_state,
-    reset_circuit_breaker,
-)
+from mcp_server_langgraph.resilience.bulkhead import reset_bulkhead, with_bulkhead
+from mcp_server_langgraph.resilience.circuit_breaker import circuit_breaker, get_circuit_breaker_state, reset_circuit_breaker
 from mcp_server_langgraph.resilience.fallback import fail_closed, fail_open, with_fallback
 from mcp_server_langgraph.resilience.retry import retry_with_backoff, should_retry_exception
 from mcp_server_langgraph.resilience.timeout import with_timeout

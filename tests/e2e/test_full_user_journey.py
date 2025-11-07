@@ -13,9 +13,6 @@ Test Journeys:
 4. API Key Flow: Create → Use → Rotate → Revoke
 """
 
-import asyncio
-import json
-from datetime import datetime, timezone
 from typing import Any, Dict
 
 import pytest
@@ -656,22 +653,18 @@ class TestPerformanceE2E:
 async def create_test_user(username: str, password: str, email: str) -> Dict[str, Any]:
     """Create test user in Keycloak"""
     # TODO: Implement Keycloak user creation via admin API
-    pass
 
 
 async def login_user(username: str, password: str) -> Dict[str, Any]:
     """Login and get JWT token"""
     # TODO: Implement POST /auth/login
-    pass
 
 
 async def invoke_mcp_tool(tool_name: str, arguments: Dict[str, Any], token: str) -> Any:
     """Invoke MCP tool and get response"""
     # TODO: Implement MCP protocol communication
-    pass
 
 
 async def cleanup_test_data(user_id: str):
     """Clean up test data after tests"""
     # TODO: Delete test user, conversations, API keys, service principals
-    pass

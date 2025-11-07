@@ -30,7 +30,6 @@ def cli() -> None:
         mcpserver create-agent my-agent --template research
         mcpserver add-tool calculator
     """
-    pass
 
 
 @cli.command()

@@ -12,8 +12,6 @@ from typing import Any, Literal
 class ResourceLimitError(Exception):
     """Raised when resource limit validation fails"""
 
-    pass
-
 
 NetworkMode = Literal["none", "allowlist", "unrestricted"]
 

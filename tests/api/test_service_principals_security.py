@@ -7,7 +7,7 @@ OWASP A01:2021 - Broken Access Control
 These tests validate that service principals cannot be used for privilege escalation.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException

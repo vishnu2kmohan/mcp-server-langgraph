@@ -11,10 +11,10 @@ Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
 import subprocess
-import yaml
-import pytest
 from pathlib import Path
 
+import pytest
+import yaml
 
 # Define paths to all Kustomize overlays
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -43,18 +43,11 @@ class TestKustomizeBuilds:
         full_path = REPO_ROOT / overlay_path
 
         # Run kustomize build
-        result = subprocess.run(
-            ["kustomize", "build", str(full_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT)
 
         # Assert build succeeded
         assert result.returncode == 0, (
-            f"Kustomize build failed for {overlay_path}\n"
-            f"STDOUT: {result.stdout}\n"
-            f"STDERR: {result.stderr}"
+            f"Kustomize build failed for {overlay_path}\n" f"STDOUT: {result.stdout}\n" f"STDERR: {result.stderr}"
         )
 
         # Assert output is not empty
@@ -73,12 +66,7 @@ class TestKustomizeBuilds:
         full_path = REPO_ROOT / overlay_path
 
         # Build the overlay
-        result = subprocess.run(
-            ["kustomize", "build", str(full_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT)
 
         # Skip if build failed (covered by other test)
         if result.returncode != 0:
@@ -93,9 +81,7 @@ class TestKustomizeBuilds:
             for i, doc in enumerate(documents):
                 if doc is None:  # Empty document separator
                     continue
-                assert isinstance(doc, dict), (
-                    f"Document {i} in {overlay_path} is not a valid Kubernetes manifest"
-                )
+                assert isinstance(doc, dict), f"Document {i} in {overlay_path} is not a valid Kubernetes manifest"
                 assert "apiVersion" in doc, f"Document {i} missing apiVersion in {overlay_path}"
                 assert "kind" in doc, f"Document {i} missing kind in {overlay_path}"
 
@@ -109,12 +95,7 @@ class TestStagingGKEOverlay:
     def _build_overlay(self):
         """Helper to build staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -209,12 +190,7 @@ class TestProductionGKEOverlay:
     def _build_overlay(self):
         """Helper to build production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -278,10 +254,7 @@ class TestProductionGKEOverlay:
                         liveness = container.get("livenessProbe", {})
                         readiness = container.get("readinessProbe", {})
 
-                        has_http_probe = (
-                            liveness.get("httpGet") is not None or
-                            readiness.get("httpGet") is not None
-                        )
+                        has_http_probe = liveness.get("httpGet") is not None or readiness.get("httpGet") is not None
 
                         if has_http_probe:
                             # Must have health check flags
@@ -332,12 +305,7 @@ class TestBaseResources:
     def _build_base(self):
         """Helper to build base."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(
-            ["kustomize", "build", str(base_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -444,11 +412,7 @@ class TestServiceMeshConfig:
 @pytest.fixture(scope="session")
 def check_kustomize_installed():
     """Ensure kustomize is installed before running tests."""
-    result = subprocess.run(
-        ["kustomize", "version"],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["kustomize", "version"], capture_output=True, text=True)
     if result.returncode != 0:
         pytest.fail(
             "kustomize is not installed. Install it with:\n"

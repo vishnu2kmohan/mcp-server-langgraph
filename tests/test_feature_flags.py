@@ -194,7 +194,6 @@ class TestFeatureFlags:
         """Test feature flags integrate with main config"""
         # This would test integration with config.py
         # Will be implemented when config.py is updated
-        pass
 
 
 @pytest.mark.unit

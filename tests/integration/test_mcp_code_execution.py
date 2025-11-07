@@ -5,7 +5,7 @@ Tests execute_python and search_tools integration with MCP server.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

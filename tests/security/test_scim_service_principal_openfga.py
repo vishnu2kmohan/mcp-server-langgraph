@@ -18,7 +18,7 @@ References:
 - CWE-863: Incorrect Authorization
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import HTTPException

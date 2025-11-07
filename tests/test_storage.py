@@ -5,7 +5,6 @@ Covers abstract interfaces and data models for compliance data storage.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List
 
 import pytest
 

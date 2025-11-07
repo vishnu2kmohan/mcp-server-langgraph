@@ -15,9 +15,7 @@ Design Principles:
 These tests would have caught ALL 5 bugs from OpenAI Codex review.
 """
 
-import os
 import sys
-from typing import Optional
 
 import pytest
 

@@ -7,14 +7,10 @@ Covers HIPAA Security Rule technical safeguards:
 - 164.312(c)(1): Integrity Controls
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 from mcp_server_langgraph.auth.hipaa import (
     DataIntegrityCheck,
-    EmergencyAccessGrant,
     EmergencyAccessRequest,
     HIPAAControls,
     PHIAuditLog,

@@ -168,22 +168,18 @@ class UserProfileStore(ABC):
     @abstractmethod
     async def create(self, profile: UserProfile) -> bool:
         """Create a new user profile"""
-        pass
 
     @abstractmethod
     async def get(self, user_id: str) -> Optional[UserProfile]:
         """Get user profile by ID"""
-        pass
 
     @abstractmethod
     async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
         """Update user profile"""
-        pass
 
     @abstractmethod
     async def delete(self, user_id: str) -> bool:
         """Delete user profile"""
-        pass
 
 
 class ConversationStore(ABC):
@@ -192,32 +188,26 @@ class ConversationStore(ABC):
     @abstractmethod
     async def create(self, conversation: Conversation) -> str:
         """Create a new conversation and return its ID"""
-        pass
 
     @abstractmethod
     async def get(self, conversation_id: str) -> Optional[Conversation]:
         """Get conversation by ID"""
-        pass
 
     @abstractmethod
     async def list_user_conversations(self, user_id: str, archived: Optional[bool] = None) -> List[Conversation]:
         """List all conversations for a user"""
-        pass
 
     @abstractmethod
     async def update(self, conversation_id: str, updates: Dict[str, Any]) -> bool:
         """Update conversation"""
-        pass
 
     @abstractmethod
     async def delete(self, conversation_id: str) -> bool:
         """Delete conversation"""
-        pass
 
     @abstractmethod
     async def delete_user_conversations(self, user_id: str) -> int:
         """Delete all conversations for a user"""
-        pass
 
 
 class PreferencesStore(ABC):
@@ -226,22 +216,18 @@ class PreferencesStore(ABC):
     @abstractmethod
     async def get(self, user_id: str) -> Optional[UserPreferences]:
         """Get user preferences"""
-        pass
 
     @abstractmethod
     async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
         """Set user preferences"""
-        pass
 
     @abstractmethod
     async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
         """Update specific preferences"""
-        pass
 
     @abstractmethod
     async def delete(self, user_id: str) -> bool:
         """Delete user preferences"""
-        pass
 
 
 class AuditLogStore(ABC):
@@ -250,24 +236,20 @@ class AuditLogStore(ABC):
     @abstractmethod
     async def log(self, entry: AuditLogEntry) -> str:
         """Log an audit entry and return its ID"""
-        pass
 
     @abstractmethod
     async def get(self, log_id: str) -> Optional[AuditLogEntry]:
         """Get audit log entry by ID"""
-        pass
 
     @abstractmethod
     async def list_user_logs(
         self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
     ) -> List[AuditLogEntry]:
         """List audit logs for a user"""
-        pass
 
     @abstractmethod
     async def anonymize_user_logs(self, user_id: str) -> int:
         """Anonymize audit logs for a user (GDPR compliance)"""
-        pass
 
 
 class ConsentStore(ABC):
@@ -276,22 +258,18 @@ class ConsentStore(ABC):
     @abstractmethod
     async def create(self, record: ConsentRecord) -> str:
         """Create a consent record and return its ID"""
-        pass
 
     @abstractmethod
     async def get_user_consents(self, user_id: str) -> List[ConsentRecord]:
         """Get all consent records for a user"""
-        pass
 
     @abstractmethod
     async def get_latest_consent(self, user_id: str, consent_type: str) -> Optional[ConsentRecord]:
         """Get the latest consent record for a specific type"""
-        pass
 
     @abstractmethod
     async def delete_user_consents(self, user_id: str) -> int:
         """Delete all consent records for a user"""
-        pass
 
 
 # ============================================================================

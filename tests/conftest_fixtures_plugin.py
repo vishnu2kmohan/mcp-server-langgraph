@@ -10,9 +10,8 @@ This provides runtime enforcement in addition to pre-commit hooks.
 """
 
 import ast
-import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Tuple
 
 import pytest
 
@@ -103,7 +102,7 @@ class FixtureOrganizationPlugin:
                 if not file_path.endswith("conftest.py"):
                     self.violations.append(f"Autouse fixture '{fixture_name}' found outside conftest.py:")
                     self.violations.append(f"  - {file_path}:{line_num}")
-                    self.violations.append(f"  RULE: Module/session-scoped autouse fixtures must be in conftest.py")
+                    self.violations.append("  RULE: Module/session-scoped autouse fixtures must be in conftest.py")
                     self.violations.append("")
 
 

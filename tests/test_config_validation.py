@@ -167,7 +167,7 @@ class TestCORSValidation:
         """Test that wildcard CORS is rejected in production."""
         # Wildcard CORS is rejected during Settings initialization
         with pytest.raises(ValueError, match="Wildcard CORS.*not allowed in production"):
-            settings = Settings(
+            _ = Settings(
                 environment="production",
                 cors_allowed_origins=["*"],  # Wildcard
                 auth_provider="keycloak",  # Required for production

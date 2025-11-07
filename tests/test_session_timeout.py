@@ -10,9 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import jwt
 import pytest
 from fastapi import FastAPI, Request, Response
-from starlette.responses import JSONResponse
 
-from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData
+from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.middleware.session_timeout import SessionTimeoutMiddleware, create_session_timeout_middleware
 
 

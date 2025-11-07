@@ -5,7 +5,7 @@ Tests security-critical invariants using Hypothesis.
 """
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest

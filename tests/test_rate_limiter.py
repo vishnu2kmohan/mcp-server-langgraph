@@ -1,14 +1,11 @@
 """Unit tests for rate_limiter.py - Rate Limiting Middleware"""
 
-from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
-import jwt
 import pytest
 from fastapi import Request
 
 from mcp_server_langgraph.middleware.rate_limiter import (
-    RATE_LIMITS,
     get_dynamic_limit,
     get_rate_limit_for_tier,
     get_rate_limit_key,

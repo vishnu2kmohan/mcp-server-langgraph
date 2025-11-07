@@ -4,9 +4,8 @@ Unit tests for DynamicContextLoader
 Tests semantic search, indexing, progressive discovery, and caching.
 """
 
-import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from langchain_core.messages import SystemMessage

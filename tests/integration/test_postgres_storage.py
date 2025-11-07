@@ -15,7 +15,6 @@ Compliance:
 - SOC2 CC6.6: Audit logging and monitoring
 """
 
-import json
 import uuid
 from datetime import datetime, timedelta
 

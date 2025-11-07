@@ -15,8 +15,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from mcp_server_langgraph.core.config import Settings
-
 
 class TestKeycloakClientWiring:
     """Test that Keycloak client gets all required config from settings"""
@@ -313,7 +311,7 @@ class TestAPIKeyManagerRedisCacheWiring:
                 mock_redis.return_value = Mock()
 
                 # Act
-                _manager = get_api_key_manager()
+                get_api_key_manager()
 
                 # Assert: URL should be normalized (no double slash)
                 called_url = mock_redis.call_args[0][0]
@@ -358,7 +356,7 @@ class TestAPIKeyManagerRedisCacheWiring:
                 mock_manager_class.return_value = mock_manager
 
                 # Act
-                _manager = get_api_key_manager()
+                get_api_key_manager()
 
                 # Assert: URL should have ONLY the configured database (2), not 0/2
                 called_url = mock_redis.call_args[0][0]
@@ -401,7 +399,7 @@ class TestAPIKeyManagerRedisCacheWiring:
                 mock_manager_class.return_value = mock_manager
 
                 # Act
-                _manager = get_api_key_manager()
+                get_api_key_manager()
 
                 # Assert: Query parameters should be preserved
                 called_url = mock_redis.call_args[0][0]

@@ -12,7 +12,6 @@ import pytest
 from mcp_server_langgraph.resilience.fallback import (
     CachedValueFallback,
     DefaultValueFallback,
-    FallbackStrategy,
     FunctionFallback,
     StaleDataFallback,
     fail_closed,

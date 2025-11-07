@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService, DeletionResult
+from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 from mcp_server_langgraph.compliance.gdpr.storage import (
     InMemoryAuditLogStore,
@@ -193,7 +193,7 @@ class TestDataDeletionAuditLogging:
         username = "testuser3"
 
         # Create test data
-        from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserPreferences, UserProfile
+        from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserProfile
 
         profile = UserProfile(
             user_id=user_id,

@@ -812,7 +812,6 @@ async def postgres_with_schema(postgres_connection_real):
         async def test_postgres_storage(postgres_with_schema):
             # Schema already created (audit_logs, consent_records, etc.)
     """
-    import os
     from pathlib import Path
 
     # Find schema file

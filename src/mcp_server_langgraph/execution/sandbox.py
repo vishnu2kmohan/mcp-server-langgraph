@@ -15,8 +15,6 @@ from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 class SandboxError(Exception):
     """Raised when sandbox operations fail"""
 
-    pass
-
 
 @dataclass
 class ExecutionResult:
@@ -89,7 +87,6 @@ class Sandbox(ABC):
         Raises:
             SandboxError: If sandbox setup or execution fails
         """
-        pass
 
     def _create_success_result(
         self,

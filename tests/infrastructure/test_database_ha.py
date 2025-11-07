@@ -7,8 +7,6 @@ to ensure proper HA setup, failover capabilities, and backup configurations.
 Following TDD principles: Write tests first, then ensure infrastructure meets requirements.
 """
 
-import json
-import subprocess
 from typing import Any, Dict
 
 import pytest

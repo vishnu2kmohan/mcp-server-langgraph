@@ -175,7 +175,6 @@ class UserProvider(ABC):
         Returns:
             AuthResponse with authentication result
         """
-        pass
 
     @abstractmethod
     async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
@@ -188,7 +187,6 @@ class UserProvider(ABC):
         Returns:
             UserData or None if not found
         """
-        pass
 
     @abstractmethod
     async def get_user_by_username(self, username: str) -> Optional[UserData]:
@@ -201,7 +199,6 @@ class UserProvider(ABC):
         Returns:
             UserData or None if not found
         """
-        pass
 
     @abstractmethod
     async def verify_token(self, token: str) -> TokenVerification:
@@ -214,7 +211,6 @@ class UserProvider(ABC):
         Returns:
             TokenVerification with validation result
         """
-        pass
 
     @abstractmethod
     async def list_users(self) -> List[UserData]:
@@ -224,7 +220,6 @@ class UserProvider(ABC):
         Returns:
             List of UserData objects
         """
-        pass
 
 
 class InMemoryUserProvider(UserProvider):

@@ -4,11 +4,10 @@ Integration tests for distributed conversation checkpointing with Redis
 Tests the RedisSaver checkpointer for multi-replica deployments with HPA auto-scaling.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 
 from mcp_server_langgraph.core.agent import AgentState, _create_checkpointer, create_agent_graph

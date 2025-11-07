@@ -10,8 +10,8 @@ import pytest
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware, create_session_store, create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
-from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, SessionStore
-from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider, UserProvider
+from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore
+from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider
 
 # ============================================================================
 # Fixtures
@@ -772,7 +772,7 @@ class TestSessionStoreRegistration:
         mock_redis_class.return_value = mock_redis_instance
 
         # Create middleware
-        middleware = create_auth_middleware(mock_settings)
+        create_auth_middleware(mock_settings)
 
         # Verify Redis store was registered globally
         global_store = get_session_store()

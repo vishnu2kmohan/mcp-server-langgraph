@@ -127,7 +127,6 @@ class SessionStore(ABC):
         Returns:
             Session ID
         """
-        pass
 
     @abstractmethod
     async def get(self, session_id: str) -> Optional[SessionData]:
@@ -140,7 +139,6 @@ class SessionStore(ABC):
         Returns:
             Session data or None if not found/expired
         """
-        pass
 
     @abstractmethod
     async def update(self, session_id: str, metadata: Dict[str, Any]) -> bool:
@@ -154,7 +152,6 @@ class SessionStore(ABC):
         Returns:
             True if successful, False otherwise
         """
-        pass
 
     @abstractmethod
     async def refresh(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
@@ -168,7 +165,6 @@ class SessionStore(ABC):
         Returns:
             True if successful, False otherwise
         """
-        pass
 
     @abstractmethod
     async def delete(self, session_id: str) -> bool:
@@ -181,7 +177,6 @@ class SessionStore(ABC):
         Returns:
             True if deleted, False if not found
         """
-        pass
 
     @abstractmethod
     async def list_user_sessions(self, user_id: str) -> List[SessionData]:
@@ -194,7 +189,6 @@ class SessionStore(ABC):
         Returns:
             List of session data
         """
-        pass
 
     @abstractmethod
     async def delete_user_sessions(self, user_id: str) -> int:
@@ -207,7 +201,6 @@ class SessionStore(ABC):
         Returns:
             Number of sessions deleted
         """
-        pass
 
     @abstractmethod
     async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
@@ -220,7 +213,6 @@ class SessionStore(ABC):
         Returns:
             List of inactive session data
         """
-        pass
 
     @abstractmethod
     async def delete_inactive_sessions(self, cutoff_date: datetime) -> int:
@@ -233,7 +225,6 @@ class SessionStore(ABC):
         Returns:
             Number of sessions deleted
         """
-        pass
 
     def _generate_session_id(self) -> str:
         """Generate cryptographically secure session ID"""

@@ -9,9 +9,7 @@ Tests OpenTelemetry metrics recording for all resilience patterns:
 - Fallback metrics
 """
 
-from unittest.mock import Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 from mcp_server_langgraph.resilience import metrics
 

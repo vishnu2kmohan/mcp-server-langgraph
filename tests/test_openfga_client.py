@@ -2,10 +2,10 @@ import os
 
 """Unit tests for openfga_client.py - OpenFGA Integration"""
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
+from openfga_sdk.client.models import ClientWriteRequest
 
 
 @pytest.mark.unit

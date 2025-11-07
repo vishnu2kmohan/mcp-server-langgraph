@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 
 import pytest
-from jsonschema import ValidationError, validate
 
 
 @pytest.fixture
@@ -223,7 +222,7 @@ class TestAPIContractIntegration:
 
             # Test health endpoint if it exists in schema
             if "/health/" in openapi_schema.get("paths", {}):
-                case = schema["/health/"]["get"].make_case()
+                schema["/health/"]["get"].make_case()
                 client = TestClient(app)
 
                 response = client.get("/health/")
@@ -254,7 +253,7 @@ class TestAPIContractIntegration:
 
             # Use schemathesis.openapi.from_dict (API changed in 4.x)
             # Schema validation happens automatically in schemathesis 4.x
-            schema = schemathesis.openapi.from_dict(openapi_schema)
+            schemathesis.openapi.from_dict(openapi_schema)
 
             client = TestClient(app)
 

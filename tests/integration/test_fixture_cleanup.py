@@ -92,7 +92,6 @@ class TestCleanupFixturePerformance:
     @pytest.mark.asyncio
     async def test_cleanup_is_fast_postgres(self, postgres_connection_clean):
         """Cleanup should be fast (< 100ms)"""
-        import time
 
         # Insert some data
         await postgres_connection_clean.execute("CREATE TABLE IF NOT EXISTS test_perf (id SERIAL PRIMARY KEY, data TEXT)")

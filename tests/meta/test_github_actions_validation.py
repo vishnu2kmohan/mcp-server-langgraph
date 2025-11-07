@@ -10,7 +10,7 @@ Following TDD principles - these tests define the expected valid state before fi
 
 import re
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 import pytest
 import yaml
@@ -58,7 +58,6 @@ class TestGitHubActionsVersions:
         This test will FAIL until all occurrences of v7.1.1 are fixed.
         """
         invalid_version = "astral-sh/setup-uv@v7.1.1"
-        valid_versions = ["astral-sh/setup-uv@v7.1.0", "astral-sh/setup-uv@v7"]
 
         violations = []
 
@@ -87,7 +86,6 @@ class TestGitHubActionsVersions:
         This test will FAIL until all occurrences of v4.3.0 are fixed.
         """
         invalid_version = "actions/cache@v4.3.0"
-        valid_versions = ["actions/cache@v4.2.0", "actions/cache@v4"]
 
         violations = []
 

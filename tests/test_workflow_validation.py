@@ -264,7 +264,7 @@ class TestWorkflowValidation:
                                 {
                                     "workflow": workflow_name,
                                     "job": job_name,
-                                    "step": step_name or f"Step {i+1}",
+                                    "step": step_name or f"Step {i + 1}",
                                     "issue": "Summary step without status conditional",
                                     "recommendation": "Add if: success() or use ${{ job.status }} in summary content",
                                 }

@@ -14,7 +14,7 @@ High-priority improvements tested:
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import pytest
 import yaml
@@ -289,8 +289,6 @@ class TestRBACLeastPrivilege:
             pytest.skip("No Role or ClusterRole found")
 
         # Check for overly permissive verbs
-        dangerous_verbs = ["*", "create", "delete", "deletecollection", "patch"]
-        dangerous_resources = ["*", "secrets", "serviceaccounts", "roles"]
 
         violations = []
 

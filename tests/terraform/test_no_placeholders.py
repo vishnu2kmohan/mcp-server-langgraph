@@ -10,7 +10,6 @@ Following TDD Red-Green-Refactor:
 - REFACTOR: Improve validation logic as needed
 """
 
-import os
 import re
 from pathlib import Path
 

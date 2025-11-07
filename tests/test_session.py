@@ -12,15 +12,13 @@ Tests cover:
 - Factory function
 """
 
-import asyncio
-import time
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from freezegun import freeze_time
 
-from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, SessionData, create_session_store
+from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, create_session_store
 
 # ============================================================================
 # InMemorySessionStore Tests

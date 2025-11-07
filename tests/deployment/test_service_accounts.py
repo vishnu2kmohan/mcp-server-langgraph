@@ -11,11 +11,11 @@ Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
 import subprocess
-import yaml
-import pytest
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
+import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -27,12 +27,7 @@ class TestServiceAccountSeparation:
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(
-            ["kustomize", "build", str(base_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Base build failed: {result.stderr}")
 
@@ -75,22 +70,13 @@ class TestServiceAccountSeparation:
             sa_to_workloads[sa].append(workload)
 
         # After fix: Each infrastructure component should have its own SA
-        expected_separate_components = [
-            "postgres",
-            "redis",
-            "keycloak",
-            "openfga",
-            "qdrant"
-        ]
+        expected_separate_components = ["postgres", "redis", "keycloak", "openfga", "qdrant"]
 
         violations = []
 
         for component in expected_separate_components:
             # Find workloads for this component
-            component_workloads = [
-                w for w in workload_to_sa.keys()
-                if component in w.lower()
-            ]
+            component_workloads = [w for w in workload_to_sa.keys() if component in w.lower()]
 
             if not component_workloads:
                 continue  # Component not deployed
@@ -100,10 +86,7 @@ class TestServiceAccountSeparation:
                 sa = workload_to_sa[workload]
 
                 # Check if SA is shared with other non-related workloads
-                sharing_workloads = [
-                    w for w in sa_to_workloads[sa]
-                    if w != workload and component not in w.lower()
-                ]
+                sharing_workloads = [w for w in sa_to_workloads[sa] if w != workload and component not in w.lower()]
 
                 if sharing_workloads:
                     violations.append(
@@ -138,13 +121,7 @@ class TestServiceAccountSeparation:
                     service_accounts.append(name)
 
         # Expected SAs (after implementing separation)
-        expected_sas = [
-            "postgres-sa",
-            "redis-sa",
-            "keycloak-sa",
-            "openfga-sa",
-            "qdrant-sa"
-        ]
+        expected_sas = ["postgres-sa", "redis-sa", "keycloak-sa", "openfga-sa", "qdrant-sa"]
 
         # Check which components are actually deployed
         workloads = [
@@ -165,8 +142,7 @@ class TestServiceAccountSeparation:
 
         # This test will FAIL initially (before creating separate SAs)
         assert not missing_sas, (
-            f"Missing ServiceAccounts for deployed components: {missing_sas}. "
-            f"Found SAs: {service_accounts}"
+            f"Missing ServiceAccounts for deployed components: {missing_sas}. " f"Found SAs: {service_accounts}"
         )
 
 
@@ -177,12 +153,7 @@ class TestWorkloadIdentityBindings:
     def staging_service_accounts(self):
         """Load ServiceAccounts from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Staging build failed: {result.stderr}")
 
@@ -193,12 +164,7 @@ class TestWorkloadIdentityBindings:
     def production_service_accounts(self):
         """Load ServiceAccounts from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -269,18 +235,10 @@ class TestWorkloadIdentityBindings:
         - Keycloak (for Cloud SQL)
         - External Secrets Operator
         """
-        critical_sa_patterns = [
-            "mcp-server-langgraph",
-            "openfga",
-            "keycloak",
-            "external-secrets"
-        ]
+        critical_sa_patterns = ["mcp-server-langgraph", "openfga", "keycloak", "external-secrets"]
 
         for pattern in critical_sa_patterns:
-            matching_sas = [
-                sa for sa in staging_service_accounts
-                if pattern in sa.get("metadata", {}).get("name", "").lower()
-            ]
+            matching_sas = [sa for sa in staging_service_accounts if pattern in sa.get("metadata", {}).get("name", "").lower()]
 
             for sa in matching_sas:
                 annotations = sa.get("metadata", {}).get("annotations", {})
@@ -299,12 +257,7 @@ class TestRBACConfiguration:
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(
-            ["kustomize", "build", str(base_path)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT
-        )
+        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
         if result.returncode != 0:
             pytest.skip(f"Base build failed: {result.stderr}")
 
@@ -333,28 +286,20 @@ class TestRBACConfiguration:
                 for rule_idx, rule in enumerate(rules):
                     # Check for wildcard verbs
                     if "*" in rule.get("verbs", []):
-                        violations.append(
-                            f"{kind} '{name}' rule[{rule_idx}] uses wildcard verbs: {rule['verbs']}"
-                        )
+                        violations.append(f"{kind} '{name}' rule[{rule_idx}] uses wildcard verbs: {rule['verbs']}")
 
                     # Check for wildcard resources
                     if "*" in rule.get("resources", []):
-                        violations.append(
-                            f"{kind} '{name}' rule[{rule_idx}] uses wildcard resources: {rule['resources']}"
-                        )
+                        violations.append(f"{kind} '{name}' rule[{rule_idx}] uses wildcard resources: {rule['resources']}")
 
                     # Check for wildcard API groups
                     if "*" in rule.get("apiGroups", []):
-                        violations.append(
-                            f"{kind} '{name}' rule[{rule_idx}] uses wildcard apiGroups: {rule['apiGroups']}"
-                        )
+                        violations.append(f"{kind} '{name}' rule[{rule_idx}] uses wildcard apiGroups: {rule['apiGroups']}")
 
         if violations:
             import warnings
-            warnings.warn(
-                "Potentially overly permissive RBAC rules (consider restricting):\n" +
-                "\n".join(violations)
-            )
+
+            warnings.warn("Potentially overly permissive RBAC rules (consider restricting):\n" + "\n".join(violations))
 
     def test_role_bindings_reference_existing_service_accounts(self, base_resources):
         """

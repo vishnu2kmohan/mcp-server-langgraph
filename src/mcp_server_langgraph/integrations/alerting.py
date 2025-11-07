@@ -109,12 +109,10 @@ class AlertProvider(ABC):
         Returns:
             True if successful, False otherwise
         """
-        pass
 
     @abstractmethod
     async def close(self) -> None:
         """Cleanup resources"""
-        pass
 
 
 class PagerDutyProvider(AlertProvider):

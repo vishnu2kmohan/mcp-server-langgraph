@@ -5,7 +5,7 @@ Tests the complete gather-action-verify-repeat cycle.
 These are integration tests that may require mocking but test full workflows.
 """
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import HumanMessage

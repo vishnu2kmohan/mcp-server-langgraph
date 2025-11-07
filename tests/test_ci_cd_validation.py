@@ -14,7 +14,7 @@ These tests ensure such issues cannot recur.
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import List, Set
 
 import pytest
 import yaml

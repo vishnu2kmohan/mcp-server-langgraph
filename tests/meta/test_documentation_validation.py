@@ -14,7 +14,6 @@ Following TDD principles to prevent regression of documentation issues.
 import json
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 

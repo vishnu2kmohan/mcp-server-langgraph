@@ -10,10 +10,6 @@ These helper functions make it easy to create test instances of:
 Following TDD: Write tests first, then implement.
 """
 
-from unittest.mock import Mock, patch
-
-import pytest
-
 
 class TestAgentHelpers:
     """Test helper functions for creating test agents"""

@@ -1,0 +1,154 @@
+src/mcp_server_langgraph/database/models.py:12:1: F401 'sqlalchemy.Column' imported but unused
+from sqlalchemy import JSON, Column, DateTime, Index, Integer, Numeric, String, Text
+^
+src/mcp_server_langgraph/database/models.py:12:1: F401 'sqlalchemy.Text' imported but unused
+from sqlalchemy import JSON, Column, DateTime, Index, Integer, Numeric, String, Text
+^
+src/mcp_server_langgraph/execution/code_validator.py:10:1: F401 'typing.Any' imported but unused
+from typing import Any
+^
+src/mcp_server_langgraph/execution/code_validator.py:28:9: F841 local variable 'status' is assigned to but never used
+        status = "valid" if self.is_valid else "invalid"
+        ^
+src/mcp_server_langgraph/infrastructure/middleware.py:9:1: F401 'typing.Optional' imported but unused
+from typing import Any, Optional
+^
+src/mcp_server_langgraph/infrastructure/middleware.py:65:5: F841 local variable 'auth_provider' is assigned to but never used
+    auth_provider = container.get_auth()
+    ^
+src/mcp_server_langgraph/monitoring/budget_monitor.py:551:9: F841 local variable 'budget_start' is assigned to but never used
+        budget_start = budget.start_date
+        ^
+src/mcp_server_langgraph/tools/tool_discovery.py:11:1: F401 'langchain_core.tools.BaseTool' imported but unused
+from langchain_core.tools import BaseTool, tool
+^
+src/mcp_server_langgraph/tools/tool_discovery.py:36:1: C901 'search_tools' is too complex (21)
+def search_tools(
+^
+src/mcp_server_langgraph/tools/tool_discovery.py:87:13: F402 import 'tool' from line 11 shadowed by loop variable
+        for tool in tools:
+            ^
+tests/api/test_app_configuration.py:55:13: F841 local variable 'app' is assigned to but never used
+            app = create_app()
+            ^
+tests/api/test_app_configuration.py:72:71: F841 local variable 'mock_setup' is assigned to but never used
+        with patch("mcp_server_langgraph.app.setup_rate_limiting") as mock_setup:
+                                                                      ^
+tests/api/test_app_configuration.py:93:13: F841 local variable 'cors_middleware_count' is assigned to but never used
+            cors_middleware_count = sum(1 for middleware in app.user_middleware if "CORS" in str(middleware))
+            ^
+tests/api/test_app_configuration.py:117:21: F841 local variable 'app' is assigned to but never used
+                    app = create_app()
+                    ^
+tests/api/test_app_configuration.py:140:17: F841 local variable 'app' is assigned to but never used
+                app = create_app()
+                ^
+tests/api/test_app_configuration.py:187:13: F841 local variable 'app' is assigned to but never used
+            app = create_app()
+            ^
+tests/api/test_app_configuration.py:258:21: F841 local variable 'app' is assigned to but never used
+                    app = create_app()
+                    ^
+tests/api/test_app_configuration.py:276:25: F841 local variable 'app' is assigned to but never used
+                        app = create_app()
+                        ^
+tests/api/test_health.py:273:13: F841 local variable 'app' is assigned to but never used
+            app = create_app()
+            ^
+tests/api/test_openapi_compliance.py:226:17: F841 local variable 'case' is assigned to but never used
+                case = schema["/health/"]["get"].make_case()
+                ^
+tests/api/test_openapi_compliance.py:257:13: F841 local variable 'schema' is assigned to but never used
+            schema = schemathesis.openapi.from_dict(openapi_schema)
+            ^
+tests/conftest_fixtures_plugin.py:106:44: F541 f-string is missing placeholders
+                    self.violations.append(f"  RULE: Module/session-scoped autouse fixtures must be in conftest.py")
+                                           ^
+tests/deployment/test_kustomize_builds.py:282:65: W504 line break after binary operator
+                            liveness.get("httpGet") is not None or
+                                                                ^
+tests/deployment/test_network_policies.py:313:5: F841 local variable 'workloads' is assigned to but never used
+    workloads = [
+    ^
+tests/deployment/test_service_accounts.py:355:86: W504 line break after binary operator
+                "Potentially overly permissive RBAC rules (consider restricting):\n" +
+                                                                                     ^
+tests/kubernetes/test_high_priority_improvements.py:292:9: F841 local variable 'dangerous_verbs' is assigned to but never used
+        dangerous_verbs = ["*", "create", "delete", "deletecollection", "patch"]
+        ^
+tests/kubernetes/test_high_priority_improvements.py:293:9: F841 local variable 'dangerous_resources' is assigned to but never used
+        dangerous_resources = ["*", "secrets", "serviceaccounts", "roles"]
+        ^
+tests/meta/test_fixture_validation.py:74:30: F541 f-string is missing placeholders
+                error_msg += f"    This function returns Generator but lacks @pytest.fixture decorator\n"
+                             ^
+tests/meta/test_github_actions_validation.py:61:9: F841 local variable 'valid_versions' is assigned to but never used
+        valid_versions = ["astral-sh/setup-uv@v7.1.0", "astral-sh/setup-uv@v7"]
+        ^
+tests/meta/test_github_actions_validation.py:90:9: F841 local variable 'valid_versions' is assigned to but never used
+        valid_versions = ["actions/cache@v4.2.0", "actions/cache@v4"]
+        ^
+tests/meta/test_suite_validation.py:416:21: F841 local variable 'lines' is assigned to but never used
+                    lines = content.split("\n")
+                    ^
+tests/security/test_accurate_token_counting.py:72:13: F541 f-string is missing placeholders
+            f"SECURITY: Token counting appears to be using len(text)//4 fallback " f"instead of tiktoken for GPT-4"
+            ^
+tests/security/test_api_key_indexed_lookup.py:64:9: F841 local variable 'result' is assigned to but never used
+        result = await manager.create_api_key(username="testuser", description="Test key", expires_in_days=90)
+        ^
+tests/security/test_api_key_indexed_lookup.py:107:13: F841 local variable 'result' is assigned to but never used
+            result = await manager.validate_and_get_user(api_key)
+            ^
+tests/security/test_api_key_indexed_lookup.py:252:21: F841 local variable 'result' is assigned to but never used
+                    result = await manager.create_api_key(username="testuser", description="Test", expires_in_days=90)
+                    ^
+tests/test_auth_factory.py:775:9: F841 local variable 'middleware' is assigned to but never used
+        middleware = create_auth_middleware(mock_settings)
+        ^
+tests/test_config_validation.py:170:13: F841 local variable 'settings' is assigned to but never used
+            settings = Settings(
+            ^
+tests/test_helper/bats-core/docs/source/conf.py:42:18: E201 whitespace after '{'
+html_sidebars = {  '**': [
+                 ^
+tests/test_helper/bats-core/docs/source/conf.py:43:9: E126 continuation line over-indented for hanging indent
+        'about.html',
+        ^
+tests/test_helper/bats-core/docs/source/conf.py:47:23: E202 whitespace before '}'
+        'donate.html'] }
+                      ^
+tests/test_helper/bats-core/docs/source/conf.py:60:1: E265 block comment should start with '# '
+#html_theme = 'alabaster'
+^
+tests/test_helper/bats-core/docs/source/conf.py:68:1: E265 block comment should start with '# '
+#man_pages = [ ('man.1', 'bats', 'bats documentation', ['bats-core Contributors'], 1)]
+^
+tests/test_helper/bats-core/docs/source/conf.py:70:1: E302 expected 2 blank lines, found 1
+def setup(app):
+^
+tests/test_workflow_validation.py:267:67: E226 missing whitespace around arithmetic operator
+                                    "step": step_name or f"Step {i+1}",
+                                                                  ^
+tests/unit/test_dependencies_wiring.py:316:17: F841 local variable '_manager' is assigned to but never used
+                _manager = get_api_key_manager()
+                ^
+tests/unit/test_dependencies_wiring.py:361:17: F841 local variable '_manager' is assigned to but never used
+                _manager = get_api_key_manager()
+                ^
+tests/unit/test_dependencies_wiring.py:404:17: F841 local variable '_manager' is assigned to but never used
+                _manager = get_api_key_manager()
+                ^
+1     C901 'search_tools' is too complex (21)
+1     E126 continuation line over-indented for hanging indent
+1     E201 whitespace after '{'
+1     E202 whitespace before '}'
+1     E226 missing whitespace around arithmetic operator
+2     E265 block comment should start with '# '
+1     E302 expected 2 blank lines, found 1
+5     F401 'sqlalchemy.Column' imported but unused
+1     F402 import 'tool' from line 11 shadowed by loop variable
+3     F541 f-string is missing placeholders
+28    F841 local variable 'status' is assigned to but never used
+2     W504 line break after binary operator
+47

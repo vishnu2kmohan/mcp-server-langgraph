@@ -14,9 +14,8 @@ Critical issues tested:
 5. GKE production overlay namespace mismatch
 """
 
-import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import pytest
 import yaml

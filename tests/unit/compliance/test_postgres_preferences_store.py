@@ -11,7 +11,7 @@ import asyncpg
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresPreferencesStore, PostgresUserProfileStore
-from mcp_server_langgraph.compliance.gdpr.storage import UserPreferences, UserProfile
+from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
 
 @pytest.fixture

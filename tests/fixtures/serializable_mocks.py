@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from pydantic import Field, PrivateAttr
 

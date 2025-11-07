@@ -7,13 +7,10 @@ Security-first design following defense-in-depth principles.
 
 import ast
 from dataclasses import dataclass, field
-from typing import Any
 
 
 class CodeValidationError(Exception):
     """Raised when code validation fails"""
-
-    pass
 
 
 @dataclass
@@ -25,7 +22,7 @@ class ValidationResult:
     warnings: list[str] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        status = "valid" if self.is_valid else "invalid"
+        "valid" if self.is_valid else "invalid"
         return f"ValidationResult(is_valid={self.is_valid}, errors={len(self.errors)}, warnings={len(self.warnings)})"
 
 

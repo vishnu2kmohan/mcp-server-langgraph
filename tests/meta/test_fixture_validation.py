@@ -17,7 +17,7 @@ References:
 
 import ast
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 import pytest
 
@@ -71,7 +71,7 @@ class TestFixtureDecorators:
             error_msg = "Found Generator-returning functions without @pytest.fixture decorator:\n"
             for file_path, func_name, line_num in violations:
                 error_msg += f"\n  {file_path}:{line_num} - function '{func_name}()'\n"
-                error_msg += f"    This function returns Generator but lacks @pytest.fixture decorator\n"
+                error_msg += "    This function returns Generator but lacks @pytest.fixture decorator\n"
             error_msg += (
                 "\nAdd @pytest.fixture decorator to these functions to ensure they work as fixtures.\n"
                 "If they're not meant to be fixtures, rename them to not follow fixture naming patterns."

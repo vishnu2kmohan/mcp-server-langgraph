@@ -13,8 +13,6 @@ Tests cover:
 - Edge cases
 """
 
-from pathlib import Path
-
 import pytest
 
 from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agent

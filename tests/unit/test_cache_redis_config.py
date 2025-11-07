@@ -156,7 +156,6 @@ class TestCacheServiceComparison:
         """
         # This test will PASS after implementing the fix
         # It documents expected behavior
-        pass
 
 
 @pytest.mark.integration

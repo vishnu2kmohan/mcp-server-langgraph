@@ -12,12 +12,10 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.health import (
-    HealthCheckResult,
     SystemValidationError,
     router,
     run_startup_validation,
     validate_api_key_cache_configured,
-    validate_docker_sandbox_security,
     validate_observability_initialized,
     validate_session_store_registered,
 )
@@ -270,7 +268,7 @@ class TestHealthCheckIntegration:
         with patch("mcp_server_langgraph.app.run_startup_validation") as mock_validation:
             from mcp_server_langgraph.app import create_app
 
-            app = create_app()
+            create_app()
 
             # Verify startup validation was called
             mock_validation.assert_called_once()
