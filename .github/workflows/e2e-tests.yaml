@@ -105,18 +105,19 @@ jobs:
         docker compose -f docker-compose.test.yml up -d
 
         echo "Waiting for all services to report healthy..."
-        echo "This may take up to 7.5 minutes for Keycloak to initialize on slow runners..."
+        echo "This may take up to 10 minutes for all services to initialize on slow runners..."
 
-        # Wait for all services to be healthy (max 7.5 minutes = 450 seconds)
+        # Wait for all services to be healthy (max 10 minutes = 600 seconds)
         # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
-        # Increased timeout to 7.5 minutes to accommodate slower GitHub Actions runners
-        # (from audit: E2E tests failing due to health check timeouts)
-        for i in {1..150}; do
+        # Multiple services (postgres, redis, qdrant, keycloak, openfga) = ~5-8 min total
+        # Increased timeout to 10 minutes to accommodate slower GitHub Actions runners
+        # (from audit: E2E tests had 64% failure rate with 7.5 min timeout)
+        for i in {1..200}; do
           # Count healthy services by checking health status directly (docker compose ps --filter only supports status, not health)
           HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
           TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
 
-          echo "Attempt $i/150: $HEALTHY/$TOTAL services healthy"
+          echo "Attempt $i/200: $HEALTHY/$TOTAL services healthy"
 
           # Show which services are not healthy yet (for debugging)
           if [ "$HEALTHY" -ne "$TOTAL" ]; then
@@ -131,8 +132,8 @@ jobs:
             break
           fi
 
-          if [ $i -eq 150 ]; then
-            echo "❌ Timeout waiting for services after 7.5 minutes. Current status:"
+          if [ $i -eq 200 ]; then
+            echo "❌ Timeout waiting for services after 10 minutes. Current status:"
             docker compose -f docker-compose.test.yml ps
             echo ""
             echo "Showing logs for all services:"
