@@ -386,6 +386,55 @@ class TestSessionTimeoutHelpers:
             # Should use JWT session ID, not cookie
             assert session_id == "jwt-session-priority"
 
+    def test_get_session_id_from_rs256_jwt_token(self, app, mock_session_store):
+        """Test extracting session ID from RS256 JWT token (asymmetric algorithm)"""
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+
+        middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)
+
+        # Generate RSA key pair for testing
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+        public_key = private_key.public_key()
+
+        # Serialize keys to PEM format
+        private_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        public_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        # Create RS256 JWT
+        payload = {
+            "sub": "user:david",
+            "session_id": "rs256-session-999",
+            "exp": 9999999999,
+        }
+        token = jwt.encode(payload, private_pem, algorithm="RS256")
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers.get.return_value = f"Bearer {token}"
+        mock_request.cookies.get.return_value = None
+
+        with patch("mcp_server_langgraph.middleware.session_timeout.settings") as mock_settings:
+            mock_settings.jwt_algorithm = "RS256"
+            mock_settings.jwt_public_key = public_pem.decode('utf-8')
+            mock_settings.jwt_secret_key = None  # RS256 doesn't use secret key
+
+            session_id = middleware._get_session_id(mock_request)
+
+            # Should successfully extract session ID from RS256 token
+            assert session_id == "rs256-session-999"
+
     def test_is_public_endpoint_health(self, app, mock_session_store):
         """Test /health is recognized as public"""
         middleware = SessionTimeoutMiddleware(app=app, session_store=mock_session_store)

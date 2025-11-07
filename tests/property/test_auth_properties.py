@@ -53,25 +53,6 @@ relations = st.sampled_from(["executor", "viewer", "editor", "owner", "admin", "
 expiration_seconds = st.integers(min_value=1, max_value=86400)  # 1s to 24h
 
 
-@pytest.fixture(scope="module", autouse=True)
-def init_test_observability():
-    """Initialize observability for property-based auth tests"""
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    if not is_initialized():
-        test_settings = Settings(
-            log_format="text",
-            enable_file_logging=False,
-            langsmith_tracing=False,
-            observability_backend="opentelemetry",
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-    yield
-
-
-@pytest.mark.property
 @pytest.mark.unit
 class TestJWTProperties:
     """Property-based tests for JWT authentication"""

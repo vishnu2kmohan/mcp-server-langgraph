@@ -56,26 +56,6 @@ def cache_service_with_mock_redis():
         cache.mock_redis = mock_redis  # Store for assertions
         return cache
 
-
-@pytest.fixture(scope="module", autouse=True)
-def init_test_observability():
-    """Initialize observability for tests"""
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    if not is_initialized():
-        test_settings = Settings(
-            log_format="text",
-            enable_file_logging=False,
-            langsmith_tracing=False,
-            observability_backend="opentelemetry",
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-    yield
-
-
-class TestCacheServiceInitialization:
     """Test cache service initialization"""
 
     def test_init_with_defaults(self, cache_service_no_redis):

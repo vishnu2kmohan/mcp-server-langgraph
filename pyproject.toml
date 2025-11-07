@@ -405,6 +405,7 @@ markers = [
     "performance: Performance tests (load, stress, benchmarks)",
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
+    "infrastructure: Infrastructure and deployment configuration tests",
     "asyncio: Async tests using pytest-asyncio",
     "xdist_group: Test grouping for pytest-xdist parallel execution",
 ]

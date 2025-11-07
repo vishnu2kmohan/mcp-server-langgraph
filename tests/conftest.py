@@ -63,6 +63,46 @@ settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
 
 
 # ==============================================================================
+# Observability Initialization (Session-Scoped Autouse Fixture)
+# ==============================================================================
+
+
+@pytest.fixture(scope="session", autouse=True)
+def init_test_observability():
+    """
+    Initialize observability system for all tests (session-scoped).
+
+    This fixture runs automatically before all tests and initializes the
+    observability/telemetry system with test-appropriate settings.
+
+    Configuration:
+    - Text logging (no JSON in tests)
+    - No file logging (console only)
+    - LangSmith tracing disabled
+    - OpenTelemetry backend for tracing
+
+    Session scope ensures observability is initialized exactly once per test run,
+    avoiding duplicate initialization and improving test performance.
+
+    Consolidates 25+ duplicate module-scoped fixtures from individual test files.
+    See: tests/test_fixture_organization.py for validation
+    """
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
+# ==============================================================================
 # Docker Infrastructure Fixtures (Automated Lifecycle Management)
 # ==============================================================================
 

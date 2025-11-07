@@ -32,7 +32,6 @@ from typing import TypedDict, List
 from langgraph.graph import StateGraph
 
 
-@pytest.fixture(scope="module", autouse=True)
 def init_test_observability():
     """Initialize observability for tests"""
     from mcp_server_langgraph.core.config import Settings

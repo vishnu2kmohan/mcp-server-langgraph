@@ -33,6 +33,16 @@ tracer = trace.get_tracer(__name__)
 P = ParamSpec("P")
 T = TypeVar("T")
 
+# Check if redis is available (optional dependency)
+_REDIS_AVAILABLE = False
+try:
+    import redis as _redis_module
+
+    _REDIS_AVAILABLE = True
+except ImportError:
+    _redis_module = None  # type: ignore[assignment]
+    logger.debug("Redis module not available. Redis error retry logic will be skipped.")
+
 
 class RetryPolicy(str, Enum):
     """Retry policies for different error types"""
@@ -99,13 +109,14 @@ def should_retry_exception(exception: Exception) -> bool:
 
     # Generic logic: retry network errors, timeouts
     import httpx
-    import redis
 
     if isinstance(exception, (httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError)):
         return True
 
-    if isinstance(exception, (redis.ConnectionError, redis.TimeoutError)):
-        return True
+    # Check redis errors if redis is available (optional dependency)
+    if _REDIS_AVAILABLE and _redis_module is not None:
+        if isinstance(exception, (_redis_module.ConnectionError, _redis_module.TimeoutError)):
+            return True
 
     # Don't retry by default
     return False

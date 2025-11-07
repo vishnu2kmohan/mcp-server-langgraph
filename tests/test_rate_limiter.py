@@ -18,24 +18,6 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 
 
 @pytest.fixture(scope="class", autouse=True)
-def init_test_observability():
-    """Initialize observability for rate limiter tests that use logger"""
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    if not is_initialized():
-        test_settings = Settings(
-            log_format="text",
-            enable_file_logging=False,
-            langsmith_tracing=False,
-            observability_backend="opentelemetry",
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-    yield
-
-
-@pytest.mark.unit
 @pytest.mark.api
 class TestRateLimiterUserExtraction:
     """Test extracting user info from JWT tokens for rate limiting"""

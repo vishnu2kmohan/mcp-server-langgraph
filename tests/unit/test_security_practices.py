@@ -21,25 +21,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
-@pytest.fixture(scope="module", autouse=True)
-def init_test_observability():
-    """Initialize observability for tests"""
-    from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-    if not is_initialized():
-        test_settings = Settings(
-            log_format="text",
-            enable_file_logging=False,
-            langsmith_tracing=False,
-            observability_backend="opentelemetry",
-        )
-        init_observability(settings=test_settings, enable_file_logging=False)
-
-    yield
-
-
-class TestCryptographicHashSecurity:
+@pytest.mark.unit
+@pytest.mark.security
+class TestCryptographicSecurity:
     """Test that cryptographic operations use secure algorithms."""
 
     def test_kubernetes_sandbox_does_not_use_insecure_md5(self):
