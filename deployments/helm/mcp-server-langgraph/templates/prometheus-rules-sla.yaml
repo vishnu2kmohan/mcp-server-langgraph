@@ -8,5 +8,5 @@ metadata:
     {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
     prometheus: kube-prometheus
 spec:
-{{ .Files.Get "prometheus-rules/sla.yaml" | indent 2 }}
+  {{- .Files.Get "prometheus-rules/sla.yaml" | nindent 2 }}
 {{- end }}

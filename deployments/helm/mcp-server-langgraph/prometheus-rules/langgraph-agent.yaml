@@ -1,20 +1,8 @@
-# Prometheus Alert Rules for MCP Server with LangGraph
-# Deploy to Prometheus with: kubectl apply -f langgraph-agent.yaml
-
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: langgraph-agent-alerts
-  namespace: langgraph-agent
-  labels:
-    app: langgraph-agent
-    prometheus: kube-prometheus
-spec:
-  groups:
-    # High Priority - Critical Service Health
-    - name: langgraph_agent.critical
-      interval: 30s
-      rules:
+groups:
+  # High Priority - Critical Service Health
+  - name: langgraph_agent.critical
+    interval: 30s
+    rules:
         - alert: ServiceDown
           expr: up{job="langgraph-agent"} == 0
           for: 2m
