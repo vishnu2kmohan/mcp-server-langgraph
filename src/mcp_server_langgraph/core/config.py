@@ -295,7 +295,7 @@ class Settings(BaseSettings):
     # Improves API key validation from O(users×keys) to O(1)
     # Redis DB allocation: 0=sessions, 1=checkpoints, 2=api-key-cache, 3=rate-limiting
     api_key_cache_enabled: bool = True  # Enable Redis cache for API key validation
-    api_key_cache_db: int = 2  # Redis database number for API key cache
+    api_key_cache_db: int = 3  # Redis database number for API key cache (ISOLATED from L2 cache DB 2)
     api_key_cache_ttl: int = 3600  # Cache TTL in seconds (1 hour)
 
     # Storage Backend Configuration (for compliance data retention)

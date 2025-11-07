@@ -67,7 +67,7 @@ jobs:
           python-version: '3.12'
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.1.1
+        uses: astral-sh/setup-uv@v7
 
       - name: Install dependencies
         run: |
@@ -228,7 +228,7 @@ jobs:
           python-version: '3.12'
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v7.1.1
+        uses: astral-sh/setup-uv@v7
 
       - name: Check for improvements
         id: check
