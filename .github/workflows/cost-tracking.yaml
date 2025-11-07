@@ -55,9 +55,30 @@ concurrency:
   cancel-in-progress: false  # Don't cancel cost analysis runs
 
 jobs:
+  check-prerequisites:
+    name: Check Prerequisites
+    runs-on: ubuntu-latest
+    outputs:
+      can_run: ${{ steps.check.outputs.can_run }}
+    steps:
+      - name: Check repository
+        id: check
+        run: |
+          # Only run in main repository (not in forks)
+          # Cost tracking requires Actions API access which forks may not have
+          if [ "${{ github.repository }}" == "vishnu2kmohan/mcp-server-langgraph" ]; then
+            echo "can_run=true" >> $GITHUB_OUTPUT
+            echo "✓ Cost tracking enabled for main repository"
+          else
+            echo "can_run=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Skipping: Cost tracking only runs in main repository"
+          fi
+
   track-costs:
     name: Track GitHub Actions Costs
     runs-on: ubuntu-latest
+    needs: check-prerequisites
+    if: needs.check-prerequisites.outputs.can_run == 'true'
     timeout-minutes: 15
 
     steps:

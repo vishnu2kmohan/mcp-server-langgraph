@@ -34,12 +34,37 @@ env:
 
 jobs:
   # ============================================================================
+  # Prerequisites Check - Gate execution on secrets availability
+  # ============================================================================
+
+  check-prerequisites:
+    name: Check Prerequisites
+    runs-on: ubuntu-latest
+    outputs:
+      has_secrets: ${{ steps.check.outputs.has_secrets }}
+    steps:
+      - name: Check for required secrets
+        id: check
+        run: |
+          # Only run in main repository with required GCP secrets configured
+          if [ "${{ secrets.GCP_WIF_PROVIDER }}" != "" ] && \
+             [ "${{ github.repository }}" == "vishnu2kmohan/mcp-server-langgraph" ]; then
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+            echo "✓ GCP secrets configured - drift detection enabled"
+          else
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Skipping: GCP secrets not configured (fork or missing secrets)"
+          fi
+
+  # ============================================================================
   # Detect Drift in Production
   # ============================================================================
 
   detect-drift-prod:
     name: Detect Drift - Production
     runs-on: ubuntu-latest
+    needs: check-prerequisites
+    if: needs.check-prerequisites.outputs.has_secrets == 'true'
     timeout-minutes: 20
     outputs:
       drift_detected: ${{ steps.plan.outputs.drift_detected }}
