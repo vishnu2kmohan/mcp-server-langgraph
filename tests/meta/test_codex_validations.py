@@ -184,13 +184,11 @@ class TestCodexFindingsRemediation:
         )
 
         # Check function calls
-        assert "mock_keycloak_auth" not in calls, (
-            "E2E tests should NOT call mock_keycloak_auth. Use real_keycloak_auth instead."
-        )
+        assert (
+            "mock_keycloak_auth" not in calls
+        ), "E2E tests should NOT call mock_keycloak_auth. Use real_keycloak_auth instead."
 
-        assert "mock_mcp_client" not in calls, (
-            "E2E tests should NOT call mock_mcp_client. Use real_mcp_client instead."
-        )
+        assert "mock_mcp_client" not in calls, "E2E tests should NOT call mock_mcp_client. Use real_mcp_client instead."
 
         assert "real_keycloak_auth" in calls or "real_mcp_client" in calls, (
             "E2E tests should call real client functions. "
