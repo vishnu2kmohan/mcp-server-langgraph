@@ -23,6 +23,7 @@ jobs:
   bump-versions:
     name: Update Deployment Versions
     runs-on: ubuntu-latest
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5

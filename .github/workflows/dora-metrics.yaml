@@ -64,6 +64,7 @@ jobs:
   calculate-metrics:
     name: Calculate DORA Metrics
     runs-on: ubuntu-latest
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     timeout-minutes: 15
     outputs:
       classification: ${{ steps.calculate.outputs.classification }}
@@ -84,11 +85,11 @@ jobs:
           python-version: '3.12'
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7.1.1
 
       - name: Install dependencies
         run: |
-          uv pip install --system requests
+          uv pip install --system -e .[monitoring]
 
       - name: Calculate DORA metrics
         id: calculate

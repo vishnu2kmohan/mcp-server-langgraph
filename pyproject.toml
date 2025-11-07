@@ -148,6 +148,26 @@ code-execution = [
 ]
 
 # ==============================================================================
+# CI/CD AND WORKFLOW TOOLS
+# ==============================================================================
+
+coverage-tools = [
+    # Test coverage measurement and reporting
+    "coverage[toml]>=7.0.0",  # Coverage.py with TOML support
+]
+
+monitoring = [
+    # Workflow monitoring and metrics collection
+    "requests>=2.31.0",  # HTTP client for API calls and metrics reporting
+]
+
+release-tools = [
+    # PyPI package building and publishing
+    "build>=1.0.0",  # PEP 517 build frontend
+    "twine>=6.0.0",  # Secure PyPI uploads
+]
+
+# ==============================================================================
 # EMBEDDING OPTIONS - Choose based on deployment strategy
 # ==============================================================================
 #

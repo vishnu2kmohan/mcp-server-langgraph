@@ -34,12 +34,12 @@ jobs:
           python-version: '3.11'
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7.1.1
 
       - name: Install package and test dependencies
         run: |
-          uv pip install --system -e .  # Install package with all dependencies
-          uv pip install --system pytest pyyaml hypothesis  # Additional test dependencies
+          # Install with dev extras (includes pytest, pyyaml, hypothesis)
+          uv pip install --system -e .[dev]
 
       - name: Run Terraform security tests
         run: |
@@ -61,12 +61,12 @@ jobs:
           python-version: '3.11'
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7.1.1
 
       - name: Install package and test dependencies
         run: |
-          uv pip install --system -e .  # Install package with all dependencies
-          uv pip install --system pytest pyyaml hypothesis  # Additional test dependencies
+          # Install with dev extras (includes pytest, pyyaml, hypothesis)
+          uv pip install --system -e .[dev]
 
       - name: Run Kubernetes security tests
         run: |
@@ -167,7 +167,7 @@ jobs:
 
       - name: Comment format check result
         if: steps.fmt.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.createComment({
