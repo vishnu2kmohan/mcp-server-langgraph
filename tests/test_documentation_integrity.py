@@ -320,11 +320,10 @@ class TestDocumentationCompleteness:
 
             line_count = len(readme_path.read_text().splitlines())
             if line_count < 50:
-                inadequate_readmes.append(
-                    f"{readme_path.relative_to(PROJECT_ROOT)} ({line_count} lines, minimum 50)"
-                )
+                inadequate_readmes.append(f"{readme_path.relative_to(PROJECT_ROOT)} ({line_count} lines, minimum 50)")
 
-        assert not inadequate_readmes, (
-            "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n"
-            + "\n".join(f"  - {f}" for f in sorted(inadequate_readmes))
+        assert (
+            not inadequate_readmes
+        ), "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n" + "\n".join(
+            f"  - {f}" for f in sorted(inadequate_readmes)
         )
