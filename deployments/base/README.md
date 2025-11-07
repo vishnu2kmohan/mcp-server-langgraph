@@ -68,7 +68,8 @@ Example overlay structure:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-bases:
+# Modern Kustomize syntax (v2.1.0+)
+resources:
   - ../../base
 
 patches:

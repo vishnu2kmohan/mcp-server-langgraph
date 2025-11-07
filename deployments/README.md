@@ -53,19 +53,19 @@ helm upgrade langgraph-agent ./deployments/helm/mcp-server-langgraph \
 
 ```bash
 # Production deployment
-kubectl apply -k deployments/kustomize/overlays/production
+kubectl apply -k deployments/overlays/production
 
 # Staging deployment
-kubectl apply -k deployments/kustomize/overlays/staging
+kubectl apply -k deployments/overlays/staging
 
 # Development deployment
-kubectl apply -k deployments/kustomize/overlays/dev
+kubectl apply -k deployments/overlays/dev
 
 # Check deployment
-kubectl get all -n langgraph-agent
+kubectl get all -n mcp-server-langgraph
 ```
 
-**Documentation**: See `kustomize/README.md`
+**Documentation**: See `base/README.md` and overlay-specific READMEs
 
 ### 3. Google Cloud Run
 
