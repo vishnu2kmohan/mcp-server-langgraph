@@ -54,15 +54,14 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
             raise RuntimeError(
                 f"SECURITY: InMemoryUserProvider is not allowed in production environments. "
                 f"Current environment: '{environment}'. "
-                f"InMemoryUserProvider contains hardcoded demo credentials (alice:alice123, bob:bob123, admin:admin123) "
-                f"and is only suitable for development/testing. "
+                f"InMemoryUserProvider is only suitable for development/testing (stores credentials in memory). "
                 f"For production, use AUTH_PROVIDER=keycloak with proper SSO integration."
             )
 
         logger.info("Creating InMemoryUserProvider for authentication")
         logger.warning(
             f"InMemoryUserProvider is being used in '{environment}' environment. "
-            f"This provider has hardcoded credentials and should NEVER be used in production."
+            f"This provider stores credentials in memory and should NEVER be used in production."
         )
 
         # Validate JWT secret is configured
