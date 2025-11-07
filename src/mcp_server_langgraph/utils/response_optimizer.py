@@ -45,6 +45,10 @@ class ResponseOptimizer:
         """
         Count tokens in text using LiteLLM model-aware token counting.
 
+        SECURITY (OpenAI Codex Finding #4):
+        Uses litellm.token_counter() which now supports Gemini, GPT, Claude, and other models.
+        Fallback to len(text)//4 is kept for compatibility but logs warning for monitoring.
+
         Args:
             text: Text to count tokens for
 
@@ -52,16 +56,34 @@ class ResponseOptimizer:
             Number of tokens
 
         Note:
-            Uses litellm.token_counter() which provides accurate token counts
-            for OpenAI, Anthropic, Google, and other LLM providers.
+            - Gemini models: Supported by litellm (tested)
+            - OpenAI models: Supported via tiktoken (tested)
+            - Claude models: Supported by litellm (tested)
+            - Fallback: len(text)//4 (conservative, but inaccurate - monitor warnings)
         """
+        if not text:
+            return 0  # Empty text = 0 tokens
+
         try:
             # Use LiteLLM's model-aware token counting
             token_count: int = litellm.token_counter(model=self.model, text=text)
             return token_count
         except Exception as e:
-            # Fallback: estimate 1 token per 4 characters (conservative estimate)
-            logger.warning(f"LiteLLM token counting failed for model {self.model}, using fallback estimate: {e}")
+            # SECURITY: Log fallback usage for monitoring
+            # If you see these warnings frequently, consider:
+            # 1. Updating litellm to latest version
+            # 2. Adding provider-specific tokenizer for this model
+            # 3. Switching to a supported model
+            logger.warning(
+                f"LiteLLM token counting failed for model {self.model}, using fallback estimate (len/4). "
+                f"This may be inaccurate and affect context budget management. Error: {e}",
+                extra={
+                    "model": self.model,
+                    "text_length": len(text),
+                    "estimated_tokens": len(text) // 4,
+                    "error_type": type(e).__name__,
+                }
+            )
             return len(text) // 4
 
     def truncate_response(
