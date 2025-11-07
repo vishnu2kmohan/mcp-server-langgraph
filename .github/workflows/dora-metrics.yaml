@@ -48,6 +48,7 @@ permissions:
   contents: write  # To commit metrics history
   pull-requests: write  # To comment on PRs
   deployments: read  # To read deployment data
+  issues: write  # To create performance regression issues
 
 concurrency:
   group: dora-metrics

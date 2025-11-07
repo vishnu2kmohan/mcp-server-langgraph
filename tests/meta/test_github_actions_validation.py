@@ -164,6 +164,15 @@ class TestGitHubActionsPermissions:
     """Validate that workflows have appropriate permissions configured."""
 
     @pytest.fixture
+    def workflow_files(self) -> List[Path]:
+        """Get all GitHub workflow files."""
+        workflows_dir = Path(".github/workflows")
+        if not workflows_dir.exists():
+            pytest.skip("No .github/workflows directory found")
+
+        return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
+
+    @pytest.fixture
     def scheduled_workflows(self) -> Dict[str, dict]:
         """Get all workflows that run on schedule."""
         workflows_dir = Path(".github/workflows")
@@ -238,6 +247,53 @@ class TestGitHubActionsPermissions:
 
         assert not violations, (
             f"Found {len(violations)} scheduled workflow(s) creating issues "
+            f"without 'issues: write' permission:\n"
+            + "\n".join([f"  - {name}" for name in violations])
+            + "\n\nAdd 'issues: write' to the permissions block of these workflows."
+        )
+
+    def test_all_workflows_creating_issues_have_permission(self, workflow_files: List[Path]):
+        """
+        Ensure ALL workflows that create GitHub issues have issues: write permission.
+
+        This test checks ALL workflows (not just scheduled), as any workflow
+        creating issues needs the permission regardless of trigger type.
+
+        This prevents permission errors at runtime when creating issues.
+        """
+        violations = []
+
+        for workflow_file in workflow_files:
+            try:
+                with open(workflow_file, "r") as f:
+                    workflow_data = yaml.safe_load(f)
+
+                if not workflow_data:
+                    continue
+
+                workflow_str = yaml.dump(workflow_data)
+
+                # Check if workflow creates issues via github-script
+                creates_issues = (
+                    "github.rest.issues.create" in workflow_str
+                    or "octokit.rest.issues.create" in workflow_str
+                    or "octokit.issues.create" in workflow_str
+                )
+
+                if creates_issues:
+                    permissions = workflow_data.get("permissions", {})
+
+                    # Check if issues permission is granted
+                    has_issues_write = permissions.get("issues") == "write" or permissions == "write-all"
+
+                    if not has_issues_write:
+                        violations.append(workflow_file.name)
+
+            except yaml.YAMLError:
+                continue
+
+        assert not violations, (
+            f"Found {len(violations)} workflow(s) creating issues "
             f"without 'issues: write' permission:\n"
             + "\n".join([f"  - {name}" for name in violations])
             + "\n\nAdd 'issues: write' to the permissions block of these workflows."

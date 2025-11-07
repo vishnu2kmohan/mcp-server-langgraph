@@ -52,6 +52,7 @@ concurrency:
 permissions:
   contents: read
   security-events: write
+  issues: write  # To create security vulnerability alerts
 
 jobs:
   trivy-scan:
