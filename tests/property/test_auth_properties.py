@@ -53,6 +53,41 @@ relations = st.sampled_from(["executor", "viewer", "editor", "owner", "admin", "
 expiration_seconds = st.integers(min_value=1, max_value=86400)  # 1s to 24h
 
 
+def add_test_users(auth):
+    """
+    Helper to add test users to AuthMiddleware users_db.
+
+    After security fix (OpenAI Codex Finding #2), users_db is empty by default.
+    Tests must explicitly add users.
+    """
+    test_users = {
+        "alice": {
+            "user_id": "user:alice",
+            "email": "alice@test.com",
+            "password": "test123",
+            "roles": ["user", "executor"],
+            "active": True,
+        },
+        "bob": {
+            "user_id": "user:bob",
+            "email": "bob@test.com",
+            "password": "test123",
+            "roles": ["user", "viewer"],
+            "active": True,
+        },
+        "admin": {
+            "user_id": "user:admin",
+            "email": "admin@test.com",
+            "password": "admin123",
+            "roles": ["admin", "user"],
+            "active": True,
+        },
+    }
+
+    for username, user_data in test_users.items():
+        auth.users_db[username] = user_data
+
+
 @pytest.mark.unit
 class TestJWTProperties:
     """Property-based tests for JWT authentication"""
@@ -64,6 +99,7 @@ class TestJWTProperties:
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
+        add_test_users(auth)  # Add test users after security fix
 
         # Create token
         token = auth.create_token(username, expires_in=expiration)
@@ -87,6 +123,8 @@ class TestJWTProperties:
 
         auth1 = AuthMiddleware(secret_key=secret1)
         auth2 = AuthMiddleware(secret_key=secret2)
+        add_test_users(auth1)  # Add test users after security fix
+        add_test_users(auth2)
 
         # Create token with secret1
         token = auth1.create_token(username)
@@ -126,6 +164,7 @@ class TestJWTProperties:
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
+        add_test_users(auth)  # Add test users after security fix
 
         before_creation = datetime.now(timezone.utc)
         token = auth.create_token(username, expires_in=expiration)
@@ -173,11 +212,19 @@ class TestAuthorizationProperties:
     async def test_admin_always_authorized(self, resource):
         """Property: Admin users should always be authorized (fallback mode)"""
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
+        from mcp_server_langgraph.core.config import Settings
 
-        auth = AuthMiddleware(secret_key="test-secret")
+        # Create settings with test environment to enable fallback authorization
+        test_settings = Settings(
+            environment="testing",
+            allow_auth_fallback=True,
+        )
+
+        auth = AuthMiddleware(secret_key="test-secret", settings=test_settings)
+        add_test_users(auth)  # Add test users after security fix
         # No OpenFGA client - fallback mode
 
-        # Property: Admin should have access to everything
+        # Property: Admin should have access to everything in test environment with fallback enabled
         authorized = await auth.authorize("user:admin", "executor", resource)
 
         assert authorized is True
@@ -301,6 +348,7 @@ class TestSecurityInvariants:
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
+        add_test_users(auth)  # Add test users after security fix
 
         # Create normal token
         token = auth.create_token(username)
@@ -322,6 +370,7 @@ class TestSecurityInvariants:
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
         auth = AuthMiddleware(secret_key="test-secret")
+        add_test_users(auth)  # Add test users after security fix
 
         token = auth.create_token(username)
 
