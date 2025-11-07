@@ -13,11 +13,11 @@ These tests ensure such issues cannot recur.
 
 import re
 import subprocess
-import yaml
 from pathlib import Path
 from typing import Dict, List, Set
 
 import pytest
+import yaml
 
 # ==============================================================================
 # Kustomize Configuration Tests
@@ -334,9 +334,7 @@ class TestGitHubActionsWorkflows:
                     # Skip short scripts (single command)
                     lines = run_script.strip().split("\n")
                     # Filter out comments and empty lines
-                    command_lines = [
-                        line for line in lines if line.strip() and not line.strip().startswith("#")
-                    ]
+                    command_lines = [line for line in lines if line.strip() and not line.strip().startswith("#")]
 
                     if len(command_lines) <= 1:
                         continue
