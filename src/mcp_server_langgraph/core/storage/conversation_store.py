@@ -69,7 +69,7 @@ class ConversationStore:
                 )
 
             try:
-                self._redis_client = redis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
+                self._redis_client = redis.from_url(redis_url, decode_responses=True)
                 # Test connection
                 self._redis_client.ping()
             except Exception as e:
@@ -234,7 +234,7 @@ class ConversationStore:
         if self.backend == "redis" and self._redis_client:
             key = self._redis_key(thread_id)
             deleted = self._redis_client.delete(key)
-            return int(deleted) > 0  # type: ignore[arg-type]
+            return int(deleted) > 0
         else:
             if thread_id in self._memory_store:
                 del self._memory_store[thread_id]
