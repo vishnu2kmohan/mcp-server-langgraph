@@ -179,6 +179,25 @@ print(f'Duration: {duration:.2f}s')
 class TestDockerSandboxNetworkIsolation:
     """Test network isolation"""
 
+    def test_default_network_mode_is_secure(self, docker_available):
+        """
+        🔴 RED: Test that default network mode from Settings is secure ("none").
+
+        SECURITY CRITICAL: Code execution should default to maximum isolation.
+        Users must explicitly opt-in to network access.
+
+        This test will FAIL because core/config.py:216 currently defaults to "allowlist".
+        Expected to PASS after fixing config.py to default to "none".
+        """
+        from mcp_server_langgraph.core.config import Settings
+
+        settings = Settings()
+        assert settings.code_execution_network_mode == "none", (
+            "SECURITY: Default network mode must be 'none' for safety. "
+            f"Got: {settings.code_execution_network_mode}. "
+            "Users must explicitly enable network access."
+        )
+
     def test_network_disabled(self, docker_available):
         """Test that network is disabled by default"""
         limits = ResourceLimits(network_mode="none")
@@ -210,6 +229,44 @@ print('Allowlist configured')
         result = sandbox.execute(code)
 
         assert result.success is True
+
+    def test_allowlist_mode_fails_closed_when_not_implemented(self, docker_available):
+        """
+        🔴 RED: Test that allowlist mode fails closed (uses "none") when not implemented.
+
+        SECURITY CRITICAL: Unimplemented security features must fail safely.
+        Currently execution/docker_sandbox.py:269-285 falls back to "bridge" (unrestricted).
+
+        This test will FAIL because _get_network_mode() returns "bridge" for allowlist.
+        Expected to PASS after fixing docker_sandbox.py to return "none" for unimplemented allowlist.
+        """
+        limits = ResourceLimits(
+            network_mode="allowlist",
+            allowed_domains=("httpbin.org",),
+        )
+        sandbox = DockerSandbox(limits=limits)
+
+        # Inspect internal network mode resolution
+        network_mode = sandbox._get_network_mode()
+
+        assert network_mode == "none", (
+            "SECURITY: Unimplemented allowlist mode must fail closed (use 'none'). "
+            f"Got: {network_mode}. "
+            "Allowlist filtering is not yet implemented - must not fallback to unrestricted bridge network."
+        )
+
+        # Also verify network is actually disabled
+        code = """
+import socket
+try:
+    socket.create_connection(('httpbin.org', 80), timeout=2)
+    print('NETWORK_ACCESSIBLE')
+except Exception as e:
+    print(f'NETWORK_BLOCKED: {type(e).__name__}')
+"""
+        result = sandbox.execute(code)
+        assert "NETWORK_BLOCKED" in result.stdout, "Network must be blocked when allowlist is not implemented"
+        assert "NETWORK_ACCESSIBLE" not in result.stdout
 
 
 @pytest.mark.integration

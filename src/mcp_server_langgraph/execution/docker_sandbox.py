@@ -266,23 +266,23 @@ class DockerSandbox(Sandbox):
         elif self.limits.network_mode == "unrestricted":
             return "bridge"  # Default Docker network
         elif self.limits.network_mode == "allowlist":
-            # WARNING (OpenAI Codex Finding #4): Network allowlist mode is NOT fully implemented!
-            # For proper security, this requires:
+            # SECURITY FIX (OpenAI Codex Finding #3): Network allowlist mode is NOT fully implemented!
+            # FAIL CLOSED: Always return "none" until proper allowlist filtering is implemented.
+            #
+            # For proper security implementation, this would require:
             # 1. Docker network policies or firewall rules (iptables/nftables)
             # 2. DNS filtering to resolve allowed domains to IPs
-            # 3. egress filtering to block unlisted destinations
+            # 3. Egress filtering to block unlisted destinations
             #
-            # Current behavior: Falls back to bridge (unrestricted) if domains are specified
-            # For production use, consider using network_mode="none" until this is implemented
-            if not self.limits.allowed_domains:
-                return "none"
-            else:
-                # TODO: Implement proper allowlist with network policies
-                logger.warning(
-                    "Network allowlist mode requested but not fully implemented. "
-                    "Using bridge network (unrestricted). For security, use network_mode='none'"
-                )
-                return "bridge"
+            # Until implemented, we fail closed (deny all network access) rather than
+            # fall back to unrestricted bridge network, which would create a false sense of security.
+            logger.warning(
+                "Network allowlist mode requested but not implemented. "
+                "Failing closed with network_mode='none' (no network access). "
+                f"Requested allowlist domains: {self.limits.allowed_domains}. "
+                "To enable network access, use network_mode='unrestricted' explicitly."
+            )
+            return "none"  # Fail closed - deny all network access for security
         else:
             return "none"  # Fail closed
 

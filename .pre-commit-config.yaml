@@ -263,6 +263,65 @@ repos:
           Following TDD principles, these tests FAIL if regressions are introduced.
           See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
 
+      # Kubernetes Deployment Validation (OpenAI Codex Findings - Phase 4)
+      - id: validate-kustomize-builds
+        name: Validate Kustomize Overlays Build Successfully
+        entry: python -m pytest tests/deployment/test_kustomize_builds.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^deployments/.*\.(yaml|yml)$
+        always_run: false  # Only run when deployment files change
+        description: |
+          Validates that all Kustomize overlays build successfully without errors.
+
+          Prevents critical deployment blockers identified in Codex audit:
+          1. NetworkPolicy port mismatches (3307 vs 5432 for PostgreSQL)
+          2. Redis StatefulSet deletion using wrong kind (Deployment vs StatefulSet)
+          3. Service Account namespace mismatches
+          4. Cloud SQL Proxy missing health check flags
+          5. PodDisruptionBudget namespace mismatches
+          6. Istio config inline comments in host strings
+          7. Orphaned ResourceQuotas for undefined namespaces
+
+          TDD-based validation suite ensures these issues never recur.
+          See: docs-internal/CLOUD_SQL_CONNECTION_STRATEGY.md
+
+      - id: validate-network-policies
+        name: Validate NetworkPolicy Port Configurations
+        entry: python -m pytest tests/deployment/test_network_policies.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^deployments/.*network-policy\.(yaml|yml)$
+        always_run: false
+        description: |
+          Validates NetworkPolicy configurations use correct database ports.
+
+          Critical validations:
+          - PostgreSQL uses port 5432 (NOT 3307 for MySQL)
+          - Redis uses port 6379
+          - Cloud SQL connections properly configured
+          - No overly permissive egress rules
+
+          Prevents production connectivity failures from port misconfigurations.
+
+      - id: validate-service-accounts
+        name: Validate Service Account Separation and RBAC
+        entry: python -m pytest tests/deployment/test_service_accounts.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^deployments/.*serviceaccount.*\.(yaml|yml)$
+        always_run: false
+        description: |
+          Validates Service Account configuration follows least-privilege principles.
+
+          Checks:
+          - Components use separate ServiceAccounts (postgres, redis, keycloak, etc.)
+          - Workload Identity annotations are correctly formatted
+          - RoleBindings reference existing ServiceAccounts
+          - No overly permissive RBAC rules (wildcards)
+
+          Ensures security best practices and prevents privilege escalation.
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2

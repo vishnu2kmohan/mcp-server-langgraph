@@ -213,7 +213,9 @@ class Settings(BaseSettings):
     code_execution_cpu_quota: float = 1.0  # CPU cores quota (0.1-8.0)
     code_execution_disk_quota_mb: int = 100  # Disk quota in MB (1-10240)
     code_execution_max_processes: int = 1  # Maximum processes (1-100)
-    code_execution_network_mode: str = "allowlist"  # Network mode: none, allowlist, unrestricted
+    code_execution_network_mode: str = (
+        "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to none for maximum isolation)
+    )
     code_execution_allowed_domains: List[str] = []  # Allowed domains for allowlist mode
     code_execution_allowed_imports: List[str] = [
         # Safe standard library modules
@@ -413,7 +415,7 @@ class Settings(BaseSettings):
         if errors:
             error_msg = (
                 "PRODUCTION CONFIGURATION SECURITY ERRORS:\n\n"
-                + "\n\n".join(f"  {i+1}. {err}" for i, err in enumerate(errors))
+                + "\n\n".join(f"  {i + 1}. {err}" for i, err in enumerate(errors))
                 + "\n\nProduction deployment blocked to prevent security vulnerabilities."
             )
             raise ValueError(error_msg)

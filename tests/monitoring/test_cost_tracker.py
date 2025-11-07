@@ -480,7 +480,7 @@ def test_get_cost_summary_returns_aggregated_data(cost_api_client):
         assert data["request_count"] == 500
 
 
-@pytest.mark.skip(reason="Cost API endpoints not implemented yet")
+@pytest.mark.xfail(strict=True, reason="Cost API endpoints not implemented yet")
 @pytest.mark.unit
 def test_get_cost_usage_filters_by_user(cost_api_client):
     """Test GET /api/cost/usage filters by user_id."""
@@ -495,7 +495,7 @@ def test_get_cost_usage_filters_by_user(cost_api_client):
         assert data[0]["user_id"] == "user123"
 
 
-@pytest.mark.skip(reason="Cost API endpoints not implemented yet")
+@pytest.mark.xfail(strict=True, reason="Cost API endpoints not implemented yet")
 @pytest.mark.unit
 def test_create_budget_creates_new_budget(cost_api_client):
     """Test POST /api/cost/budget creates new budget."""
@@ -517,7 +517,7 @@ def test_create_budget_creates_new_budget(cost_api_client):
         assert data["limit_usd"] == "5000.00"
 
 
-@pytest.mark.skip(reason="Cost API get_trends function not implemented yet")
+@pytest.mark.xfail(strict=True, reason="Cost API get_trends function not implemented yet")
 @pytest.mark.unit
 def test_get_cost_trends_returns_time_series_data(cost_api_client):
     """Test GET /api/cost/trends returns time-series data."""
@@ -539,7 +539,7 @@ def test_get_cost_trends_returns_time_series_data(cost_api_client):
         assert len(data["data_points"]) == 2
 
 
-@pytest.mark.skip(reason="Cost API export_costs function not implemented yet")
+@pytest.mark.xfail(strict=True, reason="Cost API export_costs function not implemented yet")
 @pytest.mark.unit
 def test_export_cost_data_as_csv(cost_api_client):
     """Test GET /api/cost/export?format=csv exports CSV."""

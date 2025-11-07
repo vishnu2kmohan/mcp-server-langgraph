@@ -52,18 +52,167 @@ class TestMarkerConsistency:
             pytest.fail(error_msg)
 
     @pytest.mark.unit
+    def test_unimplemented_features_use_xfail_strict(self):
+        """
+        TDD REGRESSION TEST: Ensure unimplemented features use xfail(strict=True) not skip
+
+        GIVEN: All test files in the test suite
+        WHEN: Scanning for tests with "not implemented" in skip/xfail reasons
+        THEN: They should use @pytest.mark.xfail(strict=True), not @pytest.mark.skip
+
+        Rationale:
+        - skip: Test is silently skipped, no notification when implementation is ready
+        - xfail(strict=True): Test FAILS CI when it starts passing, alerting team to remove marker
+        """
+        violations = self._find_skip_markers_for_unimplemented_features()
+
+        if violations:
+            error_msg = "Found tests using @pytest.mark.skip for unimplemented features:\n"
+            for file_path, test_name, line_num, reason in violations:
+                error_msg += f"\n  {file_path}:{line_num} - {test_name}\n"
+                error_msg += f"    Reason: {reason}\n"
+            error_msg += (
+                "\n❌ Use @pytest.mark.xfail(strict=True, reason=...) instead of skip for unimplemented features.\n"
+                "✅ This ensures CI fails when the feature is implemented, alerting you to enable the test."
+            )
+            pytest.fail(error_msg)
+
+    @pytest.mark.unit
     def test_integration_tests_properly_marked(self):
         """
-        TDD: Ensure integration tests are consistently marked
+        TDD REGRESSION TEST: Ensure integration tests are consistently marked
 
         GIVEN: All test files
-        WHEN: Scanning for integration test patterns
+        WHEN: Scanning for integration test patterns (infrastructure usage)
         THEN: Tests with real infrastructure should have @pytest.mark.integration
+
+        Infrastructure patterns include:
+        - test_infrastructure fixture usage
+        - Real database/Redis/OpenFGA client fixtures
+        - Docker/Keycloak/MCP references in test names or function parameters
         """
-        # This is a placeholder for future enhancement
-        # Could scan for patterns like "docker", "keycloak", "openfga" in test names
-        # and verify they have integration markers
-        pass
+        violations = self._find_unmarked_integration_tests()
+
+        if violations:
+            error_msg = "Found tests using infrastructure without @pytest.mark.integration:\n"
+            for file_path, test_name, line_num, pattern in violations:
+                error_msg += f"\n  {file_path}:{line_num} - {test_name}\n"
+                error_msg += f"    Pattern detected: {pattern}\n"
+            error_msg += (
+                "\n❌ Add @pytest.mark.integration to tests that use real infrastructure.\n"
+                "✅ This ensures proper test categorization and allows selective execution."
+            )
+            pytest.fail(error_msg)
+
+    def _find_unmarked_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+        """
+        Find tests that use infrastructure but lack @pytest.mark.integration
+
+        Returns:
+            List of (file_path, test_name, line_number, pattern) tuples
+        """
+        violations = []
+        tests_dir = Path(__file__).parent.parent
+
+        # ONLY check for REAL infrastructure fixture usage (not mocks)
+        # These fixtures indicate actual infrastructure is being used
+        infrastructure_fixtures = {
+            "test_infrastructure",  # Docker-compose based infrastructure
+            "test_fastapi_app",  # Full FastAPI app with real dependencies
+            "postgres_connection_real",  # Real Postgres connection
+            "redis_client_real",  # Real Redis client
+            "openfga_client_real",  # Real OpenFGA client (not mocked)
+            "real_keycloak_auth",  # Real Keycloak auth (not mocked)
+            "real_mcp_client",  # Real MCP client (not mocked)
+        }
+
+        # Don't use keyword matching - too many false positives from unit tests
+        # that mention infrastructure in names but use mocks
+        infrastructure_keywords = set()
+
+        for test_file in tests_dir.rglob("test_*.py"):
+            # Skip meta-tests and e2e tests (e2e has own marker)
+            if test_file.parent.name in ["meta", "e2e"]:
+                continue
+
+            try:
+                with open(test_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    tree = ast.parse(content, filename=str(test_file))
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+                        # Check if test has integration marker
+                        has_integration_marker = self._has_marker(node, "integration")
+
+                        if not has_integration_marker:
+                            # Check for infrastructure usage
+                            detected_pattern = self._detect_infrastructure_usage(
+                                node, infrastructure_fixtures, infrastructure_keywords
+                            )
+
+                            if detected_pattern:
+                                rel_path = test_file.relative_to(tests_dir.parent)
+                                violations.append((str(rel_path), node.name, node.lineno, detected_pattern))
+
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+
+        return violations
+
+    def _has_marker(self, func_node: ast.FunctionDef, marker_name: str) -> bool:
+        """Check if a test function has a specific marker"""
+        for decorator in func_node.decorator_list:
+            if isinstance(decorator, ast.Attribute):
+                if (
+                    isinstance(decorator.value, ast.Attribute)
+                    and isinstance(decorator.value.value, ast.Name)
+                    and decorator.value.value.id == "pytest"
+                    and decorator.value.attr == "mark"
+                    and decorator.attr == marker_name
+                ):
+                    return True
+            elif isinstance(decorator, ast.Call):
+                if isinstance(decorator.func, ast.Attribute):
+                    if (
+                        isinstance(decorator.func.value, ast.Attribute)
+                        and isinstance(decorator.func.value.value, ast.Name)
+                        and decorator.func.value.value.id == "pytest"
+                        and decorator.func.value.attr == "mark"
+                        and decorator.func.attr == marker_name
+                    ):
+                        return True
+        return False
+
+    def _detect_infrastructure_usage(
+        self, func_node: ast.FunctionDef, infrastructure_fixtures: set, infrastructure_keywords: set
+    ) -> str:
+        """
+        Detect if a test uses infrastructure patterns
+
+        Returns:
+            Description of detected pattern, or empty string if none found
+        """
+        # Check function parameters for infrastructure fixtures
+        for arg in func_node.args.args:
+            if arg.arg in infrastructure_fixtures:
+                return f"Uses infrastructure fixture: {arg.arg}"
+
+        # Check function name and docstring for infrastructure keywords
+        func_name_lower = func_node.name.lower()
+        for keyword in infrastructure_keywords:
+            if keyword in func_name_lower:
+                return f"Function name contains: {keyword}"
+
+        # Check docstring
+        docstring = ast.get_docstring(func_node)
+        if docstring:
+            docstring_lower = docstring.lower()
+            for keyword in infrastructure_keywords:
+                if keyword in docstring_lower:
+                    return f"Docstring mentions: {keyword}"
+
+        return ""
 
     def _find_conflicting_markers(self, marker_pairs: List[Tuple[str, str]]) -> List[Tuple[str, str, Set[str]]]:
         """
@@ -147,6 +296,84 @@ class TestMarkerConsistency:
                 and decorator.value.attr == "mark"
             ):
                 return decorator.attr
+        return ""
+
+    def _find_skip_markers_for_unimplemented_features(self) -> List[Tuple[str, str, int, str]]:
+        """
+        Find tests using @pytest.mark.skip for unimplemented features
+
+        Returns:
+            List of (file_path, test_name, line_number, reason) tuples
+        """
+        violations = []
+        tests_dir = Path(__file__).parent.parent
+
+        # Keywords that indicate unimplemented features
+        unimplemented_keywords = [
+            "not implemented",
+            "not yet implemented",
+            "todo",
+            "coming soon",
+            "future",
+            "pending implementation",
+        ]
+
+        for test_file in tests_dir.rglob("test_*.py"):
+            if test_file.parent.name == "meta":
+                continue
+
+            try:
+                with open(test_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    lines = content.split("\n")
+                    tree = ast.parse(content, filename=str(test_file))
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+                        # Check decorators for skip markers
+                        for decorator in node.decorator_list:
+                            skip_reason = self._extract_skip_reason(decorator)
+
+                            if skip_reason:
+                                # Check if reason indicates unimplemented feature
+                                reason_lower = skip_reason.lower()
+                                if any(keyword in reason_lower for keyword in unimplemented_keywords):
+                                    rel_path = test_file.relative_to(tests_dir.parent)
+                                    violations.append((str(rel_path), node.name, node.lineno, skip_reason))
+
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+
+        return violations
+
+    def _extract_skip_reason(self, decorator: ast.expr) -> str:
+        """
+        Extract reason from @pytest.mark.skip(reason=...) decorator
+
+        Args:
+            decorator: AST node for the decorator
+
+        Returns:
+            Skip reason string or empty string if not a skip marker
+        """
+        # Handle @pytest.mark.skip(reason="...")
+        if isinstance(decorator, ast.Call):
+            if isinstance(decorator.func, ast.Attribute):
+                if (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr == "skip"
+                ):
+                    # Extract reason from keyword arguments
+                    for keyword in decorator.keywords:
+                        if keyword.arg == "reason":
+                            if isinstance(keyword.value, ast.Constant):
+                                return keyword.value.value
+                            elif isinstance(keyword.value, ast.Str):  # Python 3.7 compatibility
+                                return keyword.value.s
+
         return ""
 
 

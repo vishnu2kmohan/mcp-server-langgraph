@@ -726,6 +726,56 @@ class TestGDPREdgeCases:
 
     @pytest.mark.asyncio
     async def test_concurrent_deletion_attempts(self, mock_session_store):
-        """Test handling of concurrent deletion attempts"""
-        # TODO: Implement test for concurrent deletion
-        pass
+        """
+        Test handling of concurrent deletion attempts to verify idempotency
+
+        GIVEN: Multiple concurrent deletion requests for the same user
+        WHEN: Deletions are executed simultaneously via asyncio.gather
+        THEN: All deletions succeed (idempotent), audit log shows only one deletion
+
+        This test validates:
+        1. Thread safety of the deletion service
+        2. Idempotent behavior (multiple deletions don't cause errors)
+        3. Proper locking/coordination if implemented
+        """
+        import asyncio
+
+        service = DataDeletionService(session_store=mock_session_store)
+
+        # Mock session store to return data once, then 0 for subsequent calls
+        deletion_count = [5]  # Mutable counter
+
+        async def mock_delete_sessions(user_id):
+            """Simulate deletion that only works once"""
+            if deletion_count[0] > 0:
+                count = deletion_count[0]
+                deletion_count[0] = 0  # Subsequent calls return 0
+                return count
+            return 0
+
+        mock_session_store.delete_user_sessions.side_effect = mock_delete_sessions
+
+        # Launch 3 concurrent deletion attempts
+        results = await asyncio.gather(
+            service.delete_user_account("user:test", "test"),
+            service.delete_user_account("user:test", "test"),
+            service.delete_user_account("user:test", "test"),
+            return_exceptions=False,  # Don't catch exceptions
+        )
+
+        # All deletions should succeed (idempotent behavior)
+        assert len(results) == 3, "Expected 3 deletion results"
+        for i, result in enumerate(results):
+            assert isinstance(result, DeletionResult), f"Result {i} should be DeletionResult"
+            assert result.success is True, f"Deletion {i} should succeed"
+
+        # Verify total deletions (first call deletes 5, rest delete 0)
+        total_deleted = sum(r.deleted_items["sessions"] for r in results)
+        assert total_deleted == 5, "Expected total of 5 deleted sessions"
+
+        # Verify idempotency: some deletions should have 0 items deleted
+        zero_deletions = [r for r in results if r.deleted_items["sessions"] == 0]
+        assert len(zero_deletions) >= 2, "At least 2 deletions should find 0 items (already deleted)"
+
+        # Verify delete_user_sessions was called 3 times (once per concurrent request)
+        assert mock_session_store.delete_user_sessions.call_count == 3

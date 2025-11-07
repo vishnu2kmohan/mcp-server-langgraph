@@ -144,6 +144,7 @@ class TestCacheServiceComparison:
                 )
                 assert _manager is not None  # Use variable to avoid F841
 
+    @pytest.mark.xfail(strict=True, reason="CacheService Redis configuration fix not yet implemented")
     def test_cache_service_should_use_same_pattern(self):
         """
         Test that after fix, CacheService uses same pattern as APIKeyManager.

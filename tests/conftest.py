@@ -15,7 +15,16 @@ from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from freezegun import freeze_time
+
+# Guard freezegun import - it's a dev dependency that may not be installed
+try:
+    from freezegun import freeze_time
+
+    FREEZEGUN_AVAILABLE = True
+except ImportError:
+    FREEZEGUN_AVAILABLE = False
+    freeze_time = None  # Define as None for type checking
+
 from hypothesis import settings
 from langchain_core.messages import HumanMessage
 from opentelemetry import trace
@@ -308,6 +317,9 @@ def frozen_time():
             # datetime.now() will always return 2024-01-01T00:00:00Z
             assert datetime.now(timezone.utc).isoformat() == "2024-01-01T00:00:00+00:00"
     """
+    if not FREEZEGUN_AVAILABLE:
+        pytest.skip("freezegun not installed - required for time-freezing tests. Install with: pip install freezegun")
+
     with freeze_time("2024-01-01 00:00:00", tz_offset=0):
         yield
 
