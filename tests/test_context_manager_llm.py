@@ -490,11 +490,15 @@ class TestRuleBasedExtraction:
 class TestContextManagerLLMIntegration:
     """Integration tests for LLM extraction"""
 
-    @pytest.mark.skip(reason="Requires actual LLM")
+    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
     @pytest.mark.asyncio
-    @pytest.mark.unit
     async def test_full_extraction_workflow(self):
-        """Test complete extraction workflow with real LLM"""
+        """
+        Test complete extraction workflow with real LLM.
+
+        Runs only when ANTHROPIC_API_KEY environment variable is set.
+        Tests the LLM-based extraction with actual API calls.
+        """
         manager = ContextManager()
 
         messages = [

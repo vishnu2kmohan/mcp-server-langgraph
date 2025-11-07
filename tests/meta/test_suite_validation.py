@@ -104,6 +104,42 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
+    @pytest.mark.unit
+    def test_integration_tests_use_conditional_skips_not_hard_skips(self):
+        """
+        TDD REGRESSION TEST: Integration tests should use conditional skips, not hard skips
+
+        GIVEN: All test files marked with @pytest.mark.integration
+        WHEN: Scanning for @pytest.mark.skip decorators
+        THEN: Integration tests should use skipif with availability checks
+        OR: Use fixtures that auto-skip when infrastructure unavailable
+
+        Rationale:
+        - Hard skip: Test never runs, even when infrastructure is available
+        - Conditional skip: Test runs when infrastructure is available (CI, local dev)
+        - This enables tests to run in environments where infrastructure exists
+
+        Codex Finding: "Several integration tests are permanently skipped"
+        """
+        violations = self._find_hard_skips_in_integration_tests()
+
+        if violations:
+            error_msg = "Found integration tests with hard @pytest.mark.skip:\n"
+            for file_path, test_name, line_num, reason in violations:
+                error_msg += f"\n  {file_path}:{line_num} - {test_name}\n"
+                error_msg += f"    Reason: {reason}\n"
+            error_msg += (
+                "\n❌ Integration tests should NOT use hard @pytest.mark.skip.\n"
+                "✅ Instead, use one of these approaches:\n"
+                "   1. Use @pytest.mark.skipif with environment variable check:\n"
+                "      @pytest.mark.skipif(not os.getenv('RUN_INTEGRATION_TESTS'), reason='...')\n"
+                "   2. Use infrastructure fixtures that auto-skip when unavailable:\n"
+                "      def test_my_feature(openfga_client_real):  # Auto-skips if unavailable\n"
+                "   3. Check fixture availability in test setup:\n"
+                "      if not integration_test_env: pytest.skip('...')\n"
+            )
+            pytest.fail(error_msg)
+
     def _find_unmarked_integration_tests(self) -> List[Tuple[str, str, int, str]]:
         """
         Find tests that use infrastructure but lack @pytest.mark.integration
@@ -297,6 +333,58 @@ class TestMarkerConsistency:
             ):
                 return decorator.attr
         return ""
+
+    def _find_hard_skips_in_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+        """
+        Find integration tests using hard @pytest.mark.skip instead of conditional skips
+
+        Returns:
+            List of (file_path, test_name, line_number, reason) tuples
+        """
+        violations = []
+        tests_dir = Path(__file__).parent.parent
+
+        for test_file in tests_dir.rglob("test_*.py"):
+            if test_file.parent.name == "meta":
+                continue
+
+            try:
+                with open(test_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    tree = ast.parse(content, filename=str(test_file))
+
+                # Check test functions and classes for integration marker
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+                        # Check if test or its parent class has integration marker
+                        has_integration_marker = self._has_marker(node, "integration")
+
+                        # Also check parent class if this is a method
+                        if not has_integration_marker:
+                            # Find parent class in AST
+                            for parent in ast.walk(tree):
+                                if isinstance(parent, ast.ClassDef):
+                                    for child in parent.body:
+                                        if child == node:
+                                            has_integration_marker = self._has_marker(parent, "integration")
+                                            break
+
+                        if has_integration_marker:
+                            # Check for hard skip markers
+                            skip_reason = None
+                            for decorator in node.decorator_list:
+                                skip_reason = self._extract_skip_reason(decorator)
+                                if skip_reason:
+                                    break
+
+                            if skip_reason:
+                                rel_path = test_file.relative_to(tests_dir.parent)
+                                violations.append((str(rel_path), node.name, node.lineno, skip_reason))
+
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+
+        return violations
 
     def _find_skip_markers_for_unimplemented_features(self) -> List[Tuple[str, str, int, str]]:
         """

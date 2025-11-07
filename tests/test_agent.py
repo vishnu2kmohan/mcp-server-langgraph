@@ -324,15 +324,15 @@ class TestAgentIntegration:
         # Should return the same instance
         assert graph1 is graph2
 
-    @pytest.mark.skip(reason="Requires ANTHROPIC_API_KEY")
+    @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
     async def test_real_llm_invocation(self):
-        """Test with real Anthropic API"""
-        import os
+        """
+        Test with real Anthropic API.
 
+        Runs only when ANTHROPIC_API_KEY environment variable is set.
+        This enables testing in CI environments where API key is available.
+        """
         from mcp_server_langgraph.core.agent import create_agent_graph
-
-        if not os.getenv("ANTHROPIC_API_KEY"):
-            pytest.skip("ANTHROPIC_API_KEY not set")
 
         graph = create_agent_graph()
 

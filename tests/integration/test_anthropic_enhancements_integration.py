@@ -359,15 +359,20 @@ PREFERENCES:
 class TestFullAgentIntegration:
     """Test full agent with all enhancements enabled"""
 
-    @pytest.mark.skip(reason="Requires full infrastructure (Qdrant, Redis, LLM)")
+    @pytest.mark.skipif(
+        not (os.getenv("ANTHROPIC_API_KEY") and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
+        reason="Requires full infrastructure (Qdrant, Redis, LLM) - set RUN_FULL_INTEGRATION_TESTS=1",
+    )
     @pytest.mark.asyncio
-    async def test_agent_with_dynamic_context(self, mock_settings):
-        """Test agent graph with dynamic context loading"""
-        # This test requires:
-        # 1. Qdrant running with indexed contexts
-        # 2. Redis for checkpointing
-        # 3. LLM API configured
+    async def test_agent_with_dynamic_context(self, mock_settings, integration_test_env):
+        """
+        Test agent graph with dynamic context loading.
 
+        Requires:
+        - ANTHROPIC_API_KEY environment variable
+        - RUN_FULL_INTEGRATION_TESTS=1
+        - Docker infrastructure (Qdrant, Redis) via integration_test_env fixture
+        """
         # Create agent with all enhancements
         agent = create_agent_graph()
 
@@ -401,10 +406,17 @@ class TestFullAgentIntegration:
         system_messages = [m for m in result["messages"] if isinstance(m, SystemMessage)]
         assert len(system_messages) > 0
 
-    @pytest.mark.skip(reason="Requires full infrastructure")
+    @pytest.mark.skipif(
+        not (os.getenv("ANTHROPIC_API_KEY") and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
+        reason="Requires full infrastructure - set RUN_FULL_INTEGRATION_TESTS=1 and ANTHROPIC_API_KEY",
+    )
     @pytest.mark.asyncio
-    async def test_agent_with_verification_loop(self, mock_settings):
-        """Test agent with verification and refinement"""
+    async def test_agent_with_verification_loop(self, mock_settings, integration_test_env):
+        """
+        Test agent with verification and refinement.
+
+        Requires full infrastructure and LLM API access.
+        """
         agent = create_agent_graph()
 
         state = {
@@ -443,11 +455,18 @@ class TestFullAgentIntegration:
 class TestEndToEndWorkflow:
     """Test complete end-to-end workflow with all enhancements"""
 
-    @pytest.mark.skip(reason="Requires langchain-google-genai and complex infrastructure mocking")
+    @pytest.mark.skipif(
+        not os.getenv("RUN_FULL_INTEGRATION_TESTS"),
+        reason="Requires langchain-google-genai - set RUN_FULL_INTEGRATION_TESTS=1",
+    )
     @pytest.mark.asyncio
     async def test_mock_full_workflow(self):
-        """Test complete workflow with mocked external dependencies"""
+        """
+        Test complete workflow with mocked external dependencies.
 
+        Requires langchain-google-genai package to be installed.
+        Runs when RUN_FULL_INTEGRATION_TESTS environment variable is set.
+        """
         # Mock Qdrant
         with patch("mcp_server_langgraph.core.dynamic_context_loader.QdrantClient") as mock_qdrant_cls:
             mock_qdrant = MagicMock()

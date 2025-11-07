@@ -400,12 +400,22 @@ class TestSecretsManager:
 class TestSecretsManagerIntegration:
     """Integration tests for Infisical (requires running Infisical instance)"""
 
-    @pytest.mark.skip(reason="Requires running Infisical instance with credentials")
+    @pytest.mark.skipif(
+        not all([os.getenv("TEST_INFISICAL_CLIENT_ID"), os.getenv("TEST_INFISICAL_CLIENT_SECRET"), os.getenv("TEST_INFISICAL_PROJECT_ID")]),
+        reason="Requires Infisical credentials (TEST_INFISICAL_CLIENT_ID, TEST_INFISICAL_CLIENT_SECRET, TEST_INFISICAL_PROJECT_ID)",
+    )
     def test_full_secret_lifecycle(self):
-        """Test complete secret lifecycle with real Infisical"""
+        """
+        Test complete secret lifecycle with real Infisical.
+
+        Runs only when Infisical credentials are provided via environment variables:
+        - TEST_INFISICAL_CLIENT_ID
+        - TEST_INFISICAL_CLIENT_SECRET
+        - TEST_INFISICAL_PROJECT_ID
+        """
         from mcp_server_langgraph.secrets.manager import SecretsManager
 
-        # This requires real Infisical credentials
+        # Use real Infisical credentials from environment
         manager = SecretsManager(
             client_id=os.getenv("TEST_INFISICAL_CLIENT_ID"),
             client_secret=os.getenv("TEST_INFISICAL_CLIENT_SECRET"),

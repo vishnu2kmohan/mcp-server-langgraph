@@ -708,12 +708,16 @@ except MemoryError:
         # Result may vary: MemoryError, killed by OOM, or timeout
         assert result.success is False or "MEMORY_LIMITED" in result.stdout, "Memory limits should be enforced"
 
-    @pytest.mark.skip(reason="Requires Docker rootless mode or additional configuration")
+    @pytest.mark.skipif(
+        not os.getenv("DOCKER_ROOTLESS_TEST"),
+        reason="Requires Docker rootless mode (set DOCKER_ROOTLESS_TEST=1 to enable)",
+    )
     def test_docker_socket_not_exposed_in_container(self, sandbox):
         """
         Test that Docker socket is not accessible inside container.
 
         This prevents container escape via Docker socket manipulation.
+        Runs only when DOCKER_ROOTLESS_TEST environment variable is set.
 
         IMPORTANT: This test is aspirational - current implementation uses
         host Docker socket, which is a known security risk.

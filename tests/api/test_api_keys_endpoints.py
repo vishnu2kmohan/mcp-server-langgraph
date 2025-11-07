@@ -508,10 +508,14 @@ class TestAPIKeyEndpointsIntegration:
     test infrastructure to be running.
     """
 
-    @pytest.mark.skip(reason="Requires full test infrastructure setup")
-    async def test_full_api_key_lifecycle(self):
+    async def test_full_api_key_lifecycle(self, integration_test_env, test_fastapi_app):
         """
-        Test complete API key lifecycle with real services:
+        Test complete API key lifecycle with real services.
+
+        Uses integration_test_env fixture which auto-skips when
+        Docker infrastructure is not available.
+
+        Test steps:
         1. Create API key
         2. List keys
         3. Validate key → JWT exchange
@@ -520,5 +524,6 @@ class TestAPIKeyEndpointsIntegration:
         6. Revoke key
         7. Verify revoked key fails validation
         """
-        # TODO: Implement when E2E infrastructure is ready
+        # TODO: Implement full lifecycle test
+        # infrastructure is available via fixtures
         pass

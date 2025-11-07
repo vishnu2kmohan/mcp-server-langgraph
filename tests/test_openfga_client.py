@@ -406,17 +406,22 @@ class TestOpenFGAUtilityFunctions:
 class TestOpenFGAIntegration:
     """Integration tests for OpenFGA (requires running OpenFGA instance)"""
 
-    @pytest.mark.skip(reason="Requires running OpenFGA instance")
+    @pytest.mark.skipif(not os.getenv("RUN_INTEGRATION_TESTS"), reason="Requires running OpenFGA instance (set RUN_INTEGRATION_TESTS=1)")
     @pytest.mark.asyncio
     async def test_full_authorization_flow(self):
-        """Test complete authorization flow with real OpenFGA"""
+        """
+        Test complete authorization flow with real OpenFGA.
+
+        Runs only when RUN_INTEGRATION_TESTS environment variable is set.
+        Requires Docker infrastructure with OpenFGA running on port 9080.
+        """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        # This test requires actual OpenFGA server
+        # Connect to test OpenFGA instance
         client = OpenFGAClient(
-            api_url="http://localhost:8080",
-            store_id=None,  # Would need to be created
-            model_id=None,  # Would need to be created
+            api_url="http://localhost:9080",
+            store_id=None,  # Will use default store
+            model_id=None,  # Will use default model
         )
 
         # Write relationship
