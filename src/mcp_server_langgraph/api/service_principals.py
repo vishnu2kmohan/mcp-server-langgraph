@@ -13,8 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.auth.middleware import get_current_user
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
-from mcp_server_langgraph.core.dependencies import get_service_principal_manager
+from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
 router = APIRouter(
     prefix="/api/v1/service-principals",
@@ -124,30 +125,29 @@ async def _validate_user_association_permission(
         try:
             # Check can_manage_service_principals relation
             authorized = await openfga.check_permission(
-                user=user_id,
-                relation="can_manage_service_principals",
-                object=target_user_id,
-                context=None
+                user=user_id, relation="can_manage_service_principals", object=target_user_id, context=None
             )
 
             if authorized:
                 from mcp_server_langgraph.observability.telemetry import logger
+
                 logger.info(
                     "Service Principal authorization granted via OpenFGA delegation",
                     extra={
                         "user_id": user_id,
                         "target_user_id": target_user_id,
                         "relation": "can_manage_service_principals",
-                    }
+                    },
                 )
                 return  # Authorized via OpenFGA delegation
 
         except Exception as e:
             # Log error but continue to denial
             from mcp_server_langgraph.observability.telemetry import logger
+
             logger.warning(
                 f"OpenFGA check failed for Service Principal authorization: {e}",
-                extra={"user_id": user_id, "target_user_id": target_user_id}
+                extra={"user_id": user_id, "target_user_id": target_user_id},
             )
 
     # Rule 4: All other cases are denied
@@ -169,6 +169,7 @@ async def create_service_principal(
     request: CreateServicePrincipalRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
+    openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> CreateServicePrincipalResponse:
     """
     Create a new service principal
@@ -399,6 +400,7 @@ async def associate_service_principal_with_user(
     inherit_permissions: bool = True,
     current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
+    openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> ServicePrincipalResponse:
     """
     Associate service principal with a user for permission inheritance

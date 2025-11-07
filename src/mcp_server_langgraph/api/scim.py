@@ -68,9 +68,7 @@ def scim_error(status_code: int, detail: str, scim_type: Optional[str] = None) -
 
 
 async def _require_admin_or_scim_role(
-    current_user: Dict[str, Any],
-    openfga: Optional[Any] = None,
-    resource: str = "scim:users"
+    current_user: Dict[str, Any], openfga: Optional[Any] = None, resource: str = "scim:users"
 ) -> None:
     """
     Validate that the current user has admin or SCIM provisioner role.
@@ -104,30 +102,29 @@ async def _require_admin_or_scim_role(
         try:
             # Check can_provision_users relation
             authorized = await openfga.check_permission(
-                user=user_id,
-                relation="can_provision_users",
-                object=resource,
-                context=None
+                user=user_id, relation="can_provision_users", object=resource, context=None
             )
 
             if authorized:
                 from mcp_server_langgraph.observability.telemetry import logger
+
                 logger.info(
                     "SCIM authorization granted via OpenFGA relation",
                     extra={
                         "user_id": user_id,
                         "relation": "can_provision_users",
                         "resource": resource,
-                    }
+                    },
                 )
                 return  # Authorized via OpenFGA
 
         except Exception as e:
             # Log error but continue to role-based fallback
             from mcp_server_langgraph.observability.telemetry import logger
+
             logger.warning(
                 f"OpenFGA check failed for SCIM authorization, falling back to roles: {e}",
-                extra={"user_id": user_id, "resource": resource}
+                extra={"user_id": user_id, "resource": resource},
             )
 
     # FALLBACK: Check for admin or SCIM provisioner role
@@ -249,6 +246,7 @@ async def replace_user(
     user_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
+    openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> Union[SCIMUser, JSONResponse]:
     """
     Replace user (SCIM 2.0 PUT)
@@ -288,6 +286,7 @@ async def update_user(
     patch_request: SCIMPatchRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
+    openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> Union[SCIMUser, JSONResponse]:
     """
     Update user with PATCH operations (SCIM 2.0)
@@ -455,6 +454,7 @@ async def create_group(
     group_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
+    openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> Union[SCIMGroup, JSONResponse]:
     """
     Create a new group (SCIM 2.0)
