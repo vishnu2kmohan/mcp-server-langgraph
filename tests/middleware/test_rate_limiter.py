@@ -37,6 +37,24 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 )
 
 
+@pytest.fixture(scope="module", autouse=True)
+def init_test_observability():
+    """Initialize observability for middleware rate limiter tests"""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
 @pytest.fixture
 def mock_request_no_auth():
     """Mock request without authentication"""
@@ -130,61 +148,48 @@ class TestUserIDExtraction:
         assert user_id == "user:alice"
 
     def test_get_user_id_from_valid_jwt(self):
-        """Test extracting user ID from valid JWT"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test extracting user ID from request.state.user"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
-            assert user_id == "user:alice"
+        user_id = get_user_id_from_jwt(request)
+        assert user_id == "user:alice"
 
     def test_get_user_id_fallback_to_user_id_claim(self):
-        """Test fallback to user_id claim if sub is missing"""
-        secret_key = "test-secret"
-        payload = {"user_id": "alice", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test extracting user_id claim from request.state.user"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "alice"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
-            assert user_id == "alice"
+        user_id = get_user_id_from_jwt(request)
+        assert user_id == "alice"
 
     def test_get_user_id_no_auth_header(self, mock_request_no_auth):
         """Test user ID extraction with no auth header"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None
+
         user_id = get_user_id_from_jwt(mock_request_no_auth)
         assert user_id is None
 
     def test_get_user_id_invalid_token_format(self):
-        """Test user ID extraction with invalid token format"""
+        """Test user ID extraction with invalid token format (no user in state)"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": "InvalidFormat token123"}
+        request.state = Mock()
+        request.state.user = None  # AuthMiddleware didn't set user due to invalid format
 
         user_id = get_user_id_from_jwt(request)
         assert user_id is None
 
     def test_get_user_id_invalid_jwt(self):
-        """Test user ID extraction with invalid JWT"""
+        """Test user ID extraction with invalid JWT (no user in state)"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": "Bearer invalid.jwt.token"}
+        request.state = Mock()
+        request.state.user = None  # AuthMiddleware rejected invalid JWT
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
-
-            user_id = get_user_id_from_jwt(request)
-            assert user_id is None
+        user_id = get_user_id_from_jwt(request)
+        assert user_id is None
 
 
 class TestUserTierExtraction:
@@ -207,98 +212,69 @@ class TestUserTierExtraction:
         assert tier == "premium"
 
     def test_get_tier_from_valid_jwt(self):
-        """Test extracting tier from valid JWT"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "tier": "premium", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test extracting tier from request.state.user"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice", "tier": "premium"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
-            assert tier == "premium"
+        tier = get_user_tier(request)
+        assert tier == "premium"
 
     def test_get_tier_fallback_to_plan_claim(self):
-        """Test fallback to 'plan' claim if 'tier' is missing"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "plan": "standard", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test fallback to 'plan' field in request.state.user"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice", "plan": "standard"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
-            assert tier == "standard"
+        tier = get_user_tier(request)
+        assert tier == "standard"
 
     def test_get_tier_defaults_to_free(self):
-        """Test tier defaults to 'free' if not in JWT"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test tier defaults to 'free' when user has no tier/roles"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice"}  # No tier or roles
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
-            assert tier == "free"
+        tier = get_user_tier(request)
+        assert tier == "free"
 
     def test_get_tier_anonymous_no_auth(self, mock_request_no_auth):
         """Test tier is 'anonymous' with no authentication"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None
+
         tier = get_user_tier(mock_request_no_auth)
         assert tier == "anonymous"
 
     def test_get_tier_invalid_tier_defaults_to_free(self):
         """Test that invalid tier names default to 'free'"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "tier": "invalid_tier", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice", "tier": "invalid_tier"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            tier = get_user_tier(request)
-            assert tier == "free"
+        tier = get_user_tier(request)
+        assert tier == "free"
 
 
 class TestRateLimitKeyGeneration:
     """Test rate limit key generation"""
 
     def test_key_prioritizes_user_id(self):
-        """Test rate limit key prioritizes user ID from JWT"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
+        """Test rate limit key prioritizes user ID from request.state.user"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice"}
         request.client = Mock()
         request.client.host = "192.168.1.1"
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            key = get_rate_limit_key(request)
-            assert key == "user:user:alice"
+        key = get_rate_limit_key(request)
+        assert key == "user:user:alice"
 
     def test_key_falls_back_to_ip(self, mock_request_no_auth):
         """Test rate limit key falls back to IP address"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None
+
         with patch("mcp_server_langgraph.middleware.rate_limiter.get_remote_address") as mock_get_ip:
             mock_get_ip.return_value = "192.168.1.1"
 
@@ -307,6 +283,9 @@ class TestRateLimitKeyGeneration:
 
     def test_key_global_anonymous_fallback(self, mock_request_no_auth):
         """Test rate limit key falls back to global anonymous"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None
+
         with patch("mcp_server_langgraph.middleware.rate_limiter.get_remote_address") as mock_get_ip:
             mock_get_ip.return_value = None
 
@@ -335,24 +314,18 @@ class TestDynamicLimitDetermination:
 
     def test_dynamic_limit_for_premium_user(self):
         """Test dynamic limit for premium user"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "tier": "premium", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
-        request.url = Mock()
-        request.url.path = "/test"
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice", "tier": "premium"}
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            limit = get_dynamic_limit(request)
-            assert limit == "1000/minute"
+        limit = get_dynamic_limit(request)
+        assert limit == "1000/minute"
 
     def test_dynamic_limit_for_anonymous(self, mock_request_no_auth):
         """Test dynamic limit for anonymous user"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None
+
         limit = get_dynamic_limit(mock_request_no_auth)
         assert limit == "10/minute"
 
@@ -383,12 +356,9 @@ class TestCustomRateLimitHandler:
     @pytest.mark.asyncio
     async def test_rate_limit_handler_response_structure(self):
         """Test rate limit handler returns proper structure"""
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "tier": "free", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice", "tier": "free"}
         request.url = Mock()
         request.url.path = "/api/chat"
         request.method = "POST"
@@ -398,26 +368,25 @@ class TestCustomRateLimitHandler:
         mock_limit.error_message = "Rate limit exceeded"
         exc = RateLimitExceeded(mock_limit)
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
+        response = await custom_rate_limit_exceeded_handler(request, exc)
 
-            response = custom_rate_limit_exceeded_handler(request, exc)
-
-            assert response.status_code == 429
-            assert "Retry-After" in response.headers
-            assert "X-RateLimit-Limit" in response.headers
-            assert "X-RateLimit-Remaining" in response.headers
-            assert response.headers["X-RateLimit-Remaining"] == "0"
+        assert response.status_code == 429
+        assert "Retry-After" in response.headers
+        assert "X-RateLimit-Limit" in response.headers
+        assert "X-RateLimit-Remaining" in response.headers
+        assert response.headers["X-RateLimit-Remaining"] == "0"
 
     @pytest.mark.asyncio
     async def test_rate_limit_handler_includes_tier_info(self, mock_request_no_auth):
         """Test rate limit handler includes tier information"""
+        mock_request_no_auth.state = Mock()
+        mock_request_no_auth.state.user = None  # Anonymous user
+
         mock_limit = Mock()
         mock_limit.error_message = "Rate limit exceeded"
         exc = RateLimitExceeded(mock_limit)
 
-        response = custom_rate_limit_exceeded_handler(mock_request_no_auth, exc)
+        response = await custom_rate_limit_exceeded_handler(mock_request_no_auth, exc)
 
         # Should be anonymous tier
         content = response.body.decode()
@@ -512,89 +481,58 @@ class TestRateLimitingIntegration:
     """Integration tests for rate limiting"""
 
     def test_rate_limit_key_hierarchy(self):
-        """Test that rate limit key follows hierarchy"""
+        """Test that rate limit key follows hierarchy (user > IP > global)"""
         # 1. User ID (highest priority)
-        secret_key = "test-secret"
-        payload = {"sub": "user:alice", "exp": 9999999999}
-        token = jwt.encode(payload, secret_key, algorithm="HS256")
-
         request = Mock(spec=Request)
-        request.headers = {"Authorization": f"Bearer {token}"}
+        request.state = Mock()
+        request.state.user = {"user_id": "user:alice"}
         request.client = Mock()
         request.client.host = "192.168.1.1"
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = secret_key
-            mock_settings.jwt_algorithm = "HS256"
-
-            key = get_rate_limit_key(request)
-            # Should prioritize user ID
-            assert key.startswith("user:")
-            assert "alice" in key
+        key = get_rate_limit_key(request)
+        # Should prioritize user ID
+        assert key.startswith("user:")
+        assert "alice" in key
 
     def test_full_tier_based_limiting_flow(self):
         """Test complete tier-based rate limiting flow"""
         for tier_name, expected_limit in RATE_LIMITS.items():
-            secret_key = "test-secret"
-            payload = {"sub": f"user:{tier_name}", "tier": tier_name, "exp": 9999999999}
-            token = jwt.encode(payload, secret_key, algorithm="HS256")
-
             request = Mock(spec=Request)
-            request.headers = {"Authorization": f"Bearer {token}"}
-            request.url = Mock()
-            request.url.path = "/test"
+            request.state = Mock()
+            request.state.user = {"user_id": f"user:{tier_name}", "tier": tier_name}
 
-            with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-                mock_settings.jwt_secret_key = secret_key
-                mock_settings.jwt_algorithm = "HS256"
+            tier = get_user_tier(request)
+            limit = get_dynamic_limit(request)
 
-                tier = get_user_tier(request)
-                limit = get_dynamic_limit(request)
-
-                assert tier == tier_name
-                assert limit == expected_limit
+            assert tier == tier_name
+            assert limit == expected_limit
 
 
 class TestRateLimitErrorHandling:
     """Test error handling and resilience"""
 
     def test_jwt_decode_error_handled_gracefully(self):
-        """Test that JWT decode errors don't crash"""
+        """Test that invalid tokens are handled gracefully (no user in state)"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": "Bearer corrupted_token"}
+        request.state = Mock()
+        request.state.user = None  # AuthMiddleware would have rejected corrupted token
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
+        # Should return None, not crash
+        user_id = get_user_id_from_jwt(request)
+        assert user_id is None
 
-            # Should return None, not crash
-            user_id = get_user_id_from_jwt(request)
-            assert user_id is None
-
-            tier = get_user_tier(request)
-            assert tier == "anonymous"
+        tier = get_user_tier(request)
+        assert tier == "anonymous"
 
     def test_missing_jwt_secret_handled(self):
-        """Test that missing JWT secret is handled"""
+        """Test that missing JWT secret is handled (AuthMiddleware would fail)"""
         request = Mock(spec=Request)
-        request.headers = {"Authorization": "Bearer token"}
+        request.state = Mock()
+        request.state.user = None  # AuthMiddleware would fail without JWT secret
 
-        with patch("mcp_server_langgraph.middleware.rate_limiter.settings") as mock_settings:
-            mock_settings.jwt_secret_key = None
-
-            # FIXED: Remove 'or True' placeholder - implement proper assertion for both paths
-            # Test should verify graceful error handling for missing JWT secret
-            try:
-                user_id = get_user_id_from_jwt(request)
-                # If no exception raised, user_id should be None (graceful failure)
-                assert user_id is None, "get_user_id_from_jwt should return None when JWT secret is missing"
-            except (TypeError, ValueError, AttributeError) as e:
-                # These exceptions are acceptable - they indicate graceful error handling
-                # The function attempted to decode but failed due to missing secret
-                assert True, f"Acceptable exception when JWT secret missing: {type(e).__name__}"
-            except Exception as e:
-                # Unexpected exception type - this might indicate a problem
-                pytest.fail(f"Unexpected exception type when JWT secret missing: {type(e).__name__}: {e}")
+        # Should handle gracefully
+        user_id = get_user_id_from_jwt(request)
+        assert user_id is None
 
 
 class TestKeycloakIntegration:
