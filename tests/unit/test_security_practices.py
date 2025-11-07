@@ -21,6 +21,24 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+@pytest.fixture(scope="module", autouse=True)
+def init_test_observability():
+    """Initialize observability for tests"""
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+
 class TestCryptographicHashSecurity:
     """Test that cryptographic operations use secure algorithms."""
 
@@ -145,14 +163,14 @@ class TestTemporaryDirectorySecurity:
         from pathlib import Path
 
         # Simulate the path validation logic
-        allowed_base = Path("/tmp/workflows").resolve()
+        allowed_base = Path("/tmp/workflows")  # nosec B108 - test path.resolve()
 
         # Test valid paths
         valid_path = Path("/tmp/workflows/my_workflow.py").resolve()
         assert str(valid_path).startswith(str(allowed_base))
 
         # Test directory traversal attempts (should be prevented)
-        evil_path = Path("/tmp/workflows/../../../etc/passwd").resolve()
+        evil_path = Path("/tmp/workflows/../../../etc/passwd")  # nosec B108 - testing path traversal.resolve()
         assert not str(evil_path).startswith(str(allowed_base)), (
             "Path traversal attack not prevented! " "Validation should reject paths outside allowed base."
         )
