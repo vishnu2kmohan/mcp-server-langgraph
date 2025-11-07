@@ -407,9 +407,18 @@ jobs:
     - name: Verify image was loaded
       run: |
         echo "=== Checking if image was loaded ==="
-        docker images | grep "${{ matrix.variant }}"
-        echo "=== Inspecting image ==="
-        docker inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }} | jq '.[0].Config.Cmd, .[0].Config.Entrypoint, .[0].Config.WorkingDir'
+        # Use docker inspect for precise validation (fails if image doesn't exist)
+        IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ github.sha }}"
+        if ! docker inspect "$IMAGE_TAG" > /dev/null 2>&1; then
+          echo "ERROR: Image $IMAGE_TAG not found"
+          echo "Available images:"
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep "${{ env.IMAGE_NAME }}" || docker images
+          exit 1
+        fi
+        echo "✓ Image loaded successfully: $IMAGE_TAG"
+
+        echo "=== Inspecting image configuration ==="
+        docker inspect "$IMAGE_TAG" | jq '.[0].Config.Cmd, .[0].Config.Entrypoint, .[0].Config.WorkingDir'
 
     - name: Test ${{ matrix.variant }} image
       run: |

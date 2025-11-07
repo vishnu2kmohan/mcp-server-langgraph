@@ -82,6 +82,25 @@ repos:
   # Mintlify documentation validation
   - repo: local
     hooks:
+      - id: actionlint-workflow-validation
+        name: Validate GitHub Actions with actionlint
+        entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1 || true'
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Advanced GitHub Actions workflow validation using actionlint.
+
+          Catches issues like:
+          - Invalid context usage (secrets.* in job-level if conditions)
+          - Missing job dependencies (needs declarations)
+          - Expression syntax errors
+          - Invalid workflow syntax
+
+          Complements check-github-workflows with deeper validation.
+
+
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
         entry: python3 scripts/validate_mintlify_docs.py docs

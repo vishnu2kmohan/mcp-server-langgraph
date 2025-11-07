@@ -98,8 +98,9 @@ main() {
     fi
 
     # Test 1: actionlint - Workflow syntax validation
+    # Simplified: Let actionlint fail fast on errors (removed || true short-circuit)
     run_test "Workflow syntax validation (actionlint)" \
-        "actionlint -color $workflow_dir/*.{yml,yaml} 2>&1 || true | grep -q 'no errors found' || actionlint $workflow_dir/*.{yml,yaml}"
+        "actionlint -color $workflow_dir/*.{yml,yaml}"
 
     # Test 2: Context usage validation (existing script)
     if [[ -f "$script_dir/validate_github_workflows.py" ]]; then

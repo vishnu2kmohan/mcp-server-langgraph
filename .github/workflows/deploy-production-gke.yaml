@@ -207,6 +207,8 @@ jobs:
     name: Manual Approval Required
     runs-on: ubuntu-latest
     needs: build-and-push
+    # Only run in main repository (not forks) to avoid environment protection issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     environment:
       name: production-approval
       url: https://console.cloud.google.com/kubernetes/clusters/details/${{ env.GCP_REGION }}/${{ env.GKE_CLUSTER }}/details?project=${{ env.GCP_PROJECT_ID }}
@@ -378,9 +380,25 @@ jobs:
           # Get service endpoint
           SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-          # Health checks (canary is behind same service)
-          curl -f -s "http://${SERVICE_IP}:8000/health/live" || exit 1
-          curl -f -s "http://${SERVICE_IP}:8000/health/ready" || exit 1
+          # Health checks with timeout and retry logic (canary is behind same service)
+          echo "Running health checks against http://${SERVICE_IP}:8000..."
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            if curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/live" && \
+               curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/ready"; then
+              echo "✅ Health checks passed"
+              break
+            elif [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Health checks failed after $MAX_RETRIES attempts"
+              exit 1
+            else
+              echo "⚠️  Health check failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
           echo "✅ Canary smoke tests passed"
 
@@ -428,9 +446,25 @@ jobs:
           # Get service endpoint
           SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-          # Health check
-          curl -f -s "http://${SERVICE_IP}:8000/health/live" || exit 1
-          curl -f -s "http://${SERVICE_IP}:8000/health/ready" || exit 1
+          # Health checks with timeout and retry logic
+          echo "Running health checks against http://${SERVICE_IP}:8000..."
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            if curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/live" && \
+               curl --fail --silent --max-time 10 "http://${SERVICE_IP}:8000/health/ready"; then
+              echo "✅ Health checks passed"
+              break
+            elif [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ Health checks failed after $MAX_RETRIES attempts"
+              exit 1
+            else
+              echo "⚠️  Health check failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
           echo "✅ Smoke tests passed"
 

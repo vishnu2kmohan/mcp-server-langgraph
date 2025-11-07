@@ -84,7 +84,8 @@ jobs:
 
       - name: Classify alert severity
         id: classify
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
+        # Run on workflow_run events, or workflow_dispatch when not in test mode
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.test_mode != true)
         env:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
@@ -120,7 +121,8 @@ jobs:
     steps:
       - name: Determine Slack message
         id: message
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
+        # Run on workflow_run events, or workflow_dispatch when not in test mode
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.test_mode != true)
         env:
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
           CONCLUSION: ${{ needs.collect-metrics.outputs.workflow_conclusion }}
@@ -146,7 +148,8 @@ jobs:
 
       - name: Send Slack notification
         # Check secret availability at step level (secrets not available in job-level if)
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true' && env.SLACK_WEBHOOK != ''
+        # Run on workflow_run events, or workflow_dispatch when not in test mode
+        if: (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.test_mode != true)) && env.SLACK_WEBHOOK != ''
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
@@ -208,7 +211,8 @@ jobs:
     steps:
       - name: Send PagerDuty event
         # Check secret availability at step level (secrets not available in job-level if)
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true' && env.PAGERDUTY_KEY != ''
+        # Run on workflow_run events, or workflow_dispatch when not in test mode
+        if: (github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.test_mode != true)) && env.PAGERDUTY_KEY != ''
         env:
           PAGERDUTY_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
