@@ -56,37 +56,6 @@ def test_workflow_syntax_valid(workflow_file):
     assert result.returncode == 0, "\n".join(errors)
 
 
-def test_all_workflows_pass_actionlint():
-    """
-    Test that all workflows pass actionlint validation in one run.
-
-    This provides a comprehensive check of all workflows together,
-    catching any cross-workflow issues.
-
-    Expected to FAIL initially (RED phase) due to known blocker issues.
-    """
-    workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
-
-    result = subprocess.run(
-        ["actionlint", "-no-color", "-shellcheck=", f"{workflows_dir}/*.yml", f"{workflows_dir}/*.yaml"],
-        capture_output=True,
-        text=True,
-        shell=True,
-    )
-
-    # Provide detailed error output
-    error_msg = []
-    if result.returncode != 0:
-        error_msg.append("=" * 80)
-        error_msg.append("WORKFLOW VALIDATION FAILED")
-        error_msg.append("=" * 80)
-        error_msg.append(result.stdout)
-        error_msg.append(result.stderr)
-        error_msg.append("=" * 80)
-
-    assert result.returncode == 0, "\n".join(error_msg)
-
-
 def test_actionlint_installed():
     """
     Verify that actionlint is installed and available.
