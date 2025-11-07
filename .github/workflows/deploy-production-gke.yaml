@@ -14,9 +14,9 @@ name: Deploy to GKE Production
 #
 # ==============================================================================
 
-on:
+"on":  # Quoted to prevent YAML 1.1 boolean interpretation
   release:
-    types: [released]  # Only on full releases, not prereleases
+    types: [published]  # GitHub releases fire with 'published' action
   workflow_dispatch:
     inputs:
       image_tag:

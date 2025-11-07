@@ -270,9 +270,24 @@ jobs:
       with:
         version: '3.19.0'
 
-    - name: Package Helm chart
+    - name: Extract version components
+      id: version
       run: |
-        helm package deployments/helm/mcp-server-langgraph --version ${{ github.ref_name }}
+        VERSION="${{ github.ref_name }}"
+        # Remove 'v' prefix if present (Helm requires SemVer without 'v')
+        VERSION=${VERSION#v}
+
+        echo "full=$VERSION" >> $GITHUB_OUTPUT
+        echo "✓ Sanitized version for Helm: $VERSION"
+
+    - name: Package Helm chart
+      id: helm_package
+      run: |
+        # Use sanitized version (without 'v' prefix) for Helm packaging
+        # Helm rejects versions with leading 'v' per SemVer 2 spec
+        VERSION="${{ steps.version.outputs.full }}"
+        helm package deployments/helm/mcp-server-langgraph --version "$VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v3.6.0
@@ -283,7 +298,9 @@ jobs:
 
     - name: Push Helm chart
       run: |
-        helm push mcp-server-langgraph-${{ github.ref_name }}.tgz oci://ghcr.io/${{ github.repository }}/charts
+        # Use sanitized version for chart filename (matches package step)
+        VERSION="${{ steps.helm_package.outputs.version }}"
+        helm push "mcp-server-langgraph-${VERSION}.tgz" oci://ghcr.io/${{ github.repository }}/charts
 
   attach-sbom:
     name: Attach SBOM to Release
@@ -331,17 +348,23 @@ jobs:
 
     - name: Install build tools
       run: |
-        uv tool install build
-        uv tool install twine
+        # Install to system Python (not isolated tool environment)
+        # This allows 'python -m build' to find the build module
+        uv pip install --system build twine
+        echo "✓ Build tools installed to active interpreter"
 
     - name: Build package
-      run: python -m build
+      run: |
+        python -m build
+        echo "✓ Package built successfully"
 
     - name: Publish to PyPI
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      run: twine upload dist/*
+      run: |
+        twine upload dist/*
+        echo "✓ Package published to PyPI"
 
   update-mcp-registry:
     name: Update MCP Registry
