@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762533160697,
+  "lastUpdate": 1762537396537,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36300,6 +36300,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002019804425334061",
             "extra": "mean: 59.042348461085616 usec\nrounds: 4451"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "3ca058a24a8df15298145ad6784c36a1f6c2fd31",
+          "message": "feat(ci/tests): add comprehensive regression prevention tests and hooks (TDD)\n\nImplement comprehensive TDD-based regression prevention to ensure critical\nCI/CD and testing infrastructure issues can never occur again.\n\n## New Features\n\n### 1. Comprehensive Regression Test Suite (tests/test_regression_prevention.py)\nCreated 8 test classes with full coverage of critical issues:\n\n**TestPytestFixtureValidation**\n- test_all_yield_functions_have_fixture_decorator: Detects missing @pytest.fixture\n- test_no_class_scoped_fixtures: Prevents invalid class-scoped fixtures\n\n**TestMonkeypatchReloadPattern**\n- test_monkeypatch_tests_reload_config_module: Ensures Settings singleton reload\n\n**TestWorkflowToolMaintenance**\n- test_no_archived_tools_in_workflows: Detects use of archived tools (kubeval)\n- test_workflows_use_kubeconform_with_ignore_missing_schemas: Validates kubeconform flags\n\n**TestWorkflowActionVersions**\n- test_astral_sh_setup_uv_uses_v7_or_later: Prevents outdated action versions\n\n**TestWorkflowSyntaxValidation**\n- test_all_workflows_are_valid_yaml: Validates YAML syntax\n- test_all_workflows_have_required_structure: Ensures required workflow fields\n\n### 2. Pre-Commit Hook Integration\nAdded regression-prevention-tests hook to .pre-commit-config.yaml:\n- Runs automatically when test files or workflows change\n- Prevents commits that would reintroduce critical issues\n- Comprehensive documentation of issues prevented\n\n### 3. Additional Workflow Fixes\n- Replaced kubeval with kubeconform in gcp-compliance-scan.yaml\n- All 27 workflows now use maintained tools\n\n## Test Results\n- 60 tests passed ✅\n- 1 skipped (informational) ✅\n- 1 xfailed (expected) ✅\n- Zero regressions ✅\n\n## Issues Prevented\n1. Missing pytest fixture decorators (Issue #6)\n2. Invalid class-scoped fixtures (Issue #6)\n3. Settings singleton not reloaded (Issue #7)\n4. Archived tool usage (Issue #8)\n5. Outdated GitHub Actions versions\n6. Invalid workflow YAML syntax\n\n## TDD Approach\nFollowing Test-Driven Development best practices:\n1. RED: Tests fail when issues exist\n2. GREEN: Tests pass after fixes applied\n3. REFACTOR: Code maintained, tests prevent regression\n\n## Files Changed\n- tests/test_regression_prevention.py (NEW - 405 lines)\n- .pre-commit-config.yaml (added regression-prevention-tests hook)\n- .github/workflows/gcp-compliance-scan.yaml (kubeval → kubeconform)\n\n## Documentation\nSee docs/CRITICAL_FIXES_SUMMARY.md for complete audit and fix details.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-07T12:41:33-05:00",
+          "tree_id": "d407c0da961397800b134da9d155a4ebff6d1981",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/3ca058a24a8df15298145ad6784c36a1f6c2fd31"
+        },
+        "date": 1762537394895,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.01445140035872,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008988235906800666",
+            "extra": "mean: 6.895864448979506 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 151.09391629850282,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012181117449785146",
+            "extra": "mean: 6.618400161290339 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46303.64914428581,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.596569999999815 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48994.05408150783,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.410640000037006 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46719.10418923012,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.404519999990157 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.35541422427247,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.145212979999982 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.436143766842537,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.450535250000016 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.975494695513085,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.24565503000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1444272.7364983181,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 692.3899999833338 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13721.37754946382,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 72.87898000001292 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2976.8062143812517,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.9304999999324 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2938.162348101473,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.3487900000357 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60310.28823959414,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019701427177740694",
+            "extra": "mean: 16.58091893090129 usec\nrounds: 13544"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17273.871785589978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016922498668420076",
+            "extra": "mean: 57.89090091743121 usec\nrounds: 5450"
           }
         ]
       }
