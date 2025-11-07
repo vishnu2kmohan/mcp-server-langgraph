@@ -49,9 +49,9 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=False)
 
-        assert "alice" not in provider.users_db, (
-            "SECURITY FAILURE: Hard-coded 'alice' user still exists in InMemoryUserProvider"
-        )
+        assert (
+            "alice" not in provider.users_db
+        ), "SECURITY FAILURE: Hard-coded 'alice' user still exists in InMemoryUserProvider"
 
     def test_no_bob_user_exists_by_default(self):
         """
@@ -61,9 +61,7 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=False)
 
-        assert "bob" not in provider.users_db, (
-            "SECURITY FAILURE: Hard-coded 'bob' user still exists in InMemoryUserProvider"
-        )
+        assert "bob" not in provider.users_db, "SECURITY FAILURE: Hard-coded 'bob' user still exists in InMemoryUserProvider"
 
     def test_no_admin_user_exists_by_default(self):
         """
@@ -73,9 +71,9 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=False)
 
-        assert "admin" not in provider.users_db, (
-            "SECURITY FAILURE: Hard-coded 'admin' user still exists in InMemoryUserProvider"
-        )
+        assert (
+            "admin" not in provider.users_db
+        ), "SECURITY FAILURE: Hard-coded 'admin' user still exists in InMemoryUserProvider"
 
     def test_users_can_be_created_explicitly(self):
         """
@@ -86,12 +84,7 @@ class TestNoHardcodedCredentials:
         provider = InMemoryUserProvider(use_password_hashing=False)
 
         # Explicitly create a test user
-        provider.add_user(
-            username="testuser",
-            password="test-password-123",
-            email="testuser@example.com",
-            roles=["user"]
-        )
+        provider.add_user(username="testuser", password="test-password-123", email="testuser@example.com", roles=["user"])
 
         # User should now exist
         assert "testuser" in provider.users_db
@@ -104,24 +97,15 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=True)
 
-        provider.add_user(
-            username="hasheduser",
-            password="secure-password",
-            email="hasheduser@example.com",
-            roles=["admin"]
-        )
+        provider.add_user(username="hasheduser", password="secure-password", email="hasheduser@example.com", roles=["admin"])
 
         # User should exist
         assert "hasheduser" in provider.users_db
 
         # Password should be hashed (bcrypt hashes start with $2b$)
         stored_password = provider.users_db["hasheduser"]["password"]
-        assert stored_password.startswith("$2b$"), (
-            "Password should be hashed with bcrypt"
-        )
-        assert stored_password != "secure-password", (
-            "Password should not be stored in plaintext"
-        )
+        assert stored_password.startswith("$2b$"), "Password should be hashed with bcrypt"
+        assert stored_password != "secure-password", "Password should not be stored in plaintext"
 
     @pytest.mark.asyncio
     async def test_authentication_fails_without_users(self):
@@ -146,12 +130,7 @@ class TestNoHardcodedCredentials:
         provider = InMemoryUserProvider(use_password_hashing=False)
 
         # Create user explicitly
-        provider.add_user(
-            username="validuser",
-            password="validpassword",
-            email="validuser@example.com",
-            roles=["user"]
-        )
+        provider.add_user(username="validuser", password="validpassword", email="validuser@example.com", roles=["user"])
 
         # Authentication should succeed
         result = await provider.authenticate("validuser", "validpassword")
@@ -179,18 +158,17 @@ class TestNoHardcodedCredentialsInSourceCode:
 
         # Patterns that indicate hard-coded credentials
         suspicious_patterns = [
-            r'alice123',
-            r'bob123',
-            r'admin123',
+            r"alice123",
+            r"bob123",
+            r"admin123",
             r'"password":\s*"[^"]*123"',  # password ending in 123
-            r'default_users\s*=\s*\{',  # default_users dictionary
+            r"default_users\s*=\s*\{",  # default_users dictionary
         ]
 
         for pattern in suspicious_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
             assert len(matches) == 0, (
-                f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' "
-                f"in user_provider.py: {matches}"
+                f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' " f"in user_provider.py: {matches}"
             )
 
     def test_no_init_users_method_exists(self):
@@ -257,16 +235,17 @@ class TestCredentialCreationDocumentation:
         content = readme_file.read_text()
 
         # Should mention user creation or InMemoryUserProvider
-        has_user_creation_docs = any([
-            "add_user" in content,
-            "create user" in content.lower(),
-            "inmemoryprovider" in content.lower(),
-            "test users" in content.lower(),
-        ])
+        has_user_creation_docs = any(
+            [
+                "add_user" in content,
+                "create user" in content.lower(),
+                "inmemoryprovider" in content.lower(),
+                "test users" in content.lower(),
+            ]
+        )
 
         assert has_user_creation_docs, (
-            "README.md should document how to create test users now that "
-            "hard-coded credentials have been removed"
+            "README.md should document how to create test users now that " "hard-coded credentials have been removed"
         )
 
     def test_add_user_method_has_docstring(self):
@@ -276,9 +255,9 @@ class TestCredentialCreationDocumentation:
         This is the recommended way to create users for testing.
         """
         # Check that add_user method is documented
-        assert InMemoryUserProvider.add_user.__doc__ is not None, (
-            "The add_user() method should have a docstring explaining how to use it"
-        )
+        assert (
+            InMemoryUserProvider.add_user.__doc__ is not None
+        ), "The add_user() method should have a docstring explaining how to use it"
 
         docstring = InMemoryUserProvider.add_user.__doc__
         assert "username" in docstring.lower()

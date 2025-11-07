@@ -401,7 +401,13 @@ class TestSecretsManagerIntegration:
     """Integration tests for Infisical (requires running Infisical instance)"""
 
     @pytest.mark.skipif(
-        not all([os.getenv("TEST_INFISICAL_CLIENT_ID"), os.getenv("TEST_INFISICAL_CLIENT_SECRET"), os.getenv("TEST_INFISICAL_PROJECT_ID")]),
+        not all(
+            [
+                os.getenv("TEST_INFISICAL_CLIENT_ID"),
+                os.getenv("TEST_INFISICAL_CLIENT_SECRET"),
+                os.getenv("TEST_INFISICAL_PROJECT_ID"),
+            ]
+        ),
         reason="Requires Infisical credentials (TEST_INFISICAL_CLIENT_ID, TEST_INFISICAL_CLIENT_SECRET, TEST_INFISICAL_PROJECT_ID)",
     )
     def test_full_secret_lifecycle(self):

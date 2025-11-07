@@ -24,24 +24,9 @@ def auth_middleware_with_users():
     user_provider = InMemoryUserProvider(use_password_hashing=False)
 
     # Add test users explicitly (no more hard-coded defaults as of Finding #2 fix)
-    user_provider.add_user(
-        username="alice",
-        password="alice123",
-        email="alice@acme.com",
-        roles=["user", "premium"]
-    )
-    user_provider.add_user(
-        username="bob",
-        password="bob123",
-        email="bob@acme.com",
-        roles=["user"]
-    )
-    user_provider.add_user(
-        username="admin",
-        password="admin123",
-        email="admin@acme.com",
-        roles=["admin"]
-    )
+    user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["user", "premium"])
+    user_provider.add_user(username="bob", password="bob123", email="bob@acme.com", roles=["user"])
+    user_provider.add_user(username="admin", password="admin123", email="admin@acme.com", roles=["admin"])
 
     return AuthMiddleware(secret_key="test-key", user_provider=user_provider)
 

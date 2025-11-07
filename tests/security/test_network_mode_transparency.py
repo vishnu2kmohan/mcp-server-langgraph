@@ -28,6 +28,7 @@ from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 # Docker is an optional dependency - mock if not available
 try:
     from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
@@ -64,10 +65,7 @@ class TestNetworkModeTransparency:
         2. Log clear warning explaining the limitation
         """
         limits = ResourceLimits(
-            timeout_seconds=30,
-            memory_limit_mb=512,
-            network_mode="allowlist",
-            allowed_domains=("pypi.org", "github.com")
+            timeout_seconds=30, memory_limit_mb=512, network_mode="allowlist", allowed_domains=("pypi.org", "github.com")
         )
 
         sandbox = DockerSandbox(limits=limits)
@@ -76,14 +74,11 @@ class TestNetworkModeTransparency:
             network_mode = sandbox._get_network_mode()
 
         # Must fail closed
-        assert network_mode == "none", (
-            f"SECURITY: Allowlist mode must fail closed to 'none', got '{network_mode}'"
-        )
+        assert network_mode == "none", f"SECURITY: Allowlist mode must fail closed to 'none', got '{network_mode}'"
 
         # Must log warning
         assert any(
-            "allowlist" in record.message.lower() and "not implemented" in record.message.lower()
-            for record in caplog.records
+            "allowlist" in record.message.lower() and "not implemented" in record.message.lower() for record in caplog.records
         ), "Expected warning about unimplemented allowlist not found in logs"
 
     @pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not available")
@@ -93,11 +88,7 @@ class TestNetworkModeTransparency:
 
         This is the secure default and current production behavior.
         """
-        limits = ResourceLimits(
-            timeout_seconds=30,
-            memory_limit_mb=512,
-            network_mode="none"
-        )
+        limits = ResourceLimits(timeout_seconds=30, memory_limit_mb=512, network_mode="none")
 
         sandbox = DockerSandbox(limits=limits)
         network_mode = sandbox._get_network_mode()
@@ -111,18 +102,12 @@ class TestNetworkModeTransparency:
 
         This is for cases where network access is explicitly required.
         """
-        limits = ResourceLimits(
-            timeout_seconds=30,
-            memory_limit_mb=512,
-            network_mode="unrestricted"
-        )
+        limits = ResourceLimits(timeout_seconds=30, memory_limit_mb=512, network_mode="unrestricted")
 
         sandbox = DockerSandbox(limits=limits)
         network_mode = sandbox._get_network_mode()
 
-        assert network_mode == "bridge", (
-            f"Unrestricted mode should use 'bridge', got '{network_mode}'"
-        )
+        assert network_mode == "bridge", f"Unrestricted mode should use 'bridge', got '{network_mode}'"
 
     def test_development_profile_network_mode_is_explicit(self):
         """
@@ -131,9 +116,10 @@ class TestNetworkModeTransparency:
         limits = ResourceLimits.development()
 
         # Development should have explicit network mode
-        assert limits.network_mode in ("none", "unrestricted"), (
-            f"Development profile has unclear network_mode: {limits.network_mode}"
-        )
+        assert limits.network_mode in (
+            "none",
+            "unrestricted",
+        ), f"Development profile has unclear network_mode: {limits.network_mode}"
 
     def test_testing_profile_network_mode_is_none(self):
         """
@@ -141,9 +127,7 @@ class TestNetworkModeTransparency:
         """
         limits = ResourceLimits.testing()
 
-        assert limits.network_mode == "none", (
-            "Testing profile should disable network for deterministic tests"
-        )
+        assert limits.network_mode == "none", "Testing profile should disable network for deterministic tests"
 
 
 @pytest.mark.security
@@ -158,9 +142,7 @@ class TestNetworkModeDocumentation:
         docstring = ResourceLimits.production.__doc__
 
         assert docstring is not None, "production() method must have docstring"
-        assert "network" in docstring.lower(), (
-            "production() docstring must mention network mode"
-        )
+        assert "network" in docstring.lower(), "production() docstring must mention network mode"
 
     def test_network_mode_parameter_has_documentation(self):
         """
@@ -172,9 +154,7 @@ class TestNetworkModeDocumentation:
 
         combined_docs = (class_doc + init_doc).lower()
 
-        assert "network" in combined_docs, (
-            "ResourceLimits must document network_mode parameter"
-        )
+        assert "network" in combined_docs, "ResourceLimits must document network_mode parameter"
 
     @pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not available")
     def test_docker_sandbox_documents_allowlist_limitation(self):
@@ -182,19 +162,18 @@ class TestNetworkModeDocumentation:
         Test that DockerSandbox documents that allowlist is not implemented
         """
         # Check _get_network_mode has documentation about allowlist
-        method_source = DockerSandbox._get_network_mode.__doc__ or ""
+        _ = DockerSandbox._get_network_mode.__doc__ or ""  # noqa: F841
 
         # At minimum, the code should have comments (checked via reading source)
         # This test ensures the limitation is documented somewhere
         import inspect
+
         source = inspect.getsource(DockerSandbox._get_network_mode)
 
-        assert "allowlist" in source.lower(), (
-            "_get_network_mode must reference allowlist mode"
-        )
-        assert "not implemented" in source.lower() or "fail closed" in source.lower(), (
-            "_get_network_mode must document that allowlist is not implemented"
-        )
+        assert "allowlist" in source.lower(), "_get_network_mode must reference allowlist mode"
+        assert (
+            "not implemented" in source.lower() or "fail closed" in source.lower()
+        ), "_get_network_mode must document that allowlist is not implemented"
 
 
 @pytest.mark.security
@@ -208,14 +187,11 @@ class TestNetworkModeSecurityDefaults:
 
         If no network mode is specified, default to most restrictive (none).
         """
-        limits = ResourceLimits(
-            timeout_seconds=30,
-            memory_limit_mb=512
-        )
+        limits = ResourceLimits(timeout_seconds=30, memory_limit_mb=512)
 
-        assert limits.network_mode == "none", (
-            f"SECURITY: Default network_mode should be 'none' (fail-closed), got '{limits.network_mode}'"
-        )
+        assert (
+            limits.network_mode == "none"
+        ), f"SECURITY: Default network_mode should be 'none' (fail-closed), got '{limits.network_mode}'"
 
     @pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not available")
     def test_allowed_domains_ignored_when_network_disabled(self):
@@ -228,7 +204,7 @@ class TestNetworkModeSecurityDefaults:
             timeout_seconds=30,
             memory_limit_mb=512,
             network_mode="none",
-            allowed_domains=("pypi.org", "github.com")  # These should have no effect
+            allowed_domains=("pypi.org", "github.com"),  # These should have no effect
         )
 
         sandbox = DockerSandbox(limits=limits)
@@ -248,7 +224,7 @@ class TestNetworkModeSecurityDefaults:
             timeout_seconds=30,
             memory_limit_mb=512,
             network_mode="unrestricted",
-            allowed_domains=()  # Empty, but unrestricted should still work
+            allowed_domains=(),  # Empty, but unrestricted should still work
         )
 
         sandbox = DockerSandbox(limits=limits)
@@ -274,7 +250,7 @@ class TestFutureAllowlistImplementation:
             timeout_seconds=30,
             memory_limit_mb=512,
             network_mode="allowlist",
-            allowed_domains=()  # Empty - should this be valid?
+            allowed_domains=(),  # Empty - should this be valid?
         )
 
         # For now, this is allowed because allowlist isn't implemented
@@ -289,12 +265,7 @@ class TestFutureAllowlistImplementation:
         Even though allowlist isn't implemented, the config should be stored.
         """
         domains = ("pypi.org", "github.com", "anthropic.com")
-        limits = ResourceLimits(
-            timeout_seconds=30,
-            memory_limit_mb=512,
-            network_mode="allowlist",
-            allowed_domains=domains
-        )
+        limits = ResourceLimits(timeout_seconds=30, memory_limit_mb=512, network_mode="allowlist", allowed_domains=domains)
 
         # Configuration should be preserved
         assert limits.allowed_domains == domains
