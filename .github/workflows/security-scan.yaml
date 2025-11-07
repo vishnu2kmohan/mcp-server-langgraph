@@ -290,8 +290,10 @@ jobs:
       uses: trufflesecurity/trufflehog@v3.90.12
       with:
         path: ./
-        base: ${{ github.event.repository.default_branch }}
-        head: HEAD
+        # Only specify base/head for push and pull_request events
+        # For schedule events, scan full repository without range
+        base: ${{ github.event_name == 'schedule' && '' || github.event.repository.default_branch }}
+        head: ${{ github.event_name == 'schedule' && '' || 'HEAD' }}
         extra_args: --debug --only-verified
 
   license-check:
