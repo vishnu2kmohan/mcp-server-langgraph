@@ -13,9 +13,9 @@ Expected to FAIL until:
 """
 
 import os
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 
 def test_api_key_cache_uses_separate_database():
