@@ -389,12 +389,10 @@ def test_staging_has_comprehensive_validation(workflows_dir: Path):
         pytest.skip("deploy-production-gke.yaml not found")
 
     with open(staging_file) as f:
-        staging_workflow = yaml.safe_load(f)
-        staging_content = f.seek(0) or f.read()
+        staging_content = f.read()
 
     with open(production_file) as f:
-        production_workflow = yaml.safe_load(f)
-        production_content = f.seek(0) or f.read()
+        production_content = f.read()
 
     # Check for validation job in staging
 
@@ -454,7 +452,6 @@ def test_gcloud_setup_consistency(workflows_dir: Path):
     # Check approaches
     staging_uses_setup_gcloud = "google-github-actions/setup-gcloud@" in staging_content
     production_uses_setup_gcloud = "google-github-actions/setup-gcloud@" in production_content
-
 
     # Both should use the same approach
     if staging_uses_setup_gcloud != production_uses_setup_gcloud:
