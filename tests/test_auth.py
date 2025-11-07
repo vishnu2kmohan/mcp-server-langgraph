@@ -20,15 +20,30 @@ from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, Keyclo
 
 @pytest.fixture
 def auth_middleware_with_users():
-    """Create AuthMiddleware with test users"""
-    user_provider = InMemoryUserProvider(use_password_hashing=False)
+    """Create AuthMiddleware with test users and fallback enabled for testing"""
+    from mcp_server_langgraph.core.config import Settings
+
+    # Create settings with fallback enabled for testing (Finding #1 security fix compatibility)
+    settings = Settings(
+        allow_auth_fallback=True,  # Enable fallback for tests
+        environment="development",  # Development environment (not production)
+    )
+
+    # Pass secret_key to user provider to match middleware secret (for token creation/verification)
+    user_provider = InMemoryUserProvider(
+        secret_key="test-key", use_password_hashing=False  # Must match AuthMiddleware secret for token tests
+    )
 
     # Add test users explicitly (no more hard-coded defaults as of Finding #2 fix)
     user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["user", "premium"])
     user_provider.add_user(username="bob", password="bob123", email="bob@acme.com", roles=["user"])
     user_provider.add_user(username="admin", password="admin123", email="admin@acme.com", roles=["admin"])
 
-    return AuthMiddleware(secret_key="test-key", user_provider=user_provider)
+    return AuthMiddleware(
+        secret_key="test-key",
+        user_provider=user_provider,
+        settings=settings,  # Pass settings for fallback control (Finding #1)
+    )
 
 
 @pytest.mark.auth
@@ -59,7 +74,7 @@ class TestAuthMiddleware:
         assert "premium" in result.roles
 
     @pytest.mark.asyncio
-    async def test_authenticate_missing_password(self):
+    async def test_authenticate_missing_password(self, auth_middleware_with_users):
         """Test authentication without password fails"""
         auth = auth_middleware_with_users
         result = await auth.authenticate("alice")
@@ -68,7 +83,7 @@ class TestAuthMiddleware:
         assert result.reason == "password_required"
 
     @pytest.mark.asyncio
-    async def test_authenticate_invalid_password(self):
+    async def test_authenticate_invalid_password(self, auth_middleware_with_users):
         """Test authentication with wrong password fails"""
         auth = auth_middleware_with_users
         result = await auth.authenticate("alice", "wrongpassword")
@@ -77,7 +92,7 @@ class TestAuthMiddleware:
         assert result.reason == "invalid_credentials"
 
     @pytest.mark.asyncio
-    async def test_authenticate_user_not_found(self):
+    async def test_authenticate_user_not_found(self, auth_middleware_with_users):
         """Test authentication with non-existent user"""
         auth = auth_middleware_with_users
         result = await auth.authenticate("nonexistent", "anypassword")
@@ -97,7 +112,7 @@ class TestAuthMiddleware:
         assert result.reason == "account_inactive"
 
     @pytest.mark.asyncio
-    async def test_authorize_with_openfga_success(self):
+    async def test_authorize_with_openfga_success(self, auth_middleware_with_users):
         """Test authorization with OpenFGA returns True"""
         mock_openfga = AsyncMock()
         mock_openfga.check_permission.return_value = True
@@ -217,7 +232,7 @@ class TestAuthMiddleware:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_list_accessible_resources_success(self):
+    async def test_list_accessible_resources_success(self, auth_middleware_with_users):
         """Test listing accessible resources with OpenFGA"""
         mock_openfga = AsyncMock()
         mock_openfga.list_objects.return_value = ["tool:chat", "tool:search"]
@@ -232,20 +247,18 @@ class TestAuthMiddleware:
 
     @pytest.mark.asyncio
     async def test_list_accessible_resources_no_openfga(self, auth_middleware_with_users):
-        """Test listing resources without OpenFGA returns mock resources in development mode"""
+        """Test listing resources without OpenFGA returns empty list (post Finding #1 fix)"""
         auth = auth_middleware_with_users  # No OpenFGA
+
         resources = await auth.list_accessible_resources(user_id="user:alice", relation="executor", resource_type="tool")
 
-        # In development mode (default in tests), returns mock resources for better developer experience
-        # This allows the MCP server to function without requiring OpenFGA infrastructure
+        # After Finding #1 fix: Without OpenFGA, resource listing returns empty list
+        # This is secure fail-closed behavior when authorization infrastructure is unavailable
         assert isinstance(resources, list)
-        assert len(resources) == 3
-        assert "tool:agent_chat" in resources
-        assert "tool:conversation_get" in resources
-        assert "tool:conversation_search" in resources
+        assert len(resources) == 0  # Empty without OpenFGA (secure behavior)
 
     @pytest.mark.asyncio
-    async def test_list_accessible_resources_error(self):
+    async def test_list_accessible_resources_error(self, auth_middleware_with_users):
         """Test listing resources handles OpenFGA errors"""
         mock_openfga = AsyncMock()
         mock_openfga.list_objects.side_effect = Exception("OpenFGA error")
@@ -255,34 +268,34 @@ class TestAuthMiddleware:
 
         assert resources == []
 
-    def test_create_token_success(self):
+    def test_create_token_success(self, auth_middleware_with_users):
         """Test JWT token creation"""
-        auth = AuthMiddleware(secret_key="test-secret")
+        auth = auth_middleware_with_users
         token = auth.create_token("alice", expires_in=3600)
 
         assert token is not None
         assert isinstance(token, str)
 
         # Verify token contents
-        payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        payload = jwt.decode(token, "test-key", algorithms=["HS256"])
         assert payload["sub"] == "user:alice"
         assert payload["username"] == "alice"
         assert payload["email"] == "alice@acme.com"
         assert "premium" in payload["roles"]
 
-    def test_create_token_expiration(self):
+    def test_create_token_expiration(self, auth_middleware_with_users):
         """Test JWT token expiration is set correctly"""
-        auth = AuthMiddleware(secret_key="test-secret")
+        auth = auth_middleware_with_users
         token = auth.create_token("alice", expires_in=7200)
 
-        payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        payload = jwt.decode(token, "test-key", algorithms=["HS256"])
         exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
         iat = datetime.fromtimestamp(payload["iat"], timezone.utc)
 
         time_diff = (exp - iat).total_seconds()
         assert 7190 <= time_diff <= 7210  # Allow small time drift
 
-    def test_create_token_user_not_found(self):
+    def test_create_token_user_not_found(self, auth_middleware_with_users):
         """Test token creation fails for non-existent user"""
         auth = auth_middleware_with_users
 
@@ -292,7 +305,7 @@ class TestAuthMiddleware:
     @pytest.mark.asyncio
     async def test_verify_token_success(self, auth_middleware_with_users):
         """Test successful token verification"""
-        auth = AuthMiddleware(secret_key="test-secret")
+        auth = auth_middleware_with_users
         token = auth.create_token("alice", expires_in=3600)
 
         result = await auth.verify_token(token)
@@ -302,9 +315,9 @@ class TestAuthMiddleware:
         assert result.payload["username"] == "alice"
 
     @pytest.mark.asyncio
-    async def test_verify_token_expired(self):
+    async def test_verify_token_expired(self, auth_middleware_with_users):
         """Test verification of expired token"""
-        auth = AuthMiddleware(secret_key="test-secret")
+        auth = auth_middleware_with_users
 
         # Create token with past expiration
         payload = {
@@ -313,7 +326,7 @@ class TestAuthMiddleware:
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
-        expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        expired_token = jwt.encode(payload, "test-key", algorithm="HS256")  # Use same secret as fixture
 
         result = await auth.verify_token(expired_token)
 
@@ -321,9 +334,9 @@ class TestAuthMiddleware:
         assert result.error == "Token expired"
 
     @pytest.mark.asyncio
-    async def test_verify_token_invalid(self):
+    async def test_verify_token_invalid(self, auth_middleware_with_users):
         """Test verification of invalid token"""
-        auth = AuthMiddleware(secret_key="test-secret")
+        auth = auth_middleware_with_users
 
         result = await auth.verify_token("invalid.token.here")
 
@@ -333,10 +346,14 @@ class TestAuthMiddleware:
     @pytest.mark.asyncio
     async def test_verify_token_wrong_secret(self, auth_middleware_with_users):
         """Test verification with wrong secret key"""
-        auth1 = AuthMiddleware(secret_key="secret-1")
+        # Use fixture to create token
+        auth1 = auth_middleware_with_users
         token = auth1.create_token("alice")
 
-        auth2 = AuthMiddleware(secret_key="secret-2")
+        # Create different middleware with different secret
+        user_provider2 = InMemoryUserProvider(use_password_hashing=False)
+        user_provider2.add_user("alice", "password", "alice@test.com", ["user"])
+        auth2 = AuthMiddleware(secret_key="different-secret", user_provider=user_provider2)
         result = await auth2.verify_token(token)
 
         assert result.valid is False
@@ -518,7 +535,7 @@ class TestGetCurrentUser:
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
-        expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        expired_token = jwt.encode(payload, "test-key", algorithm="HS256")
 
         request = MagicMock(spec=Request)
         request.state = MagicMock()
@@ -660,7 +677,7 @@ class TestGetCurrentUser:
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
-        token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        token = jwt.encode(payload, "test-key", algorithm="HS256")
 
         request = MagicMock(spec=Request)
         request.state = MagicMock()

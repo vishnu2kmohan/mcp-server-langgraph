@@ -54,7 +54,7 @@ class TestSCIMOpenFGAIntegration:
         # Should use OpenFGA check
         # Current implementation checks roles, new implementation should check OpenFGA
         try:
-            result = await _require_admin_or_scim_role(
+            await _require_admin_or_scim_role(
                 current_user=current_user, openfga=mock_openfga, resource="scim:users"  # Should use this
             )
             # If OpenFGA is used, should succeed because mock returns True
@@ -241,7 +241,6 @@ class TestOpenFGARelationDefinitions:
         assert (
             "can_manage" in content.lower() or "openfga" in content.lower()
         ), "Service Principal endpoints should document OpenFGA relations"
-
 
 
 @pytest.mark.security

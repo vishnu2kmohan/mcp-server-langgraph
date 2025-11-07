@@ -59,6 +59,12 @@ patches:
       kind: HorizontalPodAutoscaler
       name: mcp-server-langgraph
 
+  # OpenTelemetry Collector - GCP-specific configuration
+  - path: otel-collector-configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: otel-collector-config
+
 # Resource configuration (higher replica count for production)
 replicas:
   - name: mcp-server-langgraph
@@ -86,12 +92,9 @@ replacements:
         options:
           create: true
 
-# Generate ConfigMap from GCP-specific OTel config
-configMapGenerator:
-  - name: otel-collector-config
-    behavior: create
-    files:
-      - otel-collector-config.yaml
+# Patch OpenTelemetry Collector ConfigMap with GCP-specific configuration
+# Cannot use configMapGenerator because base has static ConfigMap (not generated)
+# Use strategic merge patch instead
 
 # Secret generator (for non-sensitive config)
 secretGenerator:

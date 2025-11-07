@@ -21,6 +21,19 @@ from mcp_server_langgraph.auth.user_provider import (
 
 
 @pytest.fixture
+def inmemory_provider_with_users():
+    """Create InMemoryUserProvider with test users (post Finding #2 fix)"""
+    provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+
+    # Explicitly add test users (no hard-coded defaults as of Finding #2 fix)
+    provider.add_user("alice", "alice123", "alice@acme.com", ["user", "premium"])
+    provider.add_user("bob", "bob123", "bob@acme.com", ["user"])
+    provider.add_user("admin", "admin123", "admin@acme.com", ["admin"])
+
+    return provider
+
+
+@pytest.fixture
 def keycloak_config():
     """Sample Keycloak configuration"""
     return KeycloakConfig(
@@ -59,19 +72,20 @@ class TestInMemoryUserProvider:
     """Test InMemoryUserProvider implementation"""
 
     def test_initialization(self):
-        """Test provider initialization"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        """Test provider initialization (post Finding #2 fix: no default users)"""
+        provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
 
         assert provider.secret_key == "test-secret"
-        assert len(provider.users_db) == 3
-        assert "alice" in provider.users_db
-        assert "bob" in provider.users_db
-        assert "admin" in provider.users_db
+        # After Finding #2 fix: No hard-coded default users (CWE-798 remediation)
+        assert len(provider.users_db) == 0  # Empty by default (secure)
+        assert "alice" not in provider.users_db
+        assert "bob" not in provider.users_db
+        assert "admin" not in provider.users_db
 
     @pytest.mark.asyncio
-    async def test_authenticate_success(self):
+    async def test_authenticate_success(self, inmemory_provider_with_users):
         """Test successful authentication"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         result = await provider.authenticate("alice", "alice123")
 
         assert result.authorized is True
@@ -81,18 +95,18 @@ class TestInMemoryUserProvider:
         assert "premium" in result.roles
 
     @pytest.mark.asyncio
-    async def test_authenticate_user_not_found(self):
+    async def test_authenticate_user_not_found(self, inmemory_provider_with_users):
         """Test authentication with non-existent user"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         result = await provider.authenticate("nonexistent", "password")
 
         assert result.authorized is False
         assert result.reason == "invalid_credentials"  # Changed from user_not_found for security
 
     @pytest.mark.asyncio
-    async def test_authenticate_inactive_user(self):
+    async def test_authenticate_inactive_user(self, inmemory_provider_with_users):
         """Test authentication with inactive user"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         provider.users_db["alice"]["active"] = False
 
         result = await provider.authenticate("alice", "alice123")
@@ -101,9 +115,9 @@ class TestInMemoryUserProvider:
         assert result.reason == "account_inactive"
 
     @pytest.mark.asyncio
-    async def test_get_user_by_id(self):
+    async def test_get_user_by_id(self, inmemory_provider_with_users):
         """Test getting user by ID"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         user = await provider.get_user_by_id("user:alice")
 
         assert user is not None
@@ -111,17 +125,17 @@ class TestInMemoryUserProvider:
         assert user.email == "alice@acme.com"
 
     @pytest.mark.asyncio
-    async def test_get_user_by_id_not_found(self):
+    async def test_get_user_by_id_not_found(self, inmemory_provider_with_users):
         """Test getting non-existent user by ID"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         user = await provider.get_user_by_id("user:nonexistent")
 
         assert user is None
 
     @pytest.mark.asyncio
-    async def test_get_user_by_username(self):
+    async def test_get_user_by_username(self, inmemory_provider_with_users):
         """Test getting user by username"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         user = await provider.get_user_by_username("bob")
 
         assert user is not None
@@ -130,17 +144,17 @@ class TestInMemoryUserProvider:
         assert "user" in user.roles
 
     @pytest.mark.asyncio
-    async def test_get_user_by_username_not_found(self):
+    async def test_get_user_by_username_not_found(self, inmemory_provider_with_users):
         """Test getting non-existent user by username"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         user = await provider.get_user_by_username("nonexistent")
 
         assert user is None
 
     @pytest.mark.asyncio
-    async def test_list_users(self):
+    async def test_list_users(self, inmemory_provider_with_users):
         """Test listing all users"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
         users = await provider.list_users()
 
         assert len(users) == 3
@@ -149,34 +163,34 @@ class TestInMemoryUserProvider:
         assert "bob" in usernames
         assert "admin" in usernames
 
-    def test_create_token_success(self):
+    def test_create_token_success(self, inmemory_provider_with_users):
         """Test creating JWT token"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        provider = inmemory_provider_with_users
         token = provider.create_token("alice", expires_in=3600)
 
         assert token is not None
         assert isinstance(token, str)
 
         # Verify token contents
-        payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        payload = jwt.decode(token, provider.secret_key, algorithms=["HS256"])
         assert payload["sub"] == "user:alice"
         assert payload["username"] == "alice"
         assert payload["email"] == "alice@acme.com"
         assert "premium" in payload["roles"]
 
-    def test_create_token_user_not_found(self):
+    def test_create_token_user_not_found(self, inmemory_provider_with_users):
         """Test creating token for non-existent user"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
 
         with pytest.raises(ValueError, match="User not found"):
             provider.create_token("nonexistent")
 
-    def test_create_token_expiration(self):
+    def test_create_token_expiration(self, inmemory_provider_with_users):
         """Test token expiration is set correctly"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        provider = inmemory_provider_with_users
         token = provider.create_token("alice", expires_in=7200)
 
-        payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        payload = jwt.decode(token, provider.secret_key, algorithms=["HS256"])
         exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
         iat = datetime.fromtimestamp(payload["iat"], timezone.utc)
 
@@ -184,9 +198,9 @@ class TestInMemoryUserProvider:
         assert 7190 <= time_diff <= 7210  # Allow small time drift
 
     @pytest.mark.asyncio
-    async def test_verify_token_success(self):
+    async def test_verify_token_success(self, inmemory_provider_with_users):
         """Test successful token verification"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        provider = inmemory_provider_with_users
         token = provider.create_token("alice")
 
         result = await provider.verify_token(token)
@@ -196,9 +210,9 @@ class TestInMemoryUserProvider:
         assert result.payload["username"] == "alice"
 
     @pytest.mark.asyncio
-    async def test_verify_token_expired(self):
+    async def test_verify_token_expired(self, inmemory_provider_with_users):
         """Test verification of expired token"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        provider = inmemory_provider_with_users
 
         # Create expired token
         payload = {
@@ -207,7 +221,7 @@ class TestInMemoryUserProvider:
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
-        expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
+        expired_token = jwt.encode(payload, provider.secret_key, algorithm="HS256")
 
         result = await provider.verify_token(expired_token)
 
@@ -215,9 +229,9 @@ class TestInMemoryUserProvider:
         assert result.error == "Token expired"
 
     @pytest.mark.asyncio
-    async def test_verify_token_invalid(self):
+    async def test_verify_token_invalid(self, inmemory_provider_with_users):
         """Test verification of invalid token"""
-        provider = InMemoryUserProvider(secret_key="test-secret")
+        provider = inmemory_provider_with_users
 
         result = await provider.verify_token("invalid.token.here")
 
@@ -225,12 +239,13 @@ class TestInMemoryUserProvider:
         assert result.error == "Invalid token"
 
     @pytest.mark.asyncio
-    async def test_verify_token_wrong_secret(self):
+    async def test_verify_token_wrong_secret(self, inmemory_provider_with_users):
         """Test verification with wrong secret"""
-        provider1 = InMemoryUserProvider(secret_key="secret-1")
+        provider1 = inmemory_provider_with_users
         token = provider1.create_token("alice")
 
-        provider2 = InMemoryUserProvider(secret_key="secret-2")
+        provider2 = InMemoryUserProvider(secret_key="different-secret", use_password_hashing=False)
+        provider2.add_user("alice", "password", "alice@test.com", ["user"])
         result = await provider2.verify_token(token)
 
         assert result.valid is False
@@ -536,7 +551,7 @@ class TestUserProviderInterface:
     @pytest.mark.asyncio
     async def test_inmemory_implements_interface(self):
         """Test InMemoryUserProvider implements all abstract methods"""
-        provider = InMemoryUserProvider()
+        provider = inmemory_provider_with_users  # Use fixture
 
         # Test all abstract methods are implemented
         assert callable(provider.authenticate)

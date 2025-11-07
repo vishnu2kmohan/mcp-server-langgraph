@@ -104,25 +104,34 @@ jobs:
         docker compose -f docker-compose.test.yml up -d
 
         echo "Waiting for all services to report healthy..."
-        echo "This may take up to 5 minutes for Keycloak to initialize..."
+        echo "This may take up to 7.5 minutes for Keycloak to initialize on slow runners..."
 
-        # Wait for all services to be healthy (max 5 minutes = 300 seconds)
+        # Wait for all services to be healthy (max 7.5 minutes = 450 seconds)
         # Keycloak needs 45s start_period + up to 40 retries * 5s = ~3 min worst case
-        # Increased timeout to 5 minutes to accommodate slower GitHub Actions runners
-        for i in {1..100}; do
+        # Increased timeout to 7.5 minutes to accommodate slower GitHub Actions runners
+        # (from audit: E2E tests failing due to health check timeouts)
+        for i in {1..150}; do
           # Count healthy services by checking health status directly (docker compose ps --filter only supports status, not health)
           HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
           TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
 
-          echo "Attempt $i/100: $HEALTHY/$TOTAL services healthy"
+          echo "Attempt $i/150: $HEALTHY/$TOTAL services healthy"
+
+          # Show which services are not healthy yet (for debugging)
+          if [ "$HEALTHY" -ne "$TOTAL" ]; then
+            UNHEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health != "healthy") | "\(.Service): \(.Health // "starting")"' | tr '\n' ', ' | sed 's/,$//')
+            if [ -n "$UNHEALTHY" ]; then
+              echo "  ⏳ Waiting for: $UNHEALTHY"
+            fi
+          fi
 
           if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
             echo "✅ All $TOTAL services are healthy!"
             break
           fi
 
-          if [ $i -eq 100 ]; then
-            echo "❌ Timeout waiting for services after 5 minutes. Current status:"
+          if [ $i -eq 150 ]; then
+            echo "❌ Timeout waiting for services after 7.5 minutes. Current status:"
             docker compose -f docker-compose.test.yml ps
             echo ""
             echo "Showing logs for all services:"

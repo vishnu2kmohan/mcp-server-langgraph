@@ -42,6 +42,8 @@ runs:
 
     - name: Install base dependencies
       run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
         uv venv --python ${{ inputs.python-version }}
 
         # Build extras flags if provided
@@ -62,6 +64,12 @@ runs:
 
     - name: Validate dependency consistency
       run: |
-        uv pip check
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
+        if ! uv pip check; then
+          echo "::error::Dependency conflicts detected. Run 'uv pip check' locally to diagnose."
+          exit 1
+        fi
+
         echo "✓ All dependencies are consistent (no conflicts detected)"
       shell: bash

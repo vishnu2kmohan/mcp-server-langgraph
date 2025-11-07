@@ -126,8 +126,13 @@ jobs:
 
       - name: Run contract tests
         run: |
+          set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
           # Match local development: parallel execution with OTEL disabled
+          # This will fail the job if pytest exits with non-zero (due to set -e above)
           OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-contract.xml
+
+          echo "✅ All contract tests passed successfully"
 
       - name: Upload contract test coverage
         if: always()
