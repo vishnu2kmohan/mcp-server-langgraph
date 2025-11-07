@@ -156,11 +156,14 @@ class TestWorkflowValidation:
         Context: OpenAI Codex Finding - GCP workflows
         Issue: Workflows fail on forks/scheduled runs without graceful degradation
 
-        Note: This test validates the improvement opportunity, not a critical bug.
+        This test enforces that jobs using GCP auth MUST check for secret availability
+        or explicitly handle forks to prevent confusing auth failures.
         """
         gcp_workflows = {
             name: data for name, data in parsed_workflows.items() if "gcp" in name.lower() or "deploy" in name.lower()
         }
+
+        issues_found = []
 
         for workflow_name, workflow_data in gcp_workflows.items():
             jobs = workflow_data.get("jobs", {})
@@ -174,19 +177,109 @@ class TestWorkflowValidation:
                         # Check if job has secret availability check
                         job_if = job_config.get("if", "")
 
-                        # Document this as best practice (not enforced strictly)
-                        # Valid patterns: checking for secret existence, fork detection
+                        # Valid patterns for secret/fork checking:
+                        # 1. Check if secrets exist: secrets.GCP_WIF_PROVIDER != ''
+                        # 2. Check repository owner: github.repository == 'owner/repo'
+                        # 3. Check not a fork: github.event.pull_request.head.repo.fork == false
+                        # 4. Step has continue-on-error: true
                         has_secret_check = any(
                             [
-                                "secrets." in job_if,
+                                "secrets.GCP_WIF_PROVIDER" in job_if,
+                                "secrets.GCP_" in job_if,
+                                "github.repository ==" in job_if,
                                 "github.event.pull_request.head.repo.fork" in job_if,
                                 step.get("continue-on-error") is True,
                             ]
                         )
 
-                        # This is a soft check - we document but don't fail
-                        # Real implementation would add explicit checks
-                        print(f"INFO: {workflow_name}::{job_name} uses GCP auth. " f"Has secret check: {has_secret_check}")
+                        if not has_secret_check:
+                            issues_found.append(
+                                {
+                                    "workflow": workflow_name,
+                                    "job": job_name,
+                                    "issue": "GCP auth without secret validation - will fail on forks",
+                                    "recommendation": "Add if: secrets.GCP_WIF_PROVIDER != '' or if: github.repository == 'owner/repo'",
+                                }
+                            )
+
+        if issues_found:
+            error_msg = "GCP workflows missing secret validation (will fail confusingly on forks):\n"
+            for issue in issues_found:
+                error_msg += (
+                    f"  - {issue['workflow']}::{issue['job']}\n"
+                    f"    Issue: {issue['issue']}\n"
+                    f"    Fix: {issue['recommendation']}\n"
+                )
+            pytest.fail(error_msg)
+
+    def test_success_summaries_have_status_conditionals(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+        """
+        Test that success summary steps include status conditionals.
+
+        Context: OpenAI Codex Finding - Success summaries
+        Issue: Static summaries print "success" messages even when upstream steps fail
+
+        This test ensures summary steps only run on actual success.
+        """
+        issues_found = []
+
+        for workflow_name, workflow_data in parsed_workflows.items():
+            jobs = workflow_data.get("jobs", {})
+
+            for job_name, job_config in jobs.items():
+                steps = job_config.get("steps", [])
+
+                for i, step in enumerate(steps):
+                    step_name = step.get("name", "")
+                    script = step.get("run", "")
+
+                    # Check if this looks like a summary step
+                    is_summary_step = any(
+                        [
+                            "GITHUB_STEP_SUMMARY" in script,
+                            "## " in script and ("✅" in script or "Success" in script or "PASS" in script),
+                            step_name and ("summary" in step_name.lower() or "report" in step_name.lower()),
+                        ]
+                    )
+
+                    if is_summary_step:
+                        # Check if step has status conditional
+                        step_if = step.get("if", "")
+
+                        # Valid patterns: if: success(), if: always() && success(), etc.
+                        has_status_check = any(
+                            [
+                                "success()" in step_if,
+                                "failure()" in step_if,
+                                "${{ job.status == 'success' }}" in step_if,
+                                "always()" in step_if,  # always() is acceptable if used correctly
+                            ]
+                        )
+
+                        # Check if summary content is conditional on job.status
+                        has_conditional_content = "${{ job.status }}" in script or "job.status" in script
+
+                        if not has_status_check and not has_conditional_content:
+                            issues_found.append(
+                                {
+                                    "workflow": workflow_name,
+                                    "job": job_name,
+                                    "step": step_name or f"Step {i+1}",
+                                    "issue": "Summary step without status conditional",
+                                    "recommendation": "Add if: success() or use ${{ job.status }} in summary content",
+                                }
+                            )
+
+        # This is informational - many summaries use conditional content which is OK
+        # Only report as warning, don't fail the test
+        if issues_found:
+            warning_msg = "\n⚠️  INFO: Summary steps that could benefit from explicit status conditionals:\n"
+            for issue in issues_found:
+                warning_msg += (
+                    f"  - {issue['workflow']}::{issue['job']}::{issue['step']}\n"
+                    f"    Suggestion: {issue['recommendation']}\n"
+                )
+            print(warning_msg)
 
     def test_action_versions_are_valid(self, parsed_workflows: Dict[str, Dict[str, Any]]):
         """

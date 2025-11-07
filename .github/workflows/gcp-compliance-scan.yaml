@@ -135,7 +135,8 @@ jobs:
   cis-benchmark:
     name: CIS Benchmark Compliance
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.event_name == 'schedule' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

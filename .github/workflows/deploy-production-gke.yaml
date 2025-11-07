@@ -111,6 +111,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: pre-deployment-checks
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     outputs:
       image_tag: ${{ steps.image.outputs.tag }}
       image_digest: ${{ steps.push.outputs.digest }}
@@ -223,6 +225,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [build-and-push, approve-deployment]
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     environment:
       name: production
       url: https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }}
@@ -439,6 +443,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: deploy-production
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -537,7 +543,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [deploy-production, post-deployment-validation]
-    if: failure()
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

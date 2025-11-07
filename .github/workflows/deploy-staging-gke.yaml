@@ -88,7 +88,8 @@ jobs:
     name: Build and Push to Artifact Registry
     runs-on: ubuntu-latest
     # Allow disabling the automated staging deploy without editing refs
-    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true'
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     needs: pre-deployment-checks
     timeout-minutes: 30
     env:
@@ -180,7 +181,8 @@ jobs:
     timeout-minutes: 45
     needs: build-and-push
     # Mirror the auto-deploy toggle so approvals never block CI unexpectedly
-    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true'
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: vars.ENABLE_STAGING_AUTODEPLOY == 'true' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     environment:
       name: staging-gke
       url: https://staging.yourdomain.com
@@ -317,7 +319,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: deploy-staging
-    if: success()
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: success() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
     steps:
       - name: Checkout code
@@ -416,7 +419,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [deploy-staging, validate-deployment]
-    if: failure()
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
     steps:
       - id: auth

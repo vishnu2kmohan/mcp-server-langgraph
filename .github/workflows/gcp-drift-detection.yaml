@@ -64,7 +64,8 @@ jobs:
     name: Detect Drift - Production
     runs-on: ubuntu-latest
     needs: check-prerequisites
-    if: needs.check-prerequisites.outputs.has_secrets == 'true'
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: needs.check-prerequisites.outputs.has_secrets == 'true' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     timeout-minutes: 20
     outputs:
       drift_detected: ${{ steps.plan.outputs.drift_detected }}
@@ -184,7 +185,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: detect-drift-prod
-    if: needs.detect-drift-prod.outputs.drift_detected == 'true' && github.event.inputs.auto_remediate == 'true'
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: needs.detect-drift-prod.outputs.drift_detected == 'true' && github.event.inputs.auto_remediate == 'true' && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     environment:
       name: production-drift-remediation
     steps:
@@ -264,6 +266,8 @@ jobs:
     name: Detect Drift - Staging
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Only run in main repository (not forks) to avoid secret availability issues
+    if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
