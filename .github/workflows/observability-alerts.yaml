@@ -116,7 +116,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: collect-metrics
-    if: secrets.SLACK_WEBHOOK_URL != ''
 
     steps:
       - name: Determine Slack message
@@ -146,7 +145,8 @@ jobs:
           echo "color=$COLOR" >> $GITHUB_OUTPUT
 
       - name: Send Slack notification
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
+        # Check secret availability at step level (secrets not available in job-level if)
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true' && env.SLACK_WEBHOOK != ''
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
@@ -203,13 +203,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: collect-metrics
-    if: |
-      secrets.PAGERDUTY_INTEGRATION_KEY != '' &&
-      needs.collect-metrics.outputs.severity == 'critical'
+    if: needs.collect-metrics.outputs.severity == 'critical'
 
     steps:
       - name: Send PagerDuty event
-        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true'
+        # Check secret availability at step level (secrets not available in job-level if)
+        if: github.event_name == 'workflow_run' && inputs.test_mode != 'true' && env.PAGERDUTY_KEY != ''
         env:
           PAGERDUTY_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}
@@ -250,10 +249,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: collect-metrics
-    if: secrets.DATADOG_API_KEY != ''
 
     steps:
       - name: Send workflow metrics
+        # Check secret availability at step level (secrets not available in job-level if)
+        if: env.DD_API_KEY != ''
         env:
           DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
           WORKFLOW_NAME: ${{ needs.collect-metrics.outputs.workflow_name }}

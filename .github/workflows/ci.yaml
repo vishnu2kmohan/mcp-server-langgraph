@@ -102,7 +102,8 @@ jobs:
         #   dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)
         #   builder: Visual workflow builder (black, jinja2, ast-comments)
         # Both required because unit tests import builder modules
-        uv sync --extra dev --extra builder
+        # --frozen: Fail if lock file is out of sync (prevents dependency drift)
+        uv sync --frozen --extra dev --extra builder
 
         echo "✓ Dependencies installed from lockfile with dev+builder extras"
 

@@ -542,7 +542,7 @@ jobs:
     name: Rollback Deployment
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [deploy-production, post-deployment-validation]
+    needs: [build-and-push, deploy-production, post-deployment-validation]
     # Only run in main repository (not forks) to avoid secret availability issues
     if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:

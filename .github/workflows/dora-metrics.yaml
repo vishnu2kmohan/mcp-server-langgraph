@@ -239,9 +239,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [calculate-metrics, report-metrics]
-    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    if: always()
     steps:
       - name: Send Slack notification
+        # Check secret availability at step level (secrets not available in job-level if)
+        if: env.SLACK_WEBHOOK != ''
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           CLASSIFICATION: ${{ needs.calculate-metrics.outputs.classification }}
