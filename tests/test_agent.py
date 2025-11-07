@@ -1,3 +1,5 @@
+import os
+
 """Unit tests for agent.py - LangGraph Agent"""
 
 from unittest.mock import AsyncMock, MagicMock, patch

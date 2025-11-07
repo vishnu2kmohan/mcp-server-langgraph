@@ -1,3 +1,5 @@
+import os
+
 """Unit tests for openfga_client.py - OpenFGA Integration"""
 
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -406,7 +408,9 @@ class TestOpenFGAUtilityFunctions:
 class TestOpenFGAIntegration:
     """Integration tests for OpenFGA (requires running OpenFGA instance)"""
 
-    @pytest.mark.skipif(not os.getenv("RUN_INTEGRATION_TESTS"), reason="Requires running OpenFGA instance (set RUN_INTEGRATION_TESTS=1)")
+    @pytest.mark.skipif(
+        not os.getenv("RUN_INTEGRATION_TESTS"), reason="Requires running OpenFGA instance (set RUN_INTEGRATION_TESTS=1)"
+    )
     @pytest.mark.asyncio
     async def test_full_authorization_flow(self):
         """

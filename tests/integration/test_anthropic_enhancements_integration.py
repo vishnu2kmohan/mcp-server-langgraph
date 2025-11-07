@@ -1,3 +1,5 @@
+import os
+
 """
 Integration tests for Anthropic Best Practices Enhancements
 
