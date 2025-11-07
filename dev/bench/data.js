@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762521526862,
+  "lastUpdate": 1762526376732,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -35934,6 +35934,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001670490376481635",
             "extra": "mean: 57.24167782712921 usec\nrounds: 4510"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ae71fb35534c671d05c2d38f5537152bca4f8663",
+          "message": "fix(workflows): comprehensive GitHub Actions validation and fixes (TDD)\n\nFollowing Test-Driven Development principles, systematically identified\nand resolved 8 classes of workflow issues through RED → GREEN → REFACTOR\ncycles.\n\n🔴 RED Phase - Tests Written First:\n• Created comprehensive test suite: tests/workflows/test_workflow_validation.py\n• Installed actionlint v1.7.8 and verified act for testing infrastructure\n• Created test harness: scripts/test-workflows.sh\n• Verified 6 tests FAIL initially (confirming issues exist)\n\n🟢 GREEN Phase - All Issues Fixed:\n\n1. Invalid astral-sh/setup-uv@v5 tags → v7.1.1 (6 files)\n   - ci.yaml, dora-metrics.yaml, performance-regression.yaml\n   - security-validation.yml\n   - Fixes: Non-existent v5 tag causing workflow failures\n\n2. Hard-coded Artifact Registry paths → dynamic env vars (1 file)\n   - deploy-staging-gke.yaml:212\n   - Now uses: ${{ env.GCP_REGION }}, ${{ env.GCP_PROJECT_ID }}\n   - Enables: Environment portability\n\n3. Obsolete install-test parameter removed (6 files)\n   - coverage-trend.yaml, quality-tests.yaml (5 occurrences)\n   - Parameter no longer defined in composite action\n   - Functionality provided by extras parameter\n\n4. Fork protection guards added (3 files)\n   - bump-deployment-versions.yaml, dora-metrics.yaml\n   - performance-regression.yaml\n   - Guards: if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'\n\n5. Ad-hoc uv pip install → pyproject.toml extras (6 files + config)\n   - Added extras: coverage-tools, monitoring, release-tools\n   - Migrated: ci.yaml, dora-metrics.yaml, performance-regression.yaml\n   - Migrated: security-validation.yml, release.yaml\n   - Improves: Maintainability, consistency, dependency management\n\n6. Comprehensive validation for staging deployment (1 file)\n   - Added pre-deployment-checks job with Kustomize, Kubeval, Trivy\n   - Staging now has parity with production validation\n   - Catches: Configuration errors, security issues before deployment\n\n7. Action version consistency across workflows (8 files)\n   - Standardized: checkout@v5, github-script@v8, setup-python@v6\n   - Standardized: docker actions to latest versions\n   - Standardized: azure/setup-helm@v4.3.1, trufflehog@v3.90.12\n   - Prevents: Version drift, compatibility issues\n\n♻️ REFACTOR Phase - Validated and Documented:\n• All modified workflows validated with actionlint: 0 errors\n• Test suite: 8 PASSED, 1 SKIPPED (informational), 0 FAILED\n• Created comprehensive documentation: .github/workflow-validation-2025-11-07.md\n• Tests prevent future regressions of these issue classes\n\nImpact:\n• Security: Fork protection, Trivy scanning, kubeval validation\n• Maintainability: Centralized deps, consistent versions, no hard-coding\n• Reliability: Pre-deployment validation, valid action tags, dynamic config\n\nTest Coverage:\n✅ test_uv_action_uses_valid_version\n✅ test_no_hardcoded_artifact_registry_paths\n✅ test_no_obsolete_install_test_parameter\n✅ test_fork_protection_on_commit_jobs\n✅ test_no_adhoc_uv_pip_install\n✅ test_staging_has_comprehensive_validation\n✅ test_action_version_consistency\n\nFiles Modified: 20+\n- Workflows: 14 workflow files\n- Config: pyproject.toml (new CI/CD extras)\n- Tests: test_workflow_validation.py (NEW - 550+ lines)\n- Scripts: test-workflows.sh (NEW)\n- Docs: workflow-validation-2025-11-07.md (NEW)\n\nRun tests: pytest tests/workflows/test_workflow_validation.py -v\nValidate: ./scripts/test-workflows.sh\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-07T09:38:07-05:00",
+          "tree_id": "98bd3f68f24ac019696b217f00aba4207710fe04",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ae71fb35534c671d05c2d38f5537152bca4f8663"
+        },
+        "date": 1762526374639,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.09813574736185,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000965990344146448",
+            "extra": "mean: 6.939715040819381 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.4137303165021,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001716053815766155",
+            "extra": "mean: 6.737921066113182 msec\nrounds: 121"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44916.02275691368,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.263770000563454 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47963.862108467234,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.84902999968108 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45862.28198895292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.80440999950406 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.34929653541514,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.145374940000238 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.430093581880147,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.46655603000113 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.969239062496527,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.30855853000048 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 742434.5917300865,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 1.346919999605234 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 6476.427649126048,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 154.40611000030913 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2990.414078150201,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 334.40185000017664 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2840.1616926808365,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 352.0926299995608 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59912.53251265432,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020992956693307937",
+            "extra": "mean: 16.690998661904114 usec\nrounds: 12696"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17128.84714857757,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019938129895412",
+            "extra": "mean: 58.381045223060624 usec\nrounds: 4533"
           }
         ]
       }
