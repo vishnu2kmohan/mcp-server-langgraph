@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: mcp-server-langgraph
 
 resources:
-  - ../../base
+  - ../../../base
 
 configMapGenerator:
   - name: otel-collector-config
@@ -17,8 +17,9 @@ commonAnnotations:
   platform: azure
   cloud-provider: microsoft
 
-commonLabels:
-  azure.workload.identity/use: "true"
+labels:
+  - pairs:
+      azure.workload.identity/use: "true"
 
 # Secret generator for Azure credentials
 secretGenerator:

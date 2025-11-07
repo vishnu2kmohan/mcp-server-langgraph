@@ -9,6 +9,7 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
+  - ingress-http.yaml
   - configmap.yaml
   # NOTE: secret.yaml is intentionally excluded from base to prevent deployment
   # of placeholder values. Secrets must be managed via:
@@ -19,13 +20,18 @@ resources:
   # See secret.yaml for template and required keys
   - serviceaccount.yaml
   - role.yaml
+  - serviceaccounts.yaml  # Component-specific ServiceAccounts (postgres, redis, etc.)
+  - serviceaccount-roles.yaml  # RBAC for component ServiceAccounts
   - hpa.yaml
   - pdb.yaml
   - networkpolicy.yaml
+  - limitrange.yaml
+  - resourcequota.yaml
   # PostgreSQL database (for OpenFGA, Keycloak, and GDPR compliance)
   - postgres-statefulset.yaml
   - postgres-service.yaml
   - postgres-gdpr-schema-configmap.yaml
+  - postgres-networkpolicy.yaml
   # OpenFGA authorization
   - openfga-deployment.yaml
   - openfga-service.yaml
@@ -35,9 +41,12 @@ resources:
   # Redis session store resources
   - redis-session-deployment.yaml
   - redis-session-service.yaml
+  - redis-networkpolicy.yaml
   # Qdrant vector database (for dynamic context loading)
   - qdrant-deployment.yaml
   - qdrant-service.yaml
+  # OpenTelemetry Collector (for observability)
+  - otel-collector-deployment.yaml
 
 labels:
   - pairs:

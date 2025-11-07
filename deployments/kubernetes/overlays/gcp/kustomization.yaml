@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: mcp-server-langgraph
 
 resources:
-  - ../../base
+  - ../../../base
 
 configMapGenerator:
   - name: otel-collector-config

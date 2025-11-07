@@ -5,14 +5,15 @@ namespace: mcp-server-langgraph
 
 # Base resources
 resources:
-  - ../../base
+  - ../../../base
   - external-secrets.yaml
 
 # AWS-specific labels
-commonLabels:
-  cloud.provider: aws
-  cloud.platform: aws_eks
-  managed-by: kustomize
+labels:
+  - pairs:
+      cloud.provider: aws
+      cloud.platform: aws_eks
+      managed-by: kustomize
 
 # AWS-specific annotations
 commonAnnotations:
@@ -20,9 +21,9 @@ commonAnnotations:
   deployment.platform: eks
 
 # Patches for AWS EKS integration
-patchesStrategicMerge:
-  - serviceaccount-patch.yaml
-  - deployment-patch.yaml
+patches:
+  - path: serviceaccount-patch.yaml
+  - path: deployment-patch.yaml
 
 # ConfigMap for OpenTelemetry with AWS exporters
 configMapGenerator:
@@ -50,12 +51,14 @@ replicas:
 generatorOptions:
   disableNameSuffixHash: false
 
-# Variables that can be set via kustomize edit
-vars:
-  - name: AWS_REGION
-    objref:
+# Variable replacements (modern Kustomize syntax)
+replacements:
+  - source:
       kind: ConfigMap
       name: aws-config
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.region
+      fieldPath: data.region
+    targets:
+      - select:
+          kind: Deployment
+        fieldPaths:
+          - spec.template.spec.containers.[name=mcp-server-langgraph].env.[name=AWS_REGION].value
