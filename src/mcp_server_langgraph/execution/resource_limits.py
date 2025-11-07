@@ -171,6 +171,14 @@ class ResourceLimits:
         """
         Production profile with conservative limits for security.
 
+        SECURITY (OpenAI Codex Finding #3):
+        Network access is DISABLED (network_mode="none") because domain allowlisting
+        is not yet implemented. Using network_mode="allowlist" would be misleading
+        since it currently fails closed to "none" anyway.
+
+        To enable network access in production, explicitly set network_mode="unrestricted"
+        and understand the security implications.
+
         Returns:
             ResourceLimits configured for production
         """
@@ -180,8 +188,8 @@ class ResourceLimits:
             cpu_quota=1.0,  # 1 CPU
             disk_quota_mb=100,  # 100MB
             max_processes=1,
-            network_mode="allowlist",
-            allowed_domains=tuple(),  # Must be configured per deployment
+            network_mode="none",  # SECURITY: Network disabled (allowlist not implemented)
+            allowed_domains=tuple(),  # Reserved for future allowlist implementation
         )
 
     @classmethod

@@ -487,10 +487,12 @@ When modifying existing `get_X_client()` functions:
 ## References
 
 - [ADR-0042: Dependency Injection Configuration Fixes](/architecture/adr-0042-dependency-injection-configuration-fixes)
-<!-- TODO: Add the following documentation pages:
+
+{/*
+TODO: Add the following documentation pages:
 - TDD Best Practices
 - Pre-commit Hooks Guide
--->
+*/}
 
 ## Checklist for New Dependencies
 

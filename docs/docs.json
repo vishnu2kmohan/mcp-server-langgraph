@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "MCP Server with LangGraph",
   "colors": {
-    "primary": "#0D9373",
+    "primary": "#087056",
     "light": "#07C983",
-    "dark": "#0D9373"
+    "dark": "#087056"
   },
   "favicon": "/favicon.svg",
   "navigation": {

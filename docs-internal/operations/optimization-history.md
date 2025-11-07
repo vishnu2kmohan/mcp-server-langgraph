@@ -174,10 +174,10 @@ Added comprehensive test suite following TDD principles:
 
 ### Key Performance Indicators (KPIs)
 
-- **CI Build Time**: Target <15 minutes (currently 12 minutes ✅)
-- **Test Pass Rate**: Target >95% (monitor for flaky tests)
-- **GitHub Actions Cost**: Target <$75/month (currently $50 ✅)
-- **Registry Storage**: Target <$150/month (currently $100 ✅)
+- **CI Build Time**: Target &lt;15 minutes (currently 12 minutes ✅)
+- **Test Pass Rate**: Target &gt;95% (monitor for flaky tests)
+- **GitHub Actions Cost**: Target &lt;$75/month (currently $50 ✅)
+- **Registry Storage**: Target &lt;$150/month (currently $100 ✅)
 
 ### Monthly Review Process
 
