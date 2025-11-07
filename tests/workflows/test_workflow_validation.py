@@ -394,9 +394,7 @@ def test_staging_has_comprehensive_validation(workflows_dir: Path):
     with open(production_file) as f:
         production_content = f.read()
 
-    # Check for validation job in staging
-
-    # Look for validation-related jobs
+    # Look for validation-related jobs in both workflows
     validation_checks = {
         "kustomize build": "Kustomize validation",
         "kubeval": "Kubernetes manifest validation",
