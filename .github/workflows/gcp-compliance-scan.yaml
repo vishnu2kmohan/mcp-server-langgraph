@@ -120,13 +120,13 @@ jobs:
             | ./kube-score_1.20.0_linux_amd64 score - \
             --output-format ci
 
-      - name: Validate with kubeval
+      - name: Validate with kubeconform
         run: |
-          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-          tar xf kubeval-linux-amd64.tar.gz
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
 
           kubectl kustomize deployments/overlays/production-gke \
-            | ./kubeval --strict
+            | ./kubeconform -strict -summary -ignore-missing-schemas
 
   # ============================================================================
   # CIS Benchmark Check

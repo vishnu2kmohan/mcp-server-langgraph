@@ -242,6 +242,27 @@ repos:
 
           See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
 
+      - id: regression-prevention-tests
+        name: CI/CD Regression Prevention Tests
+        entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
+        always_run: false  # Only run when test files or workflows change
+        description: |
+          Prevents regression of critical CI/CD and testing infrastructure issues.
+
+          Issues prevented:
+          1. Missing pytest fixture decorators (Issue #6 - Quality Tests)
+          2. Invalid class-scoped fixtures (Issue #6)
+          3. Settings singleton not reloaded after monkeypatch (Issue #7 - Smoke Tests)
+          4. Use of archived tools like kubeval (Issue #8 - Deployment Workflows)
+          5. Outdated GitHub Action versions
+          6. Invalid workflow YAML syntax
+
+          Following TDD principles, these tests FAIL if regressions are introduced.
+          See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
