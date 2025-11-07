@@ -263,6 +263,33 @@ repos:
           Following TDD principles, these tests FAIL if regressions are introduced.
           See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
 
+      - id: validate-github-action-versions
+        name: Validate GitHub Actions Action Versions
+        entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
+        always_run: false  # Only run when workflow or action files change
+        description: |
+          Validates that all GitHub Actions use published, valid version tags and have correct permissions.
+
+          Invalid versions prevented (OpenAI Codex Phase 5):
+          1. astral-sh/setup-uv@v7.1.1 (should be v7.1.0 or v7) - FIXED
+          2. actions/cache@v4.3.0 (should be v4.2.0 or v4) - FIXED
+          3. Other non-existent action version tags
+
+          Permissions validated:
+          - Workflows creating issues must have 'issues: write' permission
+          - Workflows have minimal required permissions (security best practice)
+
+          Test suite (8 tests):
+          - Action version validation (3 tests)
+          - Permissions validation (3 tests)
+          - YAML syntax validation (2 tests)
+
+          Following TDD principles: Tests written FIRST, then fixes applied.
+          See: docs-internal/GITHUB_ACTIONS_VALIDATION_REPORT.md
+
       # Kubernetes Deployment Validation (OpenAI Codex Findings - Phase 4)
       - id: validate-kustomize-builds
         name: Validate Kustomize Overlays Build Successfully

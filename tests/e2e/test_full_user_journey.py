@@ -112,14 +112,14 @@ async def authenticated_session(test_infrastructure_check, test_user_credentials
     - user_id: User identifier
     - username: Username
     """
-    # Use HTTP mock until real Keycloak is implemented
-    from tests.e2e.helpers import mock_keycloak_auth
+    # Use real Keycloak client to connect to test infrastructure
+    from tests.e2e.real_clients import real_keycloak_auth
 
-    async with mock_keycloak_auth() as auth:
+    async with real_keycloak_auth() as auth:
         username = test_user_credentials["username"]
         password = test_user_credentials["password"]
 
-        # Mock login
+        # Login to real Keycloak instance
         tokens = await auth.login(username, password)
 
         return {
@@ -150,14 +150,14 @@ class TestStandardUserJourney:
 
     async def test_01_login(self, test_user_credentials):
         """Step 1: User logs in and receives JWT token"""
-        from tests.e2e.helpers import mock_keycloak_auth
+        from tests.e2e.real_clients import real_keycloak_auth
 
-        # Use HTTP mock until real Keycloak is implemented
-        async with mock_keycloak_auth() as auth:
+        # Use real Keycloak client to connect to test infrastructure
+        async with real_keycloak_auth() as auth:
             username = test_user_credentials["username"]
             password = test_user_credentials["password"]
 
-            # Mock login flow
+            # Login to real Keycloak instance
             tokens = await auth.login(username, password)
 
             # Verify token structure
@@ -174,11 +174,11 @@ class TestStandardUserJourney:
 
     async def test_02_mcp_initialize(self, authenticated_session):
         """Step 2: Initialize MCP protocol connection"""
-        from tests.e2e.helpers import mock_mcp_client
+        from tests.e2e.real_clients import real_mcp_client
 
-        # Use HTTP mock until real MCP server is implemented
-        async with mock_mcp_client() as mcp:
-            # Mock MCP initialize
+        # Use real MCP client to connect to test infrastructure
+        async with real_mcp_client(access_token=authenticated_session["access_token"]) as mcp:
+            # Initialize MCP session with real server
             init_response = await mcp.initialize()
 
             # Verify response structure
@@ -195,11 +195,11 @@ class TestStandardUserJourney:
 
     async def test_03_list_tools(self, authenticated_session):
         """Step 3: List available MCP tools"""
-        from tests.e2e.helpers import mock_mcp_client
+        from tests.e2e.real_clients import real_mcp_client
 
-        # Use HTTP mock until real MCP server is implemented
-        async with mock_mcp_client() as mcp:
-            # Mock tool listing
+        # Use real MCP client to connect to test infrastructure
+        async with real_mcp_client(access_token=authenticated_session["access_token"]) as mcp:
+            # List tools from real MCP server
             tools_response = await mcp.list_tools()
 
             # Verify response structure

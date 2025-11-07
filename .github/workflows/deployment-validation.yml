@@ -1,0 +1,179 @@
+name: Deployment Validation
+
+on:
+  pull_request:
+    paths:
+      - 'deployments/**/*.yaml'
+      - 'deployments/**/*.yml'
+      - 'tests/deployment/**/*.py'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'deployments/**/*.yaml'
+      - 'deployments/**/*.yml'
+
+jobs:
+  validate-kustomize:
+    name: Validate Kustomize Builds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          cd /tmp
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          kustomize version
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml
+
+      - name: Validate all overlays build successfully
+        run: |
+          echo "Building base..."
+          kustomize build deployments/base
+
+          echo "Building staging-gke overlay..."
+          kustomize build deployments/overlays/staging-gke
+
+          echo "Building production-gke overlay..."
+          kustomize build deployments/overlays/production-gke
+
+      - name: Run deployment tests
+        run: |
+          pytest tests/deployment/test_kustomize_builds.py -v --tb=short
+
+  validate-network-policies:
+    name: Validate NetworkPolicy Configurations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          cd /tmp
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml
+
+      - name: Run NetworkPolicy tests
+        run: |
+          pytest tests/deployment/test_network_policies.py -v --tb=short
+
+  validate-service-accounts:
+    name: Validate Service Account Separation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          cd /tmp
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml
+
+      - name: Run ServiceAccount tests
+        run: |
+          pytest tests/deployment/test_service_accounts.py -v --tb=short
+
+  validate-conftest-policies:
+    name: Validate with Conftest/OPA Policies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          cd /tmp
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Install conftest
+        run: |
+          CONFTEST_VERSION=0.56.0
+          wget "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          tar xzf conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz
+          sudo mv conftest /usr/local/bin/
+          conftest --version
+
+      - name: Build overlays and validate with policies
+        run: |
+          echo "Validating base..."
+          kustomize build deployments/base | conftest test -p deployments/policies - || true
+
+          echo "Validating staging-gke..."
+          kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - || true
+
+          echo "Validating production-gke..."
+          kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - || true
+
+      - name: Validate raw YAML files
+        run: |
+          conftest test deployments/base/*.yaml -p deployments/policies || true
+          conftest test deployments/overlays/staging-gke/*.yaml -p deployments/policies || true
+          conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies || true
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-kustomize, validate-network-policies, validate-service-accounts, validate-conftest-policies]
+    if: always()
+
+    steps:
+      - name: Check validation results
+        run: |
+          echo "::notice::All deployment validation checks completed"
+
+          if [ "${{ needs.validate-kustomize.result }}" != "success" ]; then
+            echo "::error::Kustomize validation failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.validate-network-policies.result }}" != "success" ]; then
+            echo "::error::NetworkPolicy validation failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.validate-service-accounts.result }}" != "success" ]; then
+            echo "::error::ServiceAccount validation failed"
+            exit 1
+          fi
+
+          echo "::notice::✅ All deployment validations passed!"

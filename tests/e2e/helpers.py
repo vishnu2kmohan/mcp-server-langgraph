@@ -1,26 +1,28 @@
 """
-E2E Test Helpers - MIGRATED TO REAL INFRASTRUCTURE
+E2E Test Helpers - Mock Implementations for Unit Testing
 
-STATUS: ✅ Migrated from mocks to real infrastructure (Phase 2.2 complete)
+STATUS: Mock implementations kept for isolated unit testing
 
-New Approach (Real Infrastructure):
-- E2E tests now use real HTTP clients connecting to docker-compose.test.yml services
-- Real Keycloak on port 9082 for authentication
-- Real MCP server for protocol testing
-- Per-test cleanup fixtures ensure isolation
+Purpose:
+This module provides MOCK implementations of Keycloak and MCP clients for:
+- Unit tests that need fast, isolated testing without infrastructure
+- Development/debugging scenarios where infrastructure isn't available
+- Backwards compatibility during migration
 
-Backwards Compatibility:
-- Mock classes/functions still exported but aliased to real implementations
-- Allows gradual migration of existing tests
-- Use `from tests.e2e.real_clients import real_keycloak_auth` for clarity
+For E2E Tests - Use Real Clients Instead:
+E2E tests should use real_clients.py to connect to actual test infrastructure:
+- tests/e2e/real_clients.py - RealKeycloakAuth, RealMCPClient
+- Connects to docker-compose.test.yml services (Keycloak port 9082, etc.)
+- Provides true end-to-end testing with real HTTP/JWT flows
 
-Migration Complete:
-- ✅ RealKeycloakAuth implemented (connects to Keycloak on port 9082)
-- ✅ RealMCPClient implemented (connects to MCP server)
-- ✅ Per-test cleanup fixtures (postgres_connection_clean, redis_client_clean, openfga_client_clean)
-- ✅ Backwards compatibility maintained via aliases
+Migration Status:
+- ✅ E2E tests migrated to real_clients.py (test_full_user_journey.py updated)
+- ✅ Mock classes preserved in this file for unit testing purposes
+- ✅ Real client implementations available in tests/e2e/real_clients.py
 
-Usage (New Real Infrastructure Approach):
+Usage Guidance:
+
+For E2E tests (preferred):
     from tests.e2e.real_clients import real_keycloak_auth, real_mcp_client
 
     @pytest.mark.e2e
@@ -30,14 +32,18 @@ Usage (New Real Infrastructure Approach):
             # Real JWT token from Keycloak
             token = await auth.login("alice", "password")
 
-        async with real_mcp_client(access_token=token["access_token"]) as client:
-            # Real MCP protocol communication
-            tools = await client.list_tools()
+For unit tests (isolated, no infrastructure):
+    from tests.e2e.helpers import mock_keycloak_auth, mock_mcp_client
+
+    async def test_auth_logic():
+        async with mock_keycloak_auth() as auth:
+            # Mock token, no real Keycloak needed
+            token = await auth.login("alice", "password")
 
 For details, see:
-- tests/e2e/real_clients.py - Real client implementations
-- tests/conftest.py - Per-test cleanup fixtures
-- adr/adr-0044-test-infrastructure-quick-wins.md - Phase 1 improvements
+- tests/e2e/real_clients.py - Real client implementations for E2E tests
+- tests/e2e/test_real_clients.py - Unit tests for real clients
+- tests/conftest.py - Test infrastructure fixtures
 """
 
 import asyncio
