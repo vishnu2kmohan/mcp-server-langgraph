@@ -177,6 +177,9 @@ dependency-audit-*.txt
 !docs/reports/archive/*.md
 !docs/reports/archive/**/*.md
 
+# Preserve security documentation (permanent analysis docs)
+!docs/security/*_ANALYSIS.md
+
 # Database
 *.db
 *.sqlite
