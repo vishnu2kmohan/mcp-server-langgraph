@@ -125,6 +125,23 @@ repos:
           - Detects orphaned documentation files
           Regression prevention for issues fixed in documentation audit (2025-11-06).
 
+      - id: validate-documentation-integrity
+        name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
+        entry: python -m pytest tests/test_documentation_integrity.py -v --tb=short
+        language: system
+        files: \.(md|mdx|json)$|^monitoring/.*README\.md$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Documentation integrity and completeness tests (TDD):
+          - ADR synchronization between adr/ and docs/architecture/
+          - Architecture overview ADR count accuracy
+          - Mermaid diagram structure validation
+          - Monitoring subdirectories have comprehensive READMEs (>50 lines)
+          - No HTML comments in MDX (use JSX comments)
+          - JSX comments properly closed
+          Ensures documentation standards maintained (2025-11-07 audit).
+
       # Deployment Configuration Validation (TDD)
       - id: validate-deployment-secrets
         name: Validate deployment secret keys alignment
