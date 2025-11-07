@@ -166,7 +166,7 @@ class TestTemporaryDirectorySecurity:
         allowed_base = Path("/tmp/workflows")  # nosec B108 - test path.resolve()
 
         # Test valid paths
-        valid_path = Path("/tmp/workflows/my_workflow.py").resolve()
+        valid_path = Path("/tmp/workflows/my_workflow.py").resolve()  # nosec B108 - test path
         assert str(valid_path).startswith(str(allowed_base))
 
         # Test directory traversal attempts (should be prevented)
