@@ -92,8 +92,6 @@ class TestFastAPIStartupValidation:
         This test validates Bug Fix #1: Keycloak admin credentials must be
         wired from settings to KeycloakClient.
         """
-        from mcp_server_langgraph.core.dependencies import get_keycloak_client
-
         # Arrange: Set admin credentials
         monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "test-admin")
         monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "test-password")
@@ -101,10 +99,22 @@ class TestFastAPIStartupValidation:
         monkeypatch.setenv("KEYCLOAK_REALM", "test")
         monkeypatch.setenv("KEYCLOAK_CLIENT_ID", "test-client")
 
+        # Reload config to pick up monkeypatched env vars
+        import importlib
+
+        import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.dependencies as deps_module
+
+        importlib.reload(config_module)
+        importlib.reload(deps_module)
+
         # Reset singleton
         import mcp_server_langgraph.core.dependencies as deps
 
         deps._keycloak_client = None
+
+        # Re-import to get updated function
+        from mcp_server_langgraph.core.dependencies import get_keycloak_client
 
         # Act: Get Keycloak client
         client = get_keycloak_client()
@@ -189,6 +199,15 @@ class TestDependencyInjectionWiring:
         monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
         # Leave OpenFGA store/model unset to test graceful degradation
 
+        # Reload config to pick up monkeypatched env vars
+        import importlib
+
+        import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.dependencies as deps_module
+
+        importlib.reload(config_module)
+        importlib.reload(deps_module)
+
         # Reset all singletons
         import mcp_server_langgraph.core.dependencies as deps
 
@@ -244,8 +263,6 @@ class TestGracefulDegradation:
 
         App should start even if Keycloak server is unreachable.
         """
-        from mcp_server_langgraph.core.dependencies import get_keycloak_client
-
         # Arrange: Point to non-existent Keycloak
         monkeypatch.setenv("KEYCLOAK_SERVER_URL", "http://nonexistent:9999")
         monkeypatch.setenv("KEYCLOAK_REALM", "test")
@@ -253,10 +270,22 @@ class TestGracefulDegradation:
         monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "admin")
         monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "admin-password")
 
+        # Reload config to pick up monkeypatched env vars
+        import importlib
+
+        import mcp_server_langgraph.core.config as config_module
+        import mcp_server_langgraph.core.dependencies as deps_module
+
+        importlib.reload(config_module)
+        importlib.reload(deps_module)
+
         # Reset singleton
         import mcp_server_langgraph.core.dependencies as deps
 
         deps._keycloak_client = None
+
+        # Re-import to get updated function
+        from mcp_server_langgraph.core.dependencies import get_keycloak_client
 
         # Act: Create Keycloak client (should succeed - connectivity tested lazily)
         client = get_keycloak_client()

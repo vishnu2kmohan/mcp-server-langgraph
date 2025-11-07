@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.fixture
 def test_client() -> Generator[TestClient, None, None]:
     """Create a test client for the health check app"""
     from mcp_server_langgraph.health.checks import app

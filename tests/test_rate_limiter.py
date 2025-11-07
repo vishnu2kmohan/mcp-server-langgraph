@@ -17,7 +17,6 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 )
 
 
-@pytest.fixture(scope="class", autouse=True)
 @pytest.mark.api
 class TestRateLimiterUserExtraction:
     """Test extracting user info from JWT tokens for rate limiting"""

@@ -1,21 +1,186 @@
 # Critical Kubernetes Deployment Fixes Summary
 
 **Date:** 2025-11-07
+**Last Updated:** 2025-11-07 (Added CI/CD Workflow Fixes)
 **Status:** ✅ All critical issues resolved and validated
 **Test Coverage:** 100% of critical issues
 
 ## Overview
 
-This document summarizes the critical security and reliability fixes applied to the Kubernetes deployment manifests based on a comprehensive security audit. All fixes follow Test-Driven Development (TDD) principles with full validation.
+This document summarizes the critical security and reliability fixes applied to the Kubernetes deployment manifests and CI/CD workflows based on a comprehensive security audit. All fixes follow Test-Driven Development (TDD) principles with full validation.
 
 ## Executive Summary
 
-**Total Critical Issues Fixed:** 5
+**Total Critical Issues Fixed:** 8 (5 deployment + 3 workflow)
 **Total Violations Resolved:** 19
-**Test Suite:** `tests/kubernetes/test_critical_deployment_issues.py`
+**Deployment Test Suite:** `tests/kubernetes/test_critical_deployment_issues.py`
+**Workflow Test Suite:** `tests/test_health_check.py`, `tests/test_rate_limiter.py`, `tests/integration/test_app_startup_validation.py`
 **Validation Status:** ✅ GREEN - All tests passing
 
-## Critical Fixes Applied
+---
+
+## CI/CD Workflow Fixes (2025-11-07)
+
+### 6. Quality Test Fixture Issues ✅
+
+**Files Changed:**
+- `tests/test_health_check.py:11`
+- `tests/test_rate_limiter.py:20`
+
+**Issues Identified:**
+- Missing `@pytest.fixture` decorator on `test_client()` function causing pytest collection errors
+- Invalid `@pytest.fixture(scope="class", autouse=True)` decorator on CLASS definition (should only be on functions)
+- Quality tests failing with `'yield' keyword is allowed in fixtures, but not in tests`
+- 4 test collection errors preventing test execution
+
+**Root Cause:**
+Pytest fixture decorators were missing or incorrectly applied to non-function definitions.
+
+**Fix Applied:**
+```python
+# Before (BROKEN):
+# tests/test_health_check.py:11
+def test_client() -> Generator[TestClient, None, None]:  # ❌ Missing @pytest.fixture
+    yield TestClient(app)
+
+# tests/test_rate_limiter.py:20
+@pytest.fixture(scope="class", autouse=True)  # ❌ On CLASS
+@pytest.mark.api
+class TestRateLimiterUserExtraction:
+
+# After (FIXED):
+# tests/test_health_check.py:11
+@pytest.fixture  # ✅ Added decorator
+def test_client() -> Generator[TestClient, None, None]:
+    yield TestClient(app)
+
+# tests/test_rate_limiter.py:20
+@pytest.mark.api  # ✅ Removed invalid fixture decorator
+class TestRateLimiterUserExtraction:
+```
+
+**Impact:**
+- ✅ All 37 tests in `test_health_check.py` and `test_rate_limiter.py` now pass
+- ✅ Quality tests workflow no longer fails
+- ✅ Proper fixture lifecycle management
+
+**Validation:**
+```bash
+uv run pytest tests/test_health_check.py tests/test_rate_limiter.py -v
+# Result: ✅ 37 passed, 1 xfailed, 2 warnings in 3.34s
+```
+
+---
+
+### 7. Smoke Test Environment Configuration ✅
+
+**Files Changed:**
+- `tests/integration/test_app_startup_validation.py:176-224` (test_all_dependency_factories_instantiate)
+- `tests/integration/test_app_startup_validation.py:250-287` (test_app_works_without_keycloak)
+- `tests/integration/test_app_startup_validation.py:88-124` (test_app_keycloak_admin_credentials_wired)
+
+**Issues Identified:**
+- Tests using `monkeypatch.setenv()` but Settings singleton already loaded at module import time
+- Environment variables set in tests not being picked up by configuration
+- 2/10 tests failing with assertions like `admin_password == None` (expected "admin-password")
+- Test expecting `server_url == "http://nonexistent:9999"` but getting `"http://localhost:8082"`
+
+**Root Cause:**
+The Settings class is instantiated as a module-level singleton in `src/mcp_server_langgraph/core/config.py:657`:
+```python
+settings = Settings()  # Created at import time
+```
+
+When tests use `monkeypatch.setenv()`, the settings object has already been created with the original environment variables and doesn't pick up the changes.
+
+**Fix Applied:**
+Added `importlib.reload()` pattern after monkeypatching (following existing pattern from `tests/smoke/test_ci_startup_smoke.py`):
+
+```python
+# Added to all 3 failing tests:
+import importlib
+import mcp_server_langgraph.core.config as config_module
+import mcp_server_langgraph.core.dependencies as deps_module
+
+# Reload config to pick up monkeypatched env vars
+importlib.reload(config_module)
+importlib.reload(deps_module)
+
+# Reset singletons
+import mcp_server_langgraph.core.dependencies as deps
+deps._keycloak_client = None
+
+# Re-import to get updated functions
+from mcp_server_langgraph.core.dependencies import get_keycloak_client
+```
+
+**Impact:**
+- ✅ All 16 smoke tests now pass (was 14/16, now 16/16)
+- ✅ Environment variable overrides work correctly in tests
+- ✅ Test isolation improved - each test gets fresh config
+- ✅ Follows established pattern from smoke tests
+
+**Validation:**
+```bash
+uv run pytest tests/integration/test_app_startup_validation.py -v
+# Result: ✅ 16 passed, 2 warnings in 3.78s
+```
+
+---
+
+### 8. Deployment Workflow kubeval Limitations ✅
+
+**Files Changed:**
+- `.github/workflows/deploy-staging-gke.yaml:64-69`
+- `.github/workflows/deploy-production-gke.yaml:86-91`
+
+**Issues Identified:**
+- kubeval is archived and no longer maintained
+- kubeval doesn't support Kubernetes 1.22+ resources (PodDisruptionBudget-v1, HorizontalPodAutoscaler-v2)
+- kubeval fails validation for CRDs (ClusterSecretStore, ExternalSecret from External Secrets Operator)
+- Pre-deployment validation step failing with false positives
+- Error: `Failed initializing schema .../poddisruptionbudget-policy-v1.json: 404 Not Found`
+
+**Root Cause:**
+kubeval project is archived (https://github.com/instrumenta/kubeval) and doesn't support modern Kubernetes APIs or Custom Resource Definitions.
+
+**Fix Applied:**
+Replaced kubeval with kubeconform (actively maintained fork that supports modern K8s):
+
+```yaml
+# Before (BROKEN):
+- name: Validate manifests with kubeval
+  run: |
+    wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+    tar xf kubeval-linux-amd64.tar.gz
+    kubectl kustomize deployments/overlays/staging-gke | ./kubeval --strict
+    echo "✅ Manifest validation passed"
+
+# After (FIXED):
+- name: Validate manifests with kubeconform
+  run: |
+    wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+    tar xf kubeconform-linux-amd64.tar.gz
+    kubectl kustomize deployments/overlays/staging-gke | ./kubeconform -strict -summary -ignore-missing-schemas
+    echo "✅ Manifest validation passed"
+```
+
+**Impact:**
+- ✅ Supports Kubernetes 1.22+ resources (PodDisruptionBudget-v1, HorizontalPodAutoscaler-v2)
+- ✅ Handles CRDs gracefully with `-ignore-missing-schemas` flag
+- ✅ Actively maintained (vs archived kubeval)
+- ✅ No false positive validation failures
+- ✅ Validation summary: 37 resources found, 34 valid, 0 invalid, 0 errors, 3 skipped (CRDs)
+
+**Validation:**
+```bash
+kubectl kustomize deployments/overlays/staging-gke | kubeconform -strict -summary -ignore-missing-schemas
+# Result: ✅ Summary: 37 resources found - Valid: 34, Invalid: 0, Errors: 0, Skipped: 3
+```
+
+---
+
+## Critical Fixes Applied (Deployment Manifests)
 
 ### 1. NetworkPolicy - Namespace Selectors & External Egress ✅
 

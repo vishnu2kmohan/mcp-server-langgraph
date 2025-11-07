@@ -83,11 +83,11 @@ jobs:
           kubectl kustomize deployments/overlays/production-gke > /tmp/manifests.yaml
           echo "✅ Kustomize validation passed"
 
-      - name: Validate manifests with kubeval
+      - name: Validate manifests with kubeconform
         run: |
-          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-          tar xf kubeval-linux-amd64.tar.gz
-          kubectl kustomize deployments/overlays/production-gke | ./kubeval --strict
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          kubectl kustomize deployments/overlays/production-gke | ./kubeconform -strict -summary -ignore-missing-schemas
           echo "✅ Manifest validation passed"
 
       - name: Security scan manifests
