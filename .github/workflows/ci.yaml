@@ -193,7 +193,22 @@ jobs:
       run: |
         # For now, just copy the unit coverage (no merging needed with single source)
         # In the future, this will use: coverage combine coverage-artifacts/**/*.xml
-        cp coverage-artifacts/coverage-unit.xml coverage-merged.xml
+
+        # Check if coverage artifact exists before copying (handles continue-on-error download)
+        if [ -f coverage-artifacts/coverage-unit.xml ]; then
+          cp coverage-artifacts/coverage-unit.xml coverage-merged.xml
+          echo "✅ Coverage artifact merged successfully"
+        else
+          echo "⚠️  No coverage artifacts found (tests may have been skipped or failed)"
+          echo "Creating empty coverage file for downstream steps"
+          # Create minimal valid XML coverage file
+          cat > coverage-merged.xml << 'COVERAGE_EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <coverage version="7.0" timestamp="0" lines-valid="0" lines-covered="0" line-rate="0" branches-covered="0" branches-valid="0" branch-rate="0" complexity="0">
+          <packages/>
+        </coverage>
+        COVERAGE_EOF
+        fi
 
         echo "=== Coverage Summary ==="
         coverage report --data-file=.coverage 2>/dev/null || echo "Using XML report directly"
