@@ -1072,8 +1072,8 @@ async def login(request: LoginRequest) -> LoginResponse:
     Example:
         POST /auth/login
         {
-            "username": "alice",
-            "password": "alice123"
+            "username": "your-username",
+            "password": "your-secure-password"
         }
 
         Response:
@@ -1081,10 +1081,13 @@ async def login(request: LoginRequest) -> LoginResponse:
             "access_token": "eyJ...",
             "token_type": "bearer",
             "expires_in": 3600,
-            "user_id": "user:alice",
-            "username": "alice",
-            "roles": ["user", "premium"]
+            "user_id": "user:your-username",
+            "username": "your-username",
+            "roles": ["user"]
         }
+
+        Note: InMemoryUserProvider no longer seeds default users (v2.8.0+).
+        Create users explicitly via provider.add_user() for testing.
     """
     with tracer.start_as_current_span("auth.login") as span:
         span.set_attribute("auth.username", request.username)
