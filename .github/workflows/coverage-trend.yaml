@@ -107,7 +107,8 @@ jobs:
       id: coverage-change
       run: |
         # Extract change data from coverage history for PR comments
-        if [ -f .coverage-history/coverage-trend.csv ] && [ $(wc -l < .coverage-history/coverage-trend.csv) -ge 2 ]; then
+        # Quote command substitution to prevent word splitting (SC2046)
+        if [ -f .coverage-history/coverage-trend.csv ] && [ "$(wc -l < .coverage-history/coverage-trend.csv)" -ge 2 ]; then
           PREV_COVERAGE=$(tail -2 .coverage-history/coverage-trend.csv | head -1 | cut -d',' -f3)
           CURR_COVERAGE=${{ steps.coverage.outputs.coverage }}
           CHANGE=$(python -c "print(f'{float('$CURR_COVERAGE') - float('$PREV_COVERAGE'):.1f}')")

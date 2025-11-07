@@ -205,16 +205,25 @@ jobs:
           echo "Review the dashboard above for details"
 
       - name: Add summary comment
+        env:
+          FAILING: ${{ steps.metrics.outputs.failing_workflows }}
+          DEGRADED: ${{ steps.metrics.outputs.degraded_workflows }}
+          TOTAL: ${{ steps.metrics.outputs.total_workflows }}
         run: |
+          # Use env variables to avoid bash numeric comparison issues with GitHub expressions
+          FAILING_COUNT="${FAILING:-0}"
+          DEGRADED_COUNT="${DEGRADED:-0}"
+          TOTAL_COUNT="${TOTAL:-0}"
+
           echo "## Dashboard Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Total Workflows Analyzed**: ${{ steps.metrics.outputs.total_workflows }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Workflows Analyzed**: ${TOTAL_COUNT}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ steps.metrics.outputs.failing_workflows }}" -gt 0 ]; then
-            echo "⚠️ **Action Required**: ${{ steps.metrics.outputs.failing_workflows }} workflow(s) need attention" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ steps.metrics.outputs.degraded_workflows }}" -gt 0 ]; then
-            echo "⚠️ **Watch**: ${{ steps.metrics.outputs.degraded_workflows }} workflow(s) showing degraded performance" >> $GITHUB_STEP_SUMMARY
+          if [ "${FAILING_COUNT}" -gt 0 ] 2>/dev/null; then
+            echo "⚠️ **Action Required**: ${FAILING_COUNT} workflow(s) need attention" >> $GITHUB_STEP_SUMMARY
+          elif [ "${DEGRADED_COUNT}" -gt 0 ] 2>/dev/null; then
+            echo "⚠️ **Watch**: ${DEGRADED_COUNT} workflow(s) showing degraded performance" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **All systems operational**: All workflows healthy" >> $GITHUB_STEP_SUMMARY
           fi

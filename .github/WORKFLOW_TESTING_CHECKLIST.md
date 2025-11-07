@@ -82,9 +82,10 @@ Check these in act output:
 #### Dependency Installation
 ```
 | Install dependencies
-| uv sync --extra dev --extra builder
+| # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+| uv sync --frozen --extra dev --extra builder
 | ✓ Dependencies installed from lockfile with dev+builder extras
-- ✅ GOOD
+- ✅ GOOD (--frozen flag prevents dependency drift)
 ```
 
 #### Tool Installation
@@ -197,11 +198,13 @@ gh run list --limit=5
 
 **Check in Workflow**:
 ```yaml
-# ❌ BAD
+# ❌ BAD (no --frozen flag, allows dependency drift)
 - run: uv sync
 
-# ✅ GOOD
-- run: uv sync --extra dev --extra builder
+# ✅ GOOD (--frozen prevents drift, extras for test dependencies)
+- run: |
+    # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+    uv sync --frozen --extra dev --extra builder
 ```
 
 **Test with act**: Should show dependency installation success

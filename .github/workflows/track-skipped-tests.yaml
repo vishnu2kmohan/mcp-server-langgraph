@@ -187,16 +187,21 @@ jobs:
 
     - name: Generate step summary
       if: always()
+      env:
+        WITHOUT_ISSUES: ${{ steps.track.outputs.without_issues }}
       run: |
+        # Use env variable to avoid bash numeric comparison issues with GitHub expressions
+        WITHOUT="${WITHOUT_ISSUES:-0}"
+
         echo "## 📋 Skipped Tests Tracking" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Total Skipped Tests:** ${{ steps.track.outputs.total }}" >> $GITHUB_STEP_SUMMARY
         echo "**With GitHub Issues:** ${{ steps.track.outputs.with_issues }} ✅" >> $GITHUB_STEP_SUMMARY
-        echo "**Without Issues:** ${{ steps.track.outputs.without_issues }} $([ ${{ steps.track.outputs.without_issues }} -gt 20 ] && echo '🔴' || echo '✅')" >> $GITHUB_STEP_SUMMARY
+        echo "**Without Issues:** ${WITHOUT} $([ "${WITHOUT}" -gt 20 ] 2>/dev/null && echo '🔴' || echo '✅')" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Target Metrics" >> $GITHUB_STEP_SUMMARY
         echo "- **Goal:** <20 untracked skipped tests" >> $GITHUB_STEP_SUMMARY
-        echo "- **Current:** ${{ steps.track.outputs.without_issues }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status:** $([ ${{ steps.track.outputs.without_issues }} -lt 20 ] && echo '✅ On target' || echo '⚠️ Needs attention')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Current:** ${WITHOUT}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** $([ "${WITHOUT}" -lt 20 ] 2>/dev/null && echo '✅ On target' || echo '⚠️ Needs attention')" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "📄 **Full reports available in workflow artifacts**" >> $GITHUB_STEP_SUMMARY

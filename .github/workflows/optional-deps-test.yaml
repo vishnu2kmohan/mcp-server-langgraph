@@ -70,10 +70,11 @@ jobs:
       - name: Install with secrets extra
         run: |
           # Try to install with secrets extra (may fail if wheels unavailable)
-          uv sync --extra secrets --no-dev || {
+          # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+          uv sync --frozen --extra secrets --no-dev || {
             echo "⚠️  Infisical install failed (expected on some platforms)"
             echo "   Falling back to minimal install"
-            uv sync --no-dev
+            uv sync --frozen --no-dev
           }
 
       - name: Verify secrets fallback
@@ -103,7 +104,8 @@ jobs:
 
       - name: Install with embeddings extra
         run: |
-          uv sync --extra embeddings --no-dev
+          # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+          uv sync --frozen --extra embeddings --no-dev
 
       - name: Verify embeddings import
         run: |
@@ -137,10 +139,11 @@ jobs:
       - name: Install all extras
         run: |
           # Try to install all extras
-          uv sync --all-extras --no-dev || {
+          # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+          uv sync --frozen --all-extras --no-dev || {
             echo "⚠️  Some extras failed to install (expected)"
             echo "   Falling back to minimal + available extras"
-            uv sync --no-dev
+            uv sync --frozen --no-dev
           }
 
       - name: Run smoke tests
