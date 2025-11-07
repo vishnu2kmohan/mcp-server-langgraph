@@ -19,7 +19,6 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
-
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 

@@ -125,8 +125,9 @@ def get_api_key_manager(
         redis_client: Optional[Any] = None
         if settings.api_key_cache_enabled and settings.redis_url:
             try:
-                import redis.asyncio as redis
                 from urllib.parse import urlparse, urlunparse
+
+                import redis.asyncio as redis
 
                 # Build Redis URL with correct database number
                 # Parse the URL to handle existing database numbers, trailing slashes, query params
