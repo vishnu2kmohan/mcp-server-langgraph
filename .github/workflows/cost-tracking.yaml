@@ -93,7 +93,8 @@ jobs:
 
     - name: Install cost tracking dependencies
       run: |
-        uv sync --group cost-tracking
+        # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+        uv sync --frozen --group cost-tracking
         echo "✓ Cost tracking dependencies installed via uv"
 
     - name: Fetch workflow runs

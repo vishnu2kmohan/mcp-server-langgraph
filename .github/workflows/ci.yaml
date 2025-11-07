@@ -67,6 +67,46 @@ env:
 
 jobs:
   # ============================================================================
+  # WORKFLOW VALIDATION (Runs first to catch workflow errors early)
+  # ============================================================================
+
+  validate-workflows:
+    name: Validate GitHub Actions Workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install actionlint
+        run: |
+          # Install actionlint for workflow validation
+          curl -sSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar -xz -C /usr/local/bin
+          actionlint --version
+
+      - name: Validate workflows with actionlint
+        run: |
+          echo "🔍 Validating all GitHub Actions workflows..."
+          actionlint -color -shellcheck= .github/workflows/*.{yml,yaml}
+          echo "✅ All workflows are valid"
+
+      - name: Set up Python for workflow tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pyyaml
+          echo "✓ Test dependencies installed"
+
+      - name: Run workflow validation tests
+        run: |
+          echo "🧪 Running workflow validation test suite..."
+          python -m pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
+          echo "✅ All workflow validation tests passed"
+
+  # ============================================================================
   # TESTING (Parallelized by Python version)
   # ============================================================================
 

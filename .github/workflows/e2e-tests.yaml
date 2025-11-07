@@ -95,7 +95,8 @@ jobs:
         # dev: Testing framework (pytest, pytest-cov, etc.)
         # builder: Visual workflow builder (black, jinja2, ast-comments)
         # Both required because E2E tests import builder modules
-        uv sync --extra dev --extra builder
+        # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+        uv sync --frozen --extra dev --extra builder
         echo "✓ Dependencies installed from lockfile with dev+builder extras"
 
     - name: Start test infrastructure

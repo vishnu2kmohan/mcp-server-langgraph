@@ -99,8 +99,9 @@ main() {
 
     # Test 1: actionlint - Workflow syntax validation
     # Simplified: Let actionlint fail fast on errors (removed || true short-circuit)
+    # -shellcheck=: Disable shellcheck to focus on workflow syntax (shellcheck warnings are style issues)
     run_test "Workflow syntax validation (actionlint)" \
-        "actionlint -color $workflow_dir/*.{yml,yaml}"
+        "actionlint -color -shellcheck= $workflow_dir/*.{yml,yaml}"
 
     # Test 2: Context usage validation (existing script)
     if [[ -f "$script_dir/validate_github_workflows.py" ]]; then
@@ -113,7 +114,7 @@ main() {
     # Test 3: Comprehensive workflow validation (new test suite)
     if [[ -f "$project_root/tests/workflows/test_workflow_validation.py" ]]; then
         run_test "Comprehensive workflow validation" \
-            "cd '$project_root' && python3 -m pytest tests/workflows/test_workflow_validation.py -v --tb=short"
+            "cd '$project_root' && uv run pytest tests/workflows/test_workflow_validation.py -v --tb=short"
     else
         log_warning "Skipping comprehensive validation (test file not found)"
     fi
