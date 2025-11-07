@@ -152,6 +152,9 @@ deployments/**/charts/*.tgz
 test_results.log
 test-results/
 
+# Security scan reports (transient artifacts)
+security-reports/
+
 # CI/CD generated files (keep baselines tracked, ignore reports)
 cost-metrics.txt
 cost-report.md

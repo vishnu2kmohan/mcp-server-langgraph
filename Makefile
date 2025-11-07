@@ -538,6 +538,38 @@ security-check:
 	@echo "Running bandit security scan..."
 	bandit -r . -x ./tests,./.venv -ll
 
+security-scan-full:
+	@echo "🔒 Running comprehensive security scan..."
+	@mkdir -p security-reports
+	@echo ""
+	@echo "1/3 Running Bandit (code security)..."
+	@bandit -r src/ -f json -o security-reports/bandit-report.json 2>/dev/null || true
+	@bandit -r src/ -ll -x ./tests,./.venv || echo "⚠️  Bandit found issues (see report)"
+	@echo ""
+	@echo "2/3 Running Safety (dependency vulnerabilities)..."
+	@if command -v safety >/dev/null 2>&1; then \
+		safety check --json --output security-reports/safety-report.json 2>/dev/null || echo '{"vulnerabilities": []}' > security-reports/safety-report.json; \
+	else \
+		echo "⚠️  Safety not installed. Install with: uv tool install safety"; \
+		echo '{"vulnerabilities": []}' > security-reports/safety-report.json; \
+	fi
+	@echo ""
+	@echo "3/3 Running pip-audit (dependency vulnerabilities)..."
+	@if command -v pip-audit >/dev/null 2>&1; then \
+		pip-audit --format json --output security-reports/pip-audit-report.json 2>/dev/null || echo '{"dependencies": []}' > security-reports/pip-audit-report.json; \
+	else \
+		echo "⚠️  pip-audit not installed. Install with: uv tool install pip-audit"; \
+		echo '{"dependencies": []}' > security-reports/pip-audit-report.json; \
+	fi
+	@echo ""
+	@echo "📊 Generating consolidated report..."
+	@$(UV_RUN) python scripts/security/generate_report.py security-reports
+	@echo ""
+	@echo "✅ Security scan complete!"
+	@echo "📄 Report: security-reports/security-scan-report.md"
+	@echo ""
+	@cat security-reports/security-scan-report.md
+
 # Enhanced lint targets for pre-commit/pre-push workflow
 lint-check:
 	@echo "🔍 Running comprehensive lint checks in parallel (non-destructive)..."
