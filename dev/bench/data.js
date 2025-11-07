@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762468406976,
+  "lastUpdate": 1762491103902,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -35202,6 +35202,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016179575979683093",
             "extra": "mean: 57.46216400810237 usec\nrounds: 4451"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b090090539e10e3f73490dc28843eadf8e41da4e",
+          "message": "fix(tests): TDD-based remediation of 38+ critical test failures\n\nFix 38+ critical test failures following Red-Green-Refactor TDD cycle across\nauthentication, health checks, configuration, and observability.\n\n## Tests Fixed (120+ failures → 82 failures)\n\n### Critical Security Fixes (23 tests)\n- tests/test_rate_limiter.py: 18 failures → 0 (JWT extraction, tier validation)\n- tests/property/test_auth_properties.py: 5 failures → 0 (JWT properties)\n\n### Infrastructure Fixes (15 tests)\n- tests/test_health_check.py: 9 failures → 0 (endpoint paths, observability)\n- tests/api/test_app_configuration.py: 3 failures → 0 (observability init order)\n- tests/test_config_validation.py: 2 failures → 0 (CORS production configs)\n- tests/test_code_execution_config.py: 1 failure → 0 (production defaults)\n\n### Systematic Improvements\n- Added observability fixtures to 10+ test files\n- Fixed rate limiter tests to use request.state.user (matches implementation)\n- Corrected health check endpoint paths (/ instead of /health)\n- Added production configs to validation tests\n\n## TDD Methodology\n\nAll fixes followed Red-Green-Refactor:\n1. RED: Identified failure root cause with pytest --tb=short\n2. GREEN: Minimal fix to pass tests\n3. REFACTOR: Added fixtures, improved test structure\n\n## Remaining Work\n\n~82 failures remain (integration tests, middleware, builder tests)\nWill be fixed in subsequent commits following same TDD approach.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-06T23:47:08-05:00",
+          "tree_id": "c3bfa55cefcb6a3720eeea5d84f92a9bde589d63",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b090090539e10e3f73490dc28843eadf8e41da4e"
+        },
+        "date": 1762491101856,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 164.1598887051239,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008257370610156702",
+            "extra": "mean: 6.091622063635007 msec\nrounds: 110"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 165.39147248204668,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016302209897774606",
+            "extra": "mean: 6.046260940741974 msec\nrounds: 135"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 49328.12625614305,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.27241000007507 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53229.59948918121,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.786540000235163 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50648.22126001669,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.744029999912982 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.8597209667563,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.105695010000204 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.644264308164704,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.905444169999896 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.962349156352992,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.37793137999984 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1410516.8137052555,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 708.9599998266749 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 15166.934868603816,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 65.93290000012075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2925.6330982253776,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.80636000002096 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3167.391777665401,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 315.7171800000924 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67018.88534643721,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014437933791812325",
+            "extra": "mean: 14.921167292334877 usec\nrounds: 12254"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20696.408234047736,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018782424303077845",
+            "extra": "mean: 48.31756257855875 usec\nrounds: 5585"
           }
         ]
       }
