@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     jwt_expiration_seconds: int = 3600
     use_password_hashing: bool = True  # Enable bcrypt password hashing for InMemoryUserProvider (default: secure)
 
+    # Authorization Fallback Control (OpenAI Codex Finding #1)
+    # SECURITY: Controls whether authorization can fall back to role-based checks when OpenFGA is unavailable
+    # Default: False (fail-closed, secure by default)
+    # Set to True only in development/testing environments to allow degraded authorization
+    allow_auth_fallback: bool = False
+
     # HIPAA Compliance (only required if processing PHI)
     hipaa_integrity_secret: Optional[str] = None
 

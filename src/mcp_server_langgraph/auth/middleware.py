@@ -125,6 +125,7 @@ class AuthMiddleware:
         openfga_client: Optional[OpenFGAClient] = None,
         user_provider: Optional[UserProvider] = None,
         session_store: Optional[SessionStore] = None,
+        settings: Optional[Any] = None,
     ):
         """
         Initialize AuthMiddleware
@@ -135,10 +136,12 @@ class AuthMiddleware:
             openfga_client: OpenFGA client for authorization
             user_provider: User provider instance (defaults to InMemoryUserProvider for backward compatibility)
             session_store: Session store for session-based authentication (optional)
+            settings: Application settings (for authorization fallback control)
         """
         self.secret_key = secret_key
         self.openfga = openfga_client
         self.session_store = session_store
+        self.settings = settings
 
         # Use provided user provider or default to in-memory for backward compatibility
         if user_provider is None:
@@ -159,6 +162,7 @@ class AuthMiddleware:
                 "provider_type": type(user_provider).__name__,
                 "openfga_enabled": openfga_client is not None,
                 "session_enabled": session_store is not None,
+                "allow_auth_fallback": getattr(settings, "allow_auth_fallback", None) if settings else None,
             },
         )
 
@@ -239,8 +243,52 @@ class AuthMiddleware:
                     # Fail closed - deny access on error
                     return False
 
-            # Fallback: simple permission check
-            logger.warning("OpenFGA not available, using fallback authorization")
+            # SECURITY CONTROL (OpenAI Codex Finding #1): Check if fallback authorization is allowed
+            # When OpenFGA is not available, check configuration to determine if we should:
+            # 1. Fail closed (deny all access) - secure default for production
+            # 2. Fall back to role-based checks - only if explicitly enabled for dev/test
+
+            allow_fallback = getattr(self.settings, "allow_auth_fallback", False) if self.settings else False
+            environment = getattr(self.settings, "environment", "production") if self.settings else "production"
+
+            # Defense in depth: NEVER allow fallback in production, even if misconfigured
+            if environment == "production":
+                logger.error(
+                    "Authorization DENIED: OpenFGA unavailable in production environment. "
+                    "Fallback authorization is not permitted in production for security reasons.",
+                    extra={
+                        "user_id": user_id,
+                        "relation": relation,
+                        "resource": resource,
+                        "environment": environment,
+                        "allow_auth_fallback": allow_fallback,
+                    },
+                )
+                return False
+
+            # Check if fallback is explicitly enabled
+            if not allow_fallback:
+                logger.warning(
+                    "Authorization DENIED: OpenFGA unavailable and fallback authorization is disabled. "
+                    "Set ALLOW_AUTH_FALLBACK=true to enable role-based fallback in development/test.",
+                    extra={
+                        "user_id": user_id,
+                        "relation": relation,
+                        "resource": resource,
+                        "allow_auth_fallback": allow_fallback,
+                        "environment": environment,
+                    },
+                )
+                return False
+
+            # Fallback: simple permission check (only when explicitly allowed in non-production)
+            logger.warning(
+                "OpenFGA not available, using fallback authorization (explicitly enabled)",
+                extra={
+                    "allow_auth_fallback": allow_fallback,
+                    "environment": environment,
+                },
+            )
 
             # Extract username from user_id
             username = user_id.split(":")[-1] if ":" in user_id else user_id

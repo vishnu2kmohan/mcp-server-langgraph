@@ -73,6 +73,67 @@ def get_openfga_client() -> Optional[OpenFGAClient]:
     return _openfga_client
 
 
+def validate_production_auth_config(settings_obj) -> None:
+    """
+    Validate that production deployments have proper authorization configured.
+
+    SECURITY: This function prevents production deployments from running with degraded
+    authorization when OpenFGA is not configured and fallback is disabled.
+
+    Implements remediation for OpenAI Codex Finding #1: Authorization Degradation
+
+    Args:
+        settings_obj: Settings object to validate
+
+    Raises:
+        RuntimeError: If production environment lacks required authorization infrastructure
+
+    References:
+        - tests/security/test_authorization_fallback_controls.py
+        - CWE-862: Missing Authorization
+    """
+    if settings_obj.environment != "production":
+        # Only enforce for production environment
+        return
+
+    # Check if OpenFGA is configured
+    openfga_configured = bool(settings_obj.openfga_store_id and settings_obj.openfga_model_id)
+
+    # Check if fallback is allowed
+    allow_fallback = getattr(settings_obj, "allow_auth_fallback", False)
+
+    # Production MUST have either:
+    # 1. OpenFGA properly configured, OR
+    # 2. Fallback explicitly disabled (fail-closed)
+    if not openfga_configured and not allow_fallback:
+        # This is the secure configuration - production with no OpenFGA will deny all auth requests
+        # This is intentional fail-closed behavior
+        from mcp_server_langgraph.observability.telemetry import logger
+
+        logger.warning(
+            "Production deployment without OpenFGA will deny all authorization requests. "
+            "This is secure fail-closed behavior. Configure OpenFGA for production use.",
+            extra={
+                "environment": settings_obj.environment,
+                "openfga_configured": openfga_configured,
+                "allow_auth_fallback": allow_fallback,
+            },
+        )
+        # This is actually a valid secure configuration, so we'll allow it
+        # The authorization will just deny everything, which is secure
+        return
+
+    if not openfga_configured and allow_fallback:
+        # SECURITY ERROR: Production with fallback enabled but no OpenFGA
+        raise RuntimeError(
+            "SECURITY ERROR: Production deployment requires OpenFGA authorization infrastructure. "
+            f"OpenFGA is not configured (store_id: {settings_obj.openfga_store_id}, "
+            f"model_id: {settings_obj.openfga_model_id}) but ALLOW_AUTH_FALLBACK=true. "
+            "This configuration would allow degraded role-based authorization in production. "
+            "Either: (1) Configure OpenFGA properly, or (2) Set ALLOW_AUTH_FALLBACK=false to fail-closed."
+        )
+
+
 def get_service_principal_manager(
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
