@@ -581,7 +581,7 @@ def test_ci_cd_validation_suite_info():
 
     Test Categories:
         - Kustomize Configuration Validation (3 tests)
-        - GitHub Actions Workflow Validation (3 tests)
+        - GitHub Actions Workflow Validation (4 tests)
         - Docker Compose Infrastructure Validation (2 tests)
 
     Running:
