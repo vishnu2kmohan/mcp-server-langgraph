@@ -223,6 +223,25 @@ repos:
           Validates that all pytest.mark.* decorators used in tests are registered
           in pyproject.toml. Prevents "PytestUnknownMarkWarning" errors in CI.
 
+      - id: validate-fixture-organization
+        name: Validate Pytest Fixture Organization (No Duplicates)
+        entry: python -m pytest tests/test_fixture_organization.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^tests/.*\.py$
+        always_run: false  # Only run when test files change
+        description: |
+          Prevents duplicate autouse fixtures across test files.
+
+          Issue fixed: 25 duplicate init_test_observability fixtures were found
+          across test modules, causing duplicate initialization overhead.
+
+          Best practice: Module/session-scoped autouse fixtures should be defined
+          in tests/conftest.py to avoid initialization conflicts and improve test
+          performance. This hook ensures fixtures remain consolidated.
+
+          See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2

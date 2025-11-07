@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: mcp-server-langgraph-network-policy
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   podSelector:
     matchLabels:
@@ -108,7 +108,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: deny-all-ingress-default
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   podSelector: {}
   policyTypes:

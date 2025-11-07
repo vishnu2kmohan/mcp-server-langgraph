@@ -18,7 +18,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          name: ingress-nginx
+          kubernetes.io/metadata.name: ingress-nginx
     ports:
     - protocol: TCP
       port: 8000
@@ -34,7 +34,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          name: monitoring
+          kubernetes.io/metadata.name: monitoring
     ports:
     - protocol: TCP
       port: 8000
@@ -44,7 +44,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: kube-system
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP
       port: 53
@@ -67,9 +67,16 @@ spec:
     - protocol: TCP
       port: 4317
 
-  # Allow external API calls (Anthropic, Infisical)
+  # Allow external API calls (Anthropic, OpenAI, Google AI, Infisical, etc.)
+  # This permits egress to public internet for LLM providers and secrets management
   - to:
-    - namespaceSelector: {}
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32  # Block cloud metadata service
+        - 10.0.0.0/8          # Block private networks
+        - 172.16.0.0/12
+        - 192.168.0.0/16
     ports:
     - protocol: TCP
       port: 443

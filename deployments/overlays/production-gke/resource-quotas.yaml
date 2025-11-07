@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: mcp-production-quota
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   hard:
     # Compute resources
@@ -27,7 +27,7 @@ apiVersion: v1
 kind: LimitRange
 metadata:
   name: mcp-production-limits
-  namespace: mcp-production
+  namespace: production-mcp-server-langgraph
 spec:
   limits:
   # Container limits

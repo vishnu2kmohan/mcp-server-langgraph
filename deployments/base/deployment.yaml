@@ -548,11 +548,12 @@ spec:
         emptyDir: {}
 
       # Topology spread constraints for zone distribution
-      # Ensures pods are evenly distributed across availability zones
+      # Prefers pods evenly distributed across zones (compatible with single-zone clusters)
+      # For production multi-zone requirements, override in production overlay
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway
         labelSelector:
           matchLabels:
             app: mcp-server-langgraph
@@ -564,21 +565,23 @@ spec:
             app: mcp-server-langgraph
 
       # Affinity rules for high availability
-      # Using required anti-affinity for production-grade HA
+      # Prefers spreading across zones and nodes (compatible with single-zone clusters)
+      # For production multi-zone requirements, override in production overlay
       affinity:
         podAntiAffinity:
-          # Required: Do not schedule pods on the same zone
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - mcp-server-langgraph
-            topologyKey: topology.kubernetes.io/zone
-          # Preferred: Try to spread across different nodes
+          # Preferred: Try to spread across different zones
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mcp-server-langgraph
+              topologyKey: topology.kubernetes.io/zone
+          # Preferred: Try to spread across different nodes
+          - weight: 50
             podAffinityTerm:
               labelSelector:
                 matchExpressions:

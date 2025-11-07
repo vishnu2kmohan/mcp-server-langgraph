@@ -10,7 +10,13 @@ resources:
   - deployment.yaml
   - service.yaml
   - configmap.yaml
-  - secret.yaml
+  # NOTE: secret.yaml is intentionally excluded from base to prevent deployment
+  # of placeholder values. Secrets must be managed via:
+  # 1. External Secrets Operator (recommended for production)
+  # 2. Sealed Secrets
+  # 3. Cloud-native secret management (GCP Secret Manager, AWS Secrets Manager, etc.)
+  # 4. Manual overlay patches with actual values (dev/testing only)
+  # See secret.yaml for template and required keys
   - serviceaccount.yaml
   - hpa.yaml
   - pdb.yaml
