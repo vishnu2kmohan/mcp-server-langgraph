@@ -113,8 +113,18 @@ def pytest_configure(config):
 
     This hook is called during pytest initialization.
     """
-    # Only run if we're actually collecting/running tests, not for --help etc.
-    if config.option.collectonly or config.getoption("--help", default=False):
+    # Only run if we're actually collecting/running tests, not for informational commands
+    # Defense-in-depth: explicitly guard all informational CLI modes
+    if any(
+        [
+            config.option.collectonly,
+            config.getoption("--help", default=False),
+            config.getoption("--version", default=False),
+            config.getoption("--markers", default=False),
+            config.getoption("--fixtures", default=False),
+            config.getoption("--fixtures-per-test", default=False),
+        ]
+    ):
         return
 
     # Register the plugin

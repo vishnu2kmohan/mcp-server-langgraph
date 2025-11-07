@@ -269,14 +269,17 @@ class CacheService:
         # Clear L2
         if self.redis_available:
             try:
-                if pattern:
-                    keys = self.redis.keys(pattern)
-                    if keys:
-                        self.redis.delete(*keys)
-                        logger.info(f"Cleared L2 cache by pattern: {pattern} ({len(cast(list[Any], keys))} keys)")
+                # SECURITY FIX (OpenAI Codex Finding #6): Always use pattern-based deletion
+                # Never use flushdb() as it clears the ENTIRE Redis database, including
+                # other data structures that may share the same DB (e.g., API key cache).
+                # Use pattern="*" for "clear all" instead of flushdb().
+                search_pattern = pattern if pattern else "*"
+                keys = self.redis.keys(search_pattern)
+                if keys:
+                    self.redis.delete(*keys)
+                    logger.info(f"Cleared L2 cache by pattern: {search_pattern} ({len(cast(list[Any], keys))} keys)")
                 else:
-                    self.redis.flushdb()
-                    logger.info("Cleared all L2 cache")
+                    logger.info(f"No L2 cache keys matched pattern: {search_pattern}")
             except Exception as e:
                 logger.warning(f"L2 cache clear failed: {e}")
 

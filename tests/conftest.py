@@ -1,36 +1,44 @@
 """Pytest configuration and shared fixtures"""
 
 # Import fixture organization enforcement plugin
+# Must be defined before imports (pytest requirement)
 pytest_plugins = ["tests.conftest_fixtures_plugin"]
 
-import asyncio
-import logging
-import os
-import socket
-import sys
-import time
-import warnings
-from datetime import datetime, timedelta, timezone
-from typing import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import socket  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+import warnings  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
+from typing import AsyncGenerator, Generator  # noqa: E402
+from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-# Guard freezegun import - it's a dev dependency that may not be installed
+# Guard optional dev dependencies - may not be installed in all environments
 try:
-    from freezegun import freeze_time
+    from freezegun import freeze_time  # noqa: E402
 
     FREEZEGUN_AVAILABLE = True
 except ImportError:
     FREEZEGUN_AVAILABLE = False
     freeze_time = None  # Define as None for type checking
 
-from hypothesis import settings
-from langchain_core.messages import HumanMessage
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+try:
+    from hypothesis import settings  # noqa: E402
+
+    HYPOTHESIS_AVAILABLE = True
+except ImportError:
+    HYPOTHESIS_AVAILABLE = False
+    settings = None  # Define as None for type checking
+
+from langchain_core.messages import HumanMessage  # noqa: E402
+from opentelemetry import trace  # noqa: E402
+from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor  # noqa: E402
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter  # noqa: E402
 
 # Set minimal test environment variables
 # With container pattern, we no longer need to set all these before imports!
