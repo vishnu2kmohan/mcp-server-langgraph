@@ -126,9 +126,26 @@ def get_api_key_manager(
         if settings.api_key_cache_enabled and settings.redis_url:
             try:
                 import redis.asyncio as redis
+                from urllib.parse import urlparse, urlunparse
 
                 # Build Redis URL with correct database number
-                redis_url_with_db = f"{settings.redis_url}/{settings.api_key_cache_db}"
+                # Parse the URL to handle existing database numbers, trailing slashes, query params
+                parsed = urlparse(settings.redis_url)
+
+                # Remove existing database number from path (if present)
+                # Redis URL path is typically empty or /db_number
+                # We'll replace it with the configured database number
+                new_path = f"/{settings.api_key_cache_db}"
+
+                # Reconstruct URL with new database number
+                redis_url_with_db = urlunparse((
+                    parsed.scheme,      # redis:// or rediss://
+                    parsed.netloc,      # host:port
+                    new_path,           # /db_number
+                    parsed.params,      # unused in Redis URLs
+                    parsed.query,       # query parameters (if any)
+                    parsed.fragment     # fragment (if any)
+                ))
 
                 # Create Redis client with configured credentials
                 redis_client = redis.from_url(

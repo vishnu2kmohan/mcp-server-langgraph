@@ -17,27 +17,9 @@ class TestSearchKnowledgeBase:
 
     Note: All tests in this class run in the same xdist worker to prevent
     shared state issues with settings/metrics mocking in parallel execution.
+
+    Observability is initialized via session-scoped fixture in conftest.py.
     """
-
-    @pytest.fixture(autouse=True)
-    def setup_method(self):
-        """Ensure observability is initialized and clean state before each test"""
-        from mcp_server_langgraph.core.config import Settings
-        from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
-
-        # Ensure observability is initialized for xdist workers
-        # This provides defense-in-depth beyond the session-scoped fixture
-        if not is_initialized():
-            test_settings = Settings(
-                log_format="text",
-                enable_file_logging=False,
-                langsmith_tracing=False,
-                observability_backend="opentelemetry",
-            )
-            init_observability(settings=test_settings, enable_file_logging=False)
-
-        yield
-        # Cleanup after each test (if needed)
 
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     def test_search_with_query(self, mock_settings):

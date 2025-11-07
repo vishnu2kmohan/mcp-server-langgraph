@@ -431,6 +431,61 @@ def test_with_mock(mock_llm_factory):
 - Easier to add authentication/authorization test permutations
 - Reduces boilerplate code
 
+### Fixture Organization Best Practices (CRITICAL)
+
+**⚠️ IMPORTANT**: Session/module-scoped autouse fixtures MUST be in `tests/conftest.py`
+
+This rule is enforced automatically via:
+- Pre-commit hook: `validate-fixture-organization`
+- Runtime plugin: `tests/conftest_fixtures_plugin.py`
+- Test validation: `tests/test_fixture_organization.py`
+
+**✅ CORRECT** - Autouse fixture in conftest.py:
+```python
+# tests/conftest.py
+@pytest.fixture(scope="session", autouse=True)
+def init_test_observability():
+    """Initialize observability for all tests."""
+    # Runs once per session automatically
+    yield
+```
+
+**❌ INCORRECT** - Duplicate autouse fixtures:
+```python
+# tests/some_module/test_feature.py
+@pytest.fixture(scope="module", autouse=True)  # ❌ DON'T DO THIS!
+def init_test_observability():
+    # This creates duplicates and causes issues
+    yield
+```
+
+**Why this matters:**
+- **Performance**: Duplicates cause unnecessary re-initialization (25× observed)
+- **Maintainability**: Changes needed in multiple places
+- **Reliability**: Potential race conditions and state pollution
+
+**Test-specific fixtures should NOT be autouse:**
+```python
+# ✅ GOOD - Explicit fixture usage
+def test_my_feature(test_circuit_breaker_config):
+    # Fixture only used when needed
+    pass
+
+# ✅ GOOD - Module-wide fixture usage
+pytestmark = pytest.mark.usefixtures("test_circuit_breaker_config")
+
+def test_feature_a():
+    pass
+
+def test_feature_b():
+    pass
+```
+
+**References:**
+- ADR-0043: Pytest Fixture Consolidation (`adr/adr-0043-pytest-fixture-consolidation.md`)
+- Evidence Report: `docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md`
+- Global Guidelines: `~/.claude/CLAUDE.md` (Pytest Fixture Best Practices)
+
 ## Test Environment Variables
 
 For integration tests, configure via `.env`:
@@ -882,4 +937,4 @@ make test-quick-new         # Quick parallel check
 - **Project Testing Guide**: `../docs/development/testing.md`
 - **Contributing Guide**: `../.github/CONTRIBUTING.md`
 
-**Last Updated**: 2025-10-31
+**Last Updated**: 2025-11-07 (Fixture Organization Best Practices added)

@@ -1,5 +1,8 @@
 """Pytest configuration and shared fixtures"""
 
+# Import fixture organization enforcement plugin
+pytest_plugins = ["tests.conftest_fixtures_plugin"]
+
 import asyncio
 import logging
 import os
@@ -1078,6 +1081,46 @@ def _reset_bulkheads(reset_fn):
             reset_fn(bulkhead_name)
         except Exception:
             pass  # Ignore errors if bulkhead not initialized
+
+
+@pytest.fixture
+def test_circuit_breaker_config():
+    """
+    Configure circuit breaker with minimal timeout for testing.
+
+    Use this fixture in tests that need fast circuit breaker recovery.
+    By default, circuit breakers have 60s timeout which is too slow for tests.
+    This fixture configures 1s timeout for faster test iteration.
+
+    Usage:
+        def test_my_feature(test_circuit_breaker_config):
+            # Circuit breaker now has 1s timeout
+            pass
+    """
+    from mcp_server_langgraph.resilience.circuit_breaker import _circuit_breakers
+    from mcp_server_langgraph.resilience.config import CircuitBreakerConfig, ResilienceConfig, set_resilience_config
+
+    # Set up test-friendly resilience config with very short timeout
+    test_config = ResilienceConfig(
+        enabled=True,
+        circuit_breakers={
+            "llm": CircuitBreakerConfig(
+                name="llm",
+                fail_max=5,
+                timeout_duration=1,  # 1 second instead of 60 - allows quick recovery in tests
+            ),
+        },
+    )
+    set_resilience_config(test_config)
+
+    # Clear any existing circuit breaker instances to force recreation with new config
+    # This is critical for CI where state can pollute between sequential tests
+    if "llm" in _circuit_breakers:
+        del _circuit_breakers["llm"]
+
+    yield
+
+    # Cleanup handled by reset_resilience_state autouse fixture
 
 
 @pytest.fixture(autouse=True)

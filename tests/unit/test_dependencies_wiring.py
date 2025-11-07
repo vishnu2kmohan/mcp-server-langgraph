@@ -287,6 +287,119 @@ class TestAPIKeyManagerRedisCacheWiring:
                 assert _manager.cache_enabled is True
 
 
+    def test_redis_url_handles_trailing_slash(self):
+        """
+        Test that Redis URL construction handles trailing slashes correctly.
+
+        Bug: f"{redis_url}/{db}" produces redis://localhost:6379//2
+        when redis_url has trailing slash.
+        """
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
+            mock_settings.api_key_cache_enabled = True
+            mock_settings.redis_url = "redis://localhost:6379/"  # Trailing slash
+            mock_settings.redis_password = None
+            mock_settings.redis_ssl = False
+            mock_settings.api_key_cache_db = 2
+            mock_settings.api_key_cache_ttl = 3600
+            mock_settings.keycloak_server_url = "http://localhost:8082"
+            mock_settings.keycloak_realm = "test"
+            mock_settings.keycloak_client_id = "test"
+            mock_settings.keycloak_client_secret = "secret"
+            mock_settings.keycloak_admin_username = "admin"
+            mock_settings.keycloak_admin_password = "admin-password"
+
+            with patch("redis.asyncio.from_url") as mock_redis:
+                mock_redis.return_value = Mock()
+
+                # Act
+                _manager = get_api_key_manager()
+
+                # Assert: URL should be normalized (no double slash)
+                called_url = mock_redis.call_args[0][0]
+                assert called_url == "redis://localhost:6379/2"
+                assert "//" not in called_url.split("://")[1]  # No double slashes after protocol
+
+    def test_redis_url_handles_existing_database_number(self):
+        """
+        Test that Redis URL with existing database number doesn't produce invalid URL.
+
+        Bug: f"redis://localhost:6379/0/{db}" produces redis://localhost:6379/0/2
+        which is INVALID for redis.from_url().
+
+        Expected: Should strip existing database number and replace with configured one.
+        """
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
+            mock_settings.api_key_cache_enabled = True
+            mock_settings.redis_url = "redis://localhost:6379/0"  # Has database 0
+            mock_settings.redis_password = None
+            mock_settings.redis_ssl = False
+            mock_settings.api_key_cache_db = 2  # Want database 2
+            mock_settings.api_key_cache_ttl = 3600
+            mock_settings.keycloak_server_url = "http://localhost:8082"
+            mock_settings.keycloak_realm = "test"
+            mock_settings.keycloak_client_id = "test"
+            mock_settings.keycloak_client_secret = "secret"
+            mock_settings.keycloak_admin_username = "admin"
+            mock_settings.keycloak_admin_password = "admin-password"
+
+            with patch("redis.asyncio.from_url") as mock_redis, \
+                 patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class:
+                mock_redis.return_value = Mock()
+                mock_manager = Mock()
+                mock_manager.cache_enabled = True
+                mock_manager_class.return_value = mock_manager
+
+                # Act
+                _manager = get_api_key_manager()
+
+                # Assert: URL should have ONLY the configured database (2), not 0/2
+                called_url = mock_redis.call_args[0][0]
+                assert called_url == "redis://localhost:6379/2"
+                assert "/0/2" not in called_url  # Should not have double database
+
+    def test_redis_url_handles_query_parameters(self):
+        """
+        Test that Redis URLs with query parameters are preserved.
+
+        Example: redis://localhost:6379?timeout=5
+        Should become: redis://localhost:6379/2?timeout=5
+        """
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+
+        with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
+            mock_settings.api_key_cache_enabled = True
+            mock_settings.redis_url = "redis://localhost:6379?timeout=5"
+            mock_settings.redis_password = None
+            mock_settings.redis_ssl = False
+            mock_settings.api_key_cache_db = 2
+            mock_settings.api_key_cache_ttl = 3600
+            mock_settings.keycloak_server_url = "http://localhost:8082"
+            mock_settings.keycloak_realm = "test"
+            mock_settings.keycloak_client_id = "test"
+            mock_settings.keycloak_client_secret = "secret"
+            mock_settings.keycloak_admin_username = "admin"
+            mock_settings.keycloak_admin_password = "admin-password"
+
+            with patch("redis.asyncio.from_url") as mock_redis, \
+                 patch("mcp_server_langgraph.core.dependencies.APIKeyManager") as mock_manager_class:
+                mock_redis.return_value = Mock()
+                mock_manager = Mock()
+                mock_manager.cache_enabled = True
+                mock_manager_class.return_value = mock_manager
+
+                # Act
+                _manager = get_api_key_manager()
+
+                # Assert: Query parameters should be preserved
+                called_url = mock_redis.call_args[0][0]
+                assert "/2" in called_url
+                assert "timeout=5" in called_url
+
+
 @pytest.mark.integration
 class TestDependencyStartupSmoke:
     """Integration smoke tests that would have caught the reported bugs"""

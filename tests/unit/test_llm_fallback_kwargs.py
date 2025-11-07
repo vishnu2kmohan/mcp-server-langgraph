@@ -11,43 +11,9 @@ import pytest
 from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
-from mcp_server_langgraph.resilience.circuit_breaker import _circuit_breakers, reset_circuit_breaker
-from mcp_server_langgraph.resilience.config import CircuitBreakerConfig, ResilienceConfig, set_resilience_config
 
-
-@pytest.fixture(autouse=True)
-def configure_test_circuit_breaker():
-    """Configure circuit breaker with minimal timeout for testing."""
-    # Set up test-friendly resilience config with very short timeout
-    test_config = ResilienceConfig(
-        enabled=True,
-        circuit_breakers={
-            "llm": CircuitBreakerConfig(
-                name="llm",
-                fail_max=5,
-                timeout_duration=1,  # 1 second instead of 60 - allows quick recovery in tests
-            ),
-        },
-    )
-    set_resilience_config(test_config)
-
-    # Clear any existing circuit breaker instances to force recreation with new config
-    # This is critical for CI where state can pollute between sequential tests
-    if "llm" in _circuit_breakers:
-        del _circuit_breakers["llm"]
-
-    yield
-
-    # Always reset and clear circuit breaker after test to prevent state pollution
-    # This ensures the next test starts with a clean slate
-    try:
-        reset_circuit_breaker("llm")
-    except Exception:
-        pass  # Ignore errors if circuit breaker doesn't exist
-
-    # Clear circuit breaker instance after test
-    if "llm" in _circuit_breakers:
-        del _circuit_breakers["llm"]
+# Use shared circuit breaker config from conftest.py
+pytestmark = [pytest.mark.unit, pytest.mark.usefixtures("test_circuit_breaker_config")]
 
 
 @pytest.fixture
