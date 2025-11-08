@@ -327,6 +327,67 @@ class TestGitHubActionsPermissions:
             pytest.skip(warning_msg)  # Skip instead of fail for warnings
 
 
+class TestGitHubActionsWorkflowDependencies:
+    """Validate that workflow jobs have correct dependencies installed."""
+
+    def test_validate_workflows_job_has_required_dependencies(self):
+        """
+        Ensure validate-workflows job uses setup-python-deps composite action
+        instead of manually installing only pytest and pyyaml.
+
+        INVALID: pip install pytest pyyaml (missing langchain_core and other deps)
+        VALID: Uses ./.github/actions/setup-python-deps with extras: 'dev'
+
+        This test validates Finding #1 from Codex report is fixed.
+        """
+        ci_workflow = Path(".github/workflows/ci.yaml")
+        if not ci_workflow.exists():
+            pytest.skip("ci.yaml not found")
+
+        content = ci_workflow.read_text()
+
+        # Parse YAML to get job structure
+        import yaml
+
+        workflow = yaml.safe_load(content)
+
+        # Check if validate-workflows job exists
+        jobs = workflow.get("jobs", {})
+        validate_job = jobs.get("validate-workflows")
+
+        if not validate_job:
+            pytest.skip("validate-workflows job not found")
+
+        # Check steps
+        steps = validate_job.get("steps", [])
+
+        # Find dependency setup step
+        uses_composite_action = False
+        uses_manual_pip = False
+
+        for step in steps:
+            # Check if using setup-python-deps composite action
+            if step.get("uses", "").startswith("./.github/actions/setup-python-deps"):
+                uses_composite_action = True
+
+            # Check if manually installing pytest/pyyaml only
+            if "run" in step:
+                run_commands = step["run"]
+                if "pip install pytest pyyaml" in run_commands and "langchain" not in run_commands:
+                    uses_manual_pip = True
+
+        assert not uses_manual_pip, (
+            "validate-workflows job uses 'pip install pytest pyyaml' which is missing dependencies. "
+            "This causes ModuleNotFoundError for langchain_core when tests import project modules. "
+            "Use ./.github/actions/setup-python-deps composite action with extras: 'dev' instead."
+        )
+
+        assert uses_composite_action or not uses_manual_pip, (
+            "validate-workflows job should use ./.github/actions/setup-python-deps composite action "
+            "to install all required dependencies including langchain_core."
+        )
+
+
 class TestGitHubActionsStructure:
     """Validate overall workflow structure and best practices."""
 

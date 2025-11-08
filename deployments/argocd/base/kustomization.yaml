@@ -9,15 +9,18 @@ resources:
   - namespace.yaml
   - ingress.yaml
 
-patches:
-  # Patch server deployment for custom configurations
-  - patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/command/-
-        value: --insecure
-    target:
-      kind: Deployment
-      name: argocd-server
+# TODO: Fix ArgoCD server patch - command field doesn't exist in base manifest
+# This patch fails with: "add operation does not apply: doc is missing path"
+# Need to either: 1) use 'replace' with full command array, or 2) add command field first
+# patches:
+#   # Patch server deployment for custom configurations
+#   - patch: |-
+#       - op: add
+#         path: /spec/template/spec/containers/0/command/-
+#         value: --insecure
+#     target:
+#       kind: Deployment
+#       name: argocd-server
 
 configMapGenerator:
   - name: argocd-cm

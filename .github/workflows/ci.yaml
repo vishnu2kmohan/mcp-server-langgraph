@@ -109,20 +109,17 @@ jobs:
           actionlint -color -shellcheck= .github/workflows/*.{yml,yaml}
           echo "✅ All workflows are valid"
 
-      - name: Set up Python for workflow tests
-        uses: actions/setup-python@v5
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install test dependencies
-        run: |
-          pip install pytest pyyaml
-          echo "✓ Test dependencies installed"
+          extras: 'dev'
+          cache-key-prefix: 'workflow-validation'
 
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          python -m pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
+          uv run pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
   # ============================================================================
@@ -264,7 +261,11 @@ jobs:
     - name: List coverage files
       run: |
         echo "=== Coverage artifacts downloaded ==="
-        find coverage-artifacts/ -name "*.xml" -type f
+        if [ -d coverage-artifacts/ ]; then
+          find coverage-artifacts/ -name "*.xml" -type f
+        else
+          echo "⚠️  No coverage-artifacts directory found (download may have failed)"
+        fi
 
     - name: Merge coverage reports
       run: |
