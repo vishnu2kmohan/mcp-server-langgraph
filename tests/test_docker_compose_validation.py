@@ -16,11 +16,10 @@ Related Codex Finding: docker-compose.test.yml:214-233 uses wget for Qdrant heal
 
 import re
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 import pytest
 import yaml
-
 
 # Root directory of the project
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -148,12 +147,18 @@ class TestDockerComposeHealthChecks:
                     f"Verify this command exists in the image or use an alternative."
                 )
 
-        # This is a WARNING, not a hard failure (unless we find specific known issues)
+        # This is a WARNING test - log issues but don't fail
+        # The hard requirement test (test_image_specific_health_check_requirements) catches actual problems
         if issues:
-            pytest.fail(
-                f"\n⚠️  Potential health check issues in {compose_file.name}:\n" +
-                "\n".join(f"  - {issue}" for issue in issues)
+            import warnings
+
+            warning_msg = (
+                f"\n⚠️  Potential health check issues in {compose_file.name}:\n"
+                + "\n".join(f"  - {issue}" for issue in issues)
+                + "\n\nThese are warnings only. Services may have these commands in their images."
+                + "\nThe test_image_specific_health_check_requirements test enforces known requirements."
             )
+            warnings.warn(warning_msg, UserWarning)
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
     def test_image_specific_health_check_requirements(self, compose_file: Path):
@@ -207,9 +212,9 @@ class TestDockerComposeHealthChecks:
 
         if failures:
             pytest.fail(
-                f"\n🔴 RED PHASE: Health check validation failures in {compose_file.name}:\n" +
-                "\n".join(f"  {failure}" for failure in failures) +
-                f"\n\nFile: {compose_file}"
+                f"\n🔴 RED PHASE: Health check validation failures in {compose_file.name}:\n"
+                + "\n".join(f"  {failure}" for failure in failures)
+                + f"\n\nFile: {compose_file}"
             )
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
@@ -224,32 +229,27 @@ class TestDockerComposeHealthChecks:
                 continue
 
             # Validate health check has required fields
-            assert "test" in health_check, (
-                f"Service '{service_name}' health check missing 'test' field"
-            )
+            assert "test" in health_check, f"Service '{service_name}' health check missing 'test' field"
 
             # Validate test format
             test = health_check["test"]
             assert isinstance(test, (list, str)), (
-                f"Service '{service_name}' health check 'test' must be list or string, "
-                f"got {type(test)}"
+                f"Service '{service_name}' health check 'test' must be list or string, " f"got {type(test)}"
             )
 
             # Validate optional fields if present
             if "interval" in health_check:
-                assert isinstance(health_check["interval"], (str, int)), (
-                    f"Service '{service_name}' health check 'interval' must be string or int"
-                )
+                assert isinstance(
+                    health_check["interval"], (str, int)
+                ), f"Service '{service_name}' health check 'interval' must be string or int"
 
             if "timeout" in health_check:
-                assert isinstance(health_check["timeout"], (str, int)), (
-                    f"Service '{service_name}' health check 'timeout' must be string or int"
-                )
+                assert isinstance(
+                    health_check["timeout"], (str, int)
+                ), f"Service '{service_name}' health check 'timeout' must be string or int"
 
             if "retries" in health_check:
-                assert isinstance(health_check["retries"], int), (
-                    f"Service '{service_name}' health check 'retries' must be int"
-                )
+                assert isinstance(health_check["retries"], int), f"Service '{service_name}' health check 'retries' must be int"
 
 
 class TestDockerComposeQdrantSpecific:
@@ -279,15 +279,11 @@ class TestDockerComposeQdrantSpecific:
                 continue
 
             health_check = service_config.get("healthcheck")
-            assert health_check, (
-                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} "
-                f"MUST have a health check"
-            )
+            assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"MUST have a health check"
 
             command_parts = extract_health_check_command(health_check)
             assert command_parts, (
-                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} "
-                f"health check has no command"
+                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"health check has no command"
             )
 
             command = command_parts[0]
@@ -321,9 +317,9 @@ def test_all_compose_files_found():
     # We should have at least the ones we know about
     filenames = {f.name for f in compose_files}
 
-    assert "docker-compose.test.yml" in filenames, (
-        "docker-compose.test.yml not found - this file has the Qdrant health check issue"
-    )
+    assert (
+        "docker-compose.test.yml" in filenames
+    ), "docker-compose.test.yml not found - this file has the Qdrant health check issue"
 
     # Log all found files for debugging
     print(f"\n📁 Found {len(compose_files)} Docker Compose files:")

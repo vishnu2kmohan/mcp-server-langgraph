@@ -23,7 +23,6 @@ from typing import List, Optional
 import pytest
 import yaml
 
-
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -92,7 +91,8 @@ def get_service_health(compose_file: Path, service_name: str) -> str:
     result = run_docker_compose(
         compose_file,
         "ps",
-        "--format", "json",
+        "--format",
+        "json",
         timeout=10,
     )
 
@@ -101,6 +101,7 @@ def get_service_health(compose_file: Path, service_name: str) -> str:
 
     # Parse JSON output
     import json
+
     try:
         containers = json.loads(result.stdout)
         if not isinstance(containers, list):
@@ -156,9 +157,7 @@ class TestDockerComposeHealthChecksIntegration:
         yield
         # Cleanup happens after test
 
-    def test_qdrant_health_check_works(
-        self, docker_available, docker_compose_available, cleanup_containers
-    ):
+    def test_qdrant_health_check_works(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test that Qdrant container health check works correctly.
 
@@ -177,8 +176,7 @@ class TestDockerComposeHealthChecksIntegration:
             config = yaml.safe_load(f)
 
         qdrant_services = [
-            name for name, service in config.get("services", {}).items()
-            if "qdrant" in service.get("image", "").lower()
+            name for name, service in config.get("services", {}).items() if "qdrant" in service.get("image", "").lower()
         ]
 
         if not qdrant_services:
@@ -190,16 +188,14 @@ class TestDockerComposeHealthChecksIntegration:
         print(f"\n🐳 Starting {qdrant_service} service...")
         result = run_docker_compose(
             compose_file,
-            "up", "-d", qdrant_service,
+            "up",
+            "-d",
+            qdrant_service,
             timeout=60,
         )
 
         if result.returncode != 0:
-            pytest.fail(
-                f"Failed to start {qdrant_service}:\n"
-                f"stdout: {result.stdout}\n"
-                f"stderr: {result.stderr}"
-            )
+            pytest.fail(f"Failed to start {qdrant_service}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
 
         try:
             # Wait for health check to pass
@@ -218,7 +214,8 @@ class TestDockerComposeHealthChecksIntegration:
             # Get container logs for debugging
             logs_result = run_docker_compose(
                 compose_file,
-                "logs", qdrant_service,
+                "logs",
+                qdrant_service,
                 timeout=10,
             )
 
@@ -242,16 +239,16 @@ class TestDockerComposeHealthChecksIntegration:
             print(f"\n🧹 Cleaning up {qdrant_service}...")
             cleanup_result = run_docker_compose(
                 compose_file,
-                "down", "-v", "--remove-orphans",
+                "down",
+                "-v",
+                "--remove-orphans",
                 timeout=30,
             )
 
             if cleanup_result.returncode != 0:
                 print(f"Warning: Cleanup had issues:\n{cleanup_result.stderr}")
 
-    def test_minimal_compose_health_checks(
-        self, docker_available, docker_compose_available, cleanup_containers
-    ):
+    def test_minimal_compose_health_checks(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test health checks in docker-compose.minimal.yml if it exists.
 
@@ -267,8 +264,7 @@ class TestDockerComposeHealthChecksIntegration:
             config = yaml.safe_load(f)
 
         services_with_health_checks = [
-            name for name, service in config.get("services", {}).items()
-            if "healthcheck" in service
+            name for name, service in config.get("services", {}).items() if "healthcheck" in service
         ]
 
         if not services_with_health_checks:
@@ -280,16 +276,14 @@ class TestDockerComposeHealthChecksIntegration:
         print(f"\n🐳 Starting {service_name} service from minimal compose...")
         result = run_docker_compose(
             compose_file,
-            "up", "-d", service_name,
+            "up",
+            "-d",
+            service_name,
             timeout=60,
         )
 
         if result.returncode != 0:
-            pytest.fail(
-                f"Failed to start {service_name}:\n"
-                f"stdout: {result.stdout}\n"
-                f"stderr: {result.stderr}"
-            )
+            pytest.fail(f"Failed to start {service_name}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
 
         try:
             print(f"⏳ Waiting for {service_name} to become healthy...")
@@ -309,7 +303,9 @@ class TestDockerComposeHealthChecksIntegration:
             print(f"\n🧹 Cleaning up {service_name}...")
             run_docker_compose(
                 compose_file,
-                "down", "-v", "--remove-orphans",
+                "down",
+                "-v",
+                "--remove-orphans",
                 timeout=30,
             )
 
@@ -355,8 +351,14 @@ def test_health_check_command_availability(docker_available):
         try:
             result = subprocess.run(
                 [
-                    "docker", "run", "--rm", "--entrypoint", "/bin/sh",
-                    image, "-c", f"which {command} || command -v {command}",
+                    "docker",
+                    "run",
+                    "--rm",
+                    "--entrypoint",
+                    "/bin/sh",
+                    image,
+                    "-c",
+                    f"which {command} || command -v {command}",
                 ],
                 capture_output=True,
                 text=True,
@@ -366,31 +368,18 @@ def test_health_check_command_availability(docker_available):
             command_exists = result.returncode == 0
 
             if should_exist and not command_exists:
-                results.append(
-                    f"❌ {description}\n"
-                    f"   Image: {image}\n"
-                    f"   Expected '{command}' to exist but it doesn't"
-                )
+                results.append(f"❌ {description}\n" f"   Image: {image}\n" f"   Expected '{command}' to exist but it doesn't")
             elif not should_exist and command_exists:
                 results.append(
-                    f"⚠️  {description}\n"
-                    f"   Image: {image}\n"
-                    f"   Expected '{command}' NOT to exist but it does"
+                    f"⚠️  {description}\n" f"   Image: {image}\n" f"   Expected '{command}' NOT to exist but it does"
                 )
             else:
                 print(f"✅ {description}")
 
         except subprocess.TimeoutExpired:
-            results.append(
-                f"⏱️  Timeout checking {command} in {image}"
-            )
+            results.append(f"⏱️  Timeout checking {command} in {image}")
         except Exception as e:
-            results.append(
-                f"❌ Error checking {command} in {image}: {e}"
-            )
+            results.append(f"❌ Error checking {command} in {image}: {e}")
 
     if results:
-        pytest.fail(
-            "\n🔴 Health check command availability issues:\n\n" +
-            "\n\n".join(results)
-        )
+        pytest.fail("\n🔴 Health check command availability issues:\n\n" + "\n\n".join(results))

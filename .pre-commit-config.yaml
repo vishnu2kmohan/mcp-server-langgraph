@@ -261,7 +261,7 @@ repos:
 
       - id: validate-fixture-organization
         name: Validate Pytest Fixture Organization (No Duplicates)
-        entry: python -m pytest tests/test_fixture_organization.py -v --tb=short
+        entry: uv run pytest tests/test_fixture_organization.py -v --tb=short
         language: system
         pass_filenames: false
         files: ^tests/.*\.py$
@@ -384,6 +384,28 @@ repos:
           - No overly permissive RBAC rules (wildcards)
 
           Ensures security best practices and prevents privilege escalation.
+
+      # Docker Compose Health Check Validation (TDD)
+      - id: validate-docker-compose-health-checks
+        name: Validate Docker Compose health check configurations
+        entry: uv run pytest tests/test_docker_compose_validation.py::TestDockerComposeQdrantSpecific::test_qdrant_uses_grpc_health_probe -v --tb=short
+        language: system
+        files: ^.*docker-compose.*\.(yaml|yml)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates Docker Compose health check configurations (TDD).
+
+          Critical checks:
+          - Qdrant services MUST use grpc_health_probe (not wget/curl)
+          - Prevents using commands not available in container images
+          - Validates health check syntax and structure
+
+          Background:
+          Qdrant v1.15+ removed wget/curl for security (GitHub issue #3491).
+          This hook prevents health checks from failing due to missing commands.
+
+          Regression prevention for Codex finding: docker-compose.test.yml:227-232
 
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform

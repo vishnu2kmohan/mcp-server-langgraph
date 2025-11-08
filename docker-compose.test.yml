@@ -225,7 +225,9 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6333"]
+      # Use grpc_health_probe (built into Qdrant v1.15+)
+      # Qdrant removed wget/curl for security (GitHub issue #3491)
+      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:6334"]
       interval: 3s
       timeout: 3s
       retries: 10
