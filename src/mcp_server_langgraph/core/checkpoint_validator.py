@@ -146,7 +146,7 @@ class CheckpointConfigValidator:
                 f"Ensure password is percent-encoded per RFC 3986."
             )
 
-    def _find_unencoded_chars(self, password: str) -> set:
+    def _find_unencoded_chars(self, password: str) -> set[str]:
         """Find unencoded special characters in password.
 
         Args:
@@ -155,7 +155,7 @@ class CheckpointConfigValidator:
         Returns:
             Set of unencoded special characters found
         """
-        unencoded = set()
+        unencoded: set[str] = set()
 
         for char in self.RESERVED_CHARS:
             # Skip : as it's used as delimiter
@@ -197,7 +197,7 @@ class CheckpointConfigValidator:
         self,
         url: str,
         password: str,
-        unencoded_chars: set,
+        unencoded_chars: set[str],
     ) -> None:
         """Raise detailed error about unencoded characters.
 

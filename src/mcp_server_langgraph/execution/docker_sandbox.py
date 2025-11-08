@@ -283,8 +283,6 @@ class DockerSandbox(Sandbox):
                 "To enable network access, use network_mode='unrestricted' explicitly."
             )
             return "none"  # Fail closed - deny all network access for security
-        else:
-            return "none"  # Fail closed
 
     def _cleanup_container(self, container: Container) -> None:
         """

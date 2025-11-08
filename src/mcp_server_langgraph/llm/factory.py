@@ -254,8 +254,9 @@ class LLMFactory:
                 formatted.append({"role": "assistant", "content": msg.content})
             elif isinstance(msg, SystemMessage):
                 formatted.append({"role": "system", "content": msg.content})
-            elif isinstance(msg, dict):
+            elif isinstance(msg, dict):  # type: ignore[unreachable]
                 # Handle dict messages (already in correct format or need conversion)
+                # Note: Technically unreachable since msg is BaseMessage, but kept for defensive programming
                 if "role" in msg and "content" in msg:
                     # Already formatted dict
                     formatted.append(msg)

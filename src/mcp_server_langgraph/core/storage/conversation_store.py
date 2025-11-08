@@ -15,7 +15,7 @@ try:
     from redis import Redis
 
     REDIS_AVAILABLE = True
-    RedisType = Redis  # type: type[Redis]
+    RedisType = Redis[str]  # type: type[Redis[str]]
 except ImportError:
     REDIS_AVAILABLE = False
     RedisType = None  # type: ignore[assignment]
@@ -60,7 +60,7 @@ class ConversationStore:
         self.backend = backend.lower()
         self.ttl_seconds = ttl_seconds
         self._memory_store: dict[str, ConversationMetadata] = {}
-        self._redis_client: Optional[Redis] = None
+        self._redis_client: Optional[Redis[str]] = None
 
         if self.backend == "redis":
             if not REDIS_AVAILABLE:

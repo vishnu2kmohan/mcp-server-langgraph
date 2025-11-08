@@ -65,8 +65,8 @@ def validate_session_store_registered() -> tuple[bool, str]:
 
         session_store = get_session_store()
 
-        if session_store is None:
-            return False, "Session store is None despite session auth enabled"
+        # Note: get_session_store() always returns SessionStore (never None per type signature)
+        # If it were to return None, it would have raised an error already in dependency injection
 
         # Check if we're using the fallback (warning in logs indicates this)
         store_type = type(session_store).__name__

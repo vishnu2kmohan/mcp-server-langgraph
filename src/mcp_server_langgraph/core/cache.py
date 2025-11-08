@@ -178,7 +178,7 @@ class CacheService:
             try:
                 data = self.redis.get(key)
                 if data:
-                    value = pickle.loads(cast(bytes, data))  # nosec B301 - Internal cache data only, not user-provided
+                    value = pickle.loads(data)  # nosec B301 - Internal cache data only, not user-provided
 
                     # Promote to L1
                     self.l1_cache[key] = value
