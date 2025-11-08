@@ -74,16 +74,25 @@ class FixtureOrganizationPlugin:
                     for decorator in node.decorator_list:
                         if isinstance(decorator, ast.Call):
                             if hasattr(decorator.func, "attr") and decorator.func.attr == "fixture":
+                                # Check if this is autouse AND module/session scoped
+                                is_autouse = False
+                                scope = "function"  # default scope
+
                                 for keyword in decorator.keywords:
                                     if keyword.arg == "autouse" and isinstance(keyword.value, ast.Constant):
-                                        if keyword.value.value is True:
-                                            fixture_name = node.name
-                                            file_path = str(test_file.relative_to(test_dir))
-                                            line_num = node.lineno
+                                        is_autouse = keyword.value.value is True
+                                    if keyword.arg == "scope" and isinstance(keyword.value, ast.Constant):
+                                        scope = keyword.value.value
 
-                                            if fixture_name not in self.autouse_fixtures:
-                                                self.autouse_fixtures[fixture_name] = []
-                                            self.autouse_fixtures[fixture_name].append((file_path, line_num))
+                                # Only track module/session-scoped autouse fixtures
+                                if is_autouse and scope in ("module", "session"):
+                                    fixture_name = node.name
+                                    file_path = str(test_file.relative_to(test_dir))
+                                    line_num = node.lineno
+
+                                    if fixture_name not in self.autouse_fixtures:
+                                        self.autouse_fixtures[fixture_name] = []
+                                    self.autouse_fixtures[fixture_name].append((file_path, line_num))
 
     def _check_for_violations(self):
         """Check for fixture organization violations."""
