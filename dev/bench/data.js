@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762721062001,
+  "lastUpdate": 1762721153612,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -37398,6 +37398,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016948597610493516",
             "extra": "mean: 58.10480821134953 usec\nrounds: 5334"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "326bc3e78a2634016aa0be06019c17dd38dd6537",
+          "message": "fix(scripts): remove unused variable in Cloud DNS setup script\n\nRemove unused old_ip variable to satisfy shellcheck SC2034.\n\nThe old IP value is not needed for DNS record updates.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T15:43:11-05:00",
+          "tree_id": "090ac5de0a67e3ceac82dd5054e4fa3b810cb5d9",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/326bc3e78a2634016aa0be06019c17dd38dd6537"
+        },
+        "date": 1762721151815,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 161.22233508855547,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009368370361265369",
+            "extra": "mean: 6.202614541283777 msec\nrounds: 109"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 160.58860107058288,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000633119410289608",
+            "extra": "mean: 6.22709204347869 msec\nrounds: 138"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51711.12099354797,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.33820000004971 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 53332.22402313142,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.75038999997969 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50746.6094921168,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.705750000014177 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.39771560755426,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.144093370000178 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.56188745752985,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.11981153000016 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964394372081083,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35732856999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1214933.9684477595,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 823.0899999261965 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13952.699233407757,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 71.67071999987229 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2940.285564061212,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.1030200001287 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3074.0086329849373,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 325.3081299999394 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67680.87609315694,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011392299878388903",
+            "extra": "mean: 14.775222451665451 usec\nrounds: 12596"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20994.59970097724,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001709679290484443",
+            "extra": "mean: 47.63129634490972 usec\nrounds: 5335"
           }
         ]
       }
