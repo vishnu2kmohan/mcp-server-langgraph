@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-config
+  namespace: mcp-server-langgraph
+data:
+  # AWS Region for EKS deployment
+  # UPDATE THIS: Set to your actual AWS region (e.g., us-east-1, us-west-2, eu-west-1)
+  region: "us-east-1"
+
+  # AWS Account ID (for IAM roles, ECR, etc.)
+  # UPDATE THIS: Set to your actual AWS account ID
+  account_id: "123456789012"
+
+  # EKS Cluster Name
+  cluster_name: "mcp-server-eks-cluster"

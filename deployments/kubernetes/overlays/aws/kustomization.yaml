@@ -7,6 +7,7 @@ namespace: mcp-server-langgraph
 resources:
   - ../../../base
   - external-secrets.yaml
+  - aws-config.yaml
 
 # AWS-specific labels
 labels:
@@ -49,7 +50,9 @@ generatorOptions:
   disableNameSuffixHash: false
 
 # Variable replacements (modern Kustomize syntax)
-# TEMPORARILY DISABLED: Missing aws-config ConfigMap (Codex Finding #5 - P1)
+# Codex Finding #5 (P1): aws-config.yaml created for future use
+# Note: AWS_REGION is currently hardcoded in deployment-patch.yaml
+# To use dynamic replacement, uncomment and fix fieldPath syntax
 # replacements:
 #   - source:
 #       kind: ConfigMap
