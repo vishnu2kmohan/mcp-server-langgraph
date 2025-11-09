@@ -55,7 +55,9 @@ data:
   enable_error_reporting: "true"
 
   # GCP-specific
-  gcp_project_id: "YOUR_PROJECT_ID"  # Replace in terraform.tfvars
+  # NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
+  # If using Kustomize, replace PLACEHOLDER_GCP_PROJECT_ID before deploying
+  gcp_project_id: "PLACEHOLDER_GCP_PROJECT_ID"
   gcp_region: "us-central1"
 
   # Feature flags (conservative for production)

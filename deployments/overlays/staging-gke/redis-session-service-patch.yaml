@@ -1,25 +1,28 @@
 ---
-# Transform redis-session service to headless service for Memorystore Redis
+# Transform redis-session service to ExternalName service for Memorystore Redis
 #
 # Replaces the base ClusterIP service (which points to in-cluster redis-session
-# deployment) with a headless service that uses manual Endpoints to point to
-# the external Memorystore Redis instance at 10.138.129.37:6378.
+# deployment) with an ExternalName service that uses Cloud DNS for robust failover.
 #
-# Headless services (clusterIP: None) with manual Endpoints are the correct
-# approach for exposing external IP addresses. ExternalName services require
-# DNS names, not IP addresses.
+# IMPORTANT: Configure Cloud DNS record before deploying:
+#   redis-session-staging.internal -> Your Memorystore Redis IP
+#
+# See: DNS_SETUP.md for Cloud DNS configuration instructions
+#
+# Using Cloud DNS instead of hard-coded IPs enables:
+# - Automatic failover (update DNS, no manifest changes needed)
+# - Environment portability
+# - Centralized IP management
 apiVersion: v1
 kind: Service
 metadata:
   name: redis-session
   annotations:
-    description: "Headless service for Memorystore Redis at 10.138.129.37:6378"
+    description: "ExternalName service for Memorystore Redis via Cloud DNS"
 spec:
-  type: ClusterIP
-  clusterIP: None  # Headless service - uses manual Endpoints
-  selector: null   # No selector - endpoints are manually defined
+  type: ExternalName
+  externalName: redis-session-staging.internal
   ports:
-  - name: memorystore-redis
-    port: 6378          # Memorystore Redis port (not default 6379)
+  - name: redis
+    port: 6378
     protocol: TCP
-    targetPort: 6378

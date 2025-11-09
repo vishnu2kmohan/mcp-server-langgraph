@@ -13,7 +13,7 @@ resources:
   - serviceaccount-external-secrets.yaml
   - serviceaccount-keycloak.yaml
   - serviceaccount-openfga.yaml
-  - redis-session-endpoints.yaml
+  # redis-session-endpoints.yaml removed - using redis-session-service-patch.yaml instead
 
 # GCP-specific annotations
 commonAnnotations:
