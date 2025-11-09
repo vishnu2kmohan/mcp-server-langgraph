@@ -7,9 +7,11 @@ These tests ensure deployment configuration issues can never occur again by:
 3. Validating CORS configuration security
 4. Checking placeholder patterns are not committed
 5. Verifying ExternalSecrets key alignment
+6. Validating Helm chart lints successfully
 """
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -61,6 +63,39 @@ def kong_config():
     kong_path = Path(__file__).parent.parent.parent / "deployments" / "kong" / "kong.yaml"
     with open(kong_path) as f:
         return yaml.safe_load(f)
+
+
+# Test 0: Helm Lint Validation (Prevents Codex Finding #1 - P0 Blocker)
+def test_helm_chart_lints_successfully(helm_chart_path):
+    """
+    Test that Helm chart passes `helm lint` validation.
+
+    This test prevents deployment blockers caused by:
+    - Hyphenated keys in Go template expressions (e.g., .Values.kube-prometheus-stack.enabled)
+    - Template syntax errors
+    - Invalid Kubernetes resource schemas
+    - Missing required values
+
+    Red phase: This test will fail until hyphenated keys are wrapped with index function.
+    Green phase: After fixing templates, helm lint should pass.
+    """
+    result = subprocess.run(
+        ["helm", "lint", str(helm_chart_path)],
+        capture_output=True,
+        text=True,
+        cwd=helm_chart_path.parent,
+    )
+
+    assert result.returncode == 0, (
+        f"Helm lint failed for {helm_chart_path}\n"
+        f"STDOUT:\n{result.stdout}\n"
+        f"STDERR:\n{result.stderr}\n\n"
+        f"Common fixes:\n"
+        f'1. Hyphenated keys: Use \'index .Values "kube-prometheus-stack" "enabled"\' '
+        f"instead of '.Values.kube-prometheus-stack.enabled'\n"
+        f"2. Check template syntax in templates/*.yaml\n"
+        f"3. Ensure all required values are defined in values.yaml"
+    )
 
 
 # Test 1: Secret Key Alignment (Prevents Issue #1)

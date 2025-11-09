@@ -1,4 +1,4 @@
-{{- if .Values.kube-prometheus-stack.enabled }}
+{{- if index .Values "kube-prometheus-stack" "enabled" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
