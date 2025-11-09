@@ -68,6 +68,49 @@ patches:
   # TODO: Add Ingress patch to override base example.com domains
   # See: ingress-patch.yaml (requires matching base Ingress resource names)
 
+  # Codex Finding #8 (P1): Delete in-cluster databases (using Cloud SQL and Memorystore)
+  # PostgreSQL → Cloud SQL with Cloud SQL Proxy sidecar
+  - patch: |-
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: postgres
+      $patch: delete
+    target:
+      kind: StatefulSet
+      name: postgres
+
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: postgres
+      $patch: delete
+    target:
+      kind: Service
+      name: postgres
+
+  # Redis → Memorystore Redis
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: redis-session
+      $patch: delete
+    target:
+      kind: Deployment
+      name: redis-session
+
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: redis-session
+      $patch: delete
+    target:
+      kind: Service
+      name: redis-session
+
 # Resource configuration (higher replica count for production)
 replicas:
   - name: mcp-server-langgraph
