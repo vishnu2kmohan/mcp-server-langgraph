@@ -369,7 +369,7 @@ class TestRequireAuthDecorator:
     async def test_require_auth_success(self, auth_middleware_with_users):
         """Test decorator allows authorized request"""
 
-        @require_auth()
+        @require_auth(auth_middleware=auth_middleware_with_users)
         async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return f"Success for {user_id}"
 
@@ -399,12 +399,17 @@ class TestRequireAuthDecorator:
             await protected_function(username="nonexistent")
 
     @pytest.mark.asyncio
-    async def test_require_auth_with_authorization(self):
+    async def test_require_auth_with_authorization(self, auth_middleware_with_users):
         """Test decorator with authorization check"""
         mock_openfga = AsyncMock()
         mock_openfga.check_permission.return_value = True
 
-        @require_auth(relation="executor", resource="tool:chat", openfga_client=mock_openfga)
+        @require_auth(
+            relation="executor",
+            resource="tool:chat",
+            openfga_client=mock_openfga,
+            auth_middleware=auth_middleware_with_users,
+        )
         async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return f"Success for {user_id}"
 
@@ -412,12 +417,17 @@ class TestRequireAuthDecorator:
         assert "user:alice" in result
 
     @pytest.mark.asyncio
-    async def test_require_auth_authorization_denied(self):
+    async def test_require_auth_authorization_denied(self, auth_middleware_with_users):
         """Test decorator blocks unauthorized request"""
         mock_openfga = AsyncMock()
         mock_openfga.check_permission.return_value = False
 
-        @require_auth(relation="admin", resource="organization:acme", openfga_client=mock_openfga)
+        @require_auth(
+            relation="admin",
+            resource="organization:acme",
+            openfga_client=mock_openfga,
+            auth_middleware=auth_middleware_with_users,
+        )
         async def protected_function(username: str = None, password: str = None, user_id: str = None):
             return "Success"
 
@@ -431,10 +441,9 @@ class TestStandaloneVerifyToken:
     """Test standalone verify_token function"""
 
     @pytest.mark.asyncio
-    async def test_standalone_verify_token_success(self):
+    async def test_standalone_verify_token_success(self, auth_middleware_with_users):
         """Test standalone token verification succeeds"""
-        auth = AuthMiddleware(secret_key="test-secret")
-        token = auth.create_token("alice")
+        token = auth_middleware_with_users.create_token("alice")
 
         result = await verify_token(token, secret_key="test-secret")
 

@@ -715,7 +715,10 @@ class AuthMiddleware:
 
 
 def require_auth(  # type: ignore[no-untyped-def]
-    relation: Optional[str] = None, resource: Optional[str] = None, openfga_client: Optional[OpenFGAClient] = None
+    relation: Optional[str] = None,
+    resource: Optional[str] = None,
+    openfga_client: Optional[OpenFGAClient] = None,
+    auth_middleware: Optional["AuthMiddleware"] = None,
 ):
     """
     Decorator for requiring authentication/authorization
@@ -724,12 +727,14 @@ def require_auth(  # type: ignore[no-untyped-def]
         relation: Required relation (e.g., "executor")
         resource: Resource to check access to
         openfga_client: OpenFGA client instance
+        auth_middleware: Optional AuthMiddleware instance (for testing with pre-seeded users)
     """
 
     def decorator(func) -> None:  # type: ignore[no-untyped-def]
         @wraps(func)
         async def wrapper(*args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-            auth = AuthMiddleware(openfga_client=openfga_client)
+            # Use provided auth_middleware or create new instance
+            auth = auth_middleware if auth_middleware is not None else AuthMiddleware(openfga_client=openfga_client)
             username = kwargs.get("username")
             password = kwargs.get("password")
             user_id = kwargs.get("user_id")
