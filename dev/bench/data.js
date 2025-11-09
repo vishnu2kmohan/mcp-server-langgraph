@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762731642171,
+  "lastUpdate": 1762732078369,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38008,6 +38008,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019347092639105828",
             "extra": "mean: 47.94401813976657 usec\nrounds: 5623"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "5b4a71b1f25927bb87b38c6f900cc9fba168e17f",
+          "message": "docs(deployment): document optimized deployment directory as experimental/archived\n\nAddresses Codex Finding P2 #10: Optimized deployment drift from main configs\n\nChanges:\n- Created deployments/optimized/README.md (comprehensive documentation):\n  - Clearly marks directory as EXPERIMENTAL/ARCHIVED\n  - Explains what optimizations were tested\n  - Documents why it was not integrated\n  - Provides comparison with current deployments\n  - Recommends archival or removal\n  - Suggests using Helm value profiles instead\n\nContent:\n- Optimization analysis (init containers, probes, resources)\n- Drift risk explanation\n- Integration recommendations (Helm values approach)\n- Historical context\n- Clear warnings about production use\n\nImpact:\n- Prevents confusion about which deployment path to use\n- Documents experimental work for future reference\n- Recommends proper approach (Helm value overlays)\n- Addresses Codex concern about drift\n\nRecommendation: Archive or remove this directory\n  - Useful optimizations → integrate into Helm values-profiles/\n  - Experimental manifests → archive as deployments/archived/optimized-202410/\n  - Or remove entirely if no longer needed\n\nRelated: Codex Finding P2 #10 (Optimized deployment drift)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T18:46:32-05:00",
+          "tree_id": "257b1db04390f17281033a7c0487b6241ac124ea",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/5b4a71b1f25927bb87b38c6f900cc9fba168e17f"
+        },
+        "date": 1762732077412,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.07134608801795,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000901324563824647",
+            "extra": "mean: 6.893159999999436 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.50809221399416,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012256344868165567",
+            "extra": "mean: 6.644161023436457 msec\nrounds: 128"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45575.50699380814,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.941609999771572 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47383.82079411745,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.104250000121283 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46534.65715069761,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.489360000259694 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.39737587181168,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.1441023600000335 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.418213175333936,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.49804417999974 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.97423878442612,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.25827751000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1348835.9545307823,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 741.3800000222182 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12563.083955674516,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 79.59829000014906 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3000.0037200038123,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.33292000008896 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2970.992124196621,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.58790000004046 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 61021.82253182098,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021439487340572415",
+            "extra": "mean: 16.387580024810486 usec\nrounds: 12896"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16966.489122500832,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017886204163704475",
+            "extra": "mean: 58.939713029598295 usec\nrounds: 5004"
           }
         ]
       }
