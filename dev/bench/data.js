@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762721153612,
+  "lastUpdate": 1762722307212,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -37520,6 +37520,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001709679290484443",
             "extra": "mean: 47.63129634490972 usec\nrounds: 5335"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "20ab627023ad280cb113a1fba1e9b8bb8aa4c6b5",
+          "message": "feat(dns,deployment): Cloud DNS for staging + failover verification (TDD)\n\nComplete implementation of Cloud DNS-based infrastructure with automated\nsetup, deployment to staging GKE, and comprehensive failover verification.\n\n## Cloud DNS Infrastructure\n\n1. **Terraform Module** (terraform/modules/cloud-dns-staging/)\n   - Creates private DNS zone 'staging.internal'\n   - Configures DNS records for Cloud SQL and Memorystore Redis\n   - Auto-fetches IPs from existing GCP resources\n   - Validates VPC attachment and network configuration\n\n2. **Automation Scripts**\n   - setup-cloud-dns-staging.sh: Automated DNS zone and record creation\n   - verify-dns-failover.sh: Comprehensive DNS verification\n   - Both support environment variables and auto-discovery\n\n## Staging Deployment\n\n3. **Cloud DNS Configuration Executed**\n   - Created DNS zone: staging-internal (staging.internal.)\n   - Created DNS records:\n     * cloudsql-staging.staging.internal → 10.178.0.3\n     * redis-staging.staging.internal → 10.138.129.37\n     * redis-session-staging.staging.internal → 10.138.129.37\n   - Attached to VPC: staging-mcp-slg-vpc\n   - TTL: 300 seconds (5 minutes for fast failover)\n\n4. **Kubernetes Configuration Updated**\n   - Updated configmap-patch.yaml with DNS names\n   - Updated redis-session-service-patch.yaml to ExternalName\n   - Removed hard-coded IPs (replaced with DNS)\n   - Deployed to staging GKE cluster: ✅ SUCCESSFUL\n\n5. **Deployment Verification**\n   - Cluster: gke_vishnu-sandbox-20250310_us-central1_staging-mcp-server-langgraph-gke\n   - Namespace: staging-mcp-server-langgraph\n   - Deployment: 3/3 replicas healthy\n   - DNS resolution: ✅ ALL PASSING from within cluster\n\n## Test Coverage\n\n6. **DNS Failover Verification Tests** (test_dns_failover_verification.py)\n   - test_dns_zone_exists: ✅ PASSED\n   - test_dns_zone_attached_to_correct_vpc: ✅ PASSED\n   - test_dns_records_exist: ✅ PASSED\n   - Plus 3 DNS resolution tests\n   - Plus 2 service configuration tests\n   - Plus 1 failover simulation test\n\n7. **All Codex Validation Tests**: 12/12 PASSED\n8. **Total Test Coverage**: 15/15 PASSED\n\n## Failover Process Verified\n\n- DNS records can be updated without manifest changes\n- TTL of 300 seconds enables 5-minute failover window\n- Pods automatically resolve new IPs after TTL expiration\n- Manual rollout restart forces immediate reconnection\n\n## Files Changed\n\nModified (6):\n- .gitignore (terraform artifacts)\n- deployments/overlays/staging-gke/configmap-patch.yaml (DNS names)\n- deployments/overlays/staging-gke/deployment-patch.yaml (env vars)\n- deployments/overlays/staging-gke/redis-session-service-patch.yaml (ExternalName)\n- scripts/setup-cloud-dns-staging.sh (env var support, correct instance names)\n- tests/deployment/pytest.ini (requires_kubectl, integration markers)\n\nCreated (8):\n- terraform/modules/cloud-dns-staging/main.tf\n- terraform/modules/cloud-dns-staging/variables.tf\n- terraform/modules/cloud-dns-staging/outputs.tf\n- terraform/modules/cloud-dns-staging/README.md\n- terraform/environments/staging/main.tf\n- terraform/environments/staging/variables.tf\n- scripts/verify-dns-failover.sh\n- tests/deployment/test_dns_failover_verification.py\n\n## Verification\n\nAll infrastructure tested and verified in live staging environment:\n- Cloud DNS configured and resolving\n- Deployment healthy and using DNS-based connections\n- Failover process documented and ready\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T16:03:07-05:00",
+          "tree_id": "26ebfba19e6b2c87109c2d5ee7a5eeff95ae2b26",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/20ab627023ad280cb113a1fba1e9b8bb8aa4c6b5"
+        },
+        "date": 1762722305531,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.26170725490746,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009331173854203681",
+            "extra": "mean: 6.931846427084221 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.2854230473213,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012586690573259627",
+            "extra": "mean: 6.69857766141718 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43657.17937949409,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.905739999998787 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47924.55524807697,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.866130000030125 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44663.454173351885,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.389669999967055 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.1568322703973,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.15047545999991 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.424280528859413,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.48195829000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.970833041996407,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.29252277999987 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1433075.3796824974,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 697.8000000401607 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13359.969549977475,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 74.85046999988754 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2760.9425471324644,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 362.1951499999909 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2922.15701006779,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.21295999998347 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58258.498448963415,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004342366805558767",
+            "extra": "mean: 17.164877685202217 usec\nrounds: 12476"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17409.92884284184,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001662594701967966",
+            "extra": "mean: 57.43848863639404 usec\nrounds: 5368"
           }
         ]
       }
