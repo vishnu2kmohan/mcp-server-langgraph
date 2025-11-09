@@ -55,22 +55,39 @@ class RealKeycloakAuth:
             Dict with access_token, refresh_token, expires_in, etc.
 
         Raises:
-            httpx.HTTPError: If authentication fails
+            RuntimeError: If authentication fails (with specific error context)
         """
         token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
 
-        response = await self.client.post(
-            token_url,
-            data={
-                "grant_type": "password",
-                "client_id": self.client_id,
-                "username": username,
-                "password": password,
-            },
-        )
-        response.raise_for_status()
+        try:
+            response = await self.client.post(
+                token_url,
+                data={
+                    "grant_type": "password",
+                    "client_id": self.client_id,
+                    "username": username,
+                    "password": password,
+                },
+            )
+            response.raise_for_status()
+            return response.json()
 
-        return response.json()
+        except httpx.TimeoutException as e:
+            raise RuntimeError(
+                f"Keycloak auth timeout after 30s at {self.base_url} - "
+                f"service may be down or overloaded. "
+                f"Check docker-compose services are running."
+            ) from e
+        except httpx.ConnectError as e:
+            raise RuntimeError(
+                f"Cannot connect to Keycloak at {self.base_url} - "
+                f"service is not reachable. "
+                f"Ensure docker-compose.test.yml is running: docker compose -f docker-compose.test.yml up -d"
+            ) from e
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(
+                f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} " f"(URL: {token_url})"
+            ) from e
 
     async def refresh(self, refresh_token: str) -> Dict[str, str]:
         """
@@ -171,11 +188,25 @@ class RealMCPClient:
 
         Returns:
             Dict with protocol_version, server_info, capabilities
-        """
-        response = await self.client.post("/mcp/initialize", json={"protocol_version": "2024-11-05"})
-        response.raise_for_status()
 
-        return response.json()
+        Raises:
+            RuntimeError: If initialization fails (with specific error context)
+        """
+        try:
+            response = await self.client.post("/mcp/initialize", json={"protocol_version": "2024-11-05"})
+            response.raise_for_status()
+            return response.json()
+
+        except httpx.TimeoutException as e:
+            raise RuntimeError(
+                f"MCP initialize timeout after 30s at {self.base_url} - " f"server may be down or overloaded."
+            ) from e
+        except httpx.ConnectError as e:
+            raise RuntimeError(
+                f"Cannot connect to MCP server at {self.base_url} - " f"service is not reachable. Check server is running."
+            ) from e
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"MCP initialize failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
     async def list_tools(self) -> Dict[str, Any]:
         """
@@ -183,11 +214,21 @@ class RealMCPClient:
 
         Returns:
             Dict with tools array
-        """
-        response = await self.client.get("/mcp/tools/list")
-        response.raise_for_status()
 
-        return response.json()
+        Raises:
+            RuntimeError: If listing tools fails (with specific error context)
+        """
+        try:
+            response = await self.client.get("/mcp/tools/list")
+            response.raise_for_status()
+            return response.json()
+
+        except httpx.TimeoutException as e:
+            raise RuntimeError(f"MCP list_tools timeout after 30s at {self.base_url}") from e
+        except httpx.ConnectError as e:
+            raise RuntimeError(f"Cannot connect to MCP server at {self.base_url} for list_tools") from e
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"MCP list_tools failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """
