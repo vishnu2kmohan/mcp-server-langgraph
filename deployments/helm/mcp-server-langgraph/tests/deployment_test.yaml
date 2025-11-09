@@ -1,0 +1,55 @@
+suite: test deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should create deployment with correct name
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-mcp-server-langgraph
+
+  - it: should have correct number of replicas
+    set:
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should include app labels
+    asserts:
+      - isNotEmpty:
+          path: metadata.labels
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: mcp-server-langgraph
+
+  - it: should have security context
+    asserts:
+      - isNotEmpty:
+          path: spec.template.spec.securityContext
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: should have resource limits
+    asserts:
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].resources.limits
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].resources.requests
+
+  - it: should have liveness and readiness probes
+    asserts:
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].livenessProbe
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: should use specific image tag (not latest)
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ":[0-9]+\\.[0-9]+\\.[0-9]+$"

@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Server LangGraph Helm Chart Values",
+  "type": "object",
+  "required": ["image", "config"],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of pod replicas"
+    },
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9./-]+[a-z0-9]$",
+          "description": "Container image repository"
+        },
+        "tag": {
+          "type": "string",
+          "not": {"enum": ["latest"]},
+          "description": "Container image tag (must not be 'latest')"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Application configuration"
+    },
+    "secrets": {
+      "type": "object",
+      "properties": {
+        "existingSecret": {
+          "type": "string",
+          "description": "Name of existing secret to use"
+        },
+        "anthropicApiKey": {
+          "type": "string",
+          "description": "Anthropic API key"
+        },
+        "jwtSecretKey": {
+          "type": "string",
+          "description": "JWT secret for token signing"
+        }
+      }
+    },
+    "kube-prometheus-stack": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable PrometheusRule resources for monitoring"
+        }
+      }
+    },
+    "gcp": {
+      "type": "object",
+      "properties": {
+        "projectId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{4,28}[a-z0-9]$",
+          "description": "GCP project ID (6-30 chars, lowercase, hyphens)"
+        },
+        "region": {
+          "type": "string",
+          "pattern": "^[a-z]+-[a-z]+[0-9]+$",
+          "description": "GCP region (e.g., us-central1)"
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "className": {
+          "type": "string"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["host"],
+            "properties": {
+              "host": {
+                "type": "string",
+                "format": "hostname",
+                "not": {"pattern": "example\\.com$"},
+                "description": "Ingress hostname (must not use example.com)"
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "array"
+        }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "minReplicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
