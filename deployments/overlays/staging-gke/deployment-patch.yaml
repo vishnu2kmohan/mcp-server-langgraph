@@ -76,15 +76,16 @@ spec:
               key: redis-password
         # Override ConfigMap redis URLs (which point to deleted in-cluster service)
         # Use secrets instead of ConfigMap because passwords are required
+        # Codex Finding #7 (P1): Fixed to use correct secret name (not deleted base secret)
         - name: REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: mcp-server-langgraph-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: redis-url
         - name: CHECKPOINT_REDIS_URL
           valueFrom:
             secretKeyRef:
-              name: mcp-server-langgraph-secrets
+              name: staging-mcp-server-langgraph-secrets
               key: checkpoint-redis-url
 
         # PostgreSQL Configuration
