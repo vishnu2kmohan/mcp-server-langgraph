@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-server-langgraph-http
+  annotations:
+    # UPDATE THIS: Replace with your actual production domain
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.production-cluster.local"
+spec:
+  rules:
+    - host: mcp.production-mcp-server-langgraph.svc.cluster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server-langgraph
+                port:
+                  number: 8000
+  tls:
+    - hosts:
+        - mcp.production-mcp-server-langgraph.svc.cluster.local
+      secretName: mcp-server-tls-cert
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-server-langgraph-grpc
+  annotations:
+    # UPDATE THIS: Replace with your actual production domain
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.production-cluster.local"
+spec:
+  rules:
+    - host: mcp.production-mcp-server-langgraph.svc.cluster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcp-server-langgraph
+                port:
+                  number: 50051
+  tls:
+    - hosts:
+        - mcp.production-mcp-server-langgraph.svc.cluster.local
+      secretName: mcp-server-tls-cert

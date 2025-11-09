@@ -4,7 +4,7 @@ metadata:
   name: environment-vars
   namespace: production-mcp-server-langgraph
 data:
-  # GCP Project ID - set via environment variable or CI/CD
+  # GCP Project ID - UPDATE THIS with your actual GCP project ID
   # This ConfigMap is used as a source for Kustomize variable substitution
-  # Usage: export GCP_PROJECT_ID=my-project && kustomize build .
-  GCP_PROJECT_ID: "PLACEHOLDER_SET_VIA_ENV"
+  # For production deployments, update deployment-config ConfigMap instead
+  GCP_PROJECT_ID: "vishnu-production-project"

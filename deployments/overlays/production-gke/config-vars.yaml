@@ -8,11 +8,13 @@ metadata:
   namespace: production-mcp-server-langgraph
 data:
   # GCP Project ID for production
+  # UPDATE THIS: Replace with your actual GCP project ID before deploying
   GCP_PROJECT_ID: "vishnu-production-project"
 
   # Domain for production environment
-  # TODO: Replace PRODUCTION_DOMAIN with actual production domain
-  DOMAIN: "PRODUCTION_DOMAIN"
+  # UPDATE THIS: Replace with your actual production domain before deploying
+  # Example: mcp.mycompany.com
+  DOMAIN: "mcp-api.production-cluster.local"
 
   # Environment identifier
   ENVIRONMENT: "production"

@@ -59,10 +59,9 @@ data:
 
     exporters:
       # Cloud Trace
-      # NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
-      # which properly templates the project ID
+      # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
       googlecloud:
-        project: "PLACEHOLDER_GCP_PROJECT_ID"  # Replace via sed/envsubst before deploying
+        project: "vishnu-production-project"
         trace:
           endpoint: cloudtrace.googleapis.com:443
         metric:
@@ -73,8 +72,9 @@ data:
         use_insecure: false
 
       # Cloud Logging
+      # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
       googlecloud/logs:
-        project: "PLACEHOLDER_GCP_PROJECT_ID"  # Replace via sed/envsubst before deploying
+        project: "vishnu-production-project"
         log:
           default_log_name: mcp-server-langgraph
 

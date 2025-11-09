@@ -65,18 +65,20 @@ patches:
       kind: ConfigMap
       name: otel-collector-config
 
+  # TODO: Add Ingress patch to override base example.com domains
+  # See: ingress-patch.yaml (requires matching base Ingress resource names)
+
 # Resource configuration (higher replica count for production)
 replicas:
   - name: mcp-server-langgraph
     count: 3
 
 # Image configuration
-# NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
-# If using Kustomize, replace PLACEHOLDER_GCP_PROJECT_ID before deploying:
-# kustomize build . | sed 's/PLACEHOLDER_GCP_PROJECT_ID/my-project-id/g' | kubectl apply -f -
+# UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
+# For production, use Artifact Registry in your GCP project
 images:
   - name: mcp-server-langgraph
-    newName: us-central1-docker.pkg.dev/PLACEHOLDER_GCP_PROJECT_ID/mcp-production/mcp-server-langgraph
+    newName: us-central1-docker.pkg.dev/vishnu-production-project/mcp-production/mcp-server-langgraph
     newTag: 2.8.0  # Updated via CI/CD
 
 # Variable replacements for environment-specific values

@@ -55,9 +55,8 @@ data:
   enable_error_reporting: "true"
 
   # GCP-specific
-  # NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
-  # If using Kustomize, replace PLACEHOLDER_GCP_PROJECT_ID before deploying
-  gcp_project_id: "PLACEHOLDER_GCP_PROJECT_ID"
+  # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
+  gcp_project_id: "vishnu-production-project"
   gcp_region: "us-central1"
 
   # Feature flags (conservative for production)
