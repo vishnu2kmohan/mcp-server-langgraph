@@ -261,9 +261,12 @@ class TestNetworkPolicyComments:
                     pytest.fail(f"Port specification at line {i + 1} lacks explanatory comment:\n{context}")
 
 
+@pytest.mark.requires_kustomize
 def test_network_policy_coverage():
     """
     Test that critical components have NetworkPolicies defined.
+
+    CODEX FINDING #1: This test requires kustomize CLI tool.
 
     Components that should have network policies:
     - Main application pods
@@ -271,6 +274,15 @@ def test_network_policy_coverage():
     - Keycloak
     - OpenFGA
     """
+    # CODEX FINDING #1: Check if kustomize is available
+    import shutil
+
+    if not shutil.which("kustomize"):
+        pytest.skip(
+            "kustomize CLI not installed. Install with:\n"
+            "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+        )
+
     base_path = REPO_ROOT / "deployments/base"
     result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
 

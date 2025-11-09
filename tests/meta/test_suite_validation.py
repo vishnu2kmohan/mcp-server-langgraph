@@ -575,3 +575,226 @@ class TestInfrastructureFixtures:
         # Verify pytest.skip is used
         if "pytest.skip(" not in content:
             pytest.fail("conftest.py should use pytest.skip() for infrastructure unavailability")
+
+
+class TestCLIToolGuards:
+    """Meta-tests to validate CLI tool availability guards (OpenAI Codex Finding #1)"""
+
+    @pytest.mark.unit
+    def test_cli_tool_tests_have_skipif_guards(self):
+        """
+        TDD REGRESSION TEST: Ensure tests using CLI tools have proper skipif guards.
+
+        CODEX FINDING #1: tests/test_ci_cd_validation.py:61 invokes kustomize
+        unconditionally, causing hard failures when CLI is absent.
+
+        GIVEN: All test files that invoke external CLI tools
+        WHEN: Scanning for subprocess.run() calls to CLI tools
+        THEN: Tests should use session-scoped availability fixtures and skipif guards
+
+        CLI tools to guard:
+        - kustomize
+        - kubectl
+        - helm
+        - docker
+        """
+        violations = self._find_unguarded_cli_tool_usage()
+
+        if violations:
+            error_msg = "Found tests invoking CLI tools without proper guards:\n"
+            for file_path, test_name, line_num, cli_tool in violations:
+                error_msg += f"\n  {file_path}:{line_num} - {test_name}\n"
+                error_msg += f"    Invokes: {cli_tool}\n"
+            error_msg += (
+                "\n❌ CLI tools should be guarded with skipif decorators.\n"
+                "\n✅ Recommended pattern:\n"
+                "   @pytest.fixture(scope='session')\n"
+                "   def kustomize_available():\n"
+                "       return shutil.which('kustomize') is not None\n"
+                "\n   @pytest.mark.skipif(not kustomize_available, reason='kustomize not installed')\n"
+                "   def test_kustomize_build(...):\n"
+                "       ...\n"
+            )
+            pytest.fail(error_msg)
+
+    def _find_unguarded_cli_tool_usage(self) -> List[Tuple[str, str, int, str]]:
+        """
+        Find tests that invoke CLI tools without proper guards.
+
+        Returns:
+            List of (file_path, test_name, line_number, cli_tool) tuples
+        """
+        violations = []
+        tests_dir = Path(__file__).parent.parent
+
+        # CLI tools that require guards
+        cli_tools = {
+            "kustomize": "requires_kustomize",
+            "kubectl": "requires_kubectl",
+            "helm": "requires_helm",
+        }
+
+        for test_file in tests_dir.rglob("test_*.py"):
+            if test_file.parent.name == "meta":
+                continue
+
+            try:
+                with open(test_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    tree = ast.parse(content, filename=str(test_file))
+
+                # Find all test functions and their parent classes
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+                        # Check for CLI tool invocations in this test
+                        cli_tool_used = self._detect_cli_tool_usage(node, cli_tools.keys(), content)
+
+                        if cli_tool_used:
+                            # Check if test has guard (skipif decorator, runtime check, or class marker)
+                            has_guard = (
+                                self._has_skipif_guard(node, cli_tools[cli_tool_used])
+                                or self._has_runtime_skip_check(node, cli_tool_used, content)
+                                or self._has_class_marker(node, tree, cli_tools[cli_tool_used])
+                            )
+
+                            if not has_guard:
+                                rel_path = test_file.relative_to(tests_dir.parent)
+                                violations.append((str(rel_path), node.name, node.lineno, cli_tool_used))
+
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+
+        return violations
+
+    def _detect_cli_tool_usage(self, func_node: ast.FunctionDef, cli_tools: set, file_content: str) -> str:
+        """
+        Detect if a test function invokes CLI tools via subprocess.
+
+        Args:
+            func_node: AST node for the test function
+            cli_tools: Set of CLI tool names to detect
+            file_content: Full file content for line-based checks
+
+        Returns:
+            CLI tool name if detected, empty string otherwise
+        """
+        # Walk the function body to find subprocess.run calls
+        for node in ast.walk(func_node):
+            # Check for subprocess.run(["tool", ...])
+            if isinstance(node, ast.Call):
+                # Check if it's subprocess.run or subprocess.Popen
+                is_subprocess_call = False
+                if isinstance(node.func, ast.Attribute):
+                    if node.func.attr in ["run", "Popen", "call", "check_output"]:
+                        is_subprocess_call = True
+
+                if is_subprocess_call and node.args:
+                    # Check first argument (command list)
+                    first_arg = node.args[0]
+                    if isinstance(first_arg, ast.List) and first_arg.elts:
+                        # Check first element of command list
+                        cmd_elem = first_arg.elts[0]
+                        if isinstance(cmd_elem, ast.Constant):
+                            cmd = cmd_elem.value
+                            if cmd in cli_tools:
+                                return cmd
+                        elif isinstance(cmd_elem, ast.Str):  # Python 3.7 compatibility
+                            cmd = cmd_elem.s
+                            if cmd in cli_tools:
+                                return cmd
+
+        return ""
+
+    def _has_skipif_guard(self, func_node: ast.FunctionDef, expected_marker: str) -> bool:
+        """
+        Check if a test function has skipif guard for a CLI tool.
+
+        Args:
+            func_node: AST node for the test function
+            expected_marker: Expected marker name (e.g., "requires_kustomize")
+
+        Returns:
+            True if proper skipif guard exists, False otherwise
+        """
+        for decorator in func_node.decorator_list:
+            # Check for @pytest.mark.skipif(...)
+            if isinstance(decorator, ast.Call):
+                if isinstance(decorator.func, ast.Attribute):
+                    if (
+                        isinstance(decorator.func.value, ast.Attribute)
+                        and isinstance(decorator.func.value.value, ast.Name)
+                        and decorator.func.value.value.id == "pytest"
+                        and decorator.func.value.attr == "mark"
+                        and decorator.func.attr == "skipif"
+                    ):
+                        # Found skipif decorator
+                        return True
+
+        return False
+
+    def _has_runtime_skip_check(self, func_node: ast.FunctionDef, cli_tool: str, file_content: str) -> bool:
+        """
+        Check if a test function has runtime skip check using shutil.which().
+
+        Args:
+            func_node: AST node for the test function
+            cli_tool: CLI tool name (e.g., "kustomize")
+            file_content: Full file content
+
+        Returns:
+            True if runtime skip check exists, False otherwise
+        """
+        # Look for pattern: if not shutil.which("tool"): pytest.skip(...)
+        for node in ast.walk(func_node):
+            if isinstance(node, ast.If):
+                # Check if this is a skip check
+                test = node.test
+                # Pattern: not shutil.which("tool")
+                if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+                    if isinstance(test.operand, ast.Call):
+                        # Check if it's shutil.which call
+                        if isinstance(test.operand.func, ast.Attribute):
+                            if (
+                                isinstance(test.operand.func.value, ast.Name)
+                                and test.operand.func.value.id == "shutil"
+                                and test.operand.func.attr == "which"
+                            ):
+                                # Check if first argument is the CLI tool
+                                if test.operand.args and isinstance(test.operand.args[0], ast.Constant):
+                                    if test.operand.args[0].value == cli_tool:
+                                        # Found the check, now verify it calls pytest.skip
+                                        for stmt in node.body:
+                                            if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+                                                if isinstance(stmt.value.func, ast.Attribute):
+                                                    if (
+                                                        isinstance(stmt.value.func.value, ast.Name)
+                                                        and stmt.value.func.value.id == "pytest"
+                                                        and stmt.value.func.attr == "skip"
+                                                    ):
+                                                        return True
+        return False
+
+    def _has_class_marker(self, func_node: ast.FunctionDef, tree: ast.Module, expected_marker: str) -> bool:
+        """
+        Check if a test function's parent class has the expected marker.
+
+        Args:
+            func_node: AST node for the test function
+            tree: Full AST tree
+            expected_marker: Expected marker name (e.g., "requires_kustomize")
+
+        Returns:
+            True if parent class has the marker, False otherwise
+        """
+        # Find the parent class of this function
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                # Check if this class contains the function
+                for item in node.body:
+                    if item == func_node:
+                        # Found parent class, check for marker
+                        for decorator in node.decorator_list:
+                            marker_name = self._extract_marker_name(decorator)
+                            if marker_name == expected_marker:
+                                return True
+        return False

@@ -13,6 +13,7 @@ Test Coverage:
 - Istio integration conditional checks
 """
 
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
@@ -164,8 +165,13 @@ class TestNetworkPolicy:
         )
 
 
+@pytest.mark.requires_kustomize
 class TestKustomizeOverlays:
-    """Test that Kustomize overlays can build successfully."""
+    """Test that Kustomize overlays can build successfully.
+
+    CODEX FINDING #1: These tests require kustomize CLI tool.
+    Tests will skip gracefully if kustomize is not installed.
+    """
 
     @pytest.mark.parametrize("overlay", ["dev", "staging", "production"])
     def test_kustomize_overlay_builds(self, project_root: Path, overlay: str) -> None:
@@ -175,6 +181,13 @@ class TestKustomizeOverlays:
         Critical Issue #4: deployments/overlays/dev/kustomization.yaml:28
         Patches reference resources not included in base.
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         overlay_dir = project_root / "deployments" / "overlays" / overlay
 
         if not overlay_dir.exists():
@@ -205,6 +218,13 @@ class TestKustomizeOverlays:
         Critical Issue #3: deployments/kubernetes/overlays/aws/kustomization.yaml:8
         Invalid base path (../../base should be ../../../base).
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         overlay_dir = project_root / "deployments" / "kubernetes" / "overlays" / overlay
 
         if not overlay_dir.exists():
@@ -259,8 +279,13 @@ class TestBaseKustomization:
 # High Priority Tests
 
 
+@pytest.mark.requires_helm
 class TestHelmChart:
-    """Test Helm chart configurations."""
+    """Test Helm chart configurations.
+
+    CODEX FINDING #1: These tests require helm CLI tool.
+    Tests will skip gracefully if helm is not installed.
+    """
 
     @pytest.mark.skip(reason="Known issue: Helm template parsing error with prometheus-rules files - tracked for future PR")
     def test_helm_chart_lints_successfully(self, helm_chart_dir: Path) -> None:
@@ -273,6 +298,13 @@ class TestHelmChart:
         This is tracked for a dedicated Helm-focused PR.
         Kustomize deployments (primary method) are unaffected.
         """
+        # CODEX FINDING #1: Check if helm is available
+        if not shutil.which("helm"):
+            pytest.skip(
+                "helm CLI not installed. Install with:\n"
+                "  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash"
+            )
+
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
 
@@ -290,6 +322,13 @@ class TestHelmChart:
 
         KNOWN ISSUE: Depends on successful lint. See test_helm_chart_lints_successfully.
         """
+        # CODEX FINDING #1: Check if helm is available
+        if not shutil.which("helm"):
+            pytest.skip(
+                "helm CLI not installed. Install with:\n"
+                "  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash"
+            )
+
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
 

@@ -10,6 +10,7 @@ This test suite validates that:
 Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -26,8 +27,13 @@ OVERLAYS = [
 ]
 
 
+@pytest.mark.requires_kustomize
 class TestKustomizeBuilds:
-    """Test that all Kustomize overlays build successfully."""
+    """Test that all Kustomize overlays build successfully.
+
+    CODEX FINDING #1: These tests require kustomize CLI tool.
+    Tests will skip gracefully if kustomize is not installed.
+    """
 
     @pytest.mark.parametrize("overlay_path", OVERLAYS)
     def test_overlay_builds_without_errors(self, overlay_path):
@@ -40,6 +46,13 @@ class TestKustomizeBuilds:
         - Invalid patch targets
         - Namespace definition issues
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         full_path = REPO_ROOT / overlay_path
 
         # Run kustomize build
@@ -63,6 +76,13 @@ class TestKustomizeBuilds:
         - Invalid character sequences
         - Malformed documents
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         full_path = REPO_ROOT / overlay_path
 
         # Build the overlay

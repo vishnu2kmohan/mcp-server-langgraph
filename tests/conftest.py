@@ -198,6 +198,65 @@ def docker_services_available(docker_compose_file):
     return True
 
 
+# ==============================================================================
+# CLI Tool Availability Fixtures (OpenAI Codex Finding #1)
+# ==============================================================================
+
+
+@pytest.fixture(scope="session")
+def kustomize_available():
+    """
+    Check if kustomize CLI tool is available.
+
+    Returns:
+        bool: True if kustomize is installed and accessible, False otherwise
+
+    Usage:
+        @pytest.mark.skipif(not kustomize_available(), reason="kustomize not installed")
+        def test_kustomize_build():
+            ...
+    """
+    import shutil
+
+    return shutil.which("kustomize") is not None
+
+
+@pytest.fixture(scope="session")
+def kubectl_available():
+    """
+    Check if kubectl CLI tool is available.
+
+    Returns:
+        bool: True if kubectl is installed and accessible, False otherwise
+
+    Usage:
+        @pytest.mark.skipif(not kubectl_available(), reason="kubectl not installed")
+        def test_kubectl_apply():
+            ...
+    """
+    import shutil
+
+    return shutil.which("kubectl") is not None
+
+
+@pytest.fixture(scope="session")
+def helm_available():
+    """
+    Check if helm CLI tool is available.
+
+    Returns:
+        bool: True if helm is installed and accessible, False otherwise
+
+    Usage:
+        @pytest.mark.skipif(not helm_available(), reason="helm not installed")
+        def test_helm_template():
+            ...
+    """
+    import shutil
+
+    return shutil.which("helm") is not None
+
+
 @pytest.fixture(scope="session")
 def test_infrastructure_ports():
     """
