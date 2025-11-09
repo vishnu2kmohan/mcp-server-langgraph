@@ -21,8 +21,11 @@ metadata:
     description: "ExternalName service for Memorystore Redis via Cloud DNS"
 spec:
   type: ExternalName
-  externalName: redis-session-staging.internal
+  externalName: redis-session-staging.staging.internal
+  # Remove selector for ExternalName service
+  selector: null
+  # ExternalName services don't support ports, but we keep metadata for reference
   ports:
-  - name: redis
+  - name: memorystore-redis
     port: 6378
     protocol: TCP

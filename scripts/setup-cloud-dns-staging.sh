@@ -66,46 +66,60 @@ check_prerequisites() {
 get_resource_ips() {
     log_info "Fetching IP addresses from GCP resources..."
 
-    # Get Cloud SQL private IP
-    CLOUD_SQL_IP=$(gcloud sql instances describe staging-postgres \
-        --project="$PROJECT_ID" \
-        --format='get(ipAddresses[?type="PRIVATE"].ipAddress)' 2>/dev/null || echo "")
+    # Check if IPs are provided via environment variables
+    if [ -n "${CLOUD_SQL_IP:-}" ]; then
+        log_info "Using Cloud SQL IP from environment: $CLOUD_SQL_IP"
+    else
+        # Get Cloud SQL private IP from actual instance
+        CLOUD_SQL_IP=$(gcloud sql instances describe staging-mcp-slg-postgres \
+            --project="$PROJECT_ID" \
+            --format='get(ipAddresses[?type="PRIVATE"].ipAddress)' 2>/dev/null || echo "")
 
-    if [ -z "$CLOUD_SQL_IP" ]; then
-        log_error "Cloud SQL instance 'staging-postgres' not found or has no private IP"
-        log_info "Create Cloud SQL instance first or set CLOUD_SQL_IP environment variable"
-        exit 1
+        if [ -z "$CLOUD_SQL_IP" ]; then
+            log_error "Cloud SQL instance 'staging-mcp-slg-postgres' not found or has no private IP"
+            log_info "Create Cloud SQL instance first or set CLOUD_SQL_IP environment variable"
+            exit 1
+        fi
+
+        log_info "Cloud SQL IP (from instance): $CLOUD_SQL_IP"
     fi
 
-    log_info "Cloud SQL IP: $CLOUD_SQL_IP"
+    # Check if Redis IP is provided via environment
+    if [ -n "${REDIS_IP:-}" ]; then
+        log_info "Using Redis IP from environment: $REDIS_IP"
+    else
+        # Get Memorystore Redis (primary) IP from actual instance
+        REDIS_IP=$(gcloud redis instances describe staging-mcp-slg-redis \
+            --region="$REGION" \
+            --project="$PROJECT_ID" \
+            --format='get(host)' 2>/dev/null || echo "")
 
-    # Get Memorystore Redis (primary) IP
-    REDIS_IP=$(gcloud redis instances describe staging-redis \
-        --region="$REGION" \
-        --project="$PROJECT_ID" \
-        --format='get(host)' 2>/dev/null || echo "")
+        if [ -z "$REDIS_IP" ]; then
+            log_error "Memorystore Redis instance 'staging-mcp-slg-redis' not found"
+            log_info "Create Redis instance first or set REDIS_IP environment variable"
+            exit 1
+        fi
 
-    if [ -z "$REDIS_IP" ]; then
-        log_error "Memorystore Redis instance 'staging-redis' not found"
-        log_info "Create Redis instance first or set REDIS_IP environment variable"
-        exit 1
+        log_info "Redis IP (from instance): $REDIS_IP"
     fi
 
-    log_info "Redis IP: $REDIS_IP"
+    # Check if Redis Session IP is provided via environment
+    if [ -n "${REDIS_SESSION_IP:-}" ]; then
+        log_info "Using Redis Session IP from environment: $REDIS_SESSION_IP"
+    else
+        # Get Memorystore Redis (session) IP from actual instance
+        REDIS_SESSION_IP=$(gcloud redis instances describe staging-mcp-slg-redis-session \
+            --region="$REGION" \
+            --project="$PROJECT_ID" \
+            --format='get(host)' 2>/dev/null || echo "")
 
-    # Get Memorystore Redis (session) IP
-    REDIS_SESSION_IP=$(gcloud redis instances describe staging-redis-session \
-        --region="$REGION" \
-        --project="$PROJECT_ID" \
-        --format='get(host)' 2>/dev/null || echo "")
-
-    if [ -z "$REDIS_SESSION_IP" ]; then
-        log_error "Memorystore Redis instance 'staging-redis-session' not found"
-        log_info "Create Redis instance first or set REDIS_SESSION_IP environment variable"
-        exit 1
+        if [ -z "$REDIS_SESSION_IP" ]; then
+            log_warn "Redis session instance not found. Using same IP as primary Redis."
+            REDIS_SESSION_IP="$REDIS_IP"
+        else
+            log_info "Redis Session IP (from instance): $REDIS_SESSION_IP"
+        fi
     fi
-
-    log_info "Redis Session IP: $REDIS_SESSION_IP"
 }
 
 create_dns_zone() {
@@ -164,10 +178,10 @@ create_dns_records() {
         log_info "Created DNS record: ${record_name} -> $record_ip"
     }
 
-    # Create DNS records
-    create_or_update_record "cloudsql-staging.internal" "$CLOUD_SQL_IP"
-    create_or_update_record "redis-staging.internal" "$REDIS_IP"
-    create_or_update_record "redis-session-staging.internal" "$REDIS_SESSION_IP"
+    # Create DNS records (must be within the staging.internal zone)
+    create_or_update_record "cloudsql-staging.staging.internal" "$CLOUD_SQL_IP"
+    create_or_update_record "redis-staging.staging.internal" "$REDIS_IP"
+    create_or_update_record "redis-session-staging.staging.internal" "$REDIS_SESSION_IP"
 }
 
 verify_dns() {

@@ -240,3 +240,6 @@ _site/
 .idea/workspace.xml
 .idea/tasks.xml
 poetry.lock
+terraform/environments/staging/.terraform/
+terraform/**/.terraform/
+terraform/**/.terraform.lock.hcl
