@@ -130,7 +130,7 @@ repos:
 
       - id: validate-documentation-quality
         name: Validate Documentation Quality (MDX Parsing, Links, ADRs)
-        entry: python -m pytest tests/meta/test_documentation_validation.py -v --tb=short
+        entry: uv run pytest tests/meta/test_documentation_validation.py -v --tb=short
         language: system
         files: \.(md|mdx|json)$
         pass_filenames: false
@@ -146,7 +146,7 @@ repos:
 
       - id: validate-documentation-integrity
         name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-        entry: python -m pytest tests/test_documentation_integrity.py -v --tb=short
+        entry: uv run pytest tests/test_documentation_integrity.py -v --tb=short
         language: system
         files: \.(md|mdx|json)$|^monitoring/.*README\.md$
         pass_filenames: false

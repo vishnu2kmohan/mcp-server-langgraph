@@ -8,7 +8,7 @@ namePrefix: staging-
 # Fixed: 'bases' is deprecated, use 'resources' instead
 resources:
   - ../../base
-  # Note: namespace.yaml removed to avoid conflict with base namespace + namePrefix
+  - namespace.yaml
 
 # Fixed: 'commonLabels' is deprecated, use 'labels' instead
 labels:
@@ -17,11 +17,13 @@ labels:
 
 # Fixed: 'patchesStrategicMerge' is deprecated, use 'patches' instead
 patches:
-  # Add staging-specific labels to namespace
+  # Delete base namespace to use our staging-specific namespace.yaml instead
   - patch: |-
-      - op: add
-        path: /metadata/labels/tier
-        value: staging
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: mcp-server-langgraph
+      $patch: delete
     target:
       kind: Namespace
       name: mcp-server-langgraph

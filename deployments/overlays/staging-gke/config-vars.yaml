@@ -11,7 +11,8 @@ data:
   GCP_PROJECT_ID: "vishnu-sandbox-20250310"
 
   # Domain for staging environment
-  DOMAIN: "staging.mcp-server-langgraph.example.com"
+  # TODO: Replace STAGING_DOMAIN with actual staging domain
+  DOMAIN: "STAGING_DOMAIN"
 
   # Environment identifier
   ENVIRONMENT: "staging"

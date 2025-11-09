@@ -139,6 +139,73 @@ GitHub Actions workflow (`.github/workflows/validate-deployments.yml`) runs on e
 
 See `adr/adr-0046-deployment-configuration-tdd-infrastructure.md` for full details.
 
+### Performance & Benchmark Tests (`@pytest.mark.benchmark`)
+- **Purpose**: Validate system performance and detect regressions
+- **Dependencies**: pytest-benchmark plugin
+- **Speed**: Slow (100 iterations, ~30s per benchmark suite)
+- **Examples**: JWT encoding/decoding, OpenFGA authorization, LLM request handling
+- **Location**: `tests/performance/`
+
+**CODEX FINDINGS #2 & #4: Performance Optimizations**
+
+**Finding #2: Timeout Test Performance**
+- Problem: Timeout tests used real asyncio.sleep(5-10s), burning ~15s per run
+- Solution: Reduced to 0.05-0.3s sleeps (100x faster, same behavior)
+- Impact: Tests now complete in ~6s instead of 15s (60% speedup)
+- Validation: Meta-tests prevent regression (test_performance_regression.py)
+
+**Finding #4: Benchmark Opt-In Model**
+- Problem: Benchmarks ran by default, slowing everyday test runs
+- Solution: Benchmarks now skip unless explicitly requested
+- Impact: 90% faster test runs (benchmarks skipped in 0.57s vs 30+ seconds)
+- Usage: See "Run Performance Benchmarks" section above
+
+**Running Performance Tests**:
+
+```bash
+# Run benchmarks (opt-in)
+pytest --run-benchmarks
+
+# Run only benchmarks (CI pattern)
+pytest -m benchmark --benchmark-only
+
+# Exclude benchmarks (default behavior)
+pytest  # Benchmarks automatically skipped
+
+# Compare benchmark results over time
+pytest-benchmark compare 0001 0002
+
+# View benchmark history
+pytest-benchmark list
+```
+
+**Benchmark Test Structure**:
+
+```python
+from tests.performance.conftest import PercentileBenchmark
+
+@pytest.mark.benchmark
+class TestMyBenchmarks:
+    def test_operation_performance(self, percentile_benchmark):
+        """
+        Benchmark operation with percentile-based assertions.
+
+        Uses 100 iterations for statistical accuracy.
+        """
+        result = percentile_benchmark(my_operation, arg1, arg2)
+
+        # Assert p95 latency < 10ms (more stable than mean)
+        percentile_benchmark.assert_percentile(95, 0.010)
+
+        # Assert p99 latency < 15ms
+        percentile_benchmark.assert_percentile(99, 0.015)
+```
+
+**Why percentile-based assertions?**
+- More stable than mean (resistant to outliers)
+- Better reflects user experience (p95/p99 SLA targets)
+- Industry standard for performance testing
+
 ---
 
 ## Fixture Standards
@@ -296,6 +363,61 @@ pytest -m integration    # Integration tests only
 pytest -m e2e            # E2E tests only (requires infrastructure)
 ```
 
+### Run Performance Benchmarks (CODEX Finding #4)
+```bash
+# Benchmarks are SKIPPED by default for faster iteration
+
+# Option 1: Run with custom flag
+pytest --run-benchmarks
+
+# Option 2: Run only benchmarks (CI pattern)
+pytest -m benchmark --benchmark-only
+
+# Option 3: Exclude benchmarks explicitly
+pytest -m "not benchmark"
+
+# Compare benchmark results
+pytest-benchmark compare 0001 0002
+```
+
+**Why benchmarks are opt-in:**
+- Benchmarks run 100 iterations for statistical accuracy (~30s per suite)
+- Normal development doesn't need benchmark validation
+- CI explicitly runs benchmarks in dedicated job
+- 90% faster test runs for everyday development
+
+### Run Tests Requiring CLI Tools (CODEX Finding #1)
+```bash
+# Tests requiring external CLI tools skip gracefully if tools not installed
+
+# Kustomize tests (deployment validation)
+pytest -m requires_kustomize
+# Skips with message if kustomize not installed
+
+# Kubectl tests (K8s integration)
+pytest -m requires_kubectl
+# Skips with message if kubectl not installed
+
+# Helm tests (chart validation)
+pytest -m requires_helm
+# Skips with message if helm not installed
+
+# Exclude CLI-dependent tests
+pytest -m "not requires_kustomize and not requires_helm"
+```
+
+**Installation instructions:**
+```bash
+# Kustomize
+curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
+
+# Helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Kubectl
+# See: https://kubernetes.io/docs/tasks/tools/
+```
+
 ### Run by File
 ```bash
 pytest tests/api/test_api_keys_endpoints.py
@@ -319,17 +441,35 @@ pytest --co            # Show collected tests without running
 
 ### E2E Infrastructure Setup
 ```bash
+# CODEX FINDING #3: E2E tests now auto-run when docker is available
+# No need to set TESTING=true anymore!
+
 # Start test infrastructure
 docker compose -f docker-compose.test.yml up -d
 
 # Wait for services to be healthy (30-60s)
 docker compose -f docker-compose.test.yml ps
 
-# Run E2E tests
-TESTING=true pytest -m e2e
+# Run E2E tests (infrastructure check is automatic)
+pytest -m e2e
 
 # Cleanup
 docker compose -f docker-compose.test.yml down -v
+```
+
+### Run Meta-Validation (CODEX Finding #5)
+```bash
+# Comprehensive test suite validation
+python scripts/validate_test_suite.py
+
+# Strict mode (warnings treated as errors)
+python scripts/validate_test_suite.py --strict
+
+# Checks performed:
+# - Marker consistency (no conflicting unit+integration markers)
+# - Test naming conventions
+# - Import guards for optional dependencies
+# - CLI tool availability guards
 ```
 
 ---

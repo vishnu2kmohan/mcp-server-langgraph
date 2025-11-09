@@ -46,7 +46,7 @@ externalSecrets:
     # For GCP Secret Manager
     # kind: SecretStore
     # provider: gcpsm
-    # projectID: YOUR_GCP_PROJECT_ID
+    # projectID: ${GCP_PROJECT_ID}  # TODO: Replace with actual project ID
 
     # For Azure Key Vault
     # kind: SecretStore
@@ -84,7 +84,7 @@ redis:
 
 # Keycloak configuration
 keycloak:
-  serverUrl: "https://auth.example.com"
+  serverUrl: "https://KEYCLOAK_DOMAIN"  # TODO: Replace with actual Keycloak domain (e.g., auth.yourdomain.com)
   realm: "production"
   clientId: "mcp-server-langgraph"
   # Client secret from External Secrets
@@ -135,8 +135,8 @@ ingress:
 serviceAccount:
   create: true
   annotations:
-    # For GKE Workload Identity
-    iam.gke.io/gcp-service-account: mcp-server-langgraph@PROJECT_ID.iam.gserviceaccount.com
+    # For GKE Workload Identity - TODO: Replace ${GCP_PROJECT_ID} with actual project ID
+    iam.gke.io/gcp-service-account: mcp-server-langgraph@${GCP_PROJECT_ID}.iam.gserviceaccount.com
     # For AWS EKS IRSA
     # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mcp-server-langgraph-role
     # For Azure AKS Workload Identity

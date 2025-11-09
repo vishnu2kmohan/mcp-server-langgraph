@@ -8,7 +8,6 @@ namePrefix: production-
 # Fixed: 'bases' is deprecated, use 'resources' instead
 resources:
   - ../../base
-  # Note: namespace.yaml removed to avoid conflict with base namespace + namePrefix
 
 # Fixed: 'commonLabels' is deprecated, use 'labels' instead
 labels:
@@ -17,11 +16,8 @@ labels:
 
 # Fixed: 'patchesStrategicMerge' is deprecated, use 'patches' instead
 patches:
-  # Add production-specific labels to namespace
-  - patch: |-
-      - op: add
-        path: /metadata/labels/tier
-        value: production
+  # Patch namespace with production-specific labels
+  - path: namespace.yaml
     target:
       kind: Namespace
       name: mcp-server-langgraph

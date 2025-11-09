@@ -48,6 +48,18 @@ make test-infra-down
 1. **API Endpoint Tests** (`tests/api/`): REST API contract testing
 2. **E2E Tests** (`tests/e2e/`): Complete user journey testing
 3. **MCP Server Unit Tests** (`tests/unit/`): Comprehensive server coverage
+4. **Performance Benchmarks** (`tests/performance/`): Percentile-based performance validation
+5. **Meta-Validation Tests** (`tests/meta/`): Test suite structure validation
+6. **Deployment Tests** (`tests/deployment/`): K8s manifest and Helm chart validation
+
+**CODEX Findings Addressed (2025-11-09)**:
+- ✅ CLI tool guards for kustomize/helm/kubectl (Finding #1)
+- ✅ Timeout test performance optimization (Finding #2)
+- ✅ E2E tests auto-run with docker (Finding #3)
+- ✅ Benchmarks opt-in by default (Finding #4)
+- ✅ Meta-validation script for maintainability (Finding #5)
+- ✅ Enabled skipped singleton tests (Finding #6)
+- ✅ Helm tests use xfail(strict=True) (Finding #7)
 
 See [New Testing Features](#new-testing-features) section below for details.
 

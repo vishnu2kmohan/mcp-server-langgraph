@@ -223,9 +223,9 @@ class TestHelmPlaceholderValidation:
 
             # Look for serviceAccount.annotations in the YAML structure
             sa_config = config.get("serviceAccount", {})
-            annotations = sa_config.get("annotations", {})
+            annotations = sa_config.get("annotations")
 
-            if "iam.gke.io/gcp-service-account" in annotations:
+            if annotations and "iam.gke.io/gcp-service-account" in annotations:
                 gcp_sa = annotations["iam.gke.io/gcp-service-account"]
 
                 # Check for dangerous placeholder pattern

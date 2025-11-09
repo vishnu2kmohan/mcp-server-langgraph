@@ -34,7 +34,7 @@ externalSecrets:
   secretStore:
     kind: SecretStore
     provider: gcpsm
-    projectID: YOUR_STAGING_PROJECT_ID  # Replace with actual staging project ID
+    projectID: "${GCP_PROJECT_ID}"  # TODO: Replace with actual staging project ID or use envsubst
 
   secrets:
     - name: mcp-server-langgraph-secrets
@@ -48,7 +48,7 @@ externalSecrets:
 
 # Database configuration (staging instance)
 database:
-  host: "postgres-staging.c.PROJECT_ID.internal"  # Replace with actual Cloud SQL instance
+  host: "postgres-staging.c.${GCP_PROJECT_ID}.internal"  # TODO: Replace ${GCP_PROJECT_ID} with actual Cloud SQL instance
   port: 5432
   name: "mcp_server_langgraph_staging"
   existingSecret: "mcp-server-langgraph-db-secrets"
@@ -62,7 +62,7 @@ redis:
 
 # Keycloak configuration (staging)
 keycloak:
-  serverUrl: "https://auth-staging.example.com"
+  serverUrl: "https://KEYCLOAK_STAGING_DOMAIN"  # TODO: Replace with actual staging Keycloak domain
   realm: "staging"
   clientId: "mcp-server-langgraph-staging"
   existingSecret: "mcp-server-langgraph-keycloak-secrets"
@@ -105,7 +105,8 @@ ingress:
 serviceAccount:
   create: true
   annotations:
-    iam.gke.io/gcp-service-account: mcp-server-langgraph-staging@PROJECT_ID.iam.gserviceaccount.com
+    # TODO: Replace ${GCP_PROJECT_ID} with actual project ID
+    iam.gke.io/gcp-service-account: mcp-server-langgraph-staging@${GCP_PROJECT_ID}.iam.gserviceaccount.com
 
 # Staging-specific configuration
 env:

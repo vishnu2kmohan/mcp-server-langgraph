@@ -11,7 +11,8 @@ data:
   GCP_PROJECT_ID: "vishnu-production-project"
 
   # Domain for production environment
-  DOMAIN: "mcp-server-langgraph.example.com"
+  # TODO: Replace PRODUCTION_DOMAIN with actual production domain
+  DOMAIN: "PRODUCTION_DOMAIN"
 
   # Environment identifier
   ENVIRONMENT: "production"
