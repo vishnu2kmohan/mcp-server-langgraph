@@ -40,6 +40,16 @@ jobs:
             > /tmp/helm-output.yaml
           echo "Helm template rendering succeeded"
 
+      - name: Install helm-unittest plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.5.2 || echo "Plugin already installed"
+          helm unittest --help
+
+      - name: Run Helm unit tests
+        run: |
+          echo "Running Helm unit tests..."
+          helm unittest deployments/helm/mcp-server-langgraph
+
       - name: Setup Python for tests
         uses: ./.github/actions/setup-python-deps
         with:
@@ -117,6 +127,35 @@ jobs:
             grep -E "PLACEHOLDER|TODO:|FIXME:" && \
             echo "::error::Placeholders found in production" && exit 1 || \
             echo "✓ No placeholders in production"
+
+      # Kubernetes schema validation with kubeconform
+      - name: Install kubeconform
+        run: |
+          KUBECONFORM_VERSION=0.6.4
+          wget -q "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+          kubeconform -v
+
+      - name: Validate manifests against Kubernetes schemas
+        run: |
+          echo "Validating base..."
+          kustomize build deployments/base | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+          echo "Validating production-gke..."
+          kustomize build deployments/overlays/production-gke | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+          echo "Validating staging-gke..."
+          kustomize build deployments/overlays/staging-gke | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+          echo "Validating AWS overlay..."
+          kustomize build deployments/kubernetes/overlays/aws | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+          echo "Validating GCP overlay..."
+          kustomize build deployments/kubernetes/overlays/gcp | kubeconform -strict -summary -kubernetes-version 1.29.0
+
+          echo "Validating Azure overlay..."
+          kustomize build deployments/kubernetes/overlays/azure | kubeconform -strict -summary -kubernetes-version 1.29.0
 
       - name: Run deployment tests
         run: |
@@ -206,19 +245,19 @@ jobs:
       - name: Build overlays and validate with policies
         run: |
           echo "Validating base..."
-          kustomize build deployments/base | conftest test -p deployments/policies - || true
+          kustomize build deployments/base | conftest test -p deployments/policies - --fail-on-warn
 
           echo "Validating staging-gke..."
-          kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - || true
+          kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - --fail-on-warn
 
           echo "Validating production-gke..."
-          kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - || true
+          kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - --fail-on-warn
 
       - name: Validate raw YAML files
         run: |
-          conftest test deployments/base/*.yaml -p deployments/policies || true
-          conftest test deployments/overlays/staging-gke/*.yaml -p deployments/policies || true
-          conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies || true
+          conftest test deployments/base/*.yaml -p deployments/policies --fail-on-warn
+          conftest test deployments/overlays/staging-gke/*.yaml -p deployments/policies --fail-on-warn
+          conftest test deployments/overlays/production-gke/*.yaml -p deployments/policies --fail-on-warn
 
   summary:
     name: Validation Summary
@@ -253,9 +292,13 @@ jobs:
           fi
 
           if [ "${{ needs.validate-conftest-policies.result }}" != "success" ]; then
-            echo "::warning::OPA policy validation had warnings (non-blocking)"
+            echo "::error::OPA policy validation failed"
+            exit 1
           fi
 
-          echo "::notice::✅ All critical deployment validations passed!"
-          echo "::notice::Fixed Codex findings: P0 #1 (Helm), #2 (Kustomize), #3 (Placeholders)"
-          echo "::notice::Fixed Codex findings: P1 #4-8 (AWS, secrets, databases, images)"
+          echo "::notice::✅ All deployment validations passed!"
+          echo "::notice::Prevention: Helm lint + template + unit tests"
+          echo "::notice::Prevention: Kustomize builds + kubeconform + placeholder detection"
+          echo "::notice::Prevention: OPA policies (blocking) + NetworkPolicy + RBAC"
+          echo "::notice::Codex P0: #1 Helm, #2 Kustomize ConfigMap, #3 Placeholders - PREVENTED"
+          echo "::notice::Codex P1: #4-8 AWS/Secrets/Databases/Images - PREVENTED"
