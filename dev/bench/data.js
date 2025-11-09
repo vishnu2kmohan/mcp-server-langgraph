@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762537396537,
+  "lastUpdate": 1762713889194,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36422,6 +36422,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016922498668420076",
             "extra": "mean: 57.89090091743121 usec\nrounds: 5450"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7c88a5c92cdfa374bf7ac7f7d302c1991c56f7e5",
+          "message": "docs(codex): add comprehensive findings resolution report\n\nDocuments resolution of 3/5 critical Codex findings plus 2 bonus fixes.\n\nProvides detailed TDD process, validation metrics, and next steps for the\ncomprehensive Codex analysis remediation effort.\n\nStatus: CI/CD UNBLOCKED, READY FOR WORKFLOW VALIDATION\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T12:05:06-05:00",
+          "tree_id": "985c73c29c0c998bafc611539aca58da57eff263",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7c88a5c92cdfa374bf7ac7f7d302c1991c56f7e5"
+        },
+        "date": 1762713888090,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 139.46312639613043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006749921328024251",
+            "extra": "mean: 7.170354098900698 msec\nrounds: 91"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.8486312071948,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000205071016266529",
+            "extra": "mean: 6.809733204724656 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45282.32852612559,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.083669999943822 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46791.65966730335,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.371330000050648 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46400.54715533162,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.551469999963047 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.52309699904097,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.167341860000079 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.412123809390394,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.51419854000011 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.96460682561614,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35518887000009 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1282281.4352320307,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 779.859999937571 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12439.823906834057,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 80.38698999996541 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2940.84977677668,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 340.0377699999524 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2942.1007228771073,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.89318999999796 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58767.983006543924,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000037530330976081303",
+            "extra": "mean: 17.01606808402201 usec\nrounds: 11383"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16423.098648288942,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002681289510612975",
+            "extra": "mean: 60.88984919445674 usec\nrounds: 5338"
           }
         ]
       }
