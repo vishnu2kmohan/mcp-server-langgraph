@@ -287,12 +287,20 @@ class TestHelmChart:
     Tests will skip gracefully if helm is not installed.
     """
 
-    @pytest.mark.skip(reason="Known issue: Helm template parsing error with prometheus-rules files - tracked for future PR")
+    @pytest.mark.xfail(
+        strict=True,
+        reason="CODEX FINDING #7: Helm template parsing error with prometheus-rules files. "
+        "Using xfail(strict=True) so CI fails when fixed, alerting team to remove this marker. "
+        "Tracked in: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/TBD",
+    )
     def test_helm_chart_lints_successfully(self, helm_chart_dir: Path) -> None:
         """
         Test that Helm chart passes helm lint validation.
 
         High Priority Issue: Various Helm chart configuration issues.
+
+        CODEX FINDING #7: Converted skip → xfail(strict=True).
+        Test will FAIL CI when Helm issue is fixed, prompting marker removal.
 
         KNOWN ISSUE: Prometheus rules file inclusion causes parse errors.
         This is tracked for a dedicated Helm-focused PR.
@@ -316,9 +324,17 @@ class TestHelmChart:
 
         assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
 
-    @pytest.mark.skip(reason="Known issue: Helm template parsing error with prometheus-rules files - tracked for future PR")
+    @pytest.mark.xfail(
+        strict=True,
+        reason="CODEX FINDING #7: Helm template parsing error with prometheus-rules files. "
+        "Using xfail(strict=True) so CI fails when fixed, alerting team to remove this marker. "
+        "Tracked in: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/TBD",
+    )
     def test_helm_chart_renders_successfully(self, helm_chart_dir: Path) -> None:
         """Test that Helm chart renders without errors.
+
+        CODEX FINDING #7: Converted skip → xfail(strict=True).
+        Test will FAIL CI when Helm issue is fixed, prompting marker removal.
 
         KNOWN ISSUE: Depends on successful lint. See test_helm_chart_lints_successfully.
         """

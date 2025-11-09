@@ -239,3 +239,34 @@ def get_api_key_manager(
             )
 
     return _api_key_manager
+
+
+# ==============================================================================
+# Testing Utilities (CODEX Finding #6)
+# ==============================================================================
+
+
+def reset_singleton_dependencies() -> None:
+    """
+    Reset all singleton dependencies to None.
+
+    CODEX FINDING #6: Permanently skipped test due to singleton cache.
+    This function enables proper testing of dependency wiring logic by
+    allowing tests to reset singletons between test runs.
+
+    Usage in tests:
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
+
+        def test_dependency_wiring():
+            reset_singleton_dependencies()
+            # Now test dependency initialization with mocked settings
+            ...
+
+    WARNING: This should ONLY be used in tests. Never call in production code.
+    """
+    global _keycloak_client, _openfga_client, _service_principal_manager, _api_key_manager
+
+    _keycloak_client = None
+    _openfga_client = None
+    _service_principal_manager = None
+    _api_key_manager = None

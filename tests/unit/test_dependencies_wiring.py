@@ -318,19 +318,21 @@ class TestAPIKeyManagerRedisCacheWiring:
                 assert called_url == "redis://localhost:6379/2"
                 assert "//" not in called_url.split("://")[1]  # No double slashes after protocol
 
-    @pytest.mark.skip(
-        reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test"
-    )
     def test_redis_url_handles_existing_database_number(self):
         """
         Test that Redis URL with existing database number doesn't produce invalid URL.
+
+        CODEX FINDING #6: Enabled test by adding reset_singleton_dependencies().
 
         Bug: f"redis://localhost:6379/0/{db}" produces redis://localhost:6379/0/2
         which is INVALID for redis.from_url().
 
         Expected: Should strip existing database number and replace with configured one.
         """
-        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager, reset_singleton_dependencies
+
+        # CODEX FINDING #6: Reset singleton before test
+        reset_singleton_dependencies()
 
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.api_key_cache_enabled = True
@@ -363,17 +365,19 @@ class TestAPIKeyManagerRedisCacheWiring:
                 assert called_url == "redis://localhost:6379/2"
                 assert "/0/2" not in called_url  # Should not have double database
 
-    @pytest.mark.skip(
-        reason="Singleton pattern in get_api_key_manager() interferes with mock - logic validated via direct URL parsing test"
-    )
     def test_redis_url_handles_query_parameters(self):
         """
         Test that Redis URLs with query parameters are preserved.
 
+        CODEX FINDING #6: Enabled test by adding reset_singleton_dependencies().
+
         Example: redis://localhost:6379?timeout=5
         Should become: redis://localhost:6379/2?timeout=5
         """
-        from mcp_server_langgraph.core.dependencies import get_api_key_manager
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager, reset_singleton_dependencies
+
+        # CODEX FINDING #6: Reset singleton before test
+        reset_singleton_dependencies()
 
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
             mock_settings.api_key_cache_enabled = True
