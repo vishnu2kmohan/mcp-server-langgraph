@@ -92,8 +92,7 @@
               "host": {
                 "type": "string",
                 "format": "hostname",
-                "not": {"pattern": "example\\.com$"},
-                "description": "Ingress hostname (must not use example.com)"
+                "description": "Ingress hostname (users should replace example.com with actual domain)"
               }
             }
           }
