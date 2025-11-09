@@ -15,7 +15,9 @@ try:
     from redis import Redis
 
     REDIS_AVAILABLE = True
-    RedisType = Redis[str]  # type: type[Redis[str]]
+    # Note: Redis is not a generic class in redis-py >= 5.0
+    # Using plain Redis type instead of Redis[str] to avoid TypeError
+    RedisType = Redis  # type: ignore[assignment]
 except ImportError:
     REDIS_AVAILABLE = False
     RedisType = None  # type: ignore[assignment]
