@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762714298975,
+  "lastUpdate": 1762717243498,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36666,6 +36666,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000018305419357122112",
             "extra": "mean: 59.16114201396111 usec\nrounds: 5422"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "db0e89a981ab095b029b76050390913c66021c7e",
+          "message": "fix(ci,tests,security,deployment): resolve 5 critical Codex findings + regression tests (TDD)\n\nResolves 5 critical findings from OpenAI Codex audit using TDD methodology.\nAll fixes include comprehensive test coverage to prevent regression.\n\n## Critical Fixes\n\n1. Qdrant Security - Add readOnlyRootFilesystem (deployments/overlays/staging-gke/qdrant-patch.yaml:16)\n2. Helm Placeholder Validation Pre-commit Hook (.pre-commit-config.yaml:389-413)\n3. Auth Performance Test User Seeding (tests/regression/test_performance_regression.py:23-60)\n4. Standardize Pytest Installation - 4 workflows (deployment-validation.yml, validate-kubernetes.yaml)\n5. Add Deployment Marker to Pytest (pyproject.toml:408)\n\n## New Test Files (TDD)\n\n- tests/security/test_deployment_security_regression.py (356 lines, 9 tests)\n- tests/deployment/test_helm_placeholder_validation.py (293 lines, 8 tests)\n- tests/test_ci_workflow_dependencies.py (168 lines, 5 tests)\n- tests/test_workflow_health_dashboard.py (220 lines, 9 tests)\n\n## Test Results\n\nRED→GREEN: 3 initially failing tests now pass\nTotal: 20/22 new tests passing (2 correctly flag Helm templates)\n\n## Workflow Impact\n\nFixed: CI/CD Pipeline, Quality Tests, Deploy to GKE Staging, Security Validation\n\n🧪 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T14:37:15-05:00",
+          "tree_id": "8704ea4de0757dc1c7fdaf7f595382ff038310d7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/db0e89a981ab095b029b76050390913c66021c7e"
+        },
+        "date": 1762717241984,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.19645520960768,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008078290869919349",
+            "extra": "mean: 6.887220480392484 msec\nrounds: 102"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.9716163364632,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001239111008930008",
+            "extra": "mean: 6.667928401574919 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44598.85559339374,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.42209999998579 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46954.08829244824,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.297400000008793 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45710.357235597345,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.876879999993548 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 193.94906158308814,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.15599298000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.42067908809426,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.491505290000106 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.975424601808445,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.24635942000003 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1449506.4430778944,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 689.8899999896457 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12549.959821292126,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 79.68153000007305 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2953.834258528529,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.54302999998254 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2918.3537426456173,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.65894000000685 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 57754.56787595149,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000037817633250996884",
+            "extra": "mean: 17.314647772066383 usec\nrounds: 13443"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17486.893338633374,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015254287143424194",
+            "extra": "mean: 57.1856864815847 usec\nrounds: 5585"
           }
         ]
       }
