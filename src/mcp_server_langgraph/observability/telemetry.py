@@ -581,7 +581,30 @@ def get_meter() -> Any:
 
 
 def get_logger() -> Any:
-    """Get logger instance (lazy accessor)."""
+    """
+    Get logger instance (lazy accessor with safe fallback).
+
+    Returns the configured logger if observability is initialized,
+    otherwise returns a basic Python logger that logs to stderr.
+
+    This prevents RuntimeError when functions like create_user_provider()
+    or create_session_store() are called before init_observability()
+    (e.g., in test fixtures or standalone scripts).
+
+    Returns:
+        Logger instance (either ObservabilityConfig logger or fallback logger)
+    """
+    if _observability_config is None:
+        # Return fallback logger if observability not initialized
+        # Uses standard Python logging to stderr
+        fallback_logger = logging.getLogger("mcp-server-langgraph-fallback")
+        if not fallback_logger.handlers:
+            # Configure fallback logger on first use
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter("%(levelname)s:%(name)s:%(message)s"))
+            fallback_logger.addHandler(handler)
+            fallback_logger.setLevel(logging.INFO)
+        return fallback_logger
     return get_config().get_logger()
 
 

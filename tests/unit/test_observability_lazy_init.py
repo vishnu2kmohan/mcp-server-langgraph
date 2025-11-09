@@ -56,13 +56,13 @@ class TestObservabilitySafeFallback:
 
         assert provider is not None
 
-    def test_get_session_store_before_observability_init(self):
+    def test_create_session_store_before_observability_init(self):
         """
-        Test that get_session_store() works before init_observability().
+        Test that create_session_store() works before init_observability().
 
-        This function logs at lines 127, 133, 146 in auth/session.py.
+        This function logs at lines 127, 133, 146 in auth/factory.py.
         """
-        from mcp_server_langgraph.auth.session import get_session_store
+        from mcp_server_langgraph.auth.factory import create_session_store
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings without initializing observability
@@ -76,7 +76,7 @@ class TestObservabilitySafeFallback:
         )
 
         # Should not raise RuntimeError when creating session store
-        store = get_session_store(settings)
+        store = create_session_store(settings)
 
         assert store is not None
 
@@ -141,8 +141,7 @@ class TestObservabilityIntegration:
         Simulates realistic test setup scenario where multiple components
         are created before the app (and observability) is initialized.
         """
-        from mcp_server_langgraph.auth.factory import create_user_provider
-        from mcp_server_langgraph.auth.session import get_session_store
+        from mcp_server_langgraph.auth.factory import create_session_store, create_user_provider
         from mcp_server_langgraph.core.config import Settings
 
         # Create settings
@@ -157,7 +156,7 @@ class TestObservabilityIntegration:
 
         # All of these should work without RuntimeError
         user_provider = create_user_provider(settings)
-        session_store = get_session_store(settings)
+        session_store = create_session_store(settings)
 
         assert user_provider is not None
         assert session_store is not None
