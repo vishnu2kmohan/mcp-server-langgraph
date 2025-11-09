@@ -413,5 +413,65 @@ def test_cloud_overlay_otel_config_present(overlay_dir: Path):
     assert data, f"OTEL collector ConfigMap in {overlay_dir.name} has no data"
 
 
+# Codex Finding #4 (P1): AWS container name mismatch test
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for AWS patch validation")
+def test_aws_overlay_container_patches_apply():
+    """
+    Test that AWS overlay patches are applied to the correct container.
+
+    Codex Finding #4 (P1): AWS deployment-patch.yaml references container 'mcp-server'
+    but base deployment uses 'mcp-server-langgraph', causing patches to be ignored.
+
+    Red phase: AWS-specific env vars (AWS_REGION, etc.) will be missing from deployment.
+    Green phase: After fixing container name, env vars should be present.
+    """
+    aws_overlay = CLOUD_OVERLAYS_DIR / "aws"
+    stdout, stderr, returncode = build_kustomize(aws_overlay)
+    assert returncode == 0, f"Build failed: {stderr}"
+
+    manifests = parse_manifests(stdout)
+
+    # Find main deployment
+    deployment = None
+    for manifest in manifests:
+        if manifest.get("kind") == "Deployment":
+            name = manifest.get("metadata", {}).get("name")
+            # Look for the main app deployment (might have prefix)
+            if "mcp-server-langgraph" in name:
+                deployment = manifest
+                break
+
+    assert deployment is not None, "mcp-server-langgraph Deployment not found in AWS overlay"
+
+    # Get containers
+    containers = deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+
+    # Find main container
+    main_container = None
+    for container in containers:
+        if container.get("name") == "mcp-server-langgraph":
+            main_container = container
+            break
+
+    assert main_container is not None, (
+        "Container 'mcp-server-langgraph' not found in deployment.\n"
+        f"Available containers: {[c.get('name') for c in containers]}"
+    )
+
+    # Verify AWS-specific environment variables are present
+    env_vars = {env.get("name"): env.get("value") for env in main_container.get("env", [])}
+
+    aws_env_vars = ["AWS_REGION"]
+    missing_vars = [var for var in aws_env_vars if var not in env_vars]
+
+    assert not missing_vars, (
+        f"AWS-specific environment variables missing from deployment:\n"
+        f"Missing: {missing_vars}\n"
+        f"Available: {list(env_vars.keys())}\n\n"
+        f"This indicates the deployment patch is not being applied.\n"
+        f"Check that container name in patch matches base deployment."
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

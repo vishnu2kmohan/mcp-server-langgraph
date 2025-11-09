@@ -12,7 +12,8 @@ spec:
     spec:
       serviceAccountName: mcp-server-langgraph
       containers:
-        - name: mcp-server
+        # Codex Finding #4 (P1): Fixed container name to match base deployment
+        - name: mcp-server-langgraph
           env:
             # AWS-specific environment variables
             - name: AWS_REGION
