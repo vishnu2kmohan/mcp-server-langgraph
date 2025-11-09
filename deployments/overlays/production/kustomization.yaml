@@ -38,7 +38,8 @@ replicas:
   - name: mcp-server-langgraph
     count: 5
 
+# Codex Finding #6 (P1): Use full registry path for image name matching
 images:
-  - name: mcp-server-langgraph
+  - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newName: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newTag: 2.8.0

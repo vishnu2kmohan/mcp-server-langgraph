@@ -177,8 +177,9 @@ patches:
       name: otel-collector-config
 
 # Image configuration
+# Codex Finding #6 (P1): Use full registry path for image name matching
 images:
-  - name: mcp-server-langgraph
+  - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent
     newTag: staging-9cdd80e
 
