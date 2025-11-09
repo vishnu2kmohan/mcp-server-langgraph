@@ -571,12 +571,38 @@ def shutdown_observability() -> None:
 
 
 def get_tracer() -> Any:
-    """Get tracer instance (lazy accessor)."""
+    """
+    Get tracer instance (lazy accessor with safe fallback).
+
+    Returns the configured tracer if observability is initialized,
+    otherwise returns a no-op tracer that doesn't raise errors.
+
+    Returns:
+        Tracer instance (either ObservabilityConfig tracer or no-op tracer)
+    """
+    if _observability_config is None:
+        # Return no-op tracer if observability not initialized
+        from opentelemetry.trace import get_tracer as get_noop_tracer
+
+        return get_noop_tracer(__name__)
     return get_config().get_tracer()
 
 
 def get_meter() -> Any:
-    """Get meter instance (lazy accessor)."""
+    """
+    Get meter instance (lazy accessor with safe fallback).
+
+    Returns the configured meter if observability is initialized,
+    otherwise returns a no-op meter that doesn't raise errors.
+
+    Returns:
+        Meter instance (either ObservabilityConfig meter or no-op meter)
+    """
+    if _observability_config is None:
+        # Return no-op meter if observability not initialized
+        from opentelemetry.metrics import get_meter as get_noop_meter
+
+        return get_noop_meter(__name__)
     return get_config().get_meter()
 
 

@@ -13,27 +13,44 @@ Usage:
     uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
 """
 
+from typing import Optional
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation
-from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
-def create_app() -> FastAPI:
+def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
     """
     Create and configure the FastAPI application.
 
+    Args:
+        settings_override: Optional settings to use instead of global settings.
+                          Useful for testing with custom configurations.
+
     Returns:
         FastAPI: Configured application instance
+
+    Usage:
+        # Production (uses global settings)
+        app = create_app()
+
+        # Testing (uses custom settings)
+        test_settings = Settings(environment="test", ...)
+        test_app = create_app(settings_override=test_settings)
     """
-    # Initialize observability FIRST before any logging (OpenAI Codex Finding #2)
+    # Use override settings if provided, otherwise use global settings
+    config = settings_override if settings_override is not None else settings
+
+    # Initialize observability FIRST before any logging (OpenAI Codex Finding #3)
     # This prevents RuntimeError: "Observability not initialized" when logger is used
-    init_observability(settings)
+    init_observability(config)
 
     # Validation: Verify logger is now usable (prevent regression)
     try:
@@ -53,9 +70,9 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
 
-    # CORS middleware - use settings configuration with environment-aware defaults
+    # CORS middleware - use config (settings or override) for environment-aware defaults
     # get_cors_origins() provides localhost origins in dev, empty list in production
-    cors_origins = settings.get_cors_origins()
+    cors_origins = config.get_cors_origins()
     if cors_origins:
         app.add_middleware(
             CORSMiddleware,

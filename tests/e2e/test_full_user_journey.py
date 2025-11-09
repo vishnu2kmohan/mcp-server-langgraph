@@ -182,54 +182,59 @@ class TestStandardUserJourney:
                 assert "name" in tool
                 assert "description" in tool
 
+    @pytest.mark.xfail(strict=True, reason="Implement when MCP server test fixture is ready")
     async def test_04_agent_chat_create_conversation(self, authenticated_session):
         """Step 4: Chat with agent and create new conversation"""
-        pytest.skip("Implement when MCP server test fixture is ready")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # Call agent_chat tool with message and new thread_id
         # Receive AI response
         # Verify response format (concise vs detailed)
         # Verify conversation is persisted
         # Verify OpenFGA tuples are seeded (owner, editor, viewer)
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when MCP server test fixture is ready")
     async def test_05_agent_chat_continue_conversation(self, authenticated_session):
         """Step 5: Continue existing conversation"""
-        pytest.skip("Implement when MCP server test fixture is ready")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # Call agent_chat with same thread_id
         # Verify context continuity (agent remembers previous messages)
         # Verify authorization check for existing conversation
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when MCP server test fixture is ready")
     async def test_06_search_conversations(self, authenticated_session):
         """Step 6: Search user's conversations"""
-        pytest.skip("Implement when MCP server test fixture is ready")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # Call conversation_search with query
         # Receive matching conversations
         # Verify results are authorized (user can only see their own)
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when MCP server test fixture is ready")
     async def test_07_get_conversation(self, authenticated_session):
         """Step 7: Retrieve specific conversation by ID"""
-        pytest.skip("Implement when MCP server test fixture is ready")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # Call conversation_get with thread_id
         # Receive full conversation history
         # Verify all messages are present
         # Verify viewer authorization
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when token refresh is implemented")
     async def test_08_refresh_token(self, authenticated_session):
         """Step 8: Refresh JWT token before expiration"""
-        pytest.skip("Implement when token refresh is implemented")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /auth/refresh with refresh_token
         # Receive new access_token
         # Verify old token still works until expiration
         # Verify new token works
+        pytest.fail("Test not yet implemented")
 
 
 # ==============================================================================
@@ -249,47 +254,51 @@ class TestGDPRComplianceJourney:
     5. Consent Management (Article 21)
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_01_access_user_data(self, authenticated_session):
         """Article 15: Right to Access"""
-        pytest.skip("Implement when GDPR endpoints are integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # GET /api/v1/users/me/data
         # Receive all user data in structured format
         # Verify data includes: profile, conversations, api_keys, service_principals
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_02_export_user_data(self, authenticated_session):
         """Article 20: Right to Data Portability"""
-        pytest.skip("Implement when GDPR endpoints are integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # GET /api/v1/users/me/export
         # Receive data in machine-readable format (JSON)
         # Verify export includes all personal data
         # Verify export can be imported elsewhere
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_03_update_profile(self, authenticated_session):
         """Article 16: Right to Rectification"""
-        pytest.skip("Implement when GDPR endpoints are integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # PATCH /api/v1/users/me with updated data
         # Receive confirmation
         # Verify data is updated in all systems (Keycloak, OpenFGA)
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_04_manage_consent(self, authenticated_session):
         """Article 21: Consent Management"""
-        pytest.skip("Implement when GDPR endpoints are integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /api/v1/users/me/consent to grant/revoke
         # GET /api/v1/users/me/consent to check status
         # Verify consent is respected in data processing
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_05_delete_account(self, authenticated_session):
         """Article 17: Right to Erasure"""
-        pytest.skip("Implement when GDPR endpoints are integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # DELETE /api/v1/users/me
         # Receive confirmation
@@ -300,6 +309,7 @@ class TestGDPRComplianceJourney:
         #   - API keys revoked
         #   - Service principals deleted
         # Verify user cannot login after deletion
+        pytest.fail("Test not yet implemented")
 
 
 # ==============================================================================
@@ -319,71 +329,78 @@ class TestServicePrincipalJourney:
     6. Delete service principal
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP API is integrated")
     async def test_01_create_service_principal(self, authenticated_session):
         """Step 1: Create service principal"""
-        pytest.skip("Implement when SP API is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /api/v1/service-principals/ with name, description, mode
         # Receive service_id and client_secret
         # Store client_secret for authentication
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP API is integrated")
     async def test_02_list_service_principals(self, authenticated_session):
         """Step 2: List user's service principals"""
-        pytest.skip("Implement when SP API is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # GET /api/v1/service-principals/
         # Receive list including newly created SP
         # Verify no client_secret in response
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP authentication is integrated")
     async def test_03_authenticate_with_client_credentials(self):
         """Step 3: Authenticate SP using OAuth2 client credentials flow"""
-        pytest.skip("Implement when SP authentication is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /auth/token with client_id, client_secret, grant_type=client_credentials
         # Receive access_token for service principal
         # Verify token has correct claims (sub=service_id)
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP token usage is integrated")
     async def test_04_use_sp_to_invoke_tools(self):
         """Step 4: Use SP token to invoke MCP tools"""
-        pytest.skip("Implement when SP token usage is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # Call agent_chat with SP access_token
         # Verify SP can execute tools
         # Verify authorization uses SP permissions
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP association is integrated")
     async def test_05_associate_with_user(self, authenticated_session):
         """Step 5: Associate SP with user for permission inheritance"""
-        pytest.skip("Implement when SP association is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /api/v1/service-principals/{service_id}/associate-user
         # Specify user_id and inherit_permissions=true
         # Verify SP now inherits user's permissions
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP rotation is integrated")
     async def test_06_rotate_client_secret(self, authenticated_session):
         """Step 6: Rotate service principal secret"""
-        pytest.skip("Implement when SP rotation is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # POST /api/v1/service-principals/{service_id}/rotate-secret
         # Receive new client_secret
         # Verify old secret no longer works
         # Verify new secret works for authentication
+        pytest.fail("Test not yet implemented")
 
+    @pytest.mark.xfail(strict=True, reason="Implement when SP deletion is integrated")
     async def test_07_delete_service_principal(self, authenticated_session):
         """Step 7: Delete service principal"""
-        pytest.skip("Implement when SP deletion is integrated")
-
+        pytest.fail("Test not yet implemented")
         # Expected flow:
         # DELETE /api/v1/service-principals/{service_id}
         # Receive 204 No Content
         # Verify SP is deleted from Keycloak
         # Verify OpenFGA tuples are deleted
         # Verify SP token no longer works
+        pytest.fail("Test not yet implemented")
 
 
 # ==============================================================================
@@ -402,45 +419,50 @@ class TestAPIKeyJourney:
     5. Revoke API key
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key endpoints are integrated")
     async def test_01_create_api_key(self, authenticated_session):
         """Step 1: Create API key"""
-        pytest.skip("Implement when API key endpoints are integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # POST /api/v1/api-keys/ with name, expires_days
         # Receive key_id and api_key
         # Store api_key for later use
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key endpoints are integrated")
     async def test_02_list_api_keys(self, authenticated_session):
         """Step 2: List user's API keys"""
-        pytest.skip("Implement when API key endpoints are integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # GET /api/v1/api-keys/
         # Receive list including newly created key
         # Verify no api_key value in response (only metadata)
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key validation is integrated")
     async def test_03_validate_api_key_to_jwt(self):
         """Step 3: Validate API key and exchange for JWT (Kong plugin)"""
-        pytest.skip("Implement when API key validation is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # POST /api/v1/api-keys/validate with X-API-Key header
         # Receive access_token (JWT)
         # Verify JWT has correct user claims
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key usage is integrated")
     async def test_04_use_api_key_for_tools(self):
         """Step 4: Use API key to invoke MCP tools"""
-        pytest.skip("Implement when API key usage is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Call agent_chat with JWT obtained from API key validation
         # Verify tool execution succeeds
         # Verify last_used timestamp is updated
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key rotation is integrated")
     async def test_05_rotate_api_key(self, authenticated_session):
         """Step 5: Rotate API key"""
-        pytest.skip("Implement when API key rotation is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # POST /api/v1/api-keys/{key_id}/rotate
@@ -448,9 +470,10 @@ class TestAPIKeyJourney:
         # Verify old key no longer validates
         # Verify new key validates successfully
 
+    @pytest.mark.xfail(strict=True, reason="Implement when API key revocation is integrated")
     async def test_06_revoke_api_key(self, authenticated_session):
         """Step 6: Revoke API key"""
-        pytest.skip("Implement when API key revocation is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # DELETE /api/v1/api-keys/{key_id}
@@ -475,9 +498,10 @@ class TestErrorRecoveryJourney:
     5. Rate limiting
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when token expiration handling is ready")
     async def test_01_expired_token_refresh(self):
         """Test automatic token refresh on expiration"""
-        pytest.skip("Implement when token expiration handling is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Wait for token to expire (or mock expiration)
@@ -486,27 +510,30 @@ class TestErrorRecoveryJourney:
         # Refresh token
         # Retry with new token succeeds
 
+    @pytest.mark.xfail(strict=True, reason="Implement when authentication is integrated")
     async def test_02_invalid_credentials(self):
         """Test login with invalid credentials"""
-        pytest.skip("Implement when authentication is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # POST /auth/login with wrong password
         # Receive 401 Unauthorized
         # Verify no token is issued
 
+    @pytest.mark.xfail(strict=True, reason="Implement when authorization is integrated")
     async def test_03_unauthorized_resource_access(self, authenticated_session):
         """Test accessing unauthorized conversation"""
-        pytest.skip("Implement when authorization is integrated")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Try to access another user's conversation
         # Receive PermissionError
         # Verify OpenFGA denied access
 
+    @pytest.mark.xfail(strict=True, reason="Implement when rate limiting is ready")
     async def test_04_rate_limiting(self, authenticated_session):
         """Test rate limiting enforcement"""
-        pytest.skip("Implement when rate limiting is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Make rapid API calls exceeding rate limit
@@ -514,9 +541,10 @@ class TestErrorRecoveryJourney:
         # Wait for rate limit reset
         # Verify subsequent call succeeds
 
+    @pytest.mark.xfail(strict=True, reason="Implement when retry logic is ready")
     async def test_05_network_error_retry(self):
         """Test retry logic for transient network errors"""
-        pytest.skip("Implement when retry logic is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Simulate network error (mock)
@@ -539,9 +567,10 @@ class TestMultiUserCollaboration:
     4. Conversation transfer
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when conversation sharing is ready")
     async def test_01_share_conversation(self, authenticated_session):
         """Test sharing conversation with another user"""
-        pytest.skip("Implement when conversation sharing is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # User A creates conversation
@@ -549,18 +578,20 @@ class TestMultiUserCollaboration:
         # User B can read conversation
         # User B cannot edit conversation (viewer != editor)
 
+    @pytest.mark.xfail(strict=True, reason="Implement when permission management is ready")
     async def test_02_grant_edit_permission(self, authenticated_session):
         """Test granting edit permission"""
-        pytest.skip("Implement when permission management is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # User A grants editor permission to User B
         # User B can now add messages to conversation
         # Verify both users see all messages
 
+    @pytest.mark.xfail(strict=True, reason="Implement when permission revocation is ready")
     async def test_03_revoke_permission(self, authenticated_session):
         """Test revoking access permission"""
-        pytest.skip("Implement when permission revocation is ready")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # User A revokes User B's access
@@ -583,9 +614,10 @@ class TestPerformanceE2E:
     3. Bulk operations
     """
 
+    @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_01_concurrent_users(self):
         """Test system with multiple concurrent users"""
-        pytest.skip("Implement when performance testing is prioritized")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Spawn 10 concurrent user sessions
@@ -593,9 +625,10 @@ class TestPerformanceE2E:
         # Verify all succeed
         # Measure response times
 
+    @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_02_large_conversation(self, authenticated_session):
         """Test performance with large conversation history"""
-        pytest.skip("Implement when performance testing is prioritized")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Create conversation with 1000+ messages
@@ -603,9 +636,10 @@ class TestPerformanceE2E:
         # Verify response time < 2 seconds
         # Verify memory usage is reasonable
 
+    @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_03_bulk_search(self, authenticated_session):
         """Test search across many conversations"""
-        pytest.skip("Implement when performance testing is prioritized")
+        pytest.fail("Test not yet implemented")
 
         # Expected flow:
         # Create 100 conversations

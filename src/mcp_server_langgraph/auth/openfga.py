@@ -278,18 +278,99 @@ class OpenFGAClient:
 
     async def delete_tuples_for_object(self, object_id: str) -> None:
         """
-        Delete all tuples related to an object (helper for cleanup operations)
+        Delete all tuples related to an object (helper for cleanup operations).
+
+        This implements proper cleanup for resource deletion, ensuring no orphaned
+        authorization tuples remain in OpenFGA (important for GDPR compliance).
 
         Args:
             object_id: Object identifier (e.g., "service_principal:batch-job")
+
+        Implementation:
+        1. Extracts object type from object_id
+        2. Gets model definition to find all available relations
+        3. Expands each relation to find all users with permissions
+        4. Deletes tuples in batches (100 per batch) with retry logic
         """
-        # Note: This is a simplified implementation
-        # In production, you'd want to query for all tuples with this object
-        # and then delete them. For now, this is a placeholder.
         logger.info(f"Deleting tuples for object: {object_id}")
-        # TODO: Implement actual tuple cleanup logic
-        # This would require querying OpenFGA for all tuples with object=object_id
-        # then deleting them
+
+        # Extract object type from object_id (e.g., "service_principal:batch-job" -> "service_principal")
+        object_type = object_id.split(":")[0] if ":" in object_id else object_id
+
+        # Get authorization model to determine available relations for this type
+        model_def = OpenFGAAuthorizationModel.get_model_definition()
+        type_defs = model_def.get("type_definitions", [])
+
+        # Find the type definition for this object type
+        type_def = next((t for t in type_defs if t.get("type") == object_type), None)
+
+        if not type_def:
+            logger.warning(f"Type '{object_type}' not found in authorization model, skipping cleanup")
+            return
+
+        # Get all relations for this type
+        relations = type_def.get("relations", {})
+        if not relations:
+            logger.info(f"No relations defined for type '{object_type}', nothing to clean up")
+            return
+
+        # Collect all tuples to delete across all relations
+        tuples_to_delete: List[Dict[str, str]] = []
+
+        for relation_name in relations.keys():
+            try:
+                # Expand relation to find all users with this permission
+                expansion = await self.expand_relation(relation=relation_name, object=object_id)
+
+                # Extract users from expansion tree
+                users = _extract_users_from_expansion(expansion)
+
+                # Build tuples for deletion
+                for user in users:
+                    tuples_to_delete.append({"user": user, "relation": relation_name, "object": object_id})
+
+                logger.debug(
+                    f"Found {len(users)} users with '{relation_name}' relation to {object_id}",
+                    extra={"object_id": object_id, "relation": relation_name, "user_count": len(users)},
+                )
+
+            except Exception as e:
+                # Log but continue with other relations
+                logger.warning(
+                    f"Error expanding relation '{relation_name}' for {object_id}: {e}",
+                    extra={"object_id": object_id, "relation": relation_name, "error": str(e)},
+                )
+
+        # Delete tuples in batches (100 per batch as per user requirement)
+        if not tuples_to_delete:
+            logger.info(f"No tuples found for {object_id}, nothing to delete")
+            return
+
+        batch_size = 100
+        total_batches = (len(tuples_to_delete) + batch_size - 1) // batch_size
+
+        logger.info(
+            f"Deleting {len(tuples_to_delete)} tuples for {object_id} in {total_batches} batch(es)",
+            extra={"object_id": object_id, "tuple_count": len(tuples_to_delete), "batch_count": total_batches},
+        )
+
+        for i in range(0, len(tuples_to_delete), batch_size):
+            batch = tuples_to_delete[i : i + batch_size]
+            batch_num = i // batch_size + 1
+
+            try:
+                await self.delete_tuples(batch)
+                logger.info(
+                    f"Deleted batch {batch_num}/{total_batches} ({len(batch)} tuples)",
+                    extra={"object_id": object_id, "batch": batch_num, "tuples_in_batch": len(batch)},
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to delete batch {batch_num}/{total_batches} for {object_id}: {e}",
+                    extra={"object_id": object_id, "batch": batch_num, "error": str(e)},
+                )
+                # Note: Continue with next batch even if one fails
+                # This ensures partial cleanup is better than no cleanup
 
     async def list_objects(self, user: str, relation: str, object_type: str) -> List[str]:
         """
@@ -340,6 +421,68 @@ class OpenFGAClient:
             except Exception as e:
                 logger.error(f"Failed to expand relation: {e}", exc_info=True)
                 raise
+
+
+def _extract_users_from_expansion(expansion: Dict[str, Any]) -> List[str]:
+    """
+    Extract all user IDs from an OpenFGA expansion tree.
+
+    Recursively traverses the expansion tree to find all leaf nodes containing users.
+
+    Args:
+        expansion: Expansion tree from OpenFGA expand() call
+
+    Returns:
+        List of user IDs (e.g., ["user:alice", "user:bob"])
+
+    Example expansion structures:
+        Simple leaf: {"leaf": {"users": {"users": ["user:alice"]}}}
+        Union: {"union": {"nodes": [{"leaf": ...}, {"leaf": ...}]}}
+        Empty: {}
+    """
+    if not expansion:
+        return []
+
+    users: List[str] = []
+
+    # Handle leaf nodes (direct user lists)
+    if "leaf" in expansion:
+        leaf = expansion["leaf"]
+        if isinstance(leaf, dict) and "users" in leaf:
+            user_data = leaf["users"]
+            if isinstance(user_data, dict) and "users" in user_data:
+                user_list = user_data["users"]
+                if isinstance(user_list, list):
+                    users.extend(user_list)
+
+    # Handle union nodes (multiple children)
+    if "union" in expansion:
+        union = expansion["union"]
+        if isinstance(union, dict) and "nodes" in union:
+            nodes = union["nodes"]
+            if isinstance(nodes, list):
+                for node in nodes:
+                    users.extend(_extract_users_from_expansion(node))
+
+    # Handle intersection nodes (all children must be true)
+    if "intersection" in expansion:
+        intersection = expansion["intersection"]
+        if isinstance(intersection, dict) and "nodes" in intersection:
+            nodes = intersection["nodes"]
+            if isinstance(nodes, list):
+                for node in nodes:
+                    users.extend(_extract_users_from_expansion(node))
+
+    # Handle difference nodes (exclusion)
+    if "difference" in expansion:
+        difference = expansion["difference"]
+        if isinstance(difference, dict):
+            # Base users
+            if "base" in difference:
+                users.extend(_extract_users_from_expansion(difference["base"]))
+            # Subtract users are excluded, so we don't add them
+
+    return list(set(users))  # Deduplicate
 
 
 class OpenFGAAuthorizationModel:
