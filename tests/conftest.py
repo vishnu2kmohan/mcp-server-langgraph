@@ -85,6 +85,62 @@ if HYPOTHESIS_AVAILABLE:
 
 
 # ==============================================================================
+# Pytest Hooks for Custom Behavior (CODEX Finding #4)
+# ==============================================================================
+
+
+def pytest_addoption(parser):
+    """
+    Add custom pytest CLI options.
+
+    CODEX FINDING #4: Add --run-benchmarks flag to opt-in to benchmark execution.
+    By default, benchmarks are skipped for faster test iteration.
+    """
+    parser.addoption(
+        "--run-benchmarks",
+        action="store_true",
+        default=False,
+        help="Run benchmark tests (disabled by default for faster iteration)",
+    )
+
+
+def pytest_configure(config):
+    """
+    Configure pytest behavior based on command-line options.
+
+    CODEX FINDING #4: Skip benchmarks by default unless explicitly requested.
+    """
+    # Store benchmark flag in config for use in pytest_collection_modifyitems
+    config._run_benchmarks = config.getoption("--run-benchmarks")
+
+
+def pytest_collection_modifyitems(config, items):
+    """
+    Modify test collection to skip benchmarks by default.
+
+    CODEX FINDING #4: Benchmarks run by default, slowing everyday test runs.
+    Solution: Skip benchmarks unless:
+    - --run-benchmarks flag is passed
+    - -m benchmark is used (explicit marker selection)
+    - --benchmark-only is used (pytest-benchmark flag)
+    """
+    run_benchmarks = getattr(config, "_run_benchmarks", False)
+    benchmark_only = config.getoption("--benchmark-only", default=False)
+    markexpr = config.getoption("-m", default="")
+
+    # If user explicitly requests benchmarks, don't skip
+    if run_benchmarks or benchmark_only or "benchmark" in markexpr:
+        return
+
+    # Skip all tests marked with @pytest.mark.benchmark
+    skip_benchmark = pytest.mark.skip(reason="Benchmark tests skipped by default. Use --run-benchmarks to enable.")
+
+    for item in items:
+        if "benchmark" in item.keywords:
+            item.add_marker(skip_benchmark)
+
+
+# ==============================================================================
 # Observability Initialization (Session-Scoped Autouse Fixture)
 # ==============================================================================
 

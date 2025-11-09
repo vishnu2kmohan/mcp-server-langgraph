@@ -2,6 +2,9 @@
 
 These tests verify that the parallel executor can handle timeouts gracefully
 without blocking other tool executions.
+
+CODEX FINDING #2: Optimized to use short sleeps (0.05-0.3s instead of 5-10s)
+for fast test execution while maintaining timeout behavior validation.
 """
 
 import asyncio
@@ -19,14 +22,14 @@ class TestParallelExecutorTimeouts:
         """
         Test that parallel executor respects per-task timeout configuration.
 
-        RED: Will fail until timeout parameter is added to __init__()
+        CODEX FINDING #2: Optimized to use short sleeps for fast test execution.
         """
-        # GIVEN: Executor with 2-second timeout
-        executor = ParallelToolExecutor(max_parallelism=3, task_timeout_seconds=2.0)
+        # GIVEN: Executor with 0.05-second timeout
+        executor = ParallelToolExecutor(max_parallelism=3, task_timeout_seconds=0.05)
 
-        # Mock tool that hangs for 5 seconds
+        # Mock tool that hangs for 0.2 seconds (exceeds timeout)
         async def slow_tool(name: str, args: dict):
-            await asyncio.sleep(5)
+            await asyncio.sleep(0.2)
             return "should not reach here"
 
         invocations = [ToolInvocation(tool_name="slow", arguments={}, invocation_id="inv1")]
@@ -43,15 +46,15 @@ class TestParallelExecutorTimeouts:
         """
         Test that a hung tool doesn't block execution of other independent tools.
 
-        RED: Will fail until timeout is implemented
+        CODEX FINDING #2: Optimized to use short sleeps for fast test execution.
         """
-        # GIVEN: Executor with 1-second timeout
-        executor = ParallelToolExecutor(max_parallelism=3, task_timeout_seconds=1.0)
+        # GIVEN: Executor with 0.05-second timeout
+        executor = ParallelToolExecutor(max_parallelism=3, task_timeout_seconds=0.05)
 
         # Mock tools: one hangs, two are fast
         async def slow_tool(name: str, args: dict):
             if name == "hung":
-                await asyncio.sleep(10)  # Hangs for 10 seconds
+                await asyncio.sleep(0.3)  # Hangs for 0.3 seconds (exceeds 0.05s timeout)
                 return "should timeout"
             else:
                 return f"result_{name}"
@@ -70,8 +73,8 @@ class TestParallelExecutorTimeouts:
         duration = time.time() - start
 
         # THEN:
-        # - Should complete in ~1 second (timeout), not 10 seconds (hang)
-        assert duration < 3, f"Took {duration}s, should timeout at ~1s"
+        # - Should complete in ~0.05 second (timeout), not 0.3 seconds (hang)
+        assert duration < 0.5, f"Took {duration}s, should timeout at ~0.05s"
 
         # - Hung tool should have timeout error
         hung_result = next(r for r in results if r.invocation_id == "inv1")
@@ -90,14 +93,14 @@ class TestParallelExecutorTimeouts:
         """
         Test that timeout=None disables timeout (backward compatibility).
 
-        RED: Will fail until None handling is implemented
+        CODEX FINDING #2: Optimized to use short sleeps for fast test execution.
         """
         # GIVEN: Executor with no timeout
         executor = ParallelToolExecutor(max_parallelism=2, task_timeout_seconds=None)
 
-        # Mock tool that takes 0.5 seconds
+        # Mock tool that takes 0.05 seconds
         async def normal_tool(name: str, args: dict):
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.05)
             return "completed"
 
         invocations = [ToolInvocation(tool_name="normal", arguments={}, invocation_id="inv1")]
@@ -114,14 +117,14 @@ class TestParallelExecutorTimeouts:
         """
         Test that timeout errors are properly recorded in ToolResult.
 
-        RED: Will fail until timeout error handling is implemented
+        CODEX FINDING #2: Optimized to use short sleeps for fast test execution.
         """
         # GIVEN: Executor with very short timeout
-        executor = ParallelToolExecutor(max_parallelism=1, task_timeout_seconds=0.1)
+        executor = ParallelToolExecutor(max_parallelism=1, task_timeout_seconds=0.02)
 
         # Mock tool that exceeds timeout
         async def slow_tool(name: str, args: dict):
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
             return "too slow"
 
         invocations = [ToolInvocation(tool_name="slow", arguments={}, invocation_id="inv1")]

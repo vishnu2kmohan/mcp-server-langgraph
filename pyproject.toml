@@ -416,6 +416,16 @@ markers = [
     "requires_helm: Tests requiring helm CLI tool",
 ]
 
+# CODEX FINDING #4: Benchmark configuration
+# Benchmarks are DISABLED by default for fast test iteration
+# Enable with: pytest --benchmark-enable
+# CI explicitly enables with: pytest -m benchmark --benchmark-only
+[tool.pytest.benchmark]
+disable = false  # Don't disable - use marker-based filtering instead
+disable_gc = true  # More accurate benchmarks by disabling GC during measurements
+min_rounds = 5  # Minimum number of rounds (default)
+warmup = true  # Run warmup iteration before measuring
+
 [tool.coverage.run]
 source = ["src/mcp_server_langgraph"]
 parallel = true  # Enable parallel coverage for pytest-xdist
