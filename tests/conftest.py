@@ -314,6 +314,142 @@ def helm_available():
 
 
 @pytest.fixture(scope="session")
+def terraform_available():
+    """
+    Check if terraform CLI tool is available.
+
+    Returns:
+        bool: True if terraform is installed and accessible, False otherwise
+
+    Usage:
+        def test_terraform_plan(terraform_available):
+            if not terraform_available:
+                pytest.skip("terraform not installed")
+            # Test logic here
+    """
+    import shutil
+
+    return shutil.which("terraform") is not None
+
+
+@pytest.fixture(scope="session")
+def docker_compose_available():
+    """
+    Check if docker compose CLI tool is available and functional.
+
+    Returns:
+        bool: True if docker compose is available and working
+
+    Usage:
+        def test_docker_compose_up(docker_compose_available):
+            if not docker_compose_available:
+                pytest.skip("docker compose not available")
+            # Test logic here
+
+    Raises:
+        pytest.skip: If docker compose is not available or not working
+    """
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["docker", "compose", "version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            pytest.skip("docker compose not available")
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pytest.skip("docker compose not available")
+
+    return True
+
+
+def requires_tool(tool_name, skip_reason=None):
+    """
+    Decorator to skip tests if a required CLI tool is not available.
+
+    This decorator checks for tool availability at test runtime using shutil.which(),
+    and skips the test with a clear message if the tool is not found.
+
+    Args:
+        tool_name: Name of the CLI tool to check (e.g., "kustomize", "kubectl")
+        skip_reason: Optional custom skip message. If None, uses default message.
+
+    Returns:
+        Decorator function that wraps the test function
+
+    Usage:
+        @requires_tool("kustomize")
+        def test_kustomize_build():
+            # Test will be skipped if kustomize is not installed
+            result = subprocess.run(["kustomize", "build", "."])
+            assert result.returncode == 0
+
+        @requires_tool("terraform", skip_reason="Terraform 1.5+ required for this test")
+        def test_terraform_plan():
+            # Test will be skipped with custom message if terraform not found
+            pass
+
+    Example:
+        This decorator is preferred over @pytest.mark.skipif because:
+        1. It checks at runtime (not collection time)
+        2. It provides clearer error messages
+        3. It doesn't require calling fixtures directly
+    """
+    import functools
+    import shutil
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if not shutil.which(tool_name):
+                reason = skip_reason or f"{tool_name} not installed"
+                pytest.skip(reason)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@pytest.fixture
+def settings_isolation(monkeypatch):
+    """
+    Fixture that provides automatic settings isolation and restoration.
+
+    This fixture allows tests to modify the global settings object without
+    affecting other tests. All changes are automatically reverted after the test.
+
+    Uses pytest's monkeypatch fixture internally for automatic cleanup.
+
+    Usage:
+        def test_checkpoint_backend(settings_isolation, monkeypatch):
+            # Import settings
+            from mcp_server_langgraph.core.config import settings
+
+            # Modify settings using monkeypatch
+            monkeypatch.setattr(settings, "checkpoint_backend", "redis")
+            monkeypatch.setattr(settings, "enable_checkpointing", True)
+
+            # Test logic here - settings are modified
+            assert settings.checkpoint_backend == "redis"
+
+            # After test completes, settings are automatically restored
+
+    Note:
+        This fixture doesn't do the isolation itself - it returns the monkeypatch
+        fixture to make it clear that tests should use monkeypatch for isolation.
+        The fixture name serves as documentation and ensures consistent usage.
+
+    Returns:
+        The monkeypatch fixture for use in the test
+    """
+    return monkeypatch
+
+
+@pytest.fixture(scope="session")
 def test_infrastructure_ports():
     """
     Define test infrastructure ports (offset by 1000 from production).

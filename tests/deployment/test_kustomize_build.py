@@ -13,6 +13,8 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 
@@ -37,6 +39,7 @@ def parse_manifests(manifest_text: str) -> List[Dict[str, Any]]:
     return [m for m in yaml.safe_load_all(manifest_text) if m]
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomize build")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_overlay_builds_successfully(overlay_dir: Path):
     """Test that overlay builds without errors."""
@@ -45,6 +48,7 @@ def test_overlay_builds_successfully(overlay_dir: Path):
     assert returncode == 0, f"Kustomize build failed for {overlay_dir.name}:\n" f"stderr: {stderr}\n" f"stdout: {stdout}"
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomize build")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_overlay_produces_valid_yaml(overlay_dir: Path):
     """Test that overlay produces valid YAML."""
@@ -59,6 +63,7 @@ def test_overlay_produces_valid_yaml(overlay_dir: Path):
         pytest.fail(f"Build produced invalid YAML: {e}")
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for manifest validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_all_manifests_have_required_fields(overlay_dir: Path):
     """Test that all manifests have required Kubernetes fields."""
@@ -81,6 +86,7 @@ def test_all_manifests_have_required_fields(overlay_dir: Path):
             assert "name" in metadata, f"Manifest {i} (kind: {kind}) missing metadata.name"
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for namespace validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_namespace_consistency(overlay_dir: Path):
     """Test that all namespaced resources use the correct namespace."""
@@ -134,6 +140,7 @@ def test_namespace_consistency(overlay_dir: Path):
                 )
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for duplicate resource detection")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_no_duplicate_resources(overlay_dir: Path):
     """Test that there are no duplicate resources (same kind/name/namespace)."""
@@ -161,6 +168,7 @@ def test_no_duplicate_resources(overlay_dir: Path):
     assert not duplicates, f"Duplicate resources found: {duplicates}"
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for selector validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_deployments_have_valid_selectors(overlay_dir: Path):
     """Test that all Deployments have matching selectors and labels."""
@@ -194,6 +202,7 @@ def test_deployments_have_valid_selectors(overlay_dir: Path):
             ), f"Deployment {name}: matchLabel '{key}={value}' != template '{template_labels[key]}'"
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for service validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_services_have_valid_selectors(overlay_dir: Path):
     """Test that all Services (except ExternalName) have valid selectors."""
@@ -235,6 +244,7 @@ def test_services_have_valid_selectors(overlay_dir: Path):
             assert selector, f"Service {service_name} has no selector"
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for container image validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_container_images_have_tags(overlay_dir: Path):
     """Test that all container images have explicit tags (not 'latest')."""
@@ -277,6 +287,7 @@ def test_container_images_have_tags(overlay_dir: Path):
     assert not issues, "Container image issues:\n" + "\n".join(issues)
 
 
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomization validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
 def test_kustomization_resources_exist(overlay_dir: Path):  # noqa: C901
     """

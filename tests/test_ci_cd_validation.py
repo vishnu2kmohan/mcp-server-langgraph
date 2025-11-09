@@ -12,13 +12,14 @@ These tests ensure such issues cannot recur.
 """
 
 import re
-import shutil
 import subprocess
 from pathlib import Path
 from typing import List, Set
 
 import pytest
 import yaml
+
+from tests.conftest import requires_tool
 
 # ==============================================================================
 # Kustomize Configuration Tests
@@ -51,6 +52,7 @@ class TestKustomizeConfigurations:
             pytest.skip("Base deployments directory not found")
         return base_dir
 
+    @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for overlay build validation")
     def test_kustomize_overlay_builds_successfully(self, kustomize_overlays: List[Path]):
         """
         Test that all Kustomize overlays build successfully.
@@ -60,13 +62,6 @@ class TestKustomizeConfigurations:
         Fix: Changed to strategic merge patch approach
         Prevention: This test validates all overlays build successfully
         """
-        # CODEX FINDING #1: Check if kustomize is available
-        if not shutil.which("kustomize"):
-            pytest.skip(
-                "kustomize CLI not installed. Install with:\n"
-                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
-            )
-
         for overlay_dir in kustomize_overlays:
             overlay_name = overlay_dir.name
 
@@ -100,6 +95,7 @@ class TestKustomizeConfigurations:
                     f"Output preview (first 500 chars):\n{result.stdout[:500]}"
                 )
 
+    @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for ConfigMap collision detection")
     def test_no_configmap_collisions(self, kustomize_overlays: List[Path], kustomize_base: Path):
         """
         Test that overlay ConfigMaps don't collide with base ConfigMaps.
@@ -110,13 +106,6 @@ class TestKustomizeConfigurations:
         Solution: Use behavior:replace, behavior:merge, or strategic merge patch
         Prevention: This test detects the specific pattern that caused the failure
         """
-        # CODEX FINDING #1: Check if kustomize is available
-        if not shutil.which("kustomize"):
-            pytest.skip(
-                "kustomize CLI not installed. Install with:\n"
-                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
-            )
-
         # Get all ConfigMap names from base
         base_configmaps = self._get_configmap_names(kustomize_base)
 
@@ -147,6 +136,7 @@ class TestKustomizeConfigurations:
                             f"\nSee: deployments/overlays/staging-gke/otel-collector-configmap-patch.yaml"
                         )
 
+    @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for patch validation")
     def test_overlay_patches_target_existing_resources(self, kustomize_overlays: List[Path]):
         """
         Test that overlay patches target resources that exist in base or overlay.
@@ -154,13 +144,6 @@ class TestKustomizeConfigurations:
         FINDING: Potential issue - patches targeting non-existent resources
         Prevention: Validate patch targets exist before deployment
         """
-        # CODEX FINDING #1: Check if kustomize is available
-        if not shutil.which("kustomize"):
-            pytest.skip(
-                "kustomize CLI not installed. Install with:\n"
-                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
-            )
-
         for overlay_dir in kustomize_overlays:
             overlay_name = overlay_dir.name
 

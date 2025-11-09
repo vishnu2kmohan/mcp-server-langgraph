@@ -20,6 +20,7 @@ import functools
 import hashlib
 import pickle
 from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar, cast
+from urllib.parse import urlparse, urlunparse
 
 import redis
 from cachetools import TTLCache
@@ -40,6 +41,50 @@ CACHE_TTLS = {
     "knowledge_base": 1800,  # 30 minutes - search index updates periodically
     "feature_flag": 60,  # 1 minute - fast rollout needed
 }
+
+
+def _build_redis_url_with_db(redis_url: str, db: int) -> str:
+    """
+    Build Redis URL with database number using proper URL parsing.
+
+    This prevents malformed URLs that occur with simple string concatenation:
+    - redis://localhost:6379/ + /2 → redis://localhost:6379//2 (double slash)
+    - redis://localhost:6379/0 + /2 → redis://localhost:6379/0/2 (nested paths)
+
+    Args:
+        redis_url: Base Redis URL (e.g., "redis://host:port" or "redis://:password@host:port")
+        db: Database number to use
+
+    Returns:
+        Properly formatted Redis URL with database number (e.g., "redis://host:port/2")
+
+    Example:
+        >>> _build_redis_url_with_db("redis://localhost:6379", 2)
+        'redis://localhost:6379/2'
+        >>> _build_redis_url_with_db("redis://localhost:6379/", 2)
+        'redis://localhost:6379/2'
+        >>> _build_redis_url_with_db("redis://localhost:6379/0", 2)
+        'redis://localhost:6379/2'
+    """
+    # Parse the URL to handle existing database numbers, trailing slashes, query params
+    parsed = urlparse(redis_url)
+
+    # Replace path with correct database number
+    # Redis URL path is typically empty or /db_number
+    new_path = f"/{db}"
+
+    # Reconstruct URL with new database number
+    # This pattern matches dependencies.py:189-212 (API key manager)
+    return urlunparse(
+        (
+            parsed.scheme,  # redis:// or rediss://
+            parsed.netloc,  # host:port (or user:pass@host:port)
+            new_path,  # /db_number
+            parsed.params,  # unused in Redis URLs
+            parsed.query,  # query parameters (if any)
+            parsed.fragment,  # fragment (if any)
+        )
+    )
 
 
 class CacheLayer:
@@ -108,12 +153,12 @@ class CacheService:
             redis_ssl = getattr(settings, "redis_ssl", False)
 
         try:
-            # Build Redis URL with database number
-            # Format: redis://[password@]host:port/db
-            redis_url_with_db = f"{redis_url}/{redis_db}"
+            # Build Redis URL with database number using helper function
+            # This prevents malformed URLs from simple string concatenation
+            redis_url_with_db = _build_redis_url_with_db(redis_url, redis_db)
 
             # Create Redis client using from_url() with full configuration
-            # This matches the pattern in dependencies.py:120-125 (API key manager)
+            # This matches the pattern in dependencies.py:215-220 (API key manager)
             self.redis = redis.from_url(
                 redis_url_with_db,
                 password=redis_password,

@@ -31,49 +31,70 @@ class TestCacheServiceRedisConfiguration:
         """
         from mcp_server_langgraph.core.cache import CacheService
 
-        with patch("mcp_server_langgraph.core.cache.redis.Redis") as mock_redis_class:
-            with patch("mcp_server_langgraph.core.cache.settings") as mock_settings:
-                mock_settings.redis_url = "redis://secure-redis:6379"
-                mock_settings.redis_password = "secure-password"
-                mock_settings.redis_ssl = True
-                mock_settings.redis_host = "localhost"  # Should be IGNORED
-                mock_settings.redis_port = 6379  # Should be IGNORED
+        with patch("mcp_server_langgraph.core.cache.redis") as mock_redis_module:
+            mock_redis_instance = Mock()
+            mock_redis_instance.ping.return_value = True
+            mock_redis_module.from_url.return_value = mock_redis_instance
 
-                mock_redis_instance = Mock()
-                mock_redis_instance.ping.return_value = True
-                mock_redis_class.from_url.return_value = mock_redis_instance
+            # Act: Create cache service with full configuration
+            _cache = CacheService(
+                redis_url="redis://secure-redis:6379",
+                redis_db=2,
+                redis_password="secure-password",
+                redis_ssl=True,
+            )
 
-                # Act: Create cache service
-                _cache = CacheService(redis_url=mock_settings.redis_url, redis_db=2)
+            # Assert: Should use redis.from_url() with properly constructed URL
+            mock_redis_module.from_url.assert_called_once()
+            call_args = mock_redis_module.from_url.call_args
 
-                # Assert: Should use redis.from_url() with proper config
-                # NOT redis.Redis(host=..., port=...)
-                assert hasattr(_cache, "redis")
-                assert _cache.redis_available is True
+            # Verify URL is properly constructed (not just string concat)
+            actual_url = call_args[0][0]
+            assert actual_url == "redis://secure-redis:6379/2"
+
+            # Verify password and SSL are passed
+            assert call_args[1]["password"] == "secure-password"
+            assert call_args[1]["ssl"] is True
+
+            # Verify cache is available
+            assert hasattr(_cache, "redis")
+            assert _cache.redis_available is True
 
     def test_cache_service_honors_redis_password_and_ssl(self):
         """
         Test that password and SSL settings are properly passed to Redis client.
 
-        This is the pattern used correctly in dependencies.py:120-125 for
+        This is the pattern used correctly in dependencies.py:189-220 for
         API key manager that should be replicated for L2 cache.
         """
         from mcp_server_langgraph.core.cache import CacheService
 
-        with patch("redis.Redis") as mock_redis:
+        with patch("mcp_server_langgraph.core.cache.redis") as mock_redis_module:
             mock_instance = Mock()
             mock_instance.ping.return_value = True
-            mock_redis.from_url.return_value = mock_instance
+            mock_redis_module.from_url.return_value = mock_instance
 
             # Act: Create cache with secure settings
             _cache = CacheService(
                 redis_url="redis://secure-host:6380",
                 redis_db=2,
+                redis_password="secret-pass",
+                redis_ssl=True,
             )
 
-            # Note: Actual fix would use redis.from_url() similar to:
-            # redis.from_url("redis://secure-host:6380/2", password="secret", ssl=True)
-            assert _cache is not None  # Use variable to avoid F841
+            # Assert: redis.from_url() called with proper URL and settings
+            mock_redis_module.from_url.assert_called_once()
+            call_args = mock_redis_module.from_url.call_args
+
+            # Verify URL construction
+            assert call_args[0][0] == "redis://secure-host:6380/2"
+
+            # Verify password and SSL are passed
+            assert call_args[1]["password"] == "secret-pass"
+            assert call_args[1]["ssl"] is True
+            assert call_args[1]["decode_responses"] is False  # Binary mode for pickle
+
+            assert _cache.redis_available is True
 
     def test_cache_service_falls_back_to_l1_when_redis_unavailable(self):
         """
@@ -144,18 +165,68 @@ class TestCacheServiceComparison:
                 )
                 assert _manager is not None  # Use variable to avoid F841
 
-    @pytest.mark.xfail(strict=True, reason="CacheService Redis configuration fix not yet implemented")
     def test_cache_service_should_use_same_pattern(self):
         """
         Test that after fix, CacheService uses same pattern as APIKeyManager.
 
         Expected behavior after fix:
         - Parse redis_url from settings
-        - Append database number to URL
+        - Append database number to URL correctly using urllib.parse
         - Pass password and ssl parameters
+
+        This test verifies the fix for the Redis URL construction bug where
+        simple string concatenation (redis_url + '/' + db) creates malformed URLs:
+        - redis://localhost:6379/0 + /2 = redis://localhost:6379/0/2 (wrong!)
+        - redis://localhost:6379/ + /2 = redis://localhost:6379//2 (wrong!)
+
+        The correct approach uses urllib.parse to replace the path component.
         """
-        # This test will PASS after implementing the fix
-        # It documents expected behavior
+        from mcp_server_langgraph.core.cache import CacheService
+
+        with patch("mcp_server_langgraph.core.cache.redis") as mock_redis_module:
+            # Setup mock
+            mock_redis_instance = Mock()
+            mock_redis_instance.ping.return_value = True
+            mock_redis_module.from_url.return_value = mock_redis_instance
+
+            # Test various Redis URL formats
+            test_cases = [
+                # (input_url, expected_url_with_db)
+                ("redis://localhost:6379", "redis://localhost:6379/2"),
+                ("redis://localhost:6379/", "redis://localhost:6379/2"),
+                ("redis://localhost:6379/0", "redis://localhost:6379/2"),  # Replace existing DB
+                ("redis://:password@host:6380", "redis://:password@host:6380/2"),
+                ("rediss://secure-host:6379", "rediss://secure-host:6379/2"),  # SSL scheme
+            ]
+
+            for input_url, expected_url in test_cases:
+                mock_redis_module.from_url.reset_mock()
+
+                # Act: Create cache service
+                cache = CacheService(
+                    redis_url=input_url,
+                    redis_db=2,
+                    redis_password="test-password",
+                    redis_ssl=True,
+                )
+
+                # Assert: redis.from_url called with properly constructed URL
+                mock_redis_module.from_url.assert_called_once()
+                actual_url = mock_redis_module.from_url.call_args[0][0]
+
+                assert actual_url == expected_url, (
+                    f"URL construction failed:\n"
+                    f"  Input: {input_url}\n"
+                    f"  Expected: {expected_url}\n"
+                    f"  Actual: {actual_url}\n"
+                    f"  This indicates the bug is not fixed - still using string concatenation"
+                )
+
+                # Verify password and SSL are passed
+                call_kwargs = mock_redis_module.from_url.call_args[1]
+                assert call_kwargs["password"] == "test-password"
+                assert call_kwargs["ssl"] is True
+                assert cache.redis_available is True  # Use cache variable
 
 
 @pytest.mark.integration
@@ -168,23 +239,44 @@ class TestCacheServiceProductionScenario:
 
         Example production URLs:
         - redis://redis-master.default.svc.cluster.local:6379
-        - redis://:password@redis-host:6380?ssl=true
+        - redis://:password@redis-host:6380
         - rediss://secure-redis.example.com:6380 (SSL)
+
+        Verifies that the URL parsing correctly handles:
+        - Embedded passwords in URL (redis://:password@host:port)
+        - Cluster DNS names
+        - SSL schemes (rediss://)
         """
         from mcp_server_langgraph.core.cache import CacheService
 
         # Test with mock to avoid actual Redis connection
-        with patch("redis.Redis") as mock_redis:
+        with patch("mcp_server_langgraph.core.cache.redis") as mock_redis_module:
             mock_instance = Mock()
             mock_instance.ping.return_value = True
-            mock_redis.from_url.return_value = mock_instance
+            mock_redis_module.from_url.return_value = mock_instance
 
-            # Act: Simulate production config
-            _cache = CacheService(
-                redis_url="redis://:secure-password@redis-master:6379",
-                redis_db=2,
-            )
+            # Test various production URL formats
+            test_cases = [
+                # (redis_url, expected_url_with_db)
+                ("redis://:secure-password@redis-master:6379", "redis://:secure-password@redis-master:6379/2"),
+                (
+                    "redis://redis-master.default.svc.cluster.local:6379",
+                    "redis://redis-master.default.svc.cluster.local:6379/2",
+                ),
+                ("rediss://secure-redis.example.com:6380", "rediss://secure-redis.example.com:6380/2"),
+            ]
 
-            # Assert: Should be available with L2 enabled
-            # (Currently fails because password is ignored)
-            assert _cache.redis_available is True
+            for redis_url, expected_url in test_cases:
+                mock_redis_module.from_url.reset_mock()
+
+                # Act: Simulate production config
+                _cache = CacheService(
+                    redis_url=redis_url,
+                    redis_db=2,
+                )
+
+                # Assert: Should be available with L2 enabled
+                mock_redis_module.from_url.assert_called_once()
+                actual_url = mock_redis_module.from_url.call_args[0][0]
+                assert actual_url == expected_url, f"Failed for {redis_url}: expected {expected_url}, got {actual_url}"
+                assert _cache.redis_available is True
