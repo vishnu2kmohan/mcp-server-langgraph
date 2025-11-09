@@ -24,13 +24,10 @@ commonAnnotations:
 patches:
   - path: serviceaccount-patch.yaml
   - path: deployment-patch.yaml
-
-# ConfigMap for OpenTelemetry with AWS exporters
-configMapGenerator:
-  - name: otel-collector-config
-    behavior: replace
-    files:
-      - otel-collector.yaml=otel-collector-config.yaml
+  # OpenTelemetry ConfigMap with AWS exporters (strategic merge patch)
+  # Codex Finding #2 (P0): Replaced configMapGenerator (which required base ConfigMap to also be generated)
+  # with strategic merge patch (which works with static base ConfigMap)
+  - path: otel-collector-config.yaml
 
 # Images - override if using ECR
 # NOTE: This is a template configuration for AWS deployments
@@ -52,13 +49,14 @@ generatorOptions:
   disableNameSuffixHash: false
 
 # Variable replacements (modern Kustomize syntax)
-replacements:
-  - source:
-      kind: ConfigMap
-      name: aws-config
-      fieldPath: data.region
-    targets:
-      - select:
-          kind: Deployment
-        fieldPaths:
-          - spec.template.spec.containers.[name=mcp-server-langgraph].env.[name=AWS_REGION].value
+# TEMPORARILY DISABLED: Missing aws-config ConfigMap (Codex Finding #5 - P1)
+# replacements:
+#   - source:
+#       kind: ConfigMap
+#       name: aws-config
+#       fieldPath: data.region
+#     targets:
+#       - select:
+#           kind: Deployment
+#         fieldPaths:
+#           - spec.template.spec.containers.[name=mcp-server-langgraph].env.[name=AWS_REGION].value

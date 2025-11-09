@@ -17,10 +17,19 @@ from tests.conftest import requires_tool
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
+CLOUD_OVERLAYS_DIR = REPO_ROOT / "deployments" / "kubernetes" / "overlays"
 
 # All overlays that should build successfully
 OVERLAYS_TO_TEST = [
     OVERLAYS_DIR / "staging-gke",
+]
+
+# Cloud-specific overlays (AWS, GCP, Azure)
+# Codex Finding #2 (P0): These currently fail due to ConfigMap generator issue
+CLOUD_OVERLAYS_TO_TEST = [
+    CLOUD_OVERLAYS_DIR / "aws",
+    CLOUD_OVERLAYS_DIR / "gcp",
+    CLOUD_OVERLAYS_DIR / "azure",
 ]
 
 
@@ -350,6 +359,58 @@ def test_kustomization_resources_exist(overlay_dir: Path):  # noqa: C901
     assert not missing_files, f"kustomization.yaml in {overlay_dir.name} references files that don't exist:\n" + "\n".join(
         f"  - {f}" for f in missing_files
     )
+
+
+# Codex Finding #2 (P0 Blocker): Cloud overlay ConfigMap generator tests
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomize build")
+@pytest.mark.parametrize("overlay_dir", CLOUD_OVERLAYS_TO_TEST)
+def test_cloud_overlay_builds_successfully(overlay_dir: Path):
+    """
+    Test that cloud-specific overlays (AWS, GCP, Azure) build without errors.
+
+    Codex Finding #2 (P0): These overlays use configMapGenerator with behavior: replace
+    against a non-generated ConfigMap, causing build failures.
+
+    Red phase: This test will fail until ConfigMaps are converted to patches.
+    Green phase: After fixing configMapGenerator to use patches, builds should succeed.
+    """
+    stdout, stderr, returncode = build_kustomize(overlay_dir)
+
+    assert returncode == 0, (
+        f"Kustomize build failed for {overlay_dir.name}:\n"
+        f"STDERR:\n{stderr}\n"
+        f"STDOUT:\n{stdout}\n\n"
+        f"Common issue: configMapGenerator with 'behavior: replace' requires "
+        f"base ConfigMap to also be generated (not static YAML).\n"
+        f"Fix: Convert to strategic merge patch instead of configMapGenerator."
+    )
+
+
+@requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for OTEL config validation")
+@pytest.mark.parametrize("overlay_dir", CLOUD_OVERLAYS_TO_TEST)
+def test_cloud_overlay_otel_config_present(overlay_dir: Path):
+    """
+    Test that cloud overlays include OTEL collector configuration.
+
+    Validates that the overlay-specific OTEL configuration is properly applied.
+    """
+    stdout, stderr, returncode = build_kustomize(overlay_dir)
+    assert returncode == 0, f"Build failed: {stderr}"
+
+    manifests = parse_manifests(stdout)
+
+    # Find OTEL collector ConfigMap
+    otel_config = None
+    for manifest in manifests:
+        if manifest.get("kind") == "ConfigMap" and manifest.get("metadata", {}).get("name") == "otel-collector-config":
+            otel_config = manifest
+            break
+
+    assert otel_config is not None, f"OTEL collector ConfigMap not found in {overlay_dir.name} overlay"
+
+    # Verify ConfigMap has data
+    data = otel_config.get("data", {})
+    assert data, f"OTEL collector ConfigMap in {overlay_dir.name} has no data"
 
 
 if __name__ == "__main__":
