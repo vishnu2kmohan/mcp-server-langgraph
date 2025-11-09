@@ -16,6 +16,7 @@ Reference: OpenAI Codex Deployment Configuration Review (2025-01-09)
 """
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -25,8 +26,13 @@ import yaml
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
+@pytest.mark.requires_kustomize
 class TestCriticalIssues:
-    """P0 Critical Issues - Production Blockers"""
+    """P0 Critical Issues - Production Blockers
+
+    CODEX FINDING #1: These tests require kustomize CLI tool.
+    Tests will skip gracefully if kustomize is not installed.
+    """
 
     def test_redis_ssl_configuration_matches_url_scheme(self):
         """
@@ -230,6 +236,13 @@ class TestCriticalIssues:
 
         Validates: deployments/overlays/production-gke/kustomization.yaml:76
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         # Build production-gke overlay
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
         result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
@@ -435,8 +448,12 @@ class TestMediumPriorityIssues:
             )
 
 
+@pytest.mark.requires_kustomize
 class TestLowPriorityIssues:
-    """P2-P3 Low Priority Issues - Technical Debt"""
+    """P2-P3 Low Priority Issues - Technical Debt
+
+    CODEX FINDING #1: Tests in this class may require kustomize CLI tool.
+    """
 
     def test_no_unused_secret_generators(self):
         """
@@ -450,6 +467,13 @@ class TestLowPriorityIssues:
 
         Validates: deployments/overlays/production-gke/kustomization.yaml:100-104
         """
+        # CODEX FINDING #1: Check if kustomize is available
+        if not shutil.which("kustomize"):
+            pytest.skip(
+                "kustomize CLI not installed. Install with:\n"
+                "  curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash"
+            )
+
         kustomization = REPO_ROOT / "deployments/overlays/production-gke/kustomization.yaml"
 
         if not kustomization.exists():
