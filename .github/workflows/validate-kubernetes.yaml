@@ -158,19 +158,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install pytest pyyaml
+          extras: 'dev'
+          cache-key-prefix: 'validate-kubernetes-pytest'
 
       - name: Run deployment validation tests
         run: |
           if [ -f tests/deployment/test_helm_configuration.py ]; then
-            pytest tests/deployment/test_helm_configuration.py -v --tb=short
+            uv run pytest tests/deployment/test_helm_configuration.py -v --tb=short
           else
             echo "⚠️  Deployment tests not found, skipping"
           fi

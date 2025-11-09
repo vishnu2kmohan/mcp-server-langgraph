@@ -385,6 +385,39 @@ repos:
 
           Ensures security best practices and prevents privilege escalation.
 
+      # Helm Placeholder Validation (TDD - Codex Finding)
+      - id: check-helm-placeholders
+        name: Check Helm values for unresolved placeholders
+        entry: >
+          bash -c 'if grep -r "YOUR_.*_PROJECT_ID\|@PROJECT_ID\." deployments/helm/values-*.yaml | grep -v "^#" | grep -v "TODO" | grep -v "# For" | grep -v ".local.yaml"; then
+          echo "ERROR: Found unresolved PROJECT_ID placeholders in Helm values files.";
+          echo "Use either @DOLLAR{GCP_PROJECT_ID} or actual project IDs.";
+          echo "For deployment-specific values, create values-*.local.yaml files.";
+          exit 1;
+          else echo "No dangerous placeholders found"; fi'
+        language: system
+        pass_filenames: false
+        files: ^deployments/helm/values-.*\.(yaml|yml)$
+        always_run: false  # Only run when Helm values change
+        description: |
+          Prevents committing unresolved PROJECT_ID placeholders in Helm values.
+
+          Dangerous patterns blocked:
+          - YOUR_STAGING_PROJECT_ID
+          - YOUR_GCP_PROJECT_ID
+          - @PROJECT_ID.iam.gserviceaccount.com (not using variable substitution)
+
+          Safe patterns allowed:
+          - @${GCP_PROJECT_ID}.iam.gserviceaccount.com (variable substitution)
+          - vishnu-sandbox-20250310 (actual project ID)
+          - Commented placeholders with TODO or "# For" documentation
+
+          Best practice: Create values-*.local.yaml for deployment-specific configs.
+          Add *.local.yaml to .gitignore to prevent committing secrets.
+
+          Prevents accidental deployment failures and security issues.
+          Regression prevention for Codex findings: values-staging.yaml:108, values-production.yaml:139
+
       # Docker Compose Health Check Validation (TDD)
       - id: validate-docker-compose-health-checks
         name: Validate Docker Compose health check configurations

@@ -14,6 +14,50 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import HumanMessage
 
+# ============================================================================
+# Fixtures for Performance Tests
+# ============================================================================
+
+
+@pytest.fixture
+def auth_with_alice():
+    """
+    Create AuthMiddleware with alice user seeded for performance tests.
+
+    This fixture ensures proper user initialization before performance
+    benchmarking, preventing "User not found" errors.
+    """
+    from mcp_server_langgraph.auth.middleware import AuthMiddleware
+    from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
+    from mcp_server_langgraph.core.config import Settings
+
+    # Create settings with fallback enabled for testing
+    settings = Settings(
+        allow_auth_fallback=True,
+        environment="development",
+    )
+
+    # Create user provider with test secret
+    user_provider = InMemoryUserProvider(
+        secret_key="test-secret-key",
+        use_password_hashing=False,  # Faster for benchmarking
+    )
+
+    # Seed alice user for performance tests
+    user_provider.add_user(
+        username="alice",
+        password="alice123",
+        email="alice@acme.com",
+        roles=["user", "premium"],
+    )
+
+    # Create AuthMiddleware with seeded users
+    return AuthMiddleware(
+        secret_key="test-secret-key",
+        user_provider=user_provider,
+        settings=settings,
+    )
+
 
 def load_baseline_metrics():
     """Load baseline performance metrics"""
@@ -196,11 +240,10 @@ class TestAuthPerformance:
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_jwt_validation_performance(self):
+    async def test_jwt_validation_performance(self, auth_with_alice):
         """JWT validation should be very fast (<2ms p95)"""
-        from mcp_server_langgraph.auth.middleware import AuthMiddleware
-
-        auth = AuthMiddleware(secret_key="test-secret-key")
+        # Use fixture with properly seeded alice user
+        auth = auth_with_alice
         token = auth.create_token("alice")
 
         async def validate():
