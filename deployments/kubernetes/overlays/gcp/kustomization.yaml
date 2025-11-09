@@ -6,12 +6,6 @@ namespace: mcp-server-langgraph
 resources:
   - ../../../base
 
-configMapGenerator:
-  - name: otel-collector-config
-    behavior: replace
-    files:
-      - otel-collector-config.yaml
-
 # GCP-specific annotations and labels
 commonAnnotations:
   platform: gcp
@@ -22,6 +16,10 @@ commonAnnotations:
 
 # Patches for GCP-specific configuration
 patches:
+  # OpenTelemetry ConfigMap with GCP exporters (strategic merge patch)
+  # Codex Finding #2 (P0): Replaced configMapGenerator with strategic merge patch
+  - path: otel-collector-configmap-patch.yaml
+
   # Add Workload Identity annotation to ServiceAccount
   - target:
       kind: ServiceAccount
