@@ -6,20 +6,26 @@ This directory contains all deployment configurations for the MCP Server with La
 
 ```
 deployments/
-├── helm/                    # Helm chart for Kubernetes
-│   └── langgraph-agent/    # Main chart
-├── kustomize/              # Kustomize overlays for Kubernetes
-│   ├── base/               # Base configuration
-│   └── overlays/           # Environment-specific overlays
-│       ├── dev/            # Development environment
-│       ├── staging/        # Staging environment
-│       └── production/     # Production environment
-├── kubernetes/             # Raw Kubernetes manifests
-│   ├── base/               # Base manifests
-│   └── kong/               # Kong API Gateway configs
-├── cloudrun/               # Google Cloud Run deployment
-├── kong/                   # Kong API Gateway standalone configs
-└── langgraph-platform/     # LangGraph Platform (LangGraph Cloud)
+├── base/                        # Base Kubernetes manifests (Kustomize base)
+│   ├── configmap.yaml          # Application configuration
+│   ├── deployment.yaml         # Main deployment
+│   ├── service.yaml            # Service definitions
+│   ├── serviceaccount-roles.yaml  # RBAC configuration
+│   └── ...
+├── overlays/                    # Environment-specific Kustomize overlays
+│   ├── production/             # Production environment (non-GKE)
+│   ├── production-gke/         # Production on GKE (Helm recommended)
+│   ├── staging-gke/            # Staging on GKE
+│   └── ...
+├── helm/                        # Helm charts (recommended for production)
+│   ├── mcp-server-langgraph/   # Main Helm chart
+│   ├── values-production-gke.yaml  # Production GKE values
+│   └── values-staging.yaml     # Staging values
+├── argocd/                      # ArgoCD application definitions
+│   ├── base/                   # Base ArgoCD configs
+│   └── applications/           # Application manifests
+└── service-mesh/                # Service mesh configurations (Istio)
+    └── istio/
 ```
 
 ## Deployment Options

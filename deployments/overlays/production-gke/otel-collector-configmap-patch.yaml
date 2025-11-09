@@ -59,8 +59,10 @@ data:
 
     exporters:
       # Cloud Trace
+      # NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
+      # which properly templates the project ID
       googlecloud:
-        project: $(GCP_PROJECT_ID)  # Kustomize variable substitution
+        project: "PLACEHOLDER_GCP_PROJECT_ID"  # Replace via sed/envsubst before deploying
         trace:
           endpoint: cloudtrace.googleapis.com:443
         metric:
@@ -72,7 +74,7 @@ data:
 
       # Cloud Logging
       googlecloud/logs:
-        project: $(GCP_PROJECT_ID)  # Kustomize variable substitution
+        project: "PLACEHOLDER_GCP_PROJECT_ID"  # Replace via sed/envsubst before deploying
         log:
           default_log_name: mcp-server-langgraph
 

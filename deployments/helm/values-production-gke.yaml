@@ -1,0 +1,257 @@
+# Helm Values for Production GKE Deployment
+#
+# This file provides production-ready configuration for deploying
+# mcp-server-langgraph to Google Kubernetes Engine (GKE).
+#
+# Usage:
+#   helm install mcp-server ./deployments/helm/mcp-server-langgraph \
+#     -f deployments/helm/values-production-gke.yaml \
+#     --set gcp.projectId=YOUR_PROJECT_ID \
+#     --namespace production-mcp-server-langgraph \
+#     --create-namespace
+
+# GCP-specific configuration
+gcp:
+  # REQUIRED: Set your GCP project ID
+  # Can be overridden via --set gcp.projectId=my-project-id
+  projectId: ""  # Must be set at deployment time
+
+  region: "us-central1"
+
+  # Workload Identity configuration
+  workloadIdentity:
+    enabled: true
+    # Format: SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com
+    serviceAccount: ""  # Auto-generated from projectId if empty
+
+# Environment configuration
+environment: production
+
+# Replica configuration
+replicaCount: 3
+
+# Image configuration
+image:
+  registry: us-central1-docker.pkg.dev
+  # Image path will be: {registry}/{projectId}/mcp-production/mcp-server-langgraph
+  repository: ""  # Auto-generated from projectId: {projectId}/mcp-production/mcp-server-langgraph
+  tag: "2.8.0"
+  pullPolicy: IfNotPresent
+
+# Service account
+serviceAccount:
+  create: true
+  annotations:
+    # Workload Identity annotation - auto-populated from gcp.projectId
+    # iam.gke.io/gcp-service-account: mcp-prod-app-sa@{projectId}.iam.gserviceaccount.com
+
+# Resource limits (production-sized)
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "2Gi"
+  limits:
+    cpu: "2000m"
+    memory: "4Gi"
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Application configuration
+config:
+  # Service configuration
+  logLevel: "INFO"
+
+  # Authentication
+  authProvider: "keycloak"
+  authMode: "token"
+
+  # Session management
+  sessionBackend: "redis"
+  sessionTtlSeconds: 86400  # 24 hours
+  sessionSlidingWindow: true
+  sessionMaxConcurrent: 5
+
+  # Observability
+  enableConsoleExport: false
+  enableTracing: true
+  enableMetrics: true
+  observabilityBackend: "both"  # OpenTelemetry + LangSmith
+  langsmithTracing: true
+
+  # Security
+  keycloakVerifySsl: true
+  redisSsl: false  # In-cluster Redis without TLS
+
+  # Rate limiting
+  rateLimitEnabled: true
+  rateLimitRequestsPerMinute: 100
+
+  # Resource limits
+  maxConcurrentRequests: 100
+  requestTimeoutSeconds: 30
+
+# Dependencies (managed separately in GKE)
+postgresql:
+  enabled: false  # Use Cloud SQL
+
+redis:
+  enabled: false  # Use Memorystore or in-cluster StatefulSet
+
+keycloak:
+  enabled: true  # Deploy in-cluster
+
+openfga:
+  enabled: true  # Deploy in-cluster
+
+# External services (Cloud SQL, Memorystore)
+externalServices:
+  # Cloud SQL PostgreSQL
+  postgres:
+    host: ""  # Set via Secret or ConfigMap
+    port: 5432
+    database: "keycloak"
+    sslMode: "require"  # Production should use SSL
+
+  # Memorystore Redis
+  redis:
+    host: ""  # Set via Secret or ConfigMap
+    port: 6379
+    ssl: false  # Depends on Memorystore config
+
+# Secrets management
+secrets:
+  # Use External Secrets Operator for production
+  existingSecret: ""  # Name of existing secret with credentials
+
+externalSecrets:
+  enabled: true
+  backend: "gcpSecretsManager"
+  projectId: ""  # Auto-populated from gcp.projectId
+
+  # Secret mappings
+  secretMappings:
+    - key: "postgres-password"
+      gcpSecret: "mcp-production-postgres-password"
+    - key: "redis-password"
+      gcpSecret: "mcp-production-redis-password"
+    - key: "keycloak-admin-password"
+      gcpSecret: "mcp-production-keycloak-admin-password"
+
+# OpenTelemetry Collector configuration
+opentelemetry:
+  enabled: true
+
+  collector:
+    config:
+      exporters:
+        googlecloud:
+          project: ""  # Auto-populated from gcp.projectId
+          trace:
+            endpoint: "cloudtrace.googleapis.com:443"
+          metric:
+            endpoint: "monitoring.googleapis.com:443"
+          log:
+            endpoint: "logging.googleapis.com:443"
+          useInsecure: false
+
+      processors:
+        probabilisticSampler:
+          samplingPercentage: 10  # 10% for cost optimization
+
+        resourcedetection:
+          detectors: [gcp, env, system]
+          timeout: 5s
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+  hosts:
+    - host: ""  # Set to your production domain
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - secretName: mcp-server-tls
+      hosts:
+        - ""  # Set to your production domain
+
+# Network policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Monitoring and alerting
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+
+# Compliance and security
+compliance:
+  labels:
+    - "soc2"
+    - "hipaa"
+
+  podSecurityPolicy:
+    enabled: true
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+# Resource quotas
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "20"
+    requests.memory: "40Gi"
+    persistentvolumeclaims: "10"
+
+# Labels and annotations
+commonLabels:
+  environment: production
+  platform: gke
+  cloud: gcp
+  tier: production
+  compliance: "soc2,hipaa"
+
+commonAnnotations:
+  platform: gcp
+  cloud-provider: google
+  environment: production
+  managed-by: helm

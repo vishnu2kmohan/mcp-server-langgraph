@@ -20,17 +20,20 @@ data:
   session_ttl_seconds: "43200"  # 12 hours
 
   # Cloud SQL connection
-  # Direct connection to Cloud SQL private IP (simpler, no proxy needed)
-  postgres_host: "10.110.0.3"
+  # Uses Cloud DNS for robust failover support
+  # Configure Cloud DNS: cloudsql-staging.internal -> Cloud SQL private IP
+  # See: deployments/overlays/staging-gke/DNS_SETUP.md
+  postgres_host: "cloudsql-staging.internal"
   postgres_port: "5432"
   postgres_database: "keycloak"
   postgres_ssl_mode: "disable"  # SSL not required within private VPC
 
   # Memorystore Redis connection
-  # Connect to cloud-managed Memorystore Redis instance
+  # Uses Cloud DNS for robust failover support
+  # Configure Cloud DNS: redis-staging.internal -> Memorystore Redis IP
   # NOTE: redis_url and checkpoint_redis_url are injected via env vars from secrets
   # because they require passwords. See deployment-patch.yaml env section.
-  redis_host: "10.110.1.4"
+  redis_host: "redis-staging.internal"
   redis_port: "6379"
   redis_ssl: "false"  # Not required for private VPC connection
 
@@ -59,6 +62,7 @@ data:
   max_concurrent_requests: "50"
   request_timeout_seconds: "60"
 
-  # GDPR Compliance Storage (direct Cloud SQL private IP)
-  # Override base config to use direct Cloud SQL connection instead of deleted in-cluster postgres
-  gdpr_postgres_url: "postgresql://postgres@10.110.0.3:5432/gdpr?sslmode=disable"
+  # GDPR Compliance Storage (Cloud SQL via DNS)
+  # Override base config to use Cloud SQL connection instead of deleted in-cluster postgres
+  # Uses Cloud DNS for failover support - see DNS_SETUP.md
+  gdpr_postgres_url: "postgresql://postgres@cloudsql-staging.internal:5432/gdpr?sslmode=disable"

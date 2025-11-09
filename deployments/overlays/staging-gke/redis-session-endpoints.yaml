@@ -1,13 +1,18 @@
 ---
-# Manual Endpoints for redis-session headless service
-# Points to Memorystore Redis (GCP managed Redis) at 10.138.129.37:6378
+# ExternalName Service for redis-session
+# Points to Memorystore Redis via Cloud DNS for robust failover support
+#
+# IMPORTANT: Configure Cloud DNS record before deploying:
+#   redis-session-staging.internal -> Your Memorystore Redis IP
+#
+# See: DNS_SETUP.md for configuration instructions
 apiVersion: v1
-kind: Endpoints
+kind: Service
 metadata:
   name: redis-session
-subsets:
-- addresses:
-  - ip: 10.138.129.37
+spec:
+  type: ExternalName
+  externalName: redis-session-staging.internal
   ports:
   - name: redis
     port: 6378

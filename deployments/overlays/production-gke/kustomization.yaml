@@ -71,9 +71,12 @@ replicas:
     count: 3
 
 # Image configuration
+# NOTE: For production deployments, use Helm chart (values-production-gke.yaml)
+# If using Kustomize, replace PLACEHOLDER_GCP_PROJECT_ID before deploying:
+# kustomize build . | sed 's/PLACEHOLDER_GCP_PROJECT_ID/my-project-id/g' | kubectl apply -f -
 images:
   - name: mcp-server-langgraph
-    newName: us-central1-docker.pkg.dev/$(GCP_PROJECT_ID)/mcp-production/mcp-server-langgraph
+    newName: us-central1-docker.pkg.dev/PLACEHOLDER_GCP_PROJECT_ID/mcp-production/mcp-server-langgraph
     newTag: 2.8.0  # Updated via CI/CD
 
 # Variable replacements for environment-specific values

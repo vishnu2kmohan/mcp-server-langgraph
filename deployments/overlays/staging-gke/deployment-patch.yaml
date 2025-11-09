@@ -75,12 +75,12 @@ spec:
               name: staging-mcp-server-langgraph-secrets
               key: redis-password
         # Override ConfigMap redis URLs (which point to deleted in-cluster service)
-        - name: redis_url
+        - name: REDIS_URL
           valueFrom:
             secretKeyRef:
               name: staging-mcp-server-langgraph-secrets
               key: redis-url
-        - name: checkpoint_redis_url
+        - name: CHECKPOINT_REDIS_URL
           valueFrom:
             secretKeyRef:
               name: staging-mcp-server-langgraph-secrets

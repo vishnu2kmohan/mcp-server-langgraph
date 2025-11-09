@@ -26,7 +26,7 @@ data:
 
   # Security
   keycloak_verify_ssl: "true"
-  redis_ssl: "true"
+  redis_ssl: "false"  # In-cluster Redis does not have TLS configured
 
   # Service URLs (override base with production- prefix)
   keycloak_server_url: "http://production-keycloak:8080"
