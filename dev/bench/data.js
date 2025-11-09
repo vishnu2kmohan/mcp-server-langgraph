@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762713889194,
+  "lastUpdate": 1762714298975,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36544,6 +36544,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002681289510612975",
             "extra": "mean: 60.88984919445674 usec\nrounds: 5338"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6df91788fd644780b1aa856ffd294b1f754aa877",
+          "message": "fix(auth,tests): add auth_middleware parameter to require_auth decorator (partial fix)\n\nImproves test isolation by allowing decorator to use pre-configured AuthMiddleware\ninstances instead of creating new ones. Reduces auth test failures from 13 to 11.\n\n## TDD Process\n\n**RED Phase** ✅:\n- 13 auth tests failing due to decorator creating empty user providers\n- Root cause: require_auth() always created new AuthMiddleware without users\n\n**GREEN Phase** ✅:\n- Added optional auth_middleware parameter to require_auth()\n- Updated 3 decorator tests to pass auth_middleware from fixture\n- 3 tests now passing (require_auth_success, with_authorization, authorization_denied)\n\n**Results**:\n- Auth failures: 13 → 11 (15% improvement)\n- Decorator tests: 100% passing for updated tests\n\n## Changes\n\n### src/mcp_server_langgraph/auth/middleware.py\n- Line 717-721: Added auth_middleware parameter to require_auth()\n- Line 737: Use provided auth_middleware or create new instance\n\n### tests/test_auth.py\n- Lines 372, 407, 425: Updated tests to pass auth_middleware from fixture\n\n## Remaining Work (11 auth failures)\n\n**TestStandaloneVerifyToken** (2 failures):\n- Need to add users to AuthMiddleware instances\n- Token verification failing due to secret key mismatch\n\n**TestGetCurrentUser** (3 failures):\n- Need to add users and fix token creation\n- Bearer token tests failing\n\n**TestAuthFallbackWithExternalProviders** (6 failures):\n- Keycloak provider mock integration issues\n- Need to align with refactored auth system\n\n**Note**: These remaining failures are isolated and don't block CI/CD critical path.\nAddressed in separate follow-up after Codex remediation complete.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T13:49:51-05:00",
+          "tree_id": "b5de138d76989851cf58634be07a1d0406352a2d",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6df91788fd644780b1aa856ffd294b1f754aa877"
+        },
+        "date": 1762714297399,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.188259274852,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00013778911858204677",
+            "extra": "mean: 6.983812814432538 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 147.6041293098589,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015335957982342315",
+            "extra": "mean: 6.774878214285888 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43604.16315122782,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.933589999922788 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47545.57838005883,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.032450000006975 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44499.3665515629,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.47222999997689 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.0276398737075,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.153904880000084 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.409696393449405,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.52064101000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.966946820574725,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.33162793000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1366736.3700216985,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 731.6700001069876 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13352.732182646261,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 74.89104000001134 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2980.2056824718416,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.54730999995286 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2900.5635475911586,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 344.7605899999928 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58344.818274130346,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002101299131861404",
+            "extra": "mean: 17.13948264096989 usec\nrounds: 11723"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16902.98675715245,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018305419357122112",
+            "extra": "mean: 59.16114201396111 usec\nrounds: 5422"
           }
         ]
       }
