@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762717243498,
+  "lastUpdate": 1762719784278,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36788,6 +36788,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000015254287143424194",
             "extra": "mean: 57.1856864815847 usec\nrounds: 5585"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6cfd97e3b1972cfb5d42a5a2d8c4377d1183e2a9",
+          "message": "fix(tools): replace filesystem stub logger with real telemetry\n\nReplace placeholder stub logger/metrics with proper telemetry integration\nto enable observability for filesystem tool operations.\n\nOpenAI Codex Finding #5 (CONFIRMED MEDIUM SEVERITY - Technical Debt):\nFilesystem tools used stub implementations instead of real telemetry:\n- Lines 14-16: Stub logger and metrics with no-op lambda functions\n- Missing observability for file access attempts\n- Cannot debug filesystem operation issues\n- Security audit trail incomplete\n\nRoot Cause:\nLikely created to avoid circular imports or initialization issues.\nAll other tools (search_tools.py, calculator_tools.py) use real telemetry.\n\nChanges:\n- Removed stub logger and metrics (lines 14-16)\n- Added proper import: from mcp_server_langgraph.observability.telemetry\n- Now logs file operations at lines 83, 123, 150, 222, 266\n- Now tracks metrics at lines 84, 151, 223\n\nImpact:\n- Full observability for filesystem tool operations\n- Security audit trail for file access\n- Debug capability for file operation issues\n- Consistent telemetry across all tools\n\nTests: All filesystem tool tests pass (test_filesystem_tools.py - 21/21)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T15:21:16-05:00",
+          "tree_id": "4ac291dca61a8a5ca108a837e7aed924eceb9a0c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6cfd97e3b1972cfb5d42a5a2d8c4377d1183e2a9"
+        },
+        "date": 1762719783118,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 141.1768783402897,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021185075571919162",
+            "extra": "mean: 7.0833128749994145 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 141.99513627551747,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00045237883005882514",
+            "extra": "mean: 7.042494737704745 msec\nrounds: 122"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44488.003142722715,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.47796999995444 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47357.83533046467,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.115829999871494 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45600.98680542704,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.929349999965098 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.0369563796112,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.153657420000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.405104160369103,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.53283341000005 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964158304799819,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.3597062 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1447219.8906462,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 690.9799999732513 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12793.698540536641,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 78.16348000005746 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2967.552337607505,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.97805000002745 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2849.7197443128043,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 350.9116999998696 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59862.34766581791,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002551197876059773",
+            "extra": "mean: 16.704991350865637 usec\nrounds: 11793"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16858.109212111936,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021241658563890638",
+            "extra": "mean: 59.31863338989028 usec\nrounds: 4127"
           }
         ]
       }
