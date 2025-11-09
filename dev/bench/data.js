@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762722307212,
+  "lastUpdate": 1762726238379,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -37642,6 +37642,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001662594701967966",
             "extra": "mean: 57.43848863639404 usec\nrounds: 5368"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "6bcb1a0a82210b415fbd91a88359979ea7610e55",
+          "message": "feat(meta,docs): add AST-based regression prevention for Codex findings\n\nAdded comprehensive meta-test suite and validation documentation.\n\n## Changes\n- 9 AST-based meta-tests for pattern enforcement\n- Comprehensive validation report documenting all fixes\n- 100% TDD compliance across all phases\n\n## Test Results\n- 9/9 meta-tests passing\n- 66 total tests validating Codex remediation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T17:06:58-05:00",
+          "tree_id": "3686c701d851a8ed8dd878f4a298ac5cc981b1db",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/6bcb1a0a82210b415fbd91a88359979ea7610e55"
+        },
+        "date": 1762726237389,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.47424490146585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016040397156452834",
+            "extra": "mean: 6.921648911762915 msec\nrounds: 102"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.79289651549587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012361097082053168",
+            "extra": "mean: 6.675883992246263 msec\nrounds: 129"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45091.497412112134,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.17712999993182 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48175.172635975025,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.757579999894915 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46269.58417979599,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.61247000003641 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.08537700836104,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.1523716799999875 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.388257447241003,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.57761096999991 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.975110603774507,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.24951498999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1454587.770044336,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 687.4799998968228 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12275.353361404466,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 81.46404999990864 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3000.3102020736455,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.2988699997941 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2909.973424664267,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.6457500004053 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60307.04972496148,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018400796567591684",
+            "extra": "mean: 16.581809333413528 usec\nrounds: 13500"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17411.94369145344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015657298065041296",
+            "extra": "mean: 57.431842057405945 usec\nrounds: 5521"
           }
         ]
       }
