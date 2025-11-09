@@ -440,6 +440,62 @@ repos:
 
           Regression prevention for Codex finding: docker-compose.test.yml:227-232
 
+      # Codex Finding #1 (P0): Helm lint validation
+      - id: helm-lint
+        name: Helm Lint Validation
+        entry: helm lint deployments/helm/mcp-server-langgraph
+        language: system
+        files: ^deployments/helm/.*\.(yaml|yml)$
+        pass_filenames: false
+        description: |
+          Validates Helm chart passes lint checks.
+
+          Prevents:
+          - Hyphenated key parsing errors (e.g., .Values.kube-prometheus-stack.enabled)
+          - Template syntax errors
+          - Invalid Kubernetes resource schemas
+          - Missing required values
+
+          Fix: Use index .Values "kube-prometheus-stack" "enabled" for hyphenated keys
+
+          Regression prevention for Codex Finding #1 (P0 Blocker)
+
+      # Codex Finding #2 (P0): Kustomize build validation for cloud overlays
+      - id: validate-cloud-overlays
+        name: Validate Cloud Overlays Build Successfully
+        entry: bash -c 'kubectl kustomize deployments/kubernetes/overlays/aws && kubectl kustomize deployments/kubernetes/overlays/gcp && kubectl kustomize deployments/kubernetes/overlays/azure'
+        language: system
+        files: ^deployments/kubernetes/overlays/(aws|gcp|azure)/.*\.(yaml|yml)$
+        pass_filenames: false
+        description: |
+          Validates cloud-specific Kustomize overlays build without errors.
+
+          Prevents:
+          - ConfigMap generator issues with behavior: replace
+          - Missing ConfigMaps or resources
+          - YAML syntax errors in cloud configs
+
+          Regression prevention for Codex Finding #2 (P0 Blocker)
+
+      # Codex Finding #3 (P0): Placeholder validation
+      - id: validate-no-placeholders
+        name: Check for Placeholders in Production Overlays
+        entry: bash -c 'kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit 1 || exit 0'
+        language: system
+        files: ^deployments/overlays/production-gke/.*\.(yaml|yml)$
+        pass_filenames: false
+        description: |
+          Validates production overlays don't contain unresolved placeholders.
+
+          Prevents:
+          - PLACEHOLDER_GCP_PROJECT_ID in service accounts
+          - PLACEHOLDER_SET_VIA_ENV in environment variables
+          - PRODUCTION_DOMAIN in configuration
+
+          Ensures production deployments have valid, runtime-ready configuration.
+
+          Regression prevention for Codex Finding #3 (P0 Blocker)
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
