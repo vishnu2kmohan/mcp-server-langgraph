@@ -11,9 +11,7 @@ from typing import Annotated
 from langchain_core.tools import tool
 from pydantic import Field
 
-# Observability placeholder
-logger = type("StubLogger", (), {"info": lambda *a, **kw: None, "error": lambda *a, **kw: None})()
-metrics = type("StubMetrics", (), {"tool_calls": type("Counter", (), {"add": lambda *a, **kw: None})()})()
+from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 # Maximum file size to read (1MB for safety)
 MAX_FILE_SIZE = 1024 * 1024
