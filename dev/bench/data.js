@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762719784278,
+  "lastUpdate": 1762719961391,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -36910,6 +36910,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000021241658563890638",
             "extra": "mean: 59.31863338989028 usec\nrounds: 4127"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d70aae6f2d39c0e85340d28347280306cadd854d",
+          "message": "fix(deployments,tests): resolve kustomize Service ID conflict + test marker + placeholder\n\nFix regression and remaining issues from Codex findings resolution:\n\n## Regressions Fixed\n\n1. **Kustomize Service ID conflict** (staging-gke overlay)\n   - Issue: redis-session-endpoints.yaml created duplicate Service resource\n   - Fix: Removed from resources, use redis-session-service-patch.yaml instead\n   - Updated patch to use ExternalName with Cloud DNS\n   - Location: deployments/overlays/staging-gke/\n\n2. **Missing GCP_PROJECT_ID placeholder** (production-gke)\n   - Issue: Still had YOUR_PROJECT_ID in configmap-patch.yaml\n   - Fix: Replaced with PLACEHOLDER_GCP_PROJECT_ID + Helm migration note\n   - Location: deployments/overlays/production-gke/configmap-patch.yaml:60\n\n## Test Infrastructure Fixed\n\n3. **Missing pytest markers** (deployment tests)\n   - Issue: requires_kustomize marker not defined in tests/deployment/pytest.ini\n   - Fix: Added requires_kustomize, deployment, security markers\n   - Prevents pytest --strict-markers failures in pre-commit hooks\n\n## Verification\n\n- Codex validation tests: 12/12 PASSED\n- Kustomize build tests: PASSED\n- No Service ID conflicts\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T15:24:01-05:00",
+          "tree_id": "fcc6598b5dc7c3a1a5191307213f383511a8509f",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d70aae6f2d39c0e85340d28347280306cadd854d"
+        },
+        "date": 1762719960467,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.05655968254504,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009796099307375458",
+            "extra": "mean: 6.941717907214241 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 150.81276185802116,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00011113598106836076",
+            "extra": "mean: 6.630738590553926 msec\nrounds: 127"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44467.64667489349,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.488259999704496 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47672.5543870326,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.97642999956406 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45933.25347082317,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.770719999949506 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.33917954817935,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.145642800000019 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.438488039224303,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.444330340000306 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.971375218032763,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.28706955000018 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1274762.2572457725,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 784.4599997497426 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12921.283925978352,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.39168999989943 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2982.1484715668585,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.3287100003399 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2916.637597508393,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.86056000041754 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60652.80760067573,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020753559648222157",
+            "extra": "mean: 16.48728293970779 usec\nrounds: 12819"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17264.73603749594,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016703944704293223",
+            "extra": "mean: 57.921534266621734 usec\nrounds: 5428"
           }
         ]
       }
