@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762719961391,
+  "lastUpdate": 1762720595805,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -37032,6 +37032,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016703944704293223",
             "extra": "mean: 57.921534266621734 usec\nrounds: 5428"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "f41ef972081f846a204c9c45fd1462e433636326",
+          "message": "docs(codex): add comprehensive validation report for all deployment fixes\n\nComprehensive validation report documenting the resolution of 17 deployment\nconfiguration issues (12 from Codex + 5 discovered during validation).\n\n## Report Highlights\n\n- Methodology: Test-Driven Development (TDD)\n- Test Coverage: 100% (30/30 tests passing)\n- Issues Resolved: 17/17 (100%)\n- Files Changed: 20 modified, 4 created, 1 deleted\n\n## Issue Categories\n\n- P0 Critical (6 issues): Redis SSL, env var casing, hard-coded IPs,\n  unsubstituted variables, placeholders\n- P1 Security/Reliability (1 issue): Missing RBAC for main application\n- P2-P3 Technical Debt (3 issues): Documentation, config vars\n- Additional Discovered (7 issues): Kustomize conflicts, Helm placeholders,\n  namespace resources, test bugs\n\n## Documentation Added\n\n- CODEX_VALIDATION_REPORT.md: Comprehensive validation documentation\n- DNS_SETUP.md: Cloud DNS configuration guide\n- production-gke/README.md: Helm migration guide\n\n## Prevention Measures\n\n- 30 comprehensive tests preventing regression\n- Pre-commit hooks for placeholder detection\n- Kustomize build validation\n- Clear migration paths documented\n\nAll deployment configurations are now production-ready with proper security,\nresilience, and documentation.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T15:34:16-05:00",
+          "tree_id": "f11b93f8c3bd7cfcbd11fa904ee87b2451839d8c",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/f41ef972081f846a204c9c45fd1462e433636326"
+        },
+        "date": 1762720594656,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 142.25752221668273,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001126770350322566",
+            "extra": "mean: 7.029505255102276 msec\nrounds: 98"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 145.33656919808806,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00043281444424699646",
+            "extra": "mean: 6.880580747967424 msec\nrounds: 123"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44374.19516289667,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.535620000070367 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 44473.658696929284,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.48521999987929 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 44131.308294849616,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.659649999923204 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.19295071005664,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.149517509999981 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.417529241357744,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.49985807000007 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.964715270071338,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.35409672 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1335113.4846226454,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 749.0000000132113 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13665.951664083897,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 73.17455999995559 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2977.0561261413077,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.902300000015 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2871.3773411349857,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 348.26491999993436 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59626.43391577115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002507883533627137",
+            "extra": "mean: 16.77108514342161 usec\nrounds: 11463"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 16914.9165462043,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000021047611768805492",
+            "extra": "mean: 59.11941671532513 usec\nrounds: 5133"
           }
         ]
       }
