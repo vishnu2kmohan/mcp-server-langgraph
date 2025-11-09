@@ -490,12 +490,12 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             extra={
                 "tool_count": len(tool_calls),
                 "tools": [tc.get("name", "unknown") for tc in tool_calls],
-                "parallel_enabled": settings.enable_parallel_execution,
+                "parallel_enabled": effective_settings.enable_parallel_execution,
             },
         )
 
-        # Check if parallel execution is enabled
-        enable_parallel = getattr(settings, "enable_parallel_execution", False)
+        # Check if parallel execution is enabled (use effective_settings for DI support)
+        enable_parallel = getattr(effective_settings, "enable_parallel_execution", False)
 
         if enable_parallel and len(tool_calls) > 1:
             # Use parallel execution for multiple tool calls
@@ -572,8 +572,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
         from mcp_server_langgraph.tools import get_tool_by_name
 
-        # Create parallel executor
-        max_parallelism = getattr(settings, "max_parallel_tools", 5)
+        # Create parallel executor (use effective_settings for DI support)
+        max_parallelism = getattr(effective_settings, "max_parallel_tools", 5)
         executor = ParallelToolExecutor(max_parallelism=max_parallelism)
 
         # Convert tool_calls to ToolInvocation objects
@@ -673,6 +673,10 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             # Standard LLM response (use async invoke)
             response = await model.ainvoke(messages)
 
+        # NOTE: Returning [response] (not state["messages"] + [response]) is correct here.
+        # Lang Graph's operator.add annotation on AgentState.messages (line 77) automatically
+        # merges/appends this list to the existing messages. Manually appending would cause
+        # duplication. See: https://langchain-ai.github.io/langgraph/reference/graphs/#stategraph
         return {**state, "messages": [response], "next_action": "verify" if enable_verification else "end"}
 
     async def verify_response(state: AgentState) -> AgentState:
@@ -820,10 +824,10 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
     workflow.add_edge("respond", "verify")  # Always verify responses
     workflow.add_edge("refine", "respond")  # Refine loops back to respond
 
-    # Compile with optional checkpointing (respects enable_checkpointing setting)
-    enable_checkpointing = getattr(settings, "enable_checkpointing", True)
+    # Compile with optional checkpointing (use effective_settings for DI support)
+    enable_checkpointing = getattr(effective_settings, "enable_checkpointing", True)
     if enable_checkpointing:
-        checkpointer = _create_checkpointer()
+        checkpointer = _create_checkpointer(effective_settings)
         return workflow.compile(checkpointer=checkpointer)
     else:
         # Compile without checkpointing (useful for testing with mocks)
