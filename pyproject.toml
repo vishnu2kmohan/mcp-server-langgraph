@@ -374,7 +374,8 @@ python_functions = ["test_*"]
 # Coverage disabled by default for faster iteration (20-30% speedup)
 # CI and coverage targets explicitly enable coverage with --cov flag
 # --dist loadscope: Better fixture reuse in pytest-xdist (10-20% speedup)
-addopts = "-v --strict-markers --tb=short --dist loadscope"
+# --timeout=60: Prevent tests from hanging indefinitely (async mock safety)
+addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

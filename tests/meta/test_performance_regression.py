@@ -101,3 +101,185 @@ class TestTimeoutTestPerformance:
             f"\nCODEX FINDING #2: Use sleep values < 1 second for fast test execution.\n"
             f"Example: Instead of sleep(5), use sleep(0.1) with proportional timeout values."
         )
+
+
+class TestTimeBudgets:
+    """Enforce per-test time budgets to prevent performance regressions."""
+
+    @pytest.mark.unit
+    def test_unit_tests_complete_within_budget(self):
+        """
+        Unit tests should complete quickly (< 100ms per test on average).
+
+        This budget excludes setup/teardown and focuses on test execution time.
+        """
+        # This is a meta-test that validates the concept
+        # In practice, this would be enforced by pytest-timeout or CI monitoring
+        pytest.skip("Time budget enforcement is handled by pytest-timeout and sleep linter")
+
+    @pytest.mark.unit
+    def test_integration_tests_have_reasonable_budgets(self):
+        """
+        Integration tests should complete within reasonable time (< 5s per test).
+
+        Tests exceeding this should be marked as @pytest.mark.slow and
+        run separately in CI.
+        """
+        pytest.skip("Time budget enforcement is handled by pytest markers and CI config")
+
+
+class TestPropertyTestBudgets:
+    """Validate property test deadlines are reasonable."""
+
+    @pytest.mark.unit
+    def test_property_tests_have_reasonable_deadlines(self):
+        """
+        Property tests should have deadline < 3000ms per example.
+
+        CODEX audit found property tests with long deadlines that burn time
+        when examples fail or edge cases are explored.
+        """
+        import re
+        from pathlib import Path
+
+        property_test_files = list(Path("tests/property").glob("test_*.py"))
+
+        if not property_test_files:
+            pytest.skip("No property test files found")
+
+        for test_file in property_test_files:
+            with open(test_file, "r") as f:
+                content = f.read()
+
+            # Find @settings decorators with deadline parameter
+            deadline_pattern = r"@settings\([^)]*deadline=(\d+)[^)]*\)"
+            matches = re.findall(deadline_pattern, content)
+
+            for deadline_str in matches:
+                deadline_ms = int(deadline_str)
+                assert deadline_ms <= 3000, (
+                    f"{test_file.name}: Found property test deadline {deadline_ms}ms > 3000ms\n"
+                    f"Use shorter deadlines for faster property test execution."
+                )
+
+
+class TestBulkheadPerformance:
+    """Validate bulkhead tests don't burn unnecessary time."""
+
+    @pytest.mark.unit
+    def test_bulkhead_tests_use_short_sleeps(self):
+        """
+        Bulkhead tests should use sleep values < 0.5s.
+
+        CODEX audit found bulkhead tests with 1s sleeps that could be reduced.
+        """
+        test_file = Path("tests/resilience/test_bulkhead.py")
+
+        if not test_file.exists():
+            pytest.skip("Bulkhead test file not found")
+
+        with open(test_file, "r") as f:
+            content = f.read()
+
+        # Find asyncio.sleep calls
+        import re
+
+        sleep_pattern = r"asyncio\.sleep\((\d+(?:\.\d+)?)\)"
+        matches = re.findall(sleep_pattern, content)
+
+        # After optimization, should have no sleeps >= 0.5s
+        long_sleeps = [float(value) for value in matches if float(value) >= 0.5]
+
+        assert not long_sleeps, (
+            f"Found {len(long_sleeps)} asyncio.sleep() calls >= 0.5s: {long_sleeps}\n"
+            f"Bulkhead tests should use shorter sleeps for fast execution."
+        )
+
+
+class TestPollingOptimizations:
+    """Validate polling helpers are used instead of fixed sleeps."""
+
+    @pytest.mark.unit
+    def test_kubernetes_sandbox_uses_polling(self):
+        """
+        Kubernetes sandbox cleanup should use poll_until() instead of fixed sleep.
+
+        CODEX audit found 5-second sleeps that could be replaced with polling.
+        """
+        test_file = Path("tests/integration/execution/test_kubernetes_sandbox.py")
+
+        if not test_file.exists():
+            pytest.skip("Kubernetes sandbox test file not found")
+
+        with open(test_file, "r") as f:
+            content = f.read()
+
+        # Should import poll_until
+        assert (
+            "from tests.helpers.polling import poll_until" in content
+        ), "Kubernetes sandbox tests should use poll_until() for cleanup waits"
+
+        # Should not have long time.sleep calls (> 2s)
+        import re
+
+        sleep_pattern = r"time\.sleep\((\d+(?:\.\d+)?)\)"
+        matches = re.findall(sleep_pattern, content)
+
+        long_sleeps = [float(value) for value in matches if float(value) > 2.0]
+
+        assert not long_sleeps, (
+            f"Found {len(long_sleeps)} time.sleep() calls > 2s: {long_sleeps}\n"
+            f"Use poll_until() instead of fixed sleeps for cleanup waits."
+        )
+
+    @pytest.mark.unit
+    def test_docker_sandbox_uses_polling(self):
+        """
+        Docker sandbox cleanup should use poll_until() instead of fixed sleep.
+
+        CODEX audit found 2-second sleeps that could be replaced with polling.
+        """
+        test_file = Path("tests/integration/execution/test_docker_sandbox.py")
+
+        if not test_file.exists():
+            pytest.skip("Docker sandbox test file not found")
+
+        with open(test_file, "r") as f:
+            content = f.read()
+
+        # Should import poll_until
+        assert (
+            "from tests.helpers.polling import poll_until" in content
+        ), "Docker sandbox tests should use poll_until() for cleanup waits"
+
+
+class TestVirtualClockAvailability:
+    """Validate VirtualClock is available for future optimizations."""
+
+    @pytest.mark.unit
+    def test_virtual_clock_exists_and_works(self):
+        """
+        VirtualClock should be available for instant time advancement in tests.
+        """
+        from mcp_server_langgraph.core.time_provider import VirtualClock
+
+        clock = VirtualClock()
+        assert clock.time() == 0.0
+
+        # Verify instant time advancement
+        start = time.time()
+        clock.sleep(10.0)  # Should be instant
+        elapsed = time.time() - start
+
+        assert elapsed < 0.1, f"VirtualClock.sleep() should be instant, took {elapsed:.3f}s"
+        assert clock.time() == 10.0, "VirtualClock should advance time instantly"
+
+    @pytest.mark.unit
+    def test_time_fixtures_available(self):
+        """
+        Time fixtures should be available for test use.
+        """
+        from tests.fixtures.time_fixtures import virtual_clock
+
+        # Fixture should be importable (actual usage happens in tests)
+        assert virtual_clock is not None

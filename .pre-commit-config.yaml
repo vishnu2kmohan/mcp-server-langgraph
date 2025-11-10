@@ -641,6 +641,32 @@ repos:
           See: tests/MEMORY_SAFETY_GUIDELINES.md for complete guide
           Reference: tests/security/test_api_key_indexed_lookup.py (correct implementation)
 
+      - id: check-async-mock-usage
+        name: Check Async Mock Usage (prevent hanging tests)
+        entry: python scripts/check_async_mock_usage.py
+        language: system
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: true
+        always_run: false  # Only run when test files change
+        description: |
+          Prevents hanging tests by detecting async methods mocked without AsyncMock.
+
+          Issue prevented:
+          When patch.object() or patch() is used without new_callable=AsyncMock on
+          async methods, the test will hang indefinitely when the code awaits the
+          mocked method. Python's event loop waits forever for a non-async mock.
+
+          Required pattern:
+          - patch.object(obj, "async_method", new_callable=AsyncMock)
+          - NOT: patch.object(obj, "async_method")  # This hangs!
+
+          Detection strategy:
+          - Identifies common async method naming patterns (send_, get_, create_, etc.)
+          - Flags patch calls missing new_callable=AsyncMock parameter
+          - Works with both patch.object() and patch() calls
+
+          See: tests/monitoring/test_cost_tracker.py:350 (correct usage)
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2

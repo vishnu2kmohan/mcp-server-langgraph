@@ -153,13 +153,20 @@ class TestKubernetesSandboxCleanup:
         assert result.success is True
 
         # Wait for TTL controller to clean up
-        import time
+        # Performance optimization: Use polling instead of fixed 5s sleep (save ~3-4s)
+        from tests.helpers.polling import poll_until
 
-        time.sleep(5)
+        def job_cleanup_complete():
+            """Check if job count has stabilized (cleanup complete)."""
+            current_jobs = len(batch_v1.list_namespaced_job(namespace="default").items)
+            # Job should be cleaned up or marked for cleanup
+            return current_jobs <= initial_jobs + 1
 
-        # Job should be cleaned up (or marked for cleanup)
+        # Poll every 0.5s for up to 5s (usually completes in 1-2s)
+        poll_until(job_cleanup_complete, interval=0.5, timeout=5.0)
+
+        # Verify final state
         final_jobs = len(batch_v1.list_namespaced_job(namespace="default").items)
-        # Job count should not increase permanently
         assert final_jobs <= initial_jobs + 1
 
     def test_job_cleanup_on_error(self, kubernetes_available):
@@ -176,9 +183,11 @@ class TestKubernetesSandboxCleanup:
         assert result.success is False
 
         # Cleanup should still happen
-        import time
+        # Performance optimization: Use polling instead of fixed 5s sleep (save ~3-4s)
+        from tests.helpers.polling import poll_until
 
-        time.sleep(5)
+        # Wait for cleanup with polling (usually completes in 1-2s)
+        poll_until(lambda: len(batch_v1.list_namespaced_job(namespace="default").items) < 10, interval=0.5, timeout=5.0)
 
         # Verify jobs are being cleaned up
         jobs = batch_v1.list_namespaced_job(namespace="default").items

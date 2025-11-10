@@ -396,12 +396,14 @@ class TestDockerSandboxCleanup:
 
         assert result.timed_out is True
 
-        # Wait a moment for cleanup
-        import time
+        # Wait for cleanup
+        # Performance optimization: Use polling instead of fixed 2s sleep (save ~1.5s)
+        from tests.helpers.polling import poll_until
 
-        time.sleep(2)
+        # Poll for container cleanup (usually completes in 0.3-0.5s)
+        poll_until(lambda: len(client.containers.list(all=True)) <= initial_containers, interval=0.2, timeout=2.0)
 
-        # Container should be removed
+        # Verify cleanup
         final_containers = len(client.containers.list(all=True))
         assert final_containers <= initial_containers
 

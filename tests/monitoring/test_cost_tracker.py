@@ -13,6 +13,8 @@ Tests cover:
 - Edge cases
 """
 
+import gc
+import os
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
@@ -327,115 +329,120 @@ async def test_cost_aggregator_calculates_total_cost():
 # ==============================================================================
 
 
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_budget_monitor_detects_75_percent_utilization(sample_budget):
-    """Test BudgetMonitor sends warning at 75% budget utilization."""
-    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
+@pytest.mark.xdist_group(name="cost_tracker_budget_tests")
+class TestBudgetMonitor:
+    """Test suite for BudgetMonitor with memory safety pattern."""
 
-    monitor = BudgetMonitor()
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
-    # Create budget first
-    await monitor.create_budget(
-        id=sample_budget["id"],
-        name=sample_budget["name"],
-        limit_usd=sample_budget["limit_usd"],
-        period=BudgetPeriod.MONTHLY,
-        start_date=sample_budget["start_date"],
-        alert_thresholds=sample_budget["alert_thresholds"],
-    )
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_budget_monitor_detects_75_percent_utilization(self, sample_budget):
+        """Test BudgetMonitor sends warning at 75% budget utilization."""
+        from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-    # Mock current spend at 75%
-    with patch.object(monitor, "get_period_spend", return_value=Decimal("750.00")):
-        with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
-            await monitor.check_budget(sample_budget["id"])
+        monitor = BudgetMonitor()
 
-            # Assert warning alert sent
-            mock_alert.assert_called_once()
-            call_args = mock_alert.call_args[1]
-            assert call_args["level"] == "warning"
-            assert "75" in call_args["message"]
+        # Create budget first
+        await monitor.create_budget(
+            id=sample_budget["id"],
+            name=sample_budget["name"],
+            limit_usd=sample_budget["limit_usd"],
+            period=BudgetPeriod.MONTHLY,
+            start_date=sample_budget["start_date"],
+            alert_thresholds=sample_budget["alert_thresholds"],
+        )
 
+        # Mock current spend at 75%
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("750.00")):
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget(sample_budget["id"])
 
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_budget_monitor_detects_90_percent_utilization(sample_budget):
-    """Test BudgetMonitor sends critical alert at 90% budget utilization."""
-    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
+                # Assert warning alert sent
+                mock_alert.assert_called_once()
+                call_args = mock_alert.call_args[1]
+                assert call_args["level"] == "warning"
+                assert "75" in call_args["message"]
 
-    monitor = BudgetMonitor()
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_budget_monitor_detects_90_percent_utilization(self, sample_budget):
+        """Test BudgetMonitor sends critical alert at 90% budget utilization."""
+        from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-    # Create budget first
-    await monitor.create_budget(
-        id=sample_budget["id"],
-        name=sample_budget["name"],
-        limit_usd=sample_budget["limit_usd"],
-        period=BudgetPeriod.MONTHLY,
-        start_date=sample_budget["start_date"],
-        alert_thresholds=sample_budget["alert_thresholds"],
-    )
+        monitor = BudgetMonitor()
 
-    with patch.object(monitor, "get_period_spend", return_value=Decimal("900.00")):
-        with patch.object(monitor, "send_alert") as mock_alert:
-            await monitor.check_budget(sample_budget["id"])
+        # Create budget first
+        await monitor.create_budget(
+            id=sample_budget["id"],
+            name=sample_budget["name"],
+            limit_usd=sample_budget["limit_usd"],
+            period=BudgetPeriod.MONTHLY,
+            start_date=sample_budget["start_date"],
+            alert_thresholds=sample_budget["alert_thresholds"],
+        )
 
-            mock_alert.assert_called_once()
-            call_args = mock_alert.call_args[1]
-            assert call_args["level"] == "critical"
-            assert "90" in call_args["message"]
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("900.00")):
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget(sample_budget["id"])
 
+                mock_alert.assert_called_once()
+                call_args = mock_alert.call_args[1]
+                assert call_args["level"] == "critical"
+                assert "90" in call_args["message"]
 
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_budget_monitor_no_alert_below_threshold(sample_budget):
-    """Test BudgetMonitor does not alert below 75% utilization."""
-    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_budget_monitor_no_alert_below_threshold(self, sample_budget):
+        """Test BudgetMonitor does not alert below 75% utilization."""
+        from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-    monitor = BudgetMonitor()
+        monitor = BudgetMonitor()
 
-    # Create budget first
-    await monitor.create_budget(
-        id=sample_budget["id"],
-        name=sample_budget["name"],
-        limit_usd=sample_budget["limit_usd"],
-        period=BudgetPeriod.MONTHLY,
-        start_date=sample_budget["start_date"],
-        alert_thresholds=sample_budget["alert_thresholds"],
-    )
+        # Create budget first
+        await monitor.create_budget(
+            id=sample_budget["id"],
+            name=sample_budget["name"],
+            limit_usd=sample_budget["limit_usd"],
+            period=BudgetPeriod.MONTHLY,
+            start_date=sample_budget["start_date"],
+            alert_thresholds=sample_budget["alert_thresholds"],
+        )
 
-    with patch.object(monitor, "get_period_spend", return_value=Decimal("500.00")):  # 50%
-        with patch.object(monitor, "send_alert") as mock_alert:
-            await monitor.check_budget(sample_budget["id"])
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("500.00")):  # 50%
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget(sample_budget["id"])
 
-            mock_alert.assert_not_called()
+                mock_alert.assert_not_called()
 
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_budget_monitor_handles_budget_exceeded(self):
+        """Test BudgetMonitor handles budget being exceeded."""
+        from datetime import datetime, timezone
 
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_budget_monitor_handles_budget_exceeded():
-    """Test BudgetMonitor handles budget being exceeded."""
-    from datetime import datetime, timezone
+        from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
-    from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
+        monitor = BudgetMonitor()
 
-    monitor = BudgetMonitor()
+        # Create budget first
+        await monitor.create_budget(
+            id="budget_001",
+            name="Test Budget",
+            limit_usd=Decimal("1000.00"),
+            period=BudgetPeriod.MONTHLY,
+            start_date=datetime.now(timezone.utc).replace(day=1),
+            alert_thresholds=[Decimal("0.75"), Decimal("0.90")],
+        )
 
-    # Create budget first
-    await monitor.create_budget(
-        id="budget_001",
-        name="Test Budget",
-        limit_usd=Decimal("1000.00"),
-        period=BudgetPeriod.MONTHLY,
-        start_date=datetime.now(timezone.utc).replace(day=1),
-        alert_thresholds=[Decimal("0.75"), Decimal("0.90")],
-    )
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("1500.00")):  # 150%
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget("budget_001")
 
-    with patch.object(monitor, "get_period_spend", return_value=Decimal("1500.00")):  # 150%
-        with patch.object(monitor, "send_alert") as mock_alert:
-            await monitor.check_budget("budget_001")
-
-            # Should send critical alert for exceeded budget
-            assert mock_alert.called
+                # Should send critical alert for exceeded budget
+                assert mock_alert.called
 
 
 # ==============================================================================
@@ -585,9 +592,9 @@ async def test_end_to_end_cost_tracking_flow():
 
     # Step 3: Check budget
     monitor = BudgetMonitor()
-    with patch.object(monitor, "get_period_spend", return_value=total_cost):
+    with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=total_cost):
         # Should not alert for small spend
-        with patch.object(monitor, "send_alert") as mock_alert:
+        with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
             await monitor.check_budget("budget_001")
 
             # Depends on total cost vs budget

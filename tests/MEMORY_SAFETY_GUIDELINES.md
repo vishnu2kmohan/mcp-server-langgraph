@@ -570,6 +570,193 @@ class TestLLMRouting:
         # ... test implementation ...
 ```
 
+### Example 5: Correct AsyncMock Usage for Async Methods
+
+**CRITICAL**: When mocking async methods, you MUST use `new_callable=AsyncMock`. Failing to do so causes tests to hang indefinitely.
+
+#### The Problem: Hanging Tests
+
+```python
+# ❌ WRONG - This will hang indefinitely!
+@pytest.mark.asyncio
+async def test_budget_alert():
+    monitor = BudgetMonitor()
+
+    # DANGER: send_alert is async but mocked without AsyncMock
+    with patch.object(monitor, "send_alert") as mock_alert:
+        await monitor.check_budget("budget_001")  # <-- HANGS HERE
+```
+
+**Why it hangs**:
+1. `send_alert` is an `async def` method
+2. `patch.object` creates a synchronous `MagicMock` by default
+3. When code executes `await self.send_alert(...)`, it awaits a non-coroutine
+4. Python's event loop waits forever for the mock to complete
+5. Test hangs until timeout (if configured)
+
+#### The Solution: AsyncMock with new_callable
+
+```python
+# ✅ CORRECT - Async method mocked with AsyncMock
+import gc
+from unittest.mock import AsyncMock, patch
+import pytest
+
+@pytest.mark.xdist_group(name="budget_monitor_tests")
+class TestBudgetMonitor:
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_budget_alert_sent_at_threshold(self):
+        monitor = BudgetMonitor()
+
+        # ✅ CORRECT: Both async methods use AsyncMock
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("750.00")):
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget("budget_001")
+
+                # Assertions work as expected
+                mock_alert.assert_called_once()
+                assert mock_alert.call_args[1]["level"] == "warning"
+```
+
+#### How to Identify Async Methods
+
+Async methods are defined with `async def`:
+
+```python
+# In budget_monitor.py
+class BudgetMonitor:
+    async def send_alert(self, level: str, message: str) -> None:  # <-- async def
+        """Send budget alert notification."""
+        await self._send_email_alert(level, message)
+        await self._send_webhook_alert(level, message)
+
+    async def get_period_spend(self, budget_id: str) -> Decimal:  # <-- async def
+        """Get total spending for current budget period."""
+        records = await self._fetch_usage_records(budget_id)
+        return sum(r.cost for r in records)
+```
+
+#### Pattern for Async Mocks
+
+**Single async method**:
+```python
+with patch.object(obj, "async_method", new_callable=AsyncMock) as mock:
+    await obj.async_method()
+    mock.assert_called_once()
+```
+
+**Async method with return value**:
+```python
+with patch.object(obj, "async_method", new_callable=AsyncMock, return_value=expected_value):
+    result = await obj.async_method()
+    assert result == expected_value
+```
+
+**Multiple async methods in sequence**:
+```python
+with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("750.00")):
+    with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+        await monitor.check_budget("budget_001")
+        mock_alert.assert_called_once()
+```
+
+#### Prevention: Pre-commit Hook
+
+The pre-commit hook `check-async-mock-usage` automatically detects async methods mocked incorrectly:
+
+```bash
+# Run validation manually
+python scripts/check_async_mock_usage.py tests/monitoring/test_cost_tracker.py
+```
+
+Output for violations:
+```
+❌ Found async mock issues:
+
+tests/monitoring/test_cost_tracker.py:350 - Method 'send_alert' mocked without AsyncMock
+  Fix: patch.object(monitor, "send_alert", new_callable=AsyncMock)
+
+tests/monitoring/test_cost_tracker.py:359 - Method 'get_period_spend' mocked without AsyncMock
+  Fix: patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=...)
+```
+
+#### Common Async Method Patterns
+
+Methods that typically need AsyncMock:
+- `async def send_*` - Sending notifications, messages
+- `async def get_*` - Fetching data from async sources
+- `async def create_*` - Creating resources asynchronously
+- `async def update_*` - Updating async resources
+- `async def delete_*` - Deleting async resources
+- `async def check_*` - Checking async conditions
+- `async def fetch_*` - Fetching from external services
+
+#### Complete Example from Codebase
+
+**Reference**: `tests/monitoring/test_cost_tracker.py:332-367`
+
+```python
+import gc
+import os
+from datetime import datetime, timezone
+from decimal import Decimal
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
+@pytest.mark.xdist_group(name="cost_tracker_budget_tests")
+class TestBudgetMonitor:
+    """Test suite for BudgetMonitor with memory safety pattern."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_budget_monitor_detects_75_percent_utilization(self, sample_budget):
+        """Test BudgetMonitor sends warning at 75% budget utilization."""
+        from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
+
+        monitor = BudgetMonitor()
+
+        # Create budget first
+        await monitor.create_budget(
+            id=sample_budget["id"],
+            name=sample_budget["name"],
+            limit_usd=sample_budget["limit_usd"],
+            period=BudgetPeriod.MONTHLY,
+            start_date=sample_budget["start_date"],
+            alert_thresholds=sample_budget["alert_thresholds"],
+        )
+
+        # ✅ CORRECT: Both async methods use AsyncMock
+        with patch.object(monitor, "get_period_spend", new_callable=AsyncMock, return_value=Decimal("750.00")):
+            with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
+                await monitor.check_budget(sample_budget["id"])
+
+                # Assert warning alert sent
+                mock_alert.assert_called_once()
+                call_args = mock_alert.call_args[1]
+                assert call_args["level"] == "warning"
+                assert "75" in call_args["message"]
+```
+
+#### Timeout Protection
+
+Add global timeout to `pyproject.toml` to prevent infinite hangs:
+
+```toml
+[tool.pytest.ini_options]
+addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60"
+```
+
+This ensures any hanging test will fail after 60 seconds instead of hanging forever.
+
 ---
 
 ## Troubleshooting
