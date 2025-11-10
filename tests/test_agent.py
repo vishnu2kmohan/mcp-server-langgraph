@@ -274,6 +274,99 @@ class TestAgentGraph:
 
         assert result is not None
 
+    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    async def test_handles_empty_message_content(self, mock_create_llm):
+        """
+        Test agent handles empty message content gracefully.
+
+        Edge case: Empty string content should not crash the agent.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+
+        mock_model = MagicMock()
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Handled empty input"))
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        # Test with empty content
+        state_empty = {
+            "messages": [HumanMessage(content="")],
+            "next_action": "",
+            "user_id": "user:test",
+            "request_id": "req-empty",
+        }
+
+        result = await graph.ainvoke(state_empty, config={"configurable": {"thread_id": "test-empty"}})
+
+        # Should handle gracefully without crashing
+        assert result is not None
+        assert "messages" in result
+
+    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    async def test_handles_missing_optional_fields(self, mock_create_llm):
+        """
+        Test agent handles missing optional fields (user_id, request_id).
+
+        Edge case: None values for optional fields should be acceptable.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+
+        mock_model = MagicMock()
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response"))
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        # Test with None optional fields
+        state_minimal = {
+            "messages": [HumanMessage(content="Test")],
+            "next_action": "",
+            "user_id": None,  # Edge case: no user ID
+            "request_id": None,  # Edge case: no request ID
+        }
+
+        result = await graph.ainvoke(state_minimal, config={"configurable": {"thread_id": "test-minimal"}})
+
+        assert result is not None
+        assert len(result["messages"]) > 0
+
+    @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
+    async def test_handles_very_long_conversation_history(self, mock_create_llm):
+        """
+        Test agent handles very long conversation histories.
+
+        Edge case: Many messages should trigger compaction if enabled.
+        """
+        from mcp_server_langgraph.core.agent import create_agent_graph
+
+        mock_model = MagicMock()
+        mock_model.ainvoke = AsyncMock(return_value=AIMessage(content="Response to long history"))
+        mock_create_llm.return_value = mock_model
+
+        graph = create_agent_graph()
+
+        # Create very long conversation (50 messages)
+        long_history = []
+        for i in range(25):
+            long_history.append(HumanMessage(content=f"User message {i}"))
+            long_history.append(AIMessage(content=f"AI response {i}"))
+
+        long_history.append(HumanMessage(content="Final question"))
+
+        state_long = {
+            "messages": long_history,
+            "next_action": "",
+            "user_id": "user:test",
+            "request_id": "req-long",
+        }
+
+        result = await graph.ainvoke(state_long, config={"configurable": {"thread_id": "test-long"}})
+
+        # Should handle long history (potentially with compaction)
+        assert result is not None
+        assert len(result["messages"]) > 0
+
 
 @pytest.mark.integration
 class TestAgentIntegration:
@@ -416,7 +509,7 @@ class TestRedisCheckpointerLifecycle:
         """
         Test Redis checkpointer stores context manager reference for cleanup.
 
-        RED: Will fail until context manager reference is stored.
+        GREEN: Verifies context manager reference storage and cleanup capability.
         """
         from mcp_server_langgraph.core.agent import create_checkpointer
         from mcp_server_langgraph.core.config import Settings
@@ -424,6 +517,7 @@ class TestRedisCheckpointerLifecycle:
         mock_ctx = MagicMock()
         mock_checkpointer = MagicMock()
         mock_ctx.__enter__ = MagicMock(return_value=mock_checkpointer)
+        mock_ctx.__exit__ = MagicMock(return_value=None)
         mock_redis_saver.from_conn_string.return_value = mock_ctx
 
         settings = Settings(
@@ -433,9 +527,19 @@ class TestRedisCheckpointerLifecycle:
 
         checkpointer = create_checkpointer(settings)
 
-        # After implementation, checkpointer should have reference to context manager
-        # This allows cleanup on shutdown
-        assert hasattr(checkpointer, "__context_manager__") or hasattr(checkpointer, "_context")
+        # Verify checkpointer stores reference to context manager for cleanup
+        assert hasattr(checkpointer, "__context_manager__") or hasattr(checkpointer, "_context"), (
+            "Checkpointer must store context manager reference to enable proper cleanup"
+        )
+
+        # Verify the stored context manager can be used for cleanup
+        stored_ctx = getattr(checkpointer, "__context_manager__", getattr(checkpointer, "_context", None))
+        assert stored_ctx is not None, "Stored context manager should not be None"
+        assert stored_ctx == mock_ctx, "Stored context manager should match original"
+
+        # Verify cleanup can be performed using the stored reference
+        stored_ctx.__exit__(None, None, None)
+        mock_ctx.__exit__.assert_called_once_with(None, None, None)
 
     @patch("mcp_server_langgraph.core.agent.RedisSaver")
     def test_memory_checkpointer_no_cleanup_needed(self, mock_redis_saver):

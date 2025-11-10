@@ -907,26 +907,37 @@ make test-quick-new         # Quick parallel check
 - Test infrastructure: ⚠️ Shared with dev
 
 **After**:
-- API endpoints: ✅ 30+ test cases covering all routes
+- API endpoints: ✅ 33+ test cases covering all routes
 - MCP stdio server: ✅ 85%+ coverage target
-- E2E workflows: ✅ 6 complete user journeys
+- E2E workflows: ✅ 7 implemented scenarios (39 total planned)
 - Test infrastructure: ✅ Fully isolated environment
 
-### Implementation Status
+### Implementation Status (Updated After Codex Remediation)
 
 - ✅ **Completed**:
-- docker-compose.test.yml (isolated infrastructure)
-- tests/api/test_api_keys_endpoints.py (15+ tests)
-- tests/api/test_service_principals_endpoints.py (18+ tests)
-- tests/unit/test_mcp_stdio_server.py (20+ tests)
-- tests/e2e/test_full_user_journey.py (framework ready)
-- Makefile targets (8 new commands)
-- Tests README documentation
+  - docker-compose.test.yml (isolated infrastructure)
+  - tests/api/ (33+ tests for all API endpoints)
+  - tests/unit/test_mcp_stdio_server.py (20+ tests)
+  - tests/e2e/test_full_user_journey.py:
+    - ✅ Infrastructure tests (3/3): login, init, list_tools
+    - ✅ Standard user journey (3/3): chat, continue, retrieve conversation
+    - ✅ GDPR compliance (1/7): data export
+    - ✅ API key lifecycle (3/7): create, list, revoke
+  - tests/meta/ (3 meta-test suites, 10 tests for quality validation)
+  - Agent edge case tests (3 tests): empty content, missing fields, long history
+  - Makefile targets (8 new commands)
 
-⚠️ **Pending** (marked with `pytest.skip()`):
-- E2E test implementation (requires Keycloak fixtures)
-- GDPR endpoints error case expansion
-- MCP streamable server coverage expansion
+⚠️ **Pending** (marked with `@pytest.mark.xfail(strict=True)`):
+- E2E scenarios: 29/39 remaining (74%)
+  - Standard user: 2 tests (search conversations, token refresh)
+  - GDPR: 6 tests (access data, update profile, delete account, etc.)
+  - Service principals: 7 tests (full OAuth2 client credentials flow)
+  - API keys: 4 tests (validation, usage, rotation)
+  - Error recovery: 6 tests (token expiration, rate limiting, etc.)
+  - Multi-user: 5 tests (collaboration scenarios)
+  - Performance: 4 tests (load testing)
+
+**E2E Implementation Progress**: 10/39 tests (26% → target: 80%)
 
 ### Best Practices Implemented
 

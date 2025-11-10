@@ -319,15 +319,17 @@ class TestCacheEdgeCases:
     @given(st.just(None))
     @settings(max_examples=5, deadline=1000)
     def test_cache_handles_none_value(self, value):
-        """Property: Cache can store and retrieve None"""
+        """Property: Cache can store and retrieve None without crashing"""
         cache = CacheService(l1_maxsize=100, l1_ttl=60)
         cache.set("none:key", value)
 
+        # Property: get() should not crash when retrieving None
         # Note: get() returns None for both cache miss and cached None
-        # This is a design limitation - we can't distinguish
-        # For this test, we verify it doesn't crash
-        cache.get("none:key")
-        # Could be None (cached) or None (miss) - both valid
+        # This is a design limitation - we can't distinguish them
+        result = cache.get("none:key")
+
+        # Assert: Operation completed without exception and returned None
+        assert result is None, f"Cache should handle None values gracefully, got: {result}"
 
     @given(value=st.floats(allow_nan=False, allow_infinity=False))
     @settings(max_examples=30, deadline=2000)
