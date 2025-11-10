@@ -348,6 +348,57 @@ repos:
 
           See: TESTING.md "Regression Test Patterns - Pattern 3: Test Time Bombs"
 
+      - id: check-e2e-completion
+        name: Check E2E Test Implementation Progress
+        entry: python3 scripts/check_e2e_completion.py --min-percent 25
+        language: system
+        pass_filenames: false
+        files: ^tests/e2e/test_full_user_journey\.py$
+        always_run: false
+        description: |
+          Tracks E2E test implementation progress to prevent regression of
+          Codex Finding #1: "E2E suite effectively inert—49 scenarios are xfail placeholders"
+
+          Monitors:
+          - Total E2E tests vs implemented tests
+          - Completion percentage (current: 35%, target: 80%)
+          - Prevents decrease in implementation progress
+
+          Min: 25% | Current: 35% | Target: 80%
+
+      - id: check-test-sleep-budget
+        name: Monitor Test Wall-Clock Sleep Time Budget
+        entry: python3 scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+        language: system
+        pass_filenames: false
+        files: ^tests/.*test_.*\.py$
+        always_run: false
+        description: |
+          Monitors total wall-clock sleep time across test suite.
+
+          Related to Codex Finding #5: Wall-clock sleeps make suite slow and flaky
+
+          Current status: 36s in active tests (acceptable)
+          Budget: 60s max, 45s warning threshold
+
+          Note: Many sleep calls are in skipped tests or testing actual sleep functionality.
+
+      - id: validate-meta-test-quality
+        name: Run Meta-Tests for Test Quality Validation
+        entry: uv run pytest tests/meta/test_property_test_quality.py tests/meta/test_context_manager_quality.py tests/meta/test_kubectl_safety.py -v --tb=short
+        language: system
+        pass_filenames: false
+        files: ^tests/.*test_.*\.py$
+        always_run: false
+        description: |
+          Runs meta-tests that validate test suite quality (Codex Findings Prevention):
+
+          1. Property Test Quality: Ensures @given tests have assertions
+          2. Context Manager Quality: Validates __exit__ assertions
+          3. Kubectl Safety: Enforces --dry-run or safety guards
+
+          Prevents regression of Codex Findings #3, #4, #9
+
       - id: validate-github-action-versions
         name: Validate GitHub Actions Action Versions
         entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
