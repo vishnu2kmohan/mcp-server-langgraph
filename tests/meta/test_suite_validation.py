@@ -650,10 +650,11 @@ class TestCLIToolGuards:
                         cli_tool_used = self._detect_cli_tool_usage(node, cli_tools.keys(), content)
 
                         if cli_tool_used:
-                            # Check if test has guard (skipif decorator, runtime check, or class marker)
+                            # Check if test has guard (skipif decorator, runtime check, requires_* marker, or class marker)
                             has_guard = (
                                 self._has_skipif_guard(node, cli_tools[cli_tool_used])
                                 or self._has_runtime_skip_check(node, cli_tool_used, content)
+                                or self._has_requires_marker(node, cli_tools[cli_tool_used])
                                 or self._has_class_marker(node, tree, cli_tools[cli_tool_used])
                             )
 
@@ -698,10 +699,7 @@ class TestCLIToolGuards:
                             cmd = cmd_elem.value
                             if cmd in cli_tools:
                                 return cmd
-                        elif isinstance(cmd_elem, ast.Str):  # Python 3.7 compatibility
-                            cmd = cmd_elem.s
-                            if cmd in cli_tools:
-                                return cmd
+                        # Note: ast.Str deprecated in Python 3.8+, removed in 3.14, use ast.Constant instead
 
         return ""
 
@@ -730,6 +728,26 @@ class TestCLIToolGuards:
                         # Found skipif decorator
                         return True
 
+        return False
+
+    def _has_requires_marker(self, func_node: ast.FunctionDef, expected_marker: str) -> bool:
+        """
+        Check if a test function has @pytest.mark.requires_* marker.
+
+        These markers trigger auto-skip via pytest_collection_modifyitems hook
+        in conftest.py when the CLI tool is not installed.
+
+        Args:
+            func_node: AST node for the test function
+            expected_marker: Expected marker name (e.g., "requires_kustomize")
+
+        Returns:
+            True if requires_* marker exists, False otherwise
+        """
+        for decorator in func_node.decorator_list:
+            marker_name = self._extract_marker_name(decorator)
+            if marker_name == expected_marker:
+                return True
         return False
 
     def _has_runtime_skip_check(self, func_node: ast.FunctionDef, cli_tool: str, file_content: str) -> bool:

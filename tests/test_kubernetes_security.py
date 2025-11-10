@@ -186,6 +186,7 @@ class TestRedisExternalNameService:
                     )
 
 
+@pytest.mark.requires_kubectl
 class TestKubernetesValidation:
     """Test Kubernetes manifest validation with security tools."""
 

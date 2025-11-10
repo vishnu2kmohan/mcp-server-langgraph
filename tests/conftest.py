@@ -116,28 +116,42 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     """
-    Modify test collection to skip benchmarks by default.
+    Modify test collection to skip benchmarks by default and handle CLI tool requirements.
 
     CODEX FINDING #4: Benchmarks run by default, slowing everyday test runs.
     Solution: Skip benchmarks unless:
     - --run-benchmarks flag is passed
     - -m benchmark is used (explicit marker selection)
     - --benchmark-only is used (pytest-benchmark flag)
+
+    Also auto-skips tests requiring CLI tools that aren't installed.
     """
+    import shutil
+
     run_benchmarks = getattr(config, "_run_benchmarks", False)
     benchmark_only = config.getoption("--benchmark-only", default=False)
     markexpr = config.getoption("-m", default="")
 
     # If user explicitly requests benchmarks, don't skip
-    if run_benchmarks or benchmark_only or "benchmark" in markexpr:
-        return
+    if not (run_benchmarks or benchmark_only or "benchmark" in markexpr):
+        # Skip all tests marked with @pytest.mark.benchmark
+        skip_benchmark = pytest.mark.skip(reason="Benchmark tests skipped by default. Use --run-benchmarks to enable.")
+        for item in items:
+            if "benchmark" in item.keywords:
+                item.add_marker(skip_benchmark)
 
-    # Skip all tests marked with @pytest.mark.benchmark
-    skip_benchmark = pytest.mark.skip(reason="Benchmark tests skipped by default. Use --run-benchmarks to enable.")
+    # Auto-skip tests requiring CLI tools that aren't installed
+    cli_tools = {
+        "requires_kubectl": ("kubectl", "kubectl not installed"),
+        "requires_helm": ("helm", "helm not installed"),
+        "requires_kustomize": ("kustomize", "kustomize not installed"),
+    }
 
     for item in items:
-        if "benchmark" in item.keywords:
-            item.add_marker(skip_benchmark)
+        for marker_name, (tool_name, skip_reason) in cli_tools.items():
+            if marker_name in item.keywords:
+                if not shutil.which(tool_name):
+                    item.add_marker(pytest.mark.skip(reason=skip_reason))
 
 
 # ==============================================================================

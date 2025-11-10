@@ -147,6 +147,7 @@ def skip_if_not_gke(kubectl_available: bool, gcloud_available: bool):
 
 
 # Test Classes
+@pytest.mark.requires_kubectl
 class TestGCPServiceAccountIAM:
     """Test GCP service account has proper IAM roles for ESO installation."""
 
@@ -316,6 +317,7 @@ class TestGCPServiceAccountIAM:
         ), f"ESO cert-controller not fully available: {available_replicas}/{desired_replicas} replicas"
 
 
+@pytest.mark.requires_kubectl
 class TestESOCRDs:
     """Test External Secrets Operator CRDs are installed."""
 
@@ -350,6 +352,7 @@ class TestESOCRDs:
         assert crd["metadata"]["name"] == "clustersecretstores.external-secrets.io"
 
 
+@pytest.mark.requires_kubectl
 class TestESORBACResources:
     """Test External Secrets Operator RBAC resources exist (ClusterRoles, ClusterRoleBindings)."""
 
@@ -447,6 +450,7 @@ class TestESORBACResources:
         assert binding["roleRef"]["name"] == "external-secrets-cert-controller"
 
 
+@pytest.mark.requires_kubectl
 class TestClusterSecretStoreConnectivity:
     """Test ClusterSecretStore can connect to GCP Secret Manager."""
 
@@ -486,6 +490,7 @@ class TestClusterSecretStoreConnectivity:
             ), f"ClusterSecretStore not ready: {ready_condition.get('message', 'Unknown error')}"
 
 
+@pytest.mark.requires_kubectl
 class TestExternalSecretSync:
     """Test ExternalSecret resources can sync secrets from GCP Secret Manager."""
 

@@ -66,6 +66,7 @@ def kong_config():
 
 
 # Test 0: Helm Lint Validation (Prevents Codex Finding #1 - P0 Blocker)
+@pytest.mark.requires_helm
 def test_helm_chart_lints_successfully(helm_chart_path):
     """
     Test that Helm chart passes `helm lint` validation.
