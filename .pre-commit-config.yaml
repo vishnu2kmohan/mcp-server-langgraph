@@ -596,6 +596,36 @@ repos:
 
           Regression prevention for Codex Finding #3 (P0 Blocker)
 
+      # Memory Safety Validation (pytest-xdist OOM Prevention)
+      - id: check-test-memory-safety
+        name: Check Test Memory Safety (pytest-xdist OOM prevention)
+        entry: python scripts/check_test_memory_safety.py
+        language: system
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: true
+        always_run: false  # Only run when test files change
+        description: |
+          Ensures tests using AsyncMock/MagicMock follow memory safety pattern to
+          prevent pytest-xdist from consuming 200GB+ memory.
+
+          Required pattern (3-part):
+          1. @pytest.mark.xdist_group(name="...") - Groups tests in same worker
+          2. teardown_method() + gc.collect() - Forces GC after each test
+          3. Performance tests: @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER"))
+
+          Background:
+          pytest-xdist worker isolation causes AsyncMock/MagicMock objects to create
+          circular references that prevent garbage collection, leading to memory
+          explosion (observed: 217GB VIRT, 42GB RES).
+
+          Validates:
+          - Test classes with AsyncMock/MagicMock have xdist_group decorator
+          - Test classes have teardown_method with gc.collect()
+          - Performance tests skip when running in parallel mode
+
+          See: tests/MEMORY_SAFETY_GUIDELINES.md for complete guide
+          Reference: tests/security/test_api_key_indexed_lookup.py (correct implementation)
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
