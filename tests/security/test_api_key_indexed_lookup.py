@@ -18,7 +18,9 @@ References:
 - CWE-407: Inefficient Algorithmic Complexity
 """
 
+import gc
 import logging
+import os
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -30,8 +32,22 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_key_security")
 class TestAPIKeyIndexedLookup:
-    """Test suite for O(1) API key lookup via Keycloak indexed attributes"""
+    """Test suite for O(1) API key lookup via Keycloak indexed attributes
+
+    Note: Uses xdist_group to prevent parallel execution which causes excessive
+    memory consumption (42GB+ RES) due to AsyncMock/MagicMock retention issues.
+    """
+
+    def teardown_method(self):
+        """Force garbage collection after each test to prevent memory buildup.
+
+        AsyncMock and MagicMock objects can create circular references that
+        prevent garbage collection, especially in pytest-xdist workers.
+        Explicit GC prevents memory accumulation across tests.
+        """
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_api_key_stores_hash_in_keycloak_attribute(self):
@@ -172,11 +188,18 @@ class TestAPIKeyIndexedLookup:
 
     @pytest.mark.asyncio
     @pytest.mark.performance
+    @pytest.mark.skipif(
+        os.getenv("PYTEST_XDIST_WORKER") is not None,
+        reason="Performance tests skipped in parallel mode due to memory overhead (133GB VIRT, 42GB RES observed)",
+    )
     async def test_indexed_lookup_performance_with_large_user_base(self):
         """
         PERFORMANCE TEST: Indexed lookup should complete quickly even with large user base
 
         With O(1) indexed search, performance should be independent of user count.
+
+        Note: Skipped in pytest-xdist mode to prevent excessive memory consumption.
+        Run without -n flag for performance validation.
         """
         mock_keycloak = AsyncMock(spec=KeycloakClient)
 

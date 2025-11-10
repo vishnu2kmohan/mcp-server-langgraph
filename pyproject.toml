@@ -408,7 +408,7 @@ markers = [
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
     "infrastructure: Infrastructure and deployment configuration tests",
     "asyncio: Async tests using pytest-asyncio",
-    "xdist_group: Test grouping for pytest-xdist parallel execution",
+    "xdist_group: Test grouping for pytest-xdist parallel execution (prevents memory issues)",
     "external_deps: Tests requiring external dependencies or services",
     "meta: Meta tests (test suite validation, CI/CD checks)",
     "requires_kustomize: Tests requiring kustomize CLI tool",
