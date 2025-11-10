@@ -7,3 +7,6 @@ scripts/deploy-all-phases.sh:generic-api-key:246
 
 # Terraform example password complexity setting
 terraform/environments/gcp-prod/main.tf:hashicorp-tf-password:267
+
+# Test file with intentional test secrets for validation
+tests/test_gitleaks_config.py:generic-api-key-with-context:137
