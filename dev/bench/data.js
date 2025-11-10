@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762789469410,
+  "lastUpdate": 1762791346588,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -39106,6 +39106,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000164801922359049",
             "extra": "mean: 57.72196497772629 usec\nrounds: 5368"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "0e397895e49cd1cab688269fdabb7dbea5b84173",
+          "message": "feat(tests): apply memory safety fixes to 14 HIGH priority test files (Phase 2)\n\nApply xdist worker isolation pattern to prevent mock/state accumulation:\n- Add @pytest.mark.xdist_group(name=\"...\") to 75 test classes\n- Add teardown_method() with gc.collect() to each class\n- Add import gc to all affected files\n\n## Files Updated (13 test files, 75 classes)\n\n### Batch 1: Core Authentication & Authorization\n- tests/test_auth_factory.py (9 classes) - auth_factory_tests\n- tests/core/test_cache.py (15 classes) - cache_tests\n\n### Batch 2: API Endpoints\n- tests/api/test_service_principals_endpoints.py (7 classes) - service_principals_api_tests\n- tests/api/test_api_keys_endpoints.py (7 classes) - api_keys_api_tests\n\n### Batch 3: GDPR Compliance\n- tests/test_gdpr.py (6 classes) - gdpr_tests\n- tests/integration/test_gdpr_endpoints.py (2 classes) - gdpr_integration_tests\n\n### Batch 4: Session & Auth\n- tests/test_session_timeout.py (5 classes) - session_timeout_tests\n- tests/test_llm_factory_contract.py (2 classes) - llm_factory_tests\n\n### Batch 5: Startup & Validation\n- tests/integration/test_app_startup_validation.py (5 classes) - app_startup_integration_tests\n- tests/unit/test_dependencies_wiring.py (5 classes) - dependencies_wiring_tests\n- tests/smoke/test_ci_startup_smoke.py (4 classes) - ci_startup_smoke_tests\n\n### Batch 6: Core Services\n- tests/test_user_provider.py (4 classes) - user_provider_tests\n- tests/test_context_manager.py (4 classes) - context_manager_tests\n\nNote: tests/conftest.py reviewed - no test classes, no changes needed\n\n## Automation\n- Added scripts/apply_memory_safety_fixes.py for batch processing\n\n## Validation\n- All 13 files pass syntax validation\n- Total 75/~75 classes updated (100% coverage)\n\nReference: tests/security/test_api_key_indexed_lookup.py (Phase 1 pattern)\nSee: docs-internal/PYTEST_XDIST_MEMORY_SAFETY_PLAN.md\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-10T11:11:45-05:00",
+          "tree_id": "b4d93f846f7879a93ddf97b78dd4467b84797ec3",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/0e397895e49cd1cab688269fdabb7dbea5b84173"
+        },
+        "date": 1762791344964,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.71411712217235,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010113193335409398",
+            "extra": "mean: 6.958258659793965 msec\nrounds: 97"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 148.67860115032047,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001318945408087637",
+            "extra": "mean: 6.725917463999792 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 46174.78819629505,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.65683999997725 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 49166.19057400171,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.339180000021884 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47208.2236727035,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.1827499999373 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.20206510863795,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.149275830000022 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.424242938266758,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.48205791999999 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.97279225609074,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.27281972000011 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1436162.5736299297,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 696.2999999871045 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12481.637950382194,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 80.11768999992341 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2973.7993114286123,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.2701700000059 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2932.170739363947,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.04425999998966 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59882.02253951911,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002011954904543449",
+            "extra": "mean: 16.699502748759873 usec\nrounds: 12915"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17390.272349900413,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017160825999087452",
+            "extra": "mean: 57.50341224562401 usec\nrounds: 5259"
           }
         ]
       }
