@@ -10,7 +10,7 @@ Supports:
 - Conditional interrupts based on state
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
@@ -97,7 +97,7 @@ class InterruptHandler:
         """
         state["interrupted"] = True
         state["interrupt_node"] = node_name
-        state["interrupt_timestamp"] = datetime.utcnow().isoformat()
+        state["interrupt_timestamp"] = datetime.now(timezone.utc).isoformat()
 
         # Add to history
         self.interrupt_history.append({"node": node_name, "state": state.copy(), "timestamp": state["interrupt_timestamp"]})
@@ -116,7 +116,7 @@ class InterruptHandler:
             Updated state
         """
         state["interrupted"] = False
-        state["resumed_at"] = datetime.utcnow().isoformat()
+        state["resumed_at"] = datetime.now(timezone.utc).isoformat()
 
         return state
 

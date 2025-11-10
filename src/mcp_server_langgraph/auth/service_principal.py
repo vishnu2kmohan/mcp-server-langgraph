@@ -13,7 +13,7 @@ See ADR-0033 for architectural decisions.
 
 import secrets
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
@@ -78,7 +78,7 @@ class ServicePrincipalManager:
         Raises:
             ValueError: If authentication_mode is invalid
         """
-        created_at = datetime.utcnow().isoformat()
+        created_at = datetime.now(timezone.utc).isoformat()
 
         if authentication_mode == "client_credentials":
             client_secret = await self._create_client_credentials_service(
@@ -154,7 +154,7 @@ class ServicePrincipalManager:
                 "inheritPermissions": str(inherit_permissions).lower(),
                 "owner": owner_user_id or "",
                 "purpose": description,
-                "createdAt": datetime.utcnow().isoformat(),
+                "createdAt": datetime.now(timezone.utc).isoformat(),
             },
         }
 
@@ -185,7 +185,7 @@ class ServicePrincipalManager:
                 "inheritPermissions": str(inherit_permissions).lower(),
                 "owner": owner_user_id or "",
                 "purpose": description,
-                "createdAt": datetime.utcnow().isoformat(),
+                "createdAt": datetime.now(timezone.utc).isoformat(),
             },
             "credentials": [{"type": "password", "value": password, "temporary": False}],
             "realmRoles": ["service-principal"],

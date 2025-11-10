@@ -294,7 +294,7 @@ class TestInterruptHandler:
 
         assert result_state["interrupted"] is True
         assert result_state["interrupt_node"] == "test_node"
-        assert result_state["interrupt_timestamp"] == "2024-01-15T18:00:00"
+        assert result_state["interrupt_timestamp"] == "2024-01-15T18:00:00+00:00"
 
     def test_handle_interrupt_preserves_original_data(self):
         """Test handle_interrupt preserves original state data."""
@@ -317,7 +317,7 @@ class TestInterruptHandler:
         assert len(handler.interrupt_history) == 1
         history_entry = handler.interrupt_history[0]
         assert history_entry["node"] == "node1"
-        assert history_entry["timestamp"] == "2024-01-15T19:00:00"
+        assert history_entry["timestamp"] == "2024-01-15T19:00:00+00:00"
         assert "state" in history_entry
 
     def test_handle_interrupt_multiple_calls_build_history(self):
@@ -342,7 +342,7 @@ class TestInterruptHandler:
         result_state = handler.resume("interrupt_123", state)
 
         assert result_state["interrupted"] is False
-        assert result_state["resumed_at"] == "2024-01-15T20:00:00"
+        assert result_state["resumed_at"] == "2024-01-15T20:00:00+00:00"
 
     def test_resume_preserves_state(self):
         """Test resume preserves original state data."""
@@ -524,14 +524,14 @@ class TestInterruptWorkflowIntegration:
         # Step 3: Handle interrupt
         state = handler.handle_interrupt("sensitive_operation", state)
         assert state["interrupted"] is True
-        assert state["interrupt_timestamp"] == "2024-01-15T21:00:00"
+        assert state["interrupt_timestamp"] == "2024-01-15T21:00:00+00:00"
 
         # Step 4: Resume execution
         with freeze_time("2024-01-15 21:05:00"):
             state = handler.resume(interrupt_id, state)
 
         assert state["interrupted"] is False
-        assert state["resumed_at"] == "2024-01-15T21:05:00"
+        assert state["resumed_at"] == "2024-01-15T21:05:00+00:00"
 
     def test_conditional_interrupt_workflow(self):
         """Test conditional interrupt only fires when condition met."""

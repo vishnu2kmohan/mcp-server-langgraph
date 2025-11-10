@@ -10,7 +10,7 @@ See ADR-0034 for API key to JWT exchange pattern.
 
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import bcrypt
@@ -148,7 +148,7 @@ class APIKeyManager:
         key_id = secrets.token_hex(8)
 
         # Calculate expiration
-        created_at = datetime.utcnow()
+        created_at = datetime.now(timezone.utc)
         expires_at = created_at + timedelta(days=expires_days)
 
         # Store in Keycloak attributes
@@ -272,7 +272,7 @@ class APIKeyManager:
             expires_at_str = cached_user.get("expires_at")
             if expires_at_str:
                 expires_at = datetime.fromisoformat(expires_at_str)
-                if datetime.utcnow() > expires_at:
+                if datetime.now(timezone.utc) > expires_at:
                     # Expired, invalidate cache and continue to full search
                     await self._invalidate_cache(api_key_hash)
                 else:
@@ -335,11 +335,11 @@ class APIKeyManager:
                         expires_at_str = attributes.get(f"apiKey_{key_id}_expiresAt")
                         if expires_at_str:
                             expires_at = datetime.fromisoformat(expires_at_str)
-                            if datetime.utcnow() > expires_at:
+                            if datetime.now(timezone.utc) > expires_at:
                                 continue  # Expired
 
                         # Update last used timestamp
-                        attributes[f"apiKey_{key_id}_lastUsed"] = datetime.utcnow().isoformat()
+                        attributes[f"apiKey_{key_id}_lastUsed"] = datetime.now(timezone.utc).isoformat()
                         await self.keycloak.update_user_attributes(user["id"], attributes)
 
                         user_info = {
@@ -473,7 +473,7 @@ class APIKeyManager:
                 # Keep existing metadata (name, created), update expiration if needed
                 if grace_period_days > 0:
                     # Extend expiration for grace period
-                    new_expires = datetime.utcnow() + timedelta(days=grace_period_days)
+                    new_expires = datetime.now(timezone.utc) + timedelta(days=grace_period_days)
                     attributes[f"apiKey_{key_id}_expiresAt"] = new_expires.isoformat()
 
                 break

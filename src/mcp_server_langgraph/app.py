@@ -81,9 +81,15 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        logger.info(f"CORS enabled for origins: {cors_origins}")
+        try:
+            logger.info(f"CORS enabled for origins: {cors_origins}")
+        except RuntimeError:
+            pass  # Graceful degradation if observability not initialized
     else:
-        logger.info("CORS disabled (no allowed origins configured)")
+        try:
+            logger.info("CORS disabled (no allowed origins configured)")
+        except RuntimeError:
+            pass  # Graceful degradation if observability not initialized
 
     # Rate limiting - setup function registers middleware and exception handlers
     setup_rate_limiting(app)
@@ -98,14 +104,20 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
     app.include_router(gdpr_router)
     app.include_router(scim_router)
 
-    logger.info("FastAPI application created with all routers mounted")
+    try:
+        logger.info("FastAPI application created with all routers mounted")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
 
     # Run startup validation to ensure all critical systems initialized correctly
     # This prevents the app from starting if any of the OpenAI Codex findings recur
     try:
         run_startup_validation()
     except Exception as e:
-        logger.critical(f"Startup validation failed: {e}")
+        try:
+            logger.critical(f"Startup validation failed: {e}")
+        except RuntimeError:
+            pass  # Graceful degradation if observability not initialized
         raise
 
     return app

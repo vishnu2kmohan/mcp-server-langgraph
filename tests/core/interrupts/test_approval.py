@@ -83,7 +83,7 @@ class TestApprovalRequiredModel:
         assert approval.action_description == "Execute high-value transaction"
         assert approval.risk_level == "medium"  # default
         assert approval.context == {}  # default
-        assert approval.requested_at == "2024-01-15T10:30:00"
+        assert approval.requested_at == "2024-01-15T10:30:00+00:00"
         assert approval.requested_by == "system"  # default
         assert approval.expires_at is None
         assert approval.metadata == {}
@@ -162,7 +162,7 @@ class TestApprovalResponseModel:
         assert response.approval_id == "test_123"
         assert response.status == ApprovalStatus.APPROVED
         assert response.approved_by == "john@example.com"
-        assert response.approved_at == "2024-01-15T11:00:00"
+        assert response.approved_at == "2024-01-15T11:00:00+00:00"
         assert response.reason is None
         assert response.modifications is None
 
@@ -407,7 +407,7 @@ class TestApproveAction:
         assert response["status"] == "approved"
         assert response["approved_by"] == "john@example.com"
         assert response["reason"] == "Verified with manager"
-        assert response["approved_at"] == "2024-01-15T14:00:00"
+        assert response["approved_at"] == "2024-01-15T14:00:00+00:00"
 
     def test_approve_action_clears_pending_flag(self):
         """Test approve_action clears pending_approval flag."""
@@ -474,7 +474,7 @@ class TestRejectAction:
         assert response["status"] == "rejected"
         assert response["approved_by"] == "security@example.com"  # Field name is approved_by even for rejection
         assert response["reason"] == "Risk level too high"
-        assert response["approved_at"] == "2024-01-15T15:30:00"
+        assert response["approved_at"] == "2024-01-15T15:30:00+00:00"
 
     def test_reject_action_sets_workflow_halted(self):
         """Test reject_action sets workflow_halted flag."""

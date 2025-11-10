@@ -28,7 +28,7 @@ Example:
     app = graph.compile(checkpointer=checkpointer, interrupt_before=["action"])
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -56,7 +56,9 @@ class ApprovalRequired(BaseModel):
     action_description: str = Field(description="What action needs approval")
     risk_level: str = Field(default="medium", description="Risk level: low, medium, high, critical")
     context: Dict[str, Any] = Field(default_factory=dict, description="Additional context for decision")
-    requested_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat(), description="When approval was requested")
+    requested_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When approval was requested"
+    )
     requested_by: str = Field(default="system", description="Who/what requested approval")
     expires_at: Optional[str] = Field(default=None, description="Optional expiration time")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
@@ -70,7 +72,9 @@ class ApprovalResponse(BaseModel):
     approval_id: str = Field(description="ID of the approval request")
     status: ApprovalStatus = Field(description="Approval decision")
     approved_by: str = Field(description="Who approved/rejected")
-    approved_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat(), description="When decision was made")
+    approved_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When decision was made"
+    )
     reason: Optional[str] = Field(default=None, description="Reason for decision")
     modifications: Optional[Dict[str, Any]] = Field(default=None, description="Modifications to proposed action")
 
@@ -120,7 +124,7 @@ class ApprovalNode:
             Updated state with approval request
         """
         # Generate approval ID
-        approval_id = f"{self.approval_name}_{datetime.utcnow().timestamp()}"
+        approval_id = f"{self.approval_name}_{datetime.now(timezone.utc).timestamp()}"
 
         # Create approval request
         approval_request = ApprovalRequired(
