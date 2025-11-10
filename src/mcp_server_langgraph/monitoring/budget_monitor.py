@@ -365,8 +365,11 @@ class BudgetMonitor:
                         should_alert = True
 
                 if should_alert:
-                    # Determine alert level
-                    if utilization >= Decimal("0.95"):
+                    # Determine alert level based on utilization
+                    # Critical: >= 90% (aligns with standard budget alert thresholds)
+                    # Warning: >= 75%
+                    # Info: < 75%
+                    if utilization >= Decimal("0.90"):
                         level = AlertLevel.CRITICAL
                     elif utilization >= Decimal("0.75"):
                         level = AlertLevel.WARNING

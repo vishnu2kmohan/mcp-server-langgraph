@@ -142,7 +142,11 @@ class TestOpenFGAClientWiring:
         """
         When returning None due to incomplete config, log a clear warning.
         """
+        import mcp_server_langgraph.core.dependencies as deps
         from mcp_server_langgraph.core.dependencies import get_openfga_client
+
+        # Reset singleton to None to ensure clean test state
+        deps._openfga_client = None
 
         # Arrange: Incomplete config
         with patch("mcp_server_langgraph.core.dependencies.settings") as mock_settings:
@@ -289,7 +293,7 @@ class TestAPIKeyManagerRedisCacheWiring:
             mock_settings.keycloak_admin_username = "admin"
             mock_settings.keycloak_admin_password = "admin-password"
 
-            with patch("mcp_server_langgraph.core.dependencies.redis.from_url") as mock_redis:
+            with patch("redis.asyncio.from_url") as mock_redis:
                 mock_redis.return_value = Mock()
 
                 # Act: Get API key manager

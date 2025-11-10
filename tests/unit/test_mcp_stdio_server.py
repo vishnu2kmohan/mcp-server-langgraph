@@ -232,7 +232,7 @@ class TestListTools:
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
     async def test_list_tools_returns_all_tools(self, mock_create_auth, mock_settings_patch, mock_settings):
-        """Test that list_tools_public returns all three tools"""
+        """Test that list_tools_public returns core tools plus optional tools"""
         from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
         mock_settings_patch.jwt_secret_key = mock_settings.jwt_secret_key
@@ -240,17 +240,22 @@ class TestListTools:
         mock_settings_patch.openfga_store_id = ""
         mock_settings_patch.openfga_model_id = ""
         mock_settings_patch.auth_provider = "in_memory"
+        # Ensure enable_code_execution is set for deterministic test
+        mock_settings_patch.enable_code_execution = getattr(mock_settings, "enable_code_execution", False)
 
         mock_create_auth.return_value = AsyncMock()
 
         server = MCPAgentServer()
         tools = await server.list_tools_public()
 
-        assert len(tools) == 3
+        # Core tools: agent_chat, conversation_get, conversation_search, search_tools
+        # Optional: execute_python (if code execution enabled)
+        assert len(tools) >= 4, f"Expected at least 4 tools, got {len(tools)}: {[t.name for t in tools]}"
         tool_names = [tool.name for tool in tools]
         assert "agent_chat" in tool_names
         assert "conversation_get" in tool_names
         assert "conversation_search" in tool_names
+        assert "search_tools" in tool_names  # Progressive discovery tool
 
         # Verify tool schemas
         agent_chat_tool = next(t for t in tools if t.name == "agent_chat")

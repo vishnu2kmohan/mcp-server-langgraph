@@ -295,6 +295,7 @@ class APIKeyManager:
         # Until then, monitor cache hit rate and user count:
         logger.warning(
             "API key validation: Cache miss triggered user enumeration (O(n) fallback). "
+            "Redis cache provides primary mitigation (ADR-0034). "
             "For production deployments with >1000 users, consider implementing Keycloak "
             "indexed attribute search (see OpenAI Codex Finding #5).",
             extra={

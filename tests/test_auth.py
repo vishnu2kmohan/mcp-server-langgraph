@@ -504,8 +504,11 @@ class TestGetCurrentUser:
         SECURITY: This is a critical test to ensure bearer token authentication works.
         Without proper dependency injection, bearer tokens are never validated.
         """
-        # Setup: Create auth middleware and valid token
-        auth = AuthMiddleware(secret_key="test-secret")
+        # Setup: Create auth middleware with test users
+        user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+        user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["user", "premium"])
+
+        auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
         token = auth.create_token("alice", expires_in=3600)
 
@@ -696,7 +699,10 @@ class TestGetCurrentUser:
         This ensures consistent format regardless of JWT structure.
         """
         # Setup: Create JWT with plain username in preferred_username
-        auth = AuthMiddleware(secret_key="test-secret")
+        user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+        user_provider.add_user(username="dave", password="dave123", email="dave@acme.com", roles=["admin"])
+
+        auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
 
         payload = {
@@ -707,7 +713,7 @@ class TestGetCurrentUser:
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
-        token = jwt.encode(payload, "test-key", algorithm="HS256")
+        token = jwt.encode(payload, "test-secret", algorithm="HS256")  # FIXED: Use matching secret
 
         request = MagicMock(spec=Request)
         request.state = MagicMock()
@@ -722,6 +728,17 @@ class TestGetCurrentUser:
         assert user["username"] == "dave"
         assert user["user_id"] == "user:dave"  # Normalized format
         assert user["user_id"].startswith("user:")  # Always has prefix
+
+
+@pytest.fixture
+def test_settings_with_fallback():
+    """Create test settings with fallback enabled for external provider tests"""
+    from mcp_server_langgraph.core.config import Settings
+
+    return Settings(
+        allow_auth_fallback=True,  # Enable fallback for testing
+        environment="development",  # Development environment (not production)
+    )
 
 
 @pytest.mark.unit
@@ -744,7 +761,7 @@ class TestAuthFallbackWithExternalProviders:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_admin_user(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_admin_user(self, test_settings_with_fallback):
         """
         Test fallback authorization grants admin access for Keycloak users.
 
@@ -763,8 +780,8 @@ class TestAuthFallbackWithExternalProviders:
         )
         mock_keycloak.get_user_by_username.return_value = admin_user
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: Admin should have access to everything
         result = await auth.authorize(user_id="user:keycloak_admin", relation="executor", resource="tool:chat")
@@ -773,7 +790,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_admin")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_premium_user(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_premium_user(self, test_settings_with_fallback):
         """
         Test fallback authorization for Keycloak premium user.
 
@@ -792,8 +809,8 @@ class TestAuthFallbackWithExternalProviders:
         )
         mock_keycloak.get_user_by_username.return_value = premium_user
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: Premium user should have executor access to tools
         result = await auth.authorize(user_id="user:keycloak_alice", relation="executor", resource="tool:chat")
@@ -802,7 +819,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("keycloak_alice")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_standard_user(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_standard_user(self, test_settings_with_fallback):
         """Test fallback authorization for Keycloak standard user."""
         # Mock Keycloak provider
         mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
@@ -817,8 +834,8 @@ class TestAuthFallbackWithExternalProviders:
         )
         mock_keycloak.get_user_by_username.return_value = standard_user
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: Standard user should have executor access to tools
         result = await auth.authorize(user_id="user:keycloak_bob", relation="executor", resource="tool:chat")
@@ -826,7 +843,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_user_not_found(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_user_not_found(self, test_settings_with_fallback):
         """
         Test fallback authorization denies access for non-existent Keycloak user.
 
@@ -838,8 +855,8 @@ class TestAuthFallbackWithExternalProviders:
         # Mock get_user_by_username to return None (user not found)
         mock_keycloak.get_user_by_username.return_value = None
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: Non-existent user should be denied
         result = await auth.authorize(user_id="user:nonexistent", relation="executor", resource="tool:chat")
@@ -848,7 +865,7 @@ class TestAuthFallbackWithExternalProviders:
         mock_keycloak.get_user_by_username.assert_called_once_with("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_provider_error(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_provider_error(self, test_settings_with_fallback):
         """
         Test fallback authorization fails closed when provider lookup fails.
 
@@ -860,8 +877,8 @@ class TestAuthFallbackWithExternalProviders:
         # Mock get_user_by_username to raise exception (provider error)
         mock_keycloak.get_user_by_username.side_effect = Exception("Keycloak connection error")
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: Provider error should deny access (fail closed)
         result = await auth.authorize(user_id="user:alice", relation="executor", resource="tool:chat")
@@ -869,7 +886,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_conversation_ownership(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_conversation_ownership(self, test_settings_with_fallback):
         """
         Test fallback authorization respects conversation ownership for Keycloak users.
 
@@ -884,8 +901,8 @@ class TestAuthFallbackWithExternalProviders:
         )
         mock_keycloak.get_user_by_username.return_value = user
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test 1: User can access their own conversation
         result = await auth.authorize(
@@ -904,7 +921,7 @@ class TestAuthFallbackWithExternalProviders:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_fallback_keycloak_user_without_required_role(self, auth_middleware_with_users):
+    async def test_authorize_fallback_keycloak_user_without_required_role(self, test_settings_with_fallback):
         """Test fallback authorization denies access when user lacks required role."""
         # Mock Keycloak provider
         mock_keycloak = AsyncMock(spec=KeycloakUserProvider)
@@ -919,8 +936,8 @@ class TestAuthFallbackWithExternalProviders:
         )
         mock_keycloak.get_user_by_username.return_value = limited_user
 
-        # Create AuthMiddleware with Keycloak provider (no OpenFGA)
-        auth = AuthMiddleware(user_provider=mock_keycloak)
+        # Create AuthMiddleware with Keycloak provider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(user_provider=mock_keycloak, settings=test_settings_with_fallback)
 
         # Test: User without user/premium role should be denied executor access
         result = await auth.authorize(user_id="user:keycloak_limited", relation="executor", resource="tool:chat")
@@ -928,14 +945,14 @@ class TestAuthFallbackWithExternalProviders:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_authorize_inmemory_provider_still_works(self):
+    async def test_authorize_inmemory_provider_still_works(self, test_settings_with_fallback):
         """
         Test that InMemoryUserProvider fallback still works (fast path).
 
         REGRESSION TEST: Ensure the fix didn't break existing InMemory behavior.
         """
-        # Create AuthMiddleware with InMemoryUserProvider (default, no OpenFGA)
-        auth = AuthMiddleware(secret_key="test-secret")
+        # Create AuthMiddleware with InMemoryUserProvider (default, no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(secret_key="test-secret", settings=test_settings_with_fallback)
 
         # Test: InMemory admin user should have access
         result = await auth.authorize(user_id="user:admin", relation="executor", resource="tool:chat")

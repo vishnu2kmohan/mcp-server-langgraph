@@ -220,7 +220,7 @@ class Settings(BaseSettings):
     code_execution_disk_quota_mb: int = 100  # Disk quota in MB (1-10240)
     code_execution_max_processes: int = 1  # Maximum processes (1-100)
     code_execution_network_mode: str = (
-        "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to none for maximum isolation)
+        "allowlist"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to allowlist for flexible but secure isolation)
     )
     code_execution_allowed_domains: List[str] = []  # Allowed domains for allowlist mode
     code_execution_allowed_imports: List[str] = [

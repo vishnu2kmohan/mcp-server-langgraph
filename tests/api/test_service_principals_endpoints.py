@@ -114,9 +114,12 @@ def test_client(mock_sp_manager, mock_current_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with actual function references
+    # Override dependencies - must return async functions for async dependencies
+    async def mock_get_current_user():
+        return mock_current_user
+
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_current_user] = mock_get_current_user
 
     return TestClient(app)
 
@@ -133,9 +136,12 @@ def admin_test_client(mock_sp_manager, mock_admin_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with admin user
+    # Override dependencies - must return async functions for async dependencies
+    async def mock_get_admin_user():
+        return mock_admin_user
+
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_admin_user
+    app.dependency_overrides[get_current_user] = mock_get_admin_user
 
     return TestClient(app)
 

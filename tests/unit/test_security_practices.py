@@ -32,6 +32,10 @@ class TestCryptographicSecurity:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @pytest.mark.skipif(
+        not __import__("importlib").util.find_spec("kubernetes"),
+        reason="kubernetes library not installed (optional dependency for kubernetes sandbox)",
+    )
     def test_kubernetes_sandbox_does_not_use_insecure_md5(self):
         """
         Test that Kubernetes job name generation doesn't use MD5 insecurely.

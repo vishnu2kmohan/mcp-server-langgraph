@@ -654,10 +654,11 @@ def test_app_settings(test_infrastructure_ports):
         postgres_db="openfga_test",
         postgres_user="postgres",
         postgres_password="postgres",
-        # Redis settings
+        # Redis settings (use same port for both sessions and checkpoints in tests)
         redis_host="localhost",
         redis_port=test_infrastructure_ports["redis_checkpoints"],
-        redis_sessions_port=test_infrastructure_ports["redis_sessions"],
+        # Note: redis_url is built from redis_host and redis_port for sessions
+        # Checkpoints use checkpoint_redis_url with db=1
         # OpenFGA settings
         openfga_api_url=f"http://localhost:{test_infrastructure_ports['openfga_http']}",
         openfga_store_id=None,  # Will be created dynamically in tests
