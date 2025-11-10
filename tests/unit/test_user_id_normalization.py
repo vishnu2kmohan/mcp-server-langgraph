@@ -54,8 +54,13 @@ def test_normalize_empty_and_none():
 async def test_authenticate_accepts_both_formats():
     """Test that authenticate() accepts both username formats."""
     from mcp_server_langgraph.auth.middleware import AuthMiddleware
+    from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 
-    auth = AuthMiddleware(secret_key="test-secret")
+    # Create provider with test user
+    user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+    user_provider.add_user(username="alice", password="alice123", email="alice@test.com", roles=["user"])
+
+    auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
 
     # Test with plain username
     result1 = await auth.authenticate("alice", "alice123")

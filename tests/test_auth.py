@@ -471,7 +471,12 @@ class TestStandaloneVerifyToken:
         """Test standalone verification with default secret"""
         # Use explicit secret so both AuthMiddleware and verify_token use the same key
         secret = "your-secret-key-change-in-production"
-        auth = AuthMiddleware(secret_key=secret)
+
+        # Create provider with test user
+        user_provider = InMemoryUserProvider(secret_key=secret, use_password_hashing=False)
+        user_provider.add_user(username="alice", password="alice123", email="alice@test.com", roles=["user"])
+
+        auth = AuthMiddleware(secret_key=secret, user_provider=user_provider)
         token = auth.create_token("alice")
 
         result = await verify_token(token)  # Uses same default secret
@@ -556,8 +561,11 @@ class TestGetCurrentUser:
         """Test get_current_user rejects expired JWT bearer token"""
         from fastapi import HTTPException
 
-        # Setup: Create expired token
-        auth = AuthMiddleware(secret_key="test-secret")
+        # Setup: Create auth middleware with test users
+        user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+        user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["premium"])
+
+        auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
 
         payload = {
@@ -568,7 +576,7 @@ class TestGetCurrentUser:
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
         }
-        expired_token = jwt.encode(payload, "test-key", algorithm="HS256")
+        expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")  # FIXED: Use matching secret
 
         request = MagicMock(spec=Request)
         request.state = MagicMock()
@@ -951,8 +959,13 @@ class TestAuthFallbackWithExternalProviders:
 
         REGRESSION TEST: Ensure the fix didn't break existing InMemory behavior.
         """
-        # Create AuthMiddleware with InMemoryUserProvider (default, no OpenFGA) and fallback enabled
-        auth = AuthMiddleware(secret_key="test-secret", settings=test_settings_with_fallback)
+        # Create InMemoryUserProvider with test users
+        user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
+        user_provider.add_user(username="admin", password="admin123", email="admin@test.com", roles=["admin"])
+        user_provider.add_user(username="alice", password="alice123", email="alice@test.com", roles=["user", "premium"])
+
+        # Create AuthMiddleware with InMemoryUserProvider (no OpenFGA) and fallback enabled
+        auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider, settings=test_settings_with_fallback)
 
         # Test: InMemory admin user should have access
         result = await auth.authorize(user_id="user:admin", relation="executor", resource="tool:chat")
