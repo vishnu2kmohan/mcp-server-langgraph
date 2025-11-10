@@ -7,6 +7,7 @@ and the internal validation endpoint used by Kong for API key→JWT exchange.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock
 
@@ -119,8 +120,13 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestCreateAPIKey:
     """Tests for POST /api/v1/api-keys/"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_api_key_success(self, test_client, mock_api_key_manager):
         """Test successful API key creation"""
@@ -219,8 +225,13 @@ class TestCreateAPIKey:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestListAPIKeys:
     """Tests for GET /api/v1/api-keys/"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_list_api_keys_success(self, test_client, mock_api_key_manager):
         """Test successful listing of user's API keys"""
@@ -271,8 +282,13 @@ class TestListAPIKeys:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestRotateAPIKey:
     """Tests for POST /api/v1/api-keys/{key_id}/rotate"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rotate_api_key_success(self, test_client, mock_api_key_manager):
         """Test successful API key rotation"""
@@ -319,8 +335,13 @@ class TestRotateAPIKey:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestRevokeAPIKey:
     """Tests for DELETE /api/v1/api-keys/{key_id}"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_revoke_api_key_success(self, test_client, mock_api_key_manager):
         """Test successful API key revocation"""
@@ -353,8 +374,13 @@ class TestRevokeAPIKey:
 @pytest.mark.unit
 @pytest.mark.api
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestValidateAPIKey:
     """Tests for POST /api/v1/api-keys/validate (Kong plugin)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_api_key_success(self, test_client, mock_api_key_manager, mock_keycloak_client):
         """Test successful API key validation and JWT exchange"""
@@ -443,8 +469,13 @@ class TestValidateAPIKey:
 @pytest.mark.unit
 @pytest.mark.api
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestAPIKeyEndpointAuthorization:
     """Tests for endpoint authorization (JWT required)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_without_auth(self):
         """Test creating API key without authentication fails"""
@@ -499,6 +530,7 @@ class TestAPIKeyEndpointAuthorization:
 @pytest.mark.integration
 @pytest.mark.api
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="api_keys_api_tests")
 class TestAPIKeyEndpointsIntegration:
     """
     Integration tests with real Keycloak (requires docker-compose.test.yml)
@@ -506,6 +538,10 @@ class TestAPIKeyEndpointsIntegration:
     These tests are marked as integration and slow - they require the full
     test infrastructure to be running.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_full_api_key_lifecycle(self, integration_test_env, test_fastapi_app):
         """

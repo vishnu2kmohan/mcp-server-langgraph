@@ -7,6 +7,7 @@ Tests all GDPR endpoints through FastAPI test client to ensure:
 3. GDPR compliance requirements are met
 """
 
+import gc
 import os
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -79,8 +80,13 @@ async def setup_gdpr_storage():
 
 
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_integration_tests")
 class TestGDPREndpoints:
     """Integration tests for GDPR endpoints."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_user_data_success(self, client, mock_auth_user):
         """Test GET /api/v1/users/me/data returns user data."""
@@ -293,8 +299,13 @@ class TestGDPREndpoints:
 
 @pytest.mark.integration
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_integration_tests")
 class TestGDPRProductionGuard:
     """Test production guard for in-memory storage."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_production_guard_triggers(self):
         """Test that production guard raises error when ENVIRONMENT=production."""

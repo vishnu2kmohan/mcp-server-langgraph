@@ -7,6 +7,7 @@ deletion, and user association for permission inheritance.
 See ADR-0033 for service principal design decisions.
 """
 
+import gc
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock
@@ -146,8 +147,13 @@ def admin_test_client(mock_sp_manager, mock_admin_user):
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestCreateServicePrincipal:
     """Tests for POST /api/v1/service-principals/"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_service_principal_success(self, test_client, mock_sp_manager):
         """Test successful service principal creation"""
@@ -295,8 +301,13 @@ class TestCreateServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestListServicePrincipals:
     """Tests for GET /api/v1/service-principals/"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_list_service_principals_success(self, test_client, mock_sp_manager):
         """Test successful listing of user's service principals"""
@@ -341,8 +352,13 @@ class TestListServicePrincipals:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestGetServicePrincipal:
     """Tests for GET /api/v1/service-principals/{service_id}"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_service_principal_success(self, test_client, mock_sp_manager):
         """Test successful retrieval of service principal details"""
@@ -414,8 +430,13 @@ class TestGetServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestRotateServicePrincipalSecret:
     """Tests for POST /api/v1/service-principals/{service_id}/rotate-secret"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rotate_secret_success(self, test_client, mock_sp_manager):
         """Test successful secret rotation"""
@@ -485,8 +506,13 @@ class TestRotateServicePrincipalSecret:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestDeleteServicePrincipal:
     """Tests for DELETE /api/v1/service-principals/{service_id}"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_delete_service_principal_success(self, test_client, mock_sp_manager):
         """Test successful service principal deletion"""
@@ -547,8 +573,13 @@ class TestDeleteServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestAssociateServicePrincipalWithUser:
     """Tests for POST /api/v1/service-principals/{service_id}/associate-user"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_associate_with_user_success(self, admin_test_client, mock_sp_manager):
         """Test successful user association (requires admin role)"""
@@ -654,12 +685,17 @@ class TestAssociateServicePrincipalWithUser:
 @pytest.mark.integration
 @pytest.mark.api
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="service_principals_api_tests")
 class TestServicePrincipalEndpointsIntegration:
     """
     Integration tests with real Keycloak and OpenFGA
 
     These tests require docker-compose.test.yml to be running.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(
         strict=True,

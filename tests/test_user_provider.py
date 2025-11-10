@@ -3,6 +3,7 @@
 Tests InMemoryUserProvider, KeycloakUserProvider, and the factory function.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -68,8 +69,13 @@ def keycloak_user():
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="user_provider_tests")
 class TestInMemoryUserProvider:
     """Test InMemoryUserProvider implementation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization(self):
         """Test provider initialization (post Finding #2 fix: no default users)"""
@@ -257,8 +263,13 @@ class TestInMemoryUserProvider:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="user_provider_tests")
 class TestKeycloakUserProvider:
     """Test KeycloakUserProvider implementation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization(self, keycloak_config):
         """Test provider initialization"""
@@ -486,8 +497,13 @@ class TestKeycloakUserProvider:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="user_provider_tests")
 class TestCreateUserProvider:
     """Test create_user_provider factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_inmemory_provider(self):
         """Test creating InMemoryUserProvider"""
@@ -540,8 +556,13 @@ class TestCreateUserProvider:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="user_provider_tests")
 class TestUserProviderInterface:
     """Test UserProvider abstract interface"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cannot_instantiate_abstract_class(self):
         """Test UserProvider cannot be instantiated directly"""

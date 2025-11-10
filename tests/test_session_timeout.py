@@ -4,6 +4,7 @@ Tests for session timeout middleware (HIPAA 164.312(a)(2)(iii))
 Tests automatic logoff after period of inactivity.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -47,8 +48,13 @@ def sample_session():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="session_timeout_tests")
 class TestSessionTimeoutMiddleware:
     """Test SessionTimeoutMiddleware functionality"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_middleware_initialization(self, app, mock_session_store):
@@ -223,8 +229,13 @@ class TestSessionTimeoutMiddleware:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="session_timeout_tests")
 class TestSessionTimeoutHelpers:
     """Test helper methods"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_session_id_from_cookie(self, app, mock_session_store):
         """Test extracting session ID from cookie"""
@@ -462,8 +473,13 @@ class TestSessionTimeoutHelpers:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="session_timeout_tests")
 class TestCreateSessionTimeoutMiddleware:
     """Test middleware factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_middleware_with_minutes(self, app, mock_session_store):
         """Test creating middleware with timeout in minutes"""
@@ -479,8 +495,13 @@ class TestCreateSessionTimeoutMiddleware:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="session_timeout_tests")
 class TestSessionTimeoutEdgeCases:
     """Test edge cases and error handling"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_session_not_found_continues(self, app, mock_session_store):
@@ -567,8 +588,13 @@ class TestSessionTimeoutEdgeCases:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="session_timeout_tests")
 class TestHIPAACompliance:
     """Test HIPAA compliance aspects"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_logs_timeout_events(self, app, mock_session_store):

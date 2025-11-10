@@ -12,6 +12,7 @@ Tests:
 """
 
 import asyncio
+import gc
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -82,8 +83,13 @@ def cache_service_with_mock_redis():
         assert stats["deletes"] == 0
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheL1Operations:
     """Test L1 (in-memory) cache operations"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_l1_set_and_get(self, cache_service_no_redis):
         """Test basic L1 set and get"""
@@ -141,8 +147,13 @@ class TestCacheL1Operations:
         assert len(cache_small.l1_cache) <= 3
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheL2Operations:
     """Test L2 (Redis) cache operations"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_l2_set_and_get(self, cache_service_with_mock_redis):
         """Test L2 set and get with Redis"""
@@ -197,8 +208,13 @@ class TestCacheL2Operations:
         assert "promote:key" in cache_service_with_mock_redis.l1_cache
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheDelete:
     """Test cache deletion"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_delete_from_l1(self, cache_service_no_redis):
         """Test delete removes from L1"""
@@ -220,8 +236,13 @@ class TestCacheDelete:
         assert cache_service_with_mock_redis.stats["deletes"] == 1
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheClear:
     """Test cache clearing"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_clear_all_l1(self, cache_service_no_redis):
         """Test clearing all L1 cache"""
@@ -253,8 +274,13 @@ class TestCacheClear:
         cache_service_with_mock_redis.mock_redis.flushdb.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheStampedePrevention:
     """Test cache stampede prevention with locks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_with_lock_cache_hit(self, cache_service_no_redis):
@@ -317,8 +343,13 @@ class TestCacheStampedePrevention:
         assert cache_service_no_redis.get("sync:key") == "sync_result"
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheTTLLogic:
     """Test TTL determination from cache keys"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_ttl_from_key_prefix_auth(self, cache_service_no_redis):
         """Test TTL determination for auth keys"""
@@ -341,8 +372,13 @@ class TestCacheTTLLogic:
         assert ttl == 300
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheStatistics:
     """Test cache statistics tracking"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_statistics_initial_state(self, cache_service_no_redis):
         """Test statistics in initial state"""
@@ -379,8 +415,13 @@ class TestCacheStatistics:
         assert stats["l2"]["available"] is True
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCachedDecorator:
     """Test @cached decorator"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cached_decorator_async_function(self, cache_service_no_redis):
@@ -463,8 +504,13 @@ class TestCachedDecorator:
         assert result == sum(range(100))
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheKeyGeneration:
     """Test cache key generation helper"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_cache_key_basic(self):
         """Test basic cache key generation"""
@@ -486,8 +532,13 @@ class TestCacheKeyGeneration:
         assert len(key) < 100  # Much shorter than original
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheInvalidate:
     """Test cache invalidation helper"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_invalidate_pattern(self, cache_service_with_mock_redis):
         """Test cache_invalidate with pattern"""
@@ -499,8 +550,13 @@ class TestCacheInvalidate:
             cache_service_with_mock_redis.mock_redis.keys.assert_called_with("user:123:*")
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestAnthropicPromptCaching:
     """Test Anthropic-specific prompt caching (L3)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_anthropic_cached_message(self):
         """Test Anthropic prompt caching message structure"""
@@ -517,8 +573,13 @@ class TestAnthropicPromptCaching:
         assert result["messages"] == messages
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheErrorHandling:
     """Test error handling and resilience"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_connection_failure_doesnt_crash(self):
         """Test that Redis connection failure doesn't crash initialization"""
@@ -550,8 +611,13 @@ class TestCacheErrorHandling:
         assert "error:key" in cache_service_with_mock_redis.l1_cache
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheGlobalInstance:
     """Test global cache singleton"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_cache_returns_singleton(self):
         """Test get_cache returns same instance"""
@@ -566,8 +632,13 @@ class TestCacheGlobalInstance:
         assert isinstance(cache, CacheService)
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheLayers:
     """Test cache layer constants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_layer_values(self):
         """Test CacheLayer enum values"""
@@ -576,8 +647,13 @@ class TestCacheLayers:
         assert CacheLayer.L3 == "l3"
 
 
+@pytest.mark.xdist_group(name="cache_tests")
 class TestCacheTTLConstants:
     """Test cache TTL configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_ttls_defined(self):
         """Test all expected cache TTLs are defined"""

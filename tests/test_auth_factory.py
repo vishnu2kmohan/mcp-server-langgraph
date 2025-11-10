@@ -4,6 +4,7 @@ Tests the factory functions for creating AuthMiddleware, UserProvider, and Sessi
 based on configuration settings.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -59,8 +60,13 @@ def mock_openfga_client():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestCreateUserProvider:
     """Test create_user_provider factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_inmemory_provider(self, mock_settings):
         """Test creating InMemoryUserProvider"""
@@ -139,6 +145,7 @@ class TestCreateUserProvider:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestProductionEnvironmentGuards:
     """
     Test production environment guards for InMemoryUserProvider.
@@ -146,6 +153,10 @@ class TestProductionEnvironmentGuards:
     TDD RED phase: Tests written FIRST to define security requirements.
     These tests will FAIL until environment guards are implemented.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_inmemory_provider_blocked_in_production(self, mock_settings):
         """
@@ -221,8 +232,13 @@ class TestProductionEnvironmentGuards:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestCreateSessionStore:
     """Test create_session_store factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_session_store_disabled_for_token_auth(self, mock_settings):
         """Test session store returns None when auth_mode is token"""
@@ -299,8 +315,13 @@ class TestCreateSessionStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestCreateAuthMiddleware:
     """Test create_auth_middleware factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_auth_middleware_inmemory(self, mock_settings):
         """Test creating AuthMiddleware with InMemory provider"""
@@ -374,8 +395,13 @@ class TestCreateAuthMiddleware:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestFactoryIntegration:
     """Integration tests for factory module"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_full_middleware_creation_flow(self, mock_settings, mock_openfga_client):
         """Test complete middleware creation with all components"""
@@ -420,6 +446,7 @@ class TestFactoryIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestRedisSessionStoreSignatureFix:
     """
     TDD RED phase tests for Redis session store signature mismatch.
@@ -430,6 +457,10 @@ class TestRedisSessionStoreSignatureFix:
 
     Expected behavior: These tests will FAIL until the signature is fixed.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_session_store_accepts_password_parameter(self, mock_settings):
         """
@@ -499,6 +530,7 @@ class TestRedisSessionStoreSignatureFix:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestRedisMetadataSerializationFix:
     """
     TDD RED phase tests for Redis metadata serialization bug.
@@ -508,6 +540,10 @@ class TestRedisMetadataSerializationFix:
 
     Expected behavior: These tests will FAIL until str() is replaced with json.dumps().
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_redis_metadata_roundtrip_preserves_data(self):
@@ -642,6 +678,7 @@ class TestRedisMetadataSerializationFix:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestMemorySessionStoreFix:
     """
     TDD RED phase tests for memory session store factory bug.
@@ -651,6 +688,10 @@ class TestMemorySessionStoreFix:
 
     Expected behavior: These tests will FAIL until factory returns InMemorySessionStore().
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_factory_creates_memory_session_store(self, mock_settings):
         """
@@ -724,6 +765,7 @@ class TestMemorySessionStoreFix:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_factory_tests")
 class TestSessionStoreRegistration:
     """
     TDD tests for session store registration bug (OpenAI Codex Finding #3).
@@ -731,6 +773,10 @@ class TestSessionStoreRegistration:
     Validates that create_auth_middleware() registers the session store globally
     via set_session_store() so GDPR/session APIs use the configured store.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_auth_middleware_registers_memory_session_store_globally(self, mock_settings):
         """Test that memory session store is registered globally after middleware creation"""

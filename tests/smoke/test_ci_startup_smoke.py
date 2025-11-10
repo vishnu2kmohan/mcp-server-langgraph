@@ -15,14 +15,20 @@ Design Principles:
 These tests would have caught ALL 5 bugs from OpenAI Codex review.
 """
 
+import gc
 import sys
 
 import pytest
 
 
 @pytest.mark.smoke
+@pytest.mark.xdist_group(name="ci_startup_smoke_tests")
 class TestCriticalStartupValidation:
     """Critical smoke tests that must pass before deployment"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_import_core_modules(self):
         """
@@ -220,8 +226,13 @@ class TestCriticalStartupValidation:
 
 
 @pytest.mark.smoke
+@pytest.mark.xdist_group(name="ci_startup_smoke_tests")
 class TestConfigurationValidation:
     """Validate configuration handling"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_production_config_validation(self, monkeypatch):
         """
@@ -266,8 +277,13 @@ class TestConfigurationValidation:
 
 
 @pytest.mark.smoke
+@pytest.mark.xdist_group(name="ci_startup_smoke_tests")
 class TestDependencyInjectionSmoke:
     """Smoke tests for dependency injection system"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_dependency_singletons_initialize(self, monkeypatch):
         """
@@ -325,8 +341,13 @@ class TestDependencyInjectionSmoke:
 
 
 @pytest.mark.smoke
+@pytest.mark.xdist_group(name="ci_startup_smoke_tests")
 class TestGracefulDegradationSmoke:
     """Smoke tests for graceful degradation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_system_works_without_external_services(self, monkeypatch):
         """

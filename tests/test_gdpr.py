@@ -2,6 +2,7 @@
 Comprehensive tests for GDPR compliance endpoints and services
 """
 
+import gc
 import json
 from unittest.mock import AsyncMock, MagicMock
 
@@ -58,8 +59,13 @@ def mock_user_request():
 
 @pytest.mark.unit
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestDataExportService:
     """Test GDPR data export service"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_export_user_data_basic(self, mock_session_store):
@@ -189,8 +195,13 @@ class TestDataExportService:
 
 @pytest.mark.unit
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestDataDeletionService:
     """Test GDPR data deletion service"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_delete_user_account_success(self, mock_session_store):
@@ -281,6 +292,7 @@ class TestDataDeletionService:
 @pytest.mark.unit
 @pytest.mark.gdpr
 @pytest.mark.api
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPREndpoints:
     """Test GDPR API endpoints with auth mocking
 
@@ -291,6 +303,10 @@ class TestGDPREndpoints:
     - Article 20: Right to Data Portability
     - Article 21: Right to Object (Consent)
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def test_client(self, mock_current_user):
@@ -551,8 +567,13 @@ class TestGDPREndpoints:
 
 @pytest.mark.unit
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPRModels:
     """Test GDPR Pydantic models"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_user_profile_update_model(self):
         """Test UserProfileUpdate model validation"""
@@ -621,8 +642,13 @@ class TestGDPRModels:
 
 @pytest.mark.integration
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPRIntegration:
     """Integration tests for GDPR compliance"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_full_data_lifecycle(self):
@@ -682,8 +708,13 @@ class TestGDPRIntegration:
 
 @pytest.mark.unit
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPREdgeCases:
     """Test edge cases and error conditions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_export_very_large_user_data(self, mock_session_store):

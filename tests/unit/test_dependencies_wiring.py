@@ -11,13 +11,19 @@ Critical bugs these tests catch:
 3. Service principal manager crashes when OpenFGA is None
 """
 
+import gc
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="dependencies_wiring_tests")
 class TestKeycloakClientWiring:
     """Test that Keycloak client gets all required config from settings"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_client_receives_admin_credentials(self):
         """
@@ -77,8 +83,13 @@ class TestKeycloakClientWiring:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="dependencies_wiring_tests")
 class TestOpenFGAClientWiring:
     """Test that OpenFGA client validates required configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_openfga_client_returns_none_when_config_incomplete(self):
         """
@@ -148,8 +159,13 @@ class TestOpenFGAClientWiring:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="dependencies_wiring_tests")
 class TestServicePrincipalManagerOpenFGAGuards:
     """Test that ServicePrincipalManager handles None OpenFGA client gracefully"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_service_principal_skips_openfga_when_none(self):
@@ -240,8 +256,13 @@ class TestServicePrincipalManagerOpenFGAGuards:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="dependencies_wiring_tests")
 class TestAPIKeyManagerRedisCacheWiring:
     """Test that API Key Manager properly receives Redis cache configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_api_key_manager_receives_redis_client_when_enabled(self):
         """
@@ -412,8 +433,13 @@ class TestAPIKeyManagerRedisCacheWiring:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="dependencies_wiring_tests")
 class TestDependencyStartupSmoke:
     """Integration smoke tests that would have caught the reported bugs"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_client_factory_with_real_settings(self):
         """

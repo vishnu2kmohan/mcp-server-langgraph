@@ -5,6 +5,7 @@ Tests both unit functionality and integration behavior.
 Uses mocking to avoid actual LLM calls for fast execution.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -61,8 +62,13 @@ def long_conversation():
     return messages
 
 
+@pytest.mark.xdist_group(name="context_manager_tests")
 class TestContextManager:
     """Unit tests for ContextManager."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_initialization(self, context_manager):
@@ -293,8 +299,13 @@ class TestContextManager:
             assert len(key_info[category]) > 0, f"Category '{category}' should not be empty"
 
 
+@pytest.mark.xdist_group(name="context_manager_tests")
 class TestConvenienceFunctions:
     """Test convenience functions."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -340,8 +351,13 @@ class TestConvenienceFunctions:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="context_manager_tests")
 class TestTokenCounting:
     """Test token counting functionality."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_token_counting_accuracy(self, context_manager):
@@ -360,8 +376,13 @@ class TestTokenCounting:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="context_manager_tests")
 class TestCompactionResult:
     """Test CompactionResult model."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_compaction_result_creation(self):

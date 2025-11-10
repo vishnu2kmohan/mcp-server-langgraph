@@ -6,6 +6,8 @@ ensuring the method correctly handles various input types including edge cases
 that caused the string-to-character-list bug.
 """
 
+import gc
+
 import pytest
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
@@ -25,8 +27,13 @@ def llm_factory():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="llm_factory_tests")
 class TestFormatMessagesContract:
     """Test _format_messages method with various input types."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_format_single_human_message(self, llm_factory):
         """Test formatting a single HumanMessage."""
@@ -182,8 +189,13 @@ Provide a concise summary in 1-2 sentences.
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="llm_factory_tests")
 class TestFormatMessagesEdgeCases:
     """Test edge cases that previously caused bugs."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_format_does_not_accept_raw_strings(self, llm_factory):
         """

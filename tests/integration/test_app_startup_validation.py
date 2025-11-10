@@ -16,12 +16,19 @@ Following TDD:
 - Tests ensure graceful degradation when services are disabled
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestFastAPIStartupValidation:
     """Test that FastAPI app starts successfully with various configs"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_app_starts_with_minimal_config(self):
         """
@@ -180,8 +187,13 @@ class TestFastAPIStartupValidation:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestDependencyInjectionWiring:
     """Test that all dependency factories wire configuration correctly"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_dependency_factories_instantiate(self, monkeypatch):
         """
@@ -235,8 +247,13 @@ class TestDependencyInjectionWiring:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestGracefulDegradation:
     """Test that system degrades gracefully when services are unavailable"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_app_works_without_redis(self, monkeypatch):
         """
@@ -320,8 +337,13 @@ class TestGracefulDegradation:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestProductionConfigValidation:
     """Test production configuration scenarios"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_production_fails_without_admin_credentials(self, monkeypatch):
         """
@@ -374,8 +396,13 @@ class TestProductionConfigValidation:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestRegressionPrevention:
     """Tests that prevent regression of the fixed bugs"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_config_has_all_required_fields(self):
         """
