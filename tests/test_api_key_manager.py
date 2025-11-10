@@ -11,6 +11,7 @@ Tests cover:
 - Keycloak attribute storage
 """
 
+import gc
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -36,8 +37,13 @@ def api_key_manager(mock_keycloak_client):
     return APIKeyManager(keycloak_client=mock_keycloak_client)
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyGeneration:
     """Test API key generation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_generate_api_key_format(self, api_key_manager):
@@ -64,8 +70,13 @@ class TestAPIKeyGeneration:
         assert api_key.startswith("mcpkey_test_")
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyCreation:
     """Test API key creation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -188,8 +199,13 @@ class TestAPIKeyCreation:
         assert abs((expires_at - expected_expiry).total_seconds()) < 60  # Within 1 minute
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyValidation:
     """Test API key validation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -288,8 +304,13 @@ class TestAPIKeyValidation:
         assert "apiKey_xyz_lastUsed" in call_args
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyRevocation:
     """Test API key revocation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -337,8 +358,13 @@ class TestAPIKeyRevocation:
         mock_keycloak_client.update_user_attributes.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyListing:
     """Test listing API keys"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -393,8 +419,13 @@ class TestAPIKeyListing:
         assert keys == []
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyRotation:
     """Test API key rotation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -436,8 +467,13 @@ class TestAPIKeyRotation:
             await api_key_manager.rotate_api_key("user:harry", "missing")
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestBcryptHashing:
     """Test bcrypt hashing functionality"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_hash_api_key(self, api_key_manager):
@@ -464,11 +500,16 @@ class TestBcryptHashing:
         assert api_key_manager.verify_api_key_hash("wrong_key", hashed) is False
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyValidationPagination:
     """Test API key validation with pagination (>100 users)
 
     Regression test for Finding #4 from OpenAI Codex security audit.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -595,8 +636,13 @@ class TestAPIKeyValidationPagination:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestAPIKeyRedisCache:
     """Test Redis caching for API key validation (performance optimization)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_redis_client(self):
@@ -749,6 +795,7 @@ class TestAPIKeyRedisCache:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="api_key_manager_tests")
 class TestRedisAPICacheConfiguration:
     """
     TDD RED phase tests for Redis API key cache configuration (OpenAI Codex Finding #5).
@@ -762,6 +809,10 @@ class TestRedisAPICacheConfiguration:
 
     These tests will FAIL until dependencies.py wires Redis client.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_get_api_key_manager_uses_redis_when_enabled(self):

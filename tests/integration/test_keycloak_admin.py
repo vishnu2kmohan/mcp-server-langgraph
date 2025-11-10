@@ -7,6 +7,7 @@ Run: docker-compose -f docker-compose.keycloak-test.yml up -d
 TDD RED phase: Tests written FIRST, will fail until Admin API methods are implemented.
 """
 
+import gc
 import os
 from typing import AsyncGenerator
 from uuid import uuid4
@@ -91,8 +92,13 @@ def unique_client_id() -> str:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="keycloak_integration")
 class TestKeycloakUserAdminAPIs:
     """Integration tests for Keycloak User Admin APIs (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_update_user_integration(
         self, keycloak_client: KeycloakClient, unique_username: str, skip_if_no_keycloak: None
@@ -233,8 +239,13 @@ class TestKeycloakUserAdminAPIs:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="keycloak_integration")
 class TestKeycloakGroupAdminAPIs:
     """Integration tests for Keycloak Group Admin APIs (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_create_group_integration(
         self, keycloak_client: KeycloakClient, unique_group_name: str, skip_if_no_keycloak: None
@@ -348,8 +359,13 @@ class TestKeycloakGroupAdminAPIs:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="keycloak_integration")
 class TestKeycloakClientAdminAPIs:
     """Integration tests for Keycloak Client Admin APIs (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_get_clients_integration(self, keycloak_client: KeycloakClient, skip_if_no_keycloak: None):
         """Test getting all clients with real Keycloak"""
@@ -452,8 +468,13 @@ class TestKeycloakClientAdminAPIs:
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="keycloak_integration")
 class TestKeycloakEndToEndWorkflows:
     """End-to-end integration tests for complete SCIM workflows"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_user_lifecycle_workflow(
         self, keycloak_client: KeycloakClient, unique_username: str, skip_if_no_keycloak: None

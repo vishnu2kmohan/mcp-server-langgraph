@@ -10,6 +10,7 @@ Tests cover:
 - OpenFGA tuple synchronization
 """
 
+import gc
 from unittest.mock import AsyncMock
 
 import pytest
@@ -50,8 +51,13 @@ def service_principal_manager(mock_keycloak_client, mock_openfga_client):
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalCreation:
     """Test service principal creation with different authentication modes"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_service_principal_client_credentials_mode(
@@ -164,8 +170,13 @@ class TestServicePrincipalCreation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalUserAssociation:
     """Test associating service principals with users"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_associate_with_user(self, service_principal_manager, mock_keycloak_client, mock_openfga_client):
@@ -217,8 +228,13 @@ class TestServicePrincipalUserAssociation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalSecretRotation:
     """Test secret rotation for service principals"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_rotate_secret(self, service_principal_manager, mock_keycloak_client):
@@ -248,8 +264,13 @@ class TestServicePrincipalSecretRotation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalListing:
     """Test listing service principals"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_list_all_service_principals(self, service_principal_manager, mock_keycloak_client):
@@ -313,8 +334,13 @@ class TestServicePrincipalListing:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalRetrieval:
     """Test retrieving service principals (regression test for Codex finding)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_service_principal_service_account_user_uses_correct_method(
@@ -369,8 +395,13 @@ class TestServicePrincipalRetrieval:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalDeletion:
     """Test deleting service principals"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_delete_service_principal(self, service_principal_manager, mock_keycloak_client, mock_openfga_client):
@@ -390,8 +421,13 @@ class TestServicePrincipalDeletion:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="service_principal_tests")
 class TestServicePrincipalDataModel:
     """Test ServicePrincipal data model"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_service_principal_dataclass(self):
         """Test ServicePrincipal dataclass structure"""

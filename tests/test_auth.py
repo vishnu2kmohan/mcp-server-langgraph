@@ -1,5 +1,6 @@
 """Unit tests for auth.py - Authentication and Authorization"""
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
@@ -48,8 +49,13 @@ def auth_middleware_with_users():
 
 @pytest.mark.auth
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="auth_middleware_tests")
 class TestAuthMiddleware:
     """Test AuthMiddleware class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_init(self, auth_middleware_with_users):
         """Test AuthMiddleware initialization"""
@@ -362,8 +368,13 @@ class TestAuthMiddleware:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="auth_middleware_tests")
 class TestRequireAuthDecorator:
     """Test require_auth decorator"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_require_auth_success(self, auth_middleware_with_users):
@@ -437,8 +448,13 @@ class TestRequireAuthDecorator:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="auth_middleware_tests")
 class TestStandaloneVerifyToken:
     """Test standalone verify_token function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_standalone_verify_token_success(self, auth_middleware_with_users):
@@ -472,8 +488,13 @@ class TestStandaloneVerifyToken:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="auth_middleware_tests")
 class TestGetCurrentUser:
     """Test get_current_user FastAPI dependency for bearer token authentication"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_current_user_with_valid_bearer_token(self):
@@ -705,6 +726,7 @@ class TestGetCurrentUser:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="auth_middleware_tests")
 class TestAuthFallbackWithExternalProviders:
     """
     Test authorization fallback logic with external providers (Keycloak, etc.)
@@ -716,6 +738,10 @@ class TestAuthFallbackWithExternalProviders:
     The fix ensures fallback authorization queries the user provider for roles
     instead of relying on in-memory user database.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_authorize_fallback_keycloak_admin_user(self, auth_middleware_with_users):

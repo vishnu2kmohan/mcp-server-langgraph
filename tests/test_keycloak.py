@@ -4,6 +4,7 @@ Tests KeycloakClient, TokenValidator, and role synchronization.
 Uses mocking to avoid requiring live Keycloak instance.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -106,8 +107,13 @@ def keycloak_user():
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakConfig:
     """Test KeycloakConfig model"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_realm_url(self, keycloak_config):
         """Test realm URL construction"""
@@ -139,8 +145,13 @@ class TestKeycloakConfig:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakUser:
     """Test KeycloakUser model"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_user_id_property(self, keycloak_user):
         """Test user_id property formats correctly"""
@@ -176,8 +187,13 @@ class TestKeycloakUser:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestTokenValidator:
     """Test TokenValidator class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_jwks_success(self, keycloak_config, jwks_response):
@@ -363,8 +379,13 @@ class TestTokenValidator:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakClient:
     """Test KeycloakClient class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_authenticate_user_success(self, keycloak_config):
@@ -559,8 +580,13 @@ class TestKeycloakClient:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestRoleSynchronization:
     """Test sync_user_to_openfga function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_sync_admin_role(self, keycloak_user):
@@ -646,8 +672,13 @@ class TestRoleSynchronization:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakPrivateMethods:
     """Test private helper methods for comprehensive coverage"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_user_realm_roles_success(self, keycloak_config):
@@ -773,8 +804,13 @@ class TestKeycloakPrivateMethods:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestTokenValidatorErrorPaths:
     """Test error paths in TokenValidator for higher coverage"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_verify_token_generic_exception(self, keycloak_config, rsa_keypair, jwks_response):
@@ -803,6 +839,7 @@ class TestTokenValidatorErrorPaths:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakAdminClientManagement:
     """
     Test Keycloak Admin API client management methods.
@@ -810,6 +847,10 @@ class TestKeycloakAdminClientManagement:
     These tests follow TDD principles - RED phase.
     Tests written BEFORE implementation to ensure proper behavior.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_client_success(self, keycloak_config):
@@ -961,8 +1002,13 @@ class TestKeycloakAdminClientManagement:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakAdminUserManagement:
     """Test Keycloak Admin API user management methods"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_user_success(self, keycloak_config):
@@ -1036,8 +1082,13 @@ class TestKeycloakAdminUserManagement:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakUserAttributes:
     """Test Keycloak user attribute management (for API keys)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_user_attributes_success(self, keycloak_config):
@@ -1133,6 +1184,7 @@ class TestKeycloakUserAttributes:
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.scim
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakSCIMUserMethods:
     """
     Test SCIM 2.0 user management methods (TDD RED phase).
@@ -1140,6 +1192,10 @@ class TestKeycloakSCIMUserMethods:
     These tests are written FIRST to define expected behavior.
     All tests will FAIL initially because methods raise NotImplementedError.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_update_user_success(self, keycloak_config):
@@ -1442,8 +1498,13 @@ class TestKeycloakSCIMUserMethods:
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.scim
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakSCIMGroupMethods:
     """Test SCIM 2.0 group management methods (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_group_success(self, keycloak_config):
@@ -1681,8 +1742,13 @@ class TestKeycloakSCIMGroupMethods:
 @pytest.mark.unit
 @pytest.mark.auth
 @pytest.mark.scim
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakSCIMClientMethods:
     """Test SCIM 2.0 client/service principal methods (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_update_client_attributes_success(self, keycloak_config):
@@ -1884,8 +1950,13 @@ class TestKeycloakSCIMClientMethods:
 
 @pytest.mark.unit
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="keycloak_unit_tests")
 class TestKeycloakTokenIssuance:
     """Test Keycloak token issuance methods for API key → JWT exchange (TDD RED phase)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_issue_token_for_user_success(self, keycloak_config):

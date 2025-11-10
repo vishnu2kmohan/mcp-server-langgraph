@@ -1,3 +1,4 @@
+import gc
 import os
 
 """Unit tests for openfga_client.py - OpenFGA Integration"""
@@ -10,8 +11,13 @@ from openfga_sdk.client.models import ClientWriteRequest
 
 @pytest.mark.unit
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="openfga_tests")
 class TestOpenFGAClient:
     """Test OpenFGAClient class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     def test_init(self, mock_sdk_client):
@@ -280,8 +286,13 @@ class TestOpenFGAClient:
 
 @pytest.mark.unit
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="openfga_tests")
 class TestOpenFGAAuthorizationModel:
     """Test OpenFGAAuthorizationModel class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_model_definition(self):
         """Test authorization model definition"""
@@ -335,8 +346,13 @@ class TestOpenFGAAuthorizationModel:
 
 @pytest.mark.unit
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="openfga_tests")
 class TestOpenFGAUtilityFunctions:
     """Test utility functions for OpenFGA"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
@@ -405,8 +421,13 @@ class TestOpenFGAUtilityFunctions:
 
 @pytest.mark.integration
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="openfga_tests")
 class TestOpenFGAIntegration:
     """Integration tests for OpenFGA (requires running OpenFGA instance)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(
         not os.getenv("RUN_INTEGRATION_TESTS"), reason="Requires running OpenFGA instance (set RUN_INTEGRATION_TESTS=1)"
@@ -449,8 +470,13 @@ class TestOpenFGAIntegration:
 
 @pytest.mark.unit
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="openfga_tests")
 class TestOpenFGACircuitBreakerCriticality:
     """Test OpenFGA circuit breaker with criticality flag for fail-open/fail-closed behavior"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
