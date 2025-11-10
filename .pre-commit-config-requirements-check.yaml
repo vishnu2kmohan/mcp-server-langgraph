@@ -17,33 +17,34 @@
         - Temporary files from 'uv export' in Docker builds
 
         All other locations should use pyproject.toml with 'uv sync'.
-      entry: bash -c '
-        unauthorized=$(
-          find . -name "requirements*.txt" \
-            -not -path "./.venv/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./.tox/*" \
-            -not -path "./deployments/langgraph_platform/requirements.txt" \
-            -not -path "./clients/python/requirements.txt" \
-            -not -path "./clients/python/test-requirements.txt" \
-            -not -path "*/tmp/*"
-        );
-        if [ -n "$unauthorized" ]; then
-          echo "❌ ERROR: Unauthorized requirements.txt file(s) found:";
-          echo "$unauthorized";
-          echo "";
-          echo "This project uses UV-ONLY dependency management.";
-          echo "DO NOT create requirements.txt files manually.";
-          echo "";
-          echo "Use instead:";
-          echo "  - Add dependency: uv add package-name";
-          echo "  - Install deps: uv sync";
-          echo "  - Export (Docker): uv export > requirements.txt";
-          echo "";
-          echo "See: docs/contributing/DEPENDENCY_MANAGEMENT.md";
-          exit 1;
-        fi
-      '
+      entry: |
+        bash -c '
+          unauthorized=$(
+            find . -name "requirements*.txt" \
+              -not -path "./.venv/*" \
+              -not -path "./node_modules/*" \
+              -not -path "./.tox/*" \
+              -not -path "./deployments/langgraph_platform/requirements.txt" \
+              -not -path "./clients/python/requirements.txt" \
+              -not -path "./clients/python/test-requirements.txt" \
+              -not -path "*/tmp/*"
+          );
+          if [ -n "$unauthorized" ]; then
+            echo "❌ ERROR: Unauthorized requirements.txt file(s) found:";
+            echo "$unauthorized";
+            echo "";
+            echo "This project uses UV-ONLY dependency management.";
+            echo "DO NOT create requirements.txt files manually.";
+            echo "";
+            echo "Use instead:";
+            echo "  - Add dependency: uv add package-name";
+            echo "  - Install deps: uv sync";
+            echo "  - Export (Docker): uv export > requirements.txt";
+            echo "";
+            echo "See: docs/contributing/DEPENDENCY_MANAGEMENT.md";
+            exit 1;
+          fi
+        '
       language: system
       pass_filenames: false
       files: 'requirements.*\.txt$'
