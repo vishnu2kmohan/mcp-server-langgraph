@@ -165,7 +165,8 @@ def check_mermaid_diagrams(file_path: Path, content: str, report: ValidationRepo
 
         # Check for invalid arrow syntax (single dash should be followed by > or -)
         # Exclude false positives from number ranges (e.g., "70-80%") and HTML entities
-        if re.search(r"[^-\d]-[^->-\d]", diagram):
+        # Pattern: match single dash not preceded by dash/digit AND not followed by dash/>/digit
+        if re.search(r"[^-\d]-[^->\d]", diagram):
             report.add_issue("warning", file_path, "mermaid", "Possible invalid arrow syntax (use --> or --)", line_number)
 
         # Check for unclosed quotes
