@@ -1,0 +1,78 @@
+---
+# yamllint configuration for MCP Server LangGraph
+#
+# This config excludes Helm templates and Kustomize patches which use
+# Go templating and shouldn't be linted as pure YAML.
+
+extends: default
+
+# Ignore patterns
+ignore: |
+  # Helm chart templates (contain Go templating)
+  deployments/helm/**/templates/**
+  # Kustomize patches (may have incomplete YAML for strategic merge)
+  deployments/overlays/**/patch*.yaml
+  # ArgoCD application manifests (may reference external repos)
+  deployments/argocd/**/*.yaml
+  # Generated or vendored files
+  .venv/
+  venv/
+  node_modules/
+  # CI/CD generated files
+  .github/workflows/generated-*
+
+rules:
+  # Line length - allow longer lines for readability
+  line-length:
+    max: 120
+    level: warning
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # Document start (---) not required
+  document-start: disable
+
+  # Truthy values - allow common boolean representations
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+    check-keys: false  # Don't check mapping keys
+
+  # Indentation - 2 spaces
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # Comments - allow inline comments
+  comments:
+    min-spaces-from-content: 1
+
+  # Brackets - allow inline brackets for simple arrays
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Braces - allow inline braces for simple objects
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Empty lines - allow reasonable spacing
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  # Trailing spaces - disallow
+  trailing-spaces: enable
+
+  # New line at end of file
+  new-line-at-end-of-file: enable
+
+  # Key duplicates - error
+  key-duplicates: enable
+
+  # Quoted strings - allow both styles
+  quoted-strings:
+    quote-type: any
+    required: false

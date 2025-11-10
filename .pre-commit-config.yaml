@@ -299,6 +299,55 @@ repos:
           Following TDD principles, these tests FAIL if regressions are introduced.
           See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
 
+      # Codex Findings Prevention Hooks (2025-11-10)
+      - id: validate-api-schemas
+        name: Validate API Response Schemas
+        entry: python3 scripts/validate_api_schemas.py
+        language: system
+        pass_filenames: false
+        files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
+        always_run: false  # Only run when API/auth files change
+        description: |
+          Validates that API endpoint responses match their documented Pydantic schemas.
+          Prevents bugs where implementations store data but don't return it in responses.
+
+          Regression prevention for Codex Finding (2025-11-10):
+          - API key "created" timestamp was stored in Keycloak but omitted from response
+          - Violated CreateAPIKeyResponse schema contract
+          - Clients received empty string instead of actual timestamp
+
+          Detection strategy:
+          - Validates response model field definitions
+          - Checks that return statements include all required schema fields
+          - Warns when model instantiation might be missing fields
+
+          See: TESTING.md "Regression Test Patterns - Pattern 1: API Contract Violations"
+
+      - id: validate-test-time-bombs
+        name: Detect Test Time Bombs (Future Dates/Models)
+        entry: python3 scripts/validate_test_time_bombs.py
+        language: system
+        pass_filenames: false
+        files: ^tests/.*test_.*\.py$
+        always_run: false  # Only run when test files change
+        description: |
+          Detects hard-coded future dates, versions, and model names in tests that
+          will break when those futures become reality.
+
+          Regression prevention for Codex Finding (2025-11-10):
+          - Tests used "gpt-5" which will break when OpenAI releases GPT-5
+          - Tests used "gemini-2.5-flash" and other future model names
+          - Created time-bomb test failures
+
+          Patterns detected:
+          - Future AI model names (gpt-5, claude-5, gemini-3+)
+          - Future year references (beyond current year + 2)
+          - High version numbers (v5.0+) that might become real
+
+          Best practice: Use clearly fake constants like TEST_NONEXISTENT_MODEL = "gpt-999-test-nonexistent"
+
+          See: TESTING.md "Regression Test Patterns - Pattern 3: Test Time Bombs"
+
       - id: validate-github-action-versions
         name: Validate GitHub Actions Action Versions
         entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
