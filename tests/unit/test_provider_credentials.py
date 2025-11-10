@@ -5,14 +5,22 @@ Tests verify that providers requiring multiple environment variables
 are properly configured.
 """
 
+import gc
 import os
 from unittest.mock import MagicMock
+
+import pytest
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 
+@pytest.mark.xdist_group(name="unit_provider_credentials_tests")
 class TestProviderCredentialSetup:
     """Test multi-credential provider configuration (TDD RED → GREEN)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_azure_provider_sets_all_required_env_vars(self):
         """

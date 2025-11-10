@@ -1,5 +1,6 @@
 """Unit tests for secrets_manager.py - Infisical Integration"""
 
+import gc
 import os
 from unittest.mock import MagicMock, patch
 
@@ -19,8 +20,13 @@ pytestmark = pytest.mark.skipif(not INFISICAL_AVAILABLE, reason="infisical-pytho
 
 @pytest.mark.unit
 @pytest.mark.infisical
+@pytest.mark.xdist_group(name="secrets_manager_tests")
 class TestSecretsManager:
     """Test SecretsManager class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.secrets.manager.InfisicalClient")
     def test_init_with_credentials(self, mock_client):
@@ -397,8 +403,13 @@ class TestSecretsManager:
 
 @pytest.mark.integration
 @pytest.mark.infisical
+@pytest.mark.xdist_group(name="secrets_manager_tests")
 class TestSecretsManagerIntegration:
     """Integration tests for Infisical (requires running Infisical instance)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(
         not all(

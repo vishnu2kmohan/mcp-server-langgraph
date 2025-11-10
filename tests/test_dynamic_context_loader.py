@@ -4,6 +4,7 @@ Unit tests for DynamicContextLoader
 Tests semantic search, indexing, progressive discovery, and caching.
 """
 
+import gc
 import time
 from unittest.mock import MagicMock, patch
 
@@ -98,8 +99,13 @@ def context_loader(mock_qdrant_client, mock_embedder):
         )
 
 
+@pytest.mark.xdist_group(name="dynamic_context_loader_tests")
 class TestDynamicContextLoader:
     """Test suite for DynamicContextLoader"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_initialization(self, context_loader, mock_qdrant_client):
@@ -342,8 +348,13 @@ class TestDynamicContextLoader:
         assert "Qdrant write error" in str(exc_info.value)
 
 
+@pytest.mark.xdist_group(name="dynamic_context_loader_tests")
 class TestSearchAndLoadContext:
     """Test the helper function search_and_load_context"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_search_and_load(self, context_loader, mock_qdrant_client):
@@ -394,8 +405,13 @@ class TestSearchAndLoadContext:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="dynamic_context_loader_tests")
 class TestDynamicContextIntegration:
     """Integration tests requiring actual Qdrant instance"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_full_workflow(self, qdrant_client):

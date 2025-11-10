@@ -4,6 +4,7 @@ Contract tests for MCP protocol compliance
 Validates that the MCP server strictly adheres to the Model Context Protocol specification.
 """
 
+import gc
 import json
 from pathlib import Path
 
@@ -36,8 +37,13 @@ def validate_with_schema(mcp_schemas):
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestJSONRPCFormat:
     """Test basic JSON-RPC 2.0 format compliance"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_request_has_required_fields(self, validate_with_schema):
         """All MCP requests must follow JSON-RPC 2.0 format"""
@@ -76,8 +82,13 @@ class TestJSONRPCFormat:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestInitializeContract:
     """Test initialize handshake contract"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialize_request_format(self, validate_with_schema, mcp_schemas):
         """Initialize request must include protocolVersion and clientInfo"""
@@ -125,8 +136,13 @@ class TestInitializeContract:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestToolsContract:
     """Test tools/list and tools/call contracts"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_tools_list_request_format(self, validate_with_schema, mcp_schemas):
         """tools/list request should follow MCP spec"""
@@ -194,8 +210,13 @@ class TestToolsContract:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestResourcesContract:
     """Test resources/list contract"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_resources_list_request_format(self, validate_with_schema, mcp_schemas):
         """resources/list request should follow MCP spec"""
@@ -236,8 +257,13 @@ class TestResourcesContract:
 
 @pytest.mark.contract
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestMCPServerContractCompliance:
     """Integration tests verifying actual MCP server follows the contract"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mcp_server(self):
@@ -294,8 +320,13 @@ class TestMCPServerContractCompliance:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="contract_mcp_contract_tests")
 class TestSchemaCompleteness:
     """Meta-tests ensuring our schemas are comprehensive"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_required_schemas_defined(self, validate_with_schema, mcp_schemas):
         """Verify all key MCP message types have schemas"""

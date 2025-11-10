@@ -5,6 +5,7 @@ Tests execute_python tool with mocked sandbox.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,8 +19,13 @@ except ImportError:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_tools_code_execution_tools_tests")
 class TestExecutePythonTool:
     """Test execute_python tool"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_sandbox(self):
@@ -180,8 +186,13 @@ class TestExecutePythonTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_tools_code_execution_tools_tests")
 class TestCodeExecutionToolIntegration:
     """Test integration with other components"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.tools.code_execution_tools._get_sandbox")
     def test_uses_configuration_settings(self, mock_get_sandbox):

@@ -4,6 +4,7 @@ Property-based tests for LLM Factory
 Tests invariants that should hold for all inputs using Hypothesis.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -37,8 +38,13 @@ message_lists = st.lists(
 
 @pytest.mark.property
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryProperties:
     """Property-based tests for LLM Factory"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(provider=valid_providers, temperature=valid_temperatures, max_tokens=valid_max_tokens)
     @settings(max_examples=50, deadline=3000)
@@ -176,8 +182,13 @@ class TestLLMFactoryProperties:
 
 @pytest.mark.property
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryEdgeCases:
     """Property tests for edge cases and invariants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @staticmethod
     def _create_mock_response(content: str):
@@ -276,8 +287,13 @@ class TestLLMFactoryEdgeCases:
 
 @pytest.mark.property
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="property_llm_properties_tests")
 class TestLLMFactoryFallbackProperties:
     """Property tests for fallback behavior"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         fallback_count=st.integers(min_value=1, max_value=5),

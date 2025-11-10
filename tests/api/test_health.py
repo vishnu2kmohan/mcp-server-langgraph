@@ -5,6 +5,7 @@ Tests validate that health checks detect all critical system issues
 identified in OpenAI Codex security audit.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,8 +23,13 @@ from mcp_server_langgraph.api.health import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestObservabilityValidation:
     """Test observability validation checks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_observability_when_initialized(self):
         """Test validation passes when observability is initialized"""
@@ -47,8 +53,13 @@ class TestObservabilityValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestSessionStoreValidation:
     """Test session store validation checks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_session_store_when_token_mode(self):
         """Test validation passes when using token auth (no sessions)"""
@@ -99,8 +110,13 @@ class TestSessionStoreValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestAPICacheValidation:
     """Test API key cache validation checks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_cache_when_disabled(self):
         """Test validation passes when caching disabled"""
@@ -149,8 +165,13 @@ class TestAPICacheValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestStartupValidation:
     """Test complete startup validation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_run_startup_validation_all_healthy(self):
         """Test startup validation passes when all systems healthy"""
@@ -187,8 +208,13 @@ class TestStartupValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestHealthCheckEndpoint:
     """Test health check HTTP endpoint"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def client(self):
@@ -246,8 +272,13 @@ class TestHealthCheckEndpoint:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="api_health_tests")
 class TestHealthCheckIntegration:
     """Integration tests for health check with real systems"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_health_check_with_real_app(self):
         """Test health check works with real app instance"""

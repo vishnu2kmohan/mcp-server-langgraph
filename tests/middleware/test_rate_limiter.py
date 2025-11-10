@@ -11,6 +11,7 @@ Tests:
 - Fail-open behavior when Redis is unavailable
 """
 
+import gc
 from unittest.mock import Mock, patch
 
 import jwt
@@ -71,8 +72,13 @@ def mock_request_with_jwt(mock_request_no_auth):
         yield mock_request_no_auth
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRateLimitConstants:
     """Test rate limit configuration constants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rate_limits_defined(self):
         """Test all tier rate limits are defined"""
@@ -109,6 +115,7 @@ class TestRateLimitConstants:
         assert register_limit <= 10
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestUserIDExtraction:
     """
     Test user ID extraction from JWT
@@ -116,6 +123,10 @@ class TestUserIDExtraction:
     NOTE: get_user_id_from_jwt() relies on request.state.user being set by
     AuthMiddleware to avoid event loop issues in slowapi's synchronous context.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_user_id_from_request_state(self):
         """Test extracting user ID from request.state.user (preferred method)"""
@@ -173,6 +184,7 @@ class TestUserIDExtraction:
         assert user_id is None
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestUserTierExtraction:
     """
     Test user tier extraction from JWT
@@ -180,6 +192,10 @@ class TestUserTierExtraction:
     NOTE: get_user_tier() relies on request.state.user being set by
     AuthMiddleware to avoid event loop issues in slowapi's synchronous context.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_tier_from_request_state(self):
         """Test extracting tier from request.state.user (preferred method)"""
@@ -237,8 +253,13 @@ class TestUserTierExtraction:
         assert tier == "free"
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRateLimitKeyGeneration:
     """Test rate limit key generation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_key_prioritizes_user_id(self):
         """Test rate limit key prioritizes user ID from request.state.user"""
@@ -274,6 +295,7 @@ class TestRateLimitKeyGeneration:
             assert key == "global:anonymous"
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRateLimitForTier:
     """Test tier-based rate limit determination"""
 
@@ -290,8 +312,13 @@ class TestRateLimitForTier:
         assert get_rate_limit_for_tier("unknown") == RATE_LIMITS["free"]
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestDynamicLimitDetermination:
     """Test dynamic limit determination from request"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dynamic_limit_for_premium_user(self):
         """Test dynamic limit for premium user"""
@@ -311,8 +338,13 @@ class TestDynamicLimitDetermination:
         assert limit == "10/minute"
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRedisStorageURI:
     """Test Redis storage URI generation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_redis_storage_uri_default(self):
         """Test Redis storage URI with default settings"""
@@ -331,8 +363,13 @@ class TestRedisStorageURI:
             assert uri == "redis://redis.example.com:6380/5"
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestCustomRateLimitHandler:
     """Test custom rate limit exceeded handler"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_rate_limit_handler_response_structure(self):
@@ -374,8 +411,13 @@ class TestCustomRateLimitHandler:
         assert "anonymous" in content or "Rate limit exceeded" in content
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestSetupRateLimiting:
     """Test rate limiting setup function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_setup_adds_limiter_to_app_state(self):
         """Test setup_rate_limiting adds limiter to app state"""
@@ -396,8 +438,13 @@ class TestSetupRateLimiting:
         assert RateLimitExceeded in app.exception_handlers
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestEndpointSpecificDecorators:
     """Test endpoint-specific rate limit decorators"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rate_limit_for_auth_decorator(self):
         """Test auth endpoint rate limiter"""
@@ -437,8 +484,13 @@ class TestEndpointSpecificDecorators:
         assert hasattr(health_endpoint, "__wrapped__")
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestLimiterConfiguration:
     """Test limiter instance configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_limiter_has_correct_key_func(self):
         """Test limiter uses correct key function"""
@@ -458,8 +510,13 @@ class TestLimiterConfiguration:
         assert limiter._swallow_errors is True
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRateLimitingIntegration:
     """Integration tests for rate limiting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rate_limit_key_hierarchy(self):
         """Test that rate limit key follows hierarchy (user > IP > global)"""
@@ -489,8 +546,13 @@ class TestRateLimitingIntegration:
             assert limit == expected_limit
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestRateLimitErrorHandling:
     """Test error handling and resilience"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_jwt_decode_error_handled_gracefully(self):
         """Test that invalid tokens are handled gracefully (no user in state)"""
@@ -516,8 +578,13 @@ class TestRateLimitErrorHandling:
         assert user_id is None
 
 
+@pytest.mark.xdist_group(name="middleware_rate_limiter_tests")
 class TestKeycloakIntegration:
     """Integration tests for Keycloak RS256 token support"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_user_id_from_request_state(self):
         """Test user ID extraction from request.state.user (auth middleware)"""

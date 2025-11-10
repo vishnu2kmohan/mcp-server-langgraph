@@ -5,6 +5,7 @@ Tests execute_python and search_tools integration with MCP server.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,8 +16,13 @@ from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="integration_mcp_code_execution_tests")
 class TestMCPCodeExecutionEndpoint:
     """Test execute_python tool via MCP protocol"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     async def mcp_server(self):
@@ -105,8 +111,13 @@ class TestMCPCodeExecutionEndpoint:
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="integration_mcp_code_execution_tests")
 class TestMCPToolDiscoveryEndpoint:
     """Test search_tools via MCP protocol"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     async def mcp_server(self):

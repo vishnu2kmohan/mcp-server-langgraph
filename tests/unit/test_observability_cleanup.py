@@ -3,6 +3,7 @@
 Ensures that telemetry exporters are properly flushed and closed on application shutdown.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,8 +12,13 @@ from mcp_server_langgraph.observability.telemetry import init_observability, is_
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_observability_cleanup_tests")
 class TestObservabilityShutdown:
     """Test observability shutdown and cleanup"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_shutdown_flushes_tracer_spans(self):
         """

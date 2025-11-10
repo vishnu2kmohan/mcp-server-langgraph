@@ -9,6 +9,7 @@ Tests validate:
 3. Defense-in-depth safeguards prevent malformed URLs
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,8 +18,13 @@ from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 
 
+@pytest.mark.xdist_group(name="integration_redis_checkpointer_url_encoding_tests")
 class TestRedisCheckpointerURLEncoding:
     """Integration tests for Redis checkpointer URL encoding safeguards."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize(
         "password,expected_encoded",
@@ -192,8 +198,13 @@ class TestRedisCheckpointerURLEncoding:
         assert app_encoded_url == template_url, "Application encoding should be idempotent with template encoding"
 
 
+@pytest.mark.xdist_group(name="integration_redis_checkpointer_url_encoding_tests")
 class TestRedisCheckpointerDefenseInDepth:
     """Tests for defense-in-depth URL encoding safeguards."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_three_layer_protection(self):
         """Validate three-layer protection against URL encoding issues.
@@ -264,8 +275,13 @@ class TestRedisCheckpointerDefenseInDepth:
         assert original_parts["password"] == unquote(encoded_parts["password"])
 
 
+@pytest.mark.xdist_group(name="integration_redis_checkpointer_url_encoding_tests")
 class TestRegressionPrevention:
     """Regression tests to prevent future incidents of this class."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_connection_with_special_chars_does_not_crash(self):
         """Test that Redis connections with special char passwords don't crash.

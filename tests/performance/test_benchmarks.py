@@ -1,6 +1,7 @@
 """Performance benchmarks for critical system components."""
 
 import asyncio
+import gc
 import time
 from datetime import datetime, timedelta
 from unittest.mock import Mock
@@ -29,8 +30,13 @@ class BenchmarkTimer:
 
 # JWT Authentication Benchmarks
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="performance_benchmarks_tests")
 class TestJWTBenchmarks:
     """Benchmark JWT token operations."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def jwt_config(self):
@@ -127,8 +133,13 @@ class TestJWTBenchmarks:
 # OpenFGA Authorization Benchmarks
 @pytest.mark.benchmark
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="performance_benchmarks_tests")
 class TestOpenFGABenchmarks:
     """Benchmark OpenFGA authorization checks."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_openfga_client(self):
@@ -196,8 +207,13 @@ class TestOpenFGABenchmarks:
 
 # LLM Request Benchmarks
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="performance_benchmarks_tests")
 class TestLLMBenchmarks:
     """Benchmark LLM request handling."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_llm_client(self):
@@ -251,8 +267,13 @@ class TestLLMBenchmarks:
 
 # Agent Execution Benchmarks
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="performance_benchmarks_tests")
 class TestAgentBenchmarks:
     """Benchmark agent execution performance."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_initialization_performance(self, percentile_benchmark):
         """Benchmark agent initialization time.
@@ -316,8 +337,13 @@ class TestAgentBenchmarks:
 
 # Memory and Resource Benchmarks
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="performance_benchmarks_tests")
 class TestResourceBenchmarks:
     """Benchmark memory and resource usage."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_state_serialization_performance(self, percentile_benchmark):
         """Benchmark state serialization for checkpointing.

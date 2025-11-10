@@ -4,6 +4,7 @@ Unit tests for custom exception hierarchy.
 Tests exception creation, HTTP mapping, and error responses.
 """
 
+import gc
 from unittest.mock import Mock, patch
 
 import pytest
@@ -64,8 +65,13 @@ from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Auth
 )
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestMCPServerExceptionBase:
     """Test base MCPServerException class"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_exception_creation_with_defaults(self):
@@ -129,8 +135,13 @@ class TestMCPServerExceptionBase:
         assert exc.message == "Wrapped error"
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestAuthenticationExceptions:
     """Test authentication exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_invalid_credentials_error(self):
@@ -164,8 +175,13 @@ class TestAuthenticationExceptions:
         assert "mfa" in exc.user_message.lower()
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestAuthorizationExceptions:
     """Test authorization exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_permission_denied_error(self):
@@ -190,8 +206,13 @@ class TestAuthorizationExceptions:
         assert "upgrade" in exc.user_message.lower()
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestRateLimitExceptions:
     """Test rate limiting exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_rate_limit_exceeded_error(self):
@@ -209,8 +230,13 @@ class TestRateLimitExceptions:
         assert "quota" in exc.user_message.lower()
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestValidationExceptions:
     """Test validation exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_input_validation_error(self):
@@ -234,8 +260,13 @@ class TestValidationExceptions:
         assert exc.status_code == 400
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExternalServiceExceptions:
     """Test external service exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_llm_provider_error(self):
@@ -283,8 +314,13 @@ class TestExternalServiceExceptions:
         assert exc.status_code == 503
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestResilienceExceptions:
     """Test resilience pattern exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_circuit_breaker_open_error(self):
@@ -314,8 +350,13 @@ class TestResilienceExceptions:
         assert "heavy load" in exc.user_message.lower()
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestComplianceExceptions:
     """Test compliance exception types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_gdpr_violation_error(self):
@@ -336,6 +377,7 @@ class TestComplianceExceptions:
         assert exc.status_code == 403
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestStorageExceptions:
     """Test storage exception types"""
 
@@ -352,8 +394,13 @@ class TestStorageExceptions:
         assert exc.status_code == 500
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionMetadata:
     """Test exception metadata handling"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_exception_with_trace_id(self):
@@ -394,8 +441,13 @@ class TestExceptionMetadata:
             assert exc.trace_id is not None
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionHTTPMapping:
     """Test HTTP status code mapping"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_auth_exceptions_map_to_401(self):
@@ -436,8 +488,13 @@ class TestExceptionHTTPMapping:
         assert exc.status_code == 404
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionRetryPolicy:
     """Test retry policy classification"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_client_errors_never_retry(self):
@@ -469,8 +526,13 @@ class TestExceptionRetryPolicy:
             assert exc.retry_policy == RetryPolicy.CONDITIONAL
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionUserMessages:
     """Test user-friendly error messages"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_auth_error_user_message(self):
@@ -499,8 +561,13 @@ class TestExceptionUserMessages:
         assert exc.user_message == "Custom message for user"
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionCategories:
     """Test exception category classification"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_client_error_category(self):
@@ -541,8 +608,13 @@ class TestExceptionCategories:
         assert exc.category == ErrorCategory.RATE_LIMIT
 
 
+@pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestExceptionInheritance:
     """Test exception inheritance hierarchy"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_all_exceptions_inherit_from_base(self):

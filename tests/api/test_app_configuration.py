@@ -8,6 +8,7 @@ Tests:
 - App creation without observability initialized
 """
 
+import gc
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,8 +18,13 @@ from mcp_server_langgraph.app import create_app
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestAppCreation:
     """Test FastAPI app creation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_app_returns_fastapi_instance(self):
         """Test create_app returns FastAPI instance"""
@@ -46,8 +52,13 @@ class TestAppCreation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestRateLimiterSetup:
     """Test rate limiter middleware setup"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_app_calls_setup_rate_limiting(self):
         """Test that app.py calls setup_rate_limiting function"""
@@ -78,8 +89,13 @@ class TestRateLimiterSetup:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestCORSConfiguration:
     """Test CORS middleware configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cors_disabled_when_no_origins_configured(self):
         """Test CORS is not added when cors_allowed_origins is empty"""
@@ -123,8 +139,13 @@ class TestCORSConfiguration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestLoggerGracefulDegradation:
     """Test logger graceful degradation when observability not initialized"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_logger_errors_dont_crash_app_creation(self):
         """Test that logger RuntimeError doesn't crash app creation"""
@@ -162,8 +183,13 @@ class TestLoggerGracefulDegradation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestRouterRegistration:
     """Test API router registration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_routers_registered(self):
         """Test that all API routers are registered"""
@@ -190,6 +216,7 @@ class TestRouterRegistration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestAppEndpoints:
     """Test app endpoints"""
 
@@ -205,8 +232,13 @@ class TestAppEndpoints:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestAppIntegration:
     """Integration tests for app configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_app_creation_with_all_settings(self):
         """Test app creation with all settings configured"""
@@ -239,6 +271,7 @@ class TestAppIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="api_app_configuration_tests")
 class TestObservabilityInitialization:
     """
     TDD tests for observability initialization (OpenAI Codex Finding #2).
@@ -246,6 +279,10 @@ class TestObservabilityInitialization:
     Validates that create_app() calls init_observability() during startup
     BEFORE any logging occurs, eliminating RuntimeError exceptions.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_app_calls_init_observability(self):
         """Test that create_app calls init_observability during startup"""

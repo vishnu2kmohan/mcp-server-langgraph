@@ -8,15 +8,23 @@ These tests target uncovered code paths in json_logger.py:
 - Edge cases in add_fields method
 """
 
+import gc
 import json
 import logging
 from unittest.mock import Mock, patch
 
+import pytest
+
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, setup_json_logging
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestImportFallback:
     """Tests for pythonjsonlogger import fallback"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_fallback_to_standard_formatter(self):
         """Test that formatter falls back to standard logging.Formatter when pythonjsonlogger unavailable"""
@@ -40,8 +48,13 @@ class TestImportFallback:
         assert log_data["message"] == "test"
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestHostnameHandling:
     """Tests for hostname field handling"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_hostname_exception_handling(self):
         """Test hostname error handling when socket.gethostname() fails"""
@@ -90,8 +103,13 @@ class TestHostnameHandling:
         assert "hostname" not in log_data
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestTraceContextEdgeCases:
     """Tests for OpenTelemetry trace context edge cases"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_invalid_span_context(self, monkeypatch):
         """Test handling of invalid span context"""
@@ -169,8 +187,13 @@ class TestTraceContextEdgeCases:
             assert "trace_id" not in log_data
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestExceptionHandlingEdgeCases:
     """Tests for exception info handling edge cases"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_exception_with_none_values(self):
         """Test handling of exc_info tuple with None values"""
@@ -217,8 +240,13 @@ class TestExceptionHandlingEdgeCases:
         assert "message" in log_data
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestAddFieldsCustomization:
     """Tests for add_fields method customization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_timestamp_override(self):
         """Test that existing timestamp is not overridden"""
@@ -299,8 +327,13 @@ class TestAddFieldsCustomization:
         assert "created" not in log_data  # Created excluded
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestFormatterInitialization:
     """Tests for formatter initialization options"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_custom_datefmt(self):
         """Test formatter with custom date format"""
@@ -375,8 +408,13 @@ class TestFormatterInitialization:
             assert log_data["message"] == "test"
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestSetupJSONLoggingEdgeCases:
     """Tests for setup_json_logging edge cases"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_setup_replaces_existing_handlers(self):
         """Test that setup removes existing handlers"""
@@ -418,8 +456,13 @@ class TestSetupJSONLoggingEdgeCases:
         assert formatter.indent == 4
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestMessageFormatting:
     """Tests for getMessage() and format string handling"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_message_with_args(self):
         """Test message formatting with arguments"""
@@ -462,8 +505,13 @@ class TestMessageFormatting:
         assert log_data["message"] == "User bob from 10.0.0.1"
 
 
+@pytest.mark.xdist_group(name="json_logger_additional_tests")
 class TestJSONSerializationEdgeCases:
     """Tests for JSON serialization edge cases"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_non_serializable_extra_field(self):
         """Test handling of non-JSON-serializable extra fields"""

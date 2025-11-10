@@ -11,14 +11,20 @@ Critical bug this catches:
 The correct pattern is demonstrated in dependencies.py:116-125 (API key manager).
 """
 
+import gc
 from unittest.mock import Mock, patch
 
 import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_cache_redis_config_tests")
 class TestCacheServiceRedisConfiguration:
     """Test that CacheService uses proper Redis configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_service_uses_redis_url_pattern(self):
         """
@@ -120,12 +126,17 @@ class TestCacheServiceRedisConfiguration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_cache_redis_config_tests")
 class TestCacheServiceComparison:
     """
     Compare CacheService pattern with APIKeyManager pattern.
 
     Demonstrates that APIKeyManager has correct pattern that CacheService should follow.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_api_key_manager_redis_pattern_is_correct(self):
         """
@@ -230,8 +241,13 @@ class TestCacheServiceComparison:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="unit_cache_redis_config_tests")
 class TestCacheServiceProductionScenario:
     """Integration test simulating production Redis configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_with_production_redis_url(self):
         """

@@ -7,6 +7,7 @@ including CLI tool availability decorators and settings isolation fixtures.
 Following TDD principles - these tests are written FIRST, before implementation.
 """
 
+import gc
 import subprocess
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -16,8 +17,13 @@ import pytest
 from mcp_server_langgraph.core.config import settings
 
 
+@pytest.mark.xdist_group(name="utilities_tests")
 class TestRequiresToolDecorator:
     """Test the @requires_tool decorator for CLI tool availability checking."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_requires_tool_skips_when_tool_missing(self, monkeypatch):
         """Verify decorator skips test when CLI tool is not available."""
@@ -82,8 +88,13 @@ class TestRequiresToolDecorator:
         assert "Custom skip message" in str(exc_info.value)
 
 
+@pytest.mark.xdist_group(name="utilities_tests")
 class TestSettingsIsolationFixture:
     """Test the settings_isolation fixture for state mutation isolation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_settings_isolation_restores_original_state(self):
         """Verify fixture restores settings to original state after test."""
@@ -121,8 +132,13 @@ class TestSettingsIsolationFixture:
         assert settings.enable_checkpointing == original_checkpointing
 
 
+@pytest.mark.xdist_group(name="utilities_tests")
 class TestCLIAvailabilityFixtures:
     """Test CLI tool availability fixtures."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kustomize_available_returns_false_when_missing(self, kustomize_available, monkeypatch):
         """Verify kustomize_available fixture returns False when kustomize not installed."""
@@ -171,6 +187,7 @@ class TestCLIAvailabilityFixtures:
         assert isinstance(helm_available, bool)
 
 
+@pytest.mark.xdist_group(name="utilities_tests")
 class TestFixtureScoping:
     """Test that fixtures use appropriate scopes for performance."""
 
@@ -188,8 +205,13 @@ class TestFixtureScoping:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="utilities_tests")
 class TestUtilityDocumentation:
     """Test that utilities are properly documented."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_requires_tool_has_docstring(self):
         """Verify @requires_tool decorator has comprehensive docstring."""

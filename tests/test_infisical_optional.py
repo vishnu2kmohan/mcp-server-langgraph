@@ -5,14 +5,20 @@ Verifies that the application gracefully handles cases where infisical-python
 is not installed, falling back to environment variables.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestInfisicalOptionalDependency:
     """Test graceful degradation when Infisical not installed"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_secrets_manager_without_infisical(self, monkeypatch):
         """Verify SecretsManager works without infisical-python installed"""
@@ -111,8 +117,13 @@ class TestInfisicalOptionalDependency:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestConfigWithoutInfisical:
     """Test Settings configuration without Infisical"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_settings_loads_without_infisical(self, monkeypatch):
         """Verify Settings can be loaded without Infisical"""
@@ -139,8 +150,13 @@ class TestConfigWithoutInfisical:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestApplicationStartupWithoutInfisical:
     """Test application can start without Infisical"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_creation_without_infisical(self, monkeypatch):
         """Verify agent can be created without Infisical"""
@@ -179,8 +195,13 @@ class TestApplicationStartupWithoutInfisical:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestInfisicalLogging:
     """Test logging behavior when Infisical unavailable"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_warning_logged_on_fallback(self, caplog):
         """Verify warning is logged when falling back to environment variables"""
@@ -210,8 +231,13 @@ class TestInfisicalLogging:
 
 @pytest.mark.integration
 @pytest.mark.infisical
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestInfisicalIntegration:
     """Integration tests for Infisical (skip if not installed)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def skip_if_no_infisical(self):
@@ -235,8 +261,13 @@ class TestInfisicalIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="infisical_optional_tests")
 class TestDocumentationExamples:
     """Test examples from documentation work correctly"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docker_compose_example(self, monkeypatch):
         """Verify Docker Compose setup works (no Infisical required)"""

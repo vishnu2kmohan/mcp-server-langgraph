@@ -1,5 +1,6 @@
 """Unit tests for rate_limiter.py - Rate Limiting Middleware"""
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,8 +16,13 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 
 
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestRateLimiterUserExtraction:
     """Test extracting user info from JWT tokens for rate limiting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_user_id_from_jwt_with_valid_token(self):
         """Test extracting user ID from request.state.user set by AuthMiddleware"""
@@ -85,8 +91,13 @@ class TestRateLimiterUserExtraction:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestRateLimiterTierExtraction:
     """Test tier extraction for tiered rate limiting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_user_tier_for_premium_user(self):
         """Test extracting premium tier from request.state.user"""
@@ -157,8 +168,13 @@ class TestRateLimiterTierExtraction:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestRateLimiterKeyGeneration:
     """Test rate limit key generation (user > IP > global)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_rate_limit_key_for_authenticated_user(self):
         """Test rate limit key uses user ID for authenticated users"""
@@ -200,8 +216,13 @@ class TestRateLimiterKeyGeneration:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestRateLimiterTierLimits:
     """Test tiered rate limit values"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rate_limit_for_tier_anonymous(self):
         """Test anonymous users get lowest limit"""
@@ -236,8 +257,13 @@ class TestRateLimiterTierLimits:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestDynamicRateLimiting:
     """Test dynamic rate limit determination"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_dynamic_limit_for_premium_user(self):
         """Test dynamic rate limiting applies premium limits"""
@@ -274,8 +300,13 @@ class TestDynamicRateLimiting:
 
 @pytest.mark.unit
 @pytest.mark.api
+@pytest.mark.xdist_group(name="rate_limiter_tests")
 class TestRateLimiterSecurityProperties:
     """Test security properties of rate limiter"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rate_limiter_does_not_expose_secret_key(self):
         """

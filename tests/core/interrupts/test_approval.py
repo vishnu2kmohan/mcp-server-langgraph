@@ -13,6 +13,7 @@ Tests cover:
 - Edge cases and error scenarios
 """
 
+import gc
 import json
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
@@ -37,8 +38,13 @@ from mcp_server_langgraph.core.interrupts.approval import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalStatus:
     """Test approval status enumeration."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_approval_status_values(self):
         """Test all approval status values exist."""
@@ -66,8 +72,13 @@ class TestApprovalStatus:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalRequiredModel:
     """Test ApprovalRequired model validation and defaults."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 10:30:00")
     def test_approval_required_minimal_fields(self):
@@ -147,8 +158,13 @@ class TestApprovalRequiredModel:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalResponseModel:
     """Test ApprovalResponse model validation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 11:00:00")
     def test_approval_response_minimal_fields(self):
@@ -199,8 +215,13 @@ class TestApprovalResponseModel:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalNode:
     """Test ApprovalNode class functionality."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_approval_node_init_minimal(self):
         """Test ApprovalNode initialization with minimal parameters."""
@@ -342,8 +363,13 @@ class TestApprovalNode:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestCheckApprovalStatus:
     """Test check_approval_status function."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_check_approval_status_pending_no_responses(self):
         """Test pending status when no responses exist."""
@@ -384,8 +410,13 @@ class TestCheckApprovalStatus:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApproveAction:
     """Test approve_action function."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 14:00:00")
     def test_approve_action_creates_response(self):
@@ -451,8 +482,13 @@ class TestApproveAction:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestRejectAction:
     """Test reject_action function."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 15:30:00")
     def test_reject_action_creates_response(self):
@@ -514,8 +550,13 @@ class TestRejectAction:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestCreateApprovalWorkflow:
     """Test create_approval_workflow function."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_approval_workflow_single_node(self):
         """Test adding approval to single node."""
@@ -583,8 +624,13 @@ class TestCreateApprovalWorkflow:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalWorkflowIntegration:
     """Integration tests for complete approval workflows."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 16:00:00")
     def test_full_approval_workflow(self):
@@ -691,8 +737,13 @@ class TestApprovalWorkflowIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="core_interrupts_approval_tests")
 class TestApprovalEdgeCases:
     """Test edge cases and error scenarios."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_approve_action_on_empty_state(self):
         """Test approve_action creates approval_responses if missing."""

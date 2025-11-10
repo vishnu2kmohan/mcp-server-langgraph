@@ -1,5 +1,6 @@
 """Unit tests for health_check.py - Health Check Endpoints"""
 
+import gc
 from datetime import datetime
 from typing import Generator
 from unittest.mock import MagicMock, patch
@@ -17,8 +18,13 @@ def test_client() -> Generator[TestClient, None, None]:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="health_check_tests")
 class TestHealthCheckEndpoints:
     """Test health check endpoints"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_health_check_success(self, test_client: TestClient) -> None:
         """Test basic health check returns healthy status"""
@@ -233,8 +239,13 @@ class TestHealthCheckEndpoints:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="health_check_tests")
 class TestHealthCheckIntegration:
     """Integration tests for health checks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(
         strict=True,

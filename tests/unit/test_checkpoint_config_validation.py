@@ -8,6 +8,7 @@ Implements "fail fast" principle: configuration errors should be caught during
 application startup, not during first Redis connection attempt.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -20,8 +21,13 @@ from mcp_server_langgraph.core.checkpoint_validator import (
 from mcp_server_langgraph.core.config import Settings
 
 
+@pytest.mark.xdist_group(name="unit_checkpoint_config_validation_tests")
 class TestCheckpointConfigValidator:
     """Test startup validation for checkpoint configuration."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_redis_url_with_unencoded_password_raises_error(self):
         """Test that unencoded special characters in Redis URL raise validation error.
@@ -127,8 +133,13 @@ class TestCheckpointConfigValidator:
         assert "RFC 3986" in error_msg or "url-encod" in error_msg.lower()
 
 
+@pytest.mark.xdist_group(name="unit_checkpoint_config_validation_tests")
 class TestCheckpointValidationIntegration:
     """Integration tests for checkpoint validation with settings."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_checkpoint_config_with_memory_backend_passes(self):
         """Test that memory backend doesn't require Redis URL validation."""
@@ -163,8 +174,13 @@ class TestCheckpointValidationIntegration:
         validate_checkpoint_config(settings)
 
 
+@pytest.mark.xdist_group(name="unit_checkpoint_config_validation_tests")
 class TestStartupValidationErrorMessages:
     """Test that validation errors have helpful, actionable messages."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_error_message_includes_problematic_url(self):
         """Test that error message includes the problematic URL for debugging."""
@@ -213,8 +229,13 @@ class TestStartupValidationErrorMessages:
         assert "pass%2Fword" in error_msg or "%2F" in error_msg
 
 
+@pytest.mark.xdist_group(name="unit_checkpoint_config_validation_tests")
 class TestCheckpointValidatorWithMocking:
     """Test validator behavior with Redis connection mocking."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validator_can_optionally_test_redis_connectivity(self):
         """Test that validator can optionally test actual Redis connection."""
@@ -249,8 +270,13 @@ class TestCheckpointValidatorWithMocking:
             assert "connect" in error_msg or "connection" in error_msg
 
 
+@pytest.mark.xdist_group(name="unit_checkpoint_config_validation_tests")
 class TestRegressionPrevention:
     """Regression tests to ensure validation prevents known issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_production_incident_url_is_caught_at_startup(self):
         """Test that exact production incident URL would be caught at startup.

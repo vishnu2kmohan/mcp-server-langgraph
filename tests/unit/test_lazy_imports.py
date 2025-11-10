@@ -5,6 +5,7 @@ Verifies that heavy dependencies are only loaded when accessed,
 preventing ModuleNotFoundError for minimal installations.
 """
 
+import gc
 import sys
 from unittest.mock import MagicMock
 
@@ -12,8 +13,13 @@ import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_lazy_imports_tests")
 class TestLazyImports:
     """Test lazy import behavior for optional dependencies"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_package_import_does_not_load_heavy_modules(self):
         """
@@ -167,8 +173,13 @@ class TestLazyImports:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="unit_lazy_imports_tests")
 class TestBackwardsCompatibility:
     """Test that existing import patterns still work"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_star_import_lists_all_exports(self):
         """Test that 'from mcp_server_langgraph import *' works"""

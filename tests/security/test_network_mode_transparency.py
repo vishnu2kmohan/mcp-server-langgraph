@@ -18,6 +18,7 @@ References:
 - CWE-670: Always-Incorrect Control Flow Implementation
 """
 
+import gc
 import logging
 from unittest.mock import MagicMock
 
@@ -37,8 +38,13 @@ except ImportError:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestNetworkModeTransparency:
     """Test suite for network mode configuration transparency"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_production_profile_network_mode_is_none(self):
         """
@@ -132,8 +138,13 @@ class TestNetworkModeTransparency:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestNetworkModeDocumentation:
     """Test suite for network mode documentation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_resource_limits_production_has_network_documentation(self):
         """
@@ -178,8 +189,13 @@ class TestNetworkModeDocumentation:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestNetworkModeSecurityDefaults:
     """Test suite for network mode security defaults"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_default_network_mode_is_none(self):
         """
@@ -235,8 +251,13 @@ class TestNetworkModeSecurityDefaults:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestFutureAllowlistImplementation:
     """Test suite for future allowlist implementation requirements"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not available")
     def test_allowlist_will_require_allowed_domains(self):

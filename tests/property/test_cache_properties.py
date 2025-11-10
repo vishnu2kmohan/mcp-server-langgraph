@@ -10,6 +10,7 @@ Tests cache invariants and edge cases:
 """
 
 import asyncio
+import gc
 import time
 from unittest.mock import Mock, patch
 
@@ -22,8 +23,13 @@ from mcp_server_langgraph.core.cache import CACHE_TTLS, CacheLayer, CacheService
 pytestmark = [pytest.mark.unit, pytest.mark.property]
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheValuePreservation:
     """Test that cache preserves values correctly"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(value=st.integers())
     @settings(max_examples=50, deadline=2000)
@@ -71,8 +77,13 @@ class TestCacheValuePreservation:
         assert retrieved == value
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheKeyNormalization:
     """Test cache key generation properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(parts=st.lists(st.text(min_size=1, max_size=20), min_size=1, max_size=5))
     @settings(max_examples=30, deadline=2000)
@@ -126,8 +137,13 @@ class TestCacheKeyNormalization:
             assert len(key) < 100  # Hashed key should be much shorter
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheTTLProperties:
     """Test TTL-related properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(cache_type=st.sampled_from(list(CACHE_TTLS.keys())))
     @settings(max_examples=10, deadline=1000)
@@ -155,8 +171,13 @@ class TestCacheTTLProperties:
         assert ttl == 300
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheStatisticsProperties:
     """Test cache statistics invariants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(num_operations=st.integers(min_value=1, max_value=50))
     @settings(max_examples=20, deadline=3000)
@@ -211,8 +232,13 @@ class TestCacheStatisticsProperties:
         assert stats["total"]["deletes"] == num_deletes
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheConcurrencySafety:
     """Test cache behavior under concurrent access"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(num_concurrent=st.integers(min_value=2, max_value=10))
     @settings(max_examples=10, deadline=5000)
@@ -250,8 +276,13 @@ class TestCacheConcurrencySafety:
         assert all(result == "shared_value" for result in results)
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheDecoratorProperties:
     """Test @cached decorator properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         x=st.integers(min_value=1, max_value=100),
@@ -313,8 +344,13 @@ class TestCacheDecoratorProperties:
             assert result == value
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheEdgeCases:
     """Test cache edge cases and boundary conditions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(st.just(None))
     @settings(max_examples=5, deadline=1000)
@@ -354,8 +390,13 @@ class TestCacheEdgeCases:
         assert len(cache.l1_cache) <= size
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheTTLBehavior:
     """Test TTL-related properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(ttl_seconds=st.integers(min_value=1, max_value=3))
     @settings(max_examples=10, deadline=8000)
@@ -395,8 +436,13 @@ class TestCacheTTLBehavior:
         assert ttl1 == CACHE_TTLS[cache_type]
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheStatisticsInvariants:
     """Test cache statistics invariants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         num_sets=st.integers(min_value=0, max_value=20),
@@ -446,8 +492,13 @@ class TestCacheStatisticsInvariants:
         assert 0.0 <= stats["l2"]["hit_rate"] <= 1.0
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheStampedePrevention:
     """Test cache stampede prevention properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(num_concurrent=st.integers(min_value=2, max_value=8))
     @settings(max_examples=10, deadline=5000)
@@ -472,8 +523,13 @@ class TestCacheStampedePrevention:
         assert all(result == "fetched_value" for result in results)
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheDeleteProperties:
     """Test cache deletion properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(num_keys=st.integers(min_value=1, max_value=30))
     @settings(max_examples=15, deadline=2000)
@@ -515,8 +571,13 @@ class TestCacheDeleteProperties:
             assert cache.get(f"clear:key:{i}") is None
 
 
+@pytest.mark.xdist_group(name="property_cache_properties_tests")
 class TestCacheLevelIsolation:
     """Test cache level isolation properties"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(value=st.text(min_size=1, max_size=50))
     @settings(max_examples=15, deadline=2000)

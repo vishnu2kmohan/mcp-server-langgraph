@@ -5,6 +5,7 @@ Validates that fallback models have proper credentials configured
 and that missing credentials are detected at startup.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,8 +19,13 @@ TEST_NONEXISTENT_GOOGLE_MODEL = "gemini-999-test-nonexistent"
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="config_validation_tests")
 class TestFallbackModelValidation:
     """Test fallback model credential validation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_fallback_credentials_all_present(self, caplog):
         """Test that validation passes when all credentials are present."""
@@ -165,8 +171,13 @@ class TestFallbackModelValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="config_validation_tests")
 class TestCORSValidation:
     """Test CORS configuration validation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cors_validation_wildcard_in_production(self):
         """Test that wildcard CORS is rejected in production."""
