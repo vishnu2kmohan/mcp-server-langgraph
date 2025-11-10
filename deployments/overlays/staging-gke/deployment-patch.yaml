@@ -29,11 +29,18 @@ spec:
         # Security context for container
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false  # Application needs to write temp files
+          readOnlyRootFilesystem: true  # Enable read-only root filesystem (Codex Security Fix)
           capabilities:
             drop:
               - ALL
             # No capabilities needed - app listens on port 8000 (non-privileged)
+
+        # Volume mounts for writable directories (required with readOnlyRootFilesystem)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /var/tmp
 
         # Environment variables from External Secrets
         env:
@@ -247,6 +254,7 @@ spec:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 65534
+          readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
               - ALL
@@ -262,6 +270,7 @@ spec:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 65534
+          readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
               - ALL

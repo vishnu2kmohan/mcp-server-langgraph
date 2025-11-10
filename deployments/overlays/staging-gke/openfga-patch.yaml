@@ -16,9 +16,17 @@ spec:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 1000
+          readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
               - ALL
+
+        # Volume mounts for writable directories (required with readOnlyRootFilesystem)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /var/tmp
 
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy

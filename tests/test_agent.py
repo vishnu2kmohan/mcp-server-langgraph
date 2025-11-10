@@ -369,9 +369,9 @@ class TestRedisCheckpointerLifecycle:
         """
         Test Redis checkpointer context manager is properly cleaned up.
 
-        RED: Will fail until __exit__ is called on checkpointer context.
+        GREEN: Verifies full lifecycle - creation AND cleanup.
         """
-        from mcp_server_langgraph.core.agent import create_checkpointer
+        from mcp_server_langgraph.core.agent import cleanup_checkpointer, create_checkpointer
         from mcp_server_langgraph.core.config import Settings
 
         # Mock context manager
@@ -386,16 +386,30 @@ class TestRedisCheckpointerLifecycle:
             checkpoint_redis_url="redis://localhost:6379/0",
         )
 
+        # Create checkpointer
         checkpointer = create_checkpointer(settings)
 
         # Verify context manager entered
-        assert mock_ctx.__enter__.called
+        assert mock_ctx.__enter__.called, "Context manager __enter__ should be called during creation"
 
         # Verify checkpointer returned
         assert checkpointer == mock_checkpointer
 
-        # NOTE: __exit__ should be called on application shutdown
-        # This test verifies the infrastructure is in place
+        # Verify context manager reference is stored for later cleanup
+        assert hasattr(checkpointer, "__context_manager__"), "Checkpointer must store context manager reference"
+        assert checkpointer.__context_manager__ == mock_ctx
+
+        # 🟢 GREEN: Call cleanup_checkpointer to trigger __exit__
+        cleanup_checkpointer(checkpointer)
+
+        # Verify context manager __exit__ was called to release Redis connections
+        assert mock_ctx.__exit__.called, (
+            "Redis checkpointer context manager __exit__ must be called to properly "
+            "release connections and prevent resource leaks."
+        )
+
+        # Verify __exit__ was called with correct arguments (None, None, None for normal shutdown)
+        mock_ctx.__exit__.assert_called_once_with(None, None, None)
 
     @patch("mcp_server_langgraph.core.agent.RedisSaver")
     def test_redis_checkpointer_stores_context_for_cleanup(self, mock_redis_saver):

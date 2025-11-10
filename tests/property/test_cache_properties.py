@@ -368,10 +368,13 @@ class TestCacheTTLBehavior:
         # Wait for expiration (add buffer)
         time.sleep(ttl_seconds + 0.5)
 
-        # Property: Should be expired
-        cache.get("expiring:key")  # Don't assign to avoid F841 lint error
-        # Note: cachetools may not guarantee exact expiration timing
-        # We just verify it eventually expires or is None
+        # 🔴 RED → 🟢 GREEN: Assert TTL expiration behavior
+        # Property: Cached values must expire after TTL
+        result = cache.get("expiring:key")
+        assert result is None, (
+            f"Cache value should expire after {ttl_seconds}s TTL, but got: {result}\n"
+            f"This indicates cachetools TTL is not working as expected."
+        )
 
     @given(cache_type=st.sampled_from(list(CACHE_TTLS.keys())))
     @settings(max_examples=10, deadline=1000)

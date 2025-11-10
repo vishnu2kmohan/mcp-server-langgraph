@@ -23,9 +23,19 @@ spec:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 1000
+          readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
               - ALL
+
+        # Volume mounts for writable directories (required with readOnlyRootFilesystem)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /var/tmp
+        - name: cache
+          mountPath: /opt/keycloak/data/tmp  # Keycloak temp directory
 
         env:
         # Update database connection to use Cloud SQL via localhost
