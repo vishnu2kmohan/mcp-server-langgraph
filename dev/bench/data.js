@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762783750095,
+  "lastUpdate": 1762788326215,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38862,6 +38862,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002082048499086334",
             "extra": "mean: 57.67324417930693 usec\nrounds: 5111"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "27397fc81e3791672b5cb011cd8bea766fcfed9f",
+          "message": "fix(tests): fix API key test failures due to APIKeyManager signature changes\n\nFix pre-existing test failures in API key security tests caused by mismatch\nbetween test mocks and actual APIKeyManager implementation.\n\nISSUES FIXED:\n\n1. **Function signature mismatch** (3 occurrences):\n   - Tests called: `create_api_key(username=..., description=..., expires_in_days=...)`\n   - Actual signature: `create_api_key(user_id=..., name=..., expires_days=...)`\n   - Fixed in lines: 80, 279, 319\n\n2. **Missing mock for get_user_attributes** (3 occurrences):\n   - Implementation calls: `await self.keycloak.get_user_attributes(user_id)`\n   - Tests didn't mock this method, causing coroutine errors\n   - Added mocks in lines: 67, 263, 305\n\n3. **Wrong method name in mocks** (5 occurrences):\n   - Tests mocked: `update_user`\n   - Implementation calls: `update_user_attributes`\n   - Fixed in lines: 68, 85, 89, 282, 285, 322, 352\n\nCHANGES:\n- tests/security/test_api_key_indexed_lookup.py:\n  * Line 67, 68: Add get_user_attributes mock, change update_user → update_user_attributes\n  * Line 80: Fix parameters: username → user_id, description → name, expires_in_days → expires_days\n  * Line 85, 89, 90: Change update_user → update_user_attributes references\n  * Line 263: Add get_user_attributes mock\n  * Line 279: Fix parameters: username → user_id, description → name, expires_in_days → expires_days\n  * Line 282, 285: Change update_user → update_user_attributes references\n  * Line 305: Add get_user_attributes mock with existing keys\n  * Line 319: Fix parameters: username → user_id, description → name, expires_in_days → expires_days\n  * Line 322: Change update_user → update_user_attributes reference\n  * Line 352: Change update_user → update_user_attributes reference\n\nTEST RESULTS:\n- ✅ test_create_api_key_stores_hash_in_keycloak_attribute: PASSED\n- ✅ test_multiple_api_keys_per_user_supported: PASSED\n- ✅ Both tests now correctly mock the APIKeyManager methods\n- ⚠️  Note: Some tests still consume excessive memory (addressed in previous commit)\n\nRELATED:\n- Follows previous commit: fix(tests): prevent excessive memory consumption\n- Tests now work correctly with current APIKeyManager implementation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-10T10:24:03-05:00",
+          "tree_id": "7d8ce57104999c3f083bca4597b71514af26cf82",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/27397fc81e3791672b5cb011cd8bea766fcfed9f"
+        },
+        "date": 1762788324046,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.37120198468935,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009251922031293376",
+            "extra": "mean: 6.926589141413747 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 146.40481452927605,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000375337974033327",
+            "extra": "mean: 6.830376468254966 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44024.56746964521,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.71458999999254 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47748.67390012828,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.94298999992361 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45555.65830888591,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.951169999994136 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.17470487323712,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.150001389999943 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.428640081169938,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.47040636 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.967971558715298,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.32131352999997 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1336737.5581086976,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 748.0900001155533 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13605.495858399285,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 73.49971000010669 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2924.763728811328,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 341.907960000043 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2984.711115780512,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.0408000000016 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59801.22806419191,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020973541258609505",
+            "extra": "mean: 16.722064619251274 usec\nrounds: 12504"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17115.69045096695,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00001940448714096091",
+            "extra": "mean: 58.425922276685306 usec\nrounds: 5288"
           }
         ]
       }
