@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762747226020,
+  "lastUpdate": 1762782702724,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38618,6 +38618,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000015570926952492247",
             "extra": "mean: 57.33540643798091 usec\nrounds: 5654"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "ab7cf8cd00e3b20f5e475b61a005c42f9e5285a0",
+          "message": "fix(tests): fix deprecations and test failures from status report\n\nFixes multiple test issues uncovered by comprehensive test status report.\n\nChanges:\n- Fix Azure Database HA test to check for standby_availability_zone:\n  * tests/infrastructure/test_database_ha.py:137\n  * Azure Flexible Server uses high_availability block with standby_availability_zone\n  * Test now accepts either zone_redundant, ZoneRedundant, or standby_availability_zone\n\n- Remove ast.Str deprecation (Python 3.14):\n  * tests/meta/test_fixture_validation.py:362\n  * Replaced ast.Str check with comment noting deprecation\n  * ast.Str removed in Python 3.14, use ast.Constant instead\n\n- Add missing _extract_marker_name method to TestCLIToolGuards:\n  * tests/meta/test_suite_validation.py:802-827\n  * Method was being called but not defined in class\n  * Now properly extracts pytest marker names from decorators\n\nTest Results:\n- Azure HA test now passes (was failing before)\n- ast.Str deprecation warning fixed\n- TestCLIToolGuards now runs correctly (previously crashed with AttributeError)\n- All meta-tests execute successfully\n\nNote: TestCLIToolGuards now correctly identifies tests needing kubectl/helm guards.\nThis is expected behavior - the test is working as designed to catch unguarded CLI usage.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-10T08:50:23-05:00",
+          "tree_id": "d905f22aef8529d5a1f7d967953832c113cce332",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/ab7cf8cd00e3b20f5e475b61a005c42f9e5285a0"
+        },
+        "date": 1762782701290,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.4705722798271,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008514544555204627",
+            "extra": "mean: 6.921824868687345 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.72490785153602,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001158522307263032",
+            "extra": "mean: 6.678915447999998 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 43972.22186808642,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.741629999956103 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46774.04115545211,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.379380000041692 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45030.80557433149,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.207019999882505 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.01753865388588,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.15417321000001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.408597809658648,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.523557229999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.975195307274152,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.24866372999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1370313.5277642875,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 729.7599999844806 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12869.99796268278,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 77.70008999997913 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3033.032483808321,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 329.70302999999035 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2972.6573490706915,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.3993499999651 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60265.96135216321,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020554714324624535",
+            "extra": "mean: 16.593114546974792 usec\nrounds: 12903"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17100.322917986545,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017045790790835352",
+            "extra": "mean: 58.47842785168549 usec\nrounds: 4366"
           }
         ]
       }
