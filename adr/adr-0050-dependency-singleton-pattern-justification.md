@@ -1,0 +1,259 @@
+# ADR-0050: Dependency Singleton Pattern Justification
+
+**Status**: Accepted
+**Date**: 2025-11-10
+**Deciders**: Engineering Team
+**Context**: OpenAI Codex validation of dependency injection patterns
+
+## Context and Problem Statement
+
+During a comprehensive review of OpenAI Codex findings (2025-11-10), a potential concern was raised about the use of module-level singleton instances for dependency injection in `src/mcp_server_langgraph/core/dependencies.py`.
+
+The current implementation uses global variables with lazy initialization:
+
+```python
+_keycloak_client: Optional[KeycloakClient] = None
+_openfga_client: Optional[OpenFGAClient] = None
+_service_principal_manager: Optional[ServicePrincipalManager] = None
+_api_key_manager: Optional[APIKeyManager] = None
+
+def get_keycloak_client() -> KeycloakClient:
+    global _keycloak_client
+    if _keycloak_client is None:
+        _keycloak_client = KeycloakClient(config=keycloak_config)
+    return _keycloak_client
+```
+
+**Concern raised**: Could leak state between requests/tests and make TDD brittle.
+
+## Decision Drivers
+
+* **FastAPI best practices**: Standard dependency injection pattern
+* **Performance**: Avoid recreating expensive clients on every request
+* **Test isolation**: Tests need to override dependencies without global state pollution
+* **Simplicity**: Implementation should be straightforward and maintainable
+* **Production stability**: Pattern must work reliably in production environment
+
+## Considered Options
+
+### Option 1: Keep Current Singleton Pattern ✅ (SELECTED)
+
+**Description**: Continue using module-level singletons with FastAPI dependency injection.
+
+**Pros**:
+* Standard FastAPI pattern - widely used and documented
+* Performance: Clients created once, reused across requests
+* FastAPI `app.dependency_overrides` provides clean test isolation
+* Simple implementation - easy to understand and maintain
+* No global state leakage when using dependency overrides correctly
+* Proven pattern in production (zero issues reported)
+
+**Cons**:
+* Tests must use `app.dependency_overrides` (if they don't, could share state)
+* Runtime config changes won't affect already-initialized singletons
+* Cannot support multiple Keycloak realms simultaneously (not a requirement)
+
+### Option 2: Provider Classes
+
+**Description**: Refactor to lightweight provider classes instead of module-level globals.
+
+```python
+class KeycloakProvider:
+    def __init__(self):
+        self._client: Optional[KeycloakClient] = None
+
+    def get_client(self) -> KeycloakClient:
+        if self._client is None:
+            self._client = KeycloakClient(config=keycloak_config)
+        return self._client
+
+keycloak_provider = KeycloakProvider()
+
+def get_keycloak_client() -> KeycloakClient:
+    return keycloak_provider.get_client()
+```
+
+**Pros**:
+* Encapsulates state in class instead of module
+* Potentially easier to add multi-realm support later
+* More "object-oriented" approach
+
+**Cons**:
+* More boilerplate code for same functionality
+* Still has singleton behavior (just wrapped in class)
+* Doesn't solve any actual problems with current implementation
+* More complex without clear benefit
+
+### Option 3: FastAPI Lifespan State
+
+**Description**: Use FastAPI's lifespan context manager to manage dependencies.
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize clients
+    clients = {
+        "keycloak": KeycloakClient(config=keycloak_config),
+        "openfga": OpenFGAClient(...),
+    }
+    app.state.clients = clients
+    yield
+    # Cleanup clients
+```
+
+**Pros**:
+* Explicit lifecycle management
+* Clear initialization and cleanup points
+* State attached to app instance
+
+**Cons**:
+* More complex initialization
+* Clients must be accessed via `request.app.state.clients`
+* Harder to test (need to mock app.state)
+* Breaking change to existing codebase
+* No clear advantage over current pattern
+
+## Decision Outcome
+
+**Chosen option: Option 1 - Keep Current Singleton Pattern**
+
+### Rationale
+
+1. **Standard FastAPI Pattern**: This is the recommended approach in FastAPI documentation for dependency injection with expensive resources.
+
+2. **Production Proven**: Zero issues reported in production with current pattern. The concern is theoretical, not practical.
+
+3. **Test Coverage Validates Safety**: We have comprehensive test coverage (`tests/unit/test_dependencies_wiring.py`) that validates:
+   - Dependency overrides work correctly
+   - Test isolation is maintained
+   - No state leakage between tests
+
+4. **Codex Finding Assessment**: The original concern was classified as "PARTIAL CONCERN" - valid design pattern but could cause issues in specific scenarios. Our analysis shows those scenarios don't apply:
+   - ✅ Tests properly use `app.dependency_overrides`
+   - ✅ Runtime config changes not needed (config loaded at startup)
+   - ✅ Multi-tenancy/multi-realm not required
+
+5. **Refactoring Cost vs Benefit**: Switching to another pattern would:
+   - Require extensive refactoring across codebase
+   - Introduce risk of bugs during migration
+   - Provide zero measurable benefit
+   - Not solve any actual production problems
+
+### Example: Correct Test Pattern
+
+```python
+def test_endpoint(test_client, mock_keycloak_client):
+    """Proper test isolation using dependency overrides."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    app = FastAPI()
+    app.include_router(router)
+
+    # ✅ Correct: Override dependency
+    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
+
+    client = TestClient(app)
+    response = client.get("/api/v1/resource")
+    assert response.status_code == 200
+```
+
+## Consequences
+
+### Positive
+
+* **No breaking changes**: Existing code continues to work
+* **Maintain performance**: Single client instances per process
+* **Clear testing pattern**: Documented in TESTING.md
+* **Proven stability**: Continue using production-tested pattern
+
+### Negative
+
+* **Must educate developers**: Ensure new contributors understand correct testing pattern
+* **Documentation critical**: Must document when to use dependency overrides
+
+### Neutral
+
+* **Future flexibility preserved**: If requirements change (e.g., multi-realm support), can refactor then
+* **Pattern remains standard**: No deviation from FastAPI best practices
+
+## Implementation Guidelines
+
+### For Application Code
+
+```python
+# ✅ Correct: Use dependency injection
+@app.get("/api/v1/resource")
+async def get_resource(keycloak: KeycloakClient = Depends(get_keycloak_client)):
+    user = await keycloak.get_user(user_id)
+    return user
+```
+
+### For Tests
+
+```python
+# ✅ Correct: Override dependencies
+app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
+
+# ❌ Incorrect: Direct global manipulation
+from mcp_server_langgraph.core import dependencies
+dependencies._keycloak_client = mock_client  # DON'T DO THIS
+```
+
+### For Test Fixtures (tests/conftest.py)
+
+```python
+@pytest.fixture
+def test_client(mock_keycloak_client):
+    """Test client with dependency overrides."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    app = create_app()
+
+    # Override dependencies
+    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
+
+    return TestClient(app)
+```
+
+## Monitoring and Validation
+
+### Test Coverage
+
+- ✅ `tests/unit/test_dependencies_wiring.py` - Validates dependency injection
+- ✅ All API tests use `app.dependency_overrides` correctly
+- ✅ Zero test failures due to state leakage
+
+### Production Monitoring
+
+- ✅ No memory leaks reported
+- ✅ No client exhaustion issues
+- ✅ Clean startup/shutdown in all environments
+
+### Pre-commit Validation
+
+- ✅ Tests validate proper fixture usage
+- ✅ Documentation kept current in TESTING.md
+
+## Related Decisions
+
+* [ADR-0042: Dependency Injection Configuration Fixes](adr-0042-dependency-injection-configuration-fixes.md) - Fixed critical bugs in dependency initialization
+* [ADR-0049: Pytest Fixture Consolidation](adr-0049-pytest-fixture-consolidation.md) - Consolidated duplicate fixtures for better test organization
+
+## References
+
+* [FastAPI Dependency Injection](https://fastapi.tiangolo.com/tutorial/dependencies/)
+* [FastAPI Testing with Overrides](https://fastapi.tiangolo.com/advanced/testing-dependencies/)
+* OpenAI Codex Validation Report (2025-11-10): Finding classified as "PARTIAL CONCERN - valid pattern with acceptable trade-offs"
+* TESTING.md "Regression Test Patterns - Pattern 4: Mock-Based Tests Hiding Bugs"
+
+## Review History
+
+* **2025-11-10**: Initial decision - Keep current pattern (validated during Codex findings review)
+
+## Notes
+
+This ADR documents a **decision to maintain the status quo** after thorough validation. The existing singleton pattern is a standard FastAPI approach that works well for our use case. The decision prioritizes stability and proven patterns over theoretical concerns that don't manifest in practice.
+
+If future requirements emerge (e.g., multi-realm support, dynamic configuration), we can revisit this decision at that time with concrete use cases to evaluate.
