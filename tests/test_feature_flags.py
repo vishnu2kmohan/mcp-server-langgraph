@@ -188,12 +188,13 @@ class TestFeatureFlags:
         flags2 = FeatureFlags(openfga_strict_mode=True)
         assert flags2.openfga_strict_mode is True
 
-    @pytest.mark.xfail(strict=True, reason="Integration with config.py not yet implemented")
+    @pytest.mark.xfail(reason="Integration with config.py not yet implemented")
     @pytest.mark.integration
     def test_feature_flag_integration_with_config(self):
         """Test feature flags integrate with main config"""
         # This would test integration with config.py
         # Will be implemented when config.py is updated
+        pytest.fail("Feature flag integration with config.py not yet implemented")
 
 
 @pytest.mark.unit

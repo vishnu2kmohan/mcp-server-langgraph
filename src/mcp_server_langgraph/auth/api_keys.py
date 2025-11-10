@@ -272,6 +272,9 @@ class APIKeyManager:
             expires_at_str = cached_user.get("expires_at")
             if expires_at_str:
                 expires_at = datetime.fromisoformat(expires_at_str)
+                # Ensure timezone-aware comparison (handle both naive and aware datetimes)
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
                 if datetime.now(timezone.utc) > expires_at:
                     # Expired, invalidate cache and continue to full search
                     await self._invalidate_cache(api_key_hash)
@@ -335,6 +338,9 @@ class APIKeyManager:
                         expires_at_str = attributes.get(f"apiKey_{key_id}_expiresAt")
                         if expires_at_str:
                             expires_at = datetime.fromisoformat(expires_at_str)
+                            # Ensure timezone-aware comparison (handle both naive and aware datetimes)
+                            if expires_at.tzinfo is None:
+                                expires_at = expires_at.replace(tzinfo=timezone.utc)
                             if datetime.now(timezone.utc) > expires_at:
                                 continue  # Expired
 

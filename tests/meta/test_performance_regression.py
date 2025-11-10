@@ -38,9 +38,14 @@ class TestTimeoutTestPerformance:
             pytest.skip(f"Timeout test file not found: {test_file}")
 
         # Run the timeout tests and measure execution time
+        # Use venv pytest to ensure dependencies are available
+        import sys
+
+        pytest_path = Path(sys.executable).parent / "pytest"
+
         start = time.time()
         result = subprocess.run(
-            ["pytest", str(test_file), "-v", "--tb=short", "-x"],
+            [str(pytest_path), str(test_file), "-v", "--tb=short", "-x"],
             capture_output=True,
             text=True,
             timeout=10,  # Kill if it takes more than 10s

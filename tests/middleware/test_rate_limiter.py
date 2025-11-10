@@ -38,6 +38,7 @@ from mcp_server_langgraph.middleware.rate_limiter import (
 )
 
 
+@pytest.fixture
 def mock_request_no_auth():
     """Mock request without authentication"""
     request = Mock(spec=Request)

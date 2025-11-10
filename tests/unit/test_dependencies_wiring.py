@@ -117,7 +117,8 @@ class TestOpenFGAClientWiring:
                 "is missing, not create a broken client that will fail at runtime"
             )
 
-    def test_openfga_client_created_when_config_complete(self):
+    @pytest.mark.asyncio
+    async def test_openfga_client_created_when_config_complete(self):
         """
         OpenFGA client SHOULD be created when all required config is present.
         """

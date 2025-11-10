@@ -101,6 +101,9 @@ class TestFixtureDecorators:
             "monkeypatch",
             "capsys",
             "capfd",
+            "caplog",  # Built-in logging capture
+            "capfdbinary",
+            "capsysbinary",
             "tmpdir",
             "tmp_path",
             "pytestconfig",
@@ -111,6 +114,7 @@ class TestFixtureDecorators:
             "event_loop",  # pytest-asyncio
             "unused_tcp_port",  # pytest-asyncio
             "unused_tcp_port_factory",  # pytest-asyncio
+            "benchmark",  # pytest-benchmark
         }
 
         # Find test functions with undefined fixture parameters
@@ -126,22 +130,20 @@ class TestFixtureDecorators:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
-                for node in ast.walk(tree):
+                # Only check top-level functions (not nested inside other functions)
+                for node in tree.body:
+                    # Handle module-level functions and class methods
                     if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
-                        # Skip Hypothesis tests (they use strategies, not fixtures)
-                        if self._has_hypothesis_given_decorator(node):
-                            continue
-
-                        # Check each parameter
-                        for arg in node.args.args:
-                            param_name = arg.arg
-                            if param_name == "self":
-                                continue
-
-                            # Check if fixture exists
-                            if param_name not in defined_fixtures and param_name not in builtin_fixtures:
-                                rel_path = test_file.relative_to(tests_dir.parent)
-                                violations.append((str(rel_path), node.name, param_name, node.lineno))
+                        self._check_test_function_params(
+                            node, test_file, tests_dir, defined_fixtures, builtin_fixtures, violations
+                        )
+                    elif isinstance(node, ast.ClassDef):
+                        # Check class methods
+                        for class_node in node.body:
+                            if isinstance(class_node, ast.FunctionDef) and class_node.name.startswith("test_"):
+                                self._check_test_function_params(
+                                    class_node, test_file, tests_dir, defined_fixtures, builtin_fixtures, violations
+                                )
 
             except (SyntaxError, UnicodeDecodeError):
                 continue
@@ -308,6 +310,122 @@ class TestFixtureDecorators:
                         return True
 
         return False
+
+    def _check_test_function_params(
+        self,
+        func_node: ast.FunctionDef,
+        test_file: Path,
+        tests_dir: Path,
+        defined_fixtures: Set[str],
+        builtin_fixtures: Set[str],
+        violations: List[Tuple[str, str, str, int]],
+    ) -> None:
+        """
+        Check test function parameters for valid fixtures
+
+        Args:
+            func_node: AST node for the test function
+            test_file: Path to the test file
+            tests_dir: Base tests directory
+            defined_fixtures: Set of defined fixture names
+            builtin_fixtures: Set of builtin fixture names
+            violations: List to append violations to
+        """
+        # Skip Hypothesis tests (they use strategies, not fixtures)
+        if self._has_hypothesis_given_decorator(func_node):
+            return
+
+        # Get parametrize parameter names for this test
+        parametrize_params = self._get_parametrize_params(func_node)
+
+        # Get patch parameter names (from @patch decorators)
+        patch_params = self._get_patch_params(func_node)
+
+        # Check each parameter
+        for arg in func_node.args.args:
+            param_name = arg.arg
+            if param_name == "self":
+                continue
+
+            # Skip parametrize parameters
+            if param_name in parametrize_params:
+                continue
+
+            # Skip patch parameters (from @patch decorators)
+            if param_name in patch_params:
+                continue
+
+            # Check if fixture exists
+            if param_name not in defined_fixtures and param_name not in builtin_fixtures:
+                rel_path = test_file.relative_to(tests_dir.parent)
+                violations.append((str(rel_path), func_node.name, param_name, func_node.lineno))
+
+    def _get_parametrize_params(self, func_node: ast.FunctionDef) -> Set[str]:
+        """
+        Get parameter names from @pytest.mark.parametrize decorators
+
+        Args:
+            func_node: AST node for the function
+
+        Returns:
+            Set of parameter names from parametrize decorators
+        """
+        params = set()
+
+        for decorator in func_node.decorator_list:
+            # Check for @pytest.mark.parametrize("param_name", ...)
+            if isinstance(decorator, ast.Call):
+                if isinstance(decorator.func, ast.Attribute):
+                    # Check if it's pytest.mark.parametrize
+                    if (
+                        isinstance(decorator.func.value, ast.Attribute)
+                        and isinstance(decorator.func.value.value, ast.Name)
+                        and decorator.func.value.value.id == "pytest"
+                        and decorator.func.value.attr == "mark"
+                        and decorator.func.attr == "parametrize"
+                    ):
+                        # Get first argument (parameter names)
+                        if decorator.args and isinstance(decorator.args[0], ast.Constant):
+                            param_str = decorator.args[0].value
+                            # Handle "param" or "param1,param2" formats
+                            param_names = [p.strip() for p in param_str.split(",")]
+                            params.update(param_names)
+
+        return params
+
+    def _get_patch_params(self, func_node: ast.FunctionDef) -> Set[str]:
+        """
+        Get parameter names from @patch decorators
+
+        @patch decorators inject mock objects as function parameters.
+        Multiple @patch decorators inject parameters in reverse order.
+
+        Args:
+            func_node: AST node for the function
+
+        Returns:
+            Set of parameter names that come from @patch decorators
+        """
+        # Count @patch decorators (they inject parameters in reverse order)
+        patch_count = 0
+
+        for decorator in func_node.decorator_list:
+            # Check for @patch("...") or @patch.object(...)
+            if isinstance(decorator, ast.Call):
+                if isinstance(decorator.func, ast.Name) and decorator.func.id == "patch":
+                    patch_count += 1
+                elif isinstance(decorator.func, ast.Attribute) and decorator.func.attr in ["object", "dict", "multiple"]:
+                    patch_count += 1
+
+        # Get the last N parameters (where N = patch_count)
+        # @patch decorators inject parameters in reverse order of application
+        if patch_count > 0 and func_node.args.args:
+            # Skip 'self' if present
+            args = [arg.arg for arg in func_node.args.args if arg.arg != "self"]
+            # Last N parameters are from @patch decorators
+            return set(args[:patch_count]) if patch_count <= len(args) else set(args)
+
+        return set()
 
     def _find_placeholder_tests(self) -> List[Tuple[str, str, int]]:
         """

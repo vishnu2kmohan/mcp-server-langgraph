@@ -570,7 +570,7 @@ class TestUserProviderInterface:
             UserProvider()
 
     @pytest.mark.asyncio
-    async def test_inmemory_implements_interface(self):
+    async def test_inmemory_implements_interface(self, inmemory_provider_with_users):
         """Test InMemoryUserProvider implements all abstract methods"""
         provider = inmemory_provider_with_users  # Use fixture
 
