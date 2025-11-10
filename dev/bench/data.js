@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762746058853,
+  "lastUpdate": 1762747226020,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38496,6 +38496,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000019251270799654537",
             "extra": "mean: 47.94751011323928 usec\nrounds: 5389"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "1b508e3815a78cc653bd679b3fe371acc6286bdf",
+          "message": "fix(shell,docker): add variable quoting, rm safety, and health check fixes\n\n**Shell Script Security Fixes**:\n\n1. **check-pr-status.sh** - Quote all variables (lines 34, 52-58, 71-72, 114, 123-127, 139-146):\n   - Quote $pr_number in gh commands → \"$pr_number\"\n   - Quote $total_checks, $passing, $failing in conditionals\n   - Prevents word-splitting on special characters\n\n2. **build-infisical-wheels.sh** - Validate OUTPUT_DIR before rm -rf (line 99-104):\n   - Check OUTPUT_DIR not empty, not root (/), not /tmp\n   - Exit with error message if validation fails\n   - Added shellcheck disable=SC2115 with justification\n\n**Docker Compose Health Check Fixes**:\n\n3. **Keycloak** (line 146-148):\n   - Changed: curl (not in image) → kc.sh show-config\n   - Native Keycloak command, no external dependencies\n\n4. **Qdrant** (line 232):\n   - Changed: grpc_health_probe (not in image) → wget + HTTP /healthz\n   - Uses Qdrant's built-in HTTP health endpoint\n\n5. **Health Check Intervals** (lines 56, 103, 173, 198):\n   - Fixed interval 2s → 3s (must be >= timeout 3s)\n   - Postgres, OpenFGA, Redis session, Redis checkpoint\n\n**Testing**:\n- test_check_pr_status_quotes_variables ✅\n- test_build_infisical_wheels_rm_safety ✅\n- test_keycloak_health_check_uses_native_command ✅\n- test_qdrant_health_check_uses_available_command ✅\n- test_all_health_checks_have_proper_intervals ✅\n- All 5/5 shell and Docker tests passing\n\n**Impact**:\n- Fixes shellcheck failures in shell-tests.yml\n- Fixes Docker health check timeouts in e2e-tests.yaml\n- Prevents unsafe rm -rf operations\n\nRelated: #codex-findings Phases 5-6 (Shell Scripts, Docker Health Checks)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T22:58:01-05:00",
+          "tree_id": "8afe1b9bc3ef0c545671dc603ddbd28673fe2b69",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/1b508e3815a78cc653bd679b3fe371acc6286bdf"
+        },
+        "date": 1762747224008,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 143.92278917468516,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009813823509880489",
+            "extra": "mean: 6.948169957894978 msec\nrounds: 95"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.30133215216802,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012440093324206565",
+            "extra": "mean: 6.697863880951841 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45368.18093570396,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.041879999932235 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 46783.341200865965,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.375129999938736 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 46250.6879789389,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.621300000020938 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.55509927845333,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.139932099999953 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.440435131184845,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.43917783999996 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.974264019966512,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.25802385000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1444064.1740812315,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 692.4900000626621 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12647.538276835574,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 79.06676999994033 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3000.785035372664,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 333.2461300000489 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2975.5059327125086,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.07729999999947 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60667.689763922186,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019428226735644863",
+            "extra": "mean: 16.4832385062185 usec\nrounds: 13094"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17441.22981114103,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000015570926952492247",
+            "extra": "mean: 57.33540643798091 usec\nrounds: 5654"
           }
         ]
       }
