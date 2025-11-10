@@ -461,7 +461,7 @@ class TestStandaloneVerifyToken:
         """Test standalone token verification succeeds"""
         token = auth_middleware_with_users.create_token("alice")
 
-        result = await verify_token(token, secret_key="test-secret")
+        result = await verify_token(token, secret_key="test-key")  # FIXED: Use matching secret from fixture
 
         assert result.valid is True
         assert result.payload["username"] == "alice"
