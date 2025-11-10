@@ -113,6 +113,38 @@ def pytest_configure(config):
     # Store benchmark flag in config for use in pytest_collection_modifyitems
     config._run_benchmarks = config.getoption("--run-benchmarks")
 
+    # Enhancement #3: Memory-Aware Worker Tuning
+    # Auto-tune pytest-xdist workers based on available RAM to prevent OOM
+    if hasattr(config.option, "numprocesses") and config.option.numprocesses == "auto":
+        try:
+            import psutil
+
+            # Get available memory in GB
+            available_gb = psutil.virtual_memory().available / (1024**3)
+
+            # Allocate 2GB per worker as safety margin
+            # (empirical data: our tests use ~1-2GB RES per worker with memory protections)
+            max_workers_by_memory = int(available_gb / 2)
+
+            # Don't exceed CPU count (diminishing returns beyond CPU count)
+            cpu_count = os.cpu_count() or 4
+            max_workers = min(max_workers_by_memory, cpu_count)
+
+            # Ensure at least 1 worker
+            max_workers = max(1, max_workers)
+
+            config.option.numprocesses = max_workers
+
+            logging.info(
+                f"Memory-aware worker tuning: {available_gb:.1f}GB available → "
+                f"{max_workers} workers (CPU: {cpu_count}, Memory limit: {max_workers_by_memory})"
+            )
+        except ImportError:
+            # psutil not available - fallback to CPU count
+            cpu_count = os.cpu_count() or 4
+            config.option.numprocesses = cpu_count
+            logging.info(f"psutil not available - using CPU count: {cpu_count} workers")
+
 
 def pytest_collection_modifyitems(config, items):
     """

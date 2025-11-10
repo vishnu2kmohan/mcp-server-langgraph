@@ -80,7 +80,9 @@ dev = [
     "pytest-mock>=3.12.0",
     "pytest-benchmark>=4.0.0",
     "pytest-xdist>=3.5.0",  # Parallel test execution for faster test runs
+    "pytest-split>=0.9.0",  # CI/CD test distribution for 4x additional parallelism
     "pytest-testmon>=2.1.0",  # Selective test execution based on code changes
+    "psutil>=6.1.0",  # Memory monitoring for auto-tuning pytest-xdist workers
     # Docker infrastructure management
     "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
     "python-on-whales>=0.74.0",  # Docker management library used by test infrastructure
@@ -371,7 +373,8 @@ python_functions = ["test_*"]
 # Default options for all test runs (optimized for development speed)
 # Coverage disabled by default for faster iteration (20-30% speedup)
 # CI and coverage targets explicitly enable coverage with --cov flag
-addopts = "-v --strict-markers --tb=short"
+# --dist loadscope: Better fixture reuse in pytest-xdist (10-20% speedup)
+addopts = "-v --strict-markers --tb=short --dist loadscope"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
