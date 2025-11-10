@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762744535141,
+  "lastUpdate": 1762745664681,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38252,6 +38252,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000025167693583760905",
             "extra": "mean: 49.37068253185299 usec\nrounds: 4013"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "d884cc55a6e84c3413d1bffd595625b32c8c80ad",
+          "message": "docs(testing): add comprehensive regression test patterns from Codex findings\n\nDocument proven regression test patterns and anti-patterns discovered while\nresolving OpenAI Codex findings. This knowledge will help prevent similar\nbugs from occurring in the future.\n\n## New Section: Regression Test Patterns\n\nAdded comprehensive documentation covering:\n\n### Pattern 1: API Contract Violations\n- Problem: Implementation doesn't match documented schema\n- Example: API key \"created\" field stored but not returned\n- Solution: Test manager layer directly, validate ALL schema fields\n- Files: tests/test_api_key_manager.py:105-141\n\n### Pattern 2: API Parameter Type Confusion\n- Problem: Method expects UUID but receives username\n- Example: get_user() called with username instead of UUID\n- Solution: Mock both correct/incorrect methods, make wrong one fail\n- Files: tests/test_service_principal_manager.py:320-368\n\n### Pattern 3: Test Time Bombs (Future-Dated Values)\n- Problem: Tests use \"gpt-5\" which breaks when OpenAI releases it\n- Solution: Use obviously fake constants (gpt-999-test-nonexistent)\n- Benefit: Tests focus on behavior, not specific values\n- Files: tests/test_config_validation.py:16-17\n\n### Pattern 4: Mock-Based Tests Hiding Bugs\n- Problem: Mocks provide fields real implementation doesn't return\n- Solution: Test real implementation for critical contract validation\n- Trade-offs table: Mock vs Real vs Hybrid approaches\n- Recommendation: Hybrid approach for most scenarios\n\n### Pattern 5: CLI Smoke Tests\n- Problem: Zero test coverage for CLI commands\n- Solution: Test help output and command accessibility\n- Benefit: Fast safety net for refactoring\n- Files: tests/test_cli.py:1-113\n\n## Prevention Guidance\n\nAdded:\n- Pre-commit hook examples for preventing regressions\n- Checklist for writing effective regression tests\n- Mock vs integration test trade-off analysis\n- Best practices from real-world bug fixes\n\n## Impact\n\nFuture contributors can now:\n- Learn from past mistakes without repeating them\n- Write better regression tests using documented patterns\n- Understand when to use mocks vs real implementations\n- Prevent similar Codex findings from occurring\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T22:32:34-05:00",
+          "tree_id": "80ac0db8e694de4c53516f68001b5d5c535e55df",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/d884cc55a6e84c3413d1bffd595625b32c8c80ad"
+        },
+        "date": 1762745663635,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 145.02346820521203,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014559177901061197",
+            "extra": "mean: 6.895435699999766 msec\nrounds: 100"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.46928457152617,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00019023047974522093",
+            "extra": "mean: 6.6903377698410385 msec\nrounds: 126"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45568.90268722814,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.944789999963632 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48743.34775148618,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.51562000005447 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47904.42109916406,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.874899999938634 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.37677362852912,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.144647590000062 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.429711560715,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.46756795000002 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.96786936256502,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.32234208000006 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1445086.7052303113,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 691.9999999865922 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 13554.038256267308,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 73.77875000003087 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 3010.569386580265,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 332.1630799999298 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2911.986037376611,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.40823999997383 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 60758.47099123896,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019441912196153122",
+            "extra": "mean: 16.458610358121003 usec\nrounds: 12763"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17828.906875452907,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000016296560536175535",
+            "extra": "mean: 56.088688273806305 usec\nrounds: 5492"
           }
         ]
       }
