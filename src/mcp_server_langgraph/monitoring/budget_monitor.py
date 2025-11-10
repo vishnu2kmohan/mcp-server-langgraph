@@ -32,7 +32,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
@@ -83,11 +83,22 @@ class Budget(BaseModel):
     enabled: bool = Field(default=True, description="Whether budget monitoring is enabled")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    class Config:
-        json_encoders = {
-            Decimal: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = ConfigDict()
+
+    @field_serializer("limit_usd")
+    def serialize_limit(self, value: Decimal) -> str:
+        """Serialize Decimal as string for JSON compatibility."""
+        return str(value)
+
+    @field_serializer("alert_thresholds")
+    def serialize_thresholds(self, value: List[Decimal]) -> List[str]:
+        """Serialize list of Decimals as strings for JSON compatibility."""
+        return [str(v) for v in value]
+
+    @field_serializer("start_date", "end_date")
+    def serialize_dates(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat() if value else None
 
 
 class BudgetStatus(BaseModel):
@@ -105,8 +116,17 @@ class BudgetStatus(BaseModel):
     days_remaining: int
     projected_end_of_period_spend: Optional[Decimal] = None
 
-    class Config:
-        json_encoders = {Decimal: str, datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict()
+
+    @field_serializer("limit_usd", "spent_usd", "remaining_usd", "utilization", "projected_end_of_period_spend")
+    def serialize_decimals(self, value: Optional[Decimal]) -> Optional[str]:
+        """Serialize Decimal as string for JSON compatibility."""
+        return str(value) if value is not None else None
+
+    @field_serializer("period_start", "period_end")
+    def serialize_dates(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
 
 class BudgetAlert(BaseModel):
@@ -122,8 +142,17 @@ class BudgetAlert(BaseModel):
     timestamp: datetime
     acknowledged: bool = False
 
-    class Config:
-        json_encoders = {Decimal: str, datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict()
+
+    @field_serializer("utilization", "threshold")
+    def serialize_decimals(self, value: Decimal) -> str:
+        """Serialize Decimal as string for JSON compatibility."""
+        return str(value)
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
 
 # ==============================================================================

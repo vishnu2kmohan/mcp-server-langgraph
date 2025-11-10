@@ -384,6 +384,7 @@ filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
     "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning",
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
+    "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",
 ]
 markers = [
     "unit: Unit tests (fast, no external dependencies)",

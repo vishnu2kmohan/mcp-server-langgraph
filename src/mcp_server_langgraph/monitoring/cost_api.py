@@ -22,7 +22,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from .budget_monitor import Budget, BudgetPeriod, BudgetStatus, get_budget_monitor
 from .cost_tracker import CostAggregator, get_cost_collector
@@ -55,11 +55,12 @@ class CostSummaryResponse(BaseModel):
     by_user: Dict[str, str]  # Decimal as string
     by_feature: Dict[str, str] = Field(default_factory=dict)
 
-    class Config:
-        json_encoders = {
-            Decimal: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = ConfigDict()
+
+    @field_serializer("period_start", "period_end")
+    def serialize_dates(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
 
 class UsageRecordResponse(BaseModel):
@@ -76,11 +77,12 @@ class UsageRecordResponse(BaseModel):
     estimated_cost_usd: str
     feature: Optional[str] = None
 
-    class Config:
-        json_encoders = {
-            Decimal: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = ConfigDict()
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
 
 class CreateBudgetRequest(BaseModel):
@@ -99,11 +101,12 @@ class TrendDataPoint(BaseModel):
     timestamp: datetime
     value: str  # Decimal as string
 
-    class Config:
-        json_encoders = {
-            Decimal: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = ConfigDict()
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
 
 class TrendsResponse(BaseModel):

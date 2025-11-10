@@ -204,7 +204,7 @@ class TestCreateAPIKey:
             },
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_create_api_key_invalid_expiration(self, test_client, mock_api_key_manager):
         """Test API key creation with invalid expiration days"""

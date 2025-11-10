@@ -231,7 +231,7 @@ class TestAPIKeyValidation:
                 "attributes": {
                     "apiKeys": [f"key:abc123:{key_hash}"],
                     "apiKey_abc123_name": "Production Key",
-                    "apiKey_abc123_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                    "apiKey_abc123_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -306,7 +306,7 @@ class TestAPIKeyValidation:
                 "username": "alice",
                 "attributes": {
                     "apiKeys": [f"key:xyz:{key_hash}"],
-                    "apiKey_xyz_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                    "apiKey_xyz_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -389,7 +389,7 @@ class TestAPIKeyListing:
         """Test listing API keys for a user"""
         # Arrange
         user_id = "user:frank"
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         mock_keycloak_client.get_user_attributes.return_value = {
             "apiKeys": [
@@ -457,7 +457,7 @@ class TestAPIKeyRotation:
         mock_keycloak_client.get_user_attributes.return_value = {
             "apiKeys": [f"key:old123:{old_hash}"],
             "apiKey_old123_name": "Production Key",
-            "apiKey_old123_created": datetime.utcnow().isoformat(),
+            "apiKey_old123_created": datetime.now(timezone.utc).isoformat(),
         }
 
         # Act

@@ -25,8 +25,8 @@ def run_async(coro):
     import asyncio
 
     try:
-        # Try to get existing event loop
-        loop = asyncio.get_event_loop()
+        # Try to get running event loop (modern approach)
+        loop = asyncio.get_running_loop()
     except RuntimeError:
         # No event loop exists, create one but don't close it
         loop = asyncio.new_event_loop()

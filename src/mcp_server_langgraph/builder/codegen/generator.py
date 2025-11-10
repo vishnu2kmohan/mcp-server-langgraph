@@ -34,7 +34,7 @@ Example:
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # Optional black formatter - gracefully degrade if not available
 try:
@@ -63,10 +63,7 @@ class EdgeDefinition(BaseModel):
     condition: Optional[str] = Field(default=None, description="Optional condition for edge")
     label: str = Field(default="", description="Edge label")
 
-    class Config:
-        """Pydantic config."""
-
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class WorkflowDefinition(BaseModel):

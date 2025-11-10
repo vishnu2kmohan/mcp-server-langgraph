@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from .pricing import calculate_cost
 
@@ -48,11 +48,17 @@ class TokenUsage(BaseModel):
     feature: Optional[str] = Field(default=None, description="Feature that triggered the call")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    class Config:
-        json_encoders = {
-            Decimal: str,  # Encode Decimal as string in JSON
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = ConfigDict()
+
+    @field_serializer("estimated_cost_usd")
+    def serialize_decimal(self, value: Decimal) -> str:
+        """Serialize Decimal as string for JSON compatibility."""
+        return str(value)
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(self, value: datetime) -> str:
+        """Serialize datetime as ISO 8601 string."""
+        return value.isoformat()
 
     def __init__(self, **data: Any):
         # Calculate total_tokens if not provided

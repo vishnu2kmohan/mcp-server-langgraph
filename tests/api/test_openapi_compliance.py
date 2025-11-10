@@ -210,7 +210,7 @@ class TestAPIContractIntegration:
     @pytest.mark.asyncio
     async def test_health_endpoint_matches_schema(self, openapi_schema):
         """Health endpoint should match OpenAPI schema"""
-        import schemathesis
+        schemathesis = pytest.importorskip("schemathesis", reason="schemathesis not installed")
         from fastapi.testclient import TestClient
 
         # FIXED: Implement actual contract testing with schemathesis
@@ -244,7 +244,7 @@ class TestAPIContractIntegration:
     @pytest.mark.asyncio
     async def test_all_endpoints_return_valid_responses(self, openapi_schema):
         """All endpoints should return responses matching their schemas"""
-        import schemathesis
+        schemathesis = pytest.importorskip("schemathesis", reason="schemathesis not installed")
         from fastapi.testclient import TestClient
 
         # FIXED: Implement schemathesis-based contract testing

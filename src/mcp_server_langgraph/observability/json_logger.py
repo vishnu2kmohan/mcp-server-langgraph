@@ -13,9 +13,9 @@ from typing import Any, Dict, Optional
 from opentelemetry import trace
 
 try:
-    from pythonjsonlogger import jsonlogger
+    from pythonjsonlogger.json import JsonFormatter
 
-    JsonFormatterBase = jsonlogger.JsonFormatter
+    JsonFormatterBase = JsonFormatter
 except (ImportError, AttributeError):
     # Fallback if pythonjsonlogger is not available
     JsonFormatterBase = logging.Formatter

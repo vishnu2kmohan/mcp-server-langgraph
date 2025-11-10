@@ -11,7 +11,7 @@ Centralized configuration for all resilience patterns:
 import os
 from typing import Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CircuitBreakerConfig(BaseModel):
@@ -22,8 +22,7 @@ class CircuitBreakerConfig(BaseModel):
     timeout_duration: int = Field(default=60, description="Seconds to stay open")
     expected_exception: type = Field(default=Exception, description="Exception type to track")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class RetryConfig(BaseModel):
