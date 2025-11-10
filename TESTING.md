@@ -567,6 +567,257 @@ def test_delete():
 
 ---
 
+## Regression Test Patterns
+
+### Overview
+
+Regression tests prevent fixed bugs from reoccurring by encoding the fix as a permanent test case. This section documents patterns for writing effective regression tests based on real Codex findings.
+
+### Pattern 1: API Contract Violations
+
+**Problem**: Implementation doesn't match documented API schema.
+
+**Example**: API key creation returned `created` timestamp to Keycloak but omitted it from the response, violating `CreateAPIKeyResponse` schema.
+
+**Regression Test Pattern**:
+```python
+def test_api_response_matches_schema():
+    """
+    REGRESSION TEST: Ensure response includes all required schema fields.
+
+    Previous bug: API stored 'created' timestamp but didn't return it,
+    causing clients to receive empty string as fallback.
+    """
+    # Arrange
+    manager = APIKeyManager(...)
+
+    # Act
+    result = await manager.create_api_key(user_id="test", name="Test Key")
+
+    # Assert - Verify ALL required fields present
+    assert "key_id" in result, "key_id is required by schema"
+    assert "api_key" in result, "api_key is required by schema"
+    assert "name" in result, "name is required by schema"
+    assert "created" in result, "created is required by CreateAPIKeyResponse schema"
+    assert "expires_at" in result, "expires_at is required by schema"
+
+    # Assert - Verify field is valid, not just present
+    assert result["created"] != "", "created must not be empty string"
+    created_dt = datetime.fromisoformat(result["created"])
+    assert abs((datetime.utcnow() - created_dt).total_seconds()) < 60
+```
+
+**Key Principles**:
+- Test against the schema/contract, not just implementation
+- Validate field presence AND validity
+- Document the original bug in test docstring
+- Use descriptive assertion messages
+
+**Files**: `tests/test_api_key_manager.py:105-141`
+
+### Pattern 2: API Parameter Type Confusion
+
+**Problem**: Method expects specific parameter type (UUID) but receives different type (username).
+
+**Example**: `get_service_principal()` called `get_user(f"svc_{service_id}")` but `get_user()` expects UUID, not username.
+
+**Regression Test Pattern**:
+```python
+def test_parameter_type_enforcement():
+    """
+    REGRESSION TEST: Ensure correct API method is used for parameter type.
+
+    Previous bug: get_user() expects UUID but was called with username,
+    causing 404 errors. Should use get_user_by_username() instead.
+    """
+    # Arrange
+    service_id = "test-service"
+    expected_username = f"svc_{service_id}"
+
+    # Mock the CORRECT method to return data
+    mock_client.get_user_by_username = AsyncMock(return_value={
+        "id": "user-uuid-123",
+        "username": expected_username,
+        ...
+    })
+
+    # Mock the INCORRECT method to raise error if called
+    mock_client.get_user = AsyncMock(
+        side_effect=Exception("get_user requires UUID, not username")
+    )
+
+    # Act
+    result = await manager.get_service_principal(service_id)
+
+    # Assert - Verify CORRECT method was called
+    mock_client.get_user_by_username.assert_called_once_with(expected_username)
+    # If get_user was called incorrectly, exception would have been raised
+    assert result is not None
+```
+
+**Key Principles**:
+- Mock both correct and incorrect methods
+- Make incorrect method raise exception to catch misuse
+- Verify exact method calls with parameter validation
+- Test the integration point, not just the function
+
+**Files**: `tests/test_service_principal_manager.py:320-368`
+
+### Pattern 3: Test Time Bombs (Future-Dated Values)
+
+**Problem**: Tests use real future values that will break when those values become reality.
+
+**Example**: Tests used "gpt-5" which will break when OpenAI releases GPT-5.
+
+**Regression Test Pattern**:
+```python
+# ❌ BAD: Will break when GPT-5 is released
+TEST_MODEL = "gpt-5"
+
+# ✅ GOOD: Obviously fake, will never conflict
+TEST_NONEXISTENT_OPENAI_MODEL = "gpt-999-test-nonexistent"
+TEST_NONEXISTENT_ANTHROPIC_MODEL = "claude-999-test-nonexistent"
+TEST_NONEXISTENT_GOOGLE_MODEL = "gemini-999-test-nonexistent"
+
+def test_missing_credentials_warning():
+    """Test that config warns about missing API keys for fallback models."""
+    settings = Settings(
+        openai_api_key=None,
+        fallback_models=[TEST_NONEXISTENT_OPENAI_MODEL],  # Clearly fake
+    )
+
+    settings._validate_fallback_credentials()
+
+    # Test behavior, not specific model name
+    assert any(TEST_NONEXISTENT_OPENAI_MODEL in log.message for log in logs)
+    assert any("OPENAI_API_KEY" in log.message for log in logs)
+```
+
+**Key Principles**:
+- Use obviously fake values (999, nonexistent, test)
+- Test behavior/logic, not specific values
+- Constants make intent clear
+- Prevents time-bomb test failures
+
+**Files**: `tests/test_config_validation.py:16-17, 28, 46, 62, 74, 115, 127`
+
+### Pattern 4: Mock-Based Tests Hiding Bugs
+
+**Problem**: Mock provides fields that real implementation doesn't return.
+
+**Example**: API key endpoint test mocked `create_api_key()` return value with "created" field, but real implementation didn't return it.
+
+**Anti-Pattern**:
+```python
+# ❌ BAD: Mock hides the bug
+def test_create_api_key_endpoint(mock_manager):
+    # Mock provides "created" field
+    mock_manager.create_api_key.return_value = {
+        "key_id": "123",
+        "api_key": "key",
+        "name": "Test",
+        "created": "2025-01-01T00:00:00",  # Mock provides this
+        "expires_at": "2026-01-01T00:00:00"
+    }
+
+    response = client.post("/api-keys", json={...})
+    assert response.json()["created"]  # Passes but implementation broken!
+```
+
+**Fixed Pattern**:
+```python
+# ✅ GOOD: Test real implementation behavior
+def test_create_api_key_returns_created_timestamp(manager):
+    """Test that create_api_key ACTUALLY returns created timestamp."""
+    # Use REAL manager, not mock
+    result = await manager.create_api_key(
+        user_id="test", name="Test Key", expires_days=365
+    )
+
+    # Test what the implementation actually returns
+    assert "created" in result, "create_api_key must return created timestamp"
+    assert result["created"] != "", "created must not be empty"
+```
+
+**Key Principles**:
+- Test manager/service layer directly, not just API layer
+- Mocks should match reality exactly
+- Add tests at multiple layers (manager + endpoint)
+- Use real implementations when possible
+
+**Trade-offs**:
+
+| Approach | Pros | Cons | When to Use |
+|----------|------|------|-------------|
+| **Mock Everything** | Fast, isolated, no dependencies | Can hide contract violations | Unit tests for logic |
+| **Real Implementation** | Catches contract bugs, realistic | Slower, more dependencies | Critical paths, regression tests |
+| **Hybrid (Recommended)** | Balance speed and confidence | Requires careful planning | Most scenarios |
+
+**Recommendation**: For regression tests of contract violations, always test the real implementation at least once, then use mocks for variations.
+
+### Pattern 5: CLI Smoke Tests
+
+**Problem**: CLI commands had zero test coverage, making refactoring risky.
+
+**Regression Test Pattern**:
+```python
+from click.testing import CliRunner
+
+def test_cli_command_help():
+    """Smoke test: Ensure CLI command is accessible and documented."""
+    runner = CliRunner()
+    result = runner.invoke(cli, ["command", "--help"])
+
+    assert result.exit_code == 0, "Help should always succeed"
+    assert "description text" in result.output
+    assert "--option" in result.output
+```
+
+**Key Principles**:
+- Smoke tests ensure commands exist and are callable
+- Test `--help` output for documentation
+- Don't test full functionality (that's integration tests)
+- Fast, no file I/O or side effects
+
+**Files**: `tests/test_cli.py:1-113`
+
+### Preventing Regressions with Pre-commit Hooks
+
+After fixing bugs, add pre-commit hooks to prevent similar issues:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: validate-api-schemas
+        name: Validate API Response Schemas
+        entry: python scripts/validate_api_schemas.py
+        language: python
+        pass_filenames: false
+
+      - id: check-parameter-types
+        name: Check API Parameter Type Confusion
+        entry: python scripts/check_parameter_types.py
+        language: python
+        types: [python]
+```
+
+### Summary Checklist
+
+When writing regression tests:
+
+- [ ] **Document the bug** in test docstring with "REGRESSION TEST" marker
+- [ ] **Test at correct layer** (manager/service for contract bugs, not just API)
+- [ ] **Validate ALL required fields** from schemas/contracts
+- [ ] **Use real implementations** for critical contract validations
+- [ ] **Avoid test time bombs** with obviously fake constants
+- [ ] **Mock the right methods** and make wrong methods fail explicitly
+- [ ] **Add pre-commit hooks** to prevent similar bugs
+- [ ] **Update documentation** with lessons learned
+
+---
+
 ## GDPR Testing Requirements
 
 Tests for GDPR compliance endpoints must validate:
@@ -737,5 +988,9 @@ def container(test_container):
 
 ---
 
-**Last Updated**: 2025-01-05
+**Last Updated**: 2025-11-10
 **Status**: ✅ Complete and current
+
+**Recent Updates**:
+- 2025-11-10: Added comprehensive regression test patterns section documenting fixes for Codex findings
+- 2025-01-05: Initial comprehensive testing guide
