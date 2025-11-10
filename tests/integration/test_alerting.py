@@ -8,6 +8,7 @@ Tests comprehensive alerting functionality including:
 - Error handling and retries
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -25,8 +26,13 @@ from mcp_server_langgraph.integrations.alerting import (
 )
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestAlert:
     """Tests for Alert dataclass"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_alert_creation(self):
         """Test basic alert creation"""
@@ -104,8 +110,13 @@ class TestAlert:
         assert alert_dict["metadata"]["key"] == "value"
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestPagerDutyProvider:
     """Tests for PagerDuty integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_pagerduty_send_alert_success(self):
@@ -167,8 +178,13 @@ class TestPagerDutyProvider:
         await provider.close()
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestSlackProvider:
     """Tests for Slack integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_slack_send_alert_success(self):
@@ -247,8 +263,13 @@ class TestSlackProvider:
         await provider.close()
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestEmailProvider:
     """Tests for Email integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_email_send_via_sendgrid_success(self):
@@ -317,8 +338,13 @@ class TestEmailProvider:
         await provider.close()
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestAlertingService:
     """Tests for main AlertingService"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_alerting_service_initialization(self):
@@ -497,8 +523,13 @@ class TestAlertingService:
         await service.close()
 
 
+@pytest.mark.xdist_group(name="integration_alerting_tests")
 class TestAlertingConvenienceFunctions:
     """Tests for convenience functions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_send_alert_convenience_function(self):

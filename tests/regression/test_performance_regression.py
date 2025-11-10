@@ -5,6 +5,7 @@ Tracks performance over time and alerts on regressions.
 Metrics are compared against baseline_metrics.json.
 """
 
+import gc
 import json
 import statistics
 import time
@@ -180,8 +181,13 @@ async def measure_latency_async(func, *args, iterations: int = 10, **kwargs) -> 
 
 @pytest.mark.regression
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="regression_performance_regression_tests")
 class TestAgentPerformance:
     """Performance regression tests for agent"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.slow
     def test_agent_response_time_p95(self):
@@ -235,8 +241,13 @@ class TestAgentPerformance:
 
 @pytest.mark.regression
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="regression_performance_regression_tests")
 class TestAuthPerformance:
     """Performance regression tests for auth/authz"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.slow
@@ -287,8 +298,13 @@ class TestAuthPerformance:
 
 @pytest.mark.regression
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="regression_performance_regression_tests")
 class TestLLMPerformance:
     """Performance regression tests for LLM calls"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.slow
@@ -319,8 +335,13 @@ class TestLLMPerformance:
 
 
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="regression_performance_regression_tests")
 class TestRegressionReporting:
     """Tests for regression detection and reporting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_regression_detection_threshold_exceeded(self):
         """Regression detected when threshold exceeded"""
@@ -355,8 +376,13 @@ class TestRegressionReporting:
 
 
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="regression_performance_regression_tests")
 class TestBaselineMetrics:
     """Tests for baseline metrics structure"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_baseline_metrics_loadable(self):
         """Baseline metrics file should be valid JSON"""

@@ -8,6 +8,7 @@ Related to Codex Finding #1 (CRITICAL):
 - agent.py:676 previously returned fresh ["messages": [response]] instead of appending
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -38,8 +39,13 @@ def mock_llm():
     return llm
 
 
+@pytest.mark.xdist_group(name="conversation_state_persistence_tests")
 class TestConversationStatePersistence:
     """Test that conversation state is preserved across agent operations."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_generate_response_appends_to_messages_not_replaces(self, test_settings, mock_llm):

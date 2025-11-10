@@ -7,6 +7,7 @@ OWASP A01:2021 - Broken Access Control
 These tests validate that service principals cannot be used for privilege escalation.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -19,8 +20,13 @@ from mcp_server_langgraph.api.service_principals import (
 )
 
 
+@pytest.mark.xdist_group(name="service_principal_security_tests")
 class TestServicePrincipalSecurity:
     """Test security controls for service principal privilege escalation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_prevent_unauthorized_admin_impersonation(self):

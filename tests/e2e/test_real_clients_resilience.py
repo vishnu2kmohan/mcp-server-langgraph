@@ -5,6 +5,7 @@ Following TDD principles - these tests are written FIRST before implementing
 the retry logic and enhanced error handling in real_clients.py.
 """
 
+import gc
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -12,8 +13,13 @@ import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="e2e_real_clients_resilience_tests")
 class TestKeycloakAuthErrorHandling:
     """Test error handling in RealKeycloakAuth client"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_timeout_exception_has_clear_message(self):
@@ -73,8 +79,13 @@ class TestKeycloakAuthErrorHandling:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="e2e_real_clients_resilience_tests")
 class TestMCPClientRetryLogic:
     """Test retry logic in RealMCPClient"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(strict=True, reason="Retry logic not yet implemented - requires tenacity library")
     @pytest.mark.asyncio
@@ -140,8 +151,13 @@ class TestMCPClientRetryLogic:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="e2e_real_clients_resilience_tests")
 class TestClientConfiguration:
     """Test client configuration and initialization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_client_has_timeout_configured(self):
         """Verify Keycloak client has timeout to prevent hanging"""

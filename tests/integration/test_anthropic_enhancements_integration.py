@@ -1,3 +1,4 @@
+import gc
 import os
 
 """
@@ -53,8 +54,13 @@ def mock_settings():
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 class TestDynamicContextIntegration:
     """Test dynamic context loading integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_index_search_load_workflow(self, qdrant_client):
@@ -187,8 +193,13 @@ class TestDynamicContextIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 class TestParallelExecutionIntegration:
     """Test parallel tool execution integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_real_tool_parallel_execution(self):
@@ -271,8 +282,13 @@ class TestParallelExecutionIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 class TestContextManagerIntegration:
     """Test context manager LLM extraction integration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_compaction_then_extraction(self):
@@ -358,8 +374,13 @@ PREFERENCES:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 class TestFullAgentIntegration:
     """Test full agent with all enhancements enabled"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(
         not (os.getenv("ANTHROPIC_API_KEY") and os.getenv("RUN_FULL_INTEGRATION_TESTS")),
@@ -454,8 +475,13 @@ class TestFullAgentIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_anthropic_enhancements_integration_tests")
 class TestEndToEndWorkflow:
     """Test complete end-to-end workflow with all enhancements"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(
         not os.getenv("RUN_FULL_INTEGRATION_TESTS"),

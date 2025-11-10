@@ -4,6 +4,7 @@ Property-based tests for Authentication and Authorization
 Tests security-critical invariants using Hypothesis.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -89,8 +90,13 @@ def add_test_users(auth):
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_auth_properties_tests")
 class TestJWTProperties:
     """Property-based tests for JWT authentication"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(username=usernames, expiration=expiration_seconds)
     @settings(max_examples=50, deadline=2000)
@@ -183,8 +189,13 @@ class TestJWTProperties:
 
 @pytest.mark.property
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_auth_properties_tests")
 class TestAuthorizationProperties:
     """Property-based tests for authorization logic"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(user_id=user_ids, relation=relations, resource=resources)
     @settings(max_examples=30, deadline=3000)
@@ -277,8 +288,13 @@ class TestAuthorizationProperties:
 
 @pytest.mark.property
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_auth_properties_tests")
 class TestPermissionInheritance:
     """Property tests for permission inheritance and transitivity"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         org_user=usernames,
@@ -338,8 +354,13 @@ class TestPermissionInheritance:
 
 @pytest.mark.property
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="property_auth_properties_tests")
 class TestSecurityInvariants:
     """Property tests for critical security invariants"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(username=usernames, malicious_payload=st.dictionaries(st.text(), st.text()))
     @settings(max_examples=20, deadline=2000)
@@ -414,8 +435,13 @@ class TestSecurityInvariants:
 
 @pytest.mark.property
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="property_auth_properties_tests")
 class TestAuthorizationEdgeCases:
     """Property tests for edge cases in authorization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         user_id=st.one_of(

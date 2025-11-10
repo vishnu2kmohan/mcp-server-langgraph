@@ -12,11 +12,18 @@ Critical bugs these tests would have caught:
 Following TDD principles to prevent future regressions.
 """
 
+import gc
+
 import pytest
 
 
+@pytest.mark.xdist_group(name="integration_mcp_startup_validation_tests")
 class TestMCPServerStartupValidation:
     """Test that MCP server starts successfully with various configs"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_mcp_server_imports_successfully(self):
         """
@@ -102,8 +109,13 @@ class TestMCPServerStartupValidation:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_mcp_startup_validation_tests")
 class TestEndToEndDependencyWiring:
     """End-to-end tests for complete dependency chain"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_service_principal_creation_without_openfga(self, monkeypatch):
@@ -194,8 +206,13 @@ class TestEndToEndDependencyWiring:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="integration_mcp_startup_validation_tests")
 class TestProductionReadinessChecks:
     """Production readiness checks for deployment validation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_hardcoded_credentials_in_code(self):
         """

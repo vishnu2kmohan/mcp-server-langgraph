@@ -7,6 +7,7 @@ OWASP A01:2021 - Broken Access Control
 These tests validate that SCIM identity management endpoints require admin authorization.
 """
 
+import gc
 from unittest.mock import AsyncMock
 
 import pytest
@@ -15,8 +16,13 @@ from fastapi import HTTPException
 from mcp_server_langgraph.api.scim import create_group, create_user, delete_user, update_user
 
 
+@pytest.mark.xdist_group(name="scim_security_tests")
 class TestSCIMSecurityControls:
     """Test that SCIM endpoints require admin authorization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_user_requires_admin_role(self):

@@ -18,6 +18,7 @@ References:
 - CWE-863: Incorrect Authorization
 """
 
+import gc
 from unittest.mock import AsyncMock
 
 import pytest
@@ -29,8 +30,13 @@ from mcp_server_langgraph.api.service_principals import _validate_user_associati
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_scim_service_principal_openfga_tests")
 class TestSCIMOpenFGAIntegration:
     """Test suite for SCIM endpoint OpenFGA authorization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_scim_endpoint_uses_openfga_relation_check(self):
@@ -108,8 +114,13 @@ class TestSCIMOpenFGAIntegration:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_scim_service_principal_openfga_tests")
 class TestServicePrincipalOpenFGAIntegration:
     """Test suite for Service Principal endpoint OpenFGA authorization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_service_principal_uses_openfga_relation_check(self):
@@ -203,8 +214,13 @@ class TestServicePrincipalOpenFGAIntegration:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="security_scim_service_principal_openfga_tests")
 class TestOpenFGARelationDefinitions:
     """Test suite for OpenFGA relation definitions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_scim_relations_documented(self):
         """
@@ -245,8 +261,13 @@ class TestOpenFGARelationDefinitions:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_scim_service_principal_openfga_tests")
 class TestAdHocRoleChecks:
     """Test suite documenting current ad-hoc role checks"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_scim_currently_uses_role_list(self):
         """

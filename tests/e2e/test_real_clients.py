@@ -6,6 +6,7 @@ work correctly with mock HTTP responses (not actual infrastructure).
 Integration tests in test_full_user_journey.py use actual test infrastructure.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,6 +14,7 @@ import pytest
 from tests.e2e.real_clients import RealKeycloakAuth, RealMCPClient, real_keycloak_auth, real_mcp_client
 
 
+@pytest.mark.xdist_group(name="e2e_real_clients_tests")
 class TestRealKeycloakAuth:
     """
     Unit tests for RealKeycloakAuth client.
@@ -21,6 +23,10 @@ class TestRealKeycloakAuth:
     WHEN: Testing login, refresh, logout, introspect operations
     THEN: Should correctly format requests and handle responses
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_login_success(self):
@@ -79,6 +85,7 @@ class TestRealKeycloakAuth:
             mock_instance.aclose.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="e2e_real_clients_tests")
 class TestRealMCPClient:
     """
     Unit tests for RealMCPClient.
@@ -87,6 +94,10 @@ class TestRealMCPClient:
     WHEN: Testing initialize, list_tools, call_tool operations
     THEN: Should correctly format MCP requests and handle responses
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_initialize_session(self):
@@ -174,6 +185,7 @@ class TestRealMCPClient:
             mock_instance.aclose.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="e2e_real_clients_tests")
 class TestBackwardsCompatibility:
     """
     Test backwards compatibility aliases.
@@ -182,6 +194,10 @@ class TestBackwardsCompatibility:
     WHEN: Using mock_* names
     THEN: Should map to real_* implementations
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_class_aliases_exist(self):
         """

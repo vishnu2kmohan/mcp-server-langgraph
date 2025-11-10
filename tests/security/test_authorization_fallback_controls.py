@@ -15,6 +15,7 @@ References:
 - CWE-862: Missing Authorization
 """
 
+import gc
 import logging
 from unittest.mock import AsyncMock
 
@@ -27,8 +28,13 @@ from mcp_server_langgraph.core.config import Settings
 
 @pytest.mark.security
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="security_authorization_fallback_controls_tests")
 class TestAuthorizationFallbackControls:
     """Test suite for authorization fallback security controls"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_tool_execution_blocked_without_openfga_when_fallback_disabled(self):
@@ -272,8 +278,13 @@ class TestAuthorizationFallbackControls:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="security_authorization_fallback_controls_tests")
 class TestOpenFGAClientInitialization:
     """Test suite for OpenFGA client initialization and configuration validation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_openfga_client_returns_none_when_config_incomplete(self):
         """

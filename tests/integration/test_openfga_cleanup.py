@@ -5,6 +5,7 @@ Verifies that delete_tuples_for_object() properly removes all authorization
 tuples when a resource is deleted, ensuring no orphaned permissions remain.
 """
 
+import gc
 from typing import Dict, List
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,8 +14,13 @@ import pytest
 
 @pytest.mark.integration
 @pytest.mark.openfga
+@pytest.mark.xdist_group(name="integration_openfga_cleanup_tests")
 class TestOpenFGATupleCleanup:
     """Test OpenFGA tuple cleanup for resource deletion"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_delete_tuples_for_object_removes_all_permissions(self):
@@ -153,8 +159,13 @@ class TestOpenFGATupleCleanup:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="integration_openfga_cleanup_tests")
 class TestTupleExtractionHelpers:
     """Test helper functions for extracting tuples from expansion trees"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_extract_users_from_simple_leaf(self):
         """

@@ -12,6 +12,7 @@ Tests cover:
 - Factory function
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -25,8 +26,13 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSession
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="session_tests")
 class TestInMemorySessionStore:
     """Tests for InMemorySessionStore"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def store(self):
@@ -328,8 +334,13 @@ class TestInMemorySessionStore:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="session_tests")
 class TestRedisSessionStore:
     """Tests for RedisSessionStore"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def mock_redis(self):
@@ -568,8 +579,13 @@ class TestRedisSessionStore:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="session_tests")
 class TestSessionStoreFactory:
     """Tests for create_session_store factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_create_memory_store(self):
@@ -626,8 +642,13 @@ class TestSessionStoreFactory:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="session_tests")
 class TestSessionIntegration:
     """Integration tests for session management"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit

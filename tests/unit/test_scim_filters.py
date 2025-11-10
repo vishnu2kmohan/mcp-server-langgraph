@@ -16,6 +16,7 @@ References:
 - OpenAI Codex finding: Missing startsWith operator support
 """
 
+import gc
 from unittest.mock import AsyncMock
 
 import pytest
@@ -23,8 +24,13 @@ import pytest
 from mcp_server_langgraph.api.scim import list_users
 
 
+@pytest.mark.xdist_group(name="unit_scim_filters_tests")
 class TestSCIMFilterParsing:
     """Unit tests for SCIM filter parsing logic"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -343,8 +349,13 @@ class TestSCIMFilterParsing:
         assert result.totalResults == 2
 
 
+@pytest.mark.xdist_group(name="unit_scim_filters_tests")
 class TestSCIMFilterEdgeCases:
     """Edge case tests for SCIM filter parsing"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit

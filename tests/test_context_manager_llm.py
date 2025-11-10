@@ -1,3 +1,4 @@
+import gc
 import os
 
 """
@@ -66,8 +67,13 @@ def context_manager(mock_llm):
         return manager
 
 
+@pytest.mark.xdist_group(name="context_manager_llm_tests")
 class TestEnhancedNoteExtraction:
     """Test suite for LLM-based key information extraction"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -424,8 +430,13 @@ preferences:
             assert "decisions" in result
 
 
+@pytest.mark.xdist_group(name="context_manager_llm_tests")
 class TestRuleBasedExtraction:
     """Test suite for rule-based extraction (fallback)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_extract_key_information_decisions(self):
@@ -489,8 +500,13 @@ class TestRuleBasedExtraction:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="context_manager_llm_tests")
 class TestContextManagerLLMIntegration:
     """Integration tests for LLM extraction"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="Requires ANTHROPIC_API_KEY")
     @pytest.mark.asyncio

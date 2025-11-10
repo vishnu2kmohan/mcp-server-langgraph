@@ -4,6 +4,7 @@ Integration tests for distributed conversation checkpointing with Redis
 Tests the RedisSaver checkpointer for multi-replica deployments with HPA auto-scaling.
 """
 
+import gc
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -23,8 +24,13 @@ except ImportError:
     RedisSaver = None
 
 
+@pytest.mark.xdist_group(name="distributed_checkpointing_tests")
 class TestCheckpointerFactory:
     """Tests for checkpointer factory function"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_memory_checkpointer(self, monkeypatch):
         """Test factory creates MemorySaver when backend is 'memory'"""
@@ -59,8 +65,13 @@ class TestCheckpointerFactory:
         assert isinstance(checkpointer, MemorySaver)
 
 
+@pytest.mark.xdist_group(name="distributed_checkpointing_tests")
 class TestMemoryCheckpointer:
     """Tests for in-memory checkpointer (development/testing)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_conversation_state_preserved_same_instance(self, monkeypatch):
@@ -150,8 +161,13 @@ class TestMemoryCheckpointer:
 
 @pytest.mark.integration
 @pytest.mark.skipif(not REDIS_CHECKPOINTER_AVAILABLE, reason="Redis checkpointer not installed")
+@pytest.mark.xdist_group(name="distributed_checkpointing_tests")
 class TestRedisCheckpointer:
     """Integration tests for Redis checkpointer (requires Redis)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_conversation_state_persists_across_instances(self, monkeypatch):
@@ -282,8 +298,13 @@ class TestRedisCheckpointer:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="distributed_checkpointing_tests")
 class TestCheckpointerFallback:
     """Test graceful fallback when Redis is unavailable"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_unavailable_fallback_to_memory(self, monkeypatch):
         """Test graceful fallback to MemorySaver when Redis is unavailable"""

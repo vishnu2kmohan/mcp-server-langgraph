@@ -4,6 +4,7 @@ Tests for SLA Monitoring
 Comprehensive test suite for SLA tracking, measurements, and alerting.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -46,8 +47,13 @@ def custom_sla_targets():
 
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestSLATarget:
     """Test SLA target configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sla_target_creation(self):
         """Test creating SLA target"""
@@ -88,8 +94,13 @@ class TestSLATarget:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestUptimeMeasurement:
     """Test uptime SLA measurement"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
     async def test_measure_uptime_meeting_sla(self, mock_prom_client, sla_monitor):
@@ -148,8 +159,13 @@ class TestUptimeMeasurement:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestResponseTimeMeasurement:
     """Test response time SLA measurement"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.monitoring.sla.get_prometheus_client")
     async def test_measure_response_time_meeting_sla(self, mock_prom_client, sla_monitor):
@@ -210,8 +226,13 @@ class TestResponseTimeMeasurement:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestErrorRateMeasurement:
     """Test error rate SLA measurement"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_measure_error_rate_meeting_sla(self, sla_monitor):
         """Test error rate measurement meeting SLA"""
@@ -243,8 +264,13 @@ class TestErrorRateMeasurement:
 
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestSLAStatusDetermination:
     """Test SLA status determination logic"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_status_meeting_higher_is_better(self, sla_monitor):
         """Test status when meeting SLA (higher is better)"""
@@ -337,8 +363,13 @@ class TestSLAStatusDetermination:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestSLAReport:
     """Test SLA report generation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_generate_sla_report_daily(self, sla_monitor):
         """Test daily SLA report generation"""
@@ -415,8 +446,13 @@ class TestSLAReport:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestBreachDetection:
     """Test SLA breach detection and alerting"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_breach_details_populated(self, sla_monitor):
         """Test breach details are populated when SLA breached"""
@@ -488,8 +524,13 @@ class TestBreachDetection:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestSLAIntegration:
     """Integration tests for SLA monitoring"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_full_sla_monitoring_cycle(self, sla_monitor):
         """Test complete SLA monitoring cycle"""
@@ -537,8 +578,13 @@ class TestSLAIntegration:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.sla
+@pytest.mark.xdist_group(name="sla_monitoring_tests")
 class TestSLAEdgeCases:
     """Test edge cases in SLA monitoring"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_zero_period(self, sla_monitor):
         """Test measurement with zero time period"""

@@ -18,6 +18,8 @@ References:
 - CWE-407: Inefficient Algorithmic Complexity
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
@@ -25,8 +27,13 @@ from mcp_server_langgraph.auth.api_keys import APIKeyManager
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_api_key_performance_monitoring_tests")
 class TestAPIKeyPerformanceMonitoring:
     """Test suite for API key performance monitoring"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_and_get_user_has_enumeration_warning(self, caplog):
         """
@@ -99,8 +106,13 @@ class TestAPIKeyPerformanceMonitoring:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="security_api_key_performance_monitoring_tests")
 class TestAPIKeyCacheMitigation:
     """Test suite for Redis cache mitigation effectiveness"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_ttl_is_configurable(self):
         """
@@ -143,8 +155,13 @@ class TestAPIKeyCacheMitigation:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="security_api_key_performance_monitoring_tests")
 class TestAPIKeyEnumerationDocumentation:
     """Test suite ensuring enumeration is documented"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docstring_mentions_performance_implications(self):
         """

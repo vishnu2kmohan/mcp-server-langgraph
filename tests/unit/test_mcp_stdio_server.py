@@ -7,6 +7,7 @@ authorization, and tool handlers for the stdio-based MCP server.
 Target coverage: 85%+ on src/mcp_server_langgraph/mcp/server_stdio.py
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -99,8 +100,13 @@ def mock_agent_graph():
 
 
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestMCPAgentServerInitialization:
     """Tests for MCPAgentServer.__init__"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -215,8 +221,13 @@ class TestMCPAgentServerInitialization:
 
 @pytest.mark.unit
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestListTools:
     """Tests for list_tools_public()"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -257,8 +268,13 @@ class TestListTools:
 @pytest.mark.unit
 @pytest.mark.mcp
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestToolAuthentication:
     """Tests for JWT authentication in call_tool handler"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -349,8 +365,13 @@ class TestToolAuthentication:
 @pytest.mark.unit
 @pytest.mark.mcp
 @pytest.mark.auth
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestToolAuthorization:
     """Tests for OpenFGA authorization in call_tool handler"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -419,8 +440,13 @@ class TestToolAuthorization:
 
 @pytest.mark.unit
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestHandleChat:
     """Tests for _handle_chat() method"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -631,8 +657,13 @@ class TestHandleChat:
 
 @pytest.mark.unit
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestResponseFormatting:
     """Tests for response format control (concise vs detailed)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
@@ -691,8 +722,13 @@ class TestResponseFormatting:
 
 @pytest.mark.unit
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="unit_mcp_stdio_server_tests")
 class TestErrorHandling:
     """Tests for error handling in MCP server"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.mcp.server_stdio.settings")
     @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")

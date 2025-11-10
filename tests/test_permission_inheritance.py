@@ -5,6 +5,7 @@ Following TDD principles - these tests define the expected behavior
 of service principals inheriting permissions from associated users.
 """
 
+import gc
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,8 +23,13 @@ def mock_openfga_client():
     return client
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestDirectPermissions:
     """Test direct permission checks (without inheritance)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_user_has_direct_permission(self, mock_openfga_client):
@@ -63,8 +69,13 @@ class TestDirectPermissions:
         assert allowed is False
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestServicePrincipalInheritedPermissions:
     """Test permission inheritance via acts_as relationship"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_service_principal_inherits_user_permission(self, mock_openfga_client):
@@ -178,8 +189,13 @@ class TestServicePrincipalInheritedPermissions:
         assert allowed is True
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestServicePrincipalDirectPermissions:
     """Test service principals can also have direct permissions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_service_principal_direct_permission_without_acts_as(self, mock_openfga_client):
@@ -235,8 +251,13 @@ class TestServicePrincipalDirectPermissions:
         mock_openfga_client.list_objects.assert_not_called()
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestRegularUsersUnaffected:
     """Test that regular users are unaffected by acts_as logic"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_regular_user_permission_check_unchanged(self, mock_openfga_client):
@@ -260,8 +281,13 @@ class TestRegularUsersUnaffected:
         mock_openfga_client.list_objects.assert_not_called()
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestPermissionInheritanceLogging:
     """Test that inherited access is logged for audit trail"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_inherited_permission_logs_both_identities(self, mock_openfga_client, caplog):
@@ -301,8 +327,13 @@ class TestPermissionInheritanceLogging:
         assert any(service_id in msg and associated_user in msg and resource in msg for msg in log_messages)
 
 
+@pytest.mark.xdist_group(name="permission_inheritance_tests")
 class TestPermissionInheritanceCaching:
     """Test caching of acts_as relationships for performance"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_acts_as_relationships_cached(self, mock_openfga_client):

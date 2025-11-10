@@ -5,6 +5,7 @@ Tests both LLM-based and rules-based verification.
 Uses mocking to avoid actual LLM calls for fast execution.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -84,8 +85,13 @@ FEEDBACK:
 Response has accuracy issues and incomplete coverage. Needs to verify facts and provide more comprehensive explanation."""
 
 
+@pytest.mark.xdist_group(name="verifier_tests")
 class TestOutputVerifier:
     """Unit tests for OutputVerifier."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization(self, output_verifier):
         """Test OutputVerifier initializes with correct config."""
@@ -359,8 +365,13 @@ FEEDBACK: Acceptable response with room for improvement."""
         assert "Test request" in prompt
 
 
+@pytest.mark.xdist_group(name="verifier_tests")
 class TestVerificationCriterion:
     """Test VerificationCriterion enum."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_criteria_defined(self):
         """Test that all criteria are properly defined."""
@@ -380,8 +391,13 @@ class TestVerificationCriterion:
         assert VerificationCriterion.CLARITY.value == "clarity"
 
 
+@pytest.mark.xdist_group(name="verifier_tests")
 class TestVerificationResult:
     """Test VerificationResult model."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_verification_result_creation(self):
         """Test creating VerificationResult."""
@@ -411,8 +427,13 @@ class TestVerificationResult:
             )
 
 
+@pytest.mark.xdist_group(name="verifier_tests")
 class TestConvenienceFunctions:
     """Test convenience functions."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_verify_output_convenience(self, good_llm_judgment):

@@ -5,6 +5,7 @@ Comprehensive test suite for evidence collection, access reviews,
 and compliance reporting.
 """
 
+import gc
 import json
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -59,8 +60,13 @@ def compliance_scheduler(evidence_collector, mock_session_store, evidence_dir):
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.soc2
+@pytest.mark.xdist_group(name="soc2_evidence_tests")
 class TestEvidenceCollector:
     """Test evidence collector service"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_collect_all_evidence(self, evidence_collector):
         """Test collecting all evidence"""
@@ -246,8 +252,13 @@ class TestEvidenceCollector:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.soc2
+@pytest.mark.xdist_group(name="soc2_evidence_tests")
 class TestComplianceReport:
     """Test compliance report generation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_generate_daily_report(self, evidence_collector, evidence_dir):
         """Test daily compliance report generation"""
@@ -331,8 +342,13 @@ class TestComplianceReport:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.soc2
+@pytest.mark.xdist_group(name="soc2_evidence_tests")
 class TestComplianceScheduler:
     """Test compliance scheduler"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_scheduler_initialization(self, compliance_scheduler):
         """Test scheduler initialization"""
@@ -398,8 +414,13 @@ class TestComplianceScheduler:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.soc2
+@pytest.mark.xdist_group(name="soc2_evidence_tests")
 class TestAccessReview:
     """Test access review functionality"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_access_review_report_structure(self, compliance_scheduler):
         """Test access review report structure"""
@@ -452,8 +473,13 @@ class TestAccessReview:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.soc2
+@pytest.mark.xdist_group(name="soc2_evidence_tests")
 class TestSOC2Integration:
     """Integration tests for SOC 2 evidence collection"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_full_compliance_cycle(self, evidence_collector):
         """Test full compliance evidence collection cycle"""

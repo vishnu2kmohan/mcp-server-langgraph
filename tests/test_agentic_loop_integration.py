@@ -5,6 +5,7 @@ Tests the complete gather-action-verify-repeat cycle.
 These are integration tests that may require mocking but test full workflows.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -95,8 +96,13 @@ def mock_verifier_fail():
     return verifier
 
 
+@pytest.mark.xdist_group(name="agentic_loop_integration_tests")
 class TestAgenticLoopIntegration:
     """Integration tests for the complete agentic loop."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -346,8 +352,13 @@ class TestAgenticLoopIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="agentic_loop_integration_tests")
 class TestAgentGraphStructure:
     """Test the structure of the agent graph."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_graph_has_all_nodes(self):
         """Test that graph contains all expected nodes."""

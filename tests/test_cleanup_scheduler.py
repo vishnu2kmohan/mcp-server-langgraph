@@ -4,6 +4,7 @@ Tests for data cleanup scheduler
 Covers scheduled background jobs for data retention policy enforcement.
 """
 
+import gc
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -39,8 +40,13 @@ def mock_retention_config():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestCleanupSchedulerInit:
     """Test CleanupScheduler initialization"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization_default(self):
         """Test default initialization"""
@@ -66,8 +72,13 @@ class TestCleanupSchedulerInit:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestCleanupSchedulerStart:
     """Test scheduler startup"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_start_creates_retention_service(self, mock_session_store, mock_retention_config):
@@ -154,8 +165,13 @@ class TestCleanupSchedulerStart:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestCleanupSchedulerStop:
     """Test scheduler shutdown"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_stop_shuts_down_scheduler(self, mock_session_store, mock_retention_config):
@@ -183,8 +199,13 @@ class TestCleanupSchedulerStop:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestCleanupExecution:
     """Test cleanup execution"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_run_cleanup_success(self, mock_session_store, mock_retention_config):
@@ -282,8 +303,13 @@ class TestCleanupExecution:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestNotifications:
     """Test cleanup notifications"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_send_cleanup_notification(self, mock_session_store, mock_retention_config):
@@ -341,8 +367,13 @@ class TestNotifications:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestManualExecution:
     """Test manual cleanup triggering"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_run_now(self, mock_session_store, mock_retention_config):
@@ -374,8 +405,13 @@ class TestManualExecution:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestHelperFunctions:
     """Test helper functions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_get_next_run_time(self, mock_session_store, mock_retention_config):
@@ -407,8 +443,13 @@ class TestHelperFunctions:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestGlobalScheduler:
     """Test global scheduler functions"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_start_cleanup_scheduler(self, mock_session_store, mock_retention_config):
@@ -492,8 +533,13 @@ class TestGlobalScheduler:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="cleanup_scheduler_tests")
 class TestDryRunMode:
     """Test dry-run mode"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_dry_run_mode(self, mock_session_store, mock_retention_config):

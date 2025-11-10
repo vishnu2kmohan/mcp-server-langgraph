@@ -11,6 +11,7 @@ RED Phase: Tests fail when insecure patterns are present
 GREEN Phase: Tests pass after security fixes are applied
 """
 
+import gc
 import hashlib
 import inspect
 import os
@@ -23,8 +24,13 @@ import pytest
 
 @pytest.mark.unit
 @pytest.mark.security
+@pytest.mark.xdist_group(name="unit_security_practices_tests")
 class TestCryptographicSecurity:
     """Test that cryptographic operations use secure algorithms."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kubernetes_sandbox_does_not_use_insecure_md5(self):
         """
@@ -71,8 +77,13 @@ class TestCryptographicSecurity:
         assert code_hash_md5.isalnum()
 
 
+@pytest.mark.xdist_group(name="unit_security_practices_tests")
 class TestTemporaryDirectorySecurity:
     """Test that temporary directory usage follows security best practices."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_builder_api_does_not_use_hardcoded_tmp(self):
         """
@@ -160,8 +171,13 @@ class TestTemporaryDirectorySecurity:
         )
 
 
+@pytest.mark.xdist_group(name="unit_security_practices_tests")
 class TestSQLInjectionPrevention:
     """Test that SQL operations properly prevent injection attacks."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_postgres_storage_uses_parameterized_queries(self):
@@ -290,8 +306,13 @@ class TestSQLInjectionPrevention:
         assert "DROP TABLE" not in query, "SQL injection payload should not appear in query string"
 
 
+@pytest.mark.xdist_group(name="unit_security_practices_tests")
 class TestSecurityDocumentation:
     """Test that security-sensitive code has proper documentation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_postgres_storage_has_security_comments(self):
         """

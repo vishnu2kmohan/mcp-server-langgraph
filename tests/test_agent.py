@@ -1,3 +1,4 @@
+import gc
 import os
 
 """Unit tests for agent.py - LangGraph Agent"""
@@ -9,8 +10,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="agent_tests")
 class TestAgentState:
     """Test AgentState TypedDict"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_state_structure(self):
         """Test AgentState can be created with required fields"""
@@ -30,8 +36,13 @@ class TestAgentState:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="agent_tests")
 class TestAgentGraph:
     """Test LangGraph agent creation and execution"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.llm.factory.create_llm_from_config")
     def test_create_agent_graph(self, mock_create_llm):
@@ -369,8 +380,13 @@ class TestAgentGraph:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="agent_tests")
 class TestAgentIntegration:
     """Integration tests for agent (may require API keys)"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.core.agent.create_llm_from_config")
     @pytest.mark.asyncio
@@ -449,6 +465,7 @@ class TestAgentIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="agent_tests")
 class TestRedisCheckpointerLifecycle:
     """
     Test Redis checkpointer lifecycle management (TDD RED phase).
@@ -456,6 +473,10 @@ class TestRedisCheckpointerLifecycle:
     Tests written FIRST to ensure proper context manager cleanup.
     Will fail until cleanup hooks are implemented in agent.py
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("mcp_server_langgraph.core.agent.RedisSaver")
     def test_redis_checkpointer_context_manager_cleanup(self, mock_redis_saver):

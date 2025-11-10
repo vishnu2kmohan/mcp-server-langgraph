@@ -4,6 +4,7 @@ Tests for GDPR Data Deletion Service (Article 17 - Right to Erasure)
 Covers user data deletion and audit logging.
 """
 
+import gc
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -69,8 +70,13 @@ def gdpr_storage(
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="data_deletion_tests")
 class TestDataDeletionAuditLogging:
     """Test audit logging for data deletion operations"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_deletion_creates_audit_record_with_store(
