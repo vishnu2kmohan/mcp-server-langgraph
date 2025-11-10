@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762788326215,
+  "lastUpdate": 1762789469410,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38984,6 +38984,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00001940448714096091",
             "extra": "mean: 58.425922276685306 usec\nrounds: 5288"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "014386dd8275c81cbe2b8cf5d01e401413a47485",
+          "message": "fix(tests): add memory safety to 6 CRITICAL test files (45 classes) - prevent pytest-xdist OOM\n\nApply memory safety pattern to 6 CRITICAL test files to prevent pytest-xdist\nworker isolation bugs causing extreme memory consumption (217GB VIRT, 42GB RES).\n\nPROBLEM:\nAsyncMock/MagicMock objects create circular references that prevent garbage\ncollection in pytest-xdist workers, causing memory explosion during parallel\ntest execution. Identified 38 high-risk files, fixing 6 most critical first.\n\nSOLUTION (3-part pattern from test_api_key_indexed_lookup.py):\n1. Add @pytest.mark.xdist_group(name=\"category\") to each test class\n2. Add teardown_method() with gc.collect() to each test class\n3. Add import gc to file\n\nFILES FIXED (45 test classes total):\n\n1. tests/test_keycloak.py (14 classes) → Est. 40GB RES saved\n   - Group: keycloak_unit_tests\n   - Classes: TestKeycloakConfig, TestKeycloakUser, TestTokenValidator,\n     TestKeycloakClient, TestRoleSynchronization, TestKeycloakPrivateMethods,\n     TestTokenValidatorErrorPaths, TestKeycloakAdminClientManagement,\n     TestKeycloakAdminUserManagement, TestKeycloakUserAttributes,\n     TestKeycloakSCIMUserMethods, TestKeycloakSCIMGroupMethods,\n     TestKeycloakSCIMClientMethods, TestKeycloakTokenIssuance\n\n2. tests/test_openfga_client.py (5 classes) → Est. 30GB RES saved\n   - Group: openfga_tests\n   - Classes: TestOpenFGAClient, TestOpenFGAAuthorizationModel,\n     TestOpenFGAUtilityFunctions, TestOpenFGAIntegration,\n     TestOpenFGACircuitBreakerCriticality\n\n3. tests/test_auth.py (5 classes) → Est. 35GB RES saved\n   - Group: auth_middleware_tests\n   - Classes: TestAuthMiddleware, TestRequireAuthDecorator,\n     TestStandaloneVerifyToken, TestGetCurrentUser,\n     TestAuthFallbackWithExternalProviders\n\n4. tests/test_api_key_manager.py (10 classes) → Est. 25GB RES saved\n   - Group: api_key_manager_tests\n   - Classes: TestAPIKeyGeneration, TestAPIKeyCreation,\n     TestAPIKeyValidation, TestAPIKeyRevocation, TestAPIKeyListing,\n     TestAPIKeyRotation, TestBcryptHashing,\n     TestAPIKeyValidationPagination, TestAPIKeyRedisCache,\n     TestRedisAPICacheConfiguration\n\n5. tests/test_service_principal_manager.py (7 classes) → Est. 20GB RES saved\n   - Group: service_principal_tests\n   - Classes: TestServicePrincipalCreation,\n     TestServicePrincipalUserAssociation, TestServicePrincipalSecretRotation,\n     TestServicePrincipalListing, TestServicePrincipalRetrieval,\n     TestServicePrincipalDeletion, TestServicePrincipalDataModel\n\n6. tests/integration/test_keycloak_admin.py (4 classes) → Est. 15GB RES saved\n   - Group: keycloak_integration\n   - Classes: TestKeycloakUserAdminAPIs, TestKeycloakGroupAdminAPIs,\n     TestKeycloakClientAdminAPIs, TestKeycloakEndToEndWorkflows\n\nCHANGES PER FILE:\n- Added: import gc\n- Added: @pytest.mark.xdist_group(name=\"...\") to each test class\n- Added: teardown_method() with gc.collect() to each test class\n- Unchanged: All test logic, assertions, and test coverage preserved\n\nTEST RESULTS:\n- ✅ All 6 files compile successfully (python -m py_compile)\n- ✅ Sample test passes (test_keycloak.py::TestKeycloakConfig::test_realm_url)\n- ✅ No test logic modified\n- ✅ 45 test classes now protected from memory explosion\n\nEXPECTED IMPACT:\n- Memory reduction: ~165GB RES saved (40+30+35+25+20+15 GB)\n- Prevents OOM kills in CI/CD GitHub Actions runners\n- Faster test execution (no memory thrashing)\n- More reliable parallel pytest-xdist runs\n\nHELPER SCRIPT ADDED:\n- scripts/add_memory_safety_to_tests.py\n  * Automates adding memory safety pattern to test files\n  * Can be used for Phase 2 (17 HIGH priority files)\n\nREMAINING WORK:\n- Phase 2: 17 HIGH priority files (test_agent.py, e2e/test_full_user_journey.py, etc.)\n- Phase 3: Prevention infrastructure (pre-commit hook, guidelines doc)\n- Phase 4: 53 MEDIUM/LOW priority files\n\nREFERENCES:\n- Original issue: test_api_key_indexed_lookup.py (217GB VIRT, 42GB RES)\n- Pattern source: tests/security/test_api_key_indexed_lookup.py:35-50\n- pytest-xdist docs: https://pytest-xdist.readthedocs.io/\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-10T10:42:50-05:00",
+          "tree_id": "0174a8341d3013b28a875fc3c40d229d43e026a2",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/014386dd8275c81cbe2b8cf5d01e401413a47485"
+        },
+        "date": 1762789467934,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.72790896554562,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012956815333534373",
+            "extra": "mean: 6.909517363634841 msec\nrounds: 99"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.4812252871108,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014623673019563657",
+            "extra": "mean: 6.689803338708826 msec\nrounds: 124"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 45239.26822759303,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.104690000048777 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 48165.63584132088,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 20.76169000019945 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 47014.928179990835,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.269840000002205 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.0669295503746,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.152861450000046 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.40374392087788,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.536445959999924 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.96846297703618,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.31636796000015 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1449317.371747999,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 689.979999890511 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12556.083315631016,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 79.6426700000552 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2942.3026802105155,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 339.8698599997374 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2958.372095403366,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 338.02374000003965 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 59329.872768868045,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000020773817964267676",
+            "extra": "mean: 16.85491563239499 usec\nrounds: 12730"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17324.42754479823,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000164801922359049",
+            "extra": "mean: 57.72196497772629 usec\nrounds: 5368"
           }
         ]
       }
