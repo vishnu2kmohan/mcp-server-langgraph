@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762782702724,
+  "lastUpdate": 1762783750095,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38740,6 +38740,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017045790790835352",
             "extra": "mean: 58.47842785168549 usec\nrounds: 4366"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "8dc33bcb97355b6026d1b9ffc25234a9896232a3",
+          "message": "feat(tests): add CLI tool guards and auto-skip infrastructure\n\nImplements comprehensive CLI tool guarding system to prevent test failures when\nkubectl, helm, or kustomize are not installed.\n\nChanges:\n\n1. Enhanced pytest_collection_modifyitems hook in conftest.py:\n   - Auto-skips tests marked with @pytest.mark.requires_kubectl\n   - Auto-skips tests marked with @pytest.mark.requires_helm\n   - Auto-skips tests marked with @pytest.mark.requires_kustomize\n   - Uses shutil.which() to detect CLI tool availability\n   - Provides clear skip reasons for each tool\n\n2. Added @pytest.mark.requires_kubectl to test classes:\n   - tests/test_kubernetes_security.py::TestKubernetesValidation\n   - tests/infrastructure/test_external_secrets_rbac.py (5 test classes)\n\n3. Added @pytest.mark.requires_helm to test functions:\n   - tests/deployment/test_helm_configuration.py::test_helm_chart_lints_successfully\n\n4. Enhanced TestCLIToolGuards meta-test:\n   - Added _has_requires_marker() method to recognize requires_* markers\n   - Fixed another ast.Str deprecation (line 702)\n   - Now accepts both skipif decorators AND requires_* markers\n\nTest Results:\n- TestCLIToolGuards meta-test passes (was failing with AttributeError)\n- All marked tests will auto-skip gracefully when CLI tools unavailable\n- No hard failures when kubectl/helm/kustomize missing\n\nRegression Prevention:\n- Tests with CLI tool usage now have proper guards\n- New tests using CLI tools will be caught by TestCLIToolGuards\n- pytest_collection_modifyitems hook ensures consistent skip behavior\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-10T09:01:46-05:00",
+          "tree_id": "0c00aabfc5a13a21d6f96e7c29c17f2728771e57",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/8dc33bcb97355b6026d1b9ffc25234a9896232a3"
+        },
+        "date": 1762783748035,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 144.29842364207067,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00009715802061219939",
+            "extra": "mean: 6.930082635417278 msec\nrounds: 96"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 149.3729005974747,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00012524221199003142",
+            "extra": "mean: 6.694654760000731 msec\nrounds: 125"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 44442.82475060204,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.500819999891064 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 47078.43031127225,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 21.241149999866593 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 45280.770207775175,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 22.084430000006705 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 194.20520601817643,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.1491925499999525 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.441205081729464,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 51.43714063999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.967314128966448,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.3279305800001 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1445525.3760395956,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 691.7900000757982 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 12732.942822475869,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 78.53643999993665 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2969.8555797833,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 336.71671000007564 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 2983.528268618214,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 335.173629999872 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 58473.01990348398,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000037423858226141624",
+            "extra": "mean: 17.101904462102485 usec\nrounds: 12079"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 17339.06275310239,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002082048499086334",
+            "extra": "mean: 57.67324417930693 usec\nrounds: 5111"
           }
         ]
       }
