@@ -184,13 +184,13 @@ class TestQdrantHealthCheckSecurity:
 
     def test_qdrant_uses_grpc_health_probe(self):
         """
-        Test that Qdrant health check uses grpc_health_probe.
+        Test that Qdrant health check uses TCP-based check (not wget/curl).
 
-        Qdrant v1.15+ removed wget/curl for security reasons.
-        The health check must use grpc_health_probe instead.
+        Qdrant v1.15.1 image does not include wget, curl, or grpc_health_probe binaries.
+        For security and reliability, use TCP port check via /dev/tcp instead.
 
-        File: docker-compose.test.yml:206
-        Finding: grpc_health_probe binary missing, causing health check failure
+        File: docker-compose.test.yml:232
+        Finding: Must use TCP-based health check as no HTTP clients exist in base image
         """
         docker_compose_path = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
@@ -212,12 +212,12 @@ class TestQdrantHealthCheckSecurity:
         # Convert to string for easier checking
         test_cmd_str = " ".join(test_cmd) if isinstance(test_cmd, list) else test_cmd
 
-        # Verify uses grpc_health_probe
-        assert "grpc_health_probe" in test_cmd_str, "Qdrant health check should use grpc_health_probe"
+        # Verify uses TCP-based health check (grpc_health_probe not available in qdrant:v1.15.1 image)
+        assert "/dev/tcp" in test_cmd_str, "Qdrant health check should use TCP port check (/dev/tcp)"
 
-        # Verify NOT using wget or curl (security issue)
-        assert "wget" not in test_cmd_str.lower(), "Should not use wget for health checks (removed in Qdrant v1.15+)"
-        assert "curl" not in test_cmd_str.lower(), "Should not use curl for health checks (removed in Qdrant v1.15+)"
+        # Verify NOT using wget or curl (security issue - not available in Qdrant v1.15+)
+        assert "wget" not in test_cmd_str.lower(), "Should not use wget for health checks (not available in v1.15+)"
+        assert "curl" not in test_cmd_str.lower(), "Should not use curl for health checks (not available in v1.15+)"
 
     def test_qdrant_health_check_has_proper_timing(self):
         """

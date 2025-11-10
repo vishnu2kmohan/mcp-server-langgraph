@@ -123,10 +123,10 @@ class TestDockerComposeHealthChecks:
 
     def test_qdrant_health_check_uses_available_command(self):
         """
-        Test that Qdrant health check uses available HTTP endpoint.
+        Test that Qdrant health check uses TCP port check (not wget/curl/grpc_health_probe).
 
-        This test will initially FAIL if grpc_health_probe is used (not available).
-        After fix, should use wget or Qdrant's HTTP /healthz endpoint.
+        Qdrant v1.15.1 image does not include wget, curl, or grpc_health_probe.
+        Use TCP-based health check via /dev/tcp which requires no external tools.
         """
         compose_file = Path(__file__).parent.parent / "docker-compose.test.yml"
 
@@ -143,13 +143,13 @@ class TestDockerComposeHealthChecks:
         healthcheck = qdrant_service.get("healthcheck", {})
         test_cmd = healthcheck.get("test", [])
 
-        # Health check should not use grpc_health_probe if it's not available
+        # Health check should use TCP port check (no external dependencies needed)
         test_str = " ".join(test_cmd) if isinstance(test_cmd, list) else test_cmd
 
-        # Should use HTTP health endpoint (available in Qdrant)
-        assert "/healthz" in test_str or "/health" in test_str, (
-            "Qdrant health check should use HTTP /healthz endpoint\n"
-            "Available in Qdrant v1.15+ without external dependencies"
+        # Should use TCP-based check (works without external binaries)
+        assert "/dev/tcp" in test_str, (
+            "Qdrant health check should use TCP port check via /dev/tcp\n"
+            "Works with bash in Qdrant v1.15.1+ without external dependencies"
         )
 
     def test_all_health_checks_have_proper_intervals(self):

@@ -227,9 +227,9 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      # Use grpc_health_probe (built into Qdrant v1.15+)
-      # Qdrant removed wget/curl for security (GitHub issue #3491)
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:6333/healthz || exit 1"]
+      # Use TCP port check (qdrant:v1.15.1 image lacks wget, curl, and grpc_health_probe)
+      # TCP check via /dev/tcp is secure and works with minimal tooling
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 10

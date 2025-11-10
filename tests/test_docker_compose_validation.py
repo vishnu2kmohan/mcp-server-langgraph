@@ -289,23 +289,23 @@ class TestDockerComposeQdrantSpecific:
             command = command_parts[0]
             base_command = Path(command).name
 
-            # Validate using grpc_health_probe
-            assert base_command == "grpc_health_probe", (
+            # Validate using TCP-based health check (grpc_health_probe not in qdrant:v1.15.1 image)
+            full_command = " ".join(command_parts)
+            assert "/dev/tcp" in full_command, (
                 f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} "
-                f"MUST use 'grpc_health_probe' for health check, not '{base_command}'. "
+                f"MUST use TCP-based health check (/dev/tcp), not '{base_command}'. "
                 f"\n\nCurrent config: {health_check}"
                 f"\n\nExpected: "
-                f'test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:6334"]'
-                f"\n\nReason: Qdrant v1.15+ removed wget/curl for security. "
-                f"See: https://github.com/qdrant/qdrant/issues/3491"
+                f'test: ["CMD-SHELL", "timeout 2 bash -c \'</dev/tcp/localhost/6333\' || exit 1"]'
+                f"\n\nReason: Qdrant v1.15.1 image lacks wget, curl, and grpc_health_probe. "
+                f"TCP check requires only bash and is secure."
                 f"\n\nFile location: {compose_file}"
             )
 
-            # Validate targeting gRPC port (not HTTP)
-            full_command = " ".join(command_parts)
-            assert ":6334" in full_command or "6334" in full_command, (
+            # Validate targeting HTTP port 6333 (not gRPC 6334)
+            assert ":6333" in full_command or "6333" in full_command, (
                 f"Qdrant service '{service_name}' health check should target "
-                f"gRPC port :6334, not HTTP port :6333. "
+                f"HTTP port :6333 for TCP check. "
                 f"Current: {full_command}"
             )
 
