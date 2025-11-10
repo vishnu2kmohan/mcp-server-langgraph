@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762745664681,
+  "lastUpdate": 1762746058853,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38374,6 +38374,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000016296560536175535",
             "extra": "mean: 56.088688273806305 usec\nrounds: 5492"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "b7d64df5fd52036df23c66706224a939a79b66b3",
+          "message": "fix(k8s): add readOnlyRootFilesystem + tests (TDD complete)\n\n**Kubernetes Security Fixes**:\n- deployment-patch.yaml: readOnlyRootFilesystem + emptyDir volumes\n- openfga-patch.yaml: readOnlyRootFilesystem + emptyDir volumes\n- keycloak-patch.yaml: readOnlyRootFilesystem + emptyDir volumes\n\n**Tests Added**:\n- test_kubernetes_security.py: 3/3 passing ✅\n- test_shell_and_docker.py: RED phase (fixes pending)\n\n**Validation**:\n- Kustomize builds: 16/16 tests passing ✅\n- All overlays build successfully\n\n**Impact**: Fixes AVD-KSV-0011, unblocks Trivy/kube-score\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T22:38:55-05:00",
+          "tree_id": "b96014e6ad8028e3bf76017abf83ed7631191bf7",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/b7d64df5fd52036df23c66706224a939a79b66b3"
+        },
+        "date": 1762746056624,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 158.9792767333333,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010117852883909045",
+            "extra": "mean: 6.290127999999445 msec\nrounds: 108"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 159.00096290513335,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015483099763807993",
+            "extra": "mean: 6.289270088236145 msec\nrounds: 136"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 51406.296346039926,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.45286999998075 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 54575.82847489292,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 18.32312999994201 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50269.84854694161,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.89264000002322 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.96832637624482,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.102865440000102 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.673615536669036,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.82949792000008 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.965835235263828,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.34281887999995 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1213312.4642290089,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 824.1900000882652 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 14767.848680367733,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 67.71466999992981 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2920.9733010192517,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 342.3516399999471 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3112.1038307372746,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 321.3260400001161 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 67605.14928226522,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010508250370607427",
+            "extra": "mean: 14.791772677326648 usec\nrounds: 11829"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20856.140342601015,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000019251270799654537",
+            "extra": "mean: 47.94751011323928 usec\nrounds: 5389"
           }
         ]
       }
