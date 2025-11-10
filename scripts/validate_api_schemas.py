@@ -64,16 +64,16 @@ class APISchemaValidator(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Check function return statements match response models."""
         # Look for return_value annotations or explicit response_model
-        response_model_name = None
+        # Note: response_model_name extraction reserved for future OpenAPI schema validation
 
         # Check for return type annotation
         if node.returns:
             if isinstance(node.returns, ast.Name):
-                response_model_name = node.returns.id
+                _ = node.returns.id  # Reserved for future use
             elif isinstance(node.returns, ast.Subscript):
                 # Handle Response[SomeModel] patterns
                 if isinstance(node.returns.slice, ast.Name):
-                    response_model_name = node.returns.slice.id
+                    _ = node.returns.slice.id  # Reserved for future use
 
         # Extract return dictionary keys
         return_keys = set()

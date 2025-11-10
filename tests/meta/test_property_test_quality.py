@@ -112,9 +112,6 @@ class TestPropertyTestQuality:
                         # Check for standalone expression statements (calls without assignment)
                         for stmt in ast.walk(node):
                             if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
-                                # Skip if this is inside a loop (likely side-effect for statistics)
-                                parent_is_loop = any(isinstance(p, (ast.For, ast.While)) for p in ast.walk(node))
-
                                 # Check if it's a method call that likely returns a value
                                 if isinstance(stmt.value.func, ast.Attribute):
                                     method_name = stmt.value.func.attr
