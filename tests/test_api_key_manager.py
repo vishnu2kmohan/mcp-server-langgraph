@@ -267,15 +267,20 @@ class TestAPIKeyValidation:
 
         # Mock bcrypt to avoid CPU-intensive hashing (we're testing expiration, not crypto)
         with patch("mcp_server_langgraph.auth.api_keys.bcrypt.checkpw", return_value=True):
-            mock_keycloak_client.search_users.return_value = [
-                {
-                    "id": "user-123",
-                    "username": "alice",
-                    "attributes": {
-                        "apiKeys": ["key:old123:$2b$04$mockhash"],  # Mock hash
-                        "apiKey_old123_expiresAt": (datetime.utcnow() - timedelta(days=1)).isoformat(),  # Expired yesterday
-                    },
-                }
+            # CRITICAL FIX: Use side_effect to simulate pagination termination
+            # First call returns user with expired key, second call returns [] to terminate loop
+            mock_keycloak_client.search_users.side_effect = [
+                [
+                    {
+                        "id": "user-123",
+                        "username": "alice",
+                        "attributes": {
+                            "apiKeys": ["key:old123:$2b$04$mockhash"],  # Mock hash
+                            "apiKey_old123_expiresAt": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),  # Expired
+                        },
+                    }
+                ],
+                [],  # Second call returns empty to terminate pagination
             ]
 
             # Act
@@ -283,6 +288,8 @@ class TestAPIKeyValidation:
 
             # Assert
             assert user_info is None
+            # Verify pagination terminated (should call search_users twice: first page + termination check)
+            assert mock_keycloak_client.search_users.call_count in [1, 2], "Pagination should terminate after checking pages"
 
     @pytest.mark.asyncio
     @pytest.mark.unit

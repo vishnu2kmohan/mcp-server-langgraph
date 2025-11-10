@@ -21,6 +21,12 @@ class TestSearchKnowledgeBase:
     Observability is initialized via session-scoped fixture in conftest.py.
     """
 
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
+
     @patch("mcp_server_langgraph.tools.search_tools.settings")
     def test_search_with_query(self, mock_settings):
         """Test search with a query string"""
@@ -116,8 +122,15 @@ class TestSearchKnowledgeBase:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="search_tools")
 class TestWebSearch:
     """Test suite for web_search tool"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.tools.search_tools.settings")
@@ -333,8 +346,15 @@ class TestWebSearch:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="search_tools")
 class TestSearchToolSchemas:
     """Test search tool schemas"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
 
     def test_search_knowledge_base_schema(self):
         """Test search_knowledge_base has proper schema"""
