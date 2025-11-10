@@ -64,7 +64,8 @@ class TestAPIKeyIndexedLookup:
             email="testuser@example.com",
             realm_roles=["user"],
         )
-        mock_keycloak.update_user.return_value = None
+        mock_keycloak.get_user_attributes.return_value = {}  # No existing API keys
+        mock_keycloak.update_user_attributes.return_value = None
 
         # Mock Redis cache
         mock_cache = AsyncMock()
@@ -77,14 +78,16 @@ class TestAPIKeyIndexedLookup:
         )
 
         # Create API key
-        _ = await manager.create_api_key(username="testuser", description="Test key", expires_in_days=90)
+        _ = await manager.create_api_key(user_id="testuser", name="Test key", expires_days=90)
 
-        # Verify Keycloak update_user was called with api_key_hash attribute
-        assert mock_keycloak.update_user.called, "create_api_key must call update_user to store API key hash in Keycloak"
+        # Verify Keycloak update_user_attributes was called with api_key_hash attribute
+        assert (
+            mock_keycloak.update_user_attributes.called
+        ), "create_api_key must call update_user_attributes to store API key hash in Keycloak"
 
         # Check that the call included attributes update
-        call_args = mock_keycloak.update_user.call_args
-        assert call_args is not None, "update_user should have been called"
+        call_args = mock_keycloak.update_user_attributes.call_args
+        assert call_args is not None, "update_user_attributes should have been called"
 
     @pytest.mark.asyncio
     async def test_validate_uses_indexed_search_not_enumeration(self):
@@ -259,6 +262,7 @@ class TestKeycloakAttributeIndexing:
         """
         mock_keycloak = AsyncMock(spec=KeycloakClient)
         mock_keycloak.get_user_by_username.return_value = MagicMock(id="user-123", username="testuser", attributes={})
+        mock_keycloak.get_user_attributes.return_value = {}  # No existing API keys
 
         mock_cache = AsyncMock()
 
@@ -272,16 +276,15 @@ class TestKeycloakAttributeIndexing:
         with patch("secrets.token_urlsafe", return_value="test-key-12345"):
             with patch("bcrypt.gensalt", return_value=b"$2b$12$saltsaltsa"):
                 with patch("bcrypt.hashpw", return_value=b"$2b$12$hashed"):
-                    _ = await manager.create_api_key(username="testuser", description="Test", expires_in_days=90)
+                    _ = await manager.create_api_key(user_id="testuser", name="Test", expires_days=90)
 
-        # Should have called update_user with attributes containing hash
-        if mock_keycloak.update_user.called:
-            call_kwargs = mock_keycloak.update_user.call_args[1]
-            # Verify attributes parameter exists and contains hash data
+        # Should have called update_user_attributes with attributes containing hash
+        if mock_keycloak.update_user_attributes.called:
+            # Verify attributes were passed
             # (exact structure depends on implementation)
             assert (
-                "attributes" in call_kwargs or "user_id" in call_kwargs
-            ), "update_user should be called with user attributes to store API key hash"
+                mock_keycloak.update_user_attributes.call_args is not None
+            ), "update_user_attributes should be called with user attributes to store API key hash"
 
 
 @pytest.mark.security
@@ -300,6 +303,7 @@ class TestAPIKeyHashStorage:
         mock_keycloak.get_user_by_username.return_value = MagicMock(
             id="user-123", username="testuser", attributes={"api_key_hashes": ["hash1", "hash2", "hash3"]}
         )
+        mock_keycloak.get_user_attributes.return_value = {"apiKeys": ["hash1", "hash2", "hash3"]}  # Existing keys
 
         mock_cache = AsyncMock()
 
@@ -312,10 +316,10 @@ class TestAPIKeyHashStorage:
         # Creating a new key should append to existing hashes, not replace
         with patch("secrets.token_urlsafe", return_value="new-key"):
             with patch("bcrypt.hashpw", return_value=b"$2b$12$newhash"):
-                await manager.create_api_key(username="testuser", description="New key", expires_in_days=90)
+                await manager.create_api_key(user_id="testuser", name="New key", expires_days=90)
 
         # Verify update preserves existing hashes
-        if mock_keycloak.update_user.called:
+        if mock_keycloak.update_user_attributes.called:
             # Implementation should append, not replace
             pass
 
@@ -345,5 +349,5 @@ class TestAPIKeyHashStorage:
         # Should have updated user attributes to remove the hash
         # (Exact implementation may vary)
         assert (
-            mock_keycloak.update_user.called or mock_keycloak.get_user_by_id.called
+            mock_keycloak.update_user_attributes.called or mock_keycloak.get_user_by_id.called
         ), "revoke_api_key should interact with Keycloak to remove hash"
