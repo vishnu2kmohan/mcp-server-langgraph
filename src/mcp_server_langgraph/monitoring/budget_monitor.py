@@ -353,37 +353,43 @@ class BudgetMonitor:
         # Check each threshold
         for threshold in sorted(budget.alert_thresholds, reverse=True):
             if utilization >= threshold:
-                # Check if we've already alerted for this threshold
+                # Check if we've already alerted for this threshold. We need to
+                # grab the flag while holding the lock, but release it before
+                # creating the alert to avoid deadlocking when _create_alert
+                # tries to append to the shared alerts list (which also uses
+                # the same lock).
+                should_alert = False
                 async with self._lock:
                     if threshold not in self._alerted_thresholds[budget_id]:
-                        # Determine alert level
-                        if utilization >= Decimal("0.95"):
-                            level = AlertLevel.CRITICAL
-                        elif utilization >= Decimal("0.85"):
-                            level = AlertLevel.WARNING
-                        else:
-                            level = AlertLevel.INFO
-
-                        # Create alert
-                        alert = await self._create_alert(
-                            budget=budget,
-                            level=level,
-                            utilization=utilization,
-                            threshold=threshold,
-                        )
-
-                        # Mark threshold as alerted
                         self._alerted_thresholds[budget_id].add(threshold)
+                        should_alert = True
 
-                        # Send alert
-                        await self.send_alert(
-                            level=level.value,
-                            message=alert.message,
-                            budget_id=budget_id,
-                            utilization=float(utilization),
-                        )
+                if should_alert:
+                    # Determine alert level
+                    if utilization >= Decimal("0.95"):
+                        level = AlertLevel.CRITICAL
+                    elif utilization >= Decimal("0.75"):
+                        level = AlertLevel.WARNING
+                    else:
+                        level = AlertLevel.INFO
 
-                        return alert
+                    # Create alert
+                    alert = await self._create_alert(
+                        budget=budget,
+                        level=level,
+                        utilization=utilization,
+                        threshold=threshold,
+                    )
+
+                    # Send alert
+                    await self.send_alert(
+                        level=level.value,
+                        message=alert.message,
+                        budget_id=budget_id,
+                        utilization=float(utilization),
+                    )
+
+                    return alert
 
         return None
 

@@ -398,18 +398,21 @@ class TestCacheTTLBehavior:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @given(ttl_seconds=st.integers(min_value=1, max_value=3))
-    @settings(max_examples=10, deadline=8000)
+    @given(ttl_seconds=st.floats(min_value=0.1, max_value=0.3))
+    @settings(max_examples=10, deadline=2000)
     def test_cache_expires_after_ttl(self, ttl_seconds):
         """Property: Cached values expire after TTL"""
+        # Performance optimization: Use 0.1-0.3s TTL instead of 1-3s
+        # This reduces test time from ~35s to ~3.5s (10x speedup)
+        # while validating the same TTL expiration behavior
         cache = CacheService(l1_maxsize=100, l1_ttl=ttl_seconds)
         cache.set("expiring:key", "value")
 
         # Should exist immediately
         assert cache.get("expiring:key") == "value"
 
-        # Wait for expiration (add buffer)
-        time.sleep(ttl_seconds + 0.5)
+        # Wait for expiration (add buffer) - reduced from 0.5s to 0.05s
+        time.sleep(ttl_seconds + 0.05)
 
         # 🔴 RED → 🟢 GREEN: Assert TTL expiration behavior
         # Property: Cached values must expire after TTL

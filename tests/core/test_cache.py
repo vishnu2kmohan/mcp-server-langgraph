@@ -115,15 +115,15 @@ class TestCacheL1Operations:
 
     def test_l1_ttl_expiration(self, cache_service_no_redis):
         """Test L1 TTL expiration"""
-        # Create cache with very short TTL
-        cache_short_ttl = CacheService(l1_maxsize=100, l1_ttl=1)
+        # Performance optimization: Use 0.1s TTL instead of 1s (10x faster)
+        cache_short_ttl = CacheService(l1_maxsize=100, l1_ttl=0.1)
         cache_short_ttl.set("expiring:key", "value", level=CacheLayer.L1)
 
         # Should exist immediately
         assert cache_short_ttl.get("expiring:key", level=CacheLayer.L1) == "value"
 
-        # Wait for expiration (1s TTL + small buffer)
-        time.sleep(1.05)
+        # Wait for expiration (0.1s TTL + small buffer) - reduced from 1.05s
+        time.sleep(0.15)
 
         # Should be expired
         result = cache_short_ttl.get("expiring:key", level=CacheLayer.L1)

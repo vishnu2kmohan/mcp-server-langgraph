@@ -20,10 +20,11 @@ class TestTimeoutBasics:
     @pytest.mark.asyncio
     async def test_timeout_enforced(self):
         """Test that timeout is enforced"""
+        # Performance optimization: Use 0.1s timeout instead of 1s (10x faster)
 
-        @with_timeout(seconds=1)
+        @with_timeout(seconds=0.1)
         async def slow_func():
-            await asyncio.sleep(1.05)  # Just over timeout
+            await asyncio.sleep(0.15)  # Just over timeout - reduced from 1.05s
             return "should_not_reach"
 
         with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
@@ -125,9 +126,10 @@ class TestTimeoutContextManager:
     @pytest.mark.asyncio
     async def test_timeout_context_manager_enforced(self):
         """Test that TimeoutContext enforces timeout"""
+        # Performance optimization: Use 0.1s timeout instead of 1s (10x faster)
         with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
-            async with TimeoutContext(seconds=1):
-                await asyncio.sleep(1.05)  # Just over timeout
+            async with TimeoutContext(seconds=0.1):
+                await asyncio.sleep(0.15)  # Just over timeout - reduced from 1.05s
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -147,10 +149,11 @@ class TestTimeoutMetrics:
     @pytest.mark.asyncio
     async def test_timeout_metric_on_violation(self):
         """Test that metric is emitted on timeout violation"""
+        # Performance optimization: Use 0.1s timeout instead of 1s (10x faster)
 
-        @with_timeout(seconds=1)
+        @with_timeout(seconds=0.1)
         async def slow_func():
-            await asyncio.sleep(1.05)  # Just over timeout
+            await asyncio.sleep(0.15)  # Just over timeout - reduced from 1.05s
 
         with patch("mcp_server_langgraph.resilience.timeout.timeout_exceeded_counter") as mock_metric:  # noqa: F841
             with pytest.raises((MCPTimeoutError, asyncio.TimeoutError)):
@@ -186,15 +189,16 @@ class TestTimeoutEdgeCases:
     @pytest.mark.asyncio
     async def test_multiple_concurrent_timeouts(self):
         """Test multiple concurrent operations with different timeouts"""
+        # Performance optimization: Use 0.1s/0.2s timeouts instead of 1s/2s (10x faster)
 
-        @with_timeout(seconds=2)
+        @with_timeout(seconds=0.2)
         async def fast_func():
             await asyncio.sleep(0.1)
             return "fast"
 
-        @with_timeout(seconds=1)
+        @with_timeout(seconds=0.1)
         async def slow_func():
-            await asyncio.sleep(1.05)  # Just over timeout
+            await asyncio.sleep(0.15)  # Just over timeout - reduced from 1.05s
             return "slow"
 
         # Run concurrently

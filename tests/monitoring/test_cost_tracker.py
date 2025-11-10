@@ -15,7 +15,7 @@ Tests cover:
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import status
@@ -347,7 +347,7 @@ async def test_budget_monitor_detects_75_percent_utilization(sample_budget):
 
     # Mock current spend at 75%
     with patch.object(monitor, "get_period_spend", return_value=Decimal("750.00")):
-        with patch.object(monitor, "send_alert") as mock_alert:
+        with patch.object(monitor, "send_alert", new_callable=AsyncMock) as mock_alert:
             await monitor.check_budget(sample_budget["id"])
 
             # Assert warning alert sent

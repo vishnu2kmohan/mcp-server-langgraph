@@ -80,10 +80,11 @@ class TestBulkheadFailFast:
     @pytest.mark.asyncio
     async def test_fail_fast_rejects_when_full(self, reset_bulkheads):
         """Test that fail-fast mode rejects when bulkhead is full"""
+        # Performance optimization: Use 0.1s sleep instead of 1s (10x faster)
 
         @with_bulkhead(resource_type="test", limit=2, wait=False)
         async def slow_func():
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)  # Reduced from 1s
             return "success"
 
         # Start 2 concurrent tasks (fill bulkhead)
@@ -141,10 +142,11 @@ class TestBulkheadContextManager:
     @pytest.mark.asyncio
     async def test_bulkhead_context_fail_fast(self, reset_bulkheads):
         """Test BulkheadContext in fail-fast mode"""
+        # Performance optimization: Use 0.05s sleep instead of 0.5s (10x faster)
 
         async def worker():
             async with BulkheadContext(resource_type="test", limit=1, wait=True):
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.05)  # Reduced from 0.5s
 
         # Start one worker (fills bulkhead)
         task1 = asyncio.create_task(worker())
@@ -226,10 +228,11 @@ class TestBulkheadMetrics:
     @pytest.mark.asyncio
     async def test_rejection_metric(self, reset_bulkheads):
         """Test that rejection metric is emitted"""
+        # Performance optimization: Use 0.05s sleep instead of 0.5s (10x faster)
 
         @with_bulkhead(resource_type="test", limit=1, wait=False)
         async def func():
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.05)  # Reduced from 0.5s
 
         # Fill bulkhead
         task = asyncio.create_task(func())

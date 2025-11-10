@@ -122,13 +122,14 @@ class TestFallbackStrategies:
         """Test StaleDataFallback rejects too-stale data"""
         import time
 
-        strategy = StaleDataFallback(max_staleness_seconds=1)
+        # Performance optimization: Use 0.1s staleness instead of 1s (10x faster)
+        strategy = StaleDataFallback(max_staleness_seconds=0.1)
 
         # Cache data
         strategy.cache_value("old_data", "key1")
 
-        # Wait for data to become stale (1s staleness + small buffer)
-        time.sleep(1.05)
+        # Wait for data to become stale (0.1s staleness + small buffer) - reduced from 1.05s
+        time.sleep(0.15)
 
         # Should return None (too stale)
         result = strategy.get_fallback_value("key1")

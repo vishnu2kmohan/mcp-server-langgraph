@@ -100,6 +100,21 @@ repos:
 
           Complements check-github-workflows with deeper validation.
 
+      - id: check-test-sleep-duration
+        name: Check Test Sleep Durations
+        entry: python3 scripts/check_test_sleep_duration.py
+        language: system
+        files: ^tests/.*\.py$
+        exclude: ^tests/meta/test_sleep_duration_linter\.py$
+        pass_filenames: true
+        description: |
+          Prevents test performance regressions by detecting excessive sleep() calls.
+
+          Enforces:
+          - Unit tests: max 0.5s sleep
+          - Integration tests: max 2.0s sleep
+
+          Use VirtualClock for instant time advancement instead of real sleep.
 
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
