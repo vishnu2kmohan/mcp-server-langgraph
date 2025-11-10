@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762732078369,
+  "lastUpdate": 1762744535141,
   "repoUrl": "https://github.com/vishnu2kmohan/mcp-server-langgraph",
   "entries": {
     "Benchmark": [
@@ -38130,6 +38130,128 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000017886204163704475",
             "extra": "mean: 58.939713029598295 usec\nrounds: 5004"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "committer": {
+            "email": "vmohan@emergence.ai",
+            "name": "Vishnu Mohan",
+            "username": "vishnu2kmohan"
+          },
+          "distinct": true,
+          "id": "7b7bc8aaf6f1e90d326f7bc163c8d6b94d893636",
+          "message": "fix(security): add gitleaks config with proper allowlists\n\n**Problem**: Gitleaks reports 143 false positives\n- .openai/codex-instructions.md examples flagged as secrets\n- .venv/** dependencies trigger warnings\n- Generated clients/** code causes failures\n- No configuration file = using restrictive defaults\n- Blocks validate-kubernetes.yaml and gcp-compliance-scan.yaml\n\n**Solution**: Create .gitleaks.toml with comprehensive allowlists\n- Exclude documentation: .openai/**, docs/**, .mintlify/**\n- Exclude dependencies: .venv/**, node_modules/**, __pycache__/**\n- Exclude generated code: clients/python/**, clients/typescript/**\n- Exclude test data: tests/fixtures/**, test_*.tmp\n- Add regex allowlist for example/test/demo/mock patterns\n- Preserve detection of real secrets with entropy checks\n\n**Allowlisted Paths**:\n- Documentation examples (NOT real secrets)\n- Dependency directories (third-party code)\n- Generated OpenAPI clients (auto-generated)\n- Test fixtures and test data\n- Build artifacts and lock files\n\n**Testing**:\n- test_gitleaks_config_exists ✅\n- test_gitleaks_config_valid_toml ✅\n- test_gitleaks_ignores_venv_directories ✅\n- test_gitleaks_ignores_generated_clients ✅\n\n**Impact**: Eliminates 143 false positives while preserving secret detection\n\nRelated: #codex-findings OpenAI Codex Critical Failure #3-4\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+          "timestamp": "2025-11-09T22:12:15-05:00",
+          "tree_id": "ee0aa66594642ae3afdc55d3f34ff7a4d6c3e5c1",
+          "url": "https://github.com/vishnu2kmohan/mcp-server-langgraph/commit/7b7bc8aaf6f1e90d326f7bc163c8d6b94d893636"
+        },
+        "date": 1762744533381,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/patterns/test_supervisor.py::test_supervisor_performance",
+            "value": 162.4500194695438,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00010459137801225422",
+            "extra": "mean: 6.1557394900003715 msec\nrounds: 100"
+          },
+          {
+            "name": "tests/patterns/test_swarm.py::test_swarm_performance",
+            "value": 160.9759402944907,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002904960009758252",
+            "extra": "mean: 6.212108456522086 msec\nrounds: 138"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_encoding_performance",
+            "value": 50478.28171934867,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.810499999977083 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_decoding_performance",
+            "value": 52420.902100859996,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.07635999998547 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestJWTBenchmarks::test_jwt_validation_performance",
+            "value": 50971.75094575241,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 19.61871000005999 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_authorization_check_performance",
+            "value": 195.90217127485724,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 5.104588650000039 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestOpenFGABenchmarks::test_batch_authorization_performance",
+            "value": 19.66536950231673,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 50.850811619999945 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestLLMBenchmarks::test_llm_request_performance",
+            "value": 9.960908922930502,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 100.39244487999994 msec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_agent_initialization_performance",
+            "value": 1410616.2984017513,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 708.9099999291193 nsec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestAgentBenchmarks::test_message_processing_performance",
+            "value": 14794.153409767581,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 67.59426999991547 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_serialization_performance",
+            "value": 2909.1501499658193,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 343.74300000010294 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/performance/test_benchmarks.py::TestResourceBenchmarks::test_state_deserialization_performance",
+            "value": 3031.733457270683,
+            "unit": "iter/sec",
+            "range": "stddev: 0",
+            "extra": "mean: 329.84429999999065 usec\nrounds: 1"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_performance",
+            "value": 66013.20733169615,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010933254481634574",
+            "extra": "mean: 15.148483771971664 usec\nrounds: 10106"
+          },
+          {
+            "name": "tests/test_json_logger.py::TestPerformance::test_formatting_with_trace_performance",
+            "value": 20254.93569700641,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000025167693583760905",
+            "extra": "mean: 49.37068253185299 usec\nrounds: 4013"
           }
         ]
       }
