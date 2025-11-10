@@ -224,8 +224,8 @@ test-unit-fast:
 	@echo "✓ Fast unit tests complete"
 
 test-ci:
-	@echo "Running tests exactly as CI does..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
+	@echo "Running tests exactly as CI does (parallel execution)..."
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
 	@echo "✓ CI-equivalent tests complete"
 	@echo "  Coverage XML: coverage.xml"
 
@@ -235,9 +235,9 @@ test-integration:
 	@echo "✓ Integration tests complete"
 
 test-integration-local:
-	@echo "⚠️  Running integration tests locally (requires services running)..."
+	@echo "⚠️  Running integration tests locally (parallel execution, requires services running)..."
 	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	OTEL_SDK_DISABLED=true $(PYTEST) -m integration --no-cov --tb=short
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m integration --no-cov --tb=short
 	@echo "✓ Local integration tests complete"
 
 test-integration-services:
@@ -402,7 +402,7 @@ test-infra-logs:
 	$(DOCKER_COMPOSE) -f docker-compose.test.yml logs -f
 
 test-e2e:
-	@echo "Running end-to-end tests (requires test infrastructure)..."
+	@echo "Running end-to-end tests (parallel execution, requires test infrastructure)..."
 	@echo "Ensuring test infrastructure is running..."
 	$(MAKE) test-infra-up
 	@echo ""
@@ -410,7 +410,7 @@ test-e2e:
 	@sleep 10
 	@echo ""
 	@echo "Running E2E tests..."
-	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -m e2e -v --tb=short
+	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m e2e -v --tb=short
 	@echo "✓ E2E tests complete"
 
 test-api:
@@ -419,18 +419,14 @@ test-api:
 	@echo "✓ API endpoint tests complete"
 
 test-mcp-server:
-	@echo "Running MCP server unit tests..."
-	OTEL_SDK_DISABLED=true $(PYTEST) tests/unit/test_mcp_stdio_server.py tests/test_mcp_streamable.py -v
+	@echo "Running MCP server unit tests (parallel execution)..."
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/unit/test_mcp_stdio_server.py tests/test_mcp_streamable.py -v
 	@echo "✓ MCP server tests complete"
 
 test-new:
-	@echo "Running newly added tests..."
+	@echo "Running newly added tests (parallel execution)..."
 	@echo ""
-	@echo "1. API Endpoint Tests:"
-	OTEL_SDK_DISABLED=true $(PYTEST) tests/api/ -v
-	@echo ""
-	@echo "2. MCP StdIO Server Tests:"
-	OTEL_SDK_DISABLED=true $(PYTEST) tests/unit/test_mcp_stdio_server.py -v
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto tests/api/ tests/unit/test_mcp_stdio_server.py -v
 	@echo ""
 	@echo "✓ All new tests complete"
 

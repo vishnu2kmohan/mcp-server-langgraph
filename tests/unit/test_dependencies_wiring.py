@@ -453,7 +453,11 @@ class TestDependencyStartupSmoke:
         This test would CATCH bug #1 (missing admin credentials) because
         the client would be created with admin_username=None, admin_password=None.
         """
+        import mcp_server_langgraph.core.dependencies as deps
         from mcp_server_langgraph.core.dependencies import get_keycloak_client
+
+        # Reset singleton to force fresh creation with current settings (not cached from previous test)
+        deps._keycloak_client = None
 
         # Note: This test validates the factory works, not actual Keycloak connectivity
         # Real settings from environment/defaults

@@ -31,7 +31,16 @@ class TestTimeoutTestPerformance:
 
         This test enforces that timeout tests use efficient mocking/short sleeps
         instead of burning time with real long sleeps.
+
+        NOTE: This test is skipped when running under pytest-xdist (parallel mode)
+        because the subprocess timing is affected by parallel execution overhead.
         """
+        import os
+
+        # Skip when running under pytest-xdist (parallel mode)
+        if os.getenv("PYTEST_XDIST_WORKER") is not None:
+            pytest.skip("Performance timing test skipped in parallel mode (xdist)")
+
         test_file = Path(__file__).parent.parent / "unit" / "test_parallel_executor_timeout.py"
 
         if not test_file.exists():
@@ -224,8 +233,8 @@ class TestPollingOptimizations:
 
         # Remove triple-quoted strings to avoid matching sleep calls in test data
         # Pattern: Remove content between ''' ''' and """ """
-        content_no_strings = re.sub(r'""".*?"""', '', content, flags=re.DOTALL)
-        content_no_strings = re.sub(r"'''.*?'''", '', content_no_strings, flags=re.DOTALL)
+        content_no_strings = re.sub(r'""".*?"""', "", content, flags=re.DOTALL)
+        content_no_strings = re.sub(r"'''.*?'''", "", content_no_strings, flags=re.DOTALL)
 
         sleep_pattern = r"time\.sleep\((\d+(?:\.\d+)?)\)"
         matches = re.findall(sleep_pattern, content_no_strings)

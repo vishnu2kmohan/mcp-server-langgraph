@@ -226,6 +226,71 @@ def init_test_observability():
     yield
 
 
+@pytest.fixture(autouse=True)
+def ensure_observability_initialized():
+    """
+    Ensure observability is re-initialized if shut down by previous test.
+
+    Some tests (test_observability_cleanup.py, test_app_factory.py) call
+    shutdown_observability() which sets _observability_config = None.
+    This causes subsequent tests to fail with "Observability not initialized".
+
+    This function-scoped autouse fixture re-initializes observability before
+    each test if needed, preventing state pollution between tests.
+    """
+    from mcp_server_langgraph.core.config import Settings
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+
+    # Before test: Re-initialize if shutdown by previous test
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+    yield
+
+    # After test: Check if this test shut down observability
+    # If so, re-initialize for next test (defensive)
+    if not is_initialized():
+        test_settings = Settings(
+            log_format="text",
+            enable_file_logging=False,
+            langsmith_tracing=False,
+            observability_backend="opentelemetry",
+        )
+        init_observability(settings=test_settings, enable_file_logging=False)
+
+
+@pytest.fixture(autouse=True)
+def reset_dependency_singletons():
+    """
+    Reset all dependency singletons after each test for complete isolation.
+
+    Tests that modify singletons (_keycloak_client, _openfga_client, _api_key_manager,
+    _service_principal_manager) can cause state pollution affecting subsequent tests.
+
+    This fixture ensures clean singleton state by resetting all to None after each test.
+    The next test that needs these dependencies will create fresh instances.
+    """
+    yield
+
+    # Reset all dependency singletons to ensure clean state for next test
+    try:
+        import mcp_server_langgraph.core.dependencies as deps
+
+        deps._keycloak_client = None
+        deps._openfga_client = None
+        deps._api_key_manager = None
+        deps._service_principal_manager = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+
 # ==============================================================================
 # Docker Infrastructure Fixtures (Automated Lifecycle Management)
 # ==============================================================================
