@@ -204,10 +204,7 @@ class TestStandardUserJourney:
             assert len(conversation_id) > 0
 
             # Send first message to agent
-            response = await mcp.send_message(
-                conversation_id=conversation_id,
-                content="Hello! What is the capital of France?"
-            )
+            response = await mcp.send_message(conversation_id=conversation_id, content="Hello! What is the capital of France?")
 
             # Verify response structure
             assert "message_id" in response or "content" in response or "messages" in response
@@ -236,17 +233,11 @@ class TestStandardUserJourney:
             conversation_id = await mcp.create_conversation(user_id=user_id)
 
             # First message
-            response1 = await mcp.send_message(
-                conversation_id=conversation_id,
-                content="My name is Alice."
-            )
+            response1 = await mcp.send_message(conversation_id=conversation_id, content="My name is Alice.")
             assert response1 is not None
 
             # Second message - should maintain context
-            response2 = await mcp.send_message(
-                conversation_id=conversation_id,
-                content="What is my name?"
-            )
+            response2 = await mcp.send_message(conversation_id=conversation_id, content="What is my name?")
 
             # Verify agent remembers context
             assert response2 is not None
@@ -280,10 +271,7 @@ class TestStandardUserJourney:
             # Create and populate a conversation
             conversation_id = await mcp.create_conversation(user_id=user_id)
 
-            await mcp.send_message(
-                conversation_id=conversation_id,
-                content="Test message for conversation retrieval"
-            )
+            await mcp.send_message(conversation_id=conversation_id, content="Test message for conversation retrieval")
 
             # Retrieve the conversation
             conversation_data = await mcp.get_conversation(conversation_id=conversation_id)
@@ -352,11 +340,7 @@ class TestGDPRComplianceJourney:
         async with httpx.AsyncClient() as client:
             # Request data export
             headers = {"Authorization": f"Bearer {access_token}"}
-            response = await client.get(
-                "http://localhost:8000/api/v1/users/me/export",
-                headers=headers,
-                timeout=30.0
-            )
+            response = await client.get("http://localhost:8000/api/v1/users/me/export", headers=headers, timeout=30.0)
 
             # Verify response
             if response.status_code == 404:
@@ -377,9 +361,9 @@ class TestGDPRComplianceJourney:
             expected_sections = ["user_profile", "conversations", "api_keys"]
             for section in expected_sections:
                 if section in export_data:
-                    assert isinstance(export_data[section], (list, dict)), (
-                        f"Export section '{section}' should be structured data"
-                    )
+                    assert isinstance(
+                        export_data[section], (list, dict)
+                    ), f"Export section '{section}' should be structured data"
 
             # Verify export is comprehensive (not just partial data)
             assert len(export_data.keys()) > 0, "Export should contain user data"
@@ -458,9 +442,9 @@ class TestServicePrincipalJourney:
                 json={
                     "name": "E2E Test Service Principal",
                     "description": "Service principal for E2E testing",
-                    "mode": "headless"
+                    "mode": "headless",
                 },
-                timeout=30.0
+                timeout=30.0,
             )
 
             # Check if endpoint exists
@@ -482,9 +466,9 @@ class TestServicePrincipalJourney:
 
             # Verify service_id format
             service_id = sp_data.get("service_id") or sp_data.get("id")
-            assert service_id.startswith("sp:") or service_id.startswith("service:"), (
-                "Service principal ID should have appropriate prefix"
-            )
+            assert service_id.startswith("sp:") or service_id.startswith(
+                "service:"
+            ), "Service principal ID should have appropriate prefix"
 
     @pytest.mark.xfail(strict=True, reason="Implement when SP API is integrated")
     async def test_02_list_service_principals(self, authenticated_session):
@@ -514,7 +498,7 @@ class TestServicePrincipalJourney:
                 "http://localhost:8000/api/v1/service-principals",
                 headers=headers,
                 json={"name": "SP for Auth Test", "description": "Test", "mode": "headless"},
-                timeout=30.0
+                timeout=30.0,
             )
 
             if create_response.status_code == 404:
@@ -528,12 +512,8 @@ class TestServicePrincipalJourney:
             # Authenticate using client credentials
             auth_response = await client.post(
                 "http://localhost:9082/realms/master/protocol/openid-connect/token",
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": client_id,
-                    "client_secret": client_secret
-                },
-                timeout=30.0
+                data={"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret},
+                timeout=30.0,
             )
 
             # Check if OAuth2 flow is supported
@@ -631,11 +611,8 @@ class TestAPIKeyJourney:
             response = await client.post(
                 "http://localhost:8000/api/v1/api-keys",
                 headers=headers,
-                json={
-                    "name": "E2E Test API Key",
-                    "expires_days": 30
-                },
-                timeout=30.0
+                json={"name": "E2E Test API Key", "expires_days": 30},
+                timeout=30.0,
             )
 
             # Check if endpoint exists
@@ -669,11 +646,7 @@ class TestAPIKeyJourney:
             headers = {"Authorization": f"Bearer {access_token}"}
 
             # List API keys
-            response = await client.get(
-                "http://localhost:8000/api/v1/api-keys",
-                headers=headers,
-                timeout=30.0
-            )
+            response = await client.get("http://localhost:8000/api/v1/api-keys", headers=headers, timeout=30.0)
 
             # Check if endpoint exists
             if response.status_code == 404:
@@ -695,9 +668,9 @@ class TestAPIKeyJourney:
 
             # Security: Verify actual API key values are NOT returned
             for key_item in keys_list:
-                assert "api_key" not in key_item or key_item["api_key"] is None, (
-                    "List endpoint should NOT return actual API key values (security risk)"
-                )
+                assert (
+                    "api_key" not in key_item or key_item["api_key"] is None
+                ), "List endpoint should NOT return actual API key values (security risk)"
                 # Should have metadata instead
                 assert "key_id" in key_item or "id" in key_item
                 assert "name" in key_item
@@ -751,7 +724,7 @@ class TestAPIKeyJourney:
                 "http://localhost:8000/api/v1/api-keys",
                 headers=headers,
                 json={"name": "Key to Revoke", "expires_days": 7},
-                timeout=30.0
+                timeout=30.0,
             )
 
             if create_response.status_code == 404:
@@ -763,22 +736,17 @@ class TestAPIKeyJourney:
 
             # Revoke the API key
             delete_response = await client.delete(
-                f"http://localhost:8000/api/v1/api-keys/{key_id}",
-                headers=headers,
-                timeout=30.0
+                f"http://localhost:8000/api/v1/api-keys/{key_id}", headers=headers, timeout=30.0
             )
 
             # Verify deletion success (204 No Content or 200 OK)
-            assert delete_response.status_code in [200, 204], (
-                f"API key revocation should succeed, got {delete_response.status_code}"
-            )
+            assert delete_response.status_code in [
+                200,
+                204,
+            ], f"API key revocation should succeed, got {delete_response.status_code}"
 
             # Verify key is no longer in list
-            list_response = await client.get(
-                "http://localhost:8000/api/v1/api-keys",
-                headers=headers,
-                timeout=30.0
-            )
+            list_response = await client.get("http://localhost:8000/api/v1/api-keys", headers=headers, timeout=30.0)
 
             if list_response.status_code == 200:
                 keys_data = list_response.json()
@@ -786,8 +754,7 @@ class TestAPIKeyJourney:
 
                 # Verify deleted key is not in list
                 assert not any(
-                    (k.get("key_id") == key_id or k.get("id") == key_id)
-                    for k in keys_list
+                    (k.get("key_id") == key_id or k.get("id") == key_id) for k in keys_list
                 ), "Revoked API key should not appear in list"
 
 
@@ -813,8 +780,9 @@ class TestErrorRecoveryJourney:
 
         GREEN: Tests 401 handling and token refresh flow.
         """
-        from tests.e2e.real_clients import real_keycloak_auth
         import httpx
+
+        from tests.e2e.real_clients import real_keycloak_auth
 
         # Login to get initial tokens
         async with real_keycloak_auth() as auth:
@@ -825,24 +793,16 @@ class TestErrorRecoveryJourney:
 
             # Verify new token received
             assert "access_token" in new_tokens
-            assert new_tokens["access_token"] != tokens["access_token"], (
-                "Refreshed token should be different from original"
-            )
+            assert new_tokens["access_token"] != tokens["access_token"], "Refreshed token should be different from original"
 
             # Test making API call with refreshed token
             async with httpx.AsyncClient() as client:
                 headers = {"Authorization": f"Bearer {new_tokens['access_token']}"}
-                response = await client.get(
-                    "http://localhost:8000/api/v1/health",
-                    headers=headers,
-                    timeout=10.0
-                )
+                response = await client.get("http://localhost:8000/api/v1/health", headers=headers, timeout=10.0)
 
                 # If endpoint exists, verify token works
                 if response.status_code != 404:
-                    assert response.status_code in [200, 401], (
-                        "Health check should either work or require different auth"
-                    )
+                    assert response.status_code in [200, 401], "Health check should either work or require different auth"
         # Retry with new token succeeds
 
     @pytest.mark.xfail(strict=True, reason="Implement when authentication is integrated")

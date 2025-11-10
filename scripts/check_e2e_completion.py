@@ -45,23 +45,11 @@ def count_e2e_tests():
 def main():
     """Main entry point for E2E completion check."""
     parser = argparse.ArgumentParser(description="Check E2E test completion percentage")
+    parser.add_argument("--min-percent", type=int, default=25, help="Minimum completion percentage required (default: 25%%)")
     parser.add_argument(
-        "--min-percent",
-        type=int,
-        default=25,
-        help="Minimum completion percentage required (default: 25%%)"
+        "--target-percent", type=int, default=80, help="Target completion percentage for full coverage (default: 80%%)"
     )
-    parser.add_argument(
-        "--target-percent",
-        type=int,
-        default=80,
-        help="Target completion percentage for full coverage (default: 80%%)"
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail if minimum not met (for CI enforcement)"
-    )
+    parser.add_argument("--strict", action="store_true", help="Fail if minimum not met (for CI enforcement)")
 
     args = parser.parse_args()
 

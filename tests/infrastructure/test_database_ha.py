@@ -133,7 +133,8 @@ class TestDatabaseHA:
             config = f.read()
 
         assert "high_availability" in config
-        assert "zone_redundant" in config or "ZoneRedundant" in config
+        # Azure Flexible Server uses high_availability block with mode and standby_availability_zone
+        assert "standby_availability_zone" in config or "zone_redundant" in config or "ZoneRedundant" in config
 
     def test_azure_database_has_geo_redundant_backup(self, azure_database_config):
         """Test Azure Database has geo-redundant backup."""

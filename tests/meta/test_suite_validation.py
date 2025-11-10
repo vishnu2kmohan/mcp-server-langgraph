@@ -798,3 +798,30 @@ class TestCLIToolGuards:
                             if marker_name == expected_marker:
                                 return True
         return False
+
+    def _extract_marker_name(self, decorator: ast.expr) -> str:
+        """
+        Extract marker name from a decorator node.
+
+        Handles:
+        - @pytest.mark.unit
+        - @pytest.mark.integration
+        - @pytest.mark.requires_kubectl
+        - @pytest.mark.requires_kustomize
+
+        Args:
+            decorator: AST node for the decorator
+
+        Returns:
+            Marker name or empty string if not a pytest marker
+        """
+        if isinstance(decorator, ast.Attribute):
+            # @pytest.mark.unit
+            if (
+                isinstance(decorator.value, ast.Attribute)
+                and isinstance(decorator.value.value, ast.Name)
+                and decorator.value.value.id == "pytest"
+                and decorator.value.attr == "mark"
+            ):
+                return decorator.attr
+        return ""

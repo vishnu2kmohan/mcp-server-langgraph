@@ -33,20 +33,20 @@ def find_sleep_calls():
 
         for lineno, line in enumerate(lines, 1):
             # Match time.sleep(N) or asyncio.sleep(N)
-            match = re.search(r'(?:time|asyncio)\.sleep\(([^)]+)\)', line)
+            match = re.search(r"(?:time|asyncio)\.sleep\(([^)]+)\)", line)
             if match:
                 sleep_arg = match.group(1)
 
                 # Try to extract numeric value
                 try:
                     # Handle simple numbers
-                    if sleep_arg.replace('.', '').replace('+', '').replace('-', '').isdigit():
+                    if sleep_arg.replace(".", "").replace("+", "").replace("-", "").isdigit():
                         duration = float(sleep_arg)
                     # Handle expressions like "ttl_seconds + 0.5"
-                    elif '+' in sleep_arg:
-                        parts = sleep_arg.split('+')
+                    elif "+" in sleep_arg:
+                        parts = sleep_arg.split("+")
                         # Conservative estimate: take the larger part if it's a number
-                        max_part = max(p.strip() for p in parts if p.strip().replace('.', '').isdigit())
+                        max_part = max(p.strip() for p in parts if p.strip().replace(".", "").isdigit())
                         duration = float(max_part) if max_part else 1.0
                     else:
                         # Variable reference - estimate conservatively
@@ -64,22 +64,12 @@ def main():
     """Main entry point for sleep budget check."""
     parser = argparse.ArgumentParser(description="Check test suite wall-clock sleep budget")
     parser.add_argument(
-        "--max-seconds",
-        type=int,
-        default=60,
-        help="Maximum total sleep time allowed in seconds (default: 60)"
+        "--max-seconds", type=int, default=60, help="Maximum total sleep time allowed in seconds (default: 60)"
     )
     parser.add_argument(
-        "--warn-seconds",
-        type=int,
-        default=45,
-        help="Warning threshold for sleep time in seconds (default: 45)"
+        "--warn-seconds", type=int, default=45, help="Warning threshold for sleep time in seconds (default: 45)"
     )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail if budget exceeded (for CI enforcement)"
-    )
+    parser.add_argument("--strict", action="store_true", help="Fail if budget exceeded (for CI enforcement)")
 
     args = parser.parse_args()
 

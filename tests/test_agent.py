@@ -528,9 +528,9 @@ class TestRedisCheckpointerLifecycle:
         checkpointer = create_checkpointer(settings)
 
         # Verify checkpointer stores reference to context manager for cleanup
-        assert hasattr(checkpointer, "__context_manager__") or hasattr(checkpointer, "_context"), (
-            "Checkpointer must store context manager reference to enable proper cleanup"
-        )
+        assert hasattr(checkpointer, "__context_manager__") or hasattr(
+            checkpointer, "_context"
+        ), "Checkpointer must store context manager reference to enable proper cleanup"
 
         # Verify the stored context manager can be used for cleanup
         stored_ctx = getattr(checkpointer, "__context_manager__", getattr(checkpointer, "_context", None))
