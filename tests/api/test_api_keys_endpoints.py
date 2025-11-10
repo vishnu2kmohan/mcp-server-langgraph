@@ -105,10 +105,13 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with actual function references
+    # Override dependencies - must return async functions for async dependencies
+    async def mock_get_current_user():
+        return mock_current_user
+
     app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_current_user] = mock_get_current_user
 
     return TestClient(app)
 
