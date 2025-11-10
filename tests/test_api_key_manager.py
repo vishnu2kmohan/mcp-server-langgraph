@@ -102,6 +102,47 @@ class TestAPIKeyCreation:
 
     @pytest.mark.asyncio
     @pytest.mark.unit
+    async def test_create_api_key_returns_created_timestamp(self, api_key_manager, mock_keycloak_client):
+        """
+        REGRESSION TEST for Codex finding: API key creation must return 'created' timestamp.
+
+        The CreateAPIKeyResponse schema requires 'created' field, but create_api_key()
+        was only returning key_id, api_key, name, and expires_at, causing the API
+        endpoint to fill 'created' with an empty string.
+
+        This violates the API contract and breaks clients expecting the created timestamp.
+        """
+        # Arrange
+        user_id = "user:bob"
+        name = "Test Key"
+        mock_keycloak_client.get_user_attributes.return_value = {}
+
+        # Act
+        result = await api_key_manager.create_api_key(
+            user_id=user_id,
+            name=name,
+            expires_days=365,
+        )
+
+        # Assert - CRITICAL: Verify 'created' field is present in return value
+        assert "created" in result, (
+            "create_api_key() must return 'created' timestamp to satisfy API contract. "
+            "The CreateAPIKeyResponse schema requires this field."
+        )
+        assert result["created"] != "", "created timestamp must not be empty"
+
+        # Verify it's a valid ISO format timestamp
+        from datetime import datetime
+
+        try:
+            created_dt = datetime.fromisoformat(result["created"])
+            # Should be recent (within last minute)
+            assert abs((datetime.utcnow() - created_dt).total_seconds()) < 60
+        except ValueError:
+            pytest.fail(f"created field must be valid ISO format timestamp, got: {result['created']}")
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
     async def test_create_api_key_enforces_max_limit(self, api_key_manager, mock_keycloak_client):
         """Test that creating more than max keys raises error"""
         # Arrange

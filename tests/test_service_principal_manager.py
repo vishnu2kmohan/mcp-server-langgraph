@@ -313,6 +313,62 @@ class TestServicePrincipalListing:
 
 
 @pytest.mark.unit
+class TestServicePrincipalRetrieval:
+    """Test retrieving service principals (regression test for Codex finding)"""
+
+    @pytest.mark.asyncio
+    async def test_get_service_principal_service_account_user_uses_correct_method(
+        self, service_principal_manager, mock_keycloak_client
+    ):
+        """
+        Test that get_service_principal uses get_user_by_username for service account users.
+
+        REGRESSION TEST for Codex finding: get_user() expects UUID, not username.
+        Service account usernames like 'svc_my-service' are NOT UUIDs, so we must
+        use get_user_by_username() instead of get_user().
+        """
+        # Arrange
+        service_id = "test-service"
+        expected_username = f"svc_{service_id}"
+
+        # Mock get_client to fail (not a client credentials service principal)
+        mock_keycloak_client.get_client = AsyncMock(return_value=None)
+
+        # Mock get_user_by_username to return a service account user
+        mock_keycloak_client.get_user_by_username = AsyncMock(
+            return_value={
+                "id": "user-uuid-123",
+                "username": expected_username,
+                "firstName": "Test Service",
+                "enabled": True,
+                "attributes": {
+                    "serviceAccount": "true",
+                    "purpose": "Testing service account retrieval",
+                    "owner": "user:alice",
+                },
+            }
+        )
+
+        # Mock get_user to raise an error if called (should NOT be called)
+        mock_keycloak_client.get_user = AsyncMock(
+            side_effect=Exception("get_user should not be called with username - requires UUID")
+        )
+
+        # Act
+        sp = await service_principal_manager.get_service_principal(service_id)
+
+        # Assert
+        assert sp is not None, "Should retrieve service principal"
+        assert sp.service_id == service_id
+        assert sp.name == "Test Service"
+        assert sp.authentication_mode == "service_account_user"
+
+        # CRITICAL: Verify get_user_by_username was called with username, not get_user
+        mock_keycloak_client.get_user_by_username.assert_called_once_with(expected_username)
+        # Verify get_user was NOT called (if it was, the exception would have been raised)
+
+
+@pytest.mark.unit
 class TestServicePrincipalDeletion:
     """Test deleting service principals"""
 

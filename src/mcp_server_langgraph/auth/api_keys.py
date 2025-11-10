@@ -165,6 +165,7 @@ class APIKeyManager:
             "key_id": key_id,
             "api_key": api_key,  # Return once, never stored plaintext
             "name": name,
+            "created": created_at.isoformat(),
             "expires_at": expires_at.isoformat(),
         }
 

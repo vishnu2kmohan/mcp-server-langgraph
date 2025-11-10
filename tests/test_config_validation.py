@@ -11,6 +11,11 @@ import pytest
 
 from mcp_server_langgraph.core.config import Settings
 
+# Test model constants - use obviously fake names to prevent time-bomb failures
+# when real models are released (e.g., when OpenAI actually releases GPT-5)
+TEST_NONEXISTENT_OPENAI_MODEL = "gpt-999-test-nonexistent"
+TEST_NONEXISTENT_GOOGLE_MODEL = "gemini-999-test-nonexistent"
+
 
 @pytest.mark.unit
 class TestFallbackModelValidation:
@@ -25,7 +30,7 @@ class TestFallbackModelValidation:
             openai_api_key="test-openai-key",
             # Fallback models that match the credentials
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
+            fallback_models=["claude-3-haiku-20240307", TEST_NONEXISTENT_OPENAI_MODEL],
         )
 
         # Should not log warnings when all credentials present
@@ -43,7 +48,7 @@ class TestFallbackModelValidation:
             anthropic_api_key=None,
             openai_api_key="test-openai-key",
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
+            fallback_models=["claude-3-haiku-20240307", TEST_NONEXISTENT_OPENAI_MODEL],
         )
 
         settings._validate_fallback_credentials()
@@ -59,14 +64,14 @@ class TestFallbackModelValidation:
             anthropic_api_key="test-anthropic-key",
             openai_api_key=None,  # Missing
             enable_fallback=True,
-            fallback_models=["claude-3-haiku-20240307", "gpt-5"],
+            fallback_models=["claude-3-haiku-20240307", TEST_NONEXISTENT_OPENAI_MODEL],
         )
 
         settings._validate_fallback_credentials()
 
         # Should log warning about missing OpenAI credentials
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        assert any("gpt-5" in log.message for log in warning_logs)
+        assert any(TEST_NONEXISTENT_OPENAI_MODEL in log.message for log in warning_logs)
         assert any("OPENAI_API_KEY" in log.message for log in warning_logs)
 
     def test_validate_fallback_credentials_no_fallback_enabled(self, caplog):
@@ -107,8 +112,8 @@ class TestFallbackModelValidation:
             enable_fallback=True,
             fallback_models=[
                 "claude-3-haiku-20240307",  # Needs anthropic_api_key
-                "gpt-5",  # Needs openai_api_key
-                "gemini-2.5-flash",  # Needs google_api_key
+                TEST_NONEXISTENT_OPENAI_MODEL,  # Needs openai_api_key
+                TEST_NONEXISTENT_GOOGLE_MODEL,  # Needs google_api_key
             ],
         )
 
@@ -119,8 +124,8 @@ class TestFallbackModelValidation:
 
         # Check for each model warning
         assert any("claude-3-haiku-20240307" in log.message for log in warning_logs)
-        assert any("gpt-5" in log.message for log in warning_logs)
-        assert any("gemini-2.5-flash" in log.message for log in warning_logs)
+        assert any(TEST_NONEXISTENT_OPENAI_MODEL in log.message for log in warning_logs)
+        assert any(TEST_NONEXISTENT_GOOGLE_MODEL in log.message for log in warning_logs)
 
         # Check for credential names
         assert any("ANTHROPIC_API_KEY" in log.message for log in warning_logs)

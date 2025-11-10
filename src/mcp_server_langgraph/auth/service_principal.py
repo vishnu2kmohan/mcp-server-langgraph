@@ -386,7 +386,7 @@ class ServicePrincipalManager:
 
         # Try to find as service account user
         try:
-            user = await self.keycloak.get_user(f"svc_{service_id}")
+            user = await self.keycloak.get_user_by_username(f"svc_{service_id}")
             if user:
                 attrs = user.get("attributes", {})
                 if attrs.get("serviceAccount") == "true":
