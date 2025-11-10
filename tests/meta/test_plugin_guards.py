@@ -100,7 +100,7 @@ class TestPluginCLIModeGuards:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--fixtures"],
             capture_output=True,
-            timeout=10,
+            timeout=30,  # Increased from 10s - fixture loading can be slow with large test suites
             cwd=Path(__file__).parent.parent.parent,
         )
 

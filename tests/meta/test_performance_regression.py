@@ -219,16 +219,21 @@ class TestPollingOptimizations:
             "from tests.helpers.polling import poll_until" in content
         ), "Kubernetes sandbox tests should use poll_until() for cleanup waits"
 
-        # Should not have long time.sleep calls (> 2s)
+        # Should not have long time.sleep calls (> 2s) in test code (not in string literals)
         import re
 
+        # Remove triple-quoted strings to avoid matching sleep calls in test data
+        # Pattern: Remove content between ''' ''' and """ """
+        content_no_strings = re.sub(r'""".*?"""', '', content, flags=re.DOTALL)
+        content_no_strings = re.sub(r"'''.*?'''", '', content_no_strings, flags=re.DOTALL)
+
         sleep_pattern = r"time\.sleep\((\d+(?:\.\d+)?)\)"
-        matches = re.findall(sleep_pattern, content)
+        matches = re.findall(sleep_pattern, content_no_strings)
 
         long_sleeps = [float(value) for value in matches if float(value) > 2.0]
 
         assert not long_sleeps, (
-            f"Found {len(long_sleeps)} time.sleep() calls > 2s: {long_sleeps}\n"
+            f"Found {len(long_sleeps)} time.sleep() calls > 2s in test logic: {long_sleeps}\n"
             f"Use poll_until() instead of fixed sleeps for cleanup waits."
         )
 

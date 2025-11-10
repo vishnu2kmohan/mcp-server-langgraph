@@ -214,7 +214,7 @@ class TestBulkheadProperties:
     """Property-based tests for bulkhead pattern"""
 
     @given(max_concurrent=st.integers(min_value=1, max_value=5))
-    @settings(max_examples=10, deadline=4000)
+    @settings(max_examples=10, deadline=3000)
     @pytest.mark.asyncio
     async def test_bulkhead_limits_concurrency(self, max_concurrent):
         """Property: Bulkhead never exceeds max concurrent operations"""
@@ -244,7 +244,7 @@ class TestBulkheadProperties:
         max_concurrent=st.integers(min_value=1, max_value=3),
         num_requests=st.integers(min_value=5, max_value=10),
     )
-    @settings(max_examples=10, deadline=4000)
+    @settings(max_examples=10, deadline=3000)
     @pytest.mark.asyncio
     async def test_bulkhead_fail_fast_rejects_excess(self, max_concurrent, num_requests):
         """Property: Bulkhead with wait=False rejects requests beyond capacity"""

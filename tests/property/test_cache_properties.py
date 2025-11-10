@@ -241,7 +241,7 @@ class TestCacheConcurrencySafety:
         gc.collect()
 
     @given(num_concurrent=st.integers(min_value=2, max_value=10))
-    @settings(max_examples=10, deadline=5000)
+    @settings(max_examples=10, deadline=3000)
     @pytest.mark.asyncio
     async def test_concurrent_sets_dont_lose_data(self, num_concurrent):
         """Property: Concurrent sets don't lose data"""
@@ -504,7 +504,7 @@ class TestCacheStampedePrevention:
         gc.collect()
 
     @given(num_concurrent=st.integers(min_value=2, max_value=8))
-    @settings(max_examples=10, deadline=5000)
+    @settings(max_examples=10, deadline=3000)
     @pytest.mark.asyncio
     async def test_stampede_prevention_calls_fetcher_once(self, num_concurrent):
         """Property: get_with_lock calls fetcher only once for concurrent requests"""

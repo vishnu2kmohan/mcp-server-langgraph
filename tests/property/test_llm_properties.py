@@ -65,7 +65,7 @@ class TestLLMFactoryProperties:
             pytest.fail(f"Factory creation failed with valid inputs: {e}")
 
     @given(messages=message_lists)
-    @settings(max_examples=30, deadline=5000)
+    @settings(max_examples=30, deadline=3000)
     def test_invoke_preserves_message_content(self, messages):
         """Property: Invoke should accept messages without crashing"""
         from mcp_server_langgraph.llm.factory import LLMFactory
@@ -119,7 +119,7 @@ class TestLLMFactoryProperties:
             assert call_kwargs["max_tokens"] == max_tokens2
 
     @given(messages=message_lists)
-    @settings(max_examples=20, deadline=5000)
+    @settings(max_examples=20, deadline=3000)
     def test_fallback_always_tried_on_failure(self, messages):
         """Property: Fallback should always be attempted when primary fails"""
         from mcp_server_langgraph.llm.factory import LLMFactory
@@ -299,7 +299,7 @@ class TestLLMFactoryFallbackProperties:
         fallback_count=st.integers(min_value=1, max_value=5),
         success_index=st.integers(min_value=0, max_value=4),
     )
-    @settings(max_examples=15, deadline=5000)
+    @settings(max_examples=15, deadline=3000)
     def test_fallback_stops_on_first_success(self, fallback_count, success_index):
         """Property: Fallback should stop trying once one succeeds"""
         from mcp_server_langgraph.llm.factory import LLMFactory
@@ -330,7 +330,7 @@ class TestLLMFactoryFallbackProperties:
             assert response.content == "success"
 
     @given(fallback_count=st.integers(min_value=1, max_value=3))
-    @settings(max_examples=10, deadline=5000)
+    @settings(max_examples=10, deadline=3000)
     def test_all_fallbacks_exhausted_raises(self, fallback_count):
         """Property: If all fallbacks fail, should raise exception"""
         from mcp_server_langgraph.llm.factory import LLMFactory

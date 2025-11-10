@@ -18,7 +18,12 @@ Tests cover:
 from typing import Any, Dict
 
 import pytest
-from freezegun import freeze_time
+
+# Guard optional freezegun dependency
+try:
+    from freezegun import freeze_time
+except ImportError:
+    pytest.skip("freezegun not installed (optional test dependency)", allow_module_level=True)
 
 from mcp_server_langgraph.core.interrupts.interrupts import (
     InterruptConfig,
