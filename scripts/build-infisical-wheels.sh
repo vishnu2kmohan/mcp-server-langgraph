@@ -96,7 +96,15 @@ mkdir -p "$OUTPUT_DIR"
 
 # Clean if requested
 if [ "$CLEAN" = "true" ]; then
+    # Safety check: validate OUTPUT_DIR before rm -rf (Codex Security Fix)
+    if [ -z "$OUTPUT_DIR" ] || [ "$OUTPUT_DIR" = "/" ] || [ "$OUTPUT_DIR" = "/tmp" ]; then
+        log_error "Invalid OUTPUT_DIR for cleanup: '$OUTPUT_DIR'"
+        log_error "OUTPUT_DIR must be set to a specific, non-system directory"
+        exit 1
+    fi
+
     log_info "Cleaning output directory: $OUTPUT_DIR"
+    # shellcheck disable=SC2115  # OUTPUT_DIR validated above
     rm -rf "$OUTPUT_DIR"/*
 fi
 

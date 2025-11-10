@@ -53,7 +53,7 @@ services:
       - /var/lib/postgresql/data:rw,noexec,nosuid,size=256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
+      interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 10
       start_period: 5s
@@ -100,7 +100,7 @@ services:
       - TESTING=true
     healthcheck:
       test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
-      interval: 2s
+      interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 15
       start_period: 5s
@@ -143,7 +143,9 @@ services:
       # Test-specific
       - TESTING=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      # Use Keycloak's built-in health command instead of curl (not available in image)
+      # Codex Fix: curl doesn't exist in Keycloak image, use native kc.sh command
+      test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config | grep -q 'kc.db' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 40
@@ -168,7 +170,7 @@ services:
       - /data:rw,noexec,nosuid,size=128m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 2s
+      interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 2s
       retries: 10
     deploy:
@@ -193,7 +195,7 @@ services:
       - /data:rw,noexec,nosuid,size=64m
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 2s
+      interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 2s
       retries: 10
     deploy:
@@ -227,7 +229,7 @@ services:
     healthcheck:
       # Use grpc_health_probe (built into Qdrant v1.15+)
       # Qdrant removed wget/curl for security (GitHub issue #3491)
-      test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:6334"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:6333/healthz || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 10

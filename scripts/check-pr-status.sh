@@ -31,10 +31,10 @@ check_pr() {
     local category=$2
 
     # Get PR details
-    local pr_data=$(gh pr view $pr_number --json headRefOid,title,updatedAt,statusCheckRollup 2>/dev/null || echo "")
+    local pr_data=$(gh pr view "$pr_number" --json headRefOid,title,updatedAt,statusCheckRollup 2>/dev/null || echo "")
 
     if [ -z "$pr_data" ]; then
-        echo -e "  ${RED}✗${NC} PR #$pr_number - Not found"
+        echo -e "  ${RED}✗${NC} PR #${pr_number} - Not found"
         return
     fi
 
@@ -49,13 +49,13 @@ check_pr() {
     local pending=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.status == "in_progress" or .status == "queued")] | length')
 
     # Determine status
-    if [ $total_checks -eq 0 ]; then
+    if [ "$total_checks" -eq 0 ]; then
         status="${YELLOW}⏳ No checks yet${NC}"
-    elif [ $failing -gt 0 ]; then
-        status="${RED}✗ $failing failing${NC}"
-    elif [ $pending -gt 0 ]; then
-        status="${YELLOW}⏳ $pending pending${NC}"
-    elif [ $passing -eq $total_checks ]; then
+    elif [ "$failing" -gt 0 ]; then
+        status="${RED}✗ ${failing} failing${NC}"
+    elif [ "$pending" -gt 0 ]; then
+        status="${YELLOW}⏳ ${pending} pending${NC}"
+    elif [ "$passing" -eq "$total_checks" ]; then
         status="${GREEN}✓ All passing${NC}"
     else
         status="${YELLOW}? Unknown${NC}"
@@ -68,8 +68,8 @@ check_pr() {
         rebase_status="${YELLOW}⏳ Pre-rebase${NC}"
     fi
 
-    echo -e "  ${BLUE}PR #$pr_number${NC}: $pr_title"
-    echo -e "    SHA: $pr_sha | $rebase_status | Checks: $status ($passing/$total_checks)"
+    echo -e "  ${BLUE}PR #${pr_number}${NC}: $pr_title"
+    echo -e "    SHA: $pr_sha | $rebase_status | Checks: $status (${passing}/${total_checks})"
     echo -e "    Updated: ${pr_updated:0:16}"
 }
 
@@ -111,7 +111,7 @@ pending_count=0
 failing_count=0
 
 for pr in "${all_prs[@]}"; do
-    pr_data=$(gh pr view $pr --json statusCheckRollup 2>/dev/null || echo "")
+    pr_data=$(gh pr view "$pr" --json statusCheckRollup 2>/dev/null || echo "")
     if [ -z "$pr_data" ]; then
         continue
     fi
@@ -120,11 +120,11 @@ for pr in "${all_prs[@]}"; do
     passing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "success")] | length')
     failing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "failure")] | length')
 
-    if [ $total_checks -eq 0 ]; then
+    if [ "$total_checks" -eq 0 ]; then
         ((pending_count++))
-    elif [ $failing -gt 0 ]; then
+    elif [ "$failing" -gt 0 ]; then
         ((failing_count++))
-    elif [ $passing -eq $total_checks ] && [ $total_checks -gt 0 ]; then
+    elif [ "$passing" -eq "$total_checks" ] && [ "$total_checks" -gt 0 ]; then
         ((ready_count++))
     else
         ((pending_count++))
@@ -136,14 +136,14 @@ echo -e "Ready to merge: ${GREEN}$ready_count${NC}"
 echo -e "Pending CI: ${YELLOW}$pending_count${NC}"
 echo -e "Failing CI: ${RED}$failing_count${NC}"
 
-if [ $ready_count -gt 0 ]; then
-    echo -e "\n${GREEN}✓ $ready_count PR(s) ready to merge!${NC}"
+if [ "$ready_count" -gt 0 ]; then
+    echo -e "\n${GREEN}✓ ${ready_count} PR(s) ready to merge!${NC}"
     echo "Run: ./scripts/merge-ready-prs.sh"
-elif [ $pending_count -eq $total_prs ]; then
+elif [ "$pending_count" -eq "$total_prs" ]; then
     echo -e "\n${YELLOW}⏳ All PRs still pending (Dependabot rebase or CI in progress)${NC}"
     echo "Check again in 5-10 minutes"
-elif [ $failing_count -gt 0 ]; then
-    echo -e "\n${RED}⚠️  $failing_count PR(s) have failing checks${NC}"
+elif [ "$failing_count" -gt 0 ]; then
+    echo -e "\n${RED}⚠️  ${failing_count} PR(s) have failing checks${NC}"
     echo "Investigate failures with: gh pr checks <PR-NUMBER>"
 fi
 
