@@ -108,11 +108,21 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with simple lambdas
-    # FastAPI dependency_overrides don't need to match the original signature
-    app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
-    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    # Override dependencies - must match async/sync of original functions
+    # IMPORTANT: get_current_user is async, managers are sync
+    # Using wrong async/sync causes FastAPI to ignore override in pytest-xdist
+    async def mock_get_current_user_async():
+        return mock_current_user
+
+    def mock_get_api_key_manager_sync():
+        return mock_api_key_manager
+
+    def mock_get_keycloak_client_sync():
+        return mock_keycloak_client
+
+    app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
+    app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
+    app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
     yield TestClient(app)
 

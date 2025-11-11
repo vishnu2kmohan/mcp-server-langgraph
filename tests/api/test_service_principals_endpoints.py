@@ -114,10 +114,17 @@ def test_client(mock_sp_manager, mock_current_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with simple lambdas
-    # FastAPI dependency_overrides don't need to match the original signature
-    app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    # Override dependencies - must match async/sync of original functions
+    # IMPORTANT: get_current_user is async, manager is sync
+    # Using wrong async/sync causes FastAPI to ignore override in pytest-xdist
+    async def mock_get_current_user_async():
+        return mock_current_user
+
+    def mock_get_sp_manager_sync():
+        return mock_sp_manager
+
+    app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
+    app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
     yield TestClient(app)
 
@@ -137,10 +144,16 @@ def admin_test_client(mock_sp_manager, mock_admin_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies with simple lambdas
-    # FastAPI dependency_overrides don't need to match the original signature
-    app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_admin_user
+    # Override dependencies - must match async/sync of original functions
+    # IMPORTANT: get_current_user is async, manager is sync
+    async def mock_get_admin_user_async():
+        return mock_admin_user
+
+    def mock_get_sp_manager_sync():
+        return mock_sp_manager
+
+    app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
+    app.dependency_overrides[get_current_user] = mock_get_admin_user_async
 
     yield TestClient(app)
 
