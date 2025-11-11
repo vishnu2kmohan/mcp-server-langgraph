@@ -38,25 +38,43 @@ def mock_get_current_user(mock_auth_user):
 
 
 @pytest.fixture
-def test_app(mock_get_current_user):
-    """Create test FastAPI app with mocked auth."""
+def test_app(mock_get_current_user, monkeypatch):
+    """
+    Create test FastAPI app with mocked auth.
+
+    **pytest-xdist Isolation:**
+    - Uses monkeypatch.setenv() for automatic environment cleanup
+    - Overrides bearer_scheme to prevent singleton pollution
+    - Clears dependency_overrides in teardown to prevent leaks
+
+    References:
+    - tests/regression/test_pytest_xdist_environment_pollution.py
+    - OpenAI Codex Finding: test_gdpr_endpoints.py:40-57
+    - PYTEST_XDIST_BEST_PRACTICES.md
+    """
     # Set environment to development to avoid production guard
-    os.environ["ENVIRONMENT"] = "development"
-    os.environ["GDPR_STORAGE_BACKEND"] = "memory"
+    # Use monkeypatch for automatic cleanup (prevents environment pollution)
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("GDPR_STORAGE_BACKEND", "memory")
 
     # Import after setting env vars
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.gdpr import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
     app = FastAPI()
     app.include_router(router)
 
-    # Override the dependency
+    # CRITICAL: Override bearer_scheme to prevent singleton pollution (per PYTEST_XDIST_BEST_PRACTICES.md)
+    app.dependency_overrides[bearer_scheme] = lambda: None
+    # Override the dependency (async function for async dependency)
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
-    return app
+    yield app
+
+    # CRITICAL: Clear dependency overrides to prevent leaks to other tests
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

@@ -310,14 +310,26 @@ class TestGDPREndpoints:
 
     @pytest.fixture
     def test_client(self, mock_current_user):
-        """FastAPI TestClient with mocked auth and GDPR dependencies"""
+        """
+        FastAPI TestClient with mocked auth and GDPR dependencies.
+
+        **pytest-xdist Isolation:**
+        - Uses async overrides for async dependencies (prevents 401 errors)
+        - Overrides bearer_scheme to prevent singleton pollution
+        - Clears dependency_overrides in teardown to prevent leaks
+
+        References:
+        - tests/regression/test_pytest_xdist_environment_pollution.py
+        - OpenAI Codex Finding: test_gdpr.py:397-399
+        - PYTEST_XDIST_BEST_PRACTICES.md (commit 079e82e)
+        """
         from unittest.mock import AsyncMock
 
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
         from mcp_server_langgraph.auth.session import get_session_store
         from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
@@ -393,12 +405,28 @@ class TestGDPREndpoints:
         mock_gdpr_storage.store_consent_record.return_value = None
         mock_gdpr_storage.get_deletion_audit_log.return_value = []
 
-        # Override dependencies
-        app.dependency_overrides[get_current_user] = lambda: mock_current_user
-        app.dependency_overrides[get_session_store] = lambda: mock_session_store
-        app.dependency_overrides[get_gdpr_storage] = lambda: mock_gdpr_storage
+        # Define async override functions for async dependencies
+        # CRITICAL: Must use async def for async dependencies (not sync lambdas)
+        async def mock_get_current_user_async():
+            return mock_current_user
 
-        return TestClient(app)
+        async def mock_get_session_store_async():
+            return mock_session_store
+
+        async def mock_get_gdpr_storage_async():
+            return mock_gdpr_storage
+
+        # Override dependencies
+        # CRITICAL: Override bearer_scheme to prevent singleton pollution (per PYTEST_XDIST_BEST_PRACTICES.md)
+        app.dependency_overrides[bearer_scheme] = lambda: None
+        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        app.dependency_overrides[get_session_store] = mock_get_session_store_async
+        app.dependency_overrides[get_gdpr_storage] = mock_get_gdpr_storage_async
+
+        yield TestClient(app)
+
+        # CRITICAL: Clear dependency overrides to prevent leaks to other tests
+        app.dependency_overrides.clear()
 
     def test_get_user_data_endpoint(self, test_client, mock_current_user):
         """Test GET /api/v1/users/me/data - GDPR Article 15 (Right to Access)"""

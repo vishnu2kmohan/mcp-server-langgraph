@@ -16,15 +16,23 @@ import os
 from unittest.mock import MagicMock, patch
 
 
-def test_api_key_cache_uses_separate_database():
+def test_api_key_cache_uses_separate_database(monkeypatch):
     """
     🟢 GREEN: Test that API key cache uses different Redis DB than L2 cache.
 
     PROBLEM: Both use DB 2, causing cache.clear() to affect API keys.
 
     This test should PASS after changing api_key_cache_db to 3.
+
+    **pytest-xdist Isolation:**
+    - Uses monkeypatch.setenv() for automatic environment cleanup
+
+    References:
+    - tests/regression/test_pytest_xdist_environment_pollution.py
+    - OpenAI Codex Finding: test_cache_isolation.py:27
     """
-    os.environ["ENVIRONMENT"] = "test"
+    # Use monkeypatch for automatic cleanup (prevents environment pollution)
+    monkeypatch.setenv("ENVIRONMENT", "test")
 
     from mcp_server_langgraph.core.config import Settings
 
