@@ -103,19 +103,28 @@ def mock_admin_user(mock_current_user):
 
 
 @pytest.fixture
-def test_client(mock_sp_manager, mock_current_user):
+def mock_openfga_client():
+    """Mock OpenFGA client for authorization checks"""
+    mock_client = AsyncMock()
+    # By default, authorize all permission checks (tests can override)
+    mock_client.check_permission = AsyncMock(return_value=True)
+    return mock_client
+
+
+@pytest.fixture
+def test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
     """FastAPI TestClient with mocked dependencies"""
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
-    from mcp_server_langgraph.core.dependencies import get_service_principal_manager
+    from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
     app = FastAPI()
     app.include_router(router)
 
     # Override dependencies - must match async/sync of original functions
-    # IMPORTANT: get_current_user is async, manager is sync
+    # IMPORTANT: get_current_user is async, manager and openfga_client getter are sync
     # Using wrong async/sync causes FastAPI to ignore override in pytest-xdist
     async def mock_get_current_user_async():
         return mock_current_user
@@ -123,8 +132,12 @@ def test_client(mock_sp_manager, mock_current_user):
     def mock_get_sp_manager_sync():
         return mock_sp_manager
 
+    def mock_get_openfga_sync():
+        return mock_openfga_client
+
     app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
     app.dependency_overrides[get_current_user] = mock_get_current_user_async
+    app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
 
     yield TestClient(app)
 
@@ -133,27 +146,31 @@ def test_client(mock_sp_manager, mock_current_user):
 
 
 @pytest.fixture
-def admin_test_client(mock_sp_manager, mock_admin_user):
+def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
     """FastAPI TestClient with admin user for tests requiring elevated permissions"""
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
-    from mcp_server_langgraph.core.dependencies import get_service_principal_manager
+    from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
     app = FastAPI()
     app.include_router(router)
 
     # Override dependencies - must match async/sync of original functions
-    # IMPORTANT: get_current_user is async, manager is sync
+    # IMPORTANT: get_current_user is async, manager and openfga_client getter are sync
     async def mock_get_admin_user_async():
         return mock_admin_user
 
     def mock_get_sp_manager_sync():
         return mock_sp_manager
 
+    def mock_get_openfga_sync():
+        return mock_openfga_client
+
     app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
     app.dependency_overrides[get_current_user] = mock_get_admin_user_async
+    app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
 
     yield TestClient(app)
 

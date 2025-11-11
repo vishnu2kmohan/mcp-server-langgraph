@@ -1505,7 +1505,7 @@ def test_circuit_breaker_config():
 
 
 @pytest.fixture(autouse=True)
-def reset_resilience_state():
+def reset_resilience_state(request):
     """
     Reset all resilience patterns between tests to prevent state pollution.
 
@@ -1515,7 +1515,17 @@ def reset_resilience_state():
     - Retry state is reset
 
     This prevents test failures caused by resilience state from previous tests.
+
+    Tests can opt-out by using the @pytest.mark.skip_resilience_reset marker.
+    This is useful for tests that intentionally manipulate resilience state.
     """
+    # Check if test is marked to skip resilience reset
+    skip_reset_marker = request.node.get_closest_marker("skip_resilience_reset")
+    if skip_reset_marker:
+        # Skip reset for this test - just yield without resetting
+        yield
+        return
+
     # Import resilience modules
     try:
         from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker

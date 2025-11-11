@@ -470,13 +470,27 @@ class TestOpenFGAIntegration:
 
 @pytest.mark.unit
 @pytest.mark.openfga
-@pytest.mark.xdist_group(name="openfga_tests")
+@pytest.mark.skip_resilience_reset  # Opt-out of autouse resilience reset - tests manage circuit breaker state
+@pytest.mark.xdist_group(name="openfga_circuit_breaker_tests")  # Dedicated group for test isolation
 class TestOpenFGACircuitBreakerCriticality:
-    """Test OpenFGA circuit breaker with criticality flag for fail-open/fail-closed behavior"""
+    """
+    Test OpenFGA circuit breaker with criticality flag for fail-open/fail-closed behavior.
+
+    NOTE: This class uses @pytest.mark.skip_resilience_reset to opt-out of the global
+    autouse fixture that resets circuit breakers between tests. Each test method explicitly
+    resets the circuit breaker at the start to ensure clean state.
+    """
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+        Also reset circuit breaker for next test.
+        """
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
         gc.collect()
+        # Reset circuit breaker after each test to prevent state leakage
+        reset_circuit_breaker("openfga")
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
@@ -488,7 +502,10 @@ class TestOpenFGACircuitBreakerCriticality:
         unauthorized access during OpenFGA outages.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
-        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state at test start
+        reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
         mock_instance = AsyncMock()
@@ -526,7 +543,10 @@ class TestOpenFGACircuitBreakerCriticality:
         over strict security, so we fail-open.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
-        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state at test start
+        reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
         mock_instance = AsyncMock()
@@ -564,7 +584,10 @@ class TestOpenFGACircuitBreakerCriticality:
         Developers must explicitly opt-in to fail-open behavior.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
-        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker
+        from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state at test start
+        reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
         mock_instance = AsyncMock()
@@ -604,6 +627,10 @@ class TestOpenFGACircuitBreakerCriticality:
         no effect - OpenFGA response is always used.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state at test start
+        reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to return allowed=True
         mock_response = MagicMock()

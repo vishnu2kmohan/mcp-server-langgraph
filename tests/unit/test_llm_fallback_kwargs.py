@@ -46,39 +46,47 @@ def test_fallback_forwards_kwargs_sync(mock_litellm_responses):
         "api_version": "2024-02-15-preview",
     }
 
-    factory = LLMFactory(
-        provider="azure",
-        model_name="azure/gpt-4",
-        api_key="test-key",
-        enable_fallback=True,
-        fallback_models=["azure/gpt-35-turbo"],  # Use Azure fallback (same provider)
-        **azure_kwargs,
-    )
+    # Mock Azure environment variables to prevent credential validation errors
+    with patch.dict(
+        os.environ,
+        {
+            "AZURE_API_KEY": "test-azure-key",
+            "AZURE_API_BASE": "https://my-azure-endpoint.openai.azure.com",
+        },
+    ):
+        factory = LLMFactory(
+            provider="azure",
+            model_name="azure/gpt-4",
+            api_key="test-key",
+            enable_fallback=True,
+            fallback_models=["azure/gpt-35-turbo"],  # Use Azure fallback (same provider)
+            **azure_kwargs,
+        )
 
-    messages = [HumanMessage(content="test message")]
+        messages = [HumanMessage(content="test message")]
 
-    # Mock completion to fail on primary, succeed on fallback
-    with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
-        # First call (primary) fails
-        # Second call (fallback) succeeds
-        mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+        # Mock completion to fail on primary, succeed on fallback
+        with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
+            # First call (primary) fails
+            # Second call (fallback) succeeds
+            mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = factory.invoke(messages)  # noqa: F841
+            result = factory.invoke(messages)  # noqa: F841
 
-        # Should have tried twice (primary + fallback)
-        assert mock_completion.call_count == 2
+            # Should have tried twice (primary + fallback)
+            assert mock_completion.call_count == 2
 
-        # Check that fallback call received the provider-specific kwargs (same provider)
-        fallback_call = mock_completion.call_args_list[1]
-        # Debug: print actual kwargs to understand what's being passed
-        # print(f"Fallback kwargs: {list(fallback_call[1].keys())}")
+            # Check that fallback call received the provider-specific kwargs (same provider)
+            fallback_call = mock_completion.call_args_list[1]
+            # Debug: print actual kwargs to understand what's being passed
+            # print(f"Fallback kwargs: {list(fallback_call[1].keys())}")
 
-        # Check that api_base is forwarded for same-provider fallback
-        assert fallback_call[1]["api_base"] == azure_kwargs["api_base"]
-        # api_version might be filtered out - check if it's present, don't fail if not
-        if "api_version" in fallback_call[1]:
-            assert fallback_call[1]["api_version"] == azure_kwargs["api_version"]
-        assert fallback_call[1]["model"] == "azure/gpt-35-turbo"
+            # Check that api_base is forwarded for same-provider fallback
+            assert fallback_call[1]["api_base"] == azure_kwargs["api_base"]
+            # api_version might be filtered out - check if it's present, don't fail if not
+            if "api_version" in fallback_call[1]:
+                assert fallback_call[1]["api_version"] == azure_kwargs["api_version"]
+            assert fallback_call[1]["model"] == "azure/gpt-35-turbo"
 
 
 @pytest.mark.unit
@@ -91,39 +99,48 @@ async def test_fallback_forwards_kwargs_async(mock_litellm_responses):
         "aws_region_name": "us-west-2",
     }
 
-    factory = LLMFactory(
-        provider="bedrock",
-        model_name="bedrock/anthropic.claude-v2",
-        api_key="test-access-key",
-        enable_fallback=True,
-        fallback_models=["bedrock/anthropic.claude-instant-v1"],  # Use Bedrock fallback (same provider)
-        **bedrock_kwargs,
-    )
+    # Mock AWS environment variables to prevent credential validation errors
+    with patch.dict(
+        os.environ,
+        {
+            "AWS_ACCESS_KEY_ID": "test-access-key",
+            "AWS_SECRET_ACCESS_KEY": "test-secret-key",
+            "AWS_REGION_NAME": "us-west-2",
+        },
+    ):
+        factory = LLMFactory(
+            provider="bedrock",
+            model_name="bedrock/anthropic.claude-v2",
+            api_key="test-access-key",
+            enable_fallback=True,
+            fallback_models=["bedrock/anthropic.claude-instant-v1"],  # Use Bedrock fallback (same provider)
+            **bedrock_kwargs,
+        )
 
-    messages = [HumanMessage(content="test message")]
+        messages = [HumanMessage(content="test message")]
 
-    # Mock acompletion to fail on primary, succeed on fallback
-    with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
-        # First call (primary) fails
-        # Second call (fallback) succeeds
-        mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+        # Mock acompletion to fail on primary, succeed on fallback
+        with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
+            # First call (primary) fails
+            # Second call (fallback) succeeds
+            mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
 
-        result = await factory.ainvoke(messages)  # noqa: F841
+            result = await factory.ainvoke(messages)  # noqa: F841
 
-        # Should have tried twice (primary + fallback)
-        assert mock_acompletion.call_count == 2
+            # Should have tried twice (primary + fallback)
+            assert mock_acompletion.call_count == 2
 
-        # Check that fallback call received the provider-specific kwargs (same provider)
-        fallback_call = mock_acompletion.call_args_list[1]
-        # Debug: print actual kwargs to understand what's being passed
-        # print(f"Async fallback kwargs: {list(fallback_call[1].keys())}")
+            # Check that fallback call received the provider-specific kwargs (same provider)
+            fallback_call = mock_acompletion.call_args_list[1]
+            # Debug: print actual kwargs to understand what's being passed
+            # print(f"Async fallback kwargs: {list(fallback_call[1].keys())}")
 
-        # Check that aws kwargs are forwarded for same-provider fallback
-        if "aws_secret_access_key" in fallback_call[1]:
-            assert fallback_call[1]["aws_secret_access_key"] == bedrock_kwargs["aws_secret_access_key"]
-        if "aws_region_name" in fallback_call[1]:
-            assert fallback_call[1]["aws_region_name"] == bedrock_kwargs["aws_region_name"]
-        assert fallback_call[1]["model"] == "bedrock/anthropic.claude-instant-v1"
+            # Check that aws kwargs are forwarded for same-provider fallback
+            if "aws_secret_access_key" in fallback_call[1]:
+                assert fallback_call[1]["aws_secret_access_key"] == bedrock_kwargs["aws_secret_access_key"]
+            if "aws_region_name" in fallback_call[1]:
+                assert fallback_call[1]["aws_region_name"] == bedrock_kwargs["aws_region_name"]
+            assert fallback_call[1]["model"] == "bedrock/anthropic.claude-instant-v1"
 
 
 @pytest.mark.unit
@@ -135,9 +152,9 @@ def test_fallback_forwards_ollama_kwargs_sync(mock_litellm_responses):
 
     factory = LLMFactory(
         provider="ollama",
-        model_name="llama3.1:8b",
+        model_name="ollama/llama3.1:8b",
         enable_fallback=True,
-        fallback_models=["qwen2.5:7b"],
+        fallback_models=["ollama/qwen2.5:7b"],
         **ollama_kwargs,
     )
 
@@ -165,9 +182,9 @@ async def test_fallback_forwards_ollama_kwargs_async(mock_litellm_responses):
 
     factory = LLMFactory(
         provider="ollama",
-        model_name="llama3.1:8b",
+        model_name="ollama/llama3.1:8b",
         enable_fallback=True,
-        fallback_models=["qwen2.5:7b"],
+        fallback_models=["ollama/qwen2.5:7b"],
         **ollama_kwargs,
     )
 

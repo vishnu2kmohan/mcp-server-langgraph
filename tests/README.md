@@ -604,6 +604,80 @@ pytest tests/test_agent.py::test_create_agent -vv --tb=long -s
 9. **Async Tests**: Mark with `@pytest.mark.asyncio`
 10. **Clean Up**: Use fixtures to ensure cleanup (yield pattern)
 
+## Test Utilities and Helpers
+
+### Mock Factories (`tests/utils/mock_factories.py`)
+
+Reusable mock factories to prevent common test failures:
+
+```python
+from tests.utils.mock_factories import (
+    create_mock_openfga_client,
+    create_mock_llm_environment,
+    create_isolated_circuit_breaker,
+    verify_dependency_overrides,
+)
+
+# Create OpenFGA mock
+mock_openfga = create_mock_openfga_client(authorized=True)
+
+# Mock LLM environment variables
+with create_mock_llm_environment(provider="azure"):
+    factory = LLMFactory(provider="azure", ...)
+
+# Isolated circuit breaker for testing
+with create_isolated_circuit_breaker("openfga") as cb:
+    # Test circuit breaker behavior
+    ...
+
+# Verify all dependencies are overridden
+verify_dependency_overrides(
+    app.dependency_overrides,
+    [get_current_user, get_openfga_client, get_sp_manager],
+)
+```
+
+**Use cases**:
+- Prevent 401 errors from missing dependency overrides
+- Avoid credential validation errors in LLM tests
+- Test circuit breaker behavior without state pollution
+
+### Shared API Fixtures (`tests/fixtures/api_fixtures.py`)
+
+Reusable fixtures for FastAPI endpoint testing:
+
+```python
+from tests.fixtures.api_fixtures import mock_openfga_client, create_api_test_client
+
+@pytest.fixture
+def test_client(mock_openfga_client):
+    """Create test client with OpenFGA mock"""
+    return create_api_test_client(
+        router=my_router,
+        dependency_overrides={
+            get_openfga_client: lambda: mock_openfga_client,
+        },
+    )
+```
+
+**Benefits**:
+- Standardized test client setup
+- Prevents async/sync dependency mismatch
+- Automatic cleanup for xdist isolation
+
+### API Testing Guide (`tests/API_TESTING.md`)
+
+Comprehensive guide for testing FastAPI endpoints:
+- Common issues and solutions (401 errors, async/sync mismatch)
+- Dependency override patterns and checklists
+- Troubleshooting guide with examples
+- Required dependencies by endpoint type
+
+**Must-read for**:
+- Writing new API endpoint tests
+- Debugging 401/403 errors in tests
+- Understanding FastAPI dependency injection
+
 ## Coverage Reports
 
 ### Generate Coverage

@@ -281,6 +281,21 @@ repos:
           5. Missing critical test coverage
           See ADR-0042 for details on these critical production bugs.
 
+      - id: validate-test-fixtures
+        name: Validate Test Fixtures for Common Issues
+        entry: python3 scripts/validate_test_fixtures.py
+        language: system
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: true
+        always_run: false  # Only run when test files change
+        description: |
+          Validates test fixtures to prevent common failures:
+          1. Missing FastAPI dependency overrides (causes 401 errors)
+          2. Invalid Ollama model names (missing ollama/ prefix)
+          3. Circuit breaker tests without proper isolation markers
+          Errors block commits, warnings are informational only.
+          See: tests/API_TESTING.md for detailed guidance.
+
       - id: shellcheck
         name: Shellcheck - Bash Script Linting
         entry: shellcheck
