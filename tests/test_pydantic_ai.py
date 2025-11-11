@@ -15,7 +15,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 def mock_settings():
     """Mock settings for testing."""
     with patch("mcp_server_langgraph.llm.pydantic_agent.settings") as mock:
-        mock.model_name = "gemini-2.5-flash-002"
+        mock.model_name = "gemini-2.5-flash"
         mock.llm_provider = "google"
         yield mock
 
@@ -43,9 +43,9 @@ def test_pydantic_agent_wrapper_initialization(mock_settings, mock_pydantic_agen
 
     wrapper = PydanticAIAgentWrapper()
 
-    assert wrapper.model_name == "gemini-2.5-flash-002"
+    assert wrapper.model_name == "gemini-2.5-flash"
     assert wrapper.provider == "google"
-    assert wrapper.pydantic_model_name == "gemini-2.5-flash-002"
+    assert wrapper.pydantic_model_name == "google-gla:gemini-2.5-flash"
 
 
 @pytest.mark.unit
@@ -54,7 +54,7 @@ def test_get_pydantic_model_name_google(mock_settings, mock_pydantic_agent_class
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
     wrapper = PydanticAIAgentWrapper(provider="google")
-    assert wrapper.pydantic_model_name == "gemini-2.5-flash-002"
+    assert wrapper.pydantic_model_name == "google-gla:gemini-2.5-flash"
 
 
 @pytest.mark.unit
@@ -85,9 +85,9 @@ def test_get_pydantic_model_name_gemini(mock_settings, mock_pydantic_agent_class
     """Test model name mapping for Gemini provider (alternative name for google)."""
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
-    wrapper = PydanticAIAgentWrapper(provider="gemini", model_name="gemini-1.5-pro")
+    wrapper = PydanticAIAgentWrapper(provider="gemini", model_name="gemini-2.5-pro")
 
-    assert wrapper.pydantic_model_name == "gemini-1.5-pro"
+    assert wrapper.pydantic_model_name == "google-gla:gemini-2.5-pro"
 
 
 @pytest.mark.unit
@@ -97,8 +97,8 @@ def test_get_pydantic_model_name_unknown_provider(mock_settings, mock_pydantic_a
 
     wrapper = PydanticAIAgentWrapper(provider="unknown", model_name="some-model")
 
-    # Should use model name directly for unknown providers
-    assert wrapper.pydantic_model_name == "some-model"
+    # Unknown providers get provider:model prefix format (pydantic-ai v0.0.14+ requirement)
+    assert wrapper.pydantic_model_name == "unknown:some-model"
 
 
 @pytest.mark.unit
@@ -340,10 +340,10 @@ def test_create_pydantic_agent_custom_params(mock_settings, mock_pydantic_agent_
     pytest.importorskip("pydantic_ai", reason="pydantic-ai is an optional dependency")
     from mcp_server_langgraph.llm.pydantic_agent import create_pydantic_agent
 
-    agent = create_pydantic_agent(provider="anthropic", model_name="claude-3-opus-20240229")
+    agent = create_pydantic_agent(provider="anthropic", model_name="claude-opus-4-1-20250805")
 
     assert agent.provider == "anthropic"
-    assert agent.model_name == "claude-3-opus-20240229"
+    assert agent.model_name == "claude-opus-4-1-20250805"
 
 
 @pytest.mark.unit
