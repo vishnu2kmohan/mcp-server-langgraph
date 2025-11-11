@@ -138,12 +138,15 @@ resource "aws_dynamodb_table" "terraform_locks" {
   }
 
   server_side_encryption {
-    enabled = true
+    enabled     = true
+    kms_key_arn = var.kms_key_arn # CMK in production, AWS-managed key if null
   }
 
   point_in_time_recovery {
     enabled = true
   }
+
+  deletion_protection_enabled = var.enable_deletion_protection # Prevent accidental deletion
 
   tags = {
     Name = "Terraform State Lock Table"

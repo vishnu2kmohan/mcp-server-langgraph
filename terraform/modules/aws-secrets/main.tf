@@ -19,8 +19,10 @@ locals {
 resource "aws_secretsmanager_secret" "secrets" {
   for_each = local.secrets
 
-  name        = each.key
-  description = each.value.description
+  name                    = each.key
+  description             = each.value.description
+  kms_key_id              = var.kms_key_id              # CMK encryption (production) or null (dev/staging)
+  recovery_window_in_days = var.recovery_window_in_days # Secret recovery window (default: 30 days)
 
   tags = merge(
     var.tags,

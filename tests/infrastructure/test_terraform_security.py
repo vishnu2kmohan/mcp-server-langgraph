@@ -285,11 +285,9 @@ class TestDynamoDBBackendSecurity:
         # Check that server_side_encryption block exists
         assert "server_side_encryption {" in backend_main_tf, "Missing server_side_encryption configuration"
 
-        # Check that it references KMS key variable (kms_key_arn or kms_master_key_id)
-        pattern = r"server_side_encryption\s*{[^}]*kms.*=\s*var\.kms_key"
-        assert re.search(
-            pattern, backend_main_tf, re.DOTALL
-        ), "server_side_encryption must reference var.kms_key_arn or var.kms_key_id"
+        # Check that it references KMS key variable (kms_key_arn)
+        pattern = r"server_side_encryption\s*{[^}]*kms_key_arn\s*=\s*var\.kms_key_arn"
+        assert re.search(pattern, backend_main_tf, re.DOTALL), "server_side_encryption must use kms_key_arn = var.kms_key_arn"
 
 
 class TestS3BackendSecurity:

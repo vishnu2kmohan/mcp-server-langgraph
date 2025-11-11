@@ -40,8 +40,7 @@ terraform plan
 
 # Create backend infrastructure
 terraform apply
-```
-
+```bash
 ### 2. Note the Outputs
 
 After applying, note the outputs:
@@ -68,8 +67,7 @@ terraform {
     encrypt        = true
   }
 }
-```
-
+```bash
 ## Security Considerations
 
 - **Bucket Encryption**: All state files are encrypted at rest
@@ -77,6 +75,30 @@ terraform {
 - **Versioning**: Previous state versions are retained
 - **State Locking**: DynamoDB prevents concurrent modifications
 - **Public Access**: Completely blocked at bucket level
+- **Deletion Protection**: DynamoDB table has deletion protection enabled by default
+- **Customer Managed Keys**: Optionally use CMK for encryption in production (via `kms_key_arn` variable)
+
+### MFA Delete (Manual Configuration)
+
+For additional security in production, enable MFA delete on the state bucket. This requires:
+
+1. **Root account access** with MFA enabled
+2. **AWS CLI** configured with root credentials
+
+**Enable MFA Delete**:
+
+```bash
+# Get your MFA device ARN
+aws iam list-mfa-devices
+
+# Enable MFA delete (requires MFA token)
+aws s3api put-bucket-versioning \
+  --bucket mcp-langgraph-terraform-state-us-east-1-123456789012 \
+  --versioning-configuration Status=Enabled,MFADelete=Enabled \
+  --mfa "arn:aws:iam::123456789012:mfa/root-account-mfa-device 123456"
+```
+
+**Note**: MFA delete cannot be enabled via Terraform as it requires root account authentication with MFA. This must be done manually after initial deployment.
 
 ## Disaster Recovery
 
@@ -94,8 +116,7 @@ aws s3api get-object \
   --key environments/prod/terraform.tfstate \
   --version-id <VERSION_ID> \
   terraform.tfstate.backup
-```
-
+```bash
 ### Lock Release
 
 If a lock gets stuck:
@@ -125,8 +146,7 @@ terraform state rm aws_dynamodb_table.terraform_locks
 
 # Delete resources
 terraform destroy
-```
-
+```sql
 ## Troubleshooting
 
 ### Error: Bucket already exists

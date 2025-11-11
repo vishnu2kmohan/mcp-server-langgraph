@@ -29,6 +29,21 @@ jobs:
         with:
           version: 'v3.14.0'
 
+      - name: Add Helm repositories and update dependencies
+        run: |
+          echo "Adding Helm chart repositories..."
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add openfga https://openfga.github.io/helm-charts
+          helm repo add codecentric https://codecentric.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+          echo "Updating Helm chart dependencies..."
+          helm dependency update deployments/helm/mcp-server-langgraph
+          echo "✅ Helm dependencies updated successfully"
+
       - name: Helm lint
         run: |
           helm lint deployments/helm/mcp-server-langgraph
@@ -139,23 +154,28 @@ jobs:
 
       - name: Validate manifests against Kubernetes schemas
         run: |
-          echo "Validating base..."
-          kustomize build deployments/base | kubeconform -strict -summary -kubernetes-version 1.29.0
+          set -o pipefail
 
-          echo "Validating production-gke..."
-          kustomize build deployments/overlays/production-gke | kubeconform -strict -summary -kubernetes-version 1.29.0
+          validate_overlay() {
+            local overlay=$1
+            echo "Validating ${overlay}..."
 
-          echo "Validating staging-gke..."
-          kustomize build deployments/overlays/staging-gke | kubeconform -strict -summary -kubernetes-version 1.29.0
+            if ! kustomize build deployments/${overlay} | kubeconform -strict -summary -kubernetes-version 1.29.0; then
+              echo "❌ Validation failed for ${overlay}, re-running with verbose output..."
+              kustomize build deployments/${overlay} | kubeconform -strict -verbose -kubernetes-version 1.29.0
+              return 1
+            fi
 
-          echo "Validating AWS overlay..."
-          kustomize build deployments/kubernetes/overlays/aws | kubeconform -strict -summary -kubernetes-version 1.29.0
+            echo "✅ ${overlay} validation passed"
+            return 0
+          }
 
-          echo "Validating GCP overlay..."
-          kustomize build deployments/kubernetes/overlays/gcp | kubeconform -strict -summary -kubernetes-version 1.29.0
-
-          echo "Validating Azure overlay..."
-          kustomize build deployments/kubernetes/overlays/azure | kubeconform -strict -summary -kubernetes-version 1.29.0
+          validate_overlay "base"
+          validate_overlay "overlays/production-gke"
+          validate_overlay "overlays/staging-gke"
+          validate_overlay "kubernetes/overlays/aws"
+          validate_overlay "kubernetes/overlays/gcp"
+          validate_overlay "kubernetes/overlays/azure"
 
       - name: Run deployment tests
         run: |

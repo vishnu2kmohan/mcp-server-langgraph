@@ -25,15 +25,29 @@ variable "sku_name" {
 }
 
 variable "enable_purge_protection" {
-  description = "Enable purge protection"
+  description = "Enable purge protection (recommended for production to prevent accidental deletion)"
   type        = bool
-  default     = false
+  default     = true # Changed from false - BREAKING CHANGE for security compliance
 }
 
 variable "network_default_action" {
-  description = "Default network action (Allow or Deny)"
+  description = "Default network action - Deny enforces zero-trust networking (requires allowed_ip_ranges)"
   type        = string
-  default     = "Allow"
+  default     = "Deny" # Changed from "Allow" - BREAKING CHANGE for security compliance
+  validation {
+    condition     = contains(["Allow", "Deny"], var.network_default_action)
+    error_message = "network_default_action must be either 'Allow' or 'Deny'."
+  }
+}
+
+variable "allowed_ip_ranges" {
+  description = "IP ranges allowed to access Key Vault (CIDR notation, e.g., ['203.0.113.0/24']). Required when network_default_action is 'Deny'."
+  type        = list(string)
+  default     = []
+  validation {
+    condition     = alltrue([for cidr in var.allowed_ip_ranges : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", cidr))])
+    error_message = "allowed_ip_ranges must be valid CIDR notation (e.g., '203.0.113.0/24')."
+  }
 }
 
 variable "external_secrets_principal_id" {

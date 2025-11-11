@@ -326,6 +326,11 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v7
 
+    - name: Install Terraform for pre-commit hooks
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.6.6'
+
     - name: Cache pre-commit environments
       uses: actions/cache@v4
       with:
