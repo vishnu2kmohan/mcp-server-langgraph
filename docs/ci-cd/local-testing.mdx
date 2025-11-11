@@ -1,8 +1,8 @@
 ---
-title: "Testing GitHub Actions Workflows Locally"
+title: Testing GitHub Actions Workflows Locally
 sidebarTitle: "Local Testing with act"
-description: "Test GitHub Actions workflows locally using act before pushing changes to prevent CI failures and save CI minutes"
-icon: "flask"
+description: 'Test GitHub Actions workflows locally using act before pushing changes to prevent CI failures and save CI minutes'
+icon: 'flask'
 ---
 
 # Testing GitHub Actions Workflows Locally with act
@@ -423,7 +423,8 @@ GCP_SERVICE_ACCOUNT=deployer@project.iam.gserviceaccount.com
 ### Recommended Process
 
 ```mermaid
-graph LR
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart LR
     A[Make Workflow Changes] --> B[Validate Syntax]
     B --> C[Test with act]
     C --> D{Issues Found?}

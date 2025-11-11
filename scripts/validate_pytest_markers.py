@@ -62,7 +62,9 @@ def get_used_markers() -> Set[str]:
             marker_name = match.group(1)
             # Skip built-in markers
             if marker_name not in {"parametrize", "skip", "skipif", "xfail", "usefixtures", "filterwarnings"}:
-                used_markers.add(marker_name)
+                # Skip markers ending with underscore (likely documentation patterns like requires_*)
+                if not marker_name.endswith("_"):
+                    used_markers.add(marker_name)
 
     return used_markers
 

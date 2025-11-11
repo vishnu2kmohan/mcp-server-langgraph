@@ -81,7 +81,7 @@
               "reference/configuration-files",
               "reference/api-endpoints",
               "reference/kong-plugins",
-              "API_COMPLIANCE_REPORT",
+              "api-compliance-report",
               "ci-cd-troubleshooting",
               "reference/development/ide-setup",
               "reference/development/github-actions",
