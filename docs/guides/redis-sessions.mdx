@@ -451,7 +451,7 @@ helm install redis-session bitnami/redis \
 
 ## Application connects to sentinel
 REDIS_URL=redis-sentinel://redis-session:26379/mymaster
-```yaml
+```
 Benefits:
 - **Automatic failover** - Sentinel promotes replica on master failure
 - **Zero downtime** - Sessions preserved during failover

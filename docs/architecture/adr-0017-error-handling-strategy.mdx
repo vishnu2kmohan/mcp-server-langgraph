@@ -171,7 +171,7 @@ with tracer.start_as_current_span("llm.call") as span:
         span.set_status(StatusCode.ERROR, str(e))
         span.record_exception(e)
         raise
-```python
+```
 **Span Attributes**:
 - `error.type`: Exception class name
 - `error.message`: Error message

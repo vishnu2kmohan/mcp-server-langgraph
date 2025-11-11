@@ -18,7 +18,6 @@ def fix_code_fences(filepath):
 
     modified = False
     in_code_block = False
-    code_block_lang = None
     fixed_lines = []
 
     for i, line in enumerate(lines, 1):
@@ -26,7 +25,6 @@ def fix_code_fences(filepath):
         match_open = re.match(r"^(\s*)```(\w+)", line)
         if match_open and not in_code_block:
             in_code_block = True
-            code_block_lang = match_open.group(2)
             fixed_lines.append(line)
             continue
 
@@ -34,7 +32,7 @@ def fix_code_fences(filepath):
         match_close = re.match(r"^(\s*)```(\w+)?(\s*)$", line)
         if match_close and in_code_block:
             closing_lang = match_close.group(2)
-            if closing_lang and closing_lang != code_block_lang:
+            if closing_lang:  # Fix ANY closing fence with a language identifier
                 # Fix: remove the language identifier from closing fence
                 indent = match_close.group(1)
                 trailing = match_close.group(3)
@@ -45,7 +43,6 @@ def fix_code_fences(filepath):
             else:
                 fixed_lines.append(line)
             in_code_block = False
-            code_block_lang = None
             continue
 
         fixed_lines.append(line)

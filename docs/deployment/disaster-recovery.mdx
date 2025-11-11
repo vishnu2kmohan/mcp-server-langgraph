@@ -114,8 +114,10 @@ flowchart TB
     class Vault secretStyle
     class AppDR,PGDR,RedisDR recoveryStyle
     class Verify,Switch verifyStyle
-```bash
+```
+
 **Backup and Restore Timeline**:
+
 ```mermaid
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
@@ -373,7 +375,7 @@ psql -U keycloak -h postgres-keycloak -d keycloak_recovery -c "SELECT COUNT(*) F
 ## Switch to recovered database
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak RENAME TO keycloak_old;"
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak_recovery RENAME TO keycloak;"
-```bash
+```
 #### Continuous Archiving (WAL)
 
 ```bash
@@ -400,7 +402,7 @@ save 60 10000   # Save if 10000 keys changed in 1 min
 
 dir /data
 dbfilename dump.rdb
-```bash
+```
 **Backup Script**:
 ```bash
 #!/bin/bash
@@ -437,7 +439,7 @@ appendfsync everysec  # Balance durability/performance
 ## Rewrite AOF when it grows 100% and is at least 64mb
 auto-aof-rewrite-percentage 100
 auto-aof-rewrite-min-size 64mb
-```yaml
+```
 #### Redis Replication
 
 ```yaml
@@ -474,7 +476,7 @@ velero install \
 
 ## Verify installation
 velero version
-```yaml
+```
 **Create Backup Schedule**:
 ```yaml
 apiVersion: velero.io/v1
@@ -511,7 +513,7 @@ velero backup describe langgraph-backup
 
 ## Download backup
 velero backup download langgraph-backup
-```bash
+```
 #### kubectl Export
 
 ```bash
@@ -569,7 +571,7 @@ os.system(f"gpg --encrypt --recipient admin@company.com {backup_file}")
 
 ## Upload encrypted backup
 os.system(f"aws s3 cp {backup_file}.gpg s3://my-backups/secrets/")
-```bash
+```
 #### Kubernetes Secrets
 
 ```bash
@@ -683,7 +685,7 @@ pg_restore -U keycloak \
 
 ## Verify
 psql -U keycloak -d keycloak_restored -c "\dt"
-```bash
+```
 **Restore Specific Kubernetes Resource**:
 ```bash
 ## Restore from backup file
@@ -736,7 +738,7 @@ velero restore delete dr-test-restore
 
 echo "=== DR Drill Complete ==="
 echo "RTO: ${RTO}s (Target: 3600s)"
-```bash
+```
 #### Automated Testing
 
 ```yaml
@@ -790,7 +792,7 @@ secondary:
     mode: read-replica
   redis:
     mode: standby
-```bash
+```
 **Failover Procedure**:
 ```bash
 ## 1. Promote secondary database
@@ -830,7 +832,7 @@ spec:
           - backend:
               serviceName: mcp-server-langgraph
               servicePort: 80
-```yaml
+```
 **Database Synchronization**:
 ```yaml
 ## CockroachDB for multi-region
@@ -856,7 +858,7 @@ rate(backup_failures_total[1h]) > 0
 
 ## Backup size
 backup_size_bytes{backup_type="postgres"} < 1e9
-```yaml
+```
 **Alerts**:
 ```yaml
 groups:
@@ -903,7 +905,8 @@ groups:
     ]
   }
 }
-```bash
+```
+
 ### Best Practices
 
 <AccordionGroup>

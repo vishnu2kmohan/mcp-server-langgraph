@@ -203,7 +203,7 @@ See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for ret
 
 **Option 1: Cloud SQL Auth Proxy Sidecar**
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -251,7 +251,7 @@ spec:
 ```
 **Option 2: Private IP (Recommended for Production)**
 
-```bash
+```
 ## Enable private IP for Cloud SQL
 gcloud sql instances patch langgraph-postgres \
   --network=projects/$PROJECT_ID/global/networks/default \
@@ -268,7 +268,7 @@ KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
 
 #### Create Redis Instance
 
-```bash
+```
 ## Create Redis instance
 gcloud redis instances create langgraph-redis \
   --size=5 \
@@ -295,7 +295,7 @@ kubectl create secret generic redis-credentials \
 ```
 #### Configure Application
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -323,7 +323,7 @@ spec:
 
 #### Store Secrets in Secret Manager
 
-```bash
+```
 ## Create secrets
 echo -n "sk-ant-your-key" | gcloud secrets create anthropic-api-key \
   --data-file=- \
@@ -338,6 +338,7 @@ gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 ```
+
 #### Use External Secrets Operator
 
 ```bash
@@ -397,7 +398,7 @@ EOF
 
 #### Build and Push Images
 
-```bash
+```
 ## Configure Docker for GCR
 gcloud auth configure-docker
 
@@ -425,7 +426,7 @@ EOF
 ```
 #### Artifact Registry (Recommended)
 
-```bash
+```
 ## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
@@ -443,7 +444,7 @@ docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
 
 #### Install NGINX Ingress Controller
 
-```bash
+```
 ## Install NGINX Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
@@ -455,7 +456,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 ```
 #### Configure Ingress
 
-```yaml
+```
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -487,7 +488,7 @@ spec:
 
 For GCP-native load balancing:
 
-```yaml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -527,7 +528,7 @@ spec:
 
 #### Enable Google Cloud Monitoring
 
-```bash
+```
 ## Install Google Cloud Ops agent
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
@@ -535,7 +536,7 @@ kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheu
 ```
 #### Configure Pod Monitoring
 
-```yaml
+```
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
@@ -579,7 +580,7 @@ structlog.configure(
 
 #### Horizontal Pod Autoscaler
 
-```yaml
+```
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -627,7 +628,7 @@ spec:
 
 GKE Autopilot handles node scaling automatically. For Standard clusters:
 
-```bash
+```
 ## Enable cluster autoscaling
 gcloud container clusters update langgraph-cluster \
   --enable-autoscaling \
@@ -637,7 +638,7 @@ gcloud container clusters update langgraph-cluster \
 ```
 ### Complete Deployment
 
-```bash
+```
 ## Clone repository
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph
 cd mcp-server-langgraph
@@ -679,7 +680,7 @@ kubectl get ingress -n mcp-server-langgraph
   <Accordion title="Enable Preemptible Nodes" icon="dollar-sign">
     For non-production workloads:
 
-    ```bash
+    ```
     gcloud container node-pools create preemptible-pool \
       --cluster=langgraph-cluster \
       --region=us-central1 \
@@ -688,7 +689,7 @@ kubectl get ingress -n mcp-server-langgraph
       --machine-type=n2-standard-4
     ```
     Use node affinity to schedule on preemptible nodes:
-    ```yaml
+    ```
     affinity:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
@@ -705,7 +706,7 @@ kubectl get ingress -n mcp-server-langgraph
   <Accordion title="Right-Size Resources" icon="gauge">
     Use GKE usage metering to analyze resource usage:
 
-    ```bash
+    ```
     # Enable usage metering
     gcloud container clusters update langgraph-cluster \
       --resource-usage-bigquery-dataset=cluster_usage \
@@ -721,7 +722,7 @@ kubectl get ingress -n mcp-server-langgraph
     - 1-year commitment: 37% discount
     - 3-year commitment: 55% discount
 
-    ```bash
+    ```
     gcloud compute commitments create \
       --plan=12-month \
       --resources=vcpu=100,memory=400GB \
@@ -734,7 +735,7 @@ kubectl get ingress -n mcp-server-langgraph
 
 <AccordionGroup>
   <Accordion title="Enable Shielded Nodes" icon="shield">
-    ```bash
+    ```
     gcloud container clusters update langgraph-cluster \
       --enable-shielded-nodes \
       --region=us-central1
@@ -744,7 +745,7 @@ kubectl get ingress -n mcp-server-langgraph
   <Accordion title="Use Binary Authorization" icon="shield-check">
     Ensure only trusted images are deployed:
 
-    ```bash
+    ```
     # Enable Binary Authorization
     gcloud container clusters update langgraph-cluster \
       --enable-binauthz \
@@ -753,7 +754,7 @@ kubectl get ingress -n mcp-server-langgraph
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
-    ```yaml
+    ```
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
@@ -789,7 +790,7 @@ kubectl get ingress -n mcp-server-langgraph
 <AccordionGroup>
   <Accordion title="Cloud SQL connection fails">
     **Check connectivity**:
-    ```bash
+    ```
     # Test Cloud SQL Proxy
     kubectl run -it --rm debug \
       --image=gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
@@ -800,7 +801,7 @@ kubectl get ingress -n mcp-server-langgraph
 
   <Accordion title="Workload Identity not working">
     **Verify setup**:
-    ```bash
+    ```
     # Check annotation
     kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
 

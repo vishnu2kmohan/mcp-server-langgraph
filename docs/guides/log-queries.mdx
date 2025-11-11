@@ -140,7 +140,7 @@ traces
 | project timestamp, message, customDimensions.trace_id, customDimensions.user_id
 | order by timestamp desc
 | take 100
-```sql
+```
 #### Errors by Service
 ```kql
 traces
@@ -155,7 +155,7 @@ traces
 | where customDimensions.trace_id == "0af7651916cd43dd8448eb211c80319c"
 | project timestamp, severityLevel, message
 | order by timestamp asc
-```sql
+```
 #### Request Duration Analysis
 ```kql
 traces
@@ -207,7 +207,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   ],
   "size": 100
 }
-```json
+```
 #### Trace-Specific Logs
 ```json
 {
@@ -241,7 +241,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     }
   }
 }
-```json
+```
 #### Aggregation: Errors by User
 ```json
 {
@@ -351,7 +351,7 @@ index=main source="mcp-server-langgraph" level="ERROR"
 | table _time, message, trace_id, user_id
 | sort -_time
 | head 100
-```bash
+```
 #### Trace-Specific Logs
 ```spl
 index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c80319c"
@@ -363,7 +363,7 @@ index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c803
 index=main source="mcp-server-langgraph" level="ERROR"
 | stats count by user_id
 | sort -count
-```bash
+```
 #### Time Range + Level Filter
 ```spl
 index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
@@ -375,7 +375,7 @@ index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
 index=main source="mcp-server-langgraph"
 | timechart span=5m count(eval(level="ERROR")) as errors, count as total
 | eval error_rate=(errors/total)*100
-```bash
+```
 #### Top Error Messages
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
@@ -389,7 +389,7 @@ index=main source="mcp-server-langgraph" level="ERROR"
 index=main source="mcp-server-langgraph" message="request completed"
 | stats avg(duration_ms) as avg_duration, p95(duration_ms) as p95_duration, max(duration_ms) as max_duration by http_route
 | sort -p95_duration
-```bash
+```
 #### User Activity Timeline
 ```spl
 index=main source="mcp-server-langgraph" user_id="alice"
@@ -594,7 +594,7 @@ fields @timestamp, level, message, trace_id
 | filter @timestamp >= 1697385600000
 | filter @timestamp <= 1697472000000
 | sort @timestamp desc
-```sql
+```
 #### Azure (KQL)
 ```kql
 traces
@@ -628,7 +628,7 @@ traces
     avg(duration),
     percentile(duration, 95),
     percentile(duration, 99)
-```python
+```
 #### Splunk
 ```spl
 message="request completed"
