@@ -259,6 +259,7 @@
             "group": "Guides",
             "pages": [
               "guides/multi-llm-setup",
+              "guides/versioning-strategy",
               "guides/google-gemini",
               "guides/anthropic-claude",
               "guides/openai-gpt",
