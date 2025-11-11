@@ -56,6 +56,18 @@ patches:
       kind: Deployment
       name: mcp-server-langgraph
 
+  # JSON6902 patches for init containers (more precise than strategic merge)
+  - path: deployment-initcontainers-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
+  # JSON6902 patches for main containers
+  - path: deployment-containers-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
   - path: keycloak-patch.yaml
     target:
       kind: Deployment

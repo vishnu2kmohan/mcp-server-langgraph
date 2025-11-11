@@ -38,9 +38,19 @@ spec:
 
         # Make probes different (readiness more sensitive than liveness)
         readinessProbe:
-          failureThreshold: 1  # Fail faster for readiness
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 1  # More sensitive - fail faster
 
         livenessProbe:
-          periodSeconds: 30  # Check less frequently
-          timeoutSeconds: 10  # Longer timeout
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30  # Less frequent checks
+          timeoutSeconds: 10  # More tolerant
           failureThreshold: 5  # More tolerant before restart

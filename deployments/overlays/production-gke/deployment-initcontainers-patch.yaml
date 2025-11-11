@@ -1,0 +1,68 @@
+# JSON6902 patches for init containers kube-score compliance
+# Applies to: mcp-server-langgraph Deployment
+
+# Init Container 1: wait-for-openfga
+- op: add
+  path: /spec/template/spec/initContainers/0/imagePullPolicy
+  value: Always
+- op: add
+  path: /spec/template/spec/initContainers/0/resources
+  value:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 500Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 1Gi
+- op: replace
+  path: /spec/template/spec/initContainers/0/securityContext/runAsUser
+  value: 10000
+- op: add
+  path: /spec/template/spec/initContainers/0/securityContext/runAsGroup
+  value: 10000
+
+# Init Container 2: wait-for-keycloak
+- op: add
+  path: /spec/template/spec/initContainers/1/imagePullPolicy
+  value: Always
+- op: add
+  path: /spec/template/spec/initContainers/1/resources
+  value:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 500Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 1Gi
+- op: replace
+  path: /spec/template/spec/initContainers/1/securityContext/runAsUser
+  value: 10000
+- op: add
+  path: /spec/template/spec/initContainers/1/securityContext/runAsGroup
+  value: 10000
+
+# Init Container 3: wait-for-redis
+- op: add
+  path: /spec/template/spec/initContainers/2/imagePullPolicy
+  value: Always
+- op: add
+  path: /spec/template/spec/initContainers/2/resources
+  value:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 500Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 1Gi
+- op: replace
+  path: /spec/template/spec/initContainers/2/securityContext/runAsUser
+  value: 10000
+- op: add
+  path: /spec/template/spec/initContainers/2/securityContext/runAsGroup
+  value: 10000

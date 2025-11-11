@@ -1,0 +1,40 @@
+# JSON6902 patches for main containers kube-score compliance
+# Applies to: mcp-server-langgraph Deployment
+
+# Main Container: mcp-server-langgraph
+- op: add
+  path: /spec/template/spec/containers/0/imagePullPolicy
+  value: Always
+- op: replace
+  path: /spec/template/spec/containers/0/securityContext/runAsUser
+  value: 10000
+- op: add
+  path: /spec/template/spec/containers/0/securityContext/runAsGroup
+  value: 10000
+- op: replace
+  path: /spec/template/spec/containers/0/securityContext/readOnlyRootFilesystem
+  value: true
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts
+  value:
+    - name: tmp
+      mountPath: /tmp
+    - name: cache
+      mountPath: /app/.cache
+- op: replace
+  path: /spec/template/spec/containers/0/readinessProbe/failureThreshold
+  value: 1
+- op: replace
+  path: /spec/template/spec/containers/0/readinessProbe/periodSeconds
+  value: 5
+- op: replace
+  path: /spec/template/spec/containers/0/readinessProbe/timeoutSeconds
+  value: 3
+
+# Cloud SQL Proxy Container
+- op: add
+  path: /spec/template/spec/containers/1/imagePullPolicy
+  value: Always
+- op: add
+  path: /spec/template/spec/containers/1/securityContext/runAsGroup
+  value: 65532

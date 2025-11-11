@@ -10,10 +10,43 @@ spec:
       # Production-grade security context
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
-        fsGroup: 1000
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
         seccompProfile:
           type: RuntimeDefault
+
+      # Init containers - Add resource limits for kube-score compliance
+      initContainers:
+      - name: wait-for-openfga
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 1Gi
+        securityContext:
+          runAsUser: 10000
+          runAsGroup: 10000
+
+      - name: wait-for-keycloak
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+            ephemeral-storage: 1Gi
+        securityContext:
+          runAsUser: 10000
+          runAsGroup: 10000
 
       # Topology spread for high availability
       topologySpreadConstraints:
