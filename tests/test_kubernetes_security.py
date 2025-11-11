@@ -112,7 +112,8 @@ class TestSecurityContexts:
                         sec_ctx = container.get("securityContext", {})
                         if sec_ctx.get("readOnlyRootFilesystem"):
                             assert any(
-                                "/tmp" in path for path in mount_paths
+                                "/tmp" in path  # nosec B108 - K8s volumeMount path check, not temp file creation
+                                for path in mount_paths
                             ), f"{patch_file.name}: Container with readOnlyRootFilesystem should mount /tmp"
 
     def test_init_containers_have_security_context(self, deployment_patch_files):

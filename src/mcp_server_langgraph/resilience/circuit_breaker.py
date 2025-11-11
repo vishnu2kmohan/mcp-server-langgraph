@@ -276,12 +276,25 @@ def circuit_breaker(  # noqa: C901
                         try:
                             with breaker._lock:
                                 if breaker.is_system_error(e):
+                                    logger.debug(
+                                        f"Circuit breaker {breaker.name}: system error {type(e).__name__}, "
+                                        f"counter before={breaker.fail_counter}, fail_max={breaker.fail_max}, "
+                                        f"state={breaker.state.name}"
+                                    )
                                     breaker._inc_counter()
                                     for listener in breaker.listeners:
                                         listener.failure(breaker, e)
                                     breaker.state.on_failure(e)
+                                    logger.debug(
+                                        f"Circuit breaker {breaker.name}: after on_failure, "
+                                        f"counter={breaker.fail_counter}, state={breaker.state.name}"
+                                    )
                                 else:
                                     # Not a system error, treat as success
+                                    logger.debug(
+                                        f"Circuit breaker {breaker.name}: non-system error {type(e).__name__}, "
+                                        f"treating as success"
+                                    )
                                     breaker._state_storage.increment_counter()
                                     for listener in breaker.listeners:
                                         listener.success(breaker)
