@@ -216,7 +216,7 @@ class TestFilenamConvention:
         ]
 
         for name in valid_names:
-            file_path = Path(f"/tmp/{name}.mdx")
+            file_path = Path(f"/tmp/{name}.mdx")  # nosec B108 - test code, not a security risk
             report = ValidationReport()
             check_filename_convention(file_path, report)
 
@@ -233,7 +233,7 @@ class TestFilenamConvention:
         ]
 
         for filename, expected_severity in invalid_cases:
-            file_path = Path(f"/tmp/{filename}")
+            file_path = Path(f"/tmp/{filename}")  # nosec B108 - test code, not a security risk
             report = ValidationReport()
             check_filename_convention(file_path, report)
 
@@ -308,9 +308,9 @@ class TestValidationReport:
         """Test adding issues and counting by severity."""
         report = ValidationReport()
 
-        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error message")
-        report.add_issue("warning", Path("/tmp/test.mdx"), "test", "Warning message")
-        report.add_issue("info", Path("/tmp/test.mdx"), "test", "Info message")
+        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error message")  # nosec B108
+        report.add_issue("warning", Path("/tmp/test.mdx"), "test", "Warning message")  # nosec B108
+        report.add_issue("info", Path("/tmp/test.mdx"), "test", "Info message")  # nosec B108
 
         errors = [i for i in report.issues if i.severity == "error"]
         warnings = [i for i in report.issues if i.severity == "warning"]
@@ -325,9 +325,9 @@ class TestValidationReport:
         """Test that print_summary returns the correct error count."""
         report = ValidationReport()
 
-        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error 1")
-        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error 2")
-        report.add_issue("warning", Path("/tmp/test.mdx"), "test", "Warning")
+        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error 1")  # nosec B108
+        report.add_issue("error", Path("/tmp/test.mdx"), "test", "Error 2")  # nosec B108
+        report.add_issue("warning", Path("/tmp/test.mdx"), "test", "Warning")  # nosec B108
 
         error_count = report.print_summary()
 
