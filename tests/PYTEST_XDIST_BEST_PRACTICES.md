@@ -36,9 +36,59 @@ app.dependency_overrides[get_current_user] = mock_get_current_user_async
 - **Intermittent**: Fails randomly when run with `pytest -n auto` (parallel workers)
 - **Reason**: FastAPI's dependency injection system checks function signatures at import time, and pytest-xdist workers may cache or share module state differently
 
+## ⚠️ CRITICAL: Module-Level Singleton Issue (bearer_scheme)
+
+### The Second Bug We Fixed (Latest)
+
+After fixing the async/sync mismatch bug, we discovered **another critical issue** causing intermittent 401 errors in pytest-xdist:
+
+**Root Cause**: Module-level `bearer_scheme` singleton in `auth/middleware.py:816`
+
+```python
+# In auth/middleware.py (production code)
+bearer_scheme = HTTPBearer(auto_error=False)  # MODULE-LEVEL SINGLETON!
+
+async def get_current_user(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),  # Uses singleton
+) -> Dict[str, Any]:
+    ...
+```
+
+**Problem**: Even when overriding `get_current_user`, the nested `bearer_scheme` dependency is NOT overridden, causing test pollution across pytest-xdist workers.
+
+**The Fix**: Override BOTH `get_current_user` AND `bearer_scheme`:
+
+```python
+from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+
+# CRITICAL: Must override bearer_scheme to prevent singleton pollution
+app.dependency_overrides[bearer_scheme] = lambda: None
+app.dependency_overrides[get_current_user] = mock_get_current_user_async
+```
+
+**Why This Matters**:
+- Test execution order in pytest-xdist is non-deterministic
+- If TestAPIKeyEndpointAuthorization (no auth) runs before TestCreateAPIKey (mocked auth) on same worker
+- The bearer_scheme singleton gets "primed" with no-credentials state
+- Subsequent tests fail with 401 even though get_current_user is overridden
+
 ##  Core Principles
 
-### 1. Match Async/Sync Signatures
+### 1. Override ALL Nested Dependencies
+
+**Rule**: When overriding a dependency that has nested `Depends()`, override ALL levels.
+
+```python
+# ❌ WRONG: Only overrides top-level dependency
+app.dependency_overrides[get_current_user] = mock_user
+
+# ✅ CORRECT: Overrides BOTH top-level AND nested dependencies
+app.dependency_overrides[bearer_scheme] = lambda: None  # Nested dependency
+app.dependency_overrides[get_current_user] = mock_user  # Top-level dependency
+```
+
+### 2. Match Async/Sync Signatures
 
 **Rule**: Dependency override MUST match the original function's async/sync signature.
 
@@ -155,20 +205,19 @@ def mock_current_user():
     }
 
 
-@pytest.fixture
-def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
-    """FastAPI TestClient with mocked dependencies"""
+@pytest.fixture(scope="function")
+def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
+    """FastAPI TestClient with mocked dependencies for API endpoints"""
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.api_keys import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import (
         get_api_key_manager,
         get_keycloak_client,
     )
 
     app = FastAPI()
-    app.include_router(router)
 
     # ✅ CORRECT: Async override for async dependency
     async def mock_get_current_user_async():
@@ -181,12 +230,18 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     def mock_get_keycloak_client_sync():
         return mock_keycloak_client
 
-    # Set overrides
+    # ✅ CRITICAL: Override bearer_scheme to prevent module-level singleton pollution
+    app.dependency_overrides[bearer_scheme] = lambda: None
     app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
     app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
     app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
-    yield TestClient(app)
+    # Include router AFTER setting overrides
+    app.include_router(router)
+
+    client = TestClient(app)
+
+    yield client
 
     # ✅ REQUIRED: Cleanup to prevent state pollution
     app.dependency_overrides.clear()
@@ -202,9 +257,9 @@ class TestCreateAPIKey:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_create_api_key_success(self, test_client, mock_api_key_manager):
+    def test_create_api_key_success(self, api_keys_test_client, mock_api_key_manager):
         """Test successful API key creation"""
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={"name": "Test Key", "expires_days": 365},
         )

@@ -98,8 +98,10 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     """
     FastAPI TestClient with mocked dependencies for API keys endpoints.
 
-    IMPORTANT: scope="function" ensures fresh app instance per test,
-    preventing pytest-xdist state pollution across parallel workers.
+    IMPORTANT:
+    - scope="function" ensures fresh app instance per test
+    - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
+    - Overrides must be set BEFORE app.include_router() for proper resolution
     """
     from typing import Optional
 
@@ -108,12 +110,11 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
 
     # Import inside fixture to avoid module-level caching issues
     from mcp_server_langgraph.api.api_keys import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
     # Create fresh FastAPI app for each test
     app = FastAPI()
-    app.include_router(router)
 
     # Override dependencies - must match async/sync of original functions
     # IMPORTANT: get_current_user is async, managers are sync
@@ -127,9 +128,16 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     def mock_get_keycloak_client_sync():
         return mock_keycloak_client
 
+    # CRITICAL FIX: Override bearer_scheme to prevent module-level singleton pollution
+    # Without this, tests fail intermittently with 401 in pytest-xdist when
+    # TestAPIKeyEndpointAuthorization tests run before these tests on same worker
+    app.dependency_overrides[bearer_scheme] = lambda: None
     app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
     app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
     app.dependency_overrides[get_current_user] = mock_get_current_user_async
+
+    # Include router AFTER setting overrides
+    app.include_router(router)
 
     client = TestClient(app)
 
