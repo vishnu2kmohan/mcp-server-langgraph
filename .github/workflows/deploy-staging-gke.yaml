@@ -74,6 +74,8 @@ jobs:
       - name: Render Kustomize manifests for security scanning
         run: |
           kubectl kustomize deployments/overlays/staging-gke > /tmp/staging-manifests-for-scan.yaml
+          # Copy .trivyignore to scan directory for documented suppressions
+          cp deployments/overlays/staging-gke/.trivyignore /tmp/.trivyignore
           echo "✅ Manifests rendered for security scanning"
 
       - name: Security scan rendered manifests
@@ -83,6 +85,7 @@ jobs:
           scan-ref: '/tmp/staging-manifests-for-scan.yaml'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'  # Fail on critical/high vulnerabilities
+          trivyignores: '/tmp/.trivyignore'
 
       - name: Set validation status
         id: validate

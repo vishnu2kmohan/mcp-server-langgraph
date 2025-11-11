@@ -101,30 +101,36 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     assert "HIGH" in severity, "Trivy severity must include HIGH"
 
 
-def test_trivy_scan_uses_strict_mode_no_ignore_file():
+def test_trivy_scan_allows_documented_suppressions():
     """
-    Verify that Trivy scanning does NOT use a .trivyignore file.
+    Verify that Trivy scanning policy allows documented suppressions for false positives.
 
-    Per user requirement: "Keep strict - no ignore file"
-    All security findings should be addressed in the manifests themselves,
-    not hidden via ignore rules.
+    Per user requirement: "Suppress with .trivyignore (Recommended)"
+
+    Policy:
+    - Environment-specific .trivyignore files ARE allowed (staging-gke, production-gke, etc.)
+    - Global .trivyignore files are NOT allowed (too broad, could hide real issues)
+    - All suppressions must be documented (validated by test_trivy_suppressions.py)
     """
     repo_root = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph")
 
-    # Check for .trivyignore in common locations
-    ignore_file_locations = [
+    # Global .trivyignore files are NOT allowed (maintain strict default policy)
+    global_ignore_locations = [
         repo_root / ".trivyignore",
         repo_root / "deployments" / ".trivyignore",
         repo_root / "deployments" / "overlays" / ".trivyignore",
-        repo_root / "deployments" / "overlays" / "staging-gke" / ".trivyignore",
     ]
 
-    for ignore_file in ignore_file_locations:
+    for ignore_file in global_ignore_locations:
         assert not ignore_file.exists(), (
-            f"Found .trivyignore file at {ignore_file}. "
-            "Per strict security policy, security findings should be addressed "
-            "in manifests, not ignored. Remove this file and fix issues in the manifests."
+            f"Found global .trivyignore file at {ignore_file}. "
+            "Global suppressions are not allowed - they could hide real security issues. "
+            "Use environment-specific .trivyignore files in overlay directories instead "
+            "(e.g., deployments/overlays/staging-gke/.trivyignore)."
         )
+
+    # Environment-specific .trivyignore files ARE allowed
+    # They are validated by test_trivy_suppressions.py to ensure proper documentation
 
 
 def test_rendered_manifests_include_security_contexts():

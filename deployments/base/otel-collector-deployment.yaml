@@ -145,10 +145,28 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: otel-collector
+      # Pod-level security context - Trivy AVD-KSV-0118 compliance
+      # Prevents running as root and enforces security best practices
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001  # Verified from official otel-collector image
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: otel-collector
           image: otel/opentelemetry-collector-contrib:0.137.0
           imagePullPolicy: IfNotPresent
+          # Container-level security context - Trivy AVD-KSV-0014 and AVD-KSV-0118 compliance
+          # Enforces read-only root filesystem and drops all capabilities
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop:
+                - ALL
           command:
             - /otelcol-contrib
             - --config=/etc/otel-collector/otel-collector.yaml
@@ -228,6 +246,12 @@ spec:
             - name: config
               mountPath: /etc/otel-collector
               readOnly: true
+            # tmpfs volumes required for readOnlyRootFilesystem: true
+            # OTel collector needs writable directories for temporary files
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/otelcol
           resources:
             requests:
               cpu: 200m
@@ -258,6 +282,12 @@ spec:
             items:
               - key: otel-collector.yaml
                 path: otel-collector.yaml
+        # tmpfs volumes (emptyDir) for writable directories
+        # Required because readOnlyRootFilesystem: true prevents writes to root filesystem
+        - name: tmp
+          emptyDir: {}
+        - name: home
+          emptyDir: {}
 
 ---
 apiVersion: v1

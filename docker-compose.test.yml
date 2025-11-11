@@ -115,12 +115,16 @@ services:
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.0.0
     container_name: mcp-keycloak-test
-    command: start-dev
+    command: start-dev --import-realm
     depends_on:
       postgres-test:
         condition: service_healthy
     ports:
       - "9082:8080"
+    volumes:
+      # Import test realm with pre-configured client and users
+      # This eliminates the need for manual setup and prevents E2E test auth failures
+      - ./tests/e2e/keycloak-test-realm.json:/opt/keycloak/data/import/realm.json:ro
     environment:
       # Admin credentials
       - KEYCLOAK_ADMIN=admin
