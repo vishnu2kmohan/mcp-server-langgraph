@@ -344,7 +344,14 @@ async def handle_webhook(
 
 ### References
 
+#### Architecture & API Docs
 - ADR: [ADR-0034: API Key to JWT Exchange](/architecture/adr-0034-api-key-jwt-exchange)
-- API Reference: [API Keys API](/reference/api-endpoints#api-keys-api)
+- API Reference: [API Keys API](/api-reference/api-keys)
 - Kong Plugin: [kong-apikey-jwt-exchange](/reference/kong-plugins#api-key-jwt-exchange-custom-plugin)
 - Security: See "Security Best Practices" section above
+
+#### Related Guides
+- **[Service Principals](/guides/service-principals)** - Machine-to-machine authentication for batch jobs and CI/CD
+- **[SCIM Provisioning](/guides/scim-provisioning)** - Automated provisioning of API keys for users
+- **[Identity Federation](/guides/identity-federation-quickstart)** - External IdP integration
+- **[Authentication Migration](/guides/authentication-migration-v2-8)** - Migrating to v2.8.0 authentication

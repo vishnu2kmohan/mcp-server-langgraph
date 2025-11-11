@@ -379,7 +379,7 @@
             ]
           },
           {
-            "group": "Development & Quality (ADRs 10, 14-19, 22-26, 29, 49)",
+            "group": "Development & Quality (ADRs 10, 14-19, 22-26, 29, 49-50)",
             "pages": [
               "architecture/adr-0010-langgraph-functional-api",
               "architecture/adr-0014-pydantic-type-safety",
@@ -394,7 +394,8 @@
               "architecture/adr-0025-anthropic-best-practices-enhancements",
               "architecture/adr-0026-lazy-observability-initialization",
               "architecture/adr-0029-custom-exception-hierarchy",
-              "architecture/adr-0049-pytest-fixture-consolidation"
+              "architecture/adr-0049-pytest-fixture-consolidation",
+              "architecture/adr-0050-dependency-singleton-pattern-justification"
             ]
           },
           {

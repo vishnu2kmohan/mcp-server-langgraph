@@ -4,6 +4,14 @@ This directory contains internal documentation for maintainers, contributors, an
 
 ## Directory Structure
 
+### 📦 archive/
+**Historical documentation** (completed work, for reference only):
+- `archive/sprints/` - Completed sprint reports
+- `archive/audits/` - Completed audit reports
+- `archive/codex/` - Codex validation & remediation (completed)
+- `archive/releases/` - Historical release notes
+- See `archive/README.md` for full inventory and archive policy
+
 ### 📐 architecture/
 Technical architecture and design documentation:
 - `AGENTIC_LOOP_GUIDE.md` - Implementation guide for agentic loop
@@ -11,11 +19,12 @@ Technical architecture and design documentation:
 - `STRICT_TYPING_GUIDE.md` - Gradual mypy strict mode rollout
 
 ### 🔍 audits/
-Audit reports and assessments (timestamped):
-- Documentation audits
-- Infrastructure audits
-- Security audits
-- Compliance reviews
+**Active** audit reports and assessments (timestamped):
+- `DOCUMENTATION_AUDIT_2025-11-10.md` - Latest documentation audit
+- `DOCUMENTATION_AUDIT_CHECKLIST_2025-11-10.md` - Quick reference
+- `VERSION_REFERENCE_ANALYSIS_2025-11-10.md` - Version consistency analysis
+- `REMEDIATION_SUMMARY_2025-11-10.md` - Remediation summary
+- **Historical audits**: See `archive/audits/` for completed audits
 
 ### 🔧 operations/
 Operational guides and runbooks:
@@ -33,10 +42,9 @@ Release-specific documentation:
 - `RELEASE_v2.8.0_COMMANDS.md` - Release commands and procedures
 
 ### 🏃 sprints/
-Sprint summaries and progress tracking:
-- Sprint completion reports
-- Technical debt sprint progress
-- TODO catalogs
+**Active** sprint planning and tracking:
+- `TODO-CATALOG.md` - Current TODO items
+- **Historical sprints**: See `archive/sprints/` for completed sprints
 
 ### 🧪 testing/
 Testing guides and reports:
@@ -57,11 +65,14 @@ Testing guides and reports:
 
 ## Document Retention
 
-- **Audits**: Archived after 90 days to `audits/archive/`
-- **Sprints**: Kept for 6 months, then archived
+- **Audits**: Archived when superseded to `archive/audits/`
+- **Sprints**: Archived 30 days after completion to `archive/sprints/`
+- **Remediation Campaigns**: Archived immediately upon completion to `archive/codex/`, `archive/*/`
 - **Migrations**: Kept for 1 year after migration completion
 - **Architecture**: Permanent (updated as needed)
 - **Operations**: Permanent (kept current)
+
+See `archive/README.md` for complete archive policy and search procedures.
 
 ## Contributing
 
@@ -82,5 +93,6 @@ When adding new internal documentation:
 
 ---
 
-**Last Updated:** 2025-10-20
+**Last Updated:** 2025-11-10
 **Maintained By:** Repository Maintainers
+**Last Archived:** 2025-11-10 (22 files archived)
