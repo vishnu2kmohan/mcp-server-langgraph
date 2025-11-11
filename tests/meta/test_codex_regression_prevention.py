@@ -189,6 +189,7 @@ class TestCLIToolGuards:
             "test_kustomize_builds.py",  # Has conditional skips
             "test_codex_findings_validation.py",  # Has conditional checks
             "test_dns_failover_verification.py",  # Has kubectl checks
+            "test_kubernetes_security.py",  # Has class-level @requires_kubectl + defensive skips
         ]
         violations = [v for v in violations if not any(f in v for f in allowed_files)]
 

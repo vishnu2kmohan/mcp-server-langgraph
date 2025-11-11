@@ -96,7 +96,10 @@ def mock_keycloak_client():
 @pytest.fixture
 def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     """FastAPI TestClient with mocked dependencies"""
-    from fastapi import FastAPI
+    from typing import Optional
+
+    from fastapi import Depends, FastAPI
+    from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
     from mcp_server_langgraph.api.api_keys import router
     from mcp_server_langgraph.auth.middleware import get_current_user
@@ -105,13 +108,11 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     app = FastAPI()
     app.include_router(router)
 
-    # Override dependencies - must return async functions for async dependencies
-    async def mock_get_current_user():
-        return mock_current_user
-
+    # Override dependencies with simple lambdas
+    # FastAPI dependency_overrides don't need to match the original signature
     app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
-    app.dependency_overrides[get_current_user] = mock_get_current_user
+    app.dependency_overrides[get_current_user] = lambda: mock_current_user
 
     yield TestClient(app)
 
