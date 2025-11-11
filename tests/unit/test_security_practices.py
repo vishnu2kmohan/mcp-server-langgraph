@@ -45,8 +45,8 @@ class TestCryptographicSecurity:
         """
         from mcp_server_langgraph.execution.kubernetes_sandbox import KubernetesSandbox
 
-        # Get source code of the _create_job or execute_code method
-        source = inspect.getsource(KubernetesSandbox.execute_code)
+        # Get source code of the _create_job method (where job names are generated)
+        source = inspect.getsource(KubernetesSandbox._create_job)
 
         # Check for MD5 usage
         if "md5" in source.lower():

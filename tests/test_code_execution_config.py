@@ -62,7 +62,7 @@ class TestCodeExecutionSettings:
         """Test default network mode"""
         settings = Settings()
         assert hasattr(settings, "code_execution_network_mode")
-        assert settings.code_execution_network_mode == "allowlist"  # Restrictive by default
+        assert settings.code_execution_network_mode == "none"  # Maximum isolation by default (security-first)
 
     def test_code_execution_allowed_domains_default(self):
         """Test default allowed domains"""

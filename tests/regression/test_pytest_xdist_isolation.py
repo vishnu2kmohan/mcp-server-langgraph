@@ -358,5 +358,7 @@ def test_dependency_override_documentation():
         yield TestClient(app)
         app.dependency_overrides.clear()  # ✅ Cleanup after yield
     """
-    # This is a documentation test - no assertions needed
-    pass
+    # This is a documentation test - verify docstring exists
+    assert test_dependency_override_documentation.__doc__ is not None
+    assert "✅ DO THIS" in test_dependency_override_documentation.__doc__
+    assert "❌ DON'T DO THIS" in test_dependency_override_documentation.__doc__

@@ -93,18 +93,25 @@ def mock_keycloak_client():
     return client
 
 
-@pytest.fixture
-def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
-    """FastAPI TestClient with mocked dependencies"""
+@pytest.fixture(scope="function")
+def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
+    """
+    FastAPI TestClient with mocked dependencies for API keys endpoints.
+
+    IMPORTANT: scope="function" ensures fresh app instance per test,
+    preventing pytest-xdist state pollution across parallel workers.
+    """
     from typing import Optional
 
     from fastapi import Depends, FastAPI
     from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+    # Import inside fixture to avoid module-level caching issues
     from mcp_server_langgraph.api.api_keys import router
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
+    # Create fresh FastAPI app for each test
     app = FastAPI()
     app.include_router(router)
 
@@ -124,9 +131,11 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
     app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
-    yield TestClient(app)
+    client = TestClient(app)
 
-    # Cleanup to prevent state pollution in xdist workers
+    yield client
+
+    # CRITICAL: Cleanup to prevent state pollution in xdist workers
     app.dependency_overrides.clear()
 
 
@@ -137,7 +146,7 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_create_tests")
 class TestCreateAPIKey:
     """Tests for POST /api/v1/api-keys/"""
 
@@ -145,9 +154,9 @@ class TestCreateAPIKey:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_create_api_key_success(self, test_client, mock_api_key_manager):
+    def test_create_api_key_success(self, api_keys_test_client, mock_api_key_manager):
         """Test successful API key creation"""
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={
                 "name": "Test Key",
@@ -174,9 +183,9 @@ class TestCreateAPIKey:
             expires_days=365,
         )
 
-    def test_create_api_key_custom_expiration(self, test_client, mock_api_key_manager):
+    def test_create_api_key_custom_expiration(self, api_keys_test_client, mock_api_key_manager):
         """Test API key creation with custom expiration"""
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={
                 "name": "Short-lived Key",
@@ -193,12 +202,12 @@ class TestCreateAPIKey:
             expires_days=30,
         )
 
-    def test_create_api_key_max_keys_exceeded(self, test_client, mock_api_key_manager):
+    def test_create_api_key_max_keys_exceeded(self, api_keys_test_client, mock_api_key_manager):
         """Test API key creation when user has reached the limit (5 keys)"""
         # Simulate max keys error
         mock_api_key_manager.create_api_key.side_effect = ValueError("Maximum of 5 API keys allowed per user")
 
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={
                 "name": "Sixth Key",
@@ -209,9 +218,9 @@ class TestCreateAPIKey:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Maximum of 5 API keys" in response.json()["detail"]
 
-    def test_create_api_key_missing_name(self, test_client):
+    def test_create_api_key_missing_name(self, api_keys_test_client):
         """Test API key creation without required name field"""
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={
                 "expires_days": 365,
@@ -220,11 +229,11 @@ class TestCreateAPIKey:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
-    def test_create_api_key_invalid_expiration(self, test_client, mock_api_key_manager):
+    def test_create_api_key_invalid_expiration(self, api_keys_test_client, mock_api_key_manager):
         """Test API key creation with invalid expiration days"""
         mock_api_key_manager.create_api_key.side_effect = ValueError("expires_days must be between 1 and 365")
 
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/",
             json={
                 "name": "Invalid Key",
@@ -242,7 +251,7 @@ class TestCreateAPIKey:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_list_tests")
 class TestListAPIKeys:
     """Tests for GET /api/v1/api-keys/"""
 
@@ -250,9 +259,9 @@ class TestListAPIKeys:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_list_api_keys_success(self, test_client, mock_api_key_manager):
+    def test_list_api_keys_success(self, api_keys_test_client, mock_api_key_manager):
         """Test successful listing of user's API keys"""
-        response = test_client.get("/api/v1/api-keys/")
+        response = api_keys_test_client.get("/api/v1/api-keys/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -279,11 +288,11 @@ class TestListAPIKeys:
             "8c7b4e5d-1234-5678-abcd-ef1234567890"
         )  # keycloak_id from fixture
 
-    def test_list_api_keys_empty(self, test_client, mock_api_key_manager):
+    def test_list_api_keys_empty(self, api_keys_test_client, mock_api_key_manager):
         """Test listing when user has no API keys"""
         mock_api_key_manager.list_api_keys.return_value = []
 
-        response = test_client.get("/api/v1/api-keys/")
+        response = api_keys_test_client.get("/api/v1/api-keys/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -299,7 +308,7 @@ class TestListAPIKeys:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_rotate_tests")
 class TestRotateAPIKey:
     """Tests for POST /api/v1/api-keys/{key_id}/rotate"""
 
@@ -307,9 +316,9 @@ class TestRotateAPIKey:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_rotate_api_key_success(self, test_client, mock_api_key_manager):
+    def test_rotate_api_key_success(self, api_keys_test_client, mock_api_key_manager):
         """Test successful API key rotation"""
-        response = test_client.post("/api/v1/api-keys/key_12345/rotate")
+        response = api_keys_test_client.post("/api/v1/api-keys/key_12345/rotate")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -327,20 +336,20 @@ class TestRotateAPIKey:
             key_id="key_12345",
         )
 
-    def test_rotate_api_key_not_found(self, test_client, mock_api_key_manager):
+    def test_rotate_api_key_not_found(self, api_keys_test_client, mock_api_key_manager):
         """Test rotating non-existent or unauthorized API key"""
         mock_api_key_manager.rotate_api_key.side_effect = ValueError("API key not found or unauthorized")
 
-        response = test_client.post("/api/v1/api-keys/nonexistent/rotate")
+        response = api_keys_test_client.post("/api/v1/api-keys/nonexistent/rotate")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in response.json()["detail"].lower()
 
-    def test_rotate_api_key_another_users_key(self, test_client, mock_api_key_manager):
+    def test_rotate_api_key_another_users_key(self, api_keys_test_client, mock_api_key_manager):
         """Test rotating another user's API key (should fail)"""
         mock_api_key_manager.rotate_api_key.side_effect = ValueError("API key belongs to different user")
 
-        response = test_client.post("/api/v1/api-keys/other_user_key/rotate")
+        response = api_keys_test_client.post("/api/v1/api-keys/other_user_key/rotate")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -352,7 +361,7 @@ class TestRotateAPIKey:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_revoke_tests")
 class TestRevokeAPIKey:
     """Tests for DELETE /api/v1/api-keys/{key_id}"""
 
@@ -360,9 +369,9 @@ class TestRevokeAPIKey:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_revoke_api_key_success(self, test_client, mock_api_key_manager):
+    def test_revoke_api_key_success(self, api_keys_test_client, mock_api_key_manager):
         """Test successful API key revocation"""
-        response = test_client.delete("/api/v1/api-keys/key_12345")
+        response = api_keys_test_client.delete("/api/v1/api-keys/key_12345")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert response.content == b""  # No response body
@@ -373,12 +382,12 @@ class TestRevokeAPIKey:
             key_id="key_12345",
         )
 
-    def test_revoke_api_key_idempotent(self, test_client, mock_api_key_manager):
+    def test_revoke_api_key_idempotent(self, api_keys_test_client, mock_api_key_manager):
         """Test revoking already revoked key is idempotent"""
         # Revoke doesn't raise error even if key doesn't exist
         mock_api_key_manager.revoke_api_key.return_value = None
 
-        response = test_client.delete("/api/v1/api-keys/already_revoked")
+        response = api_keys_test_client.delete("/api/v1/api-keys/already_revoked")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -391,7 +400,7 @@ class TestRevokeAPIKey:
 @pytest.mark.unit
 @pytest.mark.api
 @pytest.mark.auth
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_validate_tests")
 class TestValidateAPIKey:
     """Tests for POST /api/v1/api-keys/validate (Kong plugin)"""
 
@@ -399,9 +408,9 @@ class TestValidateAPIKey:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_validate_api_key_success(self, test_client, mock_api_key_manager, mock_keycloak_client):
+    def test_validate_api_key_success(self, api_keys_test_client, mock_api_key_manager, mock_keycloak_client):
         """Test successful API key validation and JWT exchange"""
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/validate",
             headers={"X-API-Key": "mcp_test_key_abcdef123456"},  # gitleaks:allow - test key
         )
@@ -422,18 +431,18 @@ class TestValidateAPIKey:
         # Verify JWT was issued with keycloak_id (UUID)
         mock_keycloak_client.issue_token_for_user.assert_called_once_with("8c7b4e5d-1234-5678-abcd-ef1234567890")
 
-    def test_validate_api_key_missing_header(self, test_client):
+    def test_validate_api_key_missing_header(self, api_keys_test_client):
         """Test validation without X-API-Key header"""
-        response = test_client.post("/api/v1/api-keys/validate")
+        response = api_keys_test_client.post("/api/v1/api-keys/validate")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Missing X-API-Key header" in response.json()["detail"]
 
-    def test_validate_api_key_invalid(self, test_client, mock_api_key_manager):
+    def test_validate_api_key_invalid(self, api_keys_test_client, mock_api_key_manager):
         """Test validation with invalid API key"""
         mock_api_key_manager.validate_and_get_user.return_value = None
 
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/validate",
             headers={"X-API-Key": "invalid_key"},
         )
@@ -441,22 +450,22 @@ class TestValidateAPIKey:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert "Invalid or expired" in response.json()["detail"]
 
-    def test_validate_api_key_expired(self, test_client, mock_api_key_manager):
+    def test_validate_api_key_expired(self, api_keys_test_client, mock_api_key_manager):
         """Test validation with expired API key"""
         mock_api_key_manager.validate_and_get_user.return_value = None
 
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/validate",
             headers={"X-API-Key": "mcp_expired_key"},
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_validate_api_key_jwt_issuance_fails(self, test_client, mock_keycloak_client):
+    def test_validate_api_key_jwt_issuance_fails(self, api_keys_test_client, mock_keycloak_client):
         """Test validation when JWT issuance fails"""
         mock_keycloak_client.issue_token_for_user.side_effect = Exception("Keycloak unavailable")
 
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/validate",
             headers={"X-API-Key": "mcp_test_key_abcdef123456"},  # gitleaks:allow - test key
         )
@@ -464,12 +473,12 @@ class TestValidateAPIKey:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert "Failed to issue JWT" in response.json()["detail"]
 
-    def test_validate_api_key_not_in_openapi_schema(self, test_client):
+    def test_validate_api_key_not_in_openapi_schema(self, api_keys_test_client):
         """Test that validate endpoint is excluded from public API docs"""
         # This endpoint should have include_in_schema=False
         # We can't directly test FastAPI's schema generation here,
         # but we verify the endpoint works (it's an internal endpoint)
-        response = test_client.post(
+        response = api_keys_test_client.post(
             "/api/v1/api-keys/validate",
             headers={"X-API-Key": "mcp_test_key_abcdef123456"},  # gitleaks:allow - test key
         )
@@ -486,7 +495,7 @@ class TestValidateAPIKey:
 @pytest.mark.unit
 @pytest.mark.api
 @pytest.mark.auth
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_auth_tests")
 class TestAPIKeyEndpointAuthorization:
     """Tests for endpoint authorization (JWT required)"""
 
@@ -506,18 +515,22 @@ class TestAPIKeyEndpointAuthorization:
         # No dependency overrides - will fail auth
         client = TestClient(app)
 
-        response = client.post(
-            "/api/v1/api-keys/",
-            json={"name": "Test", "expires_days": 365},
-        )
+        try:
+            response = client.post(
+                "/api/v1/api-keys/",
+                json={"name": "Test", "expires_days": 365},
+            )
 
-        # Should fail due to missing authentication
-        # Actual status depends on middleware implementation
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN,
-            status.HTTP_500_INTERNAL_SERVER_ERROR,  # If dependency fails
-        ]
+            # Should fail due to missing authentication
+            # Actual status depends on middleware implementation
+            assert response.status_code in [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_403_FORBIDDEN,
+                status.HTTP_500_INTERNAL_SERVER_ERROR,  # If dependency fails
+            ]
+        finally:
+            # Cleanup to prevent pollution in pytest-xdist workers
+            app.dependency_overrides.clear()
 
     def test_list_without_auth(self):
         """Test listing API keys without authentication fails"""
@@ -530,13 +543,17 @@ class TestAPIKeyEndpointAuthorization:
 
         client = TestClient(app)
 
-        response = client.get("/api/v1/api-keys/")
+        try:
+            response = client.get("/api/v1/api-keys/")
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN,
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-        ]
+            assert response.status_code in [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_403_FORBIDDEN,
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+            ]
+        finally:
+            # Cleanup to prevent pollution in pytest-xdist workers
+            app.dependency_overrides.clear()
 
 
 # ==============================================================================
@@ -547,7 +564,7 @@ class TestAPIKeyEndpointAuthorization:
 @pytest.mark.integration
 @pytest.mark.api
 @pytest.mark.slow
-@pytest.mark.xdist_group(name="api_keys_api_tests")
+@pytest.mark.xdist_group(name="api_keys_integration_tests")
 class TestAPIKeyEndpointsIntegration:
     """
     Integration tests with real Keycloak (requires docker-compose.test.yml)

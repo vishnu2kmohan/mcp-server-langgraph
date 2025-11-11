@@ -111,15 +111,22 @@ def mock_openfga_client():
     return mock_client
 
 
-@pytest.fixture
-def test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
-    """FastAPI TestClient with mocked dependencies"""
+@pytest.fixture(scope="function")
+def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
+    """
+    FastAPI TestClient with mocked dependencies for service principals endpoints.
+
+    IMPORTANT: scope="function" ensures fresh app instance per test,
+    preventing pytest-xdist state pollution across parallel workers.
+    """
     from fastapi import FastAPI
 
+    # Import inside fixture to avoid module-level caching issues
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
+    # Create fresh FastAPI app for each test
     app = FastAPI()
     app.include_router(router)
 
@@ -139,21 +146,30 @@ def test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
     app.dependency_overrides[get_current_user] = mock_get_current_user_async
     app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
 
-    yield TestClient(app)
+    client = TestClient(app)
 
-    # Cleanup to prevent state pollution in xdist workers
+    yield client
+
+    # CRITICAL: Cleanup to prevent state pollution in xdist workers
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
-    """FastAPI TestClient with admin user for tests requiring elevated permissions"""
+    """
+    FastAPI TestClient with admin user for tests requiring elevated permissions.
+
+    IMPORTANT: scope="function" ensures fresh app instance per test,
+    preventing pytest-xdist state pollution across parallel workers.
+    """
     from fastapi import FastAPI
 
+    # Import inside fixture to avoid module-level caching issues
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
+    # Create fresh FastAPI app for each test
     app = FastAPI()
     app.include_router(router)
 
@@ -172,9 +188,11 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
     app.dependency_overrides[get_current_user] = mock_get_admin_user_async
     app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
 
-    yield TestClient(app)
+    client = TestClient(app)
 
-    # Cleanup to prevent state pollution in xdist workers
+    yield client
+
+    # CRITICAL: Cleanup to prevent state pollution in xdist workers
     app.dependency_overrides.clear()
 
 
@@ -185,7 +203,7 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_create_tests")
 class TestCreateServicePrincipal:
     """Tests for POST /api/v1/service-principals/"""
 
@@ -193,9 +211,9 @@ class TestCreateServicePrincipal:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_create_service_principal_success(self, test_client, mock_sp_manager):
+    def test_create_service_principal_success(self, sp_test_client, mock_sp_manager):
         """Test successful service principal creation"""
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Batch ETL Job",
@@ -227,9 +245,9 @@ class TestCreateServicePrincipal:
         # Verify manager was called correctly
         mock_sp_manager.create_service_principal.assert_called_once()
 
-    def test_create_service_principal_minimal(self, test_client, mock_sp_manager):
+    def test_create_service_principal_minimal(self, sp_test_client, mock_sp_manager):
         """Test service principal creation with minimal fields"""
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Simple Service",
@@ -251,9 +269,9 @@ class TestCreateServicePrincipal:
             "(this locks in the API contract for default behavior)"
         )
 
-    def test_create_service_principal_service_account_mode(self, test_client, mock_sp_manager):
+    def test_create_service_principal_service_account_mode(self, sp_test_client, mock_sp_manager):
         """Test creating service principal with service_account_user mode"""
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Service Account",
@@ -264,9 +282,9 @@ class TestCreateServicePrincipal:
 
         assert response.status_code == status.HTTP_201_CREATED
 
-    def test_create_service_principal_invalid_auth_mode(self, test_client):
+    def test_create_service_principal_invalid_auth_mode(self, sp_test_client):
         """Test creating service principal with invalid authentication mode"""
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Bad Service",
@@ -278,7 +296,7 @@ class TestCreateServicePrincipal:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Invalid authentication_mode" in response.json()["detail"]
 
-    def test_create_service_principal_duplicate_id(self, test_client, mock_sp_manager):
+    def test_create_service_principal_duplicate_id(self, sp_test_client, mock_sp_manager):
         """Test creating service principal when ID already exists"""
         # Mock get_service_principal to return existing SP
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -293,7 +311,7 @@ class TestCreateServicePrincipal:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Batch ETL Job",  # Will generate same service_id
@@ -304,7 +322,7 @@ class TestCreateServicePrincipal:
         assert response.status_code == status.HTTP_409_CONFLICT
         assert "already exists" in response.json()["detail"]
 
-    def test_create_service_principal_missing_secret(self, test_client, mock_sp_manager):
+    def test_create_service_principal_missing_secret(self, sp_test_client, mock_sp_manager):
         """Test error handling when secret generation fails"""
         # Mock creation to return SP without secret
         mock_sp_manager.create_service_principal.return_value = MockServicePrincipal(
@@ -320,7 +338,7 @@ class TestCreateServicePrincipal:
             client_secret=None,  # Missing secret
         )
 
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/",
             json={
                 "name": "Bad Service",
@@ -339,7 +357,7 @@ class TestCreateServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_list_tests")
 class TestListServicePrincipals:
     """Tests for GET /api/v1/service-principals/"""
 
@@ -347,9 +365,9 @@ class TestListServicePrincipals:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_list_service_principals_success(self, test_client, mock_sp_manager):
+    def test_list_service_principals_success(self, sp_test_client, mock_sp_manager):
         """Test successful listing of user's service principals"""
-        response = test_client.get("/api/v1/service-principals/")
+        response = sp_test_client.get("/api/v1/service-principals/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -370,11 +388,11 @@ class TestListServicePrincipals:
         # Verify manager was called with current user
         mock_sp_manager.list_service_principals.assert_called_once_with(owner_user_id="user:alice")  # OpenFGA format
 
-    def test_list_service_principals_empty(self, test_client, mock_sp_manager):
+    def test_list_service_principals_empty(self, sp_test_client, mock_sp_manager):
         """Test listing when user has no service principals"""
         mock_sp_manager.list_service_principals.return_value = []
 
-        response = test_client.get("/api/v1/service-principals/")
+        response = sp_test_client.get("/api/v1/service-principals/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -390,7 +408,7 @@ class TestListServicePrincipals:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_get_tests")
 class TestGetServicePrincipal:
     """Tests for GET /api/v1/service-principals/{service_id}"""
 
@@ -398,7 +416,7 @@ class TestGetServicePrincipal:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_get_service_principal_success(self, test_client, mock_sp_manager):
+    def test_get_service_principal_success(self, sp_test_client, mock_sp_manager):
         """Test successful retrieval of service principal details"""
         # Arrange: Configure mock to return existing service principal
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -414,7 +432,7 @@ class TestGetServicePrincipal:
         )
 
         # Act: Retrieve service principal
-        response = test_client.get("/api/v1/service-principals/batch-etl-job")
+        response = sp_test_client.get("/api/v1/service-principals/batch-etl-job")
 
         # Assert: Verify response
         assert response.status_code == status.HTTP_200_OK
@@ -431,16 +449,16 @@ class TestGetServicePrincipal:
         # Verify manager was called
         mock_sp_manager.get_service_principal.assert_called_once_with("batch-etl-job")
 
-    def test_get_service_principal_not_found(self, test_client, mock_sp_manager):
+    def test_get_service_principal_not_found(self, sp_test_client, mock_sp_manager):
         """Test retrieving non-existent service principal"""
         mock_sp_manager.get_service_principal.return_value = None
 
-        response = test_client.get("/api/v1/service-principals/nonexistent")
+        response = sp_test_client.get("/api/v1/service-principals/nonexistent")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in response.json()["detail"]
 
-    def test_get_service_principal_unauthorized(self, test_client, mock_sp_manager):
+    def test_get_service_principal_unauthorized(self, sp_test_client, mock_sp_manager):
         """Test retrieving another user's service principal"""
         # Return SP owned by different user
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -455,7 +473,7 @@ class TestGetServicePrincipal:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.get("/api/v1/service-principals/other-service")
+        response = sp_test_client.get("/api/v1/service-principals/other-service")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "do not have permission" in response.json()["detail"]
@@ -468,7 +486,7 @@ class TestGetServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_rotate_tests")
 class TestRotateServicePrincipalSecret:
     """Tests for POST /api/v1/service-principals/{service_id}/rotate-secret"""
 
@@ -476,7 +494,7 @@ class TestRotateServicePrincipalSecret:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_rotate_secret_success(self, test_client, mock_sp_manager):
+    def test_rotate_secret_success(self, sp_test_client, mock_sp_manager):
         """Test successful secret rotation"""
         # Arrange: Configure mock to return existing service principal owned by current user
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -492,7 +510,7 @@ class TestRotateServicePrincipalSecret:
         )
 
         # Act: Call rotate secret endpoint
-        response = test_client.post("/api/v1/service-principals/batch-etl-job/rotate-secret")
+        response = sp_test_client.post("/api/v1/service-principals/batch-etl-job/rotate-secret")
 
         # Assert: Verify response
         assert response.status_code == status.HTTP_200_OK
@@ -508,15 +526,15 @@ class TestRotateServicePrincipalSecret:
         # Verify manager was called
         mock_sp_manager.rotate_secret.assert_called_once_with("batch-etl-job")
 
-    def test_rotate_secret_not_found(self, test_client, mock_sp_manager):
+    def test_rotate_secret_not_found(self, sp_test_client, mock_sp_manager):
         """Test rotating secret for non-existent service principal"""
         mock_sp_manager.get_service_principal.return_value = None
 
-        response = test_client.post("/api/v1/service-principals/nonexistent/rotate-secret")
+        response = sp_test_client.post("/api/v1/service-principals/nonexistent/rotate-secret")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_rotate_secret_unauthorized(self, test_client, mock_sp_manager):
+    def test_rotate_secret_unauthorized(self, sp_test_client, mock_sp_manager):
         """Test rotating secret for another user's service principal"""
         # Return SP owned by different user
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -531,7 +549,7 @@ class TestRotateServicePrincipalSecret:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.post("/api/v1/service-principals/other-service/rotate-secret")
+        response = sp_test_client.post("/api/v1/service-principals/other-service/rotate-secret")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "do not have permission" in response.json()["detail"]
@@ -544,7 +562,7 @@ class TestRotateServicePrincipalSecret:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_delete_tests")
 class TestDeleteServicePrincipal:
     """Tests for DELETE /api/v1/service-principals/{service_id}"""
 
@@ -552,7 +570,7 @@ class TestDeleteServicePrincipal:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_delete_service_principal_success(self, test_client, mock_sp_manager):
+    def test_delete_service_principal_success(self, sp_test_client, mock_sp_manager):
         """Test successful service principal deletion"""
         # Arrange: Configure mock to return existing service principal owned by current user
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
@@ -568,7 +586,7 @@ class TestDeleteServicePrincipal:
         )
 
         # Act: Delete service principal
-        response = test_client.delete("/api/v1/service-principals/batch-etl-job")
+        response = sp_test_client.delete("/api/v1/service-principals/batch-etl-job")
 
         # Assert: Verify response
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -577,15 +595,15 @@ class TestDeleteServicePrincipal:
         # Verify manager was called
         mock_sp_manager.delete_service_principal.assert_called_once_with("batch-etl-job")
 
-    def test_delete_service_principal_not_found(self, test_client, mock_sp_manager):
+    def test_delete_service_principal_not_found(self, sp_test_client, mock_sp_manager):
         """Test deleting non-existent service principal"""
         mock_sp_manager.get_service_principal.return_value = None
 
-        response = test_client.delete("/api/v1/service-principals/nonexistent")
+        response = sp_test_client.delete("/api/v1/service-principals/nonexistent")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_delete_service_principal_unauthorized(self, test_client, mock_sp_manager):
+    def test_delete_service_principal_unauthorized(self, sp_test_client, mock_sp_manager):
         """Test deleting another user's service principal"""
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
             service_id="other-service",
@@ -599,7 +617,7 @@ class TestDeleteServicePrincipal:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.delete("/api/v1/service-principals/other-service")
+        response = sp_test_client.delete("/api/v1/service-principals/other-service")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -611,7 +629,7 @@ class TestDeleteServicePrincipal:
 
 @pytest.mark.unit
 @pytest.mark.api
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_associate_tests")
 class TestAssociateServicePrincipalWithUser:
     """Tests for POST /api/v1/service-principals/{service_id}/associate-user"""
 
@@ -656,18 +674,18 @@ class TestAssociateServicePrincipalWithUser:
             inherit_permissions=True,
         )
 
-    def test_associate_with_user_not_found(self, test_client, mock_sp_manager):
+    def test_associate_with_user_not_found(self, sp_test_client, mock_sp_manager):
         """Test associating non-existent service principal"""
         mock_sp_manager.get_service_principal.return_value = None
 
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/nonexistent/associate-user",
             params={"user_id": "user:bob"},
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_associate_with_user_unauthorized(self, test_client, mock_sp_manager):
+    def test_associate_with_user_unauthorized(self, sp_test_client, mock_sp_manager):
         """Test associating another user's service principal"""
         mock_sp_manager.get_service_principal.return_value = MockServicePrincipal(
             service_id="other-service",
@@ -681,7 +699,7 @@ class TestAssociateServicePrincipalWithUser:
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
-        response = test_client.post(
+        response = sp_test_client.post(
             "/api/v1/service-principals/other-service/associate-user",
             params={"user_id": "user:bob"},
         )
@@ -723,7 +741,7 @@ class TestAssociateServicePrincipalWithUser:
 @pytest.mark.integration
 @pytest.mark.api
 @pytest.mark.slow
-@pytest.mark.xdist_group(name="service_principals_api_tests")
+@pytest.mark.xdist_group(name="sp_integration_tests")
 class TestServicePrincipalEndpointsIntegration:
     """
     Integration tests with real Keycloak and OpenFGA
