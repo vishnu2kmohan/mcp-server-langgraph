@@ -27,9 +27,15 @@ class TestPostgreSQLHighAvailability:
     """Test PostgreSQL deployment supports HA and has backup strategy."""
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
-        """Load YAML file and return parsed content."""
+        """Load YAML file and return parsed content.
+
+        For multi-document YAML files, returns all documents as a list.
+        For single-document files, returns the document as a dict.
+        """
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+            docs = list(yaml.safe_load_all(f))
+            # Return single doc as dict, multiple docs as list
+            return docs[0] if len(docs) == 1 else docs
 
     def test_postgres_deployment_documents_ha_options(self):
         """
@@ -110,9 +116,15 @@ class TestRedisStatefulSetWithPersistence:
     """Test Redis uses StatefulSet with persistent storage instead of Deployment."""
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
-        """Load YAML file and return parsed content."""
+        """Load YAML file and return parsed content.
+
+        For multi-document YAML files, returns all documents as a list.
+        For single-document files, returns the document as a dict.
+        """
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+            docs = list(yaml.safe_load_all(f))
+            # Return single doc as dict, multiple docs as list
+            return docs[0] if len(docs) == 1 else docs
 
     def test_redis_uses_statefulset_not_deployment(self):
         """
@@ -127,7 +139,21 @@ class TestRedisStatefulSetWithPersistence:
         if not redis_path.exists():
             pytest.skip("Redis deployment not found")
 
-        redis_config = self._load_yaml_file(redis_path)
+        redis_docs = self._load_yaml_file(redis_path)
+
+        # Handle both single dict and list of dicts
+        if not isinstance(redis_docs, list):
+            redis_docs = [redis_docs]
+
+        # Find the StatefulSet/Deployment document (skip ConfigMap, etc.)
+        redis_config = None
+        for doc in redis_docs:
+            if doc.get("kind") in ["StatefulSet", "Deployment"]:
+                redis_config = doc
+                break
+
+        if not redis_config:
+            pytest.skip("No StatefulSet or Deployment found in Redis config")
 
         # Check if it's a StatefulSet
         if redis_config.get("kind") != "StatefulSet":
@@ -153,7 +179,21 @@ class TestRedisStatefulSetWithPersistence:
         if not redis_path.exists():
             pytest.skip("Redis deployment not found")
 
-        redis_config = self._load_yaml_file(redis_path)
+        redis_docs = self._load_yaml_file(redis_path)
+
+        # Handle both single dict and list of dicts
+        if not isinstance(redis_docs, list):
+            redis_docs = [redis_docs]
+
+        # Find the StatefulSet/Deployment document
+        redis_config = None
+        for doc in redis_docs:
+            if doc.get("kind") in ["StatefulSet", "Deployment"]:
+                redis_config = doc
+                break
+
+        if not redis_config:
+            pytest.skip("No StatefulSet or Deployment found in Redis config")
 
         # For StatefulSet, check volumeClaimTemplates
         if redis_config.get("kind") == "StatefulSet":
@@ -226,9 +266,15 @@ class TestRBACLeastPrivilege:
     """Test service accounts have explicit RBAC with least-privilege."""
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
-        """Load YAML file and return parsed content."""
+        """Load YAML file and return parsed content.
+
+        For multi-document YAML files, returns all documents as a list.
+        For single-document files, returns the document as a dict.
+        """
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+            docs = list(yaml.safe_load_all(f))
+            # Return single doc as dict, multiple docs as list
+            return docs[0] if len(docs) == 1 else docs
 
     def test_service_account_has_explicit_role_binding(self):
         """
@@ -322,9 +368,15 @@ class TestContainerImageBestPractices:
     """Test container images use fully-qualified references with digests."""
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
-        """Load YAML file and return parsed content."""
+        """Load YAML file and return parsed content.
+
+        For multi-document YAML files, returns all documents as a list.
+        For single-document files, returns the document as a dict.
+        """
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+            docs = list(yaml.safe_load_all(f))
+            # Return single doc as dict, multiple docs as list
+            return docs[0] if len(docs) == 1 else docs
 
     def test_main_deployment_uses_qualified_image_reference(self):
         """

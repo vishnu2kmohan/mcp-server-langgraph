@@ -11,9 +11,8 @@ variable "gcp_project_id" {
 }
 
 variable "vpc_network_self_link" {
-  description = "Self-link of the VPC network where private DNS zone should be visible"
+  description = "Self-link of the VPC network where private DNS zone should be visible (e.g., projects/my-project/global/networks/default)"
   type        = string
-  default     = "projects/PROJECT_ID/global/networks/default"
 
   validation {
     condition     = can(regex("^projects/.*/global/networks/.*$", var.vpc_network_self_link))
