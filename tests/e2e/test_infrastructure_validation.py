@@ -14,8 +14,22 @@ import pytest
 
 
 @pytest.mark.e2e
+@pytest.mark.infrastructure
+@pytest.mark.xdist_group(name="infra_docker_compose")
 class TestE2EInfrastructure:
-    """Validate E2E test infrastructure setup"""
+    """
+    Validate E2E test infrastructure setup.
+
+    **pytest-xdist Infrastructure Tests:**
+    - Marked with @pytest.mark.infrastructure for selective execution
+    - Grouped with xdist_group for docker-compose coordination
+    - Can run separately: pytest -n0 -m infrastructure
+    - Or exclude: pytest -n auto -m "not infrastructure"
+
+    References:
+    - OpenAI Codex Finding: Mark infra-heavy tests
+    - ADR-0052: Pytest-xdist Isolation Strategy
+    """
 
     def test_infrastructure_is_ready(self, test_infrastructure):
         """Test that infrastructure fixture provides ready services"""

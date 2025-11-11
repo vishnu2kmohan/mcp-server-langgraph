@@ -1123,6 +1123,7 @@ watch -n 1 'ps aux | grep pytest'
 ### ADRs and Design Docs
 
 - **ADR-0034**: API Key Caching Strategy (addresses performance concerns)
+- **ADR-0052**: Pytest-xdist Isolation Strategy (worker-scoped resources, port allocation)
 - **Comprehensive Plan**: Root cause analysis and solution design
 - **Validation Report**: Before/after measurements and findings
 

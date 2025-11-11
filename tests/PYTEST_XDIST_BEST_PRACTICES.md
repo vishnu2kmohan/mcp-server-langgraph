@@ -405,10 +405,134 @@ pytest -n 8 tests/api/test_api_keys_endpoints.py   # Parallel
 pytest -n auto --random-order tests/api/
 ```
 
+## Worker-Scoped Resource Isolation
+
+### Overview
+
+To enable safe parallel test execution, our test infrastructure uses **worker-scoped resources**.
+Each pytest-xdist worker (gw0, gw1, gw2, etc.) gets its own isolated resources to prevent
+conflicts and race conditions.
+
+### Worker-Aware Port Allocation
+
+**Problem**: Multiple workers starting docker-compose with same ports causes "address already in use" errors.
+
+**Solution**: Dynamic port offsets per worker.
+
+```python
+# tests/conftest.py:test_infrastructure_ports
+def test_infrastructure_ports():
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    worker_num = int(worker_id.replace("gw", ""))
+    port_offset = worker_num * 100  # gw0=0, gw1=100, gw2=200
+
+    return {
+        "postgres": 9432 + port_offset,  # gw0:9432, gw1:9532, gw2:9632
+        "redis": 9379 + port_offset,
+        # ... other ports
+    }
+```
+
+**Result**: Each worker can start docker-compose without conflicts.
+
+### Worker-Scoped PostgreSQL Schemas
+
+**Problem**: Multiple workers using `TRUNCATE TABLE` on shared connection causes data loss.
+
+**Solution**: Each worker gets its own PostgreSQL schema.
+
+```python
+# tests/conftest.py:postgres_connection_clean
+async def postgres_connection_clean(postgres_connection_real):
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    schema_name = f"test_worker_{worker_id}"  # test_worker_gw0, test_worker_gw1, etc.
+
+    # Create and use worker-scoped schema
+    await postgres_connection_real.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+    await postgres_connection_real.execute(f"SET search_path TO {schema_name}, public")
+
+    yield postgres_connection_real
+
+    # Cleanup: Drop schema (safe, isolated)
+    await postgres_connection_real.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
+```
+
+**Result**: Worker gw0's TRUNCATE doesn't affect worker gw1's data.
+
+### Worker-Scoped Redis DB Indexes
+
+**Problem**: Multiple workers using `FLUSHDB` on shared Redis instance wipes all data.
+
+**Solution**: Each worker gets its own Redis database index.
+
+```python
+# tests/conftest.py:redis_client_clean
+async def redis_client_clean(redis_client_real):
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    worker_num = int(worker_id.replace("gw", ""))
+    db_index = worker_num + 1  # gw0→DB1, gw1→DB2, etc. (DB0 reserved)
+
+    # Select worker-scoped database
+    await redis_client_real.select(db_index)
+
+    yield redis_client_real
+
+    # Cleanup: FLUSHDB (safe, isolated)
+    await redis_client_real.flushdb()
+```
+
+**Result**: Worker gw0's FLUSHDB doesn't affect worker gw1's data. Supports up to 15 workers (Redis has 16 DBs).
+
+### Worker Utility Functions
+
+Use the worker utility library for consistent worker-scoped resources:
+
+```python
+from tests.utils.worker_utils import (
+    get_worker_id,           # → "gw0", "gw1", "gw2"
+    get_worker_num,          # → 0, 1, 2
+    get_worker_port_offset,  # → 0, 100, 200
+    get_worker_postgres_schema,  # → "test_worker_gw0"
+    get_worker_redis_db,     # → 1, 2, 3
+    worker_tmp_path,         # → Worker-scoped temp directories
+)
+
+# Example usage
+worker_id = get_worker_id()  # "gw0"
+schema = get_worker_postgres_schema()  # "test_worker_gw0"
+ports_offset = get_worker_port_offset()  # 0
+```
+
+### Infrastructure Tests
+
+For tests that use docker-compose or other heavy infrastructure:
+
+```python
+@pytest.mark.infrastructure
+@pytest.mark.xdist_group(name="infra_docker_compose")
+class TestMyInfrastructure:
+    """Tests requiring docker-compose services"""
+    pass
+```
+
+**Run Strategy:**
+```bash
+# Run unit tests in parallel (fast)
+pytest -n auto -m "not infrastructure" tests/
+
+# Run infrastructure tests serially or limited workers (safer)
+pytest -n0 -m infrastructure tests/
+# OR
+pytest -n2 -m infrastructure tests/  # Limit workers for infra tests
+```
+
 ## References
 
-- **Issue Fix**: Commit `079e82e` - "fix(tests): resolve pytest-xdist API test failures (async/sync dependency override mismatch)"
-- **Regression Tests**: `tests/regression/test_pytest_xdist_isolation.py`
+- **Async/Sync Fix**: Commit `079e82e` - Async/sync dependency override mismatch
+- **Worker Isolation Fix**: Commit `8259c81` - Complete pytest-xdist isolation
+- **Architecture Decision**: `adr/adr-0052-pytest-xdist-isolation-strategy.md`
+- **Regression Tests**: `tests/regression/test_pytest_xdist_*.py`
+- **Worker Utilities**: `tests/utils/worker_utils.py`
 - **Memory Safety**: `tests/MEMORY_SAFETY_GUIDELINES.md`
 - **FastAPI Testing**: https://fastapi.tiangolo.com/tutorial/testing/
 - **Pytest-xdist**: https://pytest-xdist.readthedocs.io/
