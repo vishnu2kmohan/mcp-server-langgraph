@@ -9,3 +9,27 @@ spec:
     matchLabels:
       app: mcp-server-langgraph
   unhealthyPodEvictionPolicy: IfHealthyBudget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: keycloak-pdb
+  namespace: production-mcp-server-langgraph
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: openfga-pdb
+  namespace: production-mcp-server-langgraph
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: openfga
+  unhealthyPodEvictionPolicy: IfHealthyBudget

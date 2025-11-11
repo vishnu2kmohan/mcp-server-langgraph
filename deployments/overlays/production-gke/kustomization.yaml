@@ -29,17 +29,52 @@ commonLabels:
 
 # Configuration patches
 patches:
+  # Remove static replica counts for HPA-managed deployments - Kube-score compliance
+  - patch: |-
+      - op: remove
+        path: /spec/replicas
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
+  - patch: |-
+      - op: remove
+        path: /spec/replicas
+    target:
+      kind: Deployment
+      name: otel-collector
+
   # Namespace patch
   - path: namespace.yaml
     target:
       kind: Namespace
       name: mcp-server-langgraph
 
-  # Deployment patches
+  # Deployment patches for kube-score compliance
   - path: deployment-patch.yaml
     target:
       kind: Deployment
       name: mcp-server-langgraph
+
+  - path: keycloak-patch.yaml
+    target:
+      kind: Deployment
+      name: keycloak
+
+  - path: openfga-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  - path: otel-collector-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector
+
+  - path: qdrant-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
 
   # ConfigMap patches
   - path: configmap-patch.yaml
@@ -90,15 +125,35 @@ patches:
       kind: Service
       name: postgres
 
-  # Redis → Memorystore Redis
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: postgres-external
+      $patch: delete
+    target:
+      kind: Service
+      name: postgres-external
+
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: postgres
+      $patch: delete
+    target:
+      kind: NetworkPolicy
+      name: postgres
+
+  # Redis → Memorystore Redis (NOTE: redis-session is StatefulSet, not Deployment)
   - patch: |-
       apiVersion: apps/v1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         name: redis-session
       $patch: delete
     target:
-      kind: Deployment
+      kind: StatefulSet
       name: redis-session
 
   - patch: |-
@@ -111,10 +166,32 @@ patches:
       kind: Service
       name: redis-session
 
-# Resource configuration (higher replica count for production)
-replicas:
-  - name: mcp-server-langgraph
-    count: 3
+  - patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: redis-session-headless
+      $patch: delete
+    target:
+      kind: Service
+      name: redis-session-headless
+
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: redis
+      $patch: delete
+    target:
+      kind: NetworkPolicy
+      name: redis
+
+# Resource configuration
+# NOTE: Replica counts managed by HPA, not static configuration
+# Kube-score compliance: Static replicas cause error when HPA is configured
+# replicas:
+#   - name: mcp-server-langgraph
+#     count: 3
 
 # Image configuration
 # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID
