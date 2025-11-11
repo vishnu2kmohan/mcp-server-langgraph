@@ -88,6 +88,23 @@ patches:
       kind: Deployment
       name: qdrant
 
+  # JSON6902 patches for probe type changes (kube-score compliance)
+  # These use JSON6902 format to completely replace probe types (strategic merge can't do this)
+  - path: openfga-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: openfga
+
+  - path: otel-collector-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector
+
+  - path: qdrant-liveness-probe-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+
   # ConfigMap patches
   - path: configmap-patch.yaml
     target:
