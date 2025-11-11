@@ -47,8 +47,7 @@ def simple_workflow():
     assert workflow.name == "my_workflow"
     assert len(workflow.nodes) == 1
     # ... 18 lines of dead assertions
-```
-
+```bash
 **Files Affected:**
 1. `tests/builder/test_code_generator.py:33-64` (18 lines dead)
 2. `tests/builder/api/test_server.py:75-99` (9 lines dead)
@@ -94,8 +93,7 @@ pytest tests/builder/api/test_server.py::test_root_endpoint_returns_api_informat
 # Pre-commit hook validates no dead code
 python scripts/detect_dead_test_code.py tests/
 # ✓ No dead code found in test fixtures
-```
-
+```bash
 #### Coverage Impact
 
 - **Before:** 18 + 9 = 27 lines of test code with 0% execution
@@ -117,8 +115,7 @@ class TestAgentState:
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()  # ✅ REQUIRED for memory safety
-```
-
+```bash
 **Why this is NOT a code smell:**
 
 1. **Documented in CLAUDE.md** (lines 66-108): "Pytest Memory Safety (pytest-xdist OOM Prevention)"
@@ -162,8 +159,7 @@ def ensure_observability_initialized():
     yield
     if not is_initialized():
         init_observability(...)  # Defensive re-initialization
-```
-
+```bash
 **Why this is CORRECT:**
 
 1. **Documented rationale:** Prevents test pollution from tests that intentionally manipulate singletons
@@ -186,8 +182,7 @@ def reset_dependency_singletons():
         # ... etc
     except Exception:
         pass  # Defensive - if module not loaded, continue
-```
-
+```bash
 **Recommendation:** **NO ACTION REQUIRED** - This is defensive programming that ensures test isolation.
 
 ---
@@ -208,8 +203,7 @@ async def test_06_search_conversations(self, authenticated_session):
     # Call conversation_search with query
     # Receive matching conversations
     # Verify results are authorized (user can only see their own)
-```
-
+```bash
 **Why this is VALID:**
 
 1. **TDD Best Practice:**
@@ -259,8 +253,7 @@ def test_generate_state_fields_with_custom_schema_returns_formatted_fields(gener
     # ✅ VALID: String assertions for code generation
     assert "query: str" in result
     assert "result: List[str]" in result
-```
-
+```bash
 **Why this is CORRECT:**
 
 1. **Unit Tests:** Test individual helper methods in isolation
@@ -333,8 +326,7 @@ Created in response to comprehensive CI/CD audit (2025-11-07) that identified:
 
 These tests ensure such issues cannot recur.
 """
-```
-
+```bash
 **Recommendation:** **NO ACTION REQUIRED** - This is infrastructure testing best practice.
 
 ---
@@ -366,8 +358,7 @@ def pytest_collection_modifyitems(config, items):
     Auto-skip benchmarks unless explicitly requested (performance optimization).
     Auto-skip tests requiring missing CLI tools (kubectl, helm, kustomize).
     """
-```
-
+```bash
 **Impact:**
 - Faster local test runs (skip heavy benchmarks by default)
 - Clear skip messages for missing tools (better DX)
@@ -430,8 +421,7 @@ def test_no_dead_code_after_fixture_returns(self):
     Detects code after return statements in pytest fixtures.
     Runs as part of test suite.
     """
-```
-
+```bash
 **Runs:** Every test suite execution
 **Scope:** All test files (`tests/**/*test_*.py`)
 **Enforcement:** Test suite fails if violations found
@@ -445,8 +435,7 @@ def test_no_dead_code_after_fixture_returns(self):
   entry: python3 scripts/detect_dead_test_code.py
   language: system
   files: ^tests/.*test_.*\.py$
-```
-
+```bash
 **Runs:** Before every git commit
 **Scope:** Modified test files only
 **Enforcement:** Blocks commits with violations

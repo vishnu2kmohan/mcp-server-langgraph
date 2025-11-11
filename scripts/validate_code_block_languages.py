@@ -48,12 +48,27 @@ class CodeBlockValidator:
 
         lines = content.split("\n")
         is_valid = True
+        in_code_block = False
 
         for i, line in enumerate(lines, start=1):
             if self.UNTAGGED_BLOCK_PATTERN.match(line):
-                # Found untagged code block
-                self.issues.append((file_path, i, line.strip()))
-                is_valid = False
+                # Found a ``` fence
+                if not in_code_block:
+                    # This is an opening fence without a language tag - ERROR
+                    self.issues.append((file_path, i, line.strip()))
+                    is_valid = False
+                    in_code_block = True  # Enter code block
+                else:
+                    # This is a closing fence - OK
+                    in_code_block = False  # Exit code block
+            elif line.strip().startswith("```"):
+                # Found a ``` fence with language tag (e.g., ```python)
+                if not in_code_block:
+                    # Opening fence with language tag - OK
+                    in_code_block = True
+                else:
+                    # Closing fence (shouldn't happen with language tag, but handle it)
+                    in_code_block = False
 
         return is_valid
 
