@@ -152,19 +152,29 @@ class AsyncMockChecker(ast.NodeVisitor):
                     "process_",
                 ]
 
+                # Whitelist of known synchronous functions that match async patterns
+                # Add functions here that are definitely NOT async but match naming patterns
+                sync_function_whitelist = [
+                    "_get_sandbox",  # Synchronous factory function
+                ]
+
                 if method_name:
-                    for pattern in async_patterns:
-                        if pattern in method_name.lower():
-                            # Skip if we're in a function with @pytest.mark.xfail
-                            if not self.in_xfail_function:
-                                self.issues.append(
-                                    (
-                                        node.lineno,
-                                        f"Method '{method_name}' mocked without AsyncMock - "
-                                        f"use: {func_name}(..., new_callable=AsyncMock)",
+                    # Skip if method is in the synchronous whitelist
+                    if method_name in sync_function_whitelist:
+                        pass  # This is a known synchronous function, skip check
+                    else:
+                        for pattern in async_patterns:
+                            if pattern in method_name.lower():
+                                # Skip if we're in a function with @pytest.mark.xfail
+                                if not self.in_xfail_function:
+                                    self.issues.append(
+                                        (
+                                            node.lineno,
+                                            f"Method '{method_name}' mocked without AsyncMock - "
+                                            f"use: {func_name}(..., new_callable=AsyncMock)",
+                                        )
                                     )
-                                )
-                            break
+                                break
 
         self.generic_visit(node)
 
