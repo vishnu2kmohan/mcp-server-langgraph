@@ -14,25 +14,64 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 
-# Helper to run async code in sync tests without closing the event loop
+# Helper to run async code in sync tests with proper event loop cleanup
 def run_async(coro):
     """
-    Run async coroutine using existing event loop.
+    Run async coroutine safely for property-based tests.
 
-    Uses the event loop from pytest-asyncio fixture instead of asyncio.run()
-    to avoid closing the loop and breaking subsequent async tests.
+    CRITICAL: Properly manages event loop lifecycle to prevent:
+    - Invalid file descriptor errors (BaseEventLoop.__del__)
+    - Event loop pollution across hypothesis examples
+    - Memory leaks in pytest-xdist workers
+
+    Pattern: Create fresh loop, run coroutine, close loop explicitly
+
+    Args:
+        coro: Async coroutine to execute
+
+    Returns:
+        Result of the coroutine
     """
     import asyncio
 
+    # Check if there's already a running event loop
     try:
-        # Try to get running event loop (modern approach)
+        # If we're in an async context, use the running loop
         loop = asyncio.get_running_loop()
+        # Running loop exists, just execute the coroutine
+        return loop.run_until_complete(coro)
     except RuntimeError:
-        # No event loop exists, create one but don't close it
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # No event loop exists, create a fresh one for this test
+        pass
 
-    return loop.run_until_complete(coro)
+    # ALWAYS create a fresh event loop for property tests
+    # This prevents pollution across hypothesis examples
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        # Run the coroutine
+        result = loop.run_until_complete(coro)
+        return result
+    finally:
+        # CRITICAL: Always close the loop to free file descriptors
+        try:
+            # Cancel all pending tasks
+            pending = asyncio.all_tasks(loop)
+            for task in pending:
+                task.cancel()
+
+            # Run loop briefly to allow tasks to cancel
+            if pending:
+                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+
+            # Close the loop
+            loop.close()
+        except Exception as e:
+            # Log but don't fail the test
+            import logging
+
+            logging.getLogger(__name__).warning(f"Error cleaning up event loop: {e}")
 
 
 # Hypothesis strategies for auth testing

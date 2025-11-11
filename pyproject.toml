@@ -383,7 +383,10 @@ asyncio_default_fixture_loop_scope = "function"
 # Filter warnings to reduce test output noise
 filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
-    "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning",
+    # External library warnings (cannot fix directly)
+    "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning:aiohttp",
+    "ignore:Using.*@model_validator.*classmethod.*:DeprecationWarning:google.genai",
+    # Internal warnings
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
     "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",
 ]

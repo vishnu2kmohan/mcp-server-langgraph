@@ -101,27 +101,53 @@ class PydanticAIAgentWrapper:
 
     def _get_pydantic_model_name(self) -> str:
         """
-        Map provider/model to Pydantic AI format.
+        Map provider/model to Pydantic AI format with required provider prefix.
+
+        PYDANTIC-AI REQUIREMENT (v0.0.14+): All model names must include provider prefix.
+
+        Deprecation Warning Fixed:
+        --------------------------
+        Old (deprecated): 'gemini-2.5-flash'
+        New (required):   'google-gla:gemini-2.5-flash'
+
+        Without prefix, pydantic-ai emits:
+        "DeprecationWarning: Specifying a model name without a provider prefix is deprecated.
+        Instead of 'gemini-2.5-flash', use 'google-gla:gemini-2.5-flash'."
+
+        Provider Prefix Mapping:
+        ------------------------
+        - Google Gemini: 'google-gla:' (e.g., 'google-gla:gemini-2.5-flash')
+        - Anthropic Claude: 'anthropic:' (e.g., 'anthropic:claude-sonnet-4-5-20250929')
+        - OpenAI: 'openai:' (e.g., 'openai:gpt-4')
+        - Unknown: 'provider:' (generic fallback)
 
         Returns:
-            Pydantic AI compatible model name
+            Pydantic AI compatible model name with provider prefix
         """
-        # Pydantic AI supports model names like:
-        # - "openai:gpt-4"
-        # - "anthropic:claude-3-5-sonnet-20241022"
-        # - "gemini-2.5-flash-002" (Google models use simple name)
-
-        if self.provider == "google" or self.provider == "gemini":
-            # Google Gemini models work with simple names
+        # Check if model name already has a prefix (edge case)
+        if ":" in self.model_name:
+            # Model name already includes provider prefix
+            logger.debug(
+                f"Model name '{self.model_name}' already has provider prefix",
+                extra={"model": self.model_name, "provider": self.provider},
+            )
             return self.model_name
+
+        # Add provider prefix based on provider type
+        if self.provider == "google" or self.provider == "gemini":
+            # Google Gemini models require google-gla prefix
+            return f"google-gla:{self.model_name}"
         elif self.provider == "anthropic":
             return f"anthropic:{self.model_name}"
         elif self.provider == "openai":
             return f"openai:{self.model_name}"
         else:
-            # Default: try simple name
-            logger.warning(f"Unknown provider '{self.provider}', using model name directly", extra={"model": self.model_name})
-            return self.model_name
+            # Unknown provider: use provider name as prefix
+            logger.warning(
+                f"Unknown provider '{self.provider}', using provider-prefixed format",
+                extra={"model": self.model_name, "provider": self.provider},
+            )
+            return f"{self.provider}:{self.model_name}"
 
     async def route_message(self, message: str, context: Optional[dict] = None) -> RouterDecision:  # type: ignore[type-arg]
         """
