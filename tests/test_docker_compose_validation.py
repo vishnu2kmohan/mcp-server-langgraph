@@ -64,10 +64,18 @@ def extract_health_check_command(health_check: Dict[str, Any]) -> List[str]:
     if isinstance(test, str):
         # Parse string format
         parts = test.split()
-        return parts[1:] if parts[0] in ["CMD", "CMD-SHELL"] else parts
+        if parts and parts[0] in ["CMD", "CMD-SHELL"]:
+            # For CMD-SHELL, split the shell command string into tokens
+            return " ".join(parts[1:]).split()
+        return parts
     elif isinstance(test, list):
         # List format
-        return test[1:] if test and test[0] in ["CMD", "CMD-SHELL"] else test
+        if test and test[0] in ["CMD", "CMD-SHELL"]:
+            # For CMD-SHELL with list format, parse the shell command string
+            if len(test) > 1:
+                return test[1].split()
+            return test[1:]
+        return test
 
     return []
 
@@ -105,9 +113,11 @@ class TestDockerComposeHealthChecks:
     # Known image-specific health check requirements
     IMAGE_HEALTH_CHECK_REQUIREMENTS = {
         "qdrant/qdrant": {
-            "required_commands": ["grpc_health_probe"],
+            "required_commands": ["bash", "timeout"],  # TCP check via /dev/tcp or timeout commands
             "forbidden_commands": ["wget", "curl"],
-            "reason": "Qdrant removed wget/curl in v1.15+ for security (GitHub issue #3491)",
+            "reason": "Qdrant removed wget/curl in v1.15+ for security (GitHub issue #3491). "
+            "Use TCP checks (bash -c '</dev/tcp/localhost/6333') or HTTP /healthz if available. "
+            "Note: grpc_health_probe won't work - Qdrant uses non-standard gRPC health protocol (issue #2614)",
         },
     }
 
