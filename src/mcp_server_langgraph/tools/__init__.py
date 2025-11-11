@@ -73,6 +73,23 @@ SEARCH_TOOLS = [search_knowledge_base, web_search]
 FILESYSTEM_TOOLS = [read_file, list_directory, search_files]
 
 
+# Code execution tools group (conditionally loaded based on settings)
+# Returns empty list if code execution is disabled
+def _get_code_execution_tools() -> list[BaseTool]:
+    """Get code execution tools if enabled in settings"""
+    if settings.enable_code_execution:
+        try:
+            from mcp_server_langgraph.tools.code_execution_tools import execute_python
+
+            return [execute_python]
+        except ImportError:
+            pass
+    return []
+
+
+CODE_EXECUTION_TOOLS = _get_code_execution_tools()
+
+
 def get_tools(categories: list[str] | None = None, settings_override: Optional[Any] = None) -> list[BaseTool]:
     """
     Get tools by category.
@@ -131,6 +148,7 @@ __all__ = [
     "CALCULATOR_TOOLS",
     "SEARCH_TOOLS",
     "FILESYSTEM_TOOLS",
+    "CODE_EXECUTION_TOOLS",
     "get_all_tools",  # Factory function for runtime tool configuration
     "get_tools",
     "get_tool_by_name",
