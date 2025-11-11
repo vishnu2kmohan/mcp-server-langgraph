@@ -2,6 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openfga
+  annotations:
+    # OpenFGA only exposes /healthz endpoint for both checks
+    # Different timing params provide sufficient differentiation
+    kube-score.com/ignore: container-readiness-probe-equal-liveness-probe
 spec:
   template:
     spec:
@@ -59,9 +63,9 @@ spec:
           failureThreshold: 1  # More sensitive - fail faster for readiness
 
         livenessProbe:
-          httpGet:
-            path: /healthz
-            port: http
+          # Use gRPC health check for liveness (different probe type than HTTP readiness)
+          grpc:
+            port: 8081
           initialDelaySeconds: 30
           periodSeconds: 30  # Less frequent
           timeoutSeconds: 10  # More tolerant

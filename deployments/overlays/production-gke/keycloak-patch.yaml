@@ -46,3 +46,17 @@ spec:
         securityContext:
           runAsUser: 10000
           runAsGroup: 10000
+          readOnlyRootFilesystem: true
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: keycloak-data
+            mountPath: /opt/keycloak/data
+
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: keycloak-data
+          emptyDir:
+            sizeLimit: 1Gi

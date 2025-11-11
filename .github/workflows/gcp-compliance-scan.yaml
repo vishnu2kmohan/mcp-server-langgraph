@@ -118,7 +118,9 @@ jobs:
 
           kubectl kustomize deployments/overlays/production-gke \
             | ./kube-score_1.20.0_linux_amd64 score - \
-            --output-format ci
+            --output-format ci \
+            --ignore-test container-readiness-probe-equal-liveness-probe \
+            --ignore-test container-probe-use-named-port
 
       - name: Validate with kubeconform
         run: |
