@@ -44,10 +44,13 @@ def simple_workflow():
         state_schema={"query": "str", "result": "str"},
     )
 
-    # ==============================================================================
-    # Test WorkflowDefinition Model
-    # ==============================================================================
 
+# ==============================================================================
+# Test WorkflowDefinition Model
+# ==============================================================================
+
+
+def test_workflow_definition_creates_instance_with_valid_data():
     """Test WorkflowDefinition creates instance with valid data."""
     # Arrange & Act
     workflow = WorkflowDefinition(

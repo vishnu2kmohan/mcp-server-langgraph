@@ -358,6 +358,34 @@ repos:
           See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
 
       # Codex Findings Prevention Hooks (2025-11-10)
+      - id: detect-dead-test-code
+        name: Detect Dead Code in Test Fixtures (Codex P0)
+        entry: python3 scripts/detect_dead_test_code.py tests/
+        language: system
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: false
+        always_run: false  # Only run when test files change
+        description: |
+          Detects dead code after return statements in pytest fixtures.
+          This code never executes and represents lost test coverage.
+
+          Pattern detected:
+              @pytest.fixture
+              def my_fixture():
+                  return value
+
+                  # Dead code - never executes!
+                  assert something
+
+          Fix: Extract dead code into separate test function with test_ prefix.
+
+          Regression prevention for Codex P0 finding:
+          - test_code_generator.py:33-64 had 18 lines of dead code
+          - test_server.py:75-99 had 9 lines of dead code
+          These tests never executed, losing critical test coverage.
+
+          Meta-test: tests/meta/test_codex_regression_prevention.py::TestDeadCodeInFixtures
+
       - id: validate-api-schemas
         name: Validate API Response Schemas
         entry: python3 scripts/validate_api_schemas.py
