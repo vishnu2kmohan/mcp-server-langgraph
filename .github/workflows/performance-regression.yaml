@@ -99,8 +99,13 @@ jobs:
           # IMPORTANT: Disable xdist (-p no:xdist) to prevent conflict with --benchmark-only
           # pytest-benchmark auto-disables when xdist is active, causing:
           # "Can't have both --benchmark-only and --benchmark-disable options"
+          #
+          # ALSO: Override addopts to exclude --dist flag (from pyproject.toml)
+          # When xdist is disabled, --dist is unrecognized, causing:
+          # "pytest: error: unrecognized arguments: --dist"
           pytest tests/performance/ \
             -p no:xdist \
+            -o addopts="-v --strict-markers --tb=short --timeout=60" \
             --benchmark-only \
             --benchmark-json=benchmark-results.json \
             --benchmark-min-rounds=10
