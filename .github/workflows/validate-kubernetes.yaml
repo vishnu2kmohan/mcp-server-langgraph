@@ -41,6 +41,19 @@ jobs:
         with:
           version: 'v3.14.0'
 
+      - name: Add Helm Repositories
+        run: |
+          helm repo add openfga https://openfga.github.io/helm-charts
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+      - name: Build Helm Dependencies
+        run: |
+          cd deployments/helm/mcp-server-langgraph
+          helm dependency build
+
       - name: Lint Helm Chart
         run: |
           helm lint deployments/helm/mcp-server-langgraph/ || true

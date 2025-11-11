@@ -695,6 +695,33 @@ repos:
 
           See: tests/monitoring/test_cost_tracker.py:350 (correct usage)
 
+      - id: validate-code-block-languages
+        name: Validate Code Block Language Tags
+        entry: python scripts/validate_code_block_languages.py
+        language: system
+        files: \.(md|mdx)$
+        pass_filenames: true
+        always_run: false  # Only run when markdown files change
+        description: |
+          Ensures all code blocks in Markdown/MDX files have language identifiers
+          for proper syntax highlighting and accessibility.
+
+          Prevents commits of untagged code blocks like:
+          ```
+          code here
+          ```
+
+          Requires language tags like:
+          ```python
+          code here
+          ```
+
+          To auto-fix: python scripts/add_code_block_languages.py <files>
+
+          Regression prevention for documentation audit finding (2025-11-10):
+          113 files had code blocks without language tags, reducing readability
+          and accessibility. This hook ensures the issue doesn't recur.
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
