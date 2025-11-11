@@ -75,10 +75,10 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     kustomize_run_cmd = kustomize_render_step.get("run", "")
     assert "kubectl kustomize" in kustomize_run_cmd, "Kustomize render step must use 'kubectl kustomize'"
     assert "deployments/overlays/staging-gke" in kustomize_run_cmd, "Kustomize render step must target staging-gke overlay"
-    # nosec B108 - Intentionally checking for /tmp/ path in CI workflow validation
+    # Intentionally checking for /tmp/ path in CI workflow validation
     assert (
-        "/tmp/staging-manifests" in kustomize_run_cmd or "/tmp/staging.yaml" in kustomize_run_cmd
-    ), "Kustomize render step must output to /tmp/ file for Trivy scanning"
+        "/tmp/staging-manifests" in kustomize_run_cmd or "/tmp/staging.yaml" in kustomize_run_cmd  # nosec B108
+    ), "Kustomize render step must output to /tmp/ file for Trivy scanning"  # nosec B108
 
     # Validate Trivy scans the rendered manifest file, NOT the overlay directory
     trivy_with = trivy_step.get("with", {})
@@ -89,8 +89,8 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
         "This produces false positives because patches are incomplete without base manifests."
     )
 
-    # nosec B108 - Intentionally checking for /tmp/ path in CI workflow validation
-    assert "/tmp/" in scan_ref, f"Trivy scan-ref should point to rendered manifest in /tmp/, got: {scan_ref}"
+    # Intentionally checking for /tmp/ path in CI workflow validation
+    assert "/tmp/" in scan_ref, f"Trivy scan-ref should point to rendered manifest in /tmp/, got: {scan_ref}"  # nosec B108
 
     # Validate scan type is 'config'
     assert trivy_with.get("scan-type") == "config", "Trivy scan-type must be 'config' for Kubernetes manifest scanning"
