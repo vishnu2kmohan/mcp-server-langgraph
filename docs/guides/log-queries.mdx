@@ -59,14 +59,14 @@ fields @timestamp, message, duration_ms
 ```
 
 #### Error Rate Over Time
-```
+```python
 fields @timestamp, level
 | filter level = "ERROR"
 | stats count() as error_count by bin(5m)
 ```
 
 #### Top Error Messages
-```
+```python
 fields message
 | filter level = "ERROR"
 | stats count() as occurrence by message
@@ -85,7 +85,7 @@ GCP uses a custom query language with filters and boolean logic.
 ### Common Queries
 
 #### Find All Errors
-```
+```toml
 resource.type="k8s_container"
 logName="projects/YOUR_PROJECT/logs/mcp-server-langgraph"
 severity="ERROR"
@@ -98,7 +98,7 @@ jsonPayload.trace_id="0af7651916cd43dd8448eb211c80319c"
 ```
 
 #### Errors in Last Hour
-```
+```toml
 resource.type="k8s_container"
 severity="ERROR"
 timestamp>="2025-10-15T13:00:00Z"
@@ -111,7 +111,7 @@ jsonPayload.user_id="alice"
 ```
 
 #### Authentication Failures
-```
+```toml
 resource.type="k8s_container"
 jsonPayload.message=~"authentication failed"
 severity="WARNING" OR severity="ERROR"
@@ -140,7 +140,7 @@ traces
 | project timestamp, message, customDimensions.trace_id, customDimensions.user_id
 | order by timestamp desc
 | take 100
-```
+```sql
 #### Errors by Service
 ```kql
 traces
@@ -148,13 +148,14 @@ traces
 | summarize count() by tostring(customDimensions.service)
 | order by count_ desc
 ```
+
 #### Trace-Specific Logs
 ```kql
 traces
 | where customDimensions.trace_id == "0af7651916cd43dd8448eb211c80319c"
 | project timestamp, severityLevel, message
 | order by timestamp asc
-```
+```sql
 #### Request Duration Analysis
 ```kql
 traces
@@ -163,6 +164,7 @@ traces
 | summarize avg(duration_ms), percentile(duration_ms, 95), percentile(duration_ms, 99) by bin(timestamp, 5m)
 | render timechart
 ```
+
 #### User Activity Timeline
 ```kql
 traces
@@ -205,7 +207,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   ],
   "size": 100
 }
-```
+```json
 #### Trace-Specific Logs
 ```json
 {
@@ -219,6 +221,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   ]
 }
 ```
+
 #### Time Range + Level Filter
 ```json
 {
@@ -238,7 +241,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     }
   }
 }
-```
+```json
 #### Aggregation: Errors by User
 ```json
 {
@@ -256,16 +259,20 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   }
 }
 ```
+
 #### Kibana KQL (Discover Tab)
-```
+```yaml
 level: "ERROR" AND timestamp > now-1h
 ```
-```
+
+```yaml
 trace_id: "0af7651916cd43dd8448eb211c80319c"
 ```
-```
+
+```yaml
 message: "authentication failed" AND user_id: "alice"
 ```
+
 ---
 
 ## Datadog
@@ -277,25 +284,28 @@ Datadog uses a custom query syntax with filters and facets.
 ### Common Queries
 
 #### Find All Errors
-```
+```yaml
 status:error
 ```
+
 #### Trace-Specific Logs
 ```
 @trace_id:0af7651916cd43dd8448eb211c80319c
 ```
 #### Errors by Service
-```
+```yaml
 status:error service:mcp-server-langgraph
 ```
+
 #### User-Specific Logs
 ```
 @user_id:alice
 ```
 #### Time Range + Error Filter
-```
+```yaml
 status:error @timestamp:[now-1h TO now]
 ```
+
 #### Authentication Failures
 ```
 @message:"authentication failed" (status:error OR status:warn)
@@ -305,23 +315,26 @@ status:error @timestamp:[now-1h TO now]
 @duration_ms:&gt;1000 @message:"request completed"
 ```
 #### Errors with Stack Traces
-```
+```yaml
 status:error @exception.stacktrace:*
 ```
+
 ### Datadog Analytics
 
 #### Error Count by User
-```
+```yaml
 status:error | count by @user_id
 ```
+
 #### P95 Request Duration
 ```
 @message:"request completed" | p95(@duration_ms) by @http.route
 ```
 #### Error Rate Over Time
-```
+```yaml
 status:error | timeseries count()
 ```
+
 ---
 
 ## Splunk (SPL)
@@ -338,29 +351,31 @@ index=main source="mcp-server-langgraph" level="ERROR"
 | table _time, message, trace_id, user_id
 | sort -_time
 | head 100
-```
+```bash
 #### Trace-Specific Logs
 ```spl
 index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c80319c"
 | sort _time
 ```
+
 #### Errors by User
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
 | stats count by user_id
 | sort -count
-```
+```bash
 #### Time Range + Level Filter
 ```spl
 index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
 | table _time, message, user_id
 ```
+
 #### Error Rate Over Time
 ```spl
 index=main source="mcp-server-langgraph"
 | timechart span=5m count(eval(level="ERROR")) as errors, count as total
 | eval error_rate=(errors/total)*100
-```
+```bash
 #### Top Error Messages
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
@@ -368,18 +383,20 @@ index=main source="mcp-server-langgraph" level="ERROR"
 | sort -count
 | head 10
 ```
+
 #### Request Duration Statistics
 ```spl
 index=main source="mcp-server-langgraph" message="request completed"
 | stats avg(duration_ms) as avg_duration, p95(duration_ms) as p95_duration, max(duration_ms) as max_duration by http_route
 | sort -p95_duration
-```
+```bash
 #### User Activity Timeline
 ```spl
 index=main source="mcp-server-langgraph" user_id="alice"
 | table _time, message, action
 | sort _time
 ```
+
 ---
 
 ## Common Use Cases
@@ -577,7 +594,7 @@ fields @timestamp, level, message, trace_id
 | filter @timestamp >= 1697385600000
 | filter @timestamp <= 1697472000000
 | sort @timestamp desc
-```
+```sql
 #### Azure (KQL)
 ```kql
 traces
@@ -586,6 +603,7 @@ traces
 | where timestamp between(datetime(2025-10-15T00:00:00) .. datetime(2025-10-16T00:00:00))
 | project timestamp, message, customDimensions.trace_id
 ```
+
 #### Datadog
 ```
 @user_id:alice status:error @timestamp:[2025-10-15T00:00:00 TO 2025-10-16T00:00:00]
@@ -595,11 +613,12 @@ traces
 **Calculate P95, P99 latency**:
 
 #### CloudWatch
-```
+```python
 fields duration_ms
 | filter message like /request completed/
 | stats avg(duration_ms) as avg, pct(duration_ms, 95) as p95, pct(duration_ms, 99) as p99
 ```
+
 #### Azure (KQL)
 ```kql
 traces
@@ -609,12 +628,13 @@ traces
     avg(duration),
     percentile(duration, 95),
     percentile(duration, 99)
-```
+```python
 #### Splunk
 ```spl
 message="request completed"
 | stats avg(duration_ms) as avg, p95(duration_ms) as p95, p99(duration_ms) as p99
 ```
+
 ---
 
 ## Best Practices

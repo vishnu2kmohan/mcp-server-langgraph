@@ -37,7 +37,7 @@ Pick the quickstart that matches your needs:
 
 This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
 
-**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/WORKFLOW_AUDIT_REMAINING.md](.github/WORKFLOW_AUDIT_REMAINING.md)
+**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md](.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md)
 
 ---
 
@@ -125,7 +125,7 @@ Execute Python code securely with comprehensive validation and sandboxing:
 
 **Test Coverage**: 162 tests (100% passing) | **Security**: 96% code coverage | **Backends**: Docker + Kubernetes
 
-**See**: [Implementation Summary](docs/code-execution-implementation-summary.md) | [Anthropic MCP Guide](https://www.anthropic.com/engineering/code-execution-with-mcp)
+**See**: [Implementation Summary](docs-internal/code-execution-implementation-summary.md) | [Anthropic MCP Guide](https://www.anthropic.com/engineering/code-execution-with-mcp)
 
 ### 🎯 Core Capabilities
 - **Multi-LLM Support**: 100+ providers via LiteLLM (Anthropic, OpenAI, Google, Azure, Bedrock, Ollama) + open-source models (Llama, Qwen, Mistral)
@@ -141,7 +141,7 @@ Execute Python code securely with comprehensive validation and sandboxing:
 
 Complete GDPR compliance with **6 API endpoints** (Articles 15-21) and **PostgreSQL storage backend**. Features include atomic deletions, 7-year audit logs, and 14x cost savings vs Redis. Covers GDPR, HIPAA §164.312/§164.316, and SOC2 CC6.6/PI1.4.
 
-**See**: [GDPR API Reference](docs/api-reference/gdpr-endpoints.mdx) | [ADR-0041: PostgreSQL Storage](adr/ADR-0041-postgresql-gdpr-storage.md) | [Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx) | [GDPR Compliance Guide](docs/compliance/gdpr/overview.mdx)
+**See**: [GDPR API Reference](docs/api-reference/gdpr-endpoints.mdx) | [ADR-0041: PostgreSQL Storage](adr/adr-0041-postgresql-gdpr-storage.md) | [Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx) | [GDPR Compliance Guide](docs/compliance/gdpr/overview.mdx)
 
 ### 📦 Optional Dependencies
 
@@ -149,7 +149,7 @@ Install optional features on demand: **Code Execution** (`[code-execution]`), **
 
 **Code Execution**: Requires Docker (local) or Kubernetes (production). Enable with `ENABLE_CODE_EXECUTION=true`.
 
-**See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [Code Execution Summary](docs/code-execution-implementation-summary.md) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
+**See**: [Installation Guide](docs/getting-started/installation.mdx#optional-dependencies) | [Code Execution Summary](docs-internal/code-execution-implementation-summary.md) | [GDPR Storage Configuration](docs/deployment/gdpr-storage-configuration.mdx)
 
 ### 🧪 Quality & Testing
 27+ property tests, 20+ contract tests, performance regression tracking, mutation testing (80%+ target), strict typing (gradual rollout), OpenAPI validation. See [Testing Strategy](docs/advanced/testing.mdx).

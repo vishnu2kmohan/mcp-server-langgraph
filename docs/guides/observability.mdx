@@ -97,7 +97,7 @@ Trace: POST /message
 │  │  │  └─ Span: litellm_completion
 │  │  └─ Span: tool_execution
 │  └─ Span: refresh_session
-```
+```python
 #### Trace Attributes
 
 Each span includes rich metadata:
@@ -163,6 +163,7 @@ def my_function():
         span.set_attribute("result.count", len(result))
         return result
 ```
+
 ### Metrics
 
 #### Available Metrics
@@ -281,7 +282,7 @@ active_gauge = meter.create_up_down_counter(
     unit="1"
 )
 active_gauge.add(1)
-```
+```yaml
 ### Prometheus Configuration
 
 #### Scraping
@@ -297,6 +298,7 @@ scrape_configs:
       - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
 ```
+
 #### Alerting Rules
 
 ```yaml
@@ -329,7 +331,7 @@ groups:
         for: 1m
         annotations:
           summary: "Authentication failure spike"
-```
+```bash
 ### Grafana Dashboards
 
 #### Import Dashboards
@@ -345,6 +347,7 @@ kubectl label configmap grafana-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
 ```
+
 #### Key Panels
 
 <Tabs>
@@ -455,7 +458,7 @@ def custom_function(input_data):
     # Automatically traced to LangSmith
     result = process(input_data)
     return result
-```
+```python
 ### Logging
 
 #### Structured Logging
@@ -478,6 +481,7 @@ All logs are JSON-formatted with trace context:
   "status": "success"
 }
 ```
+
 #### Log Aggregation
 
 <Tabs>
@@ -536,7 +540,7 @@ All logs are JSON-formatted with trace context:
   volumeMounts:
     - name: otel-config
       mountPath: /conf
-```
+```python
 #### Sampling
 
 Configure trace sampling for high-traffic:
@@ -549,6 +553,7 @@ TRACE_SAMPLE_RATE = 0.1  # Sample 10% of traces
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
 ```
+
 #### Data Retention
 
 ```yaml

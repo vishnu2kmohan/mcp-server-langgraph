@@ -18,7 +18,7 @@ MCP (Model Context Protocol) is a standard protocol for connecting AI applicatio
 
 ### Base URL
 
-```
+```yaml
 http://localhost:8000/mcp
 ```
 
@@ -45,8 +45,7 @@ http://localhost:8000/mcp
     "version": "1.0.0"
   }
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -88,8 +87,7 @@ async with httpx.AsyncClient() as client:
 
     server_info = response.json()
     print(f"Connected to: {server_info['serverInfo']['name']}")
-```
-
+```json
 #### List Tools
 
 <ParamField path="POST /mcp/tools/list" type="endpoint">
@@ -141,8 +139,7 @@ async with httpx.AsyncClient() as client:
     }
   ]
 }
-```
-
+```python
 **Example**:
 ```python
 async def list_available_tools():
@@ -176,8 +173,7 @@ async def list_available_tools():
     }
   }
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -211,8 +207,7 @@ async def call_chat_tool(query: str):
         return result["content"][0]["text"]
     else:
         raise Exception(f"Tool error: {result['content']}")
-```
-
+```json
 #### List Resources
 
 <ParamField path="POST /mcp/resources/list" type="endpoint">
@@ -244,8 +239,7 @@ async def call_chat_tool(query: str):
     }
   ]
 }
-```
-
+```json
 #### Read Resource
 
 <ParamField path="POST /mcp/resources/read" type="endpoint">
@@ -273,8 +267,7 @@ async def call_chat_tool(query: str):
     }
   ]
 }
-```
-
+```json
 #### List Prompts
 
 <ParamField path="POST /mcp/prompts/list" type="endpoint">
@@ -310,8 +303,7 @@ async def call_chat_tool(query: str):
     }
   ]
 }
-```
-
+```python
 #### Get Prompt
 
 <ParamField path="POST /mcp/prompts/get" type="endpoint">
@@ -346,8 +338,7 @@ async def call_chat_tool(query: str):
     }
   ]
 }
-```
-
+```json
 #### Send Message
 
 <ParamField path="POST /mcp/message" type="endpoint">
@@ -390,8 +381,7 @@ data: {"type": "content_delta", "delta": " is"}
 data: {"type": "content_end"}
 
 data: {"type": "message_complete", "conversation_id": "conv_123"}
-```
-
+```python
 **Example (Streaming)**:
 ```python
 async def stream_message(query: str):
@@ -423,8 +413,7 @@ async def stream_message(query: str):
     "level": "debug"
   }
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -438,8 +427,7 @@ All MCP endpoints require authentication. Include a valid JWT token in the `Auth
 
 ```bash
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
-```
-
+```python
 See [Authentication API](/api-reference/authentication) for obtaining tokens.
 
 ### Error Responses
@@ -560,8 +548,7 @@ const response = await client.callTool('chat', {
 });
 
 console.log(response.content[0].text);
-```
-
+```bash
 #### cURL
 
 ```bash
@@ -603,7 +590,7 @@ MCP endpoints are subject to rate limiting:
 
 Rate limit headers are included in responses:
 
-```
+```yaml
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1699999999
@@ -613,7 +600,7 @@ X-RateLimit-Reset: 1699999999
 
 For real-time bidirectional communication, use the WebSocket endpoint:
 
-```
+```yaml
 ws://localhost:8000/mcp/ws
 ```
 

@@ -1,0 +1,205 @@
+---
+title: "Versioning Strategy"
+description: "Version support policy and semantic versioning guidelines for MCP Server LangGraph"
+seoTitle: "MCP Server LangGraph Versioning Strategy"
+seoDescription: "Learn about version support policy, semantic versioning, and LTS support for MCP Server LangGraph"
+keywords:
+  - versioning
+  - semver
+  - version support
+  - LTS
+  - deprecation policy
+  - migration
+contentType: guide
+icon: "tag"
+---
+
+# Versioning Strategy
+
+MCP Server LangGraph follows [Semantic Versioning 2.0.0](https://semver.org/) and provides Long-Term Support (LTS) for production deployments.
+
+## Version Format
+
+Versions follow the format: `MAJOR.MINOR.PATCH`
+
+- **MAJOR**: Incompatible API changes
+- **MINOR**: Backward-compatible functionality additions
+- **PATCH**: Backward-compatible bug fixes
+
+### Pre-release Versions
+
+- **Alpha** (`x.y.z-alpha.n`): Early development, unstable API
+- **Beta** (`x.y.z-beta.n`): Feature complete, testing phase
+- **RC** (`x.y.z-rc.n`): Release candidate, production-ready testing
+
+## Version Support Policy
+
+### Current Stable Version
+
+**v2.8.0** - Latest stable release with all current features
+
+### Long-Term Support (LTS)
+
+**v2.7.x** - Supported until Q2 2026
+
+LTS versions receive:
+- Security patches
+- Critical bug fixes
+- Performance improvements
+- No new features (stable API)
+
+### Security Patches
+
+**v2.6.x+** - Receive security updates
+
+All versions from v2.6.0 onwards receive security patches for:
+- Critical vulnerabilities (CVSS >= 9.0)
+- High severity issues (CVSS >= 7.0) affecting production
+- Authentication/authorization bypasses
+- Data leakage vulnerabilities
+
+## Deprecation Policy
+
+### Deprecation Timeline
+
+**6-month notice** before feature removal
+
+1. **Month 0**: Feature marked as deprecated
+   - Documentation updated with deprecation notice
+   - Runtime warnings added (if applicable)
+   - Migration guide published
+
+2. **Month 3**: Migration reminders
+   - Release notes highlight deprecated features
+   - Alternative approaches documented
+
+3. **Month 6**: Feature removed
+   - Next major version removes deprecated feature
+   - Breaking change documented in CHANGELOG
+
+### Deprecation Notice Format
+
+Deprecated features are marked in:
+- **Documentation**: `⚠️ DEPRECATED: Will be removed in v3.0.0. Use X instead.`
+- **Code**: `@deprecated` annotations
+- **CHANGELOG**: Dedicated "Deprecated" section
+- **Migration Guide**: Step-by-step replacement instructions
+
+## Version Compatibility
+
+### Backward Compatibility
+
+- **MINOR versions**: 100% backward compatible
+- **PATCH versions**: 100% backward compatible
+- **MAJOR versions**: May break backward compatibility
+
+### Forward Compatibility
+
+Clients using older versions may work with newer servers, but:
+- New features won't be available
+- Deprecated features may show warnings
+- Eventually deprecated features will be removed
+
+## Upgrading Between Versions
+
+### Patch Updates (2.8.0 → 2.8.1)
+
+**No breaking changes** - Safe to upgrade without code changes
+
+```bash
+# Update via uv
+uv pip install --upgrade mcp-server-langgraph
+
+# Or via pip
+pip install --upgrade mcp-server-langgraph
+```
+
+### Minor Updates (2.7.x → 2.8.0)
+
+**Backward compatible** - May require configuration changes for new features
+
+1. Read release notes for new features
+2. Update dependencies: `uv sync --upgrade`
+3. Update configuration if using new features
+4. Test in staging environment
+5. Deploy to production
+
+### Major Updates (2.x → 3.0)
+
+**May break compatibility** - Follow migration guide carefully
+
+1. **Read migration guide**: `MIGRATION.md`
+2. **Check breaking changes**: CHANGELOG for your version range
+3. **Update dependencies**: `uv sync --upgrade`
+4. **Update code**: Follow migration steps
+5. **Run full test suite**: `make test-all`
+6. **Test in staging**: Validate all integrations
+7. **Deploy to production**: With rollback plan
+
+## Release Cadence
+
+### Regular Releases
+
+- **Patch releases**: As needed (bug fixes, security)
+- **Minor releases**: Monthly (new features, improvements)
+- **Major releases**: Annually (breaking changes, major refactors)
+
+### Security Releases
+
+Released immediately for critical vulnerabilities:
+- Authentication bypasses
+- Remote code execution
+- Data exposure
+- Privilege escalation
+
+## Version Selection Guide
+
+| Use Case | Recommended Version | Why |
+|----------|-------------------|-----|
+| **Production** | Latest LTS (v2.7.x) | Stability, security patches, no breaking changes |
+| **New Projects** | Latest stable (v2.8.x) | Latest features, ongoing support |
+| **Development** | Latest stable or beta | Access to newest features |
+| **Legacy Systems** | LTS with security patches | Minimal disruption, security maintained |
+
+## Checking Your Version
+
+### Python Package
+
+```bash
+python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version__)"
+```
+
+### Docker Container
+
+```bash
+docker run ghcr.io/vishnu2kmohan/mcp-server-langgraph:latest --version
+```
+
+### API Endpoint
+
+```bash
+curl http://localhost:8000/health | jq '.version'
+```
+
+## Release Notes
+
+Find detailed release notes in:
+- **[CHANGELOG.md](../../CHANGELOG.md)** - Complete version history
+- **[GitHub Releases](https://github.com/vishnu2kmohan/mcp-server-langgraph/releases)** - Release announcements
+- **[Migration Guide](../../MIGRATION.md)** - Version-specific migration instructions
+
+## Version Support Timeline
+
+| Version | Release Date | End of Support | Status |
+|---------|--------------|----------------|--------|
+| v2.8.x  | 2025-10      | TBD            | ✅ Current |
+| v2.7.x  | 2025-09      | 2026-Q2        | ✅ LTS |
+| v2.6.x  | 2025-08      | 2025-12        | 🔒 Security Only |
+| v2.5.x  | 2025-07      | 2025-10        | ❌ End of Life |
+| v2.4.x  | 2025-06      | 2025-09        | ❌ End of Life |
+
+## Questions?
+
+- **Migration issues**: [MIGRATION.md](../../MIGRATION.md)
+- **GitHub Issues**: [Report bugs or ask questions](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues)
+- **Discussions**: [Community support](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)

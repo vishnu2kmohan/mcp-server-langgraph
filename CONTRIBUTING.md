@@ -75,7 +75,7 @@ See [.github/WORKFLOW_TESTING_CHECKLIST.md](.github/WORKFLOW_TESTING_CHECKLIST.m
 5. ✅ Commit and push
 6. ✅ Monitor CI: `gh run watch`
 
-**Documentation**: [docs/development/testing-workflows-locally.md](docs/development/testing-workflows-locally.md)
+**Documentation**: [docs/reference/development/ci-cd/testing.mdx](docs/reference/development/ci-cd/testing.mdx)
 
 ---
 
@@ -369,8 +369,8 @@ Closes #<issue_number>
 
 - **Documentation**: See [docs/](docs/)
 - **Development Setup**: [docs/advanced/development-setup.mdx](docs/advanced/development-setup.mdx)
-- **Workflow Testing**: [docs/development/testing-workflows-locally.md](docs/development/testing-workflows-locally.md)
-- **CI/CD Troubleshooting**: [docs/ci-cd-troubleshooting.md](docs/ci-cd-troubleshooting.md)
+- **Workflow Testing**: [docs/reference/development/ci-cd/testing.mdx](docs/reference/development/ci-cd/testing.mdx)
+- **CI/CD Troubleshooting**: [docs/ci-cd-troubleshooting.mdx](docs/ci-cd-troubleshooting.mdx)
 - **GitHub Discussions**: Open a discussion
 - **Issues**: Open an issue with the bug/feature template
 

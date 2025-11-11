@@ -133,7 +133,7 @@ flowchart TB
     class OTel obsStyle
     class Jaeger,Prometheus obsStyle
     class LangSmith langsmithStyle
-```
+```python
 ### Core Components
 
 #### MCP Server
@@ -178,6 +178,7 @@ START → authenticate → authorize → execute_tool → END
                 ↓           ↓            ↓
                END         END       retry/END
 ```
+
 **Components**:
 
 <Tabs>
@@ -249,7 +250,7 @@ sequenceDiagram
     AuthMiddleware->>SessionStore: create_session()
     SessionStore-->>AuthMiddleware: Session ID
     AuthMiddleware-->>Client: Set-Cookie: session_id
-```
+```python
 **Providers**:
 
 <AccordionGroup>
@@ -321,6 +322,7 @@ flowchart LR
     User2[User: bob] -->|member| Org
 
 ```
+
 **Authorization Model**:
 
 ```typescript
@@ -336,7 +338,7 @@ type tool
     define owner: [user]
     define executor: [user, organization#member]
     define viewer: [user, organization#member]
-```
+```python
 **Features**:
 - Relationship-based permissions
 - Hierarchical roles (admin → member → viewer)
@@ -441,6 +443,7 @@ flowchart TB
     class Primary,Claude primaryStyle
     class Fallback1,Gemini,Fallback2,GPT fallbackStyle
 ```
+
 **Supported Providers** (100+):
 - **Cloud**: Anthropic, OpenAI, Google, Azure, AWS Bedrock
 - **Open Source**: Ollama (Llama, Mistral, Qwen, DeepSeek)
@@ -459,7 +462,7 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=["gemini-2.5-flash-002", "gpt-5"]
-```
+```python
 **Code Location**: `src/mcp_server_langgraph/llm_factory.py`
 
 ---
@@ -632,6 +635,7 @@ sequenceDiagram
     MCP->>OTel: End trace
     MCP-->>Client: Response + trace_id
 ```
+
 #### Authentication Flow (Keycloak SSO)
 
 ```mermaid
@@ -655,7 +659,7 @@ sequenceDiagram
     App->>FGA: Sync roles to OpenFGA
     App->>Redis: Create session
     App-->>User: Set session cookie
-```
+```bash
 ---
 
 ### Deployment Architectures
@@ -699,6 +703,7 @@ flowchart TB
     class Jaeger tracingStyle
     class Prom metricsStyle
 ```
+
 **Command**: `docker compose up`
 
 ---

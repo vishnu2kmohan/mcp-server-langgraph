@@ -98,7 +98,7 @@ flowchart TB
     class PG dataStyle
     class Jaeger tracingStyle
     class Prometheus metricsStyle
-```
+```bash
 ### Prerequisites
 
 <Steps>
@@ -195,6 +195,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 kubectl get pods -n mcp-server-langgraph
 kubectl logs -l app=mcp-server-langgraph -n mcp-server-langgraph --tail=50
 ```
+
 ```bash Using Kustomize
 ## Deploy with kustomize overlays
 kubectl apply -k deployments/kubernetes/overlays/production
@@ -203,7 +204,7 @@ kubectl apply -k deployments/kubernetes/overlays/production
 kubectl apply -k deployments/kubernetes/overlays/gke
 kubectl apply -k deployments/kubernetes/overlays/eks
 kubectl apply -k deployments/kubernetes/overlays/aks
-```
+```bash
 </CodeGroup>
 
 ### Step-by-Step Deployment
@@ -225,13 +226,14 @@ EOF
 ## Create service account
 kubectl apply -f deployments/kubernetes/base/serviceaccount.yaml
 ```
+
 #### 2. Configuration
 
 **ConfigMap** for application configuration:
 
 ```bash
 kubectl apply -f deployments/kubernetes/base/configmap.yaml
-```
+```yaml
 <Accordion title="View configmap.yaml" icon="file">
 ```yaml
 apiVersion: v1
@@ -266,6 +268,7 @@ data:
   # OpenFGA
   openfga_api_url: "http://openfga:8080"
 ```
+
 </Accordion>
 
 **Secrets** for sensitive data:
@@ -286,7 +289,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=redis-password="${REDIS_PASSWORD}" \
   --from-literal=openfga-store-id="${OPENFGA_STORE_ID}" \
   --from-literal=openfga-model-id="${OPENFGA_MODEL_ID}"
-```
+```bash
 <Warning>
 **Never commit secrets to Git!** Use external secret managers (see [Infisical Setup](/guides/infisical-setup)) or cloud-native solutions (GCP Secret Manager, AWS Secrets Manager, Azure Key Vault).
 </Warning>
@@ -317,6 +320,7 @@ kubectl patch secret mcp-server-langgraph-secrets \
   -n mcp-server-langgraph \
   --patch "{\"data\":{\"keycloak-client-secret\":\"$(echo -n $CLIENT_SECRET | base64)\"}}"
 ```
+
 See [Keycloak SSO Guide](/guides/keycloak-sso) for detailed setup.
 
 #### 4. Deploy Redis
@@ -344,7 +348,7 @@ kubectl run redis-test --rm -i --tty \
   --namespace mcp-server-langgraph \
   -- redis-cli -h redis-session -a $REDIS_PASSWORD ping
 ## Expected: PONG
-```
+```bash
 See [Redis Sessions Guide](/guides/redis-sessions) for details.
 
 #### 5. Deploy OpenFGA
@@ -403,6 +407,7 @@ EOF
 ## Initialize OpenFGA
 python scripts/setup/setup_openfga.py
 ```
+
 #### 6. Deploy Application
 
 ```bash
@@ -418,7 +423,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 ## Check pods
 kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
-```
+```bash
 #### 7. Configure Ingress
 
 <Tabs>
@@ -565,6 +570,7 @@ spec:
         value: 100
         periodSeconds: 60
 ```
+
 #### Pod Disruption Budget
 
 ```yaml
@@ -579,7 +585,7 @@ spec:
   selector:
     matchLabels:
       app: mcp-server-langgraph
-```
+```yaml
 #### Pod Anti-Affinity
 
 Spread pods across availability zones:
@@ -598,6 +604,7 @@ affinity:
             - mcp-server-langgraph
         topologyKey: topology.kubernetes.io/zone
 ```
+
 ### Security
 
 #### Network Policies
@@ -651,7 +658,7 @@ spec:
     ports:
     - protocol: TCP
       port: 443  # HTTPS for LLM APIs
-```
+```typescript
 #### Pod Security Standards
 
 ```yaml
@@ -664,6 +671,7 @@ metadata:
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
 ```
+
 #### Security Context
 
 ```yaml
@@ -678,7 +686,7 @@ securityContext:
     - ALL
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
-```
+```yaml
 ### Observability
 
 #### Prometheus Metrics
@@ -690,11 +698,12 @@ annotations:
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
 ```
+
 Deploy Prometheus:
 ```bash
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace observability --create-namespace
-```
+```bash
 #### OpenTelemetry
 
 Deploy OpenTelemetry Collector:
@@ -705,6 +714,7 @@ helm install opentelemetry-collector open-telemetry/opentelemetry-collector \
   --set mode=deployment \
   --set config.exporters.otlp.endpoint=jaeger:4317
 ```
+
 #### Jaeger Tracing
 
 ```bash
@@ -713,12 +723,13 @@ helm install jaeger jaegertracing/jaeger \
   --set provisionDataStore.cassandra=false \
   --set allInOne.enabled=true \
   --set storage.type=memory
-```
+```bash
 Access Jaeger UI:
 ```bash
 kubectl port-forward svc/jaeger-query 16686:16686 -n observability
 ## Open: http://localhost:16686
 ```
+
 ### Health Checks
 
 The deployment includes comprehensive health checks:
@@ -745,12 +756,13 @@ readinessProbe:
     port: 8000
   periodSeconds: 5
   failureThreshold: 3
-```
+```bash
 Check health:
 ```bash
 kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   curl http://localhost:8000/health
 ```
+
 ### Troubleshooting
 
 <AccordionGroup>

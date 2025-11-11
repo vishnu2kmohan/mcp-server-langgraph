@@ -114,7 +114,7 @@ flowchart TB
     class Vault secretStyle
     class AppDR,PGDR,RedisDR recoveryStyle
     class Verify,Switch verifyStyle
-```
+```bash
 **Backup and Restore Timeline**:
 ```mermaid
 sequenceDiagram
@@ -188,6 +188,7 @@ sequenceDiagram
     Monitor->>Ops: Alert: DR ACTIVE<br/>RTO: 45 minutes ✓
 
 ```
+
 ### Backup Strategy
 
 #### What to Backup
@@ -372,7 +373,7 @@ psql -U keycloak -h postgres-keycloak -d keycloak_recovery -c "SELECT COUNT(*) F
 ## Switch to recovered database
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak RENAME TO keycloak_old;"
 kubectl exec -it postgres-keycloak-0 -- psql -U postgres -c "ALTER DATABASE keycloak_recovery RENAME TO keycloak;"
-```
+```bash
 #### Continuous Archiving (WAL)
 
 ```bash
@@ -386,6 +387,7 @@ archive_timeout = 300  # 5 minutes
 restore_command = 'aws s3 cp s3://my-backups/postgres-wal/%f %p'
 recovery_target_time = '2025-10-12 10:00:00'
 ```
+
 ### Redis Backup
 
 #### RDB Snapshots
@@ -398,7 +400,7 @@ save 60 10000   # Save if 10000 keys changed in 1 min
 
 dir /data
 dbfilename dump.rdb
-```
+```bash
 **Backup Script**:
 ```bash
 #!/bin/bash
@@ -423,6 +425,7 @@ kubectl cp redis-master-0:/data/dump.rdb \
 aws s3 cp "${BACKUP_DIR}/dump_${TIMESTAMP}.rdb" \
   s3://my-backups/redis/
 ```
+
 #### AOF (Append-Only File)
 
 ```conf
@@ -434,7 +437,7 @@ appendfsync everysec  # Balance durability/performance
 ## Rewrite AOF when it grows 100% and is at least 64mb
 auto-aof-rewrite-percentage 100
 auto-aof-rewrite-min-size 64mb
-```
+```yaml
 #### Redis Replication
 
 ```yaml
@@ -450,6 +453,7 @@ data:
     sentinel parallel-syncs mymaster 1
     sentinel failover-timeout mymaster 10000
 ```
+
 ### Kubernetes Resource Backup
 
 #### Velero
@@ -470,7 +474,7 @@ velero install \
 
 ## Verify installation
 velero version
-```
+```yaml
 **Create Backup Schedule**:
 ```yaml
 apiVersion: velero.io/v1
@@ -489,6 +493,7 @@ spec:
     storageLocation: default
     ttl: 720h0m0s  # 30 days
 ```
+
 **Manual Backup**:
 ```bash
 ## Backup entire namespace
@@ -506,7 +511,7 @@ velero backup describe langgraph-backup
 
 ## Download backup
 velero backup download langgraph-backup
-```
+```bash
 #### kubectl Export
 
 ```bash
@@ -529,6 +534,7 @@ tar -czf "${BACKUP_DIR}.tar.gz" -C /backups/k8s "$(date +%Y%m%d)"
 ## Upload to S3
 aws s3 cp "${BACKUP_DIR}.tar.gz" s3://my-backups/k8s/
 ```
+
 ### Secrets Backup
 
 #### Infisical Backup
@@ -563,7 +569,7 @@ os.system(f"gpg --encrypt --recipient admin@company.com {backup_file}")
 
 ## Upload encrypted backup
 os.system(f"aws s3 cp {backup_file}.gpg s3://my-backups/secrets/")
-```
+```bash
 #### Kubernetes Secrets
 
 ```bash
@@ -578,6 +584,7 @@ sops --encrypt --kms "arn:aws:kms:us-east-1:123456789:key/abc-123" \
 git add secrets-backup.enc.yaml
 git commit -m "Backup secrets $(date +%Y-%m-%d)"
 ```
+
 ### Restore Procedures
 
 #### Full System Restore
@@ -676,7 +683,7 @@ pg_restore -U keycloak \
 
 ## Verify
 psql -U keycloak -d keycloak_restored -c "\dt"
-```
+```bash
 **Restore Specific Kubernetes Resource**:
 ```bash
 ## Restore from backup file
@@ -688,6 +695,7 @@ velero restore create deployment-restore \
   --include-resources deployments \
   --selector app=mcp-server-langgraph
 ```
+
 ### Disaster Recovery Testing
 
 #### DR Drill Procedure
@@ -728,7 +736,7 @@ velero restore delete dr-test-restore
 
 echo "=== DR Drill Complete ==="
 echo "RTO: ${RTO}s (Target: 3600s)"
-```
+```bash
 #### Automated Testing
 
 ```yaml
@@ -759,6 +767,7 @@ jobs:
         text: 'DR test failed!'
         webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 ```
+
 ### Multi-Region Failover
 
 #### Active-Passive Setup
@@ -781,7 +790,7 @@ secondary:
     mode: read-replica
   redis:
     mode: standby
-```
+```bash
 **Failover Procedure**:
 ```bash
 ## 1. Promote secondary database
@@ -800,6 +809,7 @@ kubectl scale deployment mcp-server-langgraph --replicas=10
 ## 4. Verify traffic shift
 watch -n 5 'kubectl top pods'
 ```
+
 #### Active-Active Setup
 
 ```yaml
@@ -820,7 +830,7 @@ spec:
           - backend:
               serviceName: mcp-server-langgraph
               servicePort: 80
-```
+```yaml
 **Database Synchronization**:
 ```yaml
 ## CockroachDB for multi-region
@@ -832,6 +842,7 @@ cockroachdb:
     - eu-west-1 (3 nodes)
   survivability: region
 ```
+
 ### Monitoring & Alerting
 
 #### Backup Monitoring
@@ -845,7 +856,7 @@ rate(backup_failures_total[1h]) > 0
 
 ## Backup size
 backup_size_bytes{backup_type="postgres"} < 1e9
-```
+```yaml
 **Alerts**:
 ```yaml
 groups:
@@ -863,6 +874,7 @@ groups:
     annotations:
       summary: "Backup metrics missing"
 ```
+
 #### Recovery Testing Dashboard
 
 ```json
@@ -891,7 +903,7 @@ groups:
     ]
   }
 }
-```
+```bash
 ### Best Practices
 
 <AccordionGroup>
@@ -986,6 +998,7 @@ policies:
     retention_days: 2555  # 7 years
     backup_day: "Jan 1"
 ```
+
 #### Audit Trail
 
 ```bash
