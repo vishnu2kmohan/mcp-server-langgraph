@@ -86,8 +86,11 @@ def standardize_frontmatter(content: str) -> Tuple[str, bool]:
         value = value.strip()
 
         if key == "title":
-            # Remove quotes from title
+            # Remove quotes from title, but keep them if title contains colon
             new_value = unquote(value)
+            # YAML requires quotes for values containing colons
+            if ":" in new_value:
+                new_value = f"'{new_value}'"
             if new_value != value:
                 modified = True
             new_lines.append(f"{key}: {new_value}")

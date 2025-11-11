@@ -129,10 +129,16 @@ def check_frontmatter(file_path: Path, content: str, report: ValidationReport):
         if field_name not in frontmatter:
             report.add_issue("error", file_path, "frontmatter", f"Missing required field: {field_name}")
 
-    # Check title formatting (should not have quotes)
+    # Check title formatting (should not have quotes unless title contains colon)
     if "title" in frontmatter:
         title = frontmatter["title"]
-        if (title.startswith('"') and title.endswith('"')) or (title.startswith("'") and title.endswith("'")):
+        # Strip quotes to check the actual title content
+        title_unquoted = title.strip("'\"")
+        # YAML requires quotes for values containing colons
+        has_quotes = (title.startswith('"') and title.endswith('"')) or (title.startswith("'") and title.endswith("'"))
+        needs_quotes = ":" in title_unquoted
+
+        if has_quotes and not needs_quotes:
             report.add_issue("warning", file_path, "frontmatter", f"Title should not have quotes: {title}", line_number=2)
 
     # Check description formatting (should have single quotes)
