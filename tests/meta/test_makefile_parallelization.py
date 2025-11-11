@@ -65,8 +65,7 @@ class TestMakefileParallelization:
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-mcp-server should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}"
+            f"test-mcp-server should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
     @pytest.mark.unit
@@ -88,10 +87,7 @@ class TestMakefileParallelization:
         assert match, "test-new target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-new should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}"
-        )
+        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
     @pytest.mark.unit
     def test_test_integration_local_uses_parallel_execution(self):
@@ -113,8 +109,7 @@ class TestMakefileParallelization:
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-integration-local should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}"
+            f"test-integration-local should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
     @pytest.mark.unit
@@ -136,10 +131,7 @@ class TestMakefileParallelization:
         assert match, "test-e2e target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-e2e should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}"
-        )
+        assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
     @pytest.mark.unit
     def test_parallelized_targets_mention_parallel_in_output(self):
@@ -209,9 +201,7 @@ class TestMakefileParallelizationBestPractices:
             "fast",  # Alias or variant
         ]
 
-        targets_without_parallel = [
-            t for t in targets_without_parallel if t not in exceptions
-        ]
+        targets_without_parallel = [t for t in targets_without_parallel if t not in exceptions]
 
         assert not targets_without_parallel, (
             f"The following unit test targets should use '-n auto':\n"

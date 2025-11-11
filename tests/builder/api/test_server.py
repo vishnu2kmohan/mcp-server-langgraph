@@ -169,7 +169,7 @@ def test_generate_code_with_empty_request_returns_422(client):
     response = client.post("/api/builder/generate", json={})
 
     # Assert - Pydantic validation error
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 # ==============================================================================

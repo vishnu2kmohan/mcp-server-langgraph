@@ -133,7 +133,7 @@ class TestExecutePythonTool:
         )
         mock_get_sandbox.return_value = mock_sandbox
 
-        result = execute_python.invoke({"code": "import time; time.sleep(100)"})
+        result = execute_python.invoke({"code": "import time; time.sleep(0.5)"})
 
         assert "timeout" in result.lower() or "timed out" in result.lower()
 

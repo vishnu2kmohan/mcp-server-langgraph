@@ -557,8 +557,8 @@ class TestAPIKeyValidationPagination:
                     user["attributes"] = {
                         "apiKeys": [f"key:target_key:{key_hash}"],
                         "apiKey_target_key_name": "Target User Key",
-                        "apiKey_target_key_created": datetime.utcnow().isoformat(),
-                        "apiKey_target_key_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                        "apiKey_target_key_created": datetime.now(timezone.utc).isoformat(),
+                        "apiKey_target_key_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
                     }
                 all_users.append(user)
 
@@ -644,8 +644,8 @@ class TestAPIKeyValidationPagination:
                     user["attributes"] = {
                         "apiKeys": [f"key:early_key:{key_hash}"],
                         "apiKey_early_key_name": "Early User Key",
-                        "apiKey_early_key_created": datetime.utcnow().isoformat(),
-                        "apiKey_early_key_expiresAt": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                        "apiKey_early_key_created": datetime.now(timezone.utc).isoformat(),
+                        "apiKey_early_key_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
                     }
                 all_users.append(user)
 

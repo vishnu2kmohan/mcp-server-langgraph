@@ -89,20 +89,20 @@ class TestKubernetesSandboxResourceLimits:
 
     def test_timeout_enforcement(self, kubernetes_available):
         """Test that timeout is enforced"""
-        limits = ResourceLimits(timeout_seconds=5)
+        limits = ResourceLimits(timeout_seconds=1)
         sandbox = KubernetesSandbox(limits=limits, namespace="default")
 
         # Code that runs longer than timeout
         code = """
 import time
-time.sleep(20)
+time.sleep(2)
 print('Should not reach here')
 """
         result = sandbox.execute(code)
 
         assert result.success is False
         assert result.timed_out is True
-        assert result.execution_time >= 5
+        assert result.execution_time >= 1
 
     def test_memory_limit_enforcement(self, kubernetes_available):
         """Test that memory limits are enforced"""

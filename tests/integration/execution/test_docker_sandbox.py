@@ -122,21 +122,21 @@ class TestDockerSandboxResourceLimits:
 
     def test_timeout_enforcement(self, docker_available):
         """Test that timeout is enforced"""
-        limits = ResourceLimits(timeout_seconds=2)
+        limits = ResourceLimits(timeout_seconds=1)
         sandbox = DockerSandbox(limits=limits)
 
         # Code that runs longer than timeout
         code = """
 import time
-time.sleep(10)
+time.sleep(2)
 print('Should not reach here')
 """
         result = sandbox.execute(code)
 
         assert result.success is False
         assert result.timed_out is True
-        assert result.execution_time >= 2
-        assert result.execution_time < 3  # Should stop quickly after timeout
+        assert result.execution_time >= 1
+        assert result.execution_time < 2  # Should stop quickly after timeout
 
     def test_memory_limit_enforcement(self, docker_available):
         """Test that memory limits are enforced"""
@@ -392,7 +392,7 @@ class TestDockerSandboxCleanup:
 
         limits = ResourceLimits(timeout_seconds=1)
         sandbox = DockerSandbox(limits=limits)
-        result = sandbox.execute("import time; time.sleep(10)")
+        result = sandbox.execute("import time; time.sleep(2)")
 
         assert result.timed_out is True
 
