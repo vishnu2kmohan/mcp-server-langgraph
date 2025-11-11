@@ -713,23 +713,20 @@ def test_app_settings(test_infrastructure_ports):
     return Settings(
         environment="test",
         service_name="test-mcp-server",
-        # Database settings
-        postgres_host="localhost",
-        postgres_port=test_infrastructure_ports["postgres"],
-        postgres_db="openfga_test",
-        postgres_user="postgres",
-        postgres_password="postgres",
+        # Database settings - use gdpr_postgres_url (individual postgres_* fields removed)
+        gdpr_postgres_url=f"postgresql://postgres:postgres@localhost:{test_infrastructure_ports['postgres']}/gdpr",
         # Redis settings (use same port for both sessions and checkpoints in tests)
         redis_host="localhost",
         redis_port=test_infrastructure_ports["redis_checkpoints"],
-        # Note: redis_url is built from redis_host and redis_port for sessions
-        # Checkpoints use checkpoint_redis_url with db=1
+        # Redis URLs are constructed from host/port
+        redis_url=f"redis://localhost:{test_infrastructure_ports['redis_sessions']}/0",
+        checkpoint_redis_url=f"redis://localhost:{test_infrastructure_ports['redis_checkpoints']}/1",
         # OpenFGA settings
         openfga_api_url=f"http://localhost:{test_infrastructure_ports['openfga_http']}",
         openfga_store_id=None,  # Will be created dynamically in tests
         openfga_model_id=None,
         # Keycloak settings
-        keycloak_url=f"http://localhost:{test_infrastructure_ports['keycloak']}",
+        keycloak_server_url=f"http://localhost:{test_infrastructure_ports['keycloak']}",
         keycloak_realm="master",  # Use master realm for tests
         keycloak_client_id="admin-cli",
         keycloak_admin_username="admin",

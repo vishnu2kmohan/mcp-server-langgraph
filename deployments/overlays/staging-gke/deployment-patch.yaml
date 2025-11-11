@@ -18,6 +18,7 @@ spec:
       containers:
       # Main application container
       - name: mcp-server-langgraph
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
@@ -198,6 +199,7 @@ spec:
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         args:
           - "--structured-logs"
           - "--port=5432"
@@ -250,6 +252,7 @@ spec:
       # Init containers - Add resources and security contexts for GKE Autopilot compatibility
       initContainers:
       - name: wait-for-openfga
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -262,10 +265,13 @@ spec:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
             memory: 128Mi
+            ephemeral-storage: 100Mi  # Security: kube-score compliance
           limits:
             cpu: 500m
             memory: 256Mi
+            ephemeral-storage: 500Mi  # Security: kube-score compliance
       - name: wait-for-keycloak
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -278,9 +284,11 @@ spec:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
             memory: 128Mi
+            ephemeral-storage: 100Mi  # Security: kube-score compliance
           limits:
             cpu: 500m
             memory: 256Mi
+            ephemeral-storage: 500Mi  # Security: kube-score compliance
 
       # Node affinity for GKE
       affinity:

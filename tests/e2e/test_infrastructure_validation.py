@@ -104,7 +104,29 @@ class TestE2EInfrastructure:
 
         # Test HTTP connection to Keycloak
         try:
-            response = httpx.get(f"{test_app_settings.keycloak_url}/health/ready", timeout=5.0)
+            response = httpx.get(f"{test_app_settings.keycloak_server_url}/health/ready", timeout=5.0)
             assert response.status_code == 200
         except Exception as e:
             pytest.fail(f"Keycloak not available: {e}")
+
+    def test_settings_has_keycloak_server_url_field(self, test_app_settings, test_infrastructure_ports):
+        """
+        Test that Settings object has keycloak_server_url field pointing to test infrastructure.
+
+        TDD: This test validates that the Settings field naming matches the config schema.
+        Regression prevention: Ensure we use keycloak_server_url consistently and point to correct test port.
+
+        Note: Settings has extra="ignore", so wrong field names are silently ignored and defaults are used.
+        This test ensures the fixture uses the correct field name so tests connect to the right port.
+        """
+        # Verify the field exists and is properly set
+        assert hasattr(test_app_settings, "keycloak_server_url"), "Settings must have keycloak_server_url field"
+        assert test_app_settings.keycloak_server_url.startswith("http"), "keycloak_server_url must be a valid URL"
+        assert "localhost" in test_app_settings.keycloak_server_url, "Test settings should point to localhost"
+
+        # CRITICAL: Verify it points to the TEST infrastructure port, not default port
+        # If fixture uses wrong field name (keycloak_url), Settings silently ignores it and uses default
+        test_port = test_infrastructure_ports["keycloak"]
+        assert (
+            str(test_port) in test_app_settings.keycloak_server_url
+        ), f"keycloak_server_url must point to test port {test_port}, got {test_app_settings.keycloak_server_url}"

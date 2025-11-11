@@ -11,6 +11,7 @@ spec:
     spec:
       initContainers:
       - name: wait-for-openfga
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -26,6 +27,7 @@ spec:
           done
           echo "OpenFGA is ready!"
       - name: wait-for-keycloak
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -41,6 +43,7 @@ spec:
           done
           echo "Keycloak is ready!"
       - name: wait-for-redis
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true

@@ -145,6 +145,86 @@ class TestSecurityContexts:
                         ), f"{patch_file.name}: Init container '{container_name}' has invalid securityContext"
 
 
+@pytest.mark.requires_kubectl
+class TestImagePullPolicy:
+    """Test imagePullPolicy configuration for security compliance."""
+
+    @pytest.fixture
+    def staging_overlay_dir(self):
+        """Get staging overlay directory."""
+        return Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
+
+    def test_staging_overlay_has_imagepullpolicy_always(self, staging_overlay_dir):
+        """
+        Test that staging overlay sets imagePullPolicy: Always for all containers.
+
+        TDD RED phase: This test will initially FAIL because staging patches don't override imagePullPolicy.
+
+        Rationale:
+        - imagePullPolicy: IfNotPresent (base default) can use stale cached images in staging
+        - imagePullPolicy: Always ensures latest security patches and prevents supply chain attacks
+        - kube-score compliance: Production and staging MUST use Always for image pull policy
+
+        This prevents scenarios where:
+        1. A node caches a vulnerable image
+        2. Updated image is pushed with same tag (e.g., v2.8.0 rebuilt with security fix)
+        3. Pod uses cached vulnerable version instead of pulling updated image
+        """
+        # Build the kustomize output
+        result = subprocess.run(
+            ["kubectl", "kustomize", str(staging_overlay_dir)],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode != 0:
+            pytest.skip(f"kubectl kustomize failed: {result.stderr}")
+
+        # Parse all manifests
+        manifests = list(yaml.safe_load_all(result.stdout))
+
+        # Track violations for detailed error reporting
+        violations = []
+
+        for manifest in manifests:
+            if not manifest or manifest.get("kind") != "Deployment":
+                continue
+
+            deployment_name = manifest.get("metadata", {}).get("name", "unknown")
+            spec = manifest.get("spec", {})
+            template = spec.get("template", {})
+            pod_spec = template.get("spec", {})
+
+            # Check all init containers
+            init_containers = pod_spec.get("initContainers", [])
+            for idx, container in enumerate(init_containers):
+                container_name = container.get("name", f"init-{idx}")
+                pull_policy = container.get("imagePullPolicy")
+
+                if pull_policy != "Always":
+                    violations.append(
+                        f"Deployment '{deployment_name}': init container '{container_name}' "
+                        f"has imagePullPolicy={pull_policy} (expected: Always)"
+                    )
+
+            # Check all app containers
+            containers = pod_spec.get("containers", [])
+            for idx, container in enumerate(containers):
+                container_name = container.get("name", f"container-{idx}")
+                pull_policy = container.get("imagePullPolicy")
+
+                if pull_policy != "Always":
+                    violations.append(
+                        f"Deployment '{deployment_name}': container '{container_name}' "
+                        f"has imagePullPolicy={pull_policy} (expected: Always)"
+                    )
+
+        # Report all violations at once for better debugging
+        assert not violations, "Staging overlay must set imagePullPolicy: Always for all containers:\n" + "\n".join(
+            f"  - {v}" for v in violations
+        )
+
+
 class TestRedisExternalNameService:
     """Test Redis ExternalName service configuration."""
 

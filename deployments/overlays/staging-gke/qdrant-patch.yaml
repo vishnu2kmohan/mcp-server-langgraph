@@ -8,6 +8,7 @@ spec:
       # GKE Autopilot resource requirements
       containers:
       - name: qdrant
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         # Security context for Qdrant container
         securityContext:
           allowPrivilegeEscalation: false

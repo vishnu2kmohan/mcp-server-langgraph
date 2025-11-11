@@ -12,6 +12,7 @@ spec:
       containers:
       # Main OpenFGA container - add security context
       - name: openfga
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
@@ -31,6 +32,7 @@ spec:
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
+        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         args:
           - "--structured-logs"
           - "--port=5432"
