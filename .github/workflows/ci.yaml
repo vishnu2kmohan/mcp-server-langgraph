@@ -122,6 +122,12 @@ jobs:
           uv run pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
+      - name: Validate pytest configuration compatibility
+        run: |
+          echo "🔍 Validating pytest addopts against installed plugins..."
+          uv run python scripts/validate_pytest_config.py
+          echo "✅ Pytest configuration valid - all addopts flags have required plugins"
+
   # ============================================================================
   # TESTING (Parallelized by Python version)
   # ============================================================================

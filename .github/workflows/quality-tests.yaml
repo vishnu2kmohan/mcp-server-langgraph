@@ -274,7 +274,8 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          uv run pytest -m benchmark -v --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
+          # Disable xdist to prevent conflict with --benchmark-only
+          uv run pytest -m benchmark -v -p no:xdist --benchmark-only --benchmark-autosave --benchmark-json=benchmarks.json
         continue-on-error: true  # Don't fail if no benchmarks exist yet
 
       - name: Store benchmark results

@@ -177,6 +177,7 @@ def test_cloud_sql_proxy_health_endpoints():
 
 @pytest.mark.integration
 @pytest.mark.kubernetes
+@pytest.mark.requires_kubectl
 def test_kubernetes_probe_paths_match_deployment():
     """
     Verify that actual deployment probe paths match expected values.

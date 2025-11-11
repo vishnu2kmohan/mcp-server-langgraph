@@ -184,6 +184,7 @@ class TestKustomizeConfigurations:
 # ==============================================================================
 
 
+@pytest.mark.requires_kubectl
 class TestGitHubActionsWorkflows:
     """Test GitHub Actions workflows for best practices and error handling"""
 

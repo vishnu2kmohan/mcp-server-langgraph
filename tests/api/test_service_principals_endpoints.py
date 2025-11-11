@@ -121,7 +121,10 @@ def test_client(mock_sp_manager, mock_current_user):
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
-    return TestClient(app)
+    yield TestClient(app)
+
+    # Cleanup to prevent state pollution in xdist workers
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -143,7 +146,10 @@ def admin_test_client(mock_sp_manager, mock_admin_user):
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_current_user] = mock_get_admin_user
 
-    return TestClient(app)
+    yield TestClient(app)
+
+    # Cleanup to prevent state pollution in xdist workers
+    app.dependency_overrides.clear()
 
 
 # ==============================================================================

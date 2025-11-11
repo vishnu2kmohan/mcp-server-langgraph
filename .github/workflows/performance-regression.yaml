@@ -96,7 +96,11 @@ jobs:
       - name: Run performance benchmarks
         run: |
           # Run pytest benchmarks
+          # IMPORTANT: Disable xdist (-p no:xdist) to prevent conflict with --benchmark-only
+          # pytest-benchmark auto-disables when xdist is active, causing:
+          # "Can't have both --benchmark-only and --benchmark-disable options"
           pytest tests/performance/ \
+            -p no:xdist \
             --benchmark-only \
             --benchmark-json=benchmark-results.json \
             --benchmark-min-rounds=10

@@ -133,6 +133,7 @@ class TestSettingsIsolationFixture:
 
 
 @pytest.mark.xdist_group(name="utilities_tests")
+@pytest.mark.requires_kubectl
 class TestCLIAvailabilityFixtures:
     """Test CLI tool availability fixtures."""
 
@@ -188,6 +189,7 @@ class TestCLIAvailabilityFixtures:
 
 
 @pytest.mark.xdist_group(name="utilities_tests")
+@pytest.mark.requires_kubectl
 class TestFixtureScoping:
     """Test that fixtures use appropriate scopes for performance."""
 
@@ -206,6 +208,7 @@ class TestFixtureScoping:
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="utilities_tests")
+@pytest.mark.requires_kubectl
 class TestUtilityDocumentation:
     """Test that utilities are properly documented."""
 

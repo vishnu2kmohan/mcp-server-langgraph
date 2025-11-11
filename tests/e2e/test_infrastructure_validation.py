@@ -32,7 +32,8 @@ class TestE2EInfrastructure:
     def test_app_settings_configured_for_test_infrastructure(self, test_app_settings, test_infrastructure_ports):
         """Test that app settings point to test infrastructure"""
         assert test_app_settings.environment == "test"
-        assert test_app_settings.postgres_port == test_infrastructure_ports["postgres"]
+        # Postgres accessed via full URL, verify it includes test port
+        assert str(test_infrastructure_ports["postgres"]) in test_app_settings.gdpr_postgres_url
         assert test_app_settings.redis_port == test_infrastructure_ports["redis_checkpoints"]
         assert test_app_settings.openfga_api_url == f"http://localhost:{test_infrastructure_ports['openfga_http']}"
 

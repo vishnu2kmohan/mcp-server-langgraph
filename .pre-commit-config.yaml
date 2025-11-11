@@ -116,6 +116,34 @@ repos:
 
           Use VirtualClock for instant time advancement instead of real sleep.
 
+      - id: validate-pytest-config
+        name: Validate Pytest Configuration Compatibility
+        entry: python3 scripts/validate_pytest_config.py
+        language: system
+        files: ^pyproject\.toml$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates that pytest addopts flags match installed plugin dependencies.
+
+          Prevents CI failures from:
+          - Adding pytest flags without required plugins
+          - Removing plugins that addopts still references
+          - Dependency cleanup accidentally breaking pytest options
+
+          Common failure scenario:
+          1. Add --timeout to addopts
+          2. Forget to add pytest-timeout to dependencies
+          3. CI fails: "pytest: error: unrecognized arguments: --timeout"
+
+          Validated mappings:
+          - --dist, -n → pytest-xdist
+          - --timeout → pytest-timeout
+          - --cov → pytest-cov
+          - --benchmark → pytest-benchmark
+
+          Reference: Codex finding - pytest addopts compatibility validation
+
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
         entry: python3 scripts/validate_mintlify_docs.py docs

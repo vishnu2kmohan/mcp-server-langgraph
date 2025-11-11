@@ -68,11 +68,19 @@ jobs:
           kubectl kustomize deployments/overlays/staging-gke | ./kubeconform -strict -summary -ignore-missing-schemas
           echo "✅ Manifest validation passed"
 
-      - name: Security scan manifests
+      # Render complete Kustomize manifests for security scanning
+      # This ensures Trivy sees the full configuration (base + overlays merged)
+      # rather than scanning incomplete patch files that produce false positives
+      - name: Render Kustomize manifests for security scanning
+        run: |
+          kubectl kustomize deployments/overlays/staging-gke > /tmp/staging-manifests-for-scan.yaml
+          echo "✅ Manifests rendered for security scanning"
+
+      - name: Security scan rendered manifests
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'config'
-          scan-ref: 'deployments/overlays/staging-gke'
+          scan-ref: '/tmp/staging-manifests-for-scan.yaml'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'  # Fail on critical/high vulnerabilities
 

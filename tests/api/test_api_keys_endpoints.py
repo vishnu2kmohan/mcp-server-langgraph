@@ -113,7 +113,10 @@ def test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
-    return TestClient(app)
+    yield TestClient(app)
+
+    # Cleanup to prevent state pollution in xdist workers
+    app.dependency_overrides.clear()
 
 
 # ==============================================================================

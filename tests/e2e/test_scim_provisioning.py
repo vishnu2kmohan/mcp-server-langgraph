@@ -32,25 +32,35 @@ pytestmark = [pytest.mark.e2e, pytest.mark.scim]
 
 
 @pytest.fixture(scope="module")
-async def api_server_available() -> bool:
+def api_server_available() -> bool:
     """Check if API server is available for E2E tests"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{API_BASE_URL}/health", timeout=5.0)
-            return response.status_code == 200
-    except (httpx.ConnectError, httpx.TimeoutException):
-        return False
+    import asyncio
+
+    async def _check():
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{API_BASE_URL}/health", timeout=5.0)
+                return response.status_code == 200
+        except (httpx.ConnectError, httpx.TimeoutException):
+            return False
+
+    return asyncio.run(_check())
 
 
 @pytest.fixture(scope="module")
-async def keycloak_available() -> bool:
+def keycloak_available() -> bool:
     """Check if Keycloak is available for E2E tests"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{KEYCLOAK_TEST_URL}/health/ready", timeout=5.0)
-            return response.status_code == 200
-    except (httpx.ConnectError, httpx.TimeoutException):
-        return False
+    import asyncio
+
+    async def _check():
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{KEYCLOAK_TEST_URL}/health/ready", timeout=5.0)
+                return response.status_code == 200
+        except (httpx.ConnectError, httpx.TimeoutException):
+            return False
+
+    return asyncio.run(_check())
 
 
 @pytest.fixture(scope="module")
