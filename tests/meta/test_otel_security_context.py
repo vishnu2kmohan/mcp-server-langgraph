@@ -291,7 +291,8 @@ def test_otel_has_tmpfs_volumes():
     volume_mounts = otel_container.get("volumeMounts", [])
     mount_paths = [vm.get("mountPath") for vm in volume_mounts]
 
-    assert "/tmp" in mount_paths, "Missing volumeMount for /tmp directory.\n" f"Current mounts: {mount_paths}"
+    # Checking for volume mount path "/tmp", not creating temp file
+    assert "/tmp" in mount_paths, "Missing volumeMount for /tmp directory.\n" f"Current mounts: {mount_paths}"  # nosec B108
 
     assert "/home/otelcol" in mount_paths or "/home" in mount_paths, (
         "Missing volumeMount for /home/otelcol or /home directory.\n" f"Current mounts: {mount_paths}"
