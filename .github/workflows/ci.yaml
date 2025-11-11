@@ -191,17 +191,18 @@ jobs:
         source .venv/bin/activate
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
+        # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "unit and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
     - name: Run new test suites
       run: |
         source .venv/bin/activate
         echo "=== Running API endpoint tests (unit) ==="
-        OTEL_SDK_DISABLED=true pytest -n auto -m "api and unit" -v --tb=short || echo "Some API tests may be skipped (integration-only)"
+        OTEL_SDK_DISABLED=true pytest -n auto -m "api and unit and not llm" -v --tb=short || echo "Some API tests may be skipped (integration-only)"
 
         echo ""
         echo "=== Running MCP server unit tests ==="
-        OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -v --tb=short
+        OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -m "not llm" -v --tb=short
 
     - name: Run mypy type checking
       run: |

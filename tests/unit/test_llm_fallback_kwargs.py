@@ -5,6 +5,7 @@ Ensures that provider-specific kwargs (api_base, aws_secret_access_key, etc.)
 are properly forwarded to fallback models.
 """
 
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,7 +14,16 @@ from langchain_core.messages import HumanMessage
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 # Use shared circuit breaker config from conftest.py
-pytestmark = [pytest.mark.unit, pytest.mark.usefixtures("test_circuit_breaker_config")]
+# Mark as llm tests (expensive, require API keys, skipped in CI)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.llm,
+    pytest.mark.skipif(
+        os.getenv("CI") == "true",
+        reason="LLM tests require real API keys and are expensive for CI - run in scheduled workflow",
+    ),
+    pytest.mark.usefixtures("test_circuit_breaker_config"),
+]
 
 
 @pytest.fixture
