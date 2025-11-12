@@ -73,7 +73,7 @@ Redis provides production-grade session storage with:
         volumes:
           redis-session-data:
         ```
-        ```bash
+
         # Start Redis
         export REDIS_PASSWORD=$(openssl rand -base64 32)
         docker compose up -d redis-session

@@ -261,7 +261,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         persistence:
           storageClass: "standard-rwo"
     ```
-    ```bash
+
     # Create static IP
     gcloud compute addresses create mcp-server-langgraph-ip --global
 
@@ -302,7 +302,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         persistence:
           storageClass: "gp3"
     ```
-    ```bash
+
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-eks.yaml
@@ -336,7 +336,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         persistence:
           storageClass: "managed-premium"
     ```
-    ```bash
+
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-aks.yaml

@@ -338,20 +338,24 @@ class TestRBACLeastPrivilege:
 
         violations = []
 
-        for rule in found_role.get("rules", []):
-            verbs = rule.get("verbs", [])
-            resources = rule.get("resources", [])
+        # Handle both single role (dict) and multiple roles (list)
+        roles_to_check = found_role if isinstance(found_role, list) else [found_role]
 
-            # Check for wildcard permissions
-            if "*" in verbs:
-                violations.append(f"Grants wildcard (*) verb permission for {resources}")
+        for role in roles_to_check:
+            for rule in role.get("rules", []):
+                verbs = rule.get("verbs", [])
+                resources = rule.get("resources", [])
 
-            if "*" in resources:
-                violations.append("Grants wildcard (*) resource permission")
+                # Check for wildcard permissions
+                if "*" in verbs:
+                    violations.append(f"Grants wildcard (*) verb permission for {resources}")
 
-            # Check for dangerous combinations
-            if "secrets" in resources and any(v in verbs for v in ["create", "delete", "patch"]):
-                violations.append("Grants write access to secrets (create/delete/patch)")
+                if "*" in resources:
+                    violations.append("Grants wildcard (*) resource permission")
+
+                # Check for dangerous combinations
+                if "secrets" in resources and any(v in verbs for v in ["create", "delete", "patch"]):
+                    violations.append("Grants write access to secrets (create/delete/patch)")
 
         if violations:
             error_msg = "\n\nRBAC grants excessive permissions:\n"

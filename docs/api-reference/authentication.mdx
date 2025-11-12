@@ -106,7 +106,7 @@ const response = await fetch('https://api.yourdomain.com/auth/login', {
 
 const data = await response.json();
 console.log('Access Token:', data.access_token);
-```json
+```
 </CodeGroup>
 
 **Response (Token Mode)**:
@@ -139,7 +139,8 @@ console.log('Access Token:', data.access_token);
   },
   "expires_at": "2025-10-13T10:30:00Z"
 }
-```bash
+```
+
 **Status Codes**:
 
 <ResponseField name="200" type="Success">
@@ -196,7 +197,8 @@ curl -X POST https://api.yourdomain.com/auth/refresh \
   "token_type": "Bearer",
   "expires_in": 3600
 }
-```bash
+```
+
 <Note>
 Refresh tokens are rotated on each refresh for security. The old refresh token is invalidated.
 </Note>
@@ -238,7 +240,7 @@ curl -X POST https://api.yourdomain.com/auth/logout \
 ```bash Session Mode
 curl -X POST https://api.yourdomain.com/auth/logout \
   -H "Cookie: session_id=abc123def456..."
-```json
+```
 </CodeGroup>
 
 **Response**:

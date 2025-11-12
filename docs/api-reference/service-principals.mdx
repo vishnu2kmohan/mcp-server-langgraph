@@ -157,7 +157,7 @@ const data = await response.json();
 console.log('Service ID:', data.service_id);
 console.log('Client Secret:', data.client_secret);
 // IMPORTANT: Save the client_secret securely!
-```json
+```
 </CodeGroup>
 
 **Response**:
@@ -249,7 +249,7 @@ const servicePrincipals = await response.json();
 servicePrincipals.forEach(sp => {
   console.log(`${sp.service_id}: ${sp.name}`);
 });
-```bash
+```
 </CodeGroup>
 
 **Response**:
@@ -403,7 +403,7 @@ const response = await fetch(
 const data = await response.json();
 console.log('New Client Secret:', data.client_secret);
 // IMPORTANT: Update your service configuration immediately!
-```json
+```
 </CodeGroup>
 
 **Response**:
@@ -483,7 +483,7 @@ const response = await fetch(
 if (response.status === 204) {
   console.log('Service principal deleted successfully');
 }
-```bash
+```
 </CodeGroup>
 
 **Response**:

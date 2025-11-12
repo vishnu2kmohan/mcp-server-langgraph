@@ -204,7 +204,7 @@ kubectl apply -k deployments/kubernetes/overlays/production
 kubectl apply -k deployments/kubernetes/overlays/gke
 kubectl apply -k deployments/kubernetes/overlays/eks
 kubectl apply -k deployments/kubernetes/overlays/aks
-```bash
+```
 </CodeGroup>
 
 ### Step-by-Step Deployment
@@ -233,7 +233,7 @@ kubectl apply -f deployments/kubernetes/base/serviceaccount.yaml
 
 ```bash
 kubectl apply -f deployments/kubernetes/base/configmap.yaml
-```yaml
+```
 <Accordion title="View configmap.yaml" icon="file">
 ```yaml
 apiVersion: v1
@@ -289,7 +289,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
   --from-literal=redis-password="${REDIS_PASSWORD}" \
   --from-literal=openfga-store-id="${OPENFGA_STORE_ID}" \
   --from-literal=openfga-model-id="${OPENFGA_MODEL_ID}"
-```bash
+```
 <Warning>
 **Never commit secrets to Git!** Use external secret managers (see [Infisical Setup](/guides/infisical-setup)) or cloud-native solutions (GCP Secret Manager, AWS Secrets Manager, Azure Key Vault).
 </Warning>
@@ -456,7 +456,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 port:
                   number: 8000
     ```
-    ```bash
+
     kubectl apply -f ingress.yaml
     ```
   </Tab>

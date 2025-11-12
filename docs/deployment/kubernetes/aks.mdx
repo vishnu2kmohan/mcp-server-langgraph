@@ -240,7 +240,7 @@ POSTGRES_HOST=$(az postgres flexible-server show \
   --name langgraph-postgres \
   --query fullyQualifiedDomainName \
   --output tsv)
-```bash
+```
 <Info>
 **Three databases required**: Keycloak (identity), OpenFGA (authorization), and GDPR (compliance data storage per [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage)).
 </Info>

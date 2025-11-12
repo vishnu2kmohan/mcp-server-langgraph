@@ -63,7 +63,7 @@ sequenceDiagram
             - "8080:8080"
           command: start-dev
         ```
-        ```bash
+
         docker compose up -d keycloak
         ```
         Access: http://localhost:8080/admin (admin/admin)
@@ -271,7 +271,7 @@ result = await client.authenticate(
 
 access_token = result['access_token']
 refresh_token = result['refresh_token']
-```python
+```
 <Warning>
 **Never use Direct Grant in production!** Use Authorization Code flow with PKCE for web/mobile apps.
 </Warning>

@@ -376,7 +376,9 @@
               "architecture/adr-0045-test-infrastructure-phase-2-foundation",
               "architecture/adr-0046-deployment-configuration-tdd-infrastructure",
               "architecture/adr-0047-visual-workflow-builder",
-              "architecture/adr-0048-postgres-storage-integration-tests"
+              "architecture/adr-0048-postgres-storage-integration-tests",
+              "architecture/adr-0051-memorystore-redis-externalname-service",
+              "architecture/adr-0052-pytest-xdist-isolation-strategy"
             ]
           },
           {

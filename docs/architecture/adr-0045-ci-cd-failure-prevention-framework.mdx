@@ -216,9 +216,9 @@ resource "example" "name" {
 - CI validates version alignment
 
 **Rule 4**: Terraform version compatible with CI
-- Minimum version must be <= CI version
+- Minimum version must be `<=` CI version
 - CI runs Terraform 1.6.6 (as of 2025-11-12)
-- Modules can require >= 1.5 but not >= 1.7
+- Modules can require `>=` 1.5 but not `>=` 1.7
 
 #### Pre-commit Hook Standards
 

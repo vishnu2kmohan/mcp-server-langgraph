@@ -268,7 +268,7 @@ master_authorized_networks_cidrs = [
     display_name = "My IP"
   }
 ]
-```bash
+```
 <Warning>
   **Important**: Replace `YOUR_PROJECT_ID` with your actual GCP project ID throughout the configuration.
 </Warning>
@@ -302,7 +302,7 @@ Review the plan. It should create:
 
 ```bash
 terraform apply tfplan
-```bash
+```
 <Info>
   **Duration**: 20-25 minutes. Cloud SQL takes 10-12 minutes, GKE takes 8-10 minutes.
 </Info>
@@ -398,7 +398,7 @@ kubectl apply -k .
 kubectl rollout status deployment/production-mcp-server-langgraph \
   -n mcp-production \
   --timeout=10m
-```bash
+```
 <Check>
 Verify deployment:
 ```bash
@@ -514,7 +514,7 @@ SERVICE_IP=$(kubectl get svc production-mcp-server-langgraph \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
 curl http://$SERVICE_IP:8000/health/live
-```bash
+```
 </CodeGroup>
 
 <Check>All health checks should return HTTP 200</Check>
