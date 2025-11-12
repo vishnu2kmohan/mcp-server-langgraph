@@ -116,30 +116,29 @@ def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
-    - Use monkeypatch instead of dependency_overrides (more reliable)
-    - Patch at module level BEFORE any router imports
-    - Avoids FastAPI dependency resolution timing issues
-    - Works consistently across pytest-xdist workers
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 3):
+    - Use monkeypatch with importlib.reload() to force fresh imports
+    - Router module caches get_current_user reference at import time
+    - Must reload router AFTER patching to capture patched version
 
-    RATIONALE:
-    dependency_overrides doesn't work because:
-    1. Router imports capture Depends(bearer_scheme) at definition time
-    2. Setting overrides after import is too late
-    3. bearer_scheme singleton shared across workers causes pollution
+    CRITICAL INSIGHT:
+    When you do `from mcp_server_langgraph.api.service_principals import router`,
+    the router module executes:
+        from mcp_server_langgraph.auth.middleware import get_current_user
+    This captures the function reference BEFORE our monkeypatch.
 
-    monkeypatch works because:
-    1. Patches happen before dependency resolution
-    2. Operates at Python import level, not FastAPI level
-    3. No singleton state issues
+    Solution: Force module reload AFTER patching.
     """
+    import importlib
+    import sys
+
     from fastapi import FastAPI
 
-    # Patch auth middleware BEFORE importing router
+    # Patch auth middleware FIRST
     from mcp_server_langgraph.auth import middleware
     from mcp_server_langgraph.core import dependencies
 
-    # Patch get_current_user to return mock
+    # Patch get_current_user
     async def mock_get_current_user_async(*args, **kwargs):
         return mock_current_user
 
@@ -157,8 +156,13 @@ def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga
 
     monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
 
-    # NOW import router after patching is complete
-    from mcp_server_langgraph.api.service_principals import router
+    # CRITICAL: If router already imported, reload it to capture patched dependencies
+    if "mcp_server_langgraph.api.service_principals" in sys.modules:
+        router_module = sys.modules["mcp_server_langgraph.api.service_principals"]
+        importlib.reload(router_module)
+        router = router_module.router
+    else:
+        from mcp_server_langgraph.api.service_principals import router
 
     # Create fresh FastAPI app
     app = FastAPI()
@@ -178,38 +182,43 @@ def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfg
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
-    - Use monkeypatch instead of dependency_overrides (more reliable)
-    - Patch at module level BEFORE any router imports
-    - Avoids FastAPI dependency resolution timing issues
-    - Works consistently across pytest-xdist workers
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 3):
+    - Use monkeypatch with importlib.reload()
+    - Forces router to capture patched dependencies
     """
+    import importlib
+    import sys
+
     from fastapi import FastAPI
 
-    # Patch auth middleware BEFORE importing router
+    # Patch auth middleware FIRST
     from mcp_server_langgraph.auth import middleware
     from mcp_server_langgraph.core import dependencies
 
-    # Patch get_current_user to return admin mock
+    # Patch get_current_user
     async def mock_get_admin_user_async(*args, **kwargs):
         return mock_admin_user
 
     monkeypatch.setattr(middleware, "get_current_user", mock_get_admin_user_async)
 
-    # Patch service principal manager getter
+    # Patch manager getters
     def mock_get_sp_manager_sync():
         return mock_sp_manager
 
     monkeypatch.setattr(dependencies, "get_service_principal_manager", mock_get_sp_manager_sync)
 
-    # Patch OpenFGA client getter
     def mock_get_openfga_sync():
         return mock_openfga_client
 
     monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
 
-    # NOW import router after patching is complete
-    from mcp_server_langgraph.api.service_principals import router
+    # CRITICAL: Reload router to capture patched dependencies
+    if "mcp_server_langgraph.api.service_principals" in sys.modules:
+        router_module = sys.modules["mcp_server_langgraph.api.service_principals"]
+        importlib.reload(router_module)
+        router = router_module.router
+    else:
+        from mcp_server_langgraph.api.service_principals import router
 
     # Create fresh FastAPI app
     app = FastAPI()

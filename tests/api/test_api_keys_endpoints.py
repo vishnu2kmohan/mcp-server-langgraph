@@ -128,8 +128,16 @@ def api_keys_test_client(monkeypatch, mock_api_key_manager, mock_keycloak_client
 
     monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_client_sync)
 
-    # NOW import router after patching is complete
-    from mcp_server_langgraph.api.api_keys import router
+    # CRITICAL: Reload router to capture patched dependencies
+    import importlib
+    import sys
+
+    if "mcp_server_langgraph.api.api_keys" in sys.modules:
+        router_module = sys.modules["mcp_server_langgraph.api.api_keys"]
+        importlib.reload(router_module)
+        router = router_module.router
+    else:
+        from mcp_server_langgraph.api.api_keys import router
 
     # Create fresh FastAPI app
     app = FastAPI()

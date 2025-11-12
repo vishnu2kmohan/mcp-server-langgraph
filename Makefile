@@ -987,7 +987,7 @@ docs-fix-mdx:
 
 docs-test:
 	@echo "🧪 Running documentation validation tests..."
-	@pytest tests/test_mdx_validation.py tests/test_link_checker.py -v
+	@$(UV_RUN) pytest tests/test_mdx_validation.py tests/test_link_checker.py -v
 
 docs-audit:
 	@echo "📊 Running comprehensive documentation audit..."
