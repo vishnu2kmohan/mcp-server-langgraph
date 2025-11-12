@@ -1,0 +1,273 @@
+# Keycloak readOnlyRootFilesystem Implementation Plan
+
+## Overview
+
+This document outlines the plan to enable `readOnlyRootFilesystem: true` for Keycloak pods while maintaining functionality. Currently disabled due to Quarkus runtime requiring writable filesystem for build artifacts.
+
+## Current Status
+
+**Date**: 2025-11-12
+**Status**: `readOnlyRootFilesystem: false` (temporarily disabled)
+**File**: `deployments/overlays/staging-gke/keycloak-patch.yaml:30`
+**Issue**: Keycloak Quarkus runtime attempts to build JAR artifacts at startup
+
+## Problem Analysis
+
+### Root Cause
+
+Keycloak uses Quarkus runtime which performs ahead-of-time (AOT) compilation at startup:
+
+```
+ERROR: Build failure: Build failed due to errors
+  Build step io.quarkus.deployment.pkg.steps.JarResultBuildStep#buildRunnerJar threw an exception:
+  java.nio.file.ReadOnlyFileSystemException
+    at jdk.zipfs/jdk.nio.zipfs.ZipFileSystem.checkWritable(ZipFileSystem.java:370)
+```
+
+### Attempted Solutions
+
+1. **emptyDir volume mounts** - Tried mounting:
+   - `/tmp`
+   - `/opt/keycloak/data`
+   - `/opt/keycloak/providers`
+   - `/opt/keycloak/themes`
+   - `/opt/keycloak/lib/quarkus` (❌ breaks - deletes application files)
+
+2. **Result**: Quarkus still requires write access to directories we can't easily override
+
+## Recommended Solution: Pre-Built Keycloak Image
+
+### Approach
+
+Create a custom Keycloak image with pre-built/optimized configuration:
+
+1. **Build-time optimization**: Run Keycloak build process during Docker image build
+2. **Runtime-only image**: Final image contains only optimized artifacts
+3. **No runtime compilation**: Keycloak starts without building
+
+### Implementation Steps
+
+#### Phase 1: Create Custom Dockerfile
+
+```dockerfile
+# Keycloak Dockerfile with pre-build optimization
+FROM quay.io/keycloak/keycloak:23.0.0 as builder
+
+# Set working directory
+WORKDIR /opt/keycloak
+
+# Copy custom configuration
+COPY keycloak-config/ /opt/keycloak/
+
+# Build optimized Keycloak
+RUN /opt/keycloak/bin/kc.sh build \
+    --db=postgres \
+    --http-enabled=true \
+    --http-port=8080 \
+    --hostname-strict=false \
+    --log-level=INFO
+
+# Final runtime image
+FROM quay.io/keycloak/keycloak:23.0.0
+
+# Copy pre-built artifacts from builder
+COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
+COPY --from=builder /opt/keycloak/lib/lib/ /opt/keycloak/lib/lib/
+
+# Use optimized start command
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
+```
+
+#### Phase 2: Build and Push Image
+
+```bash
+# Build image
+docker build -t us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycloak:optimized-23.0.0 .
+
+# Push to Artifact Registry
+docker push us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycloak:optimized-23.0.0
+```
+
+#### Phase 3: Update Kubernetes Configuration
+
+```yaml
+# deployments/overlays/staging-gke/keycloak-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      containers:
+      - name: keycloak
+        image: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/keycloak:optimized-23.0.0
+
+        # Re-enable read-only root filesystem
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true  # ✅ Re-enabled!
+          capabilities:
+            drop:
+              - ALL
+
+        # Keep minimal writable volumes
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /opt/keycloak/data/tmp
+```
+
+#### Phase 4: Testing
+
+1. **Build test**:
+   ```bash
+   docker run --rm keycloak:optimized-23.0.0 /opt/keycloak/bin/kc.sh start --optimized --dry-run
+   ```
+
+2. **Read-only filesystem test**:
+   ```bash
+   docker run --rm --read-only keycloak:optimized-23.0.0
+   ```
+
+3. **Kubernetes test**:
+   ```bash
+   kubectl apply -k deployments/overlays/staging-gke
+   kubectl get pods -n staging-mcp-server-langgraph -w
+   kubectl logs staging-keycloak-xxx -c keycloak
+   ```
+
+## Alternative Solutions
+
+### Option 2: Use Keycloak Operator
+
+**Pros**:
+- Official Keycloak Kubernetes integration
+- Handles optimization automatically
+- Better lifecycle management
+
+**Cons**:
+- Additional complexity
+- More moving parts
+- Learning curve
+
+**Recommendation**: Consider for Phase 2 if custom image approach proves difficult
+
+### Option 3: Accept readOnlyRootFilesystem: false
+
+**Pros**:
+- No additional work
+- Keycloak works as-is
+
+**Cons**:
+- Reduced security posture
+- Fails security audits
+- Non-compliant with best practices
+
+**Recommendation**: Only as last resort
+
+## Testing Strategy
+
+### Test Cases
+
+1. **Container starts successfully**
+   ```bash
+   kubectl get pods -n staging-mcp-server-langgraph | grep keycloak
+   # Expected: All pods 2/2 Running
+   ```
+
+2. **Health checks pass**
+   ```bash
+   kubectl exec -it staging-keycloak-xxx -c keycloak -- curl http://localhost:9000/health
+   # Expected: {"status": "UP"}
+   ```
+
+3. **Read-only filesystem enforced**
+   ```bash
+   kubectl exec -it staging-keycloak-xxx -c keycloak -- touch /test
+   # Expected: touch: cannot touch '/test': Read-only file system
+   ```
+
+4. **Can write to mounted volumes**
+   ```bash
+   kubectl exec -it staging-keycloak-xxx -c keycloak -- touch /tmp/test
+   # Expected: Success
+   ```
+
+5. **Keycloak functionality works**
+   - Login to admin console
+   - Create test realm
+   - Create test client
+   - Test authentication flow
+
+### Rollback Plan
+
+If issues occur:
+
+```bash
+# Revert to previous image
+kubectl set image deployment/staging-keycloak \
+  keycloak=quay.io/keycloak/keycloak:23.0.0 \
+  -n staging-mcp-server-langgraph
+
+# Or revert entire configuration
+git revert <commit-sha>
+kubectl apply -k deployments/overlays/staging-gke
+```
+
+## Success Criteria
+
+- ✅ Keycloak pods start without errors
+- ✅ All health checks pass
+- ✅ `readOnlyRootFilesystem: true` enforced
+- ✅ Admin console accessible
+- ✅ Authentication flows work correctly
+- ✅ No filesystem write errors in logs
+- ✅ Security scans pass
+- ✅ Performance comparable to current setup
+
+## Timeline
+
+**Phase 1: Research & Prototype** (1-2 days)
+- Research Keycloak build optimization
+- Create prototype Dockerfile
+- Test locally with Docker
+
+**Phase 2: Build & Test** (1 day)
+- Build optimized image
+- Push to Artifact Registry
+- Test in development environment
+
+**Phase 3: Staging Deployment** (1 day)
+- Update staging configuration
+- Deploy and monitor
+- Run comprehensive tests
+
+**Phase 4: Production Deployment** (After 1 week stability)
+- Deploy to production
+- Monitor for issues
+- Document lessons learned
+
+## References
+
+- [Keycloak Server Installation](https://www.keycloak.org/server/installation)
+- [Keycloak on Kubernetes](https://www.keycloak.org/operator/installation)
+- [Quarkus Native Images](https://quarkus.io/guides/building-native-image)
+- [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+- [Stack Overflow: Running Keycloak with readOnlyRootFilesystem](https://stackoverflow.com/questions/75696255/running-keycloak-in-kubernetes-with-readonlyrootfilesystem-true)
+
+## Related Files
+
+- `deployments/overlays/staging-gke/keycloak-patch.yaml` - Current configuration
+- `deployments/base/keycloak-deployment.yaml` - Base deployment
+- `tests/deployment/test_configmap_secret_validation.py` - Validation tests
+
+---
+
+**Last Updated**: 2025-11-12
+**Status**: Planning Phase
+**Owner**: DevOps/Security Team
+**Priority**: Medium (Security Hardening)
