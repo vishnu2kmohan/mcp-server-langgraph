@@ -123,67 +123,46 @@ def mock_keycloak_client():
 
 
 @pytest.fixture(scope="function")
-def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga_client, mock_keycloak_client):
+def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock_keycloak_client):
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 3):
-    - Use monkeypatch with importlib.reload() to force fresh imports
-    - Router module caches get_current_user reference at import time
-    - Must reload router AFTER patching to capture patched version
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 4 - CRITICAL):
+    - Use app.dependency_overrides instead of monkeypatch
+    - Monkeypatch + reload causes FastAPI parameter name collision:
+      * Endpoint has parameter: request: CreateServicePrincipalRequest
+      * Mock get_current_user has parameter: request: Request
+      * FastAPI gets confused and looks for 'request' field in body → 422 error
+    - dependency_overrides avoids this issue and works reliably with pytest-xdist
 
-    CRITICAL INSIGHT:
-    When you do `from mcp_server_langgraph.api.service_principals import router`,
-    the router module executes:
-        from mcp_server_langgraph.auth.middleware import get_current_user
-    This captures the function reference BEFORE our monkeypatch.
+    ROOT CAUSE OF PREVIOUS FAILURES:
+    FastAPI introspects function signatures for dependency injection. When using
+    monkeypatch + reload, FastAPI sees the mock function signature with Request
+    parameter and gets confused with the endpoint's request parameter, causing:
+    {'detail': [{'type': 'missing', 'loc': ['body', 'request'], 'msg': 'Field required'}]}
 
-    Solution: Force module reload AFTER patching.
+    Solution: Use dependency_overrides which properly isolates dependencies.
     """
-    import importlib
-    import sys
-
     from fastapi import FastAPI
 
-    # Patch auth middleware FIRST
-    from mcp_server_langgraph.auth import middleware
-    from mcp_server_langgraph.core import dependencies
-
-    # Patch get_current_user
-    async def mock_get_current_user_async(*args, **kwargs):
-        return mock_current_user
-
-    monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user_async)
-
-    # Patch service principal manager getter
-    def mock_get_sp_manager_sync():
-        return mock_sp_manager
-
-    monkeypatch.setattr(dependencies, "get_service_principal_manager", mock_get_sp_manager_sync)
-
-    # Patch OpenFGA client getter
-    def mock_get_openfga_sync():
-        return mock_openfga_client
-
-    monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
-
-    # Patch Keycloak client getter
-    def mock_get_keycloak_sync():
-        return mock_keycloak_client
-
-    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_sync)
-
-    # CRITICAL: If router already imported, reload it to capture patched dependencies
-    if "mcp_server_langgraph.api.service_principals" in sys.modules:
-        router_module = sys.modules["mcp_server_langgraph.api.service_principals"]
-        importlib.reload(router_module)
-        router = router_module.router
-    else:
-        from mcp_server_langgraph.api.service_principals import router
+    from mcp_server_langgraph.api.service_principals import router
+    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import (
+        get_keycloak_client,
+        get_openfga_client,
+        get_service_principal_manager,
+    )
 
     # Create fresh FastAPI app
     app = FastAPI()
     app.include_router(router)
+
+    # Override dependencies using FastAPI's built-in mechanism
+    # This avoids parameter name collisions and works with pytest-xdist
+    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
+    app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
+    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
 
     # Create TestClient
     client = TestClient(app, raise_server_exceptions=False)
@@ -191,61 +170,38 @@ def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga
     yield client
 
     # Cleanup
+    app.dependency_overrides.clear()
     gc.collect()
 
 
 @pytest.fixture(scope="function")
-def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfga_client, mock_keycloak_client):
+def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, mock_keycloak_client):
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 3):
-    - Use monkeypatch with importlib.reload()
-    - Forces router to capture patched dependencies
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 4):
+    - Use app.dependency_overrides instead of monkeypatch
+    - Same fix as sp_test_client to avoid FastAPI parameter name collision
     """
-    import importlib
-    import sys
-
     from fastapi import FastAPI
 
-    # Patch auth middleware FIRST
-    from mcp_server_langgraph.auth import middleware
-    from mcp_server_langgraph.core import dependencies
-
-    # Patch get_current_user
-    async def mock_get_admin_user_async(*args, **kwargs):
-        return mock_admin_user
-
-    monkeypatch.setattr(middleware, "get_current_user", mock_get_admin_user_async)
-
-    # Patch manager getters
-    def mock_get_sp_manager_sync():
-        return mock_sp_manager
-
-    monkeypatch.setattr(dependencies, "get_service_principal_manager", mock_get_sp_manager_sync)
-
-    def mock_get_openfga_sync():
-        return mock_openfga_client
-
-    monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
-
-    # Patch Keycloak client getter
-    def mock_get_keycloak_sync():
-        return mock_keycloak_client
-
-    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_sync)
-
-    # CRITICAL: Reload router to capture patched dependencies
-    if "mcp_server_langgraph.api.service_principals" in sys.modules:
-        router_module = sys.modules["mcp_server_langgraph.api.service_principals"]
-        importlib.reload(router_module)
-        router = router_module.router
-    else:
-        from mcp_server_langgraph.api.service_principals import router
+    from mcp_server_langgraph.api.service_principals import router
+    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import (
+        get_keycloak_client,
+        get_openfga_client,
+        get_service_principal_manager,
+    )
 
     # Create fresh FastAPI app
     app = FastAPI()
     app.include_router(router)
+
+    # Override dependencies with admin user
+    app.dependency_overrides[get_current_user] = lambda: mock_admin_user
+    app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
+    app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
+    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
 
     # Create TestClient
     client = TestClient(app, raise_server_exceptions=False)
@@ -253,6 +209,7 @@ def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfg
     yield client
 
     # Cleanup
+    app.dependency_overrides.clear()
     gc.collect()
 
 
@@ -813,12 +770,6 @@ class TestServicePrincipalEndpointsIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="E2E infrastructure fixture not yet implemented. "
-        "Once test_infrastructure fixture with FastAPI app integration is ready, "
-        "this test will start passing and fail CI, requiring marker removal.",
-    )
     async def test_full_service_principal_lifecycle(self):
         """
         Test complete service principal lifecycle:

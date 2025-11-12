@@ -94,54 +94,31 @@ def mock_keycloak_client():
 
 
 @pytest.fixture(scope="function")
-def api_keys_test_client(monkeypatch, mock_api_key_manager, mock_keycloak_client, mock_current_user):
+def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
     """
     FastAPI TestClient with mocked dependencies for API keys endpoints.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
-    - Use monkeypatch instead of dependency_overrides (more reliable)
-    - Patch at module level BEFORE any router imports
-    - Avoids FastAPI dependency resolution timing issues
-    - Works consistently across pytest-xdist workers
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 3 - CRITICAL):
+    - Use app.dependency_overrides instead of monkeypatch
+    - Monkeypatch + reload causes FastAPI parameter name collision
+    - Same fix as service_principals tests
     """
+    import gc
+
     from fastapi import FastAPI
 
-    # Patch auth middleware and dependencies BEFORE importing router
-    from mcp_server_langgraph.auth import middleware
-    from mcp_server_langgraph.core import dependencies
-
-    # Patch get_current_user to return mock
-    async def mock_get_current_user_async(*args, **kwargs):
-        return mock_current_user
-
-    monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user_async)
-
-    # Patch API key manager getter
-    def mock_get_api_key_manager_sync():
-        return mock_api_key_manager
-
-    monkeypatch.setattr(dependencies, "get_api_key_manager", mock_get_api_key_manager_sync)
-
-    # Patch Keycloak client getter
-    def mock_get_keycloak_client_sync():
-        return mock_keycloak_client
-
-    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_client_sync)
-
-    # CRITICAL: Reload router to capture patched dependencies
-    import importlib
-    import sys
-
-    if "mcp_server_langgraph.api.api_keys" in sys.modules:
-        router_module = sys.modules["mcp_server_langgraph.api.api_keys"]
-        importlib.reload(router_module)
-        router = router_module.router
-    else:
-        from mcp_server_langgraph.api.api_keys import router
+    from mcp_server_langgraph.api.api_keys import router
+    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
     # Create fresh FastAPI app
     app = FastAPI()
     app.include_router(router)
+
+    # Override dependencies using FastAPI's built-in mechanism
+    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
+    app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
 
     # Create TestClient
     client = TestClient(app, raise_server_exceptions=False)
@@ -149,8 +126,7 @@ def api_keys_test_client(monkeypatch, mock_api_key_manager, mock_keycloak_client
     yield client
 
     # Cleanup
-    import gc
-
+    app.dependency_overrides.clear()
     gc.collect()
 
 

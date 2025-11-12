@@ -55,7 +55,17 @@ def bypass_authentication(monkeypatch, mock_user=None):
         }
 
     # Patch get_current_user at module level
-    async def mock_get_current_user(*args, **kwargs):
+    # CRITICAL: Must match real signature from middleware.py:818
+    # FastAPI introspects function signatures - *args, **kwargs causes 422 errors
+    # because FastAPI tries to inject them as query parameters!
+    from typing import Dict, Any, Optional
+    from fastapi import Request
+    from fastapi.security import HTTPAuthorizationCredentials
+
+    async def mock_get_current_user(
+        request: Request,
+        credentials: Optional[HTTPAuthorizationCredentials] = None,
+    ) -> Dict[str, Any]:
         return mock_user
 
     monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user)
