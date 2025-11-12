@@ -1,0 +1,526 @@
+---
+title: "ADR-0045: CI/CD Failure Prevention Framework"
+description: Comprehensive framework to prevent CI/CD pipeline failures through TDD, regression tests, and proactive validation
+date: 2025-11-12
+status: Accepted
+tags: [ci-cd, testing, quality, automation, prevention]
+---
+
+# ADR-0045: CI/CD Failure Prevention Framework
+
+## Status
+**Accepted** - Implemented 2025-11-12
+
+## Context
+
+On 2025-11-12, we experienced multiple CI/CD pipeline failures that blocked development:
+- **4 out of 10 workflows failed** on the same commit
+- **Pre-commit hooks** failed due to missing dependencies
+- **Terraform validation** failed with configuration errors
+- **E2E tests** failed due to infrastructure dependency issues
+- **Service principal tests** intermittently failed with 401 errors in parallel execution
+
+### Root Causes Identified
+
+1. **Documentation Code Blocks (253 untagged blocks)**
+   - Problem: Code blocks missing language tags in .mdx files
+   - Impact: Pre-commit validation hook failed
+   - Detection: Only caught in CI, not locally
+
+2. **Terraform Configuration Errors (6 files affected)**
+   - Duplicate `required_providers` blocks
+   - Invalid cross-variable references in validations
+   - Provider version conflicts (~> 5.0 vs ~> 6.0)
+   - Version incompatibility (required >= 1.7, CI had 1.6.6)
+
+3. **Pre-commit Hook Dependencies**
+   - Hook used `language: system` assuming pyyaml installed
+   - ModuleNotFoundError in CI environment
+   - No validation of hook dependencies vs script imports
+
+4. **Test Infrastructure Dependencies**
+   - E2E tests assumed Keycloak always available
+   - No graceful degradation when infrastructure missing
+   - Hard failures instead of skips in CI
+
+5. **Pytest-xdist State Pollution**
+   - FastAPI dependency overrides shared across workers
+   - Mock state accumulation
+   - Non-deterministic test failures (401 errors)
+
+### Consequences of Failures
+
+- **Development Blocked**: Cannot merge until CI passes
+- **Time Waste**: 4 hours spent diagnosing and fixing
+- **False Failures**: Tests fail for infrastructure reasons, not code issues
+- **Confidence Loss**: Team loses trust in CI reliability
+
+## Decision
+
+We adopt a **multi-layered CI/CD Failure Prevention Framework** based on TDD principles:
+
+### 1. Test-Driven Prevention (TDD for Infrastructure)
+
+**Principle**: Write regression tests before fixing issues, ensure tests fail without fix, then implement fix.
+
+#### Layer 1: Regression Test Suite
+Create comprehensive regression tests for all failure scenarios:
+
+```python
+# tests/regression/test_documentation_code_blocks.py
+def test_all_code_blocks_have_language_tags():
+    """
+    RED: 253 untagged blocks
+    GREEN: All blocks tagged
+    REFACTOR: Auto-fix script available
+    """
+    # Validates all .mdx files have tagged code blocks
+    # Fails immediately if any untagged blocks found
+```
+
+```python
+# tests/regression/test_terraform_configuration.py
+def test_no_duplicate_terraform_blocks():
+    """Prevents duplicate terraform{} blocks"""
+
+def test_variable_validations_only_reference_self():
+    """Prevents cross-variable validation references"""
+
+def test_no_conflicting_provider_versions():
+    """Ensures provider version alignment"""
+```
+
+```python
+# tests/regression/test_precommit_hook_dependencies.py
+def test_python_script_imports_match_hook_dependencies():
+    """Validates hook dependencies cover script imports"""
+
+def test_python_hooks_use_language_python():
+    """Ensures hooks use proper language configuration"""
+```
+
+**Benefits**:
+- Issues **cannot recur** without tests catching them
+- Tests document **exact failure scenarios**
+- New similar issues caught by pattern matching
+
+#### Layer 2: Proactive Health Checks
+
+Create `scripts/ci_health_check.py` - runs before commit/push:
+
+```bash
+python scripts/ci_health_check.py
+```
+
+**Checks**:
+- ✅ Documentation code blocks tagged
+- ✅ Terraform configurations valid
+- ✅ Pre-commit hook dependencies satisfied
+- ✅ Test infrastructure assumptions met
+- ✅ GitHub workflow structure valid
+
+**Integration Points**:
+1. Pre-commit hook (optional, fast checks)
+2. Manual pre-push validation
+3. CI early validation step (fail fast)
+
+#### Layer 3: Test Infrastructure Isolation
+
+**Pattern**: Tests declare dependencies, skip gracefully if unavailable
+
+```python
+@pytest.fixture(scope="module")
+def test_infrastructure_check(test_infrastructure):
+    """Check required infrastructure is running."""
+    if not test_infrastructure["ready"]:
+        pytest.skip("E2E infrastructure not available")
+    return True
+
+# Use in all E2E tests
+def test_user_login(test_user_credentials, test_infrastructure_check):
+    # Test only runs if Keycloak available
+    pass
+```
+
+**Benefits**:
+- Tests skip instead of fail when infrastructure missing
+- Clear distinction between code bugs and environment issues
+- Local development not blocked by missing services
+
+#### Layer 4: Pytest-xdist Isolation Patterns
+
+**Pattern**: Function-scoped fixtures with proper cleanup
+
+```python
+@pytest.fixture(scope="function")  # Fresh instance per test
+def sp_test_client(mock_sp_manager, mock_current_user):
+    app = FastAPI()
+
+    # Override dependencies BEFORE including router
+    app.dependency_overrides[bearer_scheme] = lambda: None
+    app.dependency_overrides[get_current_user] = mock_get_current_user_async
+
+    app.include_router(router)
+    client = TestClient(app)
+
+    yield client
+
+    # CRITICAL: Cleanup
+    app.dependency_overrides.clear()
+
+class TestClass:
+    def teardown_method(self):
+        gc.collect()  # Prevent mock accumulation
+```
+
+### 2. Configuration Management Standards
+
+#### Terraform Standards
+
+**Rule 1**: One terraform{} block per file
+```hcl
+terraform {
+  required_version = ">= 1.5"
+
+  required_providers {
+    google = { source = "hashicorp/google", version = "~> 6.0" }
+    random = { source = "hashicorp/random", version = "~> 3.0" }
+  }
+}
+```
+
+**Rule 2**: Variable validations only reference self
+```hcl
+variable "kms_key_name" {
+  validation {
+    # ❌ Cannot reference var.enable_cmek
+    # ✅ Only reference var.kms_key_name
+    condition = length(var.kms_key_name) > 0 || true
+  }
+}
+
+# Cross-variable validation at resource level:
+resource "example" "name" {
+  lifecycle {
+    precondition {
+      condition = !var.enable_cmek || var.kms_key_name != ""
+      error_message = "KMS key required when CMEK enabled"
+    }
+  }
+}
+```
+
+**Rule 3**: Align provider versions across modules
+- Use `~> 6.0` consistently (not mix of 5.0 and 6.0)
+- Document version choices in terraform/README.md
+- CI validates version alignment
+
+**Rule 4**: Terraform version compatible with CI
+- Minimum version must be <= CI version
+- CI runs Terraform 1.6.6 (as of 2025-11-12)
+- Modules can require >= 1.5 but not >= 1.7
+
+#### Pre-commit Hook Standards
+
+**Rule 1**: Python hooks use `language: python`
+```yaml
+- id: my-python-hook
+  entry: python3 scripts/my_script.py
+  language: python  # Not 'system'
+  additional_dependencies:
+    - pyyaml>=6.0.0
+    - requests>=2.31.0
+```
+
+**Rule 2**: Declare all script dependencies
+- Parse script imports
+- Add corresponding packages to additional_dependencies
+- Regression test validates alignment
+
+**Rule 3**: Provide descriptions
+```yaml
+- id: validate-workflow-test-deps
+  name: Validate Workflow Test Dependencies
+  description: |
+    Ensures GitHub Actions workflows install correct dependency extras.
+    Prevents runtime import errors in CI.
+```
+
+#### Documentation Standards
+
+**Rule 1**: All code blocks must have language tags
+````markdown
+✅ Good:
+```python
+def example():
+    pass
+```
+
+❌ Bad:
+```
+def example():
+    pass
+```
+````
+
+**Rule 2**: Use auto-fix for bulk changes
+```bash
+python scripts/add_code_block_languages.py docs/**/*.mdx
+```
+
+**Rule 3**: Pre-commit validates on commit
+- Catches new untagged blocks immediately
+- Provides fix suggestions
+- Can auto-fix with --fix flag
+
+### 3. Continuous Validation Pipeline
+
+```
+Local Development
+├── Pre-commit hooks (fast checks)
+│   ├── Code block language tags
+│   ├── Terraform fmt/validate
+│   └── Python import checks
+│
+├── Manual health check (optional)
+│   └── python scripts/ci_health_check.py
+│
+Push to GitHub
+├── Early CI validation
+│   ├── CI health check script
+│   ├── Regression test suite
+│   └── Infrastructure checks
+│
+├── Main CI/CD pipeline
+│   ├── Lint & format
+│   ├── Unit tests
+│   ├── Integration tests
+│   ├── E2E tests (skip if infra unavailable)
+│   └── Deployment
+│
+└── Post-deployment
+    └── Smoke tests
+```
+
+### 4. Failure Recovery Procedures
+
+When a CI failure occurs:
+
+**Step 1**: Capture the exact error
+```bash
+gh run view <run-id> --log-failed > failure.log
+```
+
+**Step 2**: Write failing regression test FIRST
+```python
+def test_prevent_issue_from_2025_11_12():
+    """
+    RED: Reproduce the exact failure
+    GREEN: Verify fix works
+    REFACTOR: Ensure can't recur
+    """
+    # Test that catches the issue
+```
+
+**Step 3**: Implement fix
+- Fix the immediate issue
+- Verify regression test passes
+- Add to CI health check if applicable
+
+**Step 4**: Document in ADR
+- What failed and why
+- How it was fixed
+- Prevention measures added
+
+**Step 5**: Share learnings
+- Team meeting discussion
+- Update onboarding docs
+- Add to troubleshooting guide
+
+## Implementation Details
+
+### File Structure
+```
+mcp-server-langgraph/
+├── tests/regression/
+│   ├── test_documentation_code_blocks.py        # New
+│   ├── test_terraform_configuration.py          # New
+│   ├── test_precommit_hook_dependencies.py      # New
+│   └── test_service_principal_test_isolation.py # New
+│
+├── scripts/
+│   ├── ci_health_check.py                       # New
+│   ├── add_code_block_languages.py              # Existing
+│   └── validation/
+│       └── validate_workflow_test_deps.py       # Fixed
+│
+├── .pre-commit-config.yaml                      # Updated
+│   └── language: python + additional_dependencies
+│
+├── terraform/
+│   ├── backend-setup-gcp/main.tf                # Fixed
+│   ├── modules/eks/variables.tf                 # Fixed
+│   ├── modules/github-actions-wif/versions.tf   # Fixed
+│   └── modules/azure-database/versions.tf       # Fixed
+│
+└── tests/e2e/
+    └── test_full_user_journey.py                # Fixed
+```
+
+### Regression Test Coverage
+
+| Category | Test File | Coverage |
+|----------|-----------|----------|
+| Documentation | `test_documentation_code_blocks.py` | 253 code blocks validated |
+| Terraform | `test_terraform_configuration.py` | 6 configuration issues |
+| Pre-commit | `test_precommit_hook_dependencies.py` | Hook dependency validation |
+| Test Isolation | `test_service_principal_test_isolation.py` | Pytest-xdist patterns |
+
+### CI Health Check Capabilities
+
+```bash
+# Quick check (< 5 seconds)
+python scripts/ci_health_check.py --quick
+
+# Full check (< 30 seconds)
+python scripts/ci_health_check.py
+
+# Auto-fix issues
+python scripts/ci_health_check.py --fix
+```
+
+**Exit Codes**:
+- `0`: All checks passed ✅
+- `1`: Failures found (blocks CI) ❌
+- `2`: Warnings found (should fix) ⚠️
+
+## Consequences
+
+### Positive
+
+1. **Prevents Recurrence**
+   - Issues from 2025-11-12 **cannot happen again**
+   - Regression tests catch violations immediately
+   - Similar patterns detected proactively
+
+2. **Faster Feedback**
+   - Issues caught locally before push
+   - CI health check fails in < 30 seconds
+   - No waiting for full CI pipeline
+
+3. **Better Developer Experience**
+   - Clear error messages with fix suggestions
+   - Auto-fix available for common issues
+   - Tests skip gracefully vs hard fail
+
+4. **Improved CI Reliability**
+   - Fewer false failures from infrastructure
+   - Deterministic test results
+   - Trust in CI decisions
+
+5. **Knowledge Preservation**
+   - Failure scenarios documented in tests
+   - Fix procedures documented in ADR
+   - Team learns from incidents
+
+### Negative
+
+1. **Additional Maintenance**
+   - Regression tests need maintenance
+   - Health check script needs updates
+   - More files to manage
+
+2. **Slightly Slower Commits**
+   - Pre-commit hooks add ~5 seconds
+   - Optional health check adds ~30 seconds
+   - Trade-off: Catch issues early vs commit speed
+
+3. **Learning Curve**
+   - Team needs to learn new tools
+   - Understand TDD for infrastructure
+   - Follow new patterns and conventions
+
+### Mitigation Strategies
+
+**For maintenance burden**:
+- Consolidate related tests in single files
+- Auto-generate tests where possible
+- Regular cleanup of obsolete tests
+
+**For commit speed**:
+- Use `--quick` flag for fast checks
+- Skip optional checks if in hurry
+- Run full checks before final push
+
+**For learning curve**:
+- Document all patterns with examples
+- Code review emphasizes patterns
+- Pair programming for complex scenarios
+
+## Alternatives Considered
+
+### Alternative 1: Manual Code Review Only
+- **Rejected**: Human error inevitable
+- Scaling issue as team grows
+- Inconsistent enforcement
+
+### Alternative 2: CI-Only Validation
+- **Rejected**: Slow feedback loop
+- Wastes CI resources
+- Blocks development during failures
+
+### Alternative 3: Auto-Fix Everything
+- **Rejected**: Can introduce subtle bugs
+- Hides underlying issues
+- Removes learning opportunities
+
+**Chosen**: Hybrid approach
+- Auto-fix for safe changes (code block tags)
+- Manual fix for complex changes (Terraform)
+- Always write regression test first
+
+## Success Metrics
+
+### Quantitative
+- **Zero recurrences** of 2025-11-12 issues
+- **< 1% false failure rate** in CI (down from ~40% on 2025-11-12)
+- **< 30 seconds** local validation time
+- **100% coverage** of regression test scenarios
+
+### Qualitative
+- Team **trusts CI results**
+- Developers **catch issues locally**
+- **Faster** debugging when failures occur
+- **Less time** spent on CI maintenance
+
+## References
+
+- [Pre-commit Hook Documentation](https://pre-commit.com/)
+- [Pytest-xdist Best Practices](https://pytest-xdist.readthedocs.io/)
+- [Terraform Variable Validation](https://www.terraform.io/language/values/variables#custom-validation-rules)
+- [FastAPI Testing Guide](https://fastapi.tiangolo.com/tutorial/testing/)
+
+## Related ADRs
+
+- **ADR-0016**: Property-Based Testing Strategy (test generation patterns)
+- **ADR-0017**: Error Handling Strategy (failure recovery)
+- **ADR-0018**: Semantic Versioning Strategy (CI/CD integration)
+
+## Changelog
+
+- **2025-11-12**: Initial implementation
+  - Created 4 regression test files
+  - Implemented CI health check script
+  - Fixed all identified CI/CD failures
+  - Documented preventive framework
+
+## Authors
+
+- Claude Code (Implementation)
+- Vishnu Mohan (Review and Approval)
+
+---
+
+**Last Updated**: 2025-11-12
+**Status**: Accepted and Implemented
+**Review Cycle**: Quarterly (next review: 2026-02-12)
