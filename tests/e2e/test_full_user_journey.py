@@ -13,6 +13,7 @@ Test Journeys:
 4. API Key Flow: Create → Use → Rotate → Revoke
 """
 
+import os
 from typing import Any, Dict
 
 import pytest
@@ -910,6 +911,10 @@ class TestPerformanceE2E:
     3. Bulk operations
     """
 
+    @pytest.mark.skipif(
+        os.getenv("PYTEST_XDIST_WORKER") is not None,
+        reason="Performance tests skipped in parallel mode due to memory overhead",
+    )
     @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_01_concurrent_users(self):
         """Test system with multiple concurrent users"""
@@ -921,6 +926,10 @@ class TestPerformanceE2E:
         # Verify all succeed
         # Measure response times
 
+    @pytest.mark.skipif(
+        os.getenv("PYTEST_XDIST_WORKER") is not None,
+        reason="Performance tests skipped in parallel mode due to memory overhead",
+    )
     @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_02_large_conversation(self, authenticated_session):
         """Test performance with large conversation history"""
@@ -932,6 +941,10 @@ class TestPerformanceE2E:
         # Verify response time < 2 seconds
         # Verify memory usage is reasonable
 
+    @pytest.mark.skipif(
+        os.getenv("PYTEST_XDIST_WORKER") is not None,
+        reason="Performance tests skipped in parallel mode due to memory overhead",
+    )
     @pytest.mark.xfail(strict=True, reason="Implement when performance testing is prioritized")
     async def test_03_bulk_search(self, authenticated_session):
         """Test search across many conversations"""
