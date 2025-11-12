@@ -313,7 +313,13 @@ repos:
       # Security Scanning (Trivy)
       - id: trivy-scan-k8s-manifests
         name: Trivy Security Scan for Kubernetes Manifests
-        entry: bash -c 'if ! command -v trivy &> /dev/null; then echo "⚠️  Trivy not installed - skipping security scan. Install: brew install trivy"; exit 0; fi; trivy config deployments --severity CRITICAL,HIGH --exit-code 1 --quiet || (echo "❌ Security vulnerabilities found. Run: trivy config deployments --severity CRITICAL,HIGH"; exit 1)'
+        entry: |
+          bash -c 'if ! command -v trivy &> /dev/null; then
+            echo "⚠️  Trivy not installed - skipping security scan. Install: brew install trivy";
+            exit 0;
+          fi;
+          trivy config deployments --severity CRITICAL,HIGH --exit-code 1 --quiet ||
+          (echo "❌ Security vulnerabilities found. Run: trivy config deployments --severity CRITICAL,HIGH"; exit 1)'
         language: system
         files: ^deployments/.*\.(yaml|yml)$
         pass_filenames: false

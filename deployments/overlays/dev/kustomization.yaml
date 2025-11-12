@@ -56,6 +56,23 @@ patches:
     target:
       kind: Ingress
       name: mcp-server-langgraph-sse
+  # GKE Autopilot compliance patches (CPU ratio <= 4.0)
+  - path: otel-collector-patch.yaml
+    target:
+      kind: Deployment
+      name: otel-collector
+  - path: qdrant-patch.yaml
+    target:
+      kind: Deployment
+      name: qdrant
+  - path: postgres-patch.yaml
+    target:
+      kind: StatefulSet
+      name: postgres
+  - path: redis-session-patch.yaml
+    target:
+      kind: StatefulSet
+      name: redis-session
 
 replicas:
   - name: mcp-server-langgraph

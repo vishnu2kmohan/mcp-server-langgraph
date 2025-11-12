@@ -420,6 +420,7 @@ markers = [
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
+    "staging: Staging environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
     "infrastructure: Infrastructure and deployment configuration tests",
     "diagnostic: Diagnostic and troubleshooting tests",

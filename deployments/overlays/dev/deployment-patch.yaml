@@ -9,7 +9,7 @@ spec:
       - name: mcp-server-langgraph
         resources:
           requests:
-            cpu: 100m
+            cpu: 125m  # Increased from 100m for GKE Autopilot compliance (125m/500m = 4.0 ratio)
             memory: 256Mi
           limits:
             cpu: 500m

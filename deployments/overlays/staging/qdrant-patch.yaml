@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+spec:
+  template:
+    spec:
+      containers:
+      - name: qdrant
+        # GKE Autopilot requires CPU limit/request ratio <= 4.0
+        # Updated from base (100m/1000m = 10.0) to comply with policy
+        resources:
+          requests:
+            cpu: 250m  # Increased from 100m to achieve 4.0 ratio (250m/1000m = 4.0)
+            memory: 256Mi
+            ephemeral-storage: 500Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+            ephemeral-storage: 1Gi

@@ -1,0 +1,588 @@
+---
+title: Version Migration Guide
+description: 'Step-by-step migration guides for upgrading between versions of MCP Server with LangGraph'
+seoTitle: "MCP Server Migration Guide - Upgrade Between Versions"
+seoDescription: "Complete migration guides for upgrading MCP Server with LangGraph including breaking changes, deprecations, and upgrade paths"
+keywords: ["migration", "upgrade", "version", "breaking changes", "deprecated", "MCP Server"]
+contentType: "guide"
+icon: 'arrow-up'
+---
+
+# Version Migration Guide
+
+This guide provides step-by-step instructions for migrating between major versions of MCP Server with LangGraph.
+
+## Quick Navigation
+
+<CardGroup cols={2}>
+  <Card title="v2.7 → v2.8" icon="arrow-right" href="#v27-to-v28">
+    Latest stable migration (Authentication updates)
+  </Card>
+  <Card title="v2.6 → v2.7" icon="arrow-right" href="#v26-to-v27">
+    LangGraph 0.6+ upgrade
+  </Card>
+  <Card title="v2.5 → v2.6" icon="arrow-right" href="#v25-to-v26">
+    OpenFGA integration
+  </Card>
+  <Card title="Future Migrations" icon="arrow-right" href="#future-migrations">
+    Upcoming changes and deprecations
+  </Card>
+</CardGroup>
+
+---
+
+## v2.7 → v2.8 Migration
+
+**Release Date**: 2025-11-12
+**Upgrade Time**: ~15-30 minutes
+**Complexity**: Low (Backward compatible)
+
+### Overview
+
+Version 2.8.0 introduces enhanced authentication capabilities including:
+- Service principals for machine-to-machine authentication
+- API key management with JWT exchange
+- Identity federation for multi-tenant scenarios
+- SCIM 2.0 provisioning support
+
+**Good News**: v2.8 is **fully backward compatible** with v2.7. Existing deployments will continue to work without changes.
+
+### What's New
+
+1. **Service Principals** - Machine-to-machine authentication
+2. **API Key Management** - Long-lived credentials with JWT exchange
+3. **Identity Federation** - Multi-tenant identity support
+4. **SCIM Provisioning** - Automated user provisioning
+5. **Enhanced Session Management** - Improved session handling with Redis
+
+### Breaking Changes
+
+✅ **None** - v2.8 is fully backward compatible
+
+### Deprecations
+
+⚠️ The following features are deprecated and will be removed in v3.0:
+
+1. **`AUTH_PROVIDER=simple`** (Deprecated)
+   - Use `AUTH_PROVIDER=keycloak` with service principals instead
+   - Simple auth lacks audit logging and compliance features
+
+2. **Environment-based auth configuration** (Soft deprecation)
+   - Migrate to Keycloak-managed credentials when possible
+   - Environment variables still supported but discouraged for production
+
+### Migration Steps
+
+#### Step 1: Update Dependencies
+
+```bash
+# Update via uv
+uv sync
+
+# Or update pyproject.toml
+[project]
+version = "2.8.0"
+
+dependencies = [
+    "langgraph>=0.6.10,<0.7.0",
+    "langchain-core>=0.3.39,<0.4.0",
+    # ... other dependencies
+]
+```
+
+#### Step 2: Review New Authentication Features (Optional)
+
+If you want to adopt the new authentication features:
+
+##### Enable Service Principals
+
+```bash
+# In .env
+AUTH_PROVIDER=keycloak
+KEYCLOAK_URL=http://keycloak:8080
+KEYCLOAK_REALM=mcp-server
+SERVICE_PRINCIPAL_ENABLED=true
+```
+
+```python
+# Create a service principal
+from mcp_server_langgraph.auth.service_principal import create_service_principal
+
+principal = await create_service_principal(
+    name="data-pipeline",
+    description="Batch data processing service",
+    roles=["service", "data:write"],
+)
+
+# Use in your application
+headers = {
+    "X-Service-Principal-ID": principal.id,
+    "X-Service-Principal-Secret": principal.secret,
+}
+```
+
+##### Enable API Key Management
+
+```bash
+# In .env
+API_KEY_ENABLED=true
+API_KEY_JWT_EXCHANGE=true
+```
+
+```python
+# Create API key
+from mcp_server_langgraph.auth.api_key import create_api_key
+
+api_key = await create_api_key(
+    name="integration-key",
+    user_id="user-123",
+    scopes=["read", "write"],
+    expires_in_days=90,
+)
+
+# Exchange for JWT
+jwt_token = await exchange_api_key_for_jwt(api_key.key)
+```
+
+#### Step 3: Update Configuration (If Using New Features)
+
+If adopting service principals, update your deployment configs:
+
+```yaml
+# deployments/base/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+data:
+  SERVICE_PRINCIPAL_ENABLED: "true"
+  API_KEY_ENABLED: "true"
+```
+
+#### Step 4: Test the Upgrade
+
+```bash
+# Run tests to verify compatibility
+make test
+
+# Test authentication flow
+make test-integration
+
+# Verify service principals (if enabled)
+pytest tests/integration/test_service_principals.py -v
+```
+
+#### Step 5: Deploy
+
+```bash
+# For development
+make deploy-dev
+
+# For staging
+make deploy-staging
+
+# For production (with caution)
+make deploy-production
+```
+
+#### Step 6: Verify Deployment
+
+```bash
+# Check health endpoint
+curl https://your-domain/health
+
+# Verify authentication still works
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  https://your-domain/api/user/profile
+
+# Test service principal (if enabled)
+curl -H "X-Service-Principal-ID: $PRINCIPAL_ID" \
+     -H "X-Service-Principal-Secret: $PRINCIPAL_SECRET" \
+     https://your-domain/api/agents/list
+```
+
+### Rollback Procedure
+
+If you encounter issues:
+
+```bash
+# Kubernetes rollback
+kubectl rollout undo deployment/mcp-server -n mcp-server
+
+# Helm rollback
+helm rollback mcp-server -n mcp-server
+
+# Docker Compose rollback
+docker-compose down
+git checkout v2.7.0
+docker-compose up -d
+```
+
+### Common Migration Issues
+
+#### Issue: Authentication Fails After Upgrade
+
+**Symptom**: `401 Unauthorized` for previously working requests
+
+**Solution**:
+```bash
+# 1. Verify Keycloak is running
+docker-compose logs keycloak
+
+# 2. Check JWT public key URL
+echo $AUTH_PUBLIC_KEY_URL
+
+# 3. Restart services to reload configuration
+kubectl rollout restart deployment/mcp-server -n mcp-server
+```
+
+#### Issue: Service Principal Creation Fails
+
+**Symptom**: `KeycloakAdminError: Insufficient permissions`
+
+**Solution**:
+```bash
+# Ensure Keycloak admin credentials are set
+echo $KEYCLOAK_ADMIN_USERNAME
+echo $KEYCLOAK_ADMIN_PASSWORD
+
+# Grant required permissions
+kubectl apply -f deployments/base/rbac.yaml
+```
+
+---
+
+## v2.6 → v2.7 Migration
+
+**Release Date**: 2025-10-15
+**Upgrade Time**: ~30-45 minutes
+**Complexity**: Medium (LangGraph API changes)
+
+### Overview
+
+Version 2.7.0 upgrades LangGraph from 0.2.x to 0.6.x, bringing significant performance improvements and new features.
+
+### Breaking Changes
+
+#### 1. StateGraph API Changes
+
+**Before (v2.6)**:
+```python
+from langgraph.graph import StateGraph, END
+
+graph = StateGraph(AgentState)
+graph.add_node("agent", agent_node)
+graph.add_edge("agent", END)
+```
+
+**After (v2.7)**:
+```python
+from langgraph.graph import StateGraph, START, END
+
+graph = StateGraph(AgentState)
+graph.add_node("agent", agent_node)
+graph.add_edge(START, "agent")  # Explicit START
+graph.add_edge("agent", END)
+```
+
+#### 2. Checkpointer Interface
+
+**Before (v2.6)**:
+```python
+from langgraph.checkpoint import MemorySaver
+
+checkpointer = MemorySaver()
+```
+
+**After (v2.7)**:
+```python
+from langgraph.checkpoint.memory import MemorySaver
+
+checkpointer = MemorySaver()  # Import path changed
+```
+
+#### 3. Tool Calling Convention
+
+**Before (v2.6)**:
+```python
+@tool
+def my_tool(query: str) -> str:
+    """Tool description"""
+    return result
+```
+
+**After (v2.7)**:
+```python
+from langchain_core.tools import tool
+
+@tool
+def my_tool(query: str) -> str:
+    """Tool description"""
+    return result
+# Import from langchain_core, not langgraph
+```
+
+### Migration Steps
+
+#### Step 1: Update Dependencies
+
+```bash
+# Update pyproject.toml
+[project]
+dependencies = [
+    "langgraph>=0.6.10,<0.7.0",  # Was: >=0.2.28,<0.3.0
+    "langchain-core>=0.3.0,<0.4.0",
+]
+
+# Sync dependencies
+uv lock
+uv sync
+```
+
+#### Step 2: Update Code
+
+Run our automated migration script:
+
+```bash
+# Dry run to see changes
+python scripts/migrate_to_langgraph_0_6.py --dry-run
+
+# Apply changes
+python scripts/migrate_to_langgraph_0_6.py --apply
+```
+
+Or manually update:
+
+```python
+# Update imports
+-from langgraph.checkpoint import MemorySaver
++from langgraph.checkpoint.memory import MemorySaver
+
+-from langgraph.graph import StateGraph, END
++from langgraph.graph import StateGraph, START, END
+
+# Add explicit START edges
+graph = StateGraph(AgentState)
++graph.add_edge(START, "first_node")  # Add this
+graph.add_node("first_node", first_node_fn)
+```
+
+#### Step 3: Update Tests
+
+```bash
+# Run tests to identify issues
+pytest tests/ -v
+
+# Fix failing tests by updating imports and API usage
+```
+
+#### Step 4: Deploy and Verify
+
+```bash
+# Deploy to staging first
+make deploy-staging
+
+# Run integration tests
+make test-integration
+
+# If successful, deploy to production
+make deploy-production
+```
+
+---
+
+## v2.5 → v2.6 Migration
+
+**Release Date**: 2025-09-20
+**Upgrade Time**: ~45-60 minutes
+**Complexity**: High (New authorization system)
+
+### Overview
+
+Version 2.6.0 introduces OpenFGA for fine-grained authorization, replacing the simple role-based system.
+
+### Breaking Changes
+
+#### 1. Authorization Model
+
+**Before (v2.5)**: Simple role checks
+```python
+@requires_role("admin")
+def admin_endpoint():
+    pass
+```
+
+**After (v2.6)**: OpenFGA relationship-based authorization
+```python
+@requires_permission("document:123", "read")
+def read_document(doc_id: str):
+    pass
+```
+
+#### 2. Configuration
+
+**New required environment variables**:
+```bash
+OPENFGA_ENABLED=true
+OPENFGA_API_URL=http://openfga:8080
+OPENFGA_STORE_ID=01HXXX...
+OPENFGA_AUTH_MODEL_ID=01HYYY...
+```
+
+### Migration Steps
+
+#### Step 1: Set Up OpenFGA
+
+```bash
+# Start OpenFGA
+docker-compose up -d openfga
+
+# Create authorization store
+curl -X POST http://localhost:8080/stores \
+  -H "Content-Type: application/json" \
+  -d '{"name": "mcp-server"}'
+
+# Upload authorization model
+curl -X POST http://localhost:8080/stores/$STORE_ID/authorization-models \
+  -H "Content-Type: application/json" \
+  -d @config/openfga-model.json
+```
+
+#### Step 2: Migrate Role Mappings
+
+```python
+# Old role assignments
+users = {
+    "alice": ["admin", "user"],
+    "bob": ["user"],
+}
+
+# New OpenFGA tuples
+tuples = [
+    ("user:alice", "admin", "organization:acme"),
+    ("user:alice", "member", "organization:acme"),
+    ("user:bob", "member", "organization:acme"),
+]
+
+# Write tuples
+for user, relation, object in tuples:
+    write_tuple(user, relation, object)
+```
+
+#### Step 3: Update Authorization Checks
+
+```python
+# Before (v2.5)
+if user.has_role("admin"):
+    allow()
+
+# After (v2.6)
+if await check_permission(f"user:{user.id}", "admin", "organization:acme"):
+    allow()
+```
+
+#### Step 4: Test Migration
+
+```bash
+# Test authorization
+pytest tests/integration/test_openfga.py -v
+
+# Verify role mappings
+python scripts/verify_openfga_migration.py
+```
+
+---
+
+## Future Migrations
+
+### Upcoming in v3.0 (Planned Q2 2026)
+
+**Breaking Changes**:
+- Remove deprecated `AUTH_PROVIDER=simple`
+- Require Python 3.12+ (drop 3.10, 3.11)
+- Replace LangChain with LangGraph-native components
+- Unified configuration system (remove env var sprawl)
+
+**Deprecations to Address**:
+- Migrate from environment-based auth to Keycloak
+- Update custom tools to use new Tool API
+- Replace manual checkpointing with built-in persistence
+
+**Preparation**:
+1. Audit usage of deprecated features
+2. Plan Keycloak migration timeline
+3. Test with Python 3.12
+
+### Deprecation Timeline
+
+| Feature | Deprecated In | Removed In | Migration Path |
+|---------|---------------|------------|----------------|
+| `AUTH_PROVIDER=simple` | v2.8 | v3.0 | Use Keycloak + service principals |
+| Python 3.10 | v2.8 | v3.0 | Upgrade to Python 3.12 |
+| Environment auth config | v2.8 | v3.0 | Use Keycloak-managed credentials |
+| Old Tool API | v2.6 | v3.0 | Use `@tool` from langchain_core |
+
+---
+
+## Migration Best Practices
+
+### Pre-Migration Checklist
+
+- [ ] Read release notes and changelog
+- [ ] Review breaking changes
+- [ ] Test upgrade in development environment
+- [ ] Back up production database
+- [ ] Plan rollback procedure
+- [ ] Schedule maintenance window
+
+### During Migration
+
+1. **Test First**: Always test in dev/staging before production
+2. **Incremental Rollout**: Deploy to subset of users first
+3. **Monitor Closely**: Watch metrics and logs during deployment
+4. **Have Rollback Ready**: Keep previous version deployments ready
+
+### Post-Migration Validation
+
+```bash
+# 1. Check application health
+curl https://your-domain/health
+
+# 2. Verify authentication
+curl -H "Authorization: Bearer $TOKEN" \
+  https://your-domain/api/user/profile
+
+# 3. Test core workflows
+pytest tests/e2e/ -v
+
+# 4. Monitor error rates
+# Check Grafana dashboards
+
+# 5. Verify data integrity
+python scripts/validate_migration.py
+```
+
+---
+
+## Getting Help
+
+If you encounter issues during migration:
+
+1. **Check Migration Issues**: [GitHub Issues filtered by migration](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues?q=is%3Aissue+label%3Amigration)
+2. **Review Changelog**: [CHANGELOG.md](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHANGELOG.md)
+3. **Ask Community**: [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
+4. **Report Issues**: [Create migration issue](https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/new?labels=migration)
+
+## Related Guides
+
+<CardGroup cols={3}>
+  <Card title="Troubleshooting" icon="wrench" href="/troubleshooting/overview">
+    Common migration issues
+  </Card>
+  <Card title="Version Compatibility" icon="check-circle" href="/deployment/version-compatibility">
+    Component version matrix
+  </Card>
+  <Card title="Release Notes" icon="scroll" href="/releases/overview">
+    Detailed release information
+  </Card>
+</CardGroup>
