@@ -28,8 +28,14 @@ spec:
             memory: 128Mi
             ephemeral-storage: 1Gi
         securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
           runAsUser: 10000
           runAsGroup: 10000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
 
       containers:
       - name: keycloak
@@ -44,9 +50,14 @@ spec:
             memory: 2Gi
             ephemeral-storage: 2Gi
         securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
           runAsUser: 10000
           runAsGroup: 10000
           readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         volumeMounts:
           - name: tmp
             mountPath: /tmp

@@ -154,7 +154,7 @@ spec:
             ephemeral-storage: 1Gi
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:
@@ -166,10 +166,22 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /opt/keycloak/data/tmp
+        - name: work-dir
+          mountPath: /opt/keycloak/data
+        - name: providers
+          mountPath: /opt/keycloak/providers
+        - name: themes
+          mountPath: /opt/keycloak/themes
       volumes:
       - name: tmp
         emptyDir: {}
       - name: cache
+        emptyDir: {}
+      - name: work-dir
+        emptyDir: {}
+      - name: providers
+        emptyDir: {}
+      - name: themes
         emptyDir: {}
       affinity:
         podAntiAffinity:

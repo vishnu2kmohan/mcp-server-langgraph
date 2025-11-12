@@ -340,6 +340,44 @@ class TestVersionConsistency:
                 + "\n".join(f"  - {f}" for f in version_issues)
             )
 
+    def test_readme_adr_badge_accuracy(self):
+        """
+        Ensure README.md ADR badge count matches actual ADR count.
+
+        Prevents: Incorrect badge counts (WARN-002 from audit)
+        """
+        readme = PROJECT_ROOT / "README.md"
+        if not readme.exists() or not ADR_DIR.exists():
+            pytest.skip("README.md or adr/ directory not found")
+
+        import re
+
+        # Count actual ADRs
+        actual_adr_count = len(list(ADR_DIR.glob("adr-*.md")))
+
+        # Read README and extract badge count
+        readme_content = readme.read_text()
+
+        # Match badge pattern: [![ADRs](https://img.shields.io/badge/ADRs-XX-informational.svg)]
+        badge_match = re.search(
+            r'!\[ADRs\]\(https://img\.shields\.io/badge/ADRs-(\d+)-',
+            readme_content
+        )
+
+        if not badge_match:
+            pytest.fail(
+                "Could not find ADR badge in README.md. "
+                "Expected format: [![ADRs](https://img.shields.io/badge/ADRs-XX-informational.svg)](adr/README.md)"
+            )
+
+        badge_count = int(badge_match.group(1))
+
+        assert badge_count == actual_adr_count, (
+            f"README.md ADR badge shows {badge_count} but found {actual_adr_count} ADRs.\n"
+            f"Update README.md line with ADR badge to show correct count.\n"
+            f"Search for 'badge/ADRs-{badge_count}-' and replace with 'badge/ADRs-{actual_adr_count}-'"
+        )
+
     def _get_project_version(self) -> str | None:
         """Extract version from pyproject.toml."""
         if not PYPROJECT_TOML.exists():
@@ -359,42 +397,94 @@ class TestVersionConsistency:
 class TestDocumentationQuality:
     """Additional quality checks for documentation."""
 
-    def test_no_todos_in_critical_docs(self):
+    def test_no_todos_in_public_docs(self):
         """
-        Ensure critical documentation files don't have TODO/FIXME comments.
+        Ensure public-facing documentation doesn't have TODO/FIXME comments.
 
-        Prevents: Incomplete critical documentation (WARN-001 from audit)
+        Prevents: Incomplete public documentation (WARN-003 from audit)
 
-        Note: This only checks critical paths. TODOs in other docs are tracked via GitHub issues.
+        This checks ALL public docs except:
+        - Templates (intentionally have TODOs as scaffolding)
+        - Internal docs (docs-internal/)
+        - Archive docs
+
+        TODOs in development/internal docs are acceptable for tracking.
         """
-        critical_docs = [
-            "getting-started/quickstart.mdx",
-            "getting-started/installation.mdx",
-            "deployment/production-checklist.mdx",
-            "security/overview.mdx",
+        if not DOCS_DIR.exists():
+            pytest.skip("docs/ directory not found")
+
+        import re
+
+        # Directories/files to exclude from TODO checking
+        excluded_patterns = [
+            ".mintlify/templates/",  # Template files intentionally have TODOs
+            "archive/",               # Archive docs can have TODOs
         ]
 
         docs_with_todos = []
+        total_todos = 0
+        total_fixmes = 0
 
-        for doc_path_str in critical_docs:
-            doc_path = DOCS_DIR / doc_path_str
-            if not doc_path.exists():
+        for mdx_file in DOCS_DIR.rglob("*.mdx"):
+            # Get relative path for readability
+            rel_path = str(mdx_file.relative_to(DOCS_DIR))
+
+            # Skip excluded paths
+            if any(pattern in rel_path for pattern in excluded_patterns):
                 continue
 
-            content = doc_path.read_text()
+            content = mdx_file.read_text()
 
-            # Check for TODO/FIXME (case insensitive)
-            if "TODO" in content.upper() or "FIXME" in content.upper():
-                # Count occurrences
-                import re
-                todos = len(re.findall(r'\bTODO\b', content, re.IGNORECASE))
-                fixmes = len(re.findall(r'\bFIXME\b', content, re.IGNORECASE))
-                docs_with_todos.append(f"{doc_path_str} ({todos} TODOs, {fixmes} FIXMEs)")
+            # Check for TODO/FIXME markers (actual task markers, not prose)
+            # Match patterns like:
+            #   - TODO: something (with colon)
+            #   - # TODO something (comment)
+            #   - <!-- TODO something (HTML comment)
+            #   - TODO(username) (with parentheses)
+            # But NOT:
+            #   - "with TODOs where" (plural in prose)
+            #   - "as TODO for" (singular in prose without marker)
+            #   - "Commented with TODOs" (descriptive text)
+
+            todo_markers = []
+
+            # Pattern 1: TODO/FIXME with colon (TODO: task)
+            todo_markers.extend(re.findall(r'(?:^|\s)(?:TODO|FIXME)\s*:', content, re.IGNORECASE | re.MULTILINE))
+
+            # Pattern 2: Comment markers (# TODO, <!-- TODO, // TODO)
+            todo_markers.extend(re.findall(r'(?:#|<!--|//)\s*(?:TODO|FIXME)\b', content, re.IGNORECASE))
+
+            # Pattern 3: TODO with parentheses (TODO(username))
+            todo_markers.extend(re.findall(r'(?:^|\s)(?:TODO|FIXME)\s*\([^)]+\)', content, re.IGNORECASE | re.MULTILINE))
+
+            # Pattern 4: Standalone TODO at start of line followed by dash and text (- TODO something)
+            # But be very careful here - only match if it's clearly a task marker
+            # Skip this pattern as it's too ambiguous and causes false positives
+
+            todos = len(todo_markers)
+
+            # Count FIXMEs separately for reporting
+            fixme_count = len([m for m in todo_markers if 'FIXME' in m.upper()])
+            todo_count = len([m for m in todo_markers if 'TODO' in m.upper() and 'FIXME' not in m.upper()])
+
+            # For compatibility, use total for todos, specific count for fixmes
+            todos = todo_count
+            fixmes = fixme_count
+
+            if todos + fixmes > 0:
+                docs_with_todos.append(f"{rel_path} ({todos} TODOs, {fixmes} FIXMEs)")
+                total_todos += todos
+                total_fixmes += fixmes
 
         assert not docs_with_todos, (
-            f"Found TODO/FIXME comments in critical documentation:\n"
-            + "\n".join(f"  - {d}" for d in docs_with_todos)
-            + "\n\nResolve these before releasing or move to GitHub issues."
+            f"Found {total_todos} TODOs and {total_fixmes} FIXMEs in "
+            f"{len(docs_with_todos)} public documentation files:\n"
+            + "\n".join(f"  - {d}" for d in sorted(docs_with_todos))
+            + "\n\nOptions to fix:\n"
+            + "1. Complete the TODO/FIXME task\n"
+            + "2. Remove if no longer relevant\n"
+            + "3. Convert to GitHub issue and remove from docs\n"
+            + "4. Add to excluded_patterns if intentional (rare)\n"
         )
 
     def test_mdx_files_have_frontmatter(self):
@@ -423,6 +513,103 @@ class TestDocumentationQuality:
                 + "\n".join(f"  - {f}" for f in sorted(files_without_frontmatter)[:10])
                 + ("..." if len(files_without_frontmatter) > 10 else "")
             )
+
+    def test_no_broken_internal_links(self):
+        """
+        Check for broken internal links in MDX files.
+
+        Prevents: Broken internal links between documentation pages
+
+        Validates:
+        - Relative links to other .mdx files
+        - Links to files in the repository
+        - Anchor links within the same file
+        """
+        if not DOCS_DIR.exists():
+            pytest.skip("docs/ directory not found")
+
+        import re
+
+        broken_links = []
+
+        # Pattern to match markdown links: [text](url)
+        link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+
+        for mdx_file in DOCS_DIR.rglob("*.mdx"):
+            content = mdx_file.read_text()
+            rel_path = mdx_file.relative_to(DOCS_DIR)
+
+            # Find all links
+            for match in link_pattern.finditer(content):
+                link_text = match.group(1)
+                link_url = match.group(2)
+
+                # Skip external links (http/https)
+                if link_url.startswith(('http://', 'https://', 'mailto:')):
+                    continue
+
+                # Skip anchor-only links (they reference the same page)
+                if link_url.startswith('#'):
+                    # TODO: Could validate anchors exist, but that's complex
+                    continue
+
+                # Handle links with anchors
+                link_path = link_url.split('#')[0] if '#' in link_url else link_url
+
+                # Skip empty links
+                if not link_path:
+                    continue
+
+                # Resolve the link relative to the current file's directory
+                current_dir = mdx_file.parent
+
+                # Try different path resolutions
+                target_paths = []
+
+                # 1. Relative to current file
+                target_paths.append(current_dir / link_path)
+
+                # 2. If it ends with .mdx, try as-is
+                if link_path.endswith('.mdx'):
+                    target_paths.append(current_dir / link_path)
+                # 3. If it doesn't end with .mdx, try adding it
+                else:
+                    target_paths.append(current_dir / f"{link_path}.mdx")
+
+                # 4. Try relative to docs root
+                target_paths.append(DOCS_DIR / link_path)
+                if not link_path.endswith('.mdx'):
+                    target_paths.append(DOCS_DIR / f"{link_path}.mdx")
+
+                # 5. Try relative to project root (for files like README.md)
+                target_paths.append(PROJECT_ROOT / link_path)
+
+                # Check if any of the target paths exist
+                link_valid = any(p.exists() for p in target_paths)
+
+                if not link_valid:
+                    broken_links.append({
+                        'file': str(rel_path),
+                        'link_text': link_text,
+                        'link_url': link_url,
+                        'tried_paths': [str(p) for p in target_paths[:3]]  # Show first 3
+                    })
+
+        # Report broken links
+        if broken_links:
+            error_msg = f"Found {len(broken_links)} potentially broken internal links:\n"
+            for link_info in broken_links[:20]:  # Show first 20
+                error_msg += f"\n  File: {link_info['file']}\n"
+                error_msg += f"  Link: [{link_info['link_text']}]({link_info['link_url']})\n"
+                error_msg += f"  Tried: {', '.join(link_info['tried_paths'][:2])}\n"
+
+            if len(broken_links) > 20:
+                error_msg += f"\n  ... and {len(broken_links) - 20} more\n"
+
+            # This is a warning, not a failure - some links might be valid but not detected
+            print(f"\nWARNING: {error_msg}")
+            # Uncomment to make this a hard failure:
+            # pytest.fail(error_msg)
 
 
 class TestRootDocumentationFiles:

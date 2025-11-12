@@ -352,6 +352,135 @@ from mcp_server_langgraph.core.dependencies import (
 
 ---
 
+## Keycloak Mocking for Contract Tests
+
+**Context**: Contract tests validate router registration and API structure without testing authentication logic.
+
+### Issue: Keycloak Connection Failures in CI
+
+**Symptom**: Contract tests fail with `httpx.ConnectError: All connection attempts failed`
+
+**Root Cause**: Tests import the production app which attempts to connect to Keycloak during initialization
+
+**Example Failure**:
+```python
+# Contract test in tests/api/test_router_registration.py
+def test_api_keys_create_endpoint_exists(test_client):
+    response = test_client.post("/api/v1/api-keys/", json={"name": "test"})
+    # FAILS: httpx.ConnectError - Keycloak not running in CI
+```
+
+### Solution: MCP_SKIP_AUTH Environment Variable
+
+Use `monkeypatch.setenv("MCP_SKIP_AUTH", "true")` to bypass Keycloak initialization:
+
+```python
+@pytest.fixture
+def test_client(monkeypatch):
+    """
+    FastAPI TestClient for contract tests with authentication bypassed.
+
+    TDD Context:
+    - RED: Tests failed with Keycloak connection errors in CI
+    - GREEN: Set MCP_SKIP_AUTH=true to bypass auth during app import
+    - REFACTOR: This pattern prevents external dependencies in contract tests
+
+    The MCP_SKIP_AUTH environment variable must be set BEFORE importing
+    the app, as Keycloak client initialization happens during module import.
+    """
+    # CRITICAL: Set env var BEFORE importing app
+    monkeypatch.setenv("MCP_SKIP_AUTH", "true")
+
+    # Now safe to import - Keycloak initialization will be skipped
+    from mcp_server_langgraph.mcp.server_streamable import app
+
+    return TestClient(app)
+```
+
+### Why This Works
+
+1. **app module imports Keycloak client** during initialization
+2. **Keycloak client checks MCP_SKIP_AUTH** before attempting connection
+3. **If MCP_SKIP_AUTH=true**, Keycloak client returns mock/no-op instance
+4. **Contract tests can run** without external Keycloak service
+
+### When to Use This Pattern
+
+✅ **Use MCP_SKIP_AUTH for**:
+- Contract tests (router registration, OpenAPI schema)
+- API structure tests (endpoint existence, HTTP methods)
+- Tests validating response schemas (not authentication logic)
+
+❌ **Don't use MCP_SKIP_AUTH for**:
+- Authentication/authorization tests
+- Integration tests requiring real Keycloak
+- End-to-end tests with full auth flow
+
+### Examples from This Project
+
+**Contract Tests** (`tests/api/test_router_registration.py`):
+```python
+@pytest.fixture
+def test_client(monkeypatch):
+    monkeypatch.setenv("MCP_SKIP_AUTH", "true")
+    from mcp_server_langgraph.mcp.server_streamable import app
+    return TestClient(app)
+
+class TestEndpointAccessibility:
+    def test_api_keys_create_endpoint_exists(self, test_client):
+        # Test only validates endpoint exists, not auth logic
+        response = test_client.post("/api/v1/api-keys/", json={"name": "test"})
+        assert response.status_code != 404  # Endpoint registered
+```
+
+**API Versioning Tests** (`tests/api/test_api_versioning.py`):
+```python
+@pytest.fixture
+def test_client(monkeypatch):
+    monkeypatch.setenv("MCP_SKIP_AUTH", "true")
+    from mcp_server_langgraph.mcp.server_streamable import app
+    return TestClient(app)
+
+class TestVersionNegotiation:
+    def test_version_header_accepted(self, test_client):
+        # Test only validates version header handling
+        response = test_client.get("/api/v1/api-keys/",
+                                   headers={"X-API-Version": "1.0"})
+        assert response.status_code != 400  # Header accepted
+```
+
+### Troubleshooting
+
+**Issue**: Still getting Keycloak connection errors
+
+**Check**:
+1. Environment variable set BEFORE import: ✅ `monkeypatch.setenv()` before `from ... import app`
+2. Variable name correct: ✅ `MCP_SKIP_AUTH` (not `SKIP_AUTH`)
+3. Value is string "true": ✅ `"true"` (not boolean `True`)
+
+**Issue**: Tests pass locally but fail in CI
+
+**Cause**: Local environment has Keycloak running, CI doesn't
+
+**Solution**: Always use `MCP_SKIP_AUTH` for contract tests to ensure CI consistency
+
+### Related Issues Fixed
+
+- **Quality Tests Workflow** (Run #19309378654): 5 contract test failures
+  - `test_api_keys_create_endpoint_exists` ✅ Fixed
+  - `test_api_keys_list_endpoint_exists` ✅ Fixed
+  - `test_service_principals_list_endpoint_exists` ✅ Fixed
+  - `test_version_header_accepted` ✅ Fixed
+  - `test_unsupported_version_returns_error` ✅ Fixed
+
+### References
+
+- **Fixed Tests**: `tests/api/test_router_registration.py`, `tests/api/test_api_versioning.py`
+- **CI Failure**: Quality Tests Workflow Run #19309378654
+- **Commit**: b37d5f9 - "fix(ci): comprehensive remediation of CI/CD workflow failures"
+
+---
+
 ## Best Practices
 
 1. **Use reusable mock factories**
@@ -406,6 +535,15 @@ from mcp_server_langgraph.core.dependencies import (
 ---
 
 ## Changelog
+
+### 2025-11-12: Added Keycloak Mocking Section
+- Added comprehensive Keycloak mocking guide for contract tests
+- Documented MCP_SKIP_AUTH environment variable pattern
+- Fixed 5 contract test failures (Keycloak connection errors in CI)
+- Added examples from `test_router_registration.py` and `test_api_versioning.py`
+- Included troubleshooting guide for CI/local environment differences
+
+**Root Cause**: Contract tests attempted real Keycloak connections during app import in CI
 
 ### 2025-11-11: Initial Version
 - Added comprehensive guide for API testing

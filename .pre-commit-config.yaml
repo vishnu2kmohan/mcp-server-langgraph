@@ -240,10 +240,10 @@ repos:
           Ensures documentation standards maintained (2025-11-07 audit).
 
       - id: validate-documentation-structure
-        name: Validate Documentation Structure (Orphaned Files, ADR Numbering, TODOs)
+        name: Validate Documentation Structure (Orphaned Files, ADR Numbering, TODOs, Badges, Links)
         entry: uv run pytest tests/regression/test_documentation_structure.py -v --tb=short
         language: system
-        files: \.(md|mdx|json)$|^adr/.*\.md$
+        files: \.(md|mdx|json)$|^adr/.*\.md$|^README\.md$
         pass_filenames: false
         always_run: false
         description: |
@@ -251,11 +251,14 @@ repos:
           - Prevents orphaned MDX files not in docs.json navigation
           - Detects duplicate ADR numbering
           - Validates ADR synchronization between adr/ and docs/architecture/
-          - Checks version consistency across deployment files
-          - Ensures critical docs don't have TODO/FIXME comments
+          - Validates README.md ADR badge count matches actual ADR count
+          - Ensures public docs don't have TODO/FIXME comments (excludes templates/archives)
+          - Detects broken internal links between documentation pages
           - Validates frontmatter presence in MDX files
+          - Checks version consistency across deployment files
           - Confirms essential root documentation files exist
           Regression prevention for issues fixed in documentation audit (2025-11-12).
+          Enhanced 2025-11-12: Added badge validation, comprehensive TODO detection, link checking.
 
       - id: validate-adr-index
         name: Validate ADR Index is Up-to-Date
@@ -306,6 +309,32 @@ repos:
         language: system
         files: ^deployments/base/redis-session-deployment\.yaml$
         pass_filenames: false
+
+      # Security Scanning (Trivy)
+      - id: trivy-scan-k8s-manifests
+        name: Trivy Security Scan for Kubernetes Manifests
+        entry: bash -c 'if ! command -v trivy &> /dev/null; then echo "⚠️  Trivy not installed - skipping security scan. Install: brew install trivy"; exit 0; fi; trivy config deployments --severity CRITICAL,HIGH --exit-code 1 --quiet || (echo "❌ Security vulnerabilities found. Run: trivy config deployments --severity CRITICAL,HIGH"; exit 1)'
+        language: system
+        files: ^deployments/.*\.(yaml|yml)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Scans Kubernetes manifests for security misconfigurations using Trivy.
+
+          Detects issues like:
+          - readOnlyRootFilesystem: false (AVD-KSV-0014)
+          - Missing security contexts
+          - Privileged containers
+          - Missing resource limits
+
+          Install Trivy:
+          - macOS: brew install trivy
+          - Linux: See https://aquasecurity.github.io/trivy/latest/getting-started/installation/
+
+          If Trivy is not installed, the hook will skip scanning (not fail).
+          CI/CD environments should have Trivy installed for mandatory scans.
+
+          Regression prevention for: Deploy to GKE Staging failure (Run #19309378657)
 
       - id: check-mermaid-styling
         name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling

@@ -62,6 +62,26 @@ permissions:
   pull-requests: write
 
 jobs:
+  pre-commit-validation:
+    name: Pre-commit Hook Configuration Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'pre-commit-validation'
+
+      - name: Validate pre-commit hook configuration
+        run: |
+          uv run pytest tests/regression/test_precommit_hook_dependencies.py -v --tb=short
+        timeout-minutes: 5
+
   property-tests:
     name: Property-Based Tests
     runs-on: ubuntu-latest
