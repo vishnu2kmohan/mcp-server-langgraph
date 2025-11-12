@@ -237,7 +237,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.90.12
+        uses: trufflesecurity/trufflehog@v3.90.13
         with:
           path: ./
           base: ${{ github.event.before || 'HEAD~1' }}
