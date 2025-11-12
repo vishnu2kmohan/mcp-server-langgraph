@@ -118,13 +118,13 @@ def main():
     current_version = get_current_version()
     print(f"Current version: {current_version}\n")
 
-    docs_dir = Path('docs')
+    docs_dir = Path('docs').resolve()
     if not docs_dir.exists():
         print("Error: docs/ directory not found")
         sys.exit(1)
 
     mdx_files = list(docs_dir.rglob('*.mdx'))
-    md_files = list(Path('.').glob('*.md'))
+    md_files = [f.resolve() for f in Path('.').glob('*.md')]
     all_files = mdx_files + md_files
 
     issues: Dict[Path, List[Tuple[int, str, str]]] = {}
@@ -141,8 +141,13 @@ def main():
     print(f"Found version inconsistencies in {len(issues)} files:\n")
 
     total_issues = 0
+    cwd = Path.cwd()
     for file_path, file_issues in sorted(issues.items()):
-        print(f"📄 {file_path.relative_to(Path.cwd())}")
+        try:
+            relative_path = file_path.relative_to(cwd)
+        except ValueError:
+            relative_path = file_path
+        print(f"📄 {relative_path}")
         for line_num, version, context in file_issues[:5]:  # Show first 5
             print(f"   Line {line_num}: v{version} → should be v{current_version}")
             print(f"   Context: {context}")

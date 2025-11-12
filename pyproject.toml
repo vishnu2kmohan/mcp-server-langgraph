@@ -109,6 +109,8 @@ dev = [
     "types-requests",
     "isort>=7.0.0",
     "bandit>=1.7.6",
+    # Configuration parsing
+    "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
     # Deployment tools
     "langgraph-cli>=0.1.0",
 ]

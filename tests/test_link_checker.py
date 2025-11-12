@@ -97,12 +97,13 @@ class TestLinkResolution:
         from check_internal_links import resolve_link
 
         source_file = temp_docs_structure / "index.mdx"
-        target = "../getting-started/installation.mdx"
+        target = "./getting-started/installation.mdx"  # Correct relative path
 
-        # This should resolve but from temp location
+        # This should resolve from temp location
         # Test that function handles relative paths
-        resolved = resolve_link(source_file, target)
+        resolved = resolve_link(source_file, target, docs_root=temp_docs_structure)
         assert resolved is not None
+        assert resolved.exists()
 
     def test_detects_broken_link(self, temp_docs_structure):
         """Test that broken links are detected."""
