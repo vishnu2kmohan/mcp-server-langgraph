@@ -358,7 +358,7 @@
             ]
           },
           {
-            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-48)",
+            "group": "Infrastructure (ADRs 8-9, 13, 20-21, 27-28, 30, 40-48, 51-54)",
             "pages": [
               "architecture/adr-0008-infisical-secrets-management",
               "architecture/adr-0009-feature-flag-system",
@@ -378,7 +378,9 @@
               "architecture/adr-0047-visual-workflow-builder",
               "architecture/adr-0048-postgres-storage-integration-tests",
               "architecture/adr-0051-memorystore-redis-externalname-service",
-              "architecture/adr-0052-pytest-xdist-isolation-strategy"
+              "architecture/adr-0052-pytest-xdist-isolation-strategy",
+              "architecture/adr-0053-ci-cd-failure-prevention-framework",
+              "architecture/adr-0054-pod-failure-prevention-framework"
             ]
           },
           {
