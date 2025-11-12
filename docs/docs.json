@@ -72,6 +72,12 @@
             ]
           },
           {
+            "group": "Troubleshooting",
+            "pages": [
+              "troubleshooting/overview"
+            ]
+          },
+          {
             "group": "Reference",
             "pages": [
               "references/sources",
@@ -270,6 +276,7 @@
           {
             "group": "Migration",
             "pages": [
+              "guides/migration-guide",
               "guides/container-migration"
             ]
           },

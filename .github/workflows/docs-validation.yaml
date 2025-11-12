@@ -1,0 +1,242 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'adr/**'
+      - '.github/workflows/docs-validation.yaml'
+      - 'scripts/validators/**'
+      - 'tests/unit/documentation/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'adr/**'
+      - 'scripts/validators/**'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: read
+  issues: write  # For creating issues on failure
+  pull-requests: write  # For PR comments
+
+jobs:
+  validate-documentation:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run Navigation Validator
+        id: nav-validation
+        run: |
+          echo "::group::Navigation Validation"
+          python scripts/validators/navigation_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Run MDX Extension Validator
+        id: ext-validation
+        run: |
+          echo "::group::MDX Extension Validation"
+          python scripts/validators/mdx_extension_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Run Frontmatter Validator
+        id: fm-validation
+        run: |
+          echo "::group::Frontmatter Validation"
+          python scripts/validators/frontmatter_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Run Link Validator
+        id: link-validation
+        run: |
+          echo "::group::Link Validation"
+          python scripts/validators/link_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Check Validation Results
+        run: |
+          failures=""
+          if [ "${{ steps.nav-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- Navigation validation failed\n"
+          fi
+          if [ "${{ steps.ext-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- MDX extension validation failed\n"
+          fi
+          if [ "${{ steps.fm-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- Frontmatter validation failed\n"
+          fi
+          if [ "${{ steps.link-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- Link validation failed\n"
+          fi
+
+          if [ -n "$failures" ]; then
+            echo "❌ Documentation validation failed:"
+            echo -e "$failures"
+            exit 1
+          else
+            echo "✅ All documentation validations passed!"
+          fi
+
+      - name: Create Issue on Failure
+        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '📚 Documentation Validation Failed on Main Branch';
+            const body = `## Documentation Validation Failure
+
+            The documentation validation workflow failed on the main branch.
+
+            **Commit**: ${{ github.sha }}
+            **Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ### Failed Checks
+
+            - Navigation Validation: ${{ steps.nav-validation.outcome }}
+            - MDX Extension Validation: ${{ steps.ext-validation.outcome }}
+            - Frontmatter Validation: ${{ steps.fm-validation.outcome }}
+            - Link Validation: ${{ steps.link-validation.outcome }}
+
+            ### Action Required
+
+            Please review the workflow logs and fix the documentation issues:
+            1. Check orphaned files or broken navigation
+            2. Ensure all files in docs/ use .mdx extension
+            3. Validate frontmatter has title and description
+            4. Fix broken internal links
+
+            ### How to Fix
+
+            Run validators locally:
+            \`\`\`bash
+            # Run all validators
+            python scripts/validators/validate_docs.py
+
+            # Or run individually
+            python scripts/validators/navigation_validator.py
+            python scripts/validators/mdx_extension_validator.py
+            python scripts/validators/frontmatter_validator.py
+            python scripts/validators/link_validator.py
+            \`\`\`
+
+            ---
+            *This issue was automatically created by the docs-validation workflow.*`;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'documentation,automated'
+            });
+
+            const existing = issues.data.find(issue => issue.title === title);
+
+            if (!existing) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['documentation', 'automated', 'bug']
+              });
+            } else {
+              // Update existing issue with new information
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `**New failure detected**\n\n${body}`
+              });
+            }
+
+      - name: Comment on PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 📚 Documentation Validation Failed
+
+            The documentation validation checks found issues:
+
+            | Validator | Status |
+            |-----------|--------|
+            | Navigation | ${{ steps.nav-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | MDX Extensions | ${{ steps.ext-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | Frontmatter | ${{ steps.fm-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | Links | ${{ steps.link-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+
+            ### How to Fix
+
+            Run the validators locally to see detailed error messages:
+
+            \`\`\`bash
+            # Run all validators with detailed output
+            python scripts/validators/validate_docs.py --verbose
+
+            # Or run specific validator
+            python scripts/validators/navigation_validator.py
+            \`\`\`
+
+            See the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  test-validators:
+    name: Test Documentation Validators
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Run Validator Unit Tests
+        run: |
+          uv run pytest tests/unit/documentation/ -v --tb=short
+
+      - name: Test Validator CLI
+        run: |
+          # Test each validator can be invoked
+          python scripts/validators/navigation_validator.py --help
+          python scripts/validators/mdx_extension_validator.py --help
+          python scripts/validators/frontmatter_validator.py --help
+          python scripts/validators/link_validator.py --help
+          python scripts/validators/validate_docs.py --help

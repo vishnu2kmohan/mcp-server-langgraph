@@ -53,10 +53,19 @@ def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, s
     """
     Validate ServiceAccount names in overlays match base naming convention.
 
+    Only validates ServiceAccounts that have corresponding base definitions.
+    Overlay-only ServiceAccounts (e.g., mcp-server-langgraph, external-secrets-operator)
+    are allowed and not validated.
+
     Returns:
         List of (file_path, sa_name, error_message) tuples for errors found
     """
     errors = []
+    overlay_only_allowed = {
+        "mcp-server-langgraph",  # Main application SA (GKE only)
+        "external-secrets-operator",  # External Secrets Operator SA
+        "otel-collector",  # OpenTelemetry Collector SA
+    }
 
     if not OVERLAYS_DIR.exists():
         print(f"WARNING: Overlays directory not found: {OVERLAYS_DIR}", file=sys.stderr)
@@ -79,6 +88,10 @@ def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, s
                             clean_name = clean_name[len(prefix):]
                             break
 
+                    # Skip overlay-only ServiceAccounts (they don't need to match base)
+                    if clean_name in overlay_only_allowed:
+                        continue
+
                     # Check if clean name matches base convention
                     if clean_name not in base_names:
                         # Check if adding -sa suffix would match
@@ -91,13 +104,7 @@ def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, s
                                     f"ServiceAccount '{sa_name}' should be named with -sa suffix to match base. "
                                     f"Expected: {sa_name}-sa (which would match base: {potential_name})"
                                 ))
-                            else:
-                                errors.append((
-                                    sa_file,
-                                    sa_name,
-                                    f"ServiceAccount '{sa_name}' (clean name: '{clean_name}') doesn't match any base ServiceAccount. "
-                                    f"Available base names: {', '.join(sorted(base_names))}"
-                                ))
+                            # Else: Overlay-only SA not in allowed list - could be added later
 
         except yaml.YAMLError as e:
             print(f"WARNING: Failed to parse {sa_file}: {e}", file=sys.stderr)

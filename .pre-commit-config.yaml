@@ -185,6 +185,94 @@ repos:
         pass_filenames: false
         always_run: false  # Only run when .mdx files change
 
+      # TDD-based Documentation Validators (Comprehensive)
+      - id: validate-docs-navigation
+        name: Validate Documentation Navigation Consistency
+        entry: python3 scripts/validators/navigation_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^(docs/.*\.mdx|docs/docs\.json)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates documentation navigation consistency (TDD):
+          - All files referenced in docs.json exist
+          - All production MDX files are in navigation (no orphans)
+          - No duplicate page references
+          - Navigation JSON structure is valid
+
+          Prevents regression of issues fixed in 2025-11-12 audit:
+          - Orphaned migration-guide.mdx (not in navigation)
+          - Orphaned troubleshooting/overview.mdx (not in navigation)
+
+          Exit codes: 0=pass, 1=errors found, 2=critical error
+          See: tests/unit/documentation/test_navigation_validator.py
+
+      - id: validate-mdx-extensions
+        name: Validate MDX File Extensions in docs/
+        entry: python3 scripts/validators/mdx_extension_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^docs/.*\.(md|mdx)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates all files in docs/ use .mdx extension (TDD):
+          - Detects .md files in docs/ directory
+          - Ensures Mintlify compatibility
+          - Excludes template and node_modules directories
+
+          Prevents regression of issues fixed in 2025-11-12 audit:
+          - TRY_EXCEPT_PASS_ANALYSIS.md (converted to .mdx)
+          - SECRETS.md (converted to .mdx)
+          - gke-autopilot-resource-constraints.md (converted to .mdx)
+
+          Solution: Convert .md to .mdx or move outside docs/
+          See: tests/unit/documentation/test_mdx_extension_validator.py
+
+      - id: validate-mdx-frontmatter
+        name: Validate MDX Frontmatter (title, description)
+        entry: python3 scripts/validators/frontmatter_validator.py
+        language: python
+        additional_dependencies: ['pyyaml>=6.0.0']
+        files: ^docs/.*\.mdx$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates MDX files have proper YAML frontmatter (TDD):
+          - Required fields: title, description
+          - Valid YAML syntax
+          - Non-empty field values
+          - Excludes template files
+
+          Required frontmatter format:
+          ---
+          title: "Page Title"
+          description: "Page description"
+          ---
+
+          Ensures Mintlify can properly index and display documentation.
+          See: tests/unit/documentation/test_frontmatter_validator.py
+
+      - id: validate-documentation-links
+        name: Validate Documentation Internal Links
+        entry: python3 scripts/validators/link_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^docs/.*\.mdx$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates links in MDX files (TDD):
+          - Checks broken internal links (relative paths)
+          - Detects malformed URLs
+          - Validates anchor targets exist
+          - Skips external link validation (expensive)
+
+          Note: External link validation should be run separately.
+          Run: python3 scripts/validators/link_validator.py --docs-dir docs
+          See: tests/unit/documentation/test_link_validator.py (when created)
+
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
         entry: python3 scripts/standardize_frontmatter.py docs --dry-run
