@@ -160,9 +160,13 @@ jobs:
             local overlay=$1
             echo "Validating ${overlay}..."
 
-            if ! kustomize build deployments/${overlay} | kubeconform -strict -summary -kubernetes-version 1.29.0; then
+            # Skip External Secrets CRDs - these require external-secrets-operator CRD schemas
+            # which are not included in standard Kubernetes schema validation
+            if ! kustomize build deployments/${overlay} | kubeconform -strict -summary -kubernetes-version 1.29.0 \
+                 -skip ExternalSecret,SecretStore,ClusterSecretStore; then
               echo "❌ Validation failed for ${overlay}, re-running with verbose output..."
-              kustomize build deployments/${overlay} | kubeconform -strict -verbose -kubernetes-version 1.29.0
+              kustomize build deployments/${overlay} | kubeconform -strict -verbose -kubernetes-version 1.29.0 \
+                -skip ExternalSecret,SecretStore,ClusterSecretStore
               return 1
             fi
 
@@ -264,14 +268,39 @@ jobs:
 
       - name: Build overlays and validate with policies
         run: |
-          echo "Validating base..."
-          kustomize build deployments/base | conftest test -p deployments/policies - --fail-on-warn
+          set -o pipefail
 
-          echo "Validating staging-gke..."
-          kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - --fail-on-warn
+          echo "🔍 Validating base with OPA policies..."
+          if kustomize build deployments/base | conftest test -p deployments/policies - --fail-on-warn --output tap | tee /tmp/base-opa.txt; then
+            echo "✅ Base passed all OPA policy checks"
+          else
+            echo "❌ Base failed OPA policy validation"
+            cat /tmp/base-opa.txt
+            exit 1
+          fi
 
-          echo "Validating production-gke..."
-          kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - --fail-on-warn
+          echo ""
+          echo "🔍 Validating staging-gke with OPA policies..."
+          if kustomize build deployments/overlays/staging-gke | conftest test -p deployments/policies - --fail-on-warn --output tap | tee /tmp/staging-opa.txt; then
+            echo "✅ Staging-GKE passed all OPA policy checks"
+          else
+            echo "❌ Staging-GKE failed OPA policy validation"
+            cat /tmp/staging-opa.txt
+            exit 1
+          fi
+
+          echo ""
+          echo "🔍 Validating production-gke with OPA policies..."
+          if kustomize build deployments/overlays/production-gke | conftest test -p deployments/policies - --fail-on-warn --output tap | tee /tmp/production-opa.txt; then
+            echo "✅ Production-GKE passed all OPA policy checks"
+          else
+            echo "❌ Production-GKE failed OPA policy validation"
+            cat /tmp/production-opa.txt
+            exit 1
+          fi
+
+          echo ""
+          echo "::notice::All OPA policy validations passed successfully"
 
       - name: Validate raw YAML files
         run: |

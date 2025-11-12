@@ -223,6 +223,77 @@ All deployment methods require the following environment variables:
 - **Cloud Providers**: GCP Secret Manager, AWS Secrets Manager, Azure Key Vault
 - **Third-party**: Infisical, HashiCorp Vault
 
+## ServiceAccount Naming Conventions
+
+All ServiceAccounts follow a strict naming convention to ensure consistency and prevent deployment failures.
+
+### Naming Pattern
+
+**Base ServiceAccounts** (in `deployments/base/serviceaccounts.yaml`):
+- Pattern: `<component>-sa`
+- Examples: `postgres-sa`, `openfga-sa`, `keycloak-sa`, `redis-sa`, `qdrant-sa`
+
+**Overlay ServiceAccounts** (in `deployments/overlays/*/`):
+- Pattern: `<component>-sa` (same as base, without environment prefix)
+- Kustomization patches automatically add environment prefix: `staging-`, `production-`
+- Final resource name after patch: `<environment>-<component>-sa`
+- Examples: `staging-openfga-sa`, `production-keycloak-sa`
+
+### Workload Identity (GKE)
+
+Components requiring GCP service account access MUST have Workload Identity annotations in GKE overlays:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openfga-sa  # Base name without env prefix
+  namespace: staging-mcp-server-langgraph
+  annotations:
+    iam.gke.io/gcp-service-account: staging-openfga@<PROJECT_ID>.iam.gserviceaccount.com
+```
+
+**Components requiring Workload Identity**:
+- `mcp-server-langgraph` - Secret Manager, Cloud SQL access
+- `openfga-sa` - Cloud SQL database access
+- `keycloak-sa` - Cloud SQL database access
+- `external-secrets-operator` - Secret Manager access
+
+### Validation
+
+ServiceAccount naming is automatically validated by:
+
+1. **Pre-commit hook**: `scripts/validate_serviceaccount_names.py`
+   - Runs on every commit affecting ServiceAccount files
+   - Ensures overlay names match base naming convention
+   - Prevents naming inconsistencies
+
+2. **CI/CD tests**: `tests/deployment/test_service_accounts.py`
+   - Validates Workload Identity annotations
+   - Checks RBAC bindings reference correct ServiceAccounts
+   - Ensures least-privilege principles
+
+### Common Issues
+
+**Symptom**: Workload Identity binding not found
+**Cause**: ServiceAccount name doesn't match GCP service account binding
+**Fix**: Ensure ServiceAccount name matches pattern: `<component>-sa`
+
+**Symptom**: RBAC permissions denied
+**Cause**: RoleBinding references non-existent ServiceAccount
+**Fix**: Verify ServiceAccount exists and name matches exactly
+
+**Symptom**: Pod fails to start with auth errors
+**Cause**: Missing Workload Identity annotation
+**Fix**: Add `iam.gke.io/gcp-service-account` annotation to ServiceAccount
+
+### Best Practices
+
+1. **Always use `-sa` suffix** for all ServiceAccounts in base and overlays
+2. **Never add environment prefix** in ServiceAccount manifest (use Kustomization patches)
+3. **Validate changes** with `python scripts/validate_serviceaccount_names.py` before committing
+4. **Test locally** with `kubectl kustomize deployments/overlays/<env>` to verify patches apply correctly
+
 ## Monitoring and Observability
 
 All deployments include:

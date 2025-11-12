@@ -724,6 +724,28 @@ repos:
 
           Ensures security best practices and prevents privilege escalation.
 
+      - id: validate-serviceaccount-naming
+        name: Validate ServiceAccount Naming Consistency
+        entry: python3 scripts/validate_serviceaccount_names.py
+        language: python
+        additional_dependencies: ['pyyaml>=6.0.0']
+        files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates ServiceAccount naming consistency between base and overlays.
+
+          Enforces naming convention:
+          - Base ServiceAccounts must end with -sa suffix (e.g., openfga-sa, keycloak-sa)
+          - Overlay ServiceAccounts must match base names (after removing env prefix)
+
+          Prevents deployment failures from naming mismatches that cause:
+          - Workload Identity binding failures
+          - RBAC permission issues
+          - Pod startup failures
+
+          Regression prevention for Run #19311976718 - Deployment Validation failure
+
       # Helm Placeholder Validation (TDD - Codex Finding)
       - id: check-helm-placeholders
         name: Check Helm values for unresolved placeholders
