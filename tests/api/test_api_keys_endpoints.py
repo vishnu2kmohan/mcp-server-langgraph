@@ -494,11 +494,17 @@ class TestAPIKeyEndpointAuthorization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_create_without_auth(self):
+    def test_create_without_auth(self, monkeypatch):
         """Test creating API key without authentication fails"""
+        import os
+
         from fastapi import FastAPI
 
         from mcp_server_langgraph.api.api_keys import router
+
+        # CRITICAL: Disable test mode bypass for this specific test
+        # This test explicitly verifies auth is required
+        monkeypatch.setenv("MCP_SKIP_AUTH", "false")
 
         app = FastAPI()
         app.include_router(router)

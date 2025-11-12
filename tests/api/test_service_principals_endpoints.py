@@ -158,7 +158,8 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     app.include_router(router)
 
     # Override dependencies using FastAPI's built-in mechanism
-    # This avoids parameter name collisions and works with pytest-xdist
+    # With MCP_SKIP_AUTH=true (set in conftest), get_current_user returns default user
+    # Override it here to use our specific mock_current_user
     app.dependency_overrides[get_current_user] = lambda: mock_current_user
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client

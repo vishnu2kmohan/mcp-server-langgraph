@@ -70,6 +70,16 @@ repos:
   #         types-requests
   #       ]
 
+  # UV lockfile synchronization validation
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: Validate uv.lock synchronized with pyproject.toml
+        entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+
   # GitHub Actions workflow validation
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.29.4
@@ -222,6 +232,44 @@ repos:
           - No HTML comments in MDX (use JSX comments)
           - JSX comments properly closed
           Ensures documentation standards maintained (2025-11-07 audit).
+
+      - id: validate-documentation-structure
+        name: Validate Documentation Structure (Orphaned Files, ADR Numbering, TODOs)
+        entry: uv run pytest tests/regression/test_documentation_structure.py -v --tb=short
+        language: system
+        files: \.(md|mdx|json)$|^adr/.*\.md$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Comprehensive documentation structure validation (TDD):
+          - Prevents orphaned MDX files not in docs.json navigation
+          - Detects duplicate ADR numbering
+          - Validates ADR synchronization between adr/ and docs/architecture/
+          - Checks version consistency across deployment files
+          - Ensures critical docs don't have TODO/FIXME comments
+          - Validates frontmatter presence in MDX files
+          - Confirms essential root documentation files exist
+          Regression prevention for issues fixed in documentation audit (2025-11-12).
+
+      - id: validate-adr-index
+        name: Validate ADR Index is Up-to-Date
+        entry: python scripts/generate_adr_index.py --check
+        language: system
+        files: ^adr/.*\.md$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Ensures adr/README.md index is up-to-date with all ADR files.
+
+          Validates:
+          - All ADRs are listed in the index with correct metadata
+          - Categories are accurate and complete
+          - No duplicate ADR numbers
+          - Index generation instructions are current
+
+          To regenerate: python scripts/generate_adr_index.py
+
+          Regression prevention for REC-001 from documentation audit (2025-11-12).
 
       # Deployment Configuration Validation (TDD)
       - id: validate-deployment-secrets

@@ -1,48 +1,55 @@
 """
-Shared fixtures for API endpoint tests.
+Shared fixtures for API endpoint tests - PYTEST-XDIST COMPATIBLE
 
-Provides helper function for bypassing authentication in API tests.
-This works around pytest-xdist state pollution issues with FastAPI dependency_overrides.
+CRITICAL: This conftest provides test mode setup that works across pytest-xdist workers.
 
-PROBLEM:
-- FastAPI dependency_overrides doesn't work reliably in pytest-xdist
-- bearer_scheme singleton causes state pollution across workers
-- Dependency resolution happens at route definition time, not request time
+PROBLEM HISTORY:
+1. dependency_overrides doesn't propagate across xdist workers
+2. Monkeypatch + reload caused FastAPI parameter name collision (422 errors)
+3. Tests passed locally but failed in CI with xdist
 
 SOLUTION:
-- Monkeypatch approach: Patch get_current_user before importing routers
-- Simpler than dependency_overrides and works with pytest-xdist
-- Tests explicitly call helper function when needed (no autouse)
+- Use pytest_configure hook to enable test mode globally
+- Set environment variable that ALL workers can see
+- Dependencies check for test mode and return mocks
+- Works reliably across all pytest-xdist workers
+
+See commits: 709adda, c193936, ba5296f for history
 """
 
 import gc
+import os
 
 import pytest
+
+
+# Set test mode environment variable for ALL pytest-xdist workers
+def pytest_configure(config):
+    """
+    Configure test environment for ALL pytest-xdist workers.
+
+    This runs ONCE per worker process, ensuring test mode is enabled
+    across all parallel workers.
+    """
+    os.environ["MCP_TEST_MODE"] = "true"
+    os.environ["MCP_SKIP_AUTH"] = "true"
 
 
 def bypass_authentication(monkeypatch, mock_user=None):
     """
     Helper function to bypass authentication for API endpoint tests.
 
-    Call this in your test BEFORE importing any routers.
+    DEPRECATED: This approach doesn't work with pytest-xdist in CI.
+    Use app.dependency_overrides in test fixtures instead.
 
     Args:
         monkeypatch: pytest monkeypatch fixture
-        mock_user: Optional custom user dict, uses default if None
+        mock_user: Optional custom user dict
 
     Returns:
-        The mock user dict being used
+        The mock user dict
 
-    Example:
-        def test_create_something(monkeypatch):
-            user = bypass_authentication(monkeypatch)
-            # Now import router after patching
-            from myapp import router
-            app = FastAPI()
-            app.include_router(router)
-            client = TestClient(app)
-            response = client.post("/api/v1/things")
-            assert response.status_code == 201
+    See: tests/api/test_service_principals_endpoints.py for correct pattern
     """
     from mcp_server_langgraph.auth import middleware
 
@@ -55,9 +62,6 @@ def bypass_authentication(monkeypatch, mock_user=None):
         }
 
     # Patch get_current_user at module level
-    # CRITICAL: Must match real signature from middleware.py:818
-    # FastAPI introspects function signatures - *args, **kwargs causes 422 errors
-    # because FastAPI tries to inject them as query parameters!
     from typing import Dict, Any, Optional
     from fastapi import Request
     from fastapi.security import HTTPAuthorizationCredentials
