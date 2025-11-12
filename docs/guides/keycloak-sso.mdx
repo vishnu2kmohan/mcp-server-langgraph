@@ -252,8 +252,7 @@ const tokens = await fetch('https://sso.yourdomain.com/realms/mcp-server-langgra
 });
 
 const { access_token, refresh_token, expires_in } = await tokens.json();
-```
-
+```python
 #### Direct Grant Flow (Testing Only)
 
 For testing or CLI applications:
@@ -272,6 +271,7 @@ result = await client.authenticate(
 access_token = result['access_token']
 refresh_token = result['refresh_token']
 ```
+
 <Warning>
 **Never use Direct Grant in production!** Use Authorization Code flow with PKCE for web/mobile apps.
 </Warning>
@@ -286,8 +286,7 @@ new_tokens = await client.refresh_token(refresh_token)
 
 new_access_token = new_tokens['access_token']
 new_refresh_token = new_tokens['refresh_token']  # Rotated!
-```
-
+```python
 ### Role Mapping to OpenFGA
 
 **NEW v2.1.0**: Automatic synchronization of Keycloak roles/groups to OpenFGA.
@@ -398,8 +397,7 @@ postgresql:
     persistence:
       enabled: true
       size: 10Gi
-```
-
+```rust
 #### SSL/TLS
 
 **Always use HTTPS in production:**
@@ -466,8 +464,7 @@ kubectl exec -n mcp-server-langgraph \
 kubectl exec -i -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U keycloak keycloak < keycloak-backup.sql
-```
-
+```bash
 ### Monitoring
 
 #### Health Checks

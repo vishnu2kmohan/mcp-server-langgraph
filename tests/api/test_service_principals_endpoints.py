@@ -112,121 +112,116 @@ def mock_openfga_client():
 
 
 @pytest.fixture(scope="function")
-def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
+def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga_client):
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
-    IMPORTANT:
-    - scope="function" ensures fresh app instance per test
-    - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
-    - Overrides must be set BEFORE app.include_router() for proper resolution
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
+    - Use monkeypatch instead of dependency_overrides (more reliable)
+    - Patch at module level BEFORE any router imports
+    - Avoids FastAPI dependency resolution timing issues
+    - Works consistently across pytest-xdist workers
 
-    PYTEST-XDIST FIX (2025-11-12):
-    - Use explicit module references to avoid import caching issues
-    - Import router AFTER setting overrides
-    - Use raise_server_exceptions=False in TestClient
-    - Force gc.collect() in cleanup
+    RATIONALE:
+    dependency_overrides doesn't work because:
+    1. Router imports capture Depends(bearer_scheme) at definition time
+    2. Setting overrides after import is too late
+    3. bearer_scheme singleton shared across workers causes pollution
+
+    monkeypatch works because:
+    1. Patches happen before dependency resolution
+    2. Operates at Python import level, not FastAPI level
+    3. No singleton state issues
     """
     from fastapi import FastAPI
 
-    # Import middleware and dependencies modules for stable references
+    # Patch auth middleware BEFORE importing router
     from mcp_server_langgraph.auth import middleware
     from mcp_server_langgraph.core import dependencies
 
-    # Create fresh FastAPI app for each test
-    app = FastAPI()
-
-    # Override dependencies - must match async/sync of original functions
-    # IMPORTANT: get_current_user is async, manager and openfga_client getter are sync
-    async def mock_get_current_user_async():
+    # Patch get_current_user to return mock
+    async def mock_get_current_user_async(*args, **kwargs):
         return mock_current_user
 
+    monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user_async)
+
+    # Patch service principal manager getter
     def mock_get_sp_manager_sync():
         return mock_sp_manager
 
+    monkeypatch.setattr(dependencies, "get_service_principal_manager", mock_get_sp_manager_sync)
+
+    # Patch OpenFGA client getter
     def mock_get_openfga_sync():
         return mock_openfga_client
 
-    # CRITICAL FIX: Use explicit module references (middleware.bearer_scheme)
-    # This ensures we override the actual singleton instance used at runtime
-    app.dependency_overrides[middleware.bearer_scheme] = lambda: None
-    app.dependency_overrides[dependencies.get_service_principal_manager] = mock_get_sp_manager_sync
-    app.dependency_overrides[middleware.get_current_user] = mock_get_current_user_async
-    app.dependency_overrides[dependencies.get_openfga_client] = mock_get_openfga_sync
+    monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
 
-    # Import and include router AFTER setting overrides
+    # NOW import router after patching is complete
     from mcp_server_langgraph.api.service_principals import router
 
+    # Create fresh FastAPI app
+    app = FastAPI()
     app.include_router(router)
 
-    # Create TestClient with raise_server_exceptions=False
-    # Prevents auth exceptions from breaking pytest-xdist workers
+    # Create TestClient
     client = TestClient(app, raise_server_exceptions=False)
 
     yield client
 
-    # CRITICAL: Cleanup to prevent state pollution in xdist workers
-    app.dependency_overrides.clear()
-    gc.collect()  # Force cleanup of mock objects
+    # Cleanup
+    gc.collect()
 
 
 @pytest.fixture(scope="function")
-def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
+def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfga_client):
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
-    IMPORTANT:
-    - scope="function" ensures fresh app instance per test
-    - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
-    - Overrides must be set BEFORE app.include_router() for proper resolution
-
-    PYTEST-XDIST FIX (2025-11-12):
-    - Use explicit module references to avoid import caching issues
-    - Import router AFTER setting overrides
-    - Use raise_server_exceptions=False in TestClient
-    - Force gc.collect() in cleanup
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
+    - Use monkeypatch instead of dependency_overrides (more reliable)
+    - Patch at module level BEFORE any router imports
+    - Avoids FastAPI dependency resolution timing issues
+    - Works consistently across pytest-xdist workers
     """
     from fastapi import FastAPI
 
-    # Import middleware and dependencies modules for stable references
+    # Patch auth middleware BEFORE importing router
     from mcp_server_langgraph.auth import middleware
     from mcp_server_langgraph.core import dependencies
 
-    # Create fresh FastAPI app for each test
-    app = FastAPI()
-
-    # Override dependencies - must match async/sync of original functions
-    # IMPORTANT: get_current_user is async, manager and openfga_client getter are sync
-    async def mock_get_admin_user_async():
+    # Patch get_current_user to return admin mock
+    async def mock_get_admin_user_async(*args, **kwargs):
         return mock_admin_user
 
+    monkeypatch.setattr(middleware, "get_current_user", mock_get_admin_user_async)
+
+    # Patch service principal manager getter
     def mock_get_sp_manager_sync():
         return mock_sp_manager
 
+    monkeypatch.setattr(dependencies, "get_service_principal_manager", mock_get_sp_manager_sync)
+
+    # Patch OpenFGA client getter
     def mock_get_openfga_sync():
         return mock_openfga_client
 
-    # CRITICAL FIX: Use explicit module references (middleware.bearer_scheme)
-    # This ensures we override the actual singleton instance used at runtime
-    app.dependency_overrides[middleware.bearer_scheme] = lambda: None
-    app.dependency_overrides[dependencies.get_service_principal_manager] = mock_get_sp_manager_sync
-    app.dependency_overrides[middleware.get_current_user] = mock_get_admin_user_async
-    app.dependency_overrides[dependencies.get_openfga_client] = mock_get_openfga_sync
+    monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
 
-    # Import and include router AFTER setting overrides
+    # NOW import router after patching is complete
     from mcp_server_langgraph.api.service_principals import router
 
+    # Create fresh FastAPI app
+    app = FastAPI()
     app.include_router(router)
 
-    # Create TestClient with raise_server_exceptions=False
-    # Prevents auth exceptions from breaking pytest-xdist workers
+    # Create TestClient
     client = TestClient(app, raise_server_exceptions=False)
 
     yield client
 
-    # CRITICAL: Cleanup to prevent state pollution in xdist workers
-    app.dependency_overrides.clear()
-    gc.collect()  # Force cleanup of mock objects
+    # Cleanup
+    gc.collect()
 
 
 # ==============================================================================

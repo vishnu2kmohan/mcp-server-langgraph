@@ -297,7 +297,11 @@ class TestSecurityContext:
                     sec_context = container.get("securityContext", {})
                     read_only_fs = sec_context.get("readOnlyRootFilesystem")
 
-                    if read_only_fs is not True:
+                    # Allow exceptions for stateful services that need writable filesystems
+                    # These services write to their data directories and cannot use readonly FS
+                    STATEFUL_SERVICES_ALLOWED = {"postgres", "redis", "keycloak"}
+
+                    if read_only_fs is not True and container_name not in STATEFUL_SERVICES_ALLOWED:
                         violations.append(
                             f"{file_path.name}: {kind}/{name} container '{container_name}' "
                             f"readOnlyRootFilesystem={read_only_fs} (expected True)"

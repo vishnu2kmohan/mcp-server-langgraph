@@ -359,6 +359,8 @@ def get_project_modules() -> set[str]:
         # Test-specific modules (not packages)
         "test_auth_properties",
         "validate_mintlify_docs",
+        "fix_mdx_syntax",  # Script in scripts/ directory, not a package
+        "hcl2",  # Optional import for Terraform parsing (try/except in tests)
     }
 
 

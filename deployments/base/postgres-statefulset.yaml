@@ -21,6 +21,38 @@ data:
     \    echo \"GDPR schema migration complete\"\nelse\n    echo \"GDPR database not\
     \ found, skipping schema migration\"\nfi\n"
 ---
+# PostgreSQL StatefulSet for Development/Testing
+#
+# ⚠️ PRODUCTION DEPLOYMENT NOTES:
+# This single-instance PostgreSQL is NOT suitable for production use.
+#
+# For production environments, use managed databases:
+# - GCP: Cloud SQL for PostgreSQL (terraform/modules/cloudsql)
+# - AWS: RDS for PostgreSQL (terraform/modules/rds)
+# - Azure: Azure Database for PostgreSQL
+#
+# HIGH AVAILABILITY OPTIONS:
+# 1. Managed Services (Recommended):
+#    - Cloud SQL: Automatic failover, read replicas, automated backups
+#    - RDS: Multi-AZ deployment with synchronous replication
+#    - 99.95% SLA with automatic maintenance
+#
+# 2. Self-hosted HA (Advanced):
+#    - Patroni for automatic failover
+#    - Streaming replication with WAL archiving
+#    - pgBackRest for backup management
+#    - Requires significant operational overhead
+#
+# BACKUP STRATEGY:
+# - Development: Volume snapshots (Kubernetes CSI)
+# - Staging: Daily automated backups to GCS/S3 (via CronJob)
+# - Production: Use Cloud SQL/RDS automated backup (7-35 day retention)
+#
+# STORAGE CLASS GUIDANCE:
+# - GKE: Use "standard-rwo" for development, "pd-ssd" for better performance
+# - EKS: Use "gp3" for balanced performance/cost
+# - Local: Use default storageClass
+#
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -29,6 +61,7 @@ metadata:
   labels:
     app: postgres
     component: database
+    environment: development  # NOT for production
 spec:
   serviceName: postgres
   replicas: 1

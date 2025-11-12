@@ -94,57 +94,56 @@ def mock_keycloak_client():
 
 
 @pytest.fixture(scope="function")
-def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_current_user):
+def api_keys_test_client(monkeypatch, mock_api_key_manager, mock_keycloak_client, mock_current_user):
     """
     FastAPI TestClient with mocked dependencies for API keys endpoints.
 
-    IMPORTANT:
-    - scope="function" ensures fresh app instance per test
-    - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
-    - Overrides must be set BEFORE app.include_router() for proper resolution
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 2):
+    - Use monkeypatch instead of dependency_overrides (more reliable)
+    - Patch at module level BEFORE any router imports
+    - Avoids FastAPI dependency resolution timing issues
+    - Works consistently across pytest-xdist workers
     """
-    from typing import Optional
+    from fastapi import FastAPI
 
-    from fastapi import Depends, FastAPI
-    from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+    # Patch auth middleware and dependencies BEFORE importing router
+    from mcp_server_langgraph.auth import middleware
+    from mcp_server_langgraph.core import dependencies
 
-    # Import inside fixture to avoid module-level caching issues
-    from mcp_server_langgraph.api.api_keys import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-    from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
-
-    # Create fresh FastAPI app for each test
-    app = FastAPI()
-
-    # Override dependencies - must match async/sync of original functions
-    # IMPORTANT: get_current_user is async, managers are sync
-    # Using wrong async/sync causes FastAPI to ignore override in pytest-xdist
-    async def mock_get_current_user_async():
+    # Patch get_current_user to return mock
+    async def mock_get_current_user_async(*args, **kwargs):
         return mock_current_user
 
+    monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user_async)
+
+    # Patch API key manager getter
     def mock_get_api_key_manager_sync():
         return mock_api_key_manager
 
+    monkeypatch.setattr(dependencies, "get_api_key_manager", mock_get_api_key_manager_sync)
+
+    # Patch Keycloak client getter
     def mock_get_keycloak_client_sync():
         return mock_keycloak_client
 
-    # CRITICAL FIX: Override bearer_scheme to prevent module-level singleton pollution
-    # Without this, tests fail intermittently with 401 in pytest-xdist when
-    # TestAPIKeyEndpointAuthorization tests run before these tests on same worker
-    app.dependency_overrides[bearer_scheme] = lambda: None
-    app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
-    app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
-    app.dependency_overrides[get_current_user] = mock_get_current_user_async
+    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_client_sync)
 
-    # Include router AFTER setting overrides
+    # NOW import router after patching is complete
+    from mcp_server_langgraph.api.api_keys import router
+
+    # Create fresh FastAPI app
+    app = FastAPI()
     app.include_router(router)
 
-    client = TestClient(app)
+    # Create TestClient
+    client = TestClient(app, raise_server_exceptions=False)
 
     yield client
 
-    # CRITICAL: Cleanup to prevent state pollution in xdist workers
-    app.dependency_overrides.clear()
+    # Cleanup
+    import gc
+
+    gc.collect()
 
 
 # ==============================================================================

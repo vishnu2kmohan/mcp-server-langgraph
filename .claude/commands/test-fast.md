@@ -33,8 +33,7 @@ Best for active development - parallel, fast-fail, skip slow tests:
 
 ```bash
 make test-dev
-```
-
+```rust
 **Features**:
 - ✅ Parallel execution (`pytest -n auto`)
 - ✅ Stop on first failure (`-x`)
@@ -48,12 +47,12 @@ make test-dev
 
 **Example output**:
 ```
+
 Running tests in development mode (parallel, fast-fail, no coverage)...
 ✓ Development tests complete
 
 Features: Parallel execution, stop on first failure, skip slow tests
-```
-
+```bash
 ---
 
 ### Fastest Core Tests
@@ -75,7 +74,7 @@ make test-fast-core
 **Use case**: Rapid iteration on critical paths
 
 **Example**:
-```
+```rust
 ⚡ Running core unit tests only (fastest iteration)...
 ✓ Core tests complete
 
@@ -90,8 +89,7 @@ Run all tests without coverage overhead:
 
 ```bash
 make test-fast
-```
-
+```bash
 **Features**:
 - ✅ All unit and integration tests
 - ✅ Parallel execution
@@ -103,12 +101,12 @@ make test-fast
 
 **Example**:
 ```
+
 ⚡ Running all tests without coverage (parallel, fast iteration)...
 ✓ Fast tests complete
 
 Tip: Use 'make test-dev' for fastest development iteration
-```
-
+```bash
 ---
 
 ### Parallel Execution
@@ -132,7 +130,7 @@ make test-parallel-unit
 **Use case**: Fast execution of full test suite
 
 **Example**:
-```
+```yaml
 ⚡⚡ Running all tests in parallel (pytest-xdist)...
 ✓ Parallel tests complete
 
@@ -159,7 +157,7 @@ Speedup: ~40-60% faster than sequential execution
 ```bash
 # Use test-dev for best balance
 make test-dev
-```
+```bash
 Fast feedback, catches most issues, skip slow tests.
 
 ### Quick Sanity Check
@@ -167,13 +165,14 @@ Fast feedback, catches most issues, skip slow tests.
 # Use test-fast-core
 make test-fast-core
 ```
+
 Ultra-fast, core functionality only.
 
 ### Pre-Commit
 ```bash
 # Use test-parallel or test-fast
 make test-parallel
-```
+```bash
 Full test suite, fast execution.
 
 ### Before PR/Merge
@@ -181,6 +180,7 @@ Full test suite, fast execution.
 # Use standard test with coverage
 make test
 ```
+
 Full validation with coverage metrics.
 
 ---
@@ -222,8 +222,7 @@ Full validation with coverage metrics.
 
 ```bash
 make test-failed
-```
-
+```bash
 Runs only tests that failed in previous run (using pytest `--lf`).
 
 **Speed**: Depends on failure count, typically very fast
@@ -247,8 +246,7 @@ Runs only slow tests (marked with `@pytest.mark.slow`).
 
 ```bash
 make test-watch
-```
-
+```bash
 Automatically re-runs tests when files change.
 
 **Requires**: pytest-watch
@@ -279,8 +277,7 @@ pytest tests/test_auth.py::test_login -n auto
 
 # Run tests matching pattern
 pytest -k "auth" -n auto
-```
-
+```bash
 ---
 
 ## ⚠️ Important Notes
@@ -311,8 +308,7 @@ If parallel tests fail inconsistently:
 ```bash
 # Run sequentially to verify
 pytest tests/test_file.py -v
-```
-
+```python
 ---
 
 ## 📈 Performance Tips
@@ -344,8 +340,7 @@ def expensive_resource():
 @pytest.fixture(scope="session")
 def expensive_resource():
     return setup_expensive_thing()
-```
-
+```bash
 ### 3. Parallel-Safe Test Isolation
 
 ```python
@@ -368,7 +363,7 @@ def test_user_creation():
 
 ## 📊 Example Session
 
-```
+```bash
 User: /test-fast dev
 
 Claude:

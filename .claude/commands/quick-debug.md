@@ -26,8 +26,7 @@ If error message provided as argument:
 ```bash
 # Use provided error
 ERROR_MSG="$ARGUMENTS"
-```
-
+```bash
 If no argument, look for recent errors:
 ```bash
 # Check recent test failures
@@ -45,45 +44,50 @@ tail -50 logs/app.log 2>/dev/null || echo "No app logs found"
 Analyze error message to determine category:
 
 **Import Errors**:
-```
+```python
 ImportError: cannot import name 'X'
 ModuleNotFoundError: No module named 'X'
 ```
+
 → Missing dependency, uncommitted code, wrong Python env
 
 **Test Failures**:
-```
+```yaml
 AssertionError: X != Y
 AttributeError: 'NoneType' object has no attribute 'X'
 ```
+
 → Logic error, missing mock, incorrect test setup
 
 **Runtime Errors**:
-```
+```yaml
 RuntimeError: Event loop is closed
 asyncio.TimeoutError: timeout exceeded
 ```
+
 → Async issues, resource management, timeouts
 
 **Type Errors**:
-```
+```yaml
 TypeError: X() takes 2 positional arguments but 3 were given
 mypy error: Argument has incompatible type
 ```
+
 → Function signature mismatch, type annotation issues
 
 **Database/Connection Errors**:
-```
+```yaml
 ConnectionError: Failed to connect to Redis
 sqlalchemy.exc.OperationalError
 ```
+
 → Service not running, configuration issue, network problem
 
 ### Step 3: AI-Assisted Analysis
 
 Provide context to Claude for analysis:
 
-```
+```bash
 Analyzing error: {error_message}
 
 Error Category: {category}
@@ -116,8 +120,7 @@ git status --short | grep "^ M"
 # Verify Python environment
 which python
 python --version
-```
-
+```bash
 **For Test Failures**:
 ```bash
 # Run failing test in verbose mode
@@ -140,8 +143,7 @@ grep -n "async def\|await" {file} | head -20
 
 # Check fixture scopes
 grep -B 2 "@pytest.fixture" {test_file}
-```
-
+```bash
 **For Connection Errors**:
 ```bash
 # Check if services are running
@@ -172,8 +174,7 @@ uv pip install {package}
 # Or commit missing files
 git add {file}
 git commit -m "fix: add missing {file}"
-```
-
+```bash
 **Test Failure Fix**:
 ```python
 # Update test assertion
@@ -192,8 +193,7 @@ result = async_function()  # Missing await
 
 # To:
 result = await async_function()  # Fixed
-```
-
+```bash
 **Mock Error Fix**:
 ```python
 # Use AsyncMock for async functions
@@ -245,8 +245,7 @@ Create structured debug report:
 After applying fix, run:
 ```bash
 {test_command}
-```
-
+```css
 ## Prevention
 
 To avoid this in future:
@@ -267,7 +266,7 @@ Similar errors found:
 ### Pattern 1: ImportError After Refactoring
 
 **Symptoms**:
-```
+```python
 ImportError: cannot import name 'get_session_store'
 ```
 
@@ -275,8 +274,7 @@ ImportError: cannot import name 'get_session_store'
 ```bash
 git diff --cached src/  # Check staged changes
 git status --short      # Check unstaged changes
-```
-
+```bash
 **Common Cause**: Function moved/renamed but import not updated
 
 **Fix**:
@@ -291,7 +289,7 @@ grep -r "get_session_store" src/ tests/
 ### Pattern 2: AsyncMock Issues
 
 **Symptoms**:
-```
+```yaml
 TypeError: object MagicMock can't be used in 'await' expression
 ```
 
@@ -310,15 +308,14 @@ grep -B 2 "@patch.*async" tests/{file}
 ### Pattern 3: Event Loop Closed
 
 **Symptoms**:
-```
+```yaml
 RuntimeError: Event loop is closed
 ```
 
 **Quick Check**:
 ```bash
 grep "scope=" tests/{file} | grep "session"
-```
-
+```python
 **Common Cause**: Session-scoped async fixture
 
 **Fix**:
@@ -331,7 +328,7 @@ async def fixture():
 ### Pattern 4: Docker Service Not Running
 
 **Symptoms**:
-```
+```yaml
 ConnectionError: Error -2 connecting to localhost:6379
 ```
 
@@ -339,8 +336,7 @@ ConnectionError: Error -2 connecting to localhost:6379
 ```bash
 docker ps | grep redis
 docker-compose ps
-```
-
+```bash
 **Common Cause**: Service not started
 
 **Fix**:
@@ -353,7 +349,7 @@ sleep 2
 ### Pattern 5: Test Database State
 
 **Symptoms**:
-```
+```yaml
 IntegrityError: duplicate key value violates unique constraint
 ```
 
@@ -361,8 +357,7 @@ IntegrityError: duplicate key value violates unique constraint
 ```bash
 # Check if database cleanup is working
 grep "cleanup\|teardown" tests/{file}
-```
-
+```python
 **Common Cause**: Test not cleaning up properly
 
 **Fix**:
@@ -380,7 +375,7 @@ async def clean_db():
 
 ### Example 1: Quick Debug Without Arguments
 
-```
+```bash
 User: /quick-debug
 
 Claude:
@@ -417,7 +412,7 @@ uv run pytest tests/test_auth.py::test_login -v
 
 ### Example 2: Debug Specific Error
 
-```
+```python
 User: /quick-debug "RuntimeError: Event loop is closed"
 
 Claude:
@@ -447,8 +442,7 @@ async def redis_client():
     client = Redis()
     yield client
     await client.close()
-```
-
+```yaml
 Explanation: Session-scoped async fixtures share one event loop across all tests,
 but the loop gets closed before the fixture cleanup runs.
 
@@ -456,11 +450,12 @@ After fix, run:
 ```bash
 uv run pytest tests/ -v -k "redis"
 ```
-```
 
+```bash
 ### Example 3: Docker Service Debug
 
 ```
+
 User: /quick-debug "ConnectionError: Failed to connect to Redis"
 
 Claude:
@@ -482,8 +477,7 @@ docker-compose up -d redis
 
 # Wait for health check
 timeout 30s bash -c 'until docker-compose ps redis | grep healthy; do sleep 1; done'
-```
-
+```yaml
 Verification:
 ```bash
 docker-compose ps redis
@@ -493,8 +487,7 @@ redis-cli ping  # Should return PONG
 After service is up, re-run tests:
 ```bash
 uv run pytest tests/test_session.py -v
-```
-
+```bash
 Prevention:
 Add to .claude/memory/:
 - Always run `docker-compose ps` before test sessions
@@ -524,8 +517,7 @@ git diff --cached
 
 # Recent commits
 git log -5 --oneline
-```
-
+```bash
 ### Tip 3: Isolate the Problem
 
 ```bash
@@ -573,8 +565,7 @@ ls -lt /tmp/test_*.txt
 
 # Check application logs
 find . -name "*.log" -mtime -1
-```
-
+```bash
 ### Issue: Too many errors to analyze
 
 ```bash

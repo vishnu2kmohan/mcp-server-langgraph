@@ -1,0 +1,74 @@
+# ADR-0045: CI/CD Failure Prevention Framework
+
+**Status**: Accepted
+**Date**: 2025-11-12
+**Tags**: ci-cd, testing, quality, automation, prevention
+
+## Context
+
+On 2025-11-12, we experienced multiple CI/CD pipeline failures that blocked development:
+- 4 out of 10 workflows failed on the same commit
+- Pre-commit hooks failed due to missing dependencies
+- Terraform validation failed with configuration errors
+- E2E tests failed due to infrastructure dependency issues
+- Service principal tests intermittently failed with 401 errors in parallel execution
+
+### Root Causes
+
+1. **Documentation**: 253 untagged code blocks in .mdx files
+2. **Terraform**: Duplicate required_providers, invalid variable validations, version conflicts
+3. **Pre-commit**: Missing pyyaml dependency in validation hooks
+4. **Tests**: Missing infrastructure checks, pytest-xdist state pollution
+
+## Decision
+
+Adopt a multi-layered CI/CD Failure Prevention Framework based on TDD principles:
+
+### 1. Regression Test Suite
+- `tests/regression/test_documentation_code_blocks.py` (5 tests)
+- `tests/regression/test_terraform_configuration.py` (8 tests)
+- `tests/regression/test_precommit_hook_dependencies.py` (9 tests)
+- `tests/regression/test_service_principal_test_isolation.py` (7 tests)
+
+Total: 29 regression tests preventing recurrence
+
+### 2. Proactive CI Health Check
+- `scripts/ci_health_check.py` - Validates before CI runs
+- Detects issues in < 30 seconds
+- Provides actionable fix suggestions
+
+### 3. Test Infrastructure Isolation
+- Tests declare dependencies via fixtures
+- Skip gracefully when infrastructure unavailable
+- Clear distinction between code bugs and environment issues
+
+### 4. Configuration Standards
+- Terraform: One terraform{} block per file, no cross-variable validations
+- Pre-commit: Use language: python with explicit dependencies
+- Documentation: All code blocks must have language tags
+
+## Consequences
+
+### Positive
+- Issues from 2025-11-12 cannot recur (regression tests catch them)
+- Faster feedback (< 30 seconds vs full CI pipeline)
+- Better developer experience (clear errors + fix suggestions)
+- Improved CI reliability (fewer false failures)
+- Knowledge preservation (failures documented in tests)
+
+### Negative
+- Additional maintenance burden (29 regression tests)
+- Slightly slower commits (~5 seconds for pre-commit)
+- Learning curve for team (new patterns and tools)
+
+## Implementation
+
+See ADR-0045 .mdx file in docs/architecture/ for comprehensive details.
+
+## References
+
+- Related ADRs: ADR-0016 (Property Testing), ADR-0017 (Error Handling)
+- Pre-commit hooks: https://pre-commit.com/
+- Pytest-xdist: https://pytest-xdist.readthedocs.io/
+
+**Last Updated**: 2025-11-12

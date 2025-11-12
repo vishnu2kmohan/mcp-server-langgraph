@@ -66,6 +66,16 @@ def fix_code_block_closings(content: str) -> Tuple[str, int]:
             fixes += 1
             continue
 
+        # Pattern 4: ```LANG right before markdown text (##, **, -, etc.)
+        if (i + 1 < len(lines) and
+            re.match(r'^```(bash|python|javascript|json|yaml|text|ini|hcl|mermaid)$', line.strip()) and
+            lines[i+1].strip() and
+            re.match(r'^(\*\*|##|###|####|-|\d+\.|\||>)', lines[i+1].strip())):
+            # Replace with just ```
+            fixed_lines.append('```')
+            fixes += 1
+            continue
+
         fixed_lines.append(line)
 
     return '\n'.join(fixed_lines), fixes
