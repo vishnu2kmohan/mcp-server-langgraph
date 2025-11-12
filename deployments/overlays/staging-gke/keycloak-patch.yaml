@@ -20,14 +20,12 @@ spec:
           protocol: TCP
 
         # Security context for Keycloak container
-        # Note: readOnlyRootFilesystem temporarily disabled - requires comprehensive
-        # volume mount mapping for all Keycloak/Quarkus build artifacts.
-        # TODO: Re-enable with proper volume mounts after testing in dev environment
+        # readOnlyRootFilesystem enabled with proper volume mounts for writable directories
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 1000
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL

@@ -1,4 +1,4 @@
-# ADR-0045: CI/CD Failure Prevention Framework
+# ADR-0053: CI/CD Failure Prevention Framework
 
 **Status**: Accepted
 **Date**: 2025-11-12
@@ -63,7 +63,7 @@ Total: 29 regression tests preventing recurrence
 
 ## Implementation
 
-See ADR-0045 .mdx file in docs/architecture/ for comprehensive details.
+See ADR-0053 .mdx file in docs/architecture/ for comprehensive details.
 
 ## References
 

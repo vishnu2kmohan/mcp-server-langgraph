@@ -27,7 +27,7 @@ Instead, please report them via one of the following methods:
    - Fill out the advisory form with details
 
 2. **Email**
-   - Send an email to: `security@example.com` (replace with your security contact)
+   - Send an email to: `security@vishnu2kmohan.dev`
    - Include "SECURITY" in the subject line
    - Provide a detailed description of the vulnerability
 
