@@ -10,14 +10,49 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client():
-    """Create FastAPI test client"""
+    """
+    Create FastAPI test client with pre-populated test users.
+
+    TDD Fix (2025-11-12):
+    - Before: InMemoryUserProvider starts empty → login fails with 401
+    - After: Pre-populate with alice/bob users → login succeeds
+
+    Sets up:
+    - alice / alice123 (matches Keycloak test realm)
+    - bob / bob123 (matches Keycloak test realm)
+    - admin / admin123 (for admin operations)
+
+    Note: Uses get_mcp_server() to access server instance and populate users.
+    """
     # Initialize observability before creating client
+    from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
     from mcp_server_langgraph.core.config import settings
-    from mcp_server_langgraph.mcp.server_streamable import app
+    from mcp_server_langgraph.mcp.server_streamable import app, get_mcp_server
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
 
     if not is_initialized():
         init_observability(settings=settings, enable_file_logging=False)
+
+    # Populate test users if using InMemoryUserProvider
+    # (matches users in tests/e2e/keycloak-test-realm.json for consistency)
+    try:
+        mcp_server = get_mcp_server()
+        if mcp_server and mcp_server.auth:
+            user_provider = mcp_server.auth.user_provider
+            if isinstance(user_provider, InMemoryUserProvider):
+                # Only add if not already present (idempotent)
+                if "alice" not in user_provider.users_db:
+                    user_provider.add_user(
+                        username="alice", password="alice123", email="alice@example.com", roles=["user", "premium"]
+                    )
+                if "bob" not in user_provider.users_db:
+                    user_provider.add_user(username="bob", password="bob123", email="bob@example.com", roles=["user"])
+                if "admin" not in user_provider.users_db:
+                    user_provider.add_user(username="admin", password="admin123", email="admin@example.com", roles=["admin"])
+    except Exception:
+        # If we can't access the server instance, skip user population
+        # Tests may use dependency overrides or other auth mechanisms
+        pass
 
     return TestClient(app)
 

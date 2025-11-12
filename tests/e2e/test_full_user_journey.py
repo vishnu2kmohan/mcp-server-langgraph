@@ -61,11 +61,25 @@ def test_infrastructure_check(test_infrastructure):
 
 @pytest_asyncio.fixture
 async def test_user_credentials():
-    """Test user credentials for E2E tests"""
+    """
+    Test user credentials for E2E tests.
+
+    Uses pre-configured user from tests/e2e/keycloak-test-realm.json.
+    User is imported when Keycloak container starts.
+
+    Credentials:
+    - username: alice (from keycloak-test-realm.json)
+    - password: alice123 (configured in realm import)
+    - email: alice@example.com
+
+    TDD Fix (2025-11-12):
+    - Before: Used non-existent user 'e2e_test_user' → 401 Invalid credentials
+    - After: Uses pre-configured 'alice' user → Authentication succeeds
+    """
     return {
-        "username": "e2e_test_user",
-        "password": "test_password_123",
-        "email": "e2e@example.com",
+        "username": "alice",
+        "password": "alice123",
+        "email": "alice@example.com",
     }
 
 
