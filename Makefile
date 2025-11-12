@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -162,6 +162,10 @@ help:
 	@echo "  make docs-serve          Serve Mintlify docs locally"
 	@echo "  make docs-build          Build Mintlify docs"
 	@echo "  make docs-deploy         Deploy docs to Mintlify"
+	@echo "  make docs-validate       Validate all documentation (MDX, links, versions)"
+	@echo "  make docs-fix-mdx        Auto-fix MDX syntax errors"
+	@echo "  make docs-test           Run documentation tests"
+	@echo "  make docs-audit          Comprehensive documentation audit"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean               Stop containers and clean files"
@@ -947,6 +951,52 @@ docs-deploy:
 	else \
 		echo "Deployment cancelled"; \
 	fi
+
+# Documentation validation targets
+docs-validate: docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify
+	@echo "✅ All documentation validation passed!"
+
+docs-validate-mdx:
+	@echo "🔍 Validating MDX syntax..."
+	@python3 scripts/fix_mdx_syntax.py --all --dry-run || \
+		(echo "❌ MDX syntax errors found. Run 'make docs-fix-mdx' to auto-fix." && exit 1)
+
+docs-validate-links:
+	@echo "🔗 Checking internal links..."
+	@python3 scripts/check_internal_links.py --all || \
+		(echo "❌ Broken internal links found." && exit 1)
+
+docs-validate-version:
+	@echo "🏷️  Checking version consistency..."
+	@python3 scripts/check_version_consistency.py || \
+		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
+
+docs-validate-mintlify:
+	@echo "📋 Validating Mintlify configuration..."
+	@if command -v npx >/dev/null 2>&1; then \
+		cd docs && npx mintlify broken-links || \
+			(echo "❌ Mintlify validation failed." && exit 1); \
+	else \
+		echo "⚠️  npx not found. Skipping Mintlify validation."; \
+	fi
+
+docs-fix-mdx:
+	@echo "🔧 Auto-fixing MDX syntax errors..."
+	@python3 scripts/fix_mdx_syntax.py --all
+	@echo "✅ MDX syntax fixed. Review changes with 'git diff docs/'"
+
+docs-test:
+	@echo "🧪 Running documentation validation tests..."
+	@pytest tests/test_mdx_validation.py tests/test_link_checker.py -v
+
+docs-audit:
+	@echo "📊 Running comprehensive documentation audit..."
+	@echo "Current version: $$(python3 -c 'import toml; print(toml.load(open(\"pyproject.toml\"))[\"project\"][\"version\"])')"
+	@echo ""
+	@echo "Running validations..."
+	@make docs-validate || true
+	@echo ""
+	@echo "See docs-internal/DOCUMENTATION_AUDIT_*.md for detailed reports"
 
 # ==============================================================================
 # Enhanced Testing Targets

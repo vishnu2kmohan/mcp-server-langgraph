@@ -182,3 +182,259 @@ If you prefer manual deployment or need to customize steps:
 1. See `docs/IMPLEMENTATION_SUMMARY.md` for detailed deployment checklist
 2. See `docs/kubernetes-best-practices-implementation.md` for comprehensive guide
 3. See individual component READMEs in respective directories
+
+---
+
+## Documentation Validation Scripts (TDD)
+
+### Overview
+
+Comprehensive validation infrastructure built with Test-Driven Development to ensure documentation quality and prevent regressions.
+
+**Key Scripts**:
+- `fix_mdx_syntax.py` - Auto-fix MDX syntax errors
+- `check_internal_links.py` - Validate internal links
+- `check_version_consistency.py` - Ensure version consistency
+
+### `fix_mdx_syntax.py`
+
+**Purpose**: Automatically detect and fix common MDX syntax errors that break Mintlify builds.
+
+**Usage**:
+```bash
+# Fix all MDX files
+python3 scripts/fix_mdx_syntax.py --all
+
+# Fix specific file
+python3 scripts/fix_mdx_syntax.py --file docs/guides/installation.mdx
+
+# Preview changes without modifying (dry-run)
+python3 scripts/fix_mdx_syntax.py --all --dry-run
+
+# Via Makefile
+make docs-fix-mdx
+```
+
+**Patterns Fixed**:
+1. ``` followed by ```bash (duplicate language tag)
+2. ```bash before </CodeGroup> (should be just ```)
+3. ```python before <Note> or other MDX tags
+4. ```yaml before markdown text (**bold**, ##heading)
+
+**Test Suite**: `tests/test_mdx_validation.py` (18 tests)
+
+**Example**:
+```markdown
+Before:
+```bash
+echo "test"
+```bash
+<Note>Important!</Note>
+
+After:
+```bash
+echo "test"
+```
+
+<Note>Important!</Note>
+```
+
+---
+
+### `check_internal_links.py`
+
+**Purpose**: Validate that internal documentation links point to existing files.
+
+**Usage**:
+```bash
+# Check all documentation
+python3 scripts/check_internal_links.py --all
+
+# Check specific file
+python3 scripts/check_internal_links.py --file docs/guide.mdx
+
+# Via Makefile
+make docs-validate-links
+```
+
+**Validates**:
+- Markdown links: `[text](../path.mdx)`
+- Absolute links: `[text](/api-reference/auth)`
+- MDX Link components: `<Link href="/path">text</Link>`
+- Card/Button hrefs: `<Card href="/path">`
+
+**Handles**:
+- Relative paths with `../` and `./`
+- Absolute paths from docs root
+- Files with/without `.mdx` extension
+- Anchor links (`#section`)
+
+**Test Suite**: `tests/test_link_checker.py` (10 tests)
+
+**Example Output**:
+```
+Checking 235 files for broken internal links...
+
+❌ docs/guides/authentication.mdx
+   Broken: ../setup/nonexistent.mdx
+   Broken: /api-reference/missing-endpoint
+
+📊 Summary: 2 broken links in 1 file
+```
+
+---
+
+### `check_version_consistency.py`
+
+**Purpose**: Ensure version numbers in documentation match the current project version.
+
+**Usage**:
+```bash
+# Check all documentation
+python3 scripts/check_version_consistency.py
+
+# Via Makefile
+make docs-validate-version
+```
+
+**Detects**:
+- Version numbers in code examples
+- API version references
+- Outdated installation instructions
+- Dependency version mismatches
+
+**Intelligent Skipping**:
+- Release notes (intentionally historical)
+- ADR-0018 (version strategy examples)
+- CHANGELOG.md (historical records)
+- Dependency versions (different versioning)
+
+**Current Version**: Reads from `pyproject.toml` [project.version]
+
+**Example Output**:
+```
+Current version: 2.8.0
+
+📄 docs/guides/installation.mdx
+   Line 45: v2.6.0 → should be v2.8.0
+   Context: Install mcp-server-langgraph version 2.6.0 or later
+
+📊 Summary: 12 outdated version references in 8 files
+```
+
+---
+
+## Makefile Integration
+
+Quick access to all validation tools:
+
+```bash
+make docs-validate            # Run all validations
+make docs-validate-mdx        # MDX syntax only
+make docs-validate-links      # Internal links only
+make docs-validate-version    # Version consistency
+make docs-validate-mintlify   # Mintlify build check
+make docs-fix-mdx             # Auto-fix MDX errors
+make docs-test                # Run validation tests
+make docs-audit               # Comprehensive audit
+```
+
+---
+
+## Pre-commit Integration
+
+Scripts run automatically on every commit:
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run all hooks manually
+pre-commit run --all-files
+
+# Run specific documentation hooks
+pre-commit run fix-mdx-syntax --all-files
+pre-commit run check-doc-links --all-files
+```
+
+**Configured Hooks**:
+- `fix-mdx-syntax` - Auto-fixes MDX syntax
+- `check-doc-links` - Validates internal links
+- `check-version-consistency` - Checks versions
+- `validate-mintlify-docs` - Validates docs.json
+- `validate-documentation-quality` - Comprehensive checks
+
+See `.pre-commit-config.yaml` for complete configuration.
+
+---
+
+## CI/CD Integration
+
+Automated validation on every pull request:
+
+**Workflow**: `.github/workflows/docs-validation.yml`
+
+**Jobs**:
+1. **mdx-syntax-validation** - Tests MDX syntax, runs validation scripts
+2. **mintlify-validation** - Builds docs, creates issues on failure
+3. **link-validation** - Checks all internal links
+4. **version-consistency** - Validates version references
+5. **summary** - Aggregates results, posts PR comment
+
+**PR Comments**: Automatically posted with validation status table
+
+**Artifacts**: Mintlify logs uploaded on failure (7-day retention)
+
+---
+
+## Test-Driven Development
+
+All validation scripts have comprehensive test suites:
+
+```bash
+# Run all documentation validation tests
+pytest tests/test_mdx_validation.py tests/test_link_checker.py -v
+
+# With coverage report
+pytest tests/test_mdx_validation.py tests/test_link_checker.py \
+  --cov=scripts \
+  --cov-report=html \
+  --cov-report=term-missing
+
+# Via Makefile
+make docs-test
+```
+
+**Test Coverage**:
+- MDX Validation: 18 tests
+- Link Checking: 10 tests
+- Pattern Detection: 100% coverage
+- Real-world Examples: 7 tests
+- Edge Cases: 6 tests
+
+---
+
+## Documentation
+
+**Comprehensive Guide**: `docs-internal/VALIDATION_INFRASTRUCTURE.md`
+
+**Topics Covered**:
+- Quick start guide
+- Architecture overview
+- Usage patterns
+- TDD principles
+- Error prevention matrix
+- Troubleshooting guide
+- Best practices
+- Future enhancements
+
+**Also See**:
+- `docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md` - Audit results
+- `TESTING.md` - Overall testing strategy
+- `.pre-commit-config.yaml` - Hook configuration
+- `.github/workflows/docs-validation.yml` - CI/CD workflow
+
+---
+
+**Last Updated**: 2025-11-12
+
