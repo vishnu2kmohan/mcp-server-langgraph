@@ -284,16 +284,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # Required for full repository history scan
 
-    - name: TruffleHog OSS
+    # Split into two steps for clarity and to fix scheduled scan issues
+    # Scheduled scans: full repository scan (no base/head specified)
+    - name: TruffleHog OSS (Scheduled - Full Repository Scan)
+      if: github.event_name == 'schedule'
       uses: trufflesecurity/trufflehog@v3.90.12
       with:
         path: ./
-        # Only specify base/head for push and pull_request events
-        # For schedule events, scan full repository without range
-        base: ${{ github.event_name == 'schedule' && '' || github.event.repository.default_branch }}
-        head: ${{ github.event_name == 'schedule' && '' || 'HEAD' }}
+        # No base/head specified = full repository scan
+        extra_args: --debug --only-verified
+
+    # Push/PR scans: incremental scan (with base/head range)
+    - name: TruffleHog OSS (Push/PR - Incremental Scan)
+      if: github.event_name != 'schedule'
+      uses: trufflesecurity/trufflehog@v3.90.12
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
         extra_args: --debug --only-verified
 
   license-check:

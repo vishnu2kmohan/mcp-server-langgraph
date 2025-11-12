@@ -87,6 +87,8 @@ dev = [
     # Docker infrastructure management
     "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
     "python-on-whales>=0.74.0",  # Docker management library used by test infrastructure
+    "docker>=7.1.0",  # Docker Python SDK for test imports (tests/unit/execution/test_docker_sandbox_unit.py)
+    "kubernetes>=31.0.0",  # Kubernetes Python client for test imports (tests/unit/execution/)
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
