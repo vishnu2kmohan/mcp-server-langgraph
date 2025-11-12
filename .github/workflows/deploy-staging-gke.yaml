@@ -278,13 +278,50 @@ jobs:
           echo "Deploying to staging..."
           kubectl apply -k deployments/overlays/staging-gke
 
+      # Dry-run validation before actual deployment
+      - name: Dry-run deployment validation
+        run: |
+          echo "Running dry-run validation..."
+          kubectl apply --dry-run=server -f /tmp/staging-manifests.yaml
+
       # Wait for rollout to complete
       - name: Wait for rollout
+        id: rollout
         run: |
           echo "Waiting for deployment rollout..."
           kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
             --timeout=10m
+
+      # Capture deployment failure details
+      - name: Capture deployment failure details
+        if: failure() && steps.rollout.outcome == 'failure'
+        run: |
+          echo "## Deployment Failure Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Events" >> $GITHUB_STEP_SUMMARY
+          kubectl get events -n ${{ env.NAMESPACE }} \
+            --sort-by='.lastTimestamp' \
+            --field-selector involvedObject.kind=Pod >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Descriptions" >> $GITHUB_STEP_SUMMARY
+          for pod in $(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o name); do
+            echo "#### $pod" >> $GITHUB_STEP_SUMMARY
+            kubectl describe $pod -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recent Pod Logs" >> $GITHUB_STEP_SUMMARY
+          for pod in $(kubectl get pods -n ${{ env.NAMESPACE }} -l app=mcp-server-langgraph -o name | head -3); do
+            echo "#### Logs from $pod" >> $GITHUB_STEP_SUMMARY
+            kubectl logs $pod -n ${{ env.NAMESPACE }} --tail=50 >> $GITHUB_STEP_SUMMARY || echo "Could not retrieve logs" >> $GITHUB_STEP_SUMMARY
+          done
 
       # Verify deployment
       - name: Verify deployment

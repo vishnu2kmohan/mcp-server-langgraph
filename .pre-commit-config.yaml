@@ -394,6 +394,22 @@ repos:
           - Run #19310965206: Deployment validation failure
           - Run #19310965249: Deploy to GKE Staging failure
 
+      - id: validate-pytest-markers
+        name: Validate Pytest Markers Registration
+        entry: python3 scripts/validate_pytest_markers.py
+        language: system
+        files: ^tests/.*\.py$
+        pass_filenames: false
+        description: |
+          Validates that all @pytest.mark.* decorators used in tests are registered
+          in pyproject.toml to prevent test collection failures.
+
+          Regression prevention for:
+          - Run #19310965242: E2E Tests failure (missing 'staging' marker)
+
+          Prevents errors like:
+          "PytestUnknownMarkWarning: Unknown pytest.mark.X is not registered"
+
       - id: validate-dependency-injection
         name: Validate Dependency Injection Configuration
         entry: python3 .githooks/pre-commit-dependency-validation
