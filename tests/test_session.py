@@ -799,7 +799,7 @@ class TestSessionEdgeCases:
         # Given: Invalid timestamp format
         # When: Try to create SessionData with invalid timestamp
         # Then: Should raise ValidationError
-        try:
+        with pytest.raises(ValidationError, match="timestamp|datetime|iso|valid"):
             SessionData(
                 session_id="test-session-invalid-12345678901",  # At least 32 chars
                 user_id="user:alice",
@@ -809,8 +809,3 @@ class TestSessionEdgeCases:
                 last_accessed="2025-01-01T00:00:00Z",
                 expires_at="2025-01-01T00:00:00Z",
             )
-            # If it doesn't raise, the validation is lenient
-            assert True
-        except ValidationError:
-            # Expected - validation caught the error
-            assert True

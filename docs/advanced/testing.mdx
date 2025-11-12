@@ -94,8 +94,7 @@ tests/
 │   └── test_injection.py
 │
 └── conftest.py           # Shared fixtures
-```
-
+```python
 #### Test Markers
 
 ```python
@@ -124,8 +123,7 @@ pytest -m "not slow"
 
 ## Run security tests
 pytest -m security
-```
-
+```python
 ### Unit Testing
 
 #### Writing Unit Tests
@@ -251,8 +249,7 @@ async def test_agent_with_authorization(mock_openfga_class, mock_llm):
 
     # Verify authorization checked
     mock_openfga.check_permission.assert_called_once()
-```
-
+```python
 #### Testing Async Code
 
 ```python
@@ -359,8 +356,7 @@ async def redis_client(redis_container):
         yield client
     finally:
         await client.close()
-```
-
+```python
 #### Integration Tests
 
 ```python
@@ -454,8 +450,7 @@ async def test_chat_endpoint(client):
     data = response.json()
     assert "response" in data
     assert isinstance(data["response"], str)
-```
-
+```python
 ### Property-Based Testing
 
 #### Using Hypothesis
@@ -641,8 +636,7 @@ export default function () {
 
   sleep(1);
 }
-```
-
+```bash
 **Run k6 test**:
 ```bash
 ## Install k6
@@ -701,8 +695,7 @@ async def test_xss_protection(client, token, xss_input):
     # Response should not contain unescaped script tags
     assert "`<script>`" not in response.text
     assert "onerror=" not in response.text
-```
-
+```python
 #### Authentication Tests
 
 ```python
@@ -853,8 +846,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-```
-
+```python
 ### Test Coverage
 
 #### Measuring Coverage
@@ -896,8 +888,7 @@ exclude_lines =
 
 precision = 2
 show_missing = True
-```
-
+```bash
 ### Best Practices
 
 <AccordionGroup>
@@ -965,6 +956,235 @@ show_missing = True
     ```
   </Accordion>
 </AccordionGroup>
+
+### Test Dependency Management
+
+<Warning>
+**Critical**: All packages imported in tests must be available in project dependencies. Missing test dependencies cause CI failures that pass locally.
+</Warning>
+
+#### The Problem
+
+On 2025-11-12, 10 CI jobs failed with `ModuleNotFoundError: docker.errors` despite tests passing locally:
+
+- **Root cause**: `docker` and `kubernetes` packages were in `code-execution` extras, not `dev` extras
+- **Impact**: CI workflows install `dev` extras but tests import docker modules
+- **Result**: Tests pass locally (all extras installed) but fail in CI (only `dev` installed)
+
+#### Prevention Strategy
+
+Three layers of protection prevent this issue:
+
+<Steps>
+  <Step title="Regression Test">
+    **File**: `tests/regression/test_dev_dependencies.py`
+
+    Validates all test imports against project dependencies:
+    ```python
+    @pytest.mark.regression
+    def test_test_imports_have_dev_dependencies():
+        """Ensure every test import has a corresponding dependency"""
+        # Checks all imports in tests/ against:
+        # - Main dependencies
+        # - All optional dependencies
+        # - Handles package vs import name mismatches
+        # - Excludes stdlib and project modules
+    ```
+
+    **Runs**: On every commit in CI, catches missing dependencies immediately.
+  </Step>
+
+  <Step title="Pre-commit Hook">
+    **Hook ID**: `validate-test-dependencies`
+
+    Runs dependency validation before each commit:
+    ```bash
+    # Triggers on test file or pyproject.toml changes
+    pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v
+    ```
+
+    **Fast**: Only runs affected test, typically < 5 seconds.
+  </Step>
+
+  <Step title="Workflow Validation">
+    **Script**: `scripts/validation/validate_workflow_test_deps.py`
+
+    Validates GitHub Actions workflows:
+    ```python
+    # Checks that workflows using setup-python-deps + pytest
+    # install the required 'dev' extras
+    python scripts/validation/validate_workflow_test_deps.py
+    ```
+
+    **Hook ID**: `validate-workflow-test-deps` (runs on workflow file changes)
+  </Step>
+</Steps>
+
+#### Dependency Rules
+
+<AccordionGroup>
+  <Accordion title="Rule 1: Test Imports → Dev Extras" icon="1">
+    **If a test file imports a package**, that package **must** be in project dependencies.
+
+    ```python
+    # tests/unit/execution/test_docker_sandbox_unit.py
+    from docker.errors import ImageNotFound  # ❌ FAILS if docker not in deps
+
+    # Fix: Add to pyproject.toml
+    [project.optional-dependencies]
+    dev = [
+        "docker>=7.1.0",  # ✅ Now available in CI
+    ]
+    ```
+
+    **Why `dev` extras?**
+    - All test workflows install `dev` extras by default
+    - Keeps test dependencies separate from production code
+    - Matches pytest, pytest-cov, pytest-mock pattern
+  </Accordion>
+
+  <Accordion title="Rule 2: Handle Package Name Mismatches" icon="2">
+    Some packages have different import names:
+
+    | Package Name | Import Name | Example |
+    |--------------|-------------|---------|
+    | `PyJWT` | `jwt` | `import jwt` |
+    | `pyyaml` | `yaml` | `import yaml` |
+    | `python-dotenv` | `dotenv` | `from dotenv import load_dotenv` |
+    | `infisical-python` | `infisical_client` | `from infisical_client import...` |
+
+    The regression test handles these automatically via `get_import_name_mapping()`.
+  </Accordion>
+
+  <Accordion title="Rule 3: Stdlib Backports" icon="3">
+    Python 3.11+ includes `tomllib` in stdlib. For older versions, tests may import `tomli`:
+
+    ```python
+    # Backwards compatible import
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        import tomli as tomllib
+    ```
+
+    The regression test allows `tomli` imports if `tomllib` is in stdlib (Python 3.12+).
+  </Accordion>
+
+  <Accordion title="Rule 4: Exclude Third-Party Helpers" icon="4">
+    Third-party test tools (e.g., bats-core) have their own dependencies:
+
+    ```python
+    # tests/test_helper/bats-core/docs/source/conf.py
+    import recommonmark  # ✅ Excluded from validation
+    ```
+
+    The regression test skips `test_helper/` directories automatically.
+  </Accordion>
+</AccordionGroup>
+
+#### Quick Reference
+
+<CodeGroup>
+```bash Local Testing
+# Run dependency validation
+pytest tests/regression/test_dev_dependencies.py -v
+
+# Test pre-commit hook
+pre-commit run validate-test-dependencies --all-files
+
+# Test workflow validation
+python scripts/validation/validate_workflow_test_deps.py
+```
+
+```yaml Workflow Configuration
+# .github/workflows/quality-tests.yaml
+- name: Setup Python and dependencies
+  uses: ./.github/actions/setup-python-deps
+  with:
+    python-version: '3.12'
+    extras: 'dev builder'  # ✅ Must include 'dev' for tests
+```bash
+```toml Dependency Configuration
+# pyproject.toml
+[project.optional-dependencies]
+dev = [
+    # Test framework
+    "pytest>=8.4.2",
+
+    # Test infrastructure (MUST include all test imports)
+    "docker>=7.1.0",        # For docker sandbox tests
+    "kubernetes>=31.0.0",   # For K8s execution tests
+]
+
+code-execution = [
+    # Production code execution (separate from test deps)
+    "docker>=7.1.0",        # Also here for runtime
+    "kubernetes>=31.0.0",   # Also here for runtime
+]
+```
+
+</CodeGroup>
+
+#### Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Test fails in CI but passes locally" icon="circle-exclamation">
+    **Symptom**: `ModuleNotFoundError` in CI, test passes on your machine.
+
+    **Cause**: Package installed locally but not in `dev` extras.
+
+    **Solution**:
+    1. Run dependency validation: `pytest tests/regression/test_dev_dependencies.py -v`
+    2. Add missing package to `[project.optional-dependencies.dev]`
+    3. Run `uv sync --extra dev` to update lockfile
+    4. Re-run tests locally to verify
+
+    **Example**:
+    ```bash
+    # Test output shows missing package
+    Test files import packages not in any dependency group:
+      - docker
+
+    # Fix in pyproject.toml
+    dev = [
+        "docker>=7.1.0",  # Add missing package
+    ]
+    ```
+  </Accordion>
+
+  <Accordion title="Pre-commit hook fails" icon="hook">
+    **Symptom**: `validate-test-dependencies` hook fails on commit.
+
+    **Cause**: New test import without corresponding dependency.
+
+    **Solution**:
+    1. Check hook output for missing packages
+    2. Add packages to appropriate extras in `pyproject.toml`:
+       - Test dependencies → `dev`
+       - Code execution → `code-execution`
+       - CLI tools → `cli`
+    3. Run `uv sync --extra dev`
+    4. Re-run pre-commit: `pre-commit run validate-test-dependencies --all-files`
+  </Accordion>
+
+  <Accordion title="Workflow validation fails" icon="workflow">
+    **Symptom**: `validate-workflow-test-deps` hook fails.
+
+    **Cause**: Workflow runs pytest but doesn't install `dev` extras.
+
+    **Solution**:
+    Update workflow to include `dev` in extras:
+    ```yaml
+    - uses: ./.github/actions/setup-python-deps
+      with:
+        extras: 'dev'  # or 'dev builder' for multiple
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+**Historical Context**: This protection system was implemented after commit `7b51437` (2025-11-12) to prevent the recurrence of 10 simultaneous CI failures. The regression test, pre-commit hooks, and workflow validation ensure this class of error can never happen again.
+</Info>
 
 ### Next Steps
 

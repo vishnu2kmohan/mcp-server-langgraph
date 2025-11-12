@@ -147,11 +147,13 @@ class TestGDPREndpointAuthOverrides:
         # The non-determinism is the PROBLEM
         response = client.get("/api/v1/users/me/data")
 
-        # Document that this is unreliable
-        assert True, (
-            f"Response: {response.status_code}. "
-            "This may be 200 or 401 - the non-determinism is the problem! "
-            "Always override bearer_scheme to make this deterministic."
+        # Incomplete override should cause 401 (bearer_scheme validation fails)
+        # If we get 200, it means the non-determinism bug is manifesting
+        assert response.status_code == 401, (
+            f"Expected 401 with incomplete override (missing bearer_scheme), got {response.status_code}. "
+            "Without bearer_scheme override, auth should fail even if get_current_user is overridden. "
+            "If this test fails with 200, it demonstrates the non-determinism bug in pytest-xdist. "
+            "Always override BOTH bearer_scheme AND get_current_user."
         )
 
         # Cleanup

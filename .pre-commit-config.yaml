@@ -792,6 +792,65 @@ repos:
           See: tests/PYTEST_XDIST_BEST_PRACTICES.md for complete guidance
           Regression tests: tests/regression/test_pytest_xdist_isolation.py
 
+      - id: validate-test-dependencies
+        name: Validate Test Import Dependencies
+        entry: bash -c 'source .venv/bin/activate && pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v --tb=short'
+        language: system
+        files: ^(tests/.*\.py|pyproject\.toml)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Prevents CI failures from missing test dependencies by validating that
+          every package imported in tests/ is available in project dependencies.
+
+          This hook catches the issue that caused 10 CI job failures on 2025-11-12:
+          - ModuleNotFoundError: docker.errors in 7 quality test jobs
+          - Same error in E2E tests
+          - Root cause: docker/kubernetes in code-execution extras, not dev extras
+
+          Validations:
+          - All test imports have corresponding dependencies (main or optional)
+          - Package vs import name mismatches (PyJWT→jwt, pyyaml→yaml)
+          - Stdlib backports handled (tomli→tomllib)
+          - Third-party helpers excluded (bats-core)
+
+          Quick fix: Add missing package to appropriate extras in pyproject.toml
+          - Test dependencies → [project.optional-dependencies.dev]
+          - Code execution → [project.optional-dependencies.code-execution]
+          - CLI tools → [project.optional-dependencies.cli]
+
+          Regression prevention for commit 7b51437 (2025-11-12)
+          See: tests/regression/test_dev_dependencies.py for implementation
+
+      - id: validate-workflow-test-deps
+        name: Validate Workflow Test Dependencies
+        entry: python3 scripts/validation/validate_workflow_test_deps.py
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates that GitHub Actions workflows installing dependencies for tests
+          include the required 'dev' extras.
+
+          Prevents the configuration issue that caused 10 CI failures on 2025-11-12:
+          - Workflows ran pytest but didn't install dev extras
+          - Missing docker/kubernetes packages broke test imports
+          - Root cause: setup-python-deps used without 'dev' in extras parameter
+
+          Checks:
+          - Workflows using setup-python-deps + pytest must install 'dev' extras
+          - Skips workflows using uv run (auto-installs) or other methods
+          - Only validates workflows that explicitly use setup-python-deps action
+
+          Quick fix: Add or update 'extras' parameter in setup-python-deps step:
+            - uses: ./.github/actions/setup-python-deps
+              with:
+                extras: 'dev'  # or 'dev builder' for multiple
+
+          Regression prevention for commit 7b51437 (2025-11-12)
+          See: scripts/validation/validate_workflow_test_deps.py for implementation
+
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2

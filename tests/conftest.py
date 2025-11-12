@@ -623,6 +623,10 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
             ...
     """
     # Set TESTING environment variable for services
+    # NOTE: This is intentionally session-scoped and not cleaned up.
+    # Worker isolation is achieved via port offsets and schema/DB separation,
+    # not separate Docker instances. The TESTING env var is shared across
+    # all workers to enable test infrastructure detection.
     os.environ["TESTING"] = "true"
 
     # Check if python-on-whales is available
@@ -1202,7 +1206,7 @@ async def openfga_client_clean(openfga_client_real):
     """
     # Get worker ID from environment (set by pytest-xdist)
     worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-    _store_name = f"test_store_{worker_id}"  # Reserved for future use
+    _store_name = f"test_store_{worker_id}"  # noqa: F841 Reserved for future use
 
     # Note: Worker-scoped store creation would require OpenFGA API calls.
     # For now, we track tuples and delete them (existing pattern).

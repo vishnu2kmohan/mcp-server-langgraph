@@ -28,7 +28,7 @@ class TestConfTestFixturesPluginEnhancements:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_plugin_exists_and_is_loaded(self):
+    def test_plugin_exists_and_is_loaded(self, request):
         """
         🟢 GREEN: Verify the fixture organization plugin is loaded.
 
@@ -36,8 +36,11 @@ class TestConfTestFixturesPluginEnhancements:
         and active during test execution.
         """
         # The plugin is loaded via conftest_fixtures_plugin.py:pytest_configure
-        # If we get here without errors, the plugin is loaded
-        assert True, "Plugin loaded successfully"
+        # Verify plugin is registered with pytest
+        plugin_manager = request.config.pluginmanager
+        assert plugin_manager.is_registered(name="conftest_fixtures_plugin") or any(
+            "conftest_fixtures_plugin" in str(plugin) for plugin in plugin_manager.get_plugins()
+        ), "Fixture organization plugin not loaded"
 
     def test_plugin_validates_fixture_organization(self):
         """
@@ -50,8 +53,16 @@ class TestConfTestFixturesPluginEnhancements:
         This is the EXISTING functionality that we're building on.
         """
         # The existing plugin functionality is tested in:
-        # tests/test_fixture_organization.py
-        assert True, "Existing validation works"
+        # tests/test_fixture_organization.py - verify that test module exists
+        import importlib
+        import importlib.util
+
+        spec = importlib.util.find_spec("tests.test_fixture_organization")
+        assert spec is not None, "test_fixture_organization.py module not found"
+
+        # Verify the module can be imported (contains fixture validation tests)
+        module = importlib.import_module("tests.test_fixture_organization")
+        assert module is not None, "Failed to import test_fixture_organization module"
 
     def test_bearer_scheme_validation_documentation(self):
         """

@@ -111,7 +111,7 @@ class TestTemporaryDirectorySecurity:
                 "Use tempfile.gettempdir() or ensure strict validation."
             )
 
-    def test_builder_output_directory_has_safe_default(self):
+    def test_builder_output_directory_has_safe_default(self, monkeypatch):
         """
         Test that the default output directory is secure.
 
@@ -119,39 +119,31 @@ class TestTemporaryDirectorySecurity:
         PASSES when: Default uses application-specific secure directory
         """
         # Clear environment variable to test default
-        original_value = os.environ.get("BUILDER_OUTPUT_DIR")
-        if "BUILDER_OUTPUT_DIR" in os.environ:
-            del os.environ["BUILDER_OUTPUT_DIR"]
+        monkeypatch.delenv("BUILDER_OUTPUT_DIR", raising=False)
 
-        try:
-            # Import after clearing env var to get default behavior
-            # This will need to be tested based on actual implementation
-            # For now, we test that tempfile provides safe defaults
-            temp_dir = Path(tempfile.gettempdir())
-            assert temp_dir.exists()
+        # Import after clearing env var to get default behavior
+        # This will need to be tested based on actual implementation
+        # For now, we test that tempfile provides safe defaults
+        temp_dir = Path(tempfile.gettempdir())
+        assert temp_dir.exists()
 
-            # Create application-specific temp directory with proper permissions
-            app_temp = temp_dir / "mcp-server-workflows-test"
-            app_temp.mkdir(mode=0o700, parents=True, exist_ok=True)
+        # Create application-specific temp directory with proper permissions
+        app_temp = temp_dir / "mcp-server-workflows-test"
+        app_temp.mkdir(mode=0o700, parents=True, exist_ok=True)
 
-            # Verify permissions are owner-only (0o700)
-            stat_info = app_temp.stat()
-            permissions = oct(stat_info.st_mode)[-3:]
+        # Verify permissions are owner-only (0o700)
+        stat_info = app_temp.stat()
+        permissions = oct(stat_info.st_mode)[-3:]
 
-            # Owner should have rwx, group and others should have no access
-            # This prevents symlink attacks and unauthorized access
-            assert permissions in ["700", "755"], (
-                f"Temp directory has insecure permissions: {permissions}. "
-                "Expected 700 (owner-only) or 755 (owner write, others read)."
-            )
+        # Owner should have rwx, group and others should have no access
+        # This prevents symlink attacks and unauthorized access
+        assert permissions in ["700", "755"], (
+            f"Temp directory has insecure permissions: {permissions}. "
+            "Expected 700 (owner-only) or 755 (owner write, others read)."
+        )
 
-            # Cleanup
-            app_temp.rmdir()
-
-        finally:
-            # Restore environment variable
-            if original_value is not None:
-                os.environ["BUILDER_OUTPUT_DIR"] = original_value
+        # Cleanup
+        app_temp.rmdir()
 
     def test_path_validation_prevents_directory_traversal(self):
         """

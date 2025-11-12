@@ -23,6 +23,7 @@ pytestmark = [
     pytest.mark.e2e,
     pytest.mark.integration,
     pytest.mark.slow,
+    pytest.mark.xdist_group(name="e2e_full_journey"),  # Prevent concurrent E2E runs
 ]
 
 

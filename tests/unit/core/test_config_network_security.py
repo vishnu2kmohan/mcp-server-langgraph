@@ -9,10 +9,8 @@ rather than "allowlist" or "unrestricted". Users must explicitly opt-in to netwo
 Expected to FAIL until core/config.py:216 is fixed to default to "none".
 """
 
-import os
 
-
-def test_default_network_mode_is_secure_none():
+def test_default_network_mode_is_secure_none(monkeypatch):
     """
     🔴 RED: Test that Settings defaults code_execution_network_mode to "none".
 
@@ -22,7 +20,7 @@ def test_default_network_mode_is_secure_none():
     Expected to PASS after fixing the default to "none".
     """
     # Set environment to test to avoid production validation errors
-    os.environ["ENVIRONMENT"] = "test"
+    monkeypatch.setenv("ENVIRONMENT", "test")
 
     # Import after setting environment
     from mcp_server_langgraph.core.config import Settings
@@ -37,14 +35,14 @@ def test_default_network_mode_is_secure_none():
     )
 
 
-def test_network_mode_can_be_explicitly_set_to_allowlist():
+def test_network_mode_can_be_explicitly_set_to_allowlist(monkeypatch):
     """
     Verify that network mode CAN be explicitly set to allowlist if desired.
 
     This ensures the fix doesn't prevent legitimate use cases.
     """
-    os.environ["ENVIRONMENT"] = "test"
-    os.environ["CODE_EXECUTION_NETWORK_MODE"] = "allowlist"
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("CODE_EXECUTION_NETWORK_MODE", "allowlist")
 
     from mcp_server_langgraph.core.config import Settings
 
@@ -52,24 +50,18 @@ def test_network_mode_can_be_explicitly_set_to_allowlist():
 
     assert settings.code_execution_network_mode == "allowlist"
 
-    # Clean up
-    del os.environ["CODE_EXECUTION_NETWORK_MODE"]
 
-
-def test_network_mode_can_be_explicitly_set_to_unrestricted():
+def test_network_mode_can_be_explicitly_set_to_unrestricted(monkeypatch):
     """
     Verify that network mode CAN be explicitly set to unrestricted if desired.
 
     This ensures the fix doesn't prevent legitimate use cases.
     """
-    os.environ["ENVIRONMENT"] = "test"
-    os.environ["CODE_EXECUTION_NETWORK_MODE"] = "unrestricted"
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("CODE_EXECUTION_NETWORK_MODE", "unrestricted")
 
     from mcp_server_langgraph.core.config import Settings
 
     settings = Settings()
 
     assert settings.code_execution_network_mode == "unrestricted"
-
-    # Clean up
-    del os.environ["CODE_EXECUTION_NETWORK_MODE"]

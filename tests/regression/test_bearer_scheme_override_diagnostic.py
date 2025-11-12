@@ -53,21 +53,18 @@ class TestBearerSchemeOverrideDiagnostic:
         content = test_file.read_text()
 
         # Check 1: bearer_scheme is imported
-        assert "from mcp_server_langgraph.auth.middleware import bearer_scheme" in content or \
-               "bearer_scheme" in content, \
-               "bearer_scheme not imported in test file"
+        assert (
+            "from mcp_server_langgraph.auth.middleware import bearer_scheme" in content or "bearer_scheme" in content
+        ), "bearer_scheme not imported in test file"
 
         # Check 2: bearer_scheme override is set
-        assert "app.dependency_overrides[bearer_scheme]" in content, \
-               "bearer_scheme override not found - fix from commit 05a54e1 missing!"
+        assert (
+            "app.dependency_overrides[bearer_scheme]" in content
+        ), "bearer_scheme override not found - fix from commit 05a54e1 missing!"
 
         # Check 3: Override is set BEFORE app.include_router()
         # Find the fixture definition
-        fixture_match = re.search(
-            r'def api_keys_test_client.*?yield client',
-            content,
-            re.DOTALL
-        )
+        fixture_match = re.search(r"def api_keys_test_client.*?yield client", content, re.DOTALL)
         assert fixture_match, "api_keys_test_client fixture not found"
 
         fixture_code = fixture_match.group(0)
@@ -78,8 +75,7 @@ class TestBearerSchemeOverrideDiagnostic:
 
         assert override_pos > 0, "bearer_scheme override not found in fixture"
         assert router_pos > 0, "app.include_router() not found in fixture"
-        assert override_pos < router_pos, \
-               "bearer_scheme override MUST come BEFORE app.include_router() - incorrect order!"
+        assert override_pos < router_pos, "bearer_scheme override MUST come BEFORE app.include_router() - incorrect order!"
 
     def test_bearer_scheme_override_actually_works(self):
         """
@@ -91,16 +87,14 @@ class TestBearerSchemeOverrideDiagnostic:
         If this test fails, there's a problem with the FastAPI dependency override
         mechanism itself (possibly due to FastAPI version incompatibility).
         """
+        from datetime import datetime, timedelta, timezone
+        from unittest.mock import AsyncMock, MagicMock
+
         from mcp_server_langgraph.api.api_keys import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
         from mcp_server_langgraph.auth.api_keys import APIKeyManager
         from mcp_server_langgraph.auth.keycloak import KeycloakClient
-        from mcp_server_langgraph.core.dependencies import (
-            get_api_key_manager,
-            get_keycloak_client,
-        )
-        from unittest.mock import AsyncMock, MagicMock
-        from datetime import datetime, timedelta, timezone
+        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
         # Create minimal FastAPI app
         app = FastAPI()
@@ -185,9 +179,9 @@ class TestBearerSchemeOverrideDiagnostic:
 
         # Check if running in Docker
         in_docker = (
-            os.path.exists("/.dockerenv") or
-            os.getenv("DOCKER_CONTAINER") == "true" or
-            os.getenv("TESTING") == "true"  # Set by docker-compose.test.yml
+            os.path.exists("/.dockerenv")
+            or os.getenv("DOCKER_CONTAINER") == "true"
+            or os.getenv("TESTING") == "true"  # Set by docker-compose.test.yml
         )
 
         if not in_docker:
@@ -221,8 +215,8 @@ class TestBearerSchemeOverrideDiagnostic:
         This test checks if commit 05a54e1 is in the git history.
         If not, the codebase is too old and needs to be updated.
         """
-        import subprocess
         import os
+        import subprocess
 
         # Skip if not in a git repository
         if not os.path.exists(".git"):
@@ -269,8 +263,10 @@ def test_bearer_scheme_override_documentation():
     content = test_file.read_text()
 
     # Check for documentation comment
-    assert "CRITICAL" in content and "bearer_scheme" in content, \
-           "bearer_scheme override should be documented with CRITICAL comment"
+    assert (
+        "CRITICAL" in content and "bearer_scheme" in content
+    ), "bearer_scheme override should be documented with CRITICAL comment"
 
-    assert "pytest-xdist" in content or "state pollution" in content or "singleton" in content, \
-           "Comment should explain the reason (pytest-xdist state pollution or singleton)"
+    assert (
+        "pytest-xdist" in content or "state pollution" in content or "singleton" in content
+    ), "Comment should explain the reason (pytest-xdist state pollution or singleton)"

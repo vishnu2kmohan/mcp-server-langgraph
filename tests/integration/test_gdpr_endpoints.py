@@ -325,11 +325,11 @@ class TestGDPRProductionGuard:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_production_guard_triggers(self):
+    def test_production_guard_triggers(self, monkeypatch):
         """Test that production guard raises error when ENVIRONMENT=production."""
         # Set production environment
-        os.environ["ENVIRONMENT"] = "production"
-        os.environ["GDPR_STORAGE_BACKEND"] = "memory"
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("GDPR_STORAGE_BACKEND", "memory")
 
         # Importing should raise RuntimeError
         with pytest.raises(RuntimeError, match="CRITICAL.*in-memory storage"):
@@ -341,24 +341,17 @@ class TestGDPRProductionGuard:
 
             import mcp_server_langgraph.api.gdpr  # noqa: F401
 
-        # Reset environment
-        os.environ["ENVIRONMENT"] = "development"
-
-    def test_production_guard_allows_postgres(self):
+    def test_production_guard_allows_postgres(self, monkeypatch):
         """Test that production guard allows postgres backend."""
-        os.environ["ENVIRONMENT"] = "production"
-        os.environ["GDPR_STORAGE_BACKEND"] = "postgres"
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("GDPR_STORAGE_BACKEND", "postgres")
 
-        try:
-            # Force reimport
-            import sys
+        # Force reimport
+        import sys
 
-            if "mcp_server_langgraph.api.gdpr" in sys.modules:
-                del sys.modules["mcp_server_langgraph.api.gdpr"]
+        if "mcp_server_langgraph.api.gdpr" in sys.modules:
+            del sys.modules["mcp_server_langgraph.api.gdpr"]
 
-            import mcp_server_langgraph.api.gdpr  # noqa: F401
+        import mcp_server_langgraph.api.gdpr  # noqa: F401
 
-            # Should not raise
-        finally:
-            os.environ["ENVIRONMENT"] = "development"
-            os.environ["GDPR_STORAGE_BACKEND"] = "memory"
+        # Should not raise

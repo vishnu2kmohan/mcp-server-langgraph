@@ -31,13 +31,12 @@ class TestMCPServerStartupValidation:
 
         This catches import-time failures and circular dependencies.
         """
-        try:
-            from mcp_server_langgraph.server import MCPAgentServer  # noqa: F401
+        from mcp_server_langgraph.server import MCPAgentServer
 
-            # Success - module imported
-            assert True
-        except ImportError as e:
-            pytest.fail(f"MCP server import failed: {e}")
+        # Verify the imported class exists and is a class
+        assert MCPAgentServer is not None, "MCPAgentServer class is None"
+        assert isinstance(MCPAgentServer, type), "MCPAgentServer is not a class"
+        assert hasattr(MCPAgentServer, "__init__"), "MCPAgentServer missing __init__ method"
 
     def test_mcp_server_can_instantiate(self, monkeypatch):
         """
