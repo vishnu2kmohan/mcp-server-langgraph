@@ -138,12 +138,12 @@ workflow.add_edge("refine", "respond")  # loop back
 
 #### Before (Simple Flow)
 
-```
+```bash
 START → router → [use_tools | respond] → END
 ```
 #### After (Full Agentic Loop)
 
-```
+```bash
 START
   → compact (Gather Context)
   → router (Route Decision)

@@ -151,7 +151,7 @@ cat .dora-metrics/metrics.json
 ## Workflow Dependencies
 
 ### CI Pipeline Flow
-```
+```text
 test (3.10, 3.11, 3.12) ──┐
                            ├──> lint ──> verify ──> docker-build (base, full, test)
 integration-tests ─────────┘
@@ -167,7 +167,7 @@ create-release ──┬──> build-and-push (amd64, arm64) ──┬──> p
 ```
 
 ### Deployment Flow
-```
+```text
 pre-deployment-checks ──> build-and-push ──> approve (manual) ──>
   deploy-canary ──> monitor ──> smoke-tests ──> full-rollout ──>
   post-deployment-validation

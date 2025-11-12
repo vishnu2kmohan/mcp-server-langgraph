@@ -202,7 +202,7 @@ These map to Keycloak user attributes:
 
 When users are provisioned via SCIM, roles are automatically synced to OpenFGA:
 
-```
+```text
 SCIM Create User → Keycloak User Created → Event Listener
   → sync_user_to_openfga() → OpenFGA Tuples
 ```bash

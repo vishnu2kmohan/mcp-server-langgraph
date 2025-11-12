@@ -93,7 +93,7 @@ resources:
 </CodeGroup>
 
 **Action**:
-```
+```sql
 ## Profile actual usage
 kubectl top pods -n mcp-production --containers
 
@@ -128,7 +128,7 @@ Commit to 1-year or 3-year usage for significant discounts:
 
 **Auto-shutdown dev clusters** after hours:
 
-```
+```markdown
 ## Cloud Scheduler: Scale down at 6 PM weekdays
 gcloud scheduler jobs create http scale-down-dev \
   --schedule="0 18 * * 1-5" \
@@ -185,7 +185,7 @@ gcloud scheduler jobs create http scale-up-dev \
 #### Strategy 5: Redis Optimization
 
 **Right-size memory**:
-```
+```markdown
 ## Check usage
 gcloud monitoring time-series list \
   --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'

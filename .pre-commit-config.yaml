@@ -273,6 +273,44 @@ repos:
           Run: python3 scripts/validators/link_validator.py --docs-dir docs
           See: tests/unit/documentation/test_link_validator.py (when created)
 
+      - id: validate-documentation-images
+        name: Validate Image References in Documentation
+        entry: python3 scripts/validators/image_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^docs/.*\.mdx$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates image references in MDX files (TDD):
+          - All local images exist
+          - Relative paths resolve correctly
+          - Supported formats (png, jpg, jpeg, svg, gif, webp)
+          - External images (http/https) ignored
+
+          Prevents broken images in documentation.
+          Run: python3 scripts/validators/image_validator.py --docs-dir docs
+          Tests: tests/unit/documentation/test_image_validator.py (10 tests ✅)
+
+      - id: validate-code-block-languages
+        name: Validate Code Block Language Tags
+        entry: python3 scripts/validators/codeblock_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^docs/.*\.mdx$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates code blocks have language identifiers (TDD):
+          - All fenced code blocks have language tags
+          - Inline code ignored
+          - Code blocks in MDX components validated
+
+          Ensures proper syntax highlighting and accessibility.
+          Required format: ```python (not just ```)
+          Run: python3 scripts/validators/codeblock_validator.py --docs-dir docs
+          Tests: tests/unit/documentation/test_codeblock_validator.py (11 tests ✅)
+
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
         entry: python3 scripts/standardize_frontmatter.py docs --dry-run

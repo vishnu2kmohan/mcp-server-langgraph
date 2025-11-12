@@ -15,7 +15,7 @@ Google Kubernetes Engine (GKE) Autopilot enforces strict resource constraints vi
 
 ### The 4.0x Rule
 
-```
+```text
 CPU Limit / CPU Request ≤ 4.0
 ```
 
@@ -386,7 +386,7 @@ resources:
 
 ### Pod Creation Failed
 
-```
+```text
 Error: Pod creation failed: CPU limit/request ratio exceeds 4.0
 ```
 
@@ -394,7 +394,7 @@ Error: Pod creation failed: CPU limit/request ratio exceeds 4.0
 
 ### Kustomize Build Error
 
-```
+```text
 Error: no matches for kind "Deployment" for redis-session
 ```
 
@@ -402,7 +402,7 @@ Error: no matches for kind "Deployment" for redis-session
 
 ### Pre-commit Hook Failures
 
-```
+```text
 ❌ ERRORS:
   - staging-redis-session/redis: CPU limit/request ratio 5.00 exceeds max 4.0
 ```

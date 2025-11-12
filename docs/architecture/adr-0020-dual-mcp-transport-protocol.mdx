@@ -173,7 +173,7 @@ async def call_tool(request: ToolCallRequest):
     return StreamingResponse(stream_result(), media_type="text/event-stream")
 ```
 **Communication Flow**:
-```
+```text
 Client (Web App)
     ↓ (HTTP POST)
     POST /mcp/tools/call {"name": "chat", "args": {...}}

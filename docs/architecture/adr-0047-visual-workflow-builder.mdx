@@ -115,7 +115,7 @@ We will implement a **Visual Workflow Builder** with the following architecture:
 
 ### **API Endpoints**
 
-```
+```python
 
 Backend: http://localhost:8001
 
@@ -248,13 +248,13 @@ def create_{workflow_name}():
 ### **Round-Trip Capability**
 
 **Visual → Code** (Export):
-```
+```text
 
 Workflow (JSON) → CodeGenerator → Python code
 ```
 
 **Code → Visual** (Import):
-```
+```text
 Python code → AST Parser → Graph Extractor → Layout Engine → Workflow (JSON)
 ```bash
 **Layout Algorithms**:

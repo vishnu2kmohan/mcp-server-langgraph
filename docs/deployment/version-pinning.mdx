@@ -106,7 +106,7 @@ newTag: dev-2.4.0-${GIT_SHA}
 
 We follow [Semantic Versioning 2.0.0](https://semver.org/):
 
-```
+```text
 
 MAJOR.MINOR.PATCH
 
@@ -141,7 +141,7 @@ MAJOR.MINOR.PATCH
 
 #### 1. Update Source of Truth
 
-```
+```sql
 
 ## Update pyproject.toml
 [project]
@@ -155,7 +155,7 @@ git commit -m "chore: bump version to 2.5.0"
 
 Run the version sync script:
 
-```
+```markdown
 
 ## Automated version sync (recommended)
 ./scripts/sync-versions.sh 2.5.0

@@ -32,7 +32,7 @@ Service principals enable machine-to-machine authentication for batch jobs, stre
 
 ### Base Path
 
-```
+```text
 /api/v1/service-principals
 ```
 
@@ -305,7 +305,7 @@ API keys provide simple, long-lived authentication for CLI tools, webhooks, and 
 
 ### Base Path
 
-    ```
+    ```text
 /api/v1/api-keys
 ```
 
@@ -495,7 +495,7 @@ SCIM (System for Cross-domain Identity Management) enables automated user provis
 
 ### Base Path
 
-```
+```text
 /scim/v2
 ```
 
@@ -669,7 +669,7 @@ Authorization: Bearer ACCESS_TOKEN
     - `count`: Results per page (default: 20)
 
     **Example Filter:**
-    ```
+    ```text
     userName eq "alice@example.com"
     active eq true
     emails.value co "@example.com"

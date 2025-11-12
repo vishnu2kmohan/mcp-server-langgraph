@@ -456,7 +456,7 @@ kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
 <Steps>
   <Step title="Fetch JWKS">
     Retrieves the current JSON Web Key Set from Keycloak's OIDC discovery endpoint:
-    ```
+    ```text
     GET /realms/{realm}/protocol/openid-connect/certs
     ```
   </Step>
@@ -467,7 +467,7 @@ kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
 
   <Step title="Update Kong Consumer">
     Updates the Kong consumer's public key via Admin API:
-    ```
+    ```text
     PATCH /consumers/{consumer}/jwt
     ```
   </Step>

@@ -45,7 +45,7 @@ We categorize all errors into five types:
 
 #### 2. Error Propagation Pattern
 
-```
+```text
 Layer 1: Infrastructure (Database, External APIs)
    ↓
 Layer 2: Service Layer (Business Logic)
@@ -102,7 +102,7 @@ All API errors return a consistent JSON structure:
 
 ##### LLM Fallback
 When primary model fails:
-```
+```text
 
 1. Try fallback model #1 (gemini-2.5-pro)
 2. Try fallback model #2 (claude-3-5-sonnet)
@@ -122,7 +122,7 @@ else:
 
 ##### Session Storage Fallback
 When Redis is unavailable:
-```
+```text
 Redis (primary) → InMemory (fallback) → Error
 ```
 #### 6. Logging Strategy

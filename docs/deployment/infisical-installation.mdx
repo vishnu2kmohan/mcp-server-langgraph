@@ -209,7 +209,7 @@ PYTHON_VERSIONS="3.12" ./scripts/build-infisical-wheels.sh
 CLEAN=true ./scripts/build-infisical-wheels.sh
 ```
 **Output**:
-```
+```text
 wheels/
 ├── py3.10/
 │   └── infisical_python-2.3.5-cp310-cp310-manylinux_2_34_x86_64.whl
@@ -250,7 +250,7 @@ uv sync --extra secrets
 #### Build Error: `cargo not found`
 
 **Symptom**:
-```
+```text
 
 error: command 'cargo' not found
 ```bash
@@ -295,7 +295,7 @@ docker compose up -d
 #### PyO3 Build Error
 
 **Symptom**:
-```
+```text
 error: failed to run custom build command for `pyo3-ffi`
 ```bash
 **Solutions**:

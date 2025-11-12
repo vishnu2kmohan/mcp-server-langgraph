@@ -282,12 +282,12 @@ class RedisConsentStore:
 
 The application includes a runtime guard that **prevents startup** if:
 
-```
+```text
 ENVIRONMENT=production AND GDPR_STORAGE_BACKEND=memory
 ```
 **Error Message:**
 
-```
+```text
 RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage in production.
 Set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis,
 or set ENVIRONMENT=development for testing.
@@ -349,7 +349,7 @@ Future schema changes will be added as numbered migrations. Always apply migrati
 
 Configure retention policies based on your legal requirements:
 
-```
+```markdown
 
 ## Example: 90-day retention for consent records
 CONSENT_RETENTION_DAYS=90

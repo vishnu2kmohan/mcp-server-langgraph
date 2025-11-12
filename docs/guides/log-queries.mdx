@@ -28,7 +28,7 @@ CloudWatch Insights uses a SQL-like query language with piped commands.
 ### Common Queries
 
 #### Find All Errors
-```
+```text
 fields @timestamp, level, message, trace_id, user_id
 | filter level = "ERROR"
 | sort @timestamp desc
@@ -36,7 +36,7 @@ fields @timestamp, level, message, trace_id, user_id
 ```
 
 #### Errors by User
-```
+```text
 fields @timestamp, message, user_id, trace_id
 | filter level = "ERROR"
 | stats count() by user_id
@@ -44,14 +44,14 @@ fields @timestamp, message, user_id, trace_id
 ```
 
 #### Trace-Specific Logs
-```
+```text
 fields @timestamp, level, message, span_id
 | filter trace_id = "0af7651916cd43dd8448eb211c80319c"
 | sort @timestamp asc
 ```
 
 #### Slow Requests (Performance)
-```
+```text
 fields @timestamp, message, duration_ms
 | filter message like /request completed/
 | filter duration_ms > 1000
@@ -91,7 +91,7 @@ severity="ERROR"
 ```
 
 #### Trace-Specific Logs
-```
+```text
 resource.type="k8s_container"
 jsonPayload.trace_id="0af7651916cd43dd8448eb211c80319c"
 ```toml
@@ -103,7 +103,7 @@ timestamp>="2025-10-15T13:00:00Z"
 ```
 
 #### Search by User ID
-```
+```text
 resource.type="k8s_container"
 jsonPayload.user_id="alice"
 ```
@@ -116,7 +116,7 @@ severity="WARNING" OR severity="ERROR"
 ```
 
 #### High Memory Usage
-```
+```text
 resource.type="k8s_container"
 jsonPayload.message=~"memory.*exceeded"
 ```sql
@@ -286,7 +286,7 @@ status:error
 ```
 
 #### Trace-Specific Logs
-```
+```text
 @trace_id:0af7651916cd43dd8448eb211c80319c
 ```yaml
 #### Errors by Service
@@ -295,7 +295,7 @@ status:error service:mcp-server-langgraph
 ```
 
 #### User-Specific Logs
-```
+```text
 @user_id:alice
 ```
 #### Time Range + Error Filter
@@ -304,11 +304,11 @@ status:error @timestamp:[now-1h TO now]
 ```
 
 #### Authentication Failures
-```
+```text
 @message:"authentication failed" (status:error OR status:warn)
 ```
 #### High Latency Requests
-```
+```text
 @duration_ms:&gt;1000 @message:"request completed"
 ```python
 #### Errors with Stack Traces
@@ -324,7 +324,7 @@ status:error | count by @user_id
 ```
 
 #### P95 Request Duration
-```
+```text
 @message:"request completed" | p95(@duration_ms) by @http.route
 ```yaml
 #### Error Rate Over Time
@@ -404,14 +404,14 @@ index=main source="mcp-server-langgraph" user_id="alice"
 
 <Tabs>
   <Tab title="CloudWatch">
-    ```
+    ```text
     fields @timestamp, level, message, span_id
     | filter trace_id = "YOUR_TRACE_ID"
     | sort @timestamp asc
     ```
   </Tab>
   <Tab title="GCP">
-    ```
+    ```text
     jsonPayload.trace_id="YOUR_TRACE_ID"
     ```
   </Tab>
@@ -423,12 +423,12 @@ index=main source="mcp-server-langgraph" user_id="alice"
     ```
   </Tab>
   <Tab title="Elasticsearch">
-    ```
+    ```text
     trace_id: "YOUR_TRACE_ID"
     ```
   </Tab>
   <Tab title="Datadog">
-    ```
+    ```text
     @trace_id:YOUR_TRACE_ID
     ```
   </Tab>
@@ -445,7 +445,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
 
 <Tabs>
   <Tab title="CloudWatch">
-    ```
+    ```text
     fields @timestamp, message
     | filter level = "ERROR"
     | stats count() by message
@@ -453,7 +453,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
     ```
   </Tab>
   <Tab title="GCP">
-    ```
+    ```text
     severity="ERROR"
     ```
     Then use "Group by" feature in console.
@@ -479,7 +479,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
     ```
   </Tab>
   <Tab title="Datadog">
-    ```
+    ```text
     status:error | count by @message
     ```
   </Tab>
@@ -496,14 +496,14 @@ index=main source="mcp-server-langgraph" user_id="alice"
 
 <Tabs>
   <Tab title="CloudWatch">
-    ```
+    ```text
     fields @timestamp, http_route, duration_ms
     | filter duration_ms > 1000
     | sort duration_ms desc
     ```
   </Tab>
   <Tab title="GCP">
-    ```
+    ```text
     jsonPayload.duration_ms&gt;1000
     ```
   </Tab>
@@ -517,12 +517,12 @@ index=main source="mcp-server-langgraph" user_id="alice"
     ```
   </Tab>
   <Tab title="Elasticsearch">
-    ```
+    ```text
     duration_ms:&gt;1000
     ```
   </Tab>
   <Tab title="Datadog">
-    ```
+    ```text
     @duration_ms:&gt;1000
     ```
   </Tab>
@@ -539,14 +539,14 @@ index=main source="mcp-server-langgraph" user_id="alice"
 
 <Tabs>
   <Tab title="CloudWatch">
-    ```
+    ```text
     fields @timestamp, user_id, ip_address, message
     | filter message like /authentication failed/
     | sort @timestamp desc
     ```
   </Tab>
   <Tab title="GCP">
-    ```
+    ```text
     jsonPayload.message=~"authentication failed"
     severity>="WARNING"
     ```
@@ -559,12 +559,12 @@ index=main source="mcp-server-langgraph" user_id="alice"
     ```
   </Tab>
   <Tab title="Elasticsearch">
-    ```
+    ```text
     message: "authentication failed" AND level: ("WARNING" OR "ERROR")
     ```
   </Tab>
   <Tab title="Datadog">
-    ```
+    ```text
     @message:"authentication failed" (status:warn OR status:error)
     ```
   </Tab>
@@ -584,7 +584,7 @@ index=main source="mcp-server-langgraph" user_id="alice"
 **Find errors for specific user in specific time range**:
 
 #### CloudWatch
-    ```
+    ```text
 fields @timestamp, level, message, trace_id
 | filter user_id = "alice"
 | filter level = "ERROR"
@@ -602,7 +602,7 @@ traces
 ```
 
 #### Datadog
-```
+```text
 @user_id:alice status:error @timestamp:[2025-10-15T00:00:00 TO 2025-10-16T00:00:00]
 ```
 ### Statistical Analysis
@@ -639,7 +639,7 @@ message="request completed"
 
 Always query on structured fields (not text search on message):
 
-```
+```text
 
 - ✅ user_id = "alice"
 ❌ message like /user alice/
@@ -648,7 +648,7 @@ Always query on structured fields (not text search on message):
 
 Always specify time ranges for better performance:
 
-```
+```text
 - ✅ timestamp:[now-1h TO now]
 ❌ No time filter (searches all data)
 ```rust
@@ -656,7 +656,7 @@ Always specify time ranges for better performance:
 
 For request debugging, always use trace_id:
 
-```
+```text
 
 - ✅ trace_id = "0af7651916cd43dd..."
 ❌ Searching multiple unrelated fields
@@ -665,7 +665,7 @@ For request debugging, always use trace_id:
 
 Use aggregations instead of returning all results:
 
-```
+```text
 
 - ✅ stats count() by user_id
 ❌ return 10000 individual log entries

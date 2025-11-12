@@ -86,7 +86,7 @@ kubectl get ingress -n mcp-server-langgraph
 
 ### Chart Structure
 
-    ```
+    ```text
 deployments/helm/mcp-server-langgraph/
 ├── Chart.yaml              # Chart metadata
 ├── values.yaml             # Default configuration
@@ -269,7 +269,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-gke.yaml
-    ```
+    ```html
   </Tab>
 
   <Tab title="AWS (EKS)">
@@ -301,7 +301,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       master:
         persistence:
           storageClass: "gp3"
-    ```
+    ```text
 
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
@@ -340,7 +340,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
     helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       -n mcp-server-langgraph --create-namespace \
       -f values-aks.yaml
-    ```
+    ```markdown
   </Tab>
 </Tabs>
 
@@ -391,7 +391,7 @@ config:
   enableMetrics: true
   observabilityBackend: "opentelemetry"
   otlpEndpoint: "http://otel-collector:4317"
-```
+```markdown
 
 #### Secrets Configuration
 
@@ -434,7 +434,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.jwtSecretKey="$(openssl rand -base64 32)" \
   --set secrets.keycloakClientSecret="${KEYCLOAK_CLIENT_SECRET}" \
   --set secrets.redisPassword="$(openssl rand -base64 32)"
-```
+```markdown
 
 #### Dependencies Configuration
 
@@ -469,7 +469,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 2000m
           memory: 2Gi
-    ```
+    ```html
   </Tab>
 
   <Tab title="Redis">
@@ -500,7 +500,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```
+    ```html
   </Tab>
 
   <Tab title="OpenFGA">
@@ -520,7 +520,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         limits:
           cpu: 1000m
           memory: 1Gi
-    ```
+    ```html
   </Tab>
 
   <Tab title="PostgreSQL">
@@ -550,7 +550,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
         enabled: true
         serviceMonitor:
           enabled: true
-    ```
+    ```markdown
   </Tab>
 </Tabs>
 
@@ -590,7 +590,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 ## Verify
 helm list -n mcp-server-langgraph
 kubectl get pods -n mcp-server-langgraph
-```
+```markdown
 
 #### Rollback
 
@@ -619,7 +619,7 @@ kubectl get pvc -n mcp-server-langgraph
 
 ## Delete PVCs (WARNING: Deletes data!)
 kubectl delete pvc --all -n mcp-server-langgraph
-```
+```markdown
 
 ### Customization
 
@@ -655,7 +655,7 @@ sidecars:
       requests:
         memory: "256Mi"
         cpu: "100m"
-```
+```markdown
 
 #### Custom Volumes
 
@@ -682,7 +682,7 @@ extraEnv:
       secretKeyRef:
         name: external-secret
         key: secret-key
-```
+```markdown
 
 ### Monitoring
 
@@ -715,7 +715,7 @@ kubectl create configmap langgraph-dashboards \
 kubectl label configmap langgraph-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```
+```markdown
 
 ### Troubleshooting
 
@@ -732,7 +732,7 @@ kubectl label configmap langgraph-dashboards \
 
     # Check dependencies
     helm dependency update ./deployments/helm/mcp-server-langgraph
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Dependencies not deploying">
@@ -749,7 +749,7 @@ kubectl label configmap langgraph-dashboards \
       --set keycloak.enabled=true \
       --set redis.enabled=true \
       --set openfga.enabled=true
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Values not applying">
@@ -764,7 +764,7 @@ kubectl label configmap langgraph-dashboards \
     helm template mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml \
       --debug
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Upgrade fails">

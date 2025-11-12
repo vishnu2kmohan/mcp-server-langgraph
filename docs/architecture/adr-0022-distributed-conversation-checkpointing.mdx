@@ -257,7 +257,7 @@ class Settings(BaseSettings):
 ```
 #### Request Flow (Auto-Scaling Scenario)
 
-```
+```python
 User Request 1 → Pod A (thread_id: "user-alice-123")
 ├─ LangGraph invokes with config: {"configurable": {"thread_id": "user-alice-123"}}
 ├─ RedisSaver stores checkpoint in Redis db 1

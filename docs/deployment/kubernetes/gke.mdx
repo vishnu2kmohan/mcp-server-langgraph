@@ -199,7 +199,7 @@ kill $PROXY_PID
 
 See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for retention policies and backup procedures.
 
-```
+```markdown
 #### Configure Cloud SQL Proxy
 
 **Option 1: Cloud SQL Auth Proxy Sidecar**
@@ -249,7 +249,7 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-```
+```markdown
 **Option 2: Private IP (Recommended for Production)**
 
 ```
@@ -294,7 +294,7 @@ kubectl create secret generic redis-credentials \
   --namespace=mcp-server-langgraph \
   --from-literal=host=$REDIS_HOST \
   --from-literal=password=$REDIS_AUTH
-```
+```markdown
 #### Configure Application
 
 ```
@@ -320,7 +320,7 @@ spec:
             secretKeyRef:
               name: redis-credentials
               key: password
-```
+```markdown
 ### Secret Manager Integration
 
 #### Store Secrets in Secret Manager
@@ -394,7 +394,7 @@ spec:
     remoteRef:
       key: jwt-secret
 EOF
-```
+```markdown
 
 ### Google Container Registry (GCR)
 
@@ -425,7 +425,7 @@ spec:
         image: gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
         imagePullPolicy: Always
 EOF
-```
+```markdown
 
 #### Artifact Registry (Recommended)
 
@@ -442,7 +442,7 @@ gcloud auth configure-docker us-central1-docker.pkg.dev
 ## Build and push
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
-```
+```markdown
 
 ### Load Balancer and Ingress
 
@@ -457,7 +457,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
   --set controller.service.type=LoadBalancer
-```
+```markdown
 
 #### Configure Ingress
 
@@ -488,7 +488,7 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```
+```markdown
 
 #### Google Cloud Load Balancer
 
@@ -529,7 +529,7 @@ spec:
     drainingTimeoutSec: 60
   cdn:
     enabled: false
-```
+```markdown
 
 ### Monitoring with Cloud Operations
 
@@ -540,7 +540,7 @@ spec:
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
-```
+```markdown
 
 #### Configure Pod Monitoring
 
@@ -557,7 +557,7 @@ spec:
   endpoints:
   - port: metrics
     interval: 30s
-```
+```markdown
 
 #### Cloud Logging
 
@@ -584,7 +584,7 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     logger_factory=structlog.stdlib.LoggerFactory(),
 )
-```
+```markdown
 ### Auto-Scaling
 
 #### Horizontal Pod Autoscaler
@@ -632,7 +632,7 @@ spec:
         value: 5
         periodSeconds: 60
       selectPolicy: Max
-```
+```markdown
 #### Cluster Autoscaler
 
 GKE Autopilot handles node scaling automatically. For Standard clusters:
@@ -644,7 +644,7 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=20 \
   --region=us-central1
-```
+```markdown
 ### Complete Deployment
 
 ```
@@ -673,7 +673,7 @@ helm install mcp-server-langgraph ./helm/mcp-server-langgraph \
 kubectl get pods -n mcp-server-langgraph
 kubectl get svc -n mcp-server-langgraph
 kubectl get ingress -n mcp-server-langgraph
-```
+```markdown
 ### Cost Optimization
 
 <AccordionGroup>
@@ -696,7 +696,7 @@ kubectl get ingress -n mcp-server-langgraph
       --preemptible \
       --num-nodes=3 \
       --machine-type=n2-standard-4
-    ```
+    ```text
     Use node affinity to schedule on preemptible nodes:
     ```
     affinity:
@@ -709,7 +709,7 @@ kubectl get ingress -n mcp-server-langgraph
               operator: In
               values:
               - "true"
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Right-Size Resources" icon="gauge">
@@ -722,7 +722,7 @@ kubectl get ingress -n mcp-server-langgraph
       --enable-network-egress-metering \
       --enable-resource-consumption-metering \
       --region=us-central1
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Use Committed Use Discounts" icon="percent">
@@ -736,7 +736,7 @@ kubectl get ingress -n mcp-server-langgraph
       --plan=12-month \
       --resources=vcpu=100,memory=400GB \
       --region=us-central1
-    ```
+    ```markdown
   </Accordion>
 </AccordionGroup>
 
@@ -748,7 +748,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-shielded-nodes \
       --region=us-central1
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Use Binary Authorization" icon="shield-check">
@@ -759,7 +759,7 @@ kubectl get ingress -n mcp-server-langgraph
     gcloud container clusters update langgraph-cluster \
       --enable-binauthz \
       --region=us-central1
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Network Policies" icon="network-wired">
@@ -790,7 +790,7 @@ kubectl get ingress -n mcp-server-langgraph
         ports:
         - protocol: TCP
           port: 8080
-    ```
+    ```markdown
   </Accordion>
 </AccordionGroup>
 
@@ -805,7 +805,7 @@ kubectl get ingress -n mcp-server-langgraph
       --image=gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
       --restart=Never \
       -- $PROJECT_ID:us-central1:langgraph-postgres
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Workload Identity not working">

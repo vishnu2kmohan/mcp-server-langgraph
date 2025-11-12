@@ -85,7 +85,7 @@ flowchart TD
 ### For Sequence Diagrams
 
 **Mandatory Pattern:**
-```
+```text
 %%{init: {'theme':'base', 'themeVariables': {
   'primaryColor':'#8dd3c7',
   'primaryTextColor':'#333',
@@ -133,7 +133,7 @@ graph LR      # DEPRECATED - use flowchart LR instead
 ### Theme Initialization (Sequence Diagrams)
 
 - ✅ **ALWAYS** start sequence diagrams with theme:
-```
+```text
 %%{init: {'theme':'base', 'themeVariables': {...}}}%%
 sequenceDiagram
     ...
@@ -154,7 +154,7 @@ flowchart TB
 ```
 
 ❌ **AVOID** inline styles (hard to maintain):
-```
+```text
 flowchart TB
     A[Node]
     style A fill:#8dd3c7,stroke:#2a9d8f

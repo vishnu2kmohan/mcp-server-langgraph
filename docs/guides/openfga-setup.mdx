@@ -80,7 +80,7 @@ flowchart TB
         ```
 
         docker compose up -d openfga postgres
-        ```
+        ```html
       </Tab>
 
       <Tab title="Kubernetes">
@@ -96,7 +96,7 @@ flowchart TB
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/openfga -n mcp-server-langgraph
-        ```
+        ```markdown
       </Tab>
 
       <Tab title="Cloud Services">
@@ -110,7 +110,7 @@ flowchart TB
         OPENFGA_STORE_ID=your-store-id
         OPENFGA_MODEL_ID=your-model-id
         OPENFGA_API_TOKEN=your-api-token  # If using cloud
-        ```
+        ```html
       </Tab>
     </Tabs>
   </Step>
@@ -127,14 +127,14 @@ flowchart TB
     curl http://localhost:8080/
 
     # Expected: OpenFGA version info
-    ```
+    ```html
   </Step>
 
   <Step title="Run Setup Script">
     ```bash
     # Initialize store and model
     python scripts/setup/setup_openfga.py
-    ```
+    ```markdown
     **Output**:
     ```
     ============================================================
@@ -164,7 +164,7 @@ flowchart TB
     ============================================================
     ✓ OpenFGA setup completed successfully!
     ============================================================
-    ```
+    ```sql
   </Step>
 
   <Step title="Update Configuration">
@@ -174,7 +174,7 @@ flowchart TB
     OPENFGA_API_URL=http://localhost:8080
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```
+    ```html
   </Step>
 
   <Step title="Test Authorization">
@@ -191,7 +191,7 @@ flowchart TB
     )
     print(f"Alice can execute chat: {allowed}")
     # Output: True
-    ```
+    ```markdown
   </Step>
 </Steps>
 
@@ -234,7 +234,7 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner
-```
+```markdown
 
 #### Type Definitions
 
@@ -244,7 +244,7 @@ type document
 
     ```typescript
     type user
-    ```
+    ```markdown
     No relations defined - users are leaf nodes in the authorization graph.
   </Tab>
 
@@ -257,7 +257,7 @@ type document
         define admin: [user]
         define member: [user] or admin
         define viewer: [user] or member
-    ```
+    ```bash
     **Hierarchy**: admin → member → viewer
 
     Admin users automatically have member and viewer permissions.
@@ -272,7 +272,7 @@ type document
         define owner: [user]
         define executor: [user, organization#member]
         define viewer: [user, organization#member]
-    ```
+    ```markdown
     **executor**: Can execute the tool
     **viewer**: Can see tool metadata
     **organization#member**: All org members can execute
@@ -287,7 +287,7 @@ type document
         define owner: [user]
         define editor: [user]
         define viewer: [user] or editor or owner
-    ```
+    ```markdown
     **Hierarchy**: owner → editor → viewer
 
     Owners can edit, editors can view and modify.
@@ -339,7 +339,7 @@ client = OpenFGAClient(
     cache_ttl=300,  # 5 minutes
     cache_backend="redis"
 )
-```
+```markdown
 
 ---
 
@@ -385,7 +385,7 @@ if allowed:
     result = await execute_tool("chat", query)
 else:
     raise PermissionError("Access denied")
-```
+```markdown
 
 #### Listing Permissions
 
@@ -406,7 +406,7 @@ users = await client.list_users(
 )
 print(f"Can execute chat: {users}")
 ## Output: ['user:alice', 'user:bob']
-```
+```markdown
 #### Deleting Relationships
 
 ```python
@@ -421,7 +421,7 @@ await client.delete_tuples([{
 tuples = await client.read_tuples(object="tool:chat")
 user_tuples = [t for t in tuples if t['user'] == 'user:bob']
 await client.delete_tuples(user_tuples)
-```
+```markdown
 ---
 
 ### Production Deployment
@@ -479,7 +479,7 @@ OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=
 OPENFGA_DATASTORE_MAX_OPEN_CONNS=25
 OPENFGA_DATASTORE_MAX_IDLE_CONNS=10
 OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
-```
+```markdown
 
 **PostgreSQL Configuration**:
 ```sql
@@ -509,7 +509,7 @@ OPENFGA_MAX_AUTHORIZATION_MODEL_SIZE_IN_BYTES=262144
 ## Logging
 OPENFGA_LOG_LEVEL=info  # debug, info, warn, error
 OPENFGA_LOG_FORMAT=json
-```
+```markdown
 
 #### Monitoring
 
@@ -526,7 +526,7 @@ spec:
   endpoints:
   - port: http
     path: /metrics
-```
+```markdown
 **Key Metrics**:
 ```promql
 ## Check rate
@@ -540,7 +540,7 @@ rate(openfga_check_total{allowed="error"}[5m])
 
 ## Tuple count
 openfga_tuple_count
-```
+```markdown
 ---
 
 ### Backup & Recovery
@@ -564,7 +564,7 @@ with open('openfga-backup.json', 'r') as f:
     tuples = json.load(f)
 
 await client.write_tuples(tuples)
-```
+```markdown
 
 #### Database Backup
 
@@ -574,7 +574,7 @@ pg_dump -U openfga openfga > openfga-backup.sql
 
 ## Restore
 psql -U openfga openfga < openfga-backup.sql
-```
+```markdown
 ---
 
 ### Troubleshooting
@@ -592,7 +592,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Check logs
     docker compose logs openfga
     kubectl logs -l app=openfga
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Store not found">
@@ -609,7 +609,7 @@ psql -U openfga openfga < openfga-backup.sql
       -d '{"name": "mcp-server-langgraph"}'
 
     # Update OPENFGA_STORE_ID in .env
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Model not found">
@@ -622,7 +622,7 @@ psql -U openfga openfga < openfga-backup.sql
 
     # Or create model via API
     # See: https://openfga.dev/docs/modeling
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Slow authorization checks">
@@ -637,7 +637,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Enable caching
     OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
     OPENFGA_CHECK_QUERY_CACHE_TTL=10s
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Permission check returns false unexpectedly">

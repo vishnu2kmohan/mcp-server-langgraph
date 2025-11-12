@@ -1,0 +1,317 @@
+---
+title: "ConfigMap and Secret Management Best Practices"
+description: "Best practices for managing ConfigMaps and Secrets in Kubernetes to prevent pod crashes"
+---
+
+# ConfigMap and Secret Management Best Practices
+
+This document outlines best practices for managing ConfigMaps and Secrets in Kubernetes deployments to prevent pod crashes and configuration errors.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [ConfigMap Management](#configmap-management)
+- [Secret Management](#secret-management)
+- [Testing and Validation](#testing-and-validation)
+- [Common Pitfalls](#common-pitfalls)
+- [Troubleshooting](#troubleshooting)
+
+## Overview
+
+On 2025-11-12, we experienced pod crashes in the staging environment due to:
+1. **Missing ConfigMap keys**: References to keys that didn't exist
+2. **Secret name mismatches**: Kustomize `namePrefix` not applied correctly in JSON patches
+
+This document and the associated tests/tools prevent these issues from recurring.
+
+## ConfigMap Management
+
+### Adding New Configuration Keys
+
+When adding a new configuration key that will be referenced by a deployment:
+
+1. **Add to base or overlay ConfigMap** (`deployments/base/configmap.yaml` or `deployments/overlays/*/configmap-patch.yaml`):
+   ```yaml
+   data:
+     my_new_key: "default_value"
+   ```
+
+2. **Add to environment variables** if using JSON 6902 patches:
+   ```yaml
+   - name: MY_NEW_KEY
+     valueFrom:
+       configMapKeyRef:
+         name: mcp-server-langgraph-config
+         key: my_new_key
+   ```
+
+3. **Run validation tests**:
+   ```bash
+   uv run pytest tests/deployment/test_configmap_secret_validation.py::TestConfigMapValidation
+   ```
+
+### Required Keys Checklist
+
+The following keys are required in production ConfigMaps:
+
+**Session Management:**
+- `session_backend`
+- `session_ttl_seconds`
+- `session_cookie_secure`
+- `session_cookie_samesite`
+- `session_max_age_seconds`
+
+**Rate Limiting:**
+- `rate_limit_enabled`
+- `rate_limit_per_minute`
+- `rate_limit_burst`
+
+**Circuit Breaker:**
+- `circuit_breaker_failure_threshold`
+- `circuit_breaker_recovery_timeout`
+- `circuit_breaker_expected_exception_rate`
+- `circuit_breaker_half_open_max_calls`
+
+**Retry Configuration:**
+- `retry_max_attempts`
+- `retry_base_delay_seconds`
+- `retry_max_delay_seconds`
+
+**Timeouts:**
+- `default_timeout_seconds`
+- `llm_timeout_seconds`
+- `database_timeout_seconds`
+
+**GDPR:**
+- `gdpr_storage_backend`
+- `gdpr_retention_days`
+
+### Optional vs Required Keys
+
+- **Optional keys**: Use `optional: true` in `configMapKeyRef`:
+  ```yaml
+  - name: OPTIONAL_KEY
+    valueFrom:
+      configMapKeyRef:
+        name: cluster-config
+        key: cluster.name
+        optional: true  # Pod will start even if key doesn't exist
+  ```
+
+- **Required keys**: Omit `optional` field (default is `false`). Pod will fail if key is missing.
+
+## Secret Management
+
+### ExternalSecrets with Kustomize namePrefix
+
+When using ExternalSecrets with Kustomize `namePrefix`, **always use the prefixed name** in patches:
+
+**❌ WRONG:**
+```yaml
+# In deployments/overlays/staging-gke/deployment-patch.yaml
+env:
+  - name: API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: mcp-server-langgraph-secrets  # Missing prefix!
+        key: api-key
+```
+
+**✅ CORRECT:**
+```yaml
+# In deployments/overlays/staging-gke/deployment-patch.yaml
+env:
+  - name: API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: staging-mcp-server-langgraph-secrets  # Includes prefix
+        key: api-key
+```
+
+### Adding New Secrets
+
+1. **Add to ExternalSecret template** (`deployments/overlays/*/external-secrets.yaml`):
+   ```yaml
+   template:
+     data:
+       my-new-secret: "{{ .myNewSecret }}"  # kebab-case
+   ```
+
+2. **Add data mapping**:
+   ```yaml
+   data:
+     - secretKey: myNewSecret  # camelCase
+       remoteRef:
+         key: staging-my-new-secret  # GCP Secret Manager key with prefix
+   ```
+
+3. **Create in GCP Secret Manager**:
+   ```bash
+   echo "secret-value" | gcloud secrets create staging-my-new-secret \
+     --data-file=- \
+     --project=vishnu-sandbox-20250310 \
+     --replication-policy=automatic
+   ```
+
+4. **Run validation tests**:
+   ```bash
+   uv run pytest tests/deployment/test_configmap_secret_validation.py::TestSecretValidation
+   ```
+
+### Naming Conventions
+
+- **Template keys**: kebab-case (e.g., `keycloak-client-id`)
+- **Data mapping keys**: camelCase (e.g., `keycloakClientId`)
+- **GCP Secret Manager**: `{prefix}-{kebab-case}` (e.g., `staging-keycloak-client-id`)
+
+## Testing and Validation
+
+### Automated Tests
+
+Three levels of validation:
+
+1. **Unit tests** - Run during development:
+   ```bash
+   uv run pytest tests/deployment/test_configmap_secret_validation.py -v
+   ```
+
+2. **Pre-commit validation** - Run before committing:
+   ```bash
+   python scripts/validators/k8s_config_validator.py
+   ```
+
+3. **CI/CD validation** - Runs automatically on PR/push:
+   - Validates all overlays
+   - Checks ConfigMap keys
+   - Verifies secret references
+   - Ensures Kustomize namePrefix consistency
+
+### Manual Validation
+
+Before applying changes:
+
+```bash
+# Build and inspect manifests
+kustomize build deployments/overlays/staging-gke > /tmp/staging.yaml
+
+# Search for your new keys
+grep -A5 "configMapKeyRef" /tmp/staging.yaml
+grep -A5 "secretKeyRef" /tmp/staging.yaml
+
+# Check for placeholder values
+grep "REPLACE_WITH" /tmp/staging.yaml
+```
+
+## Common Pitfalls
+
+### 1. JSON 6902 Patches Don't Auto-Update Secret Names
+
+**Problem**: When using JSON 6902 patches with `namePrefix`, the prefix is NOT automatically applied to secret names within the patch content.
+
+**Solution**: Manually use the prefixed name in all JSON 6902 patch files.
+
+### 2. ConfigMap Keys Added to Base But Not Overlays
+
+**Problem**: New keys in `deployments/base/configmap.yaml` may be overridden by overlay patches.
+
+**Solution**:
+- Use strategic merge patches (not complete replacement)
+- OR add the key to all relevant overlay patches
+
+### 3. Forgetting to Create GCP Secrets
+
+**Problem**: ExternalSecret configured but GCP Secret doesn't exist.
+
+**Solution**:
+- Create GCP secret before applying ExternalSecret
+- Use placeholder values in non-production environments
+- Document required secrets in `docs/secrets/README.md`
+
+### 4. Case Mismatch in Secret Keys
+
+**Problem**: Template uses `my-secret-key` but data mapping uses `mySecretKey`.
+
+**Solution**: Follow naming conventions (kebab-case in template, camelCase in data mapping).
+
+## Troubleshooting
+
+### Pod Stuck in CreateContainerConfigError
+
+**Symptom**: `kubectl describe pod` shows:
+```text
+Error: couldn't find key session_cookie_secure in ConfigMap staging-mcp-server-langgraph/staging-mcp-server-langgraph-config
+```
+
+**Solution**:
+1. Check ConfigMap exists:
+   ```bash
+   kubectl get configmap -n staging-mcp-server-langgraph
+   ```
+
+2. Verify key exists:
+   ```bash
+   kubectl get configmap staging-mcp-server-langgraph-config -n staging-mcp-server-langgraph -o yaml | grep session_cookie_secure
+   ```
+
+3. If missing, add to `configmap-patch.yaml` and reapply:
+   ```bash
+   kubectl apply -k deployments/overlays/staging-gke
+   ```
+
+### Secret Name Mismatch
+
+**Symptom**: Pod can't find secret `mcp-server-langgraph-secrets` but only `staging-mcp-server-langgraph-secrets` exists.
+
+**Solution**:
+1. Check ExternalSecret target name:
+   ```bash
+   kubectl get externalsecret -n staging-mcp-server-langgraph -o yaml
+   ```
+
+2. Update all references to use prefixed name in patch files.
+
+3. Run validation tests to catch similar issues:
+   ```bash
+   uv run pytest tests/deployment/test_configmap_secret_validation.py::TestKustomizePrefixConsistency
+   ```
+
+### ExternalSecret Not Syncing
+
+**Symptom**: ExternalSecret exists but Secret not created.
+
+**Solution**:
+1. Check ExternalSecret status:
+   ```bash
+   kubectl describe externalsecret staging-mcp-server-langgraph-secrets -n staging-mcp-server-langgraph
+   ```
+
+2. Check External Secrets Operator logs:
+   ```bash
+   kubectl logs -n external-secrets-system deployment/external-secrets
+   ```
+
+3. Verify GCP Secret exists:
+   ```bash
+   gcloud secrets list --filter="name~staging-" --project=vishnu-sandbox-20250310
+   ```
+
+## Prevention Measures
+
+1. **Always run tests** before committing ConfigMap/Secret changes
+2. **Use the validation script** in CI/CD pipelines
+3. **Document all new secrets** in team docs
+4. **Review diffs carefully** for JSON 6902 patches
+5. **Test in staging** before production deployment
+
+## References
+
+- [Kubernetes ConfigMaps](https://kubernetes.io/docs/concepts/configuration/configmap/)
+- [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [External Secrets Operator](https://external-secrets.io/)
+- [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
+
+---
+
+**Last Updated**: 2025-11-12
+**Related Issues**: Staging pod crashes (2025-11-12)
+**Related Tests**: `tests/deployment/test_configmap_secret_validation.py`

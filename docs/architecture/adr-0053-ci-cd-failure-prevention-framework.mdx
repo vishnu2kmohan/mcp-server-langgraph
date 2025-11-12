@@ -249,18 +249,18 @@ resource "example" "name" {
 #### Documentation Standards
 
 **Rule 1**: All code blocks must have language tags
-````markdown
+```text`markdown
 ✅ Good:
 ```python
 def example():
     pass
-```
+```text
 
 ❌ Bad:
 ```
 def example():
     pass
-```
+```text
 ````
 
 **Rule 2**: Use auto-fix for bulk changes
@@ -275,7 +275,7 @@ python scripts/add_code_block_languages.py docs/**/*.mdx
 
 ### 3. Continuous Validation Pipeline
 
-```
+```python
 Local Development
 ├── Pre-commit hooks (fast checks)
 │   ├── Code block language tags
@@ -340,7 +340,7 @@ def test_prevent_issue_from_2025_11_12():
 ## Implementation Details
 
 ### File Structure
-```
+```text
 mcp-server-langgraph/
 ├── tests/regression/
 │   ├── test_documentation_code_blocks.py        # New

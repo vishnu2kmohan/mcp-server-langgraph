@@ -140,7 +140,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
   <Accordion title="Keycloak connection failed">
     **Symptom**:
-    ```
+    ```python
     ERROR: Failed to fetch JWKS from Keycloak
     ConnectionRefusedError: [Errno 111] Connection refused
     ```
@@ -272,7 +272,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
   <Accordion title="OpenFGA connection failed">
     **Symptom**:
-    ```
+    ```text
     ERROR: OpenFGA API request failed: Connection refused
     ```
 
@@ -349,7 +349,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 <AccordionGroup>
   <Accordion title="PostgreSQL connection refused">
     **Symptom**:
-    ```
+    ```text
     psycopg2.OperationalError: could not connect to server: Connection refused
     ```
 
@@ -390,7 +390,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
   <Accordion title="Redis connection timeout">
     **Symptom**:
-    ```
+    ```python
     redis.exceptions.TimeoutError: Timeout reading from socket
     ```
 
@@ -435,7 +435,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
   <Accordion title="Database deadlock">
     **Symptom**:
-    ```
+    ```text
     psycopg2.errors.DeadlockDetected: deadlock detected
     ```
 
@@ -537,7 +537,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
   <Accordion title="LLM timeout">
     **Symptom**:
-    ```
+    ```text
     TimeoutError: LLM request timed out after 60 seconds
     ```
 

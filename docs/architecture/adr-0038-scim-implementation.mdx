@@ -34,7 +34,7 @@ Implement **FastAPI SCIM 2.0 endpoints** that bridge to Keycloak Admin API, prov
 
 #### Architecture
 
-```
+```text
 External System (SCIM Client) → MCP Server SCIM Endpoints
   → Keycloak Admin API → Keycloak (User Storage)
   → Sync to OpenFGA (via existing sync_user_to_openfga)

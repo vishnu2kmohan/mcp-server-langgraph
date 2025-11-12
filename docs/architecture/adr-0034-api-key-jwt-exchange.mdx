@@ -31,7 +31,7 @@ We will implement an **API Key to JWT Exchange Pattern** where API keys are stor
 
 #### Architecture
 
-```
+```text
 Client (API Key) → Kong (custom plugin) → Keycloak (validate & exchange)
   → JWT → Replace header → MCP Server (validates JWT normally)
 ```

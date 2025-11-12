@@ -67,6 +67,22 @@ jobs:
           echo "::endgroup::"
         continue-on-error: true
 
+      - name: Run Image Validator
+        id: img-validation
+        run: |
+          echo "::group::Image Validation"
+          python scripts/validators/image_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Run Code Block Validator
+        id: cb-validation
+        run: |
+          echo "::group::Code Block Validation"
+          python scripts/validators/codeblock_validator.py --docs-dir docs
+          echo "::endgroup::"
+        continue-on-error: true
+
       - name: Run Link Validator
         id: link-validation
         run: |
@@ -86,6 +102,12 @@ jobs:
           fi
           if [ "${{ steps.fm-validation.outcome }}" == "failure" ]; then
             failures="${failures}- Frontmatter validation failed\n"
+          fi
+          if [ "${{ steps.img-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- Image validation failed\n"
+          fi
+          if [ "${{ steps.cb-validation.outcome }}" == "failure" ]; then
+            failures="${failures}- Code block validation failed\n"
           fi
           if [ "${{ steps.link-validation.outcome }}" == "failure" ]; then
             failures="${failures}- Link validation failed\n"
@@ -117,6 +139,8 @@ jobs:
             - Navigation Validation: ${{ steps.nav-validation.outcome }}
             - MDX Extension Validation: ${{ steps.ext-validation.outcome }}
             - Frontmatter Validation: ${{ steps.fm-validation.outcome }}
+            - Image Validation: ${{ steps.img-validation.outcome }}
+            - Code Block Validation: ${{ steps.cb-validation.outcome }}
             - Link Validation: ${{ steps.link-validation.outcome }}
 
             ### Action Required
@@ -186,6 +210,8 @@ jobs:
             | Navigation | ${{ steps.nav-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
             | MDX Extensions | ${{ steps.ext-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
             | Frontmatter | ${{ steps.fm-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | Images | ${{ steps.img-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
+            | Code Blocks | ${{ steps.cb-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
             | Links | ${{ steps.link-validation.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |
 
             ### How to Fix
@@ -238,5 +264,7 @@ jobs:
           python scripts/validators/navigation_validator.py --help
           python scripts/validators/mdx_extension_validator.py --help
           python scripts/validators/frontmatter_validator.py --help
+          python scripts/validators/image_validator.py --help
+          python scripts/validators/codeblock_validator.py --help
           python scripts/validators/link_validator.py --help
           python scripts/validators/validate_docs.py --help

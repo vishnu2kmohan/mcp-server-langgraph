@@ -202,6 +202,7 @@
               "deployment/kubernetes/gke-production",
               "deployment/kubernetes/gke-staging",
               "deployment/gke-autopilot-resource-constraints",
+              "kubernetes/CONFIGMAP_BEST_PRACTICES",
               "deployment/kubernetes/eks",
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",

@@ -35,7 +35,7 @@ Complete environment variable template for configuring the MCP Server with LangG
 
 #### Location
 
-```
+```text
 /.env.example
 ```
 
@@ -290,7 +290,7 @@ Defines how LDAP/Active Directory attributes map to Keycloak user attributes.
 
 #### Location
 
-    ```
+    ```text
 /config/ldap_mappers.yaml
 ```
 
@@ -456,7 +456,7 @@ Defines OpenID Connect identity provider configurations for federation.
 
 #### Location
 
-    ```
+    ```text
 /config/oidc_providers.yaml
 ```python
 #### Used By
@@ -687,7 +687,7 @@ Defines how Keycloak roles, groups, and attributes map to OpenFGA tuples.
 
 #### Location
 
-    ```
+    ```text
 /config/role_mappings.yaml
 ```
 
@@ -723,7 +723,7 @@ Enables flexible, declarative authorization without code changes. Automatically 
     ```
 
     **Creates OpenFGA tuple:**
-    ```
+    ```text
     user:{user_id}, admin, system:global
     ```
   </Accordion>
@@ -867,7 +867,7 @@ Rules are applied in this order:
     - Role: `admin` (realm role)
 
     **Creates OpenFGA Tuples:**
-    ```
+    ```python
     user:alice, admin, system:global
     user:alice, assignee, role:premium  (from hierarchy)
     user:alice, assignee, role:user     (from hierarchy)
@@ -879,7 +879,7 @@ Rules are applied in this order:
     - Group: `/acme/engineering`
 
     **Creates OpenFGA Tuples:**
-    ```
+    ```text
     user:bob, member, organization:acme
     user:bob, member, team:engineering
     ```
@@ -891,7 +891,7 @@ Rules are applied in this order:
     - Attribute: `job_title=Manager`
 
     **Creates OpenFGA Tuples:**
-    ```
+    ```text
     user:carol, viewer, resource:financial-reports
     user:carol, viewer, resource:audit-logs
     user:carol, admin, resource:team-reports

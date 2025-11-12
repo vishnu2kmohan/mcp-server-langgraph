@@ -65,7 +65,7 @@ sequenceDiagram
         ```
 
         docker compose up -d keycloak
-        ```
+        ```text
         Access: http://localhost:8080/admin (admin/admin)
       </Tab>
 
@@ -85,11 +85,11 @@ sequenceDiagram
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/keycloak -n mcp-server-langgraph
-        ```
+        ```text
         Access via ingress or port-forward:
         ```bash
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
-        ```
+        ```python
       </Tab>
 
       <Tab title="Cloud Run">
@@ -110,7 +110,7 @@ sequenceDiagram
 
     # Save the client secret from output
     KEYCLOAK_CLIENT_SECRET=abc123...
-    ```
+    ```markdown
     This script creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -131,7 +131,7 @@ sequenceDiagram
     KEYCLOAK_VERIFY_SSL=true
     KEYCLOAK_TIMEOUT=30
     KEYCLOAK_HOSTNAME=mcp-server-langgraph.yourdomain.com
-    ```
+    ```html
   </Step>
 
   <Step title="Test Authentication">
@@ -149,7 +149,7 @@ sequenceDiagram
     print(f"Access Token: {result['access_token']}")
     print(f"Refresh Token: {result['refresh_token']}")
     print(f"Expires In: {result['expires_in']} seconds")
-    ```
+    ```sql
   </Step>
 </Steps>
 
@@ -270,7 +270,7 @@ result = await client.authenticate(
 
 access_token = result['access_token']
 refresh_token = result['refresh_token']
-```
+```markdown
 
 <Warning>
 **Never use Direct Grant in production!** Use Authorization Code flow with PKCE for web/mobile apps.
@@ -342,7 +342,7 @@ await sync_user_to_openfga(
     groups=user_info.get('groups', []),
     email_verified=user_info.get('email_verified', False)
 )
-```
+```markdown
 
 #### Manual Sync
 
@@ -422,7 +422,7 @@ Configure app:
 ```bash
 KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
 KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
-```
+```markdown
 
 #### Performance Tuning
 
@@ -496,7 +496,7 @@ spec:
   endpoints:
     - port: http
       path: /metrics
-```
+```text
 
 Key metrics:
 ```promql
@@ -522,7 +522,7 @@ extraEnv:
     value: "info"
   - name: KC_LOG_CONSOLE_FORMAT
     value: "json"
-```
+```markdown
 
 ### Troubleshooting
 
@@ -535,7 +535,7 @@ extraEnv:
 
     # Test connectivity
     curl http://keycloak:8080/health
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Invalid client secret">
@@ -546,7 +546,7 @@ extraEnv:
     # Or via CLI
     kubectl get secret keycloak-client-secret \
       -o jsonpath='{.data.client-secret}' | base64 -d
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Token verification failed">
@@ -561,7 +561,7 @@ extraEnv:
     import jwt
     decoded = jwt.decode(token, options={"verify_signature": False})
     print(decoded)
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="SSL verification errors">

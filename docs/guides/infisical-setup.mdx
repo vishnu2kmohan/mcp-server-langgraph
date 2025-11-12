@@ -138,7 +138,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
 
     # Start Infisical
     docker compose up -d infisical
-    ```
+    ```html
   </Tab>
 
   <Tab title="Kubernetes">
@@ -151,7 +151,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
       --set redis.enabled=true \
       --set ingress.enabled=true \
       --set ingress.hostname=secrets.yourdomain.com
-    ```
+    ```markdown
   </Tab>
 </Tabs>
 
@@ -195,7 +195,7 @@ secrets = client.get_all_secrets(
 
 for secret in secrets:
     print(f"{secret.secret_name}: {secret.secret_value}")
-```
+```markdown
 
 #### Environment-Specific Secrets
 
@@ -233,7 +233,7 @@ spec:
   managedSecretReference:
     secretName: mcp-server-langgraph-secrets
     secretNamespace: mcp-server-langgraph
-```
+```markdown
 
 #### Service Account Credentials
 
@@ -263,7 +263,7 @@ spec:
         envFrom:
         - secretRef:
             name: mcp-server-langgraph-secrets  # Auto-synced from Infisical
-```
+```markdown
 
 ### Secret Organization
 
@@ -286,7 +286,7 @@ mcp-server-langgraph/
 │   └── ...
 └── development/
     └── ...
-```
+```markdown
 #### Naming Conventions
 
 **Good**:
@@ -330,7 +330,7 @@ logs = client.get_audit_logs(
 
 for log in logs:
     print(f"{log.timestamp}: {log.user} {log.action} {log.secret_name}")
-```
+```markdown
 
 ### Secret Rotation
 
@@ -372,7 +372,7 @@ schedule.every().sunday.at("02:00").do(rotate_jwt_secret)
 while True:
     schedule.run_pending()
     time.sleep(3600)
-```
+```markdown
 
 #### Zero-Downtime Rotation
 
@@ -393,7 +393,7 @@ client.delete_secret(
     project_id=project_id,
     environment="production"
 )
-```
+```markdown
 ### Best Practices
 
 <AccordionGroup>
@@ -409,7 +409,7 @@ client.delete_secret(
 
     # Scan for leaked secrets
     git secrets --scan
-    ```
+    ```html
   </Accordion>
 
   <Accordion title="Use Service Accounts" icon="robot">
@@ -436,7 +436,7 @@ client.delete_secret(
         name="ops",
         permissions=["read", "write"]
     )
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Rotate Regularly" icon="rotate">
@@ -462,7 +462,7 @@ client.delete_secret(
     for log in logs:
         if log.action == "delete" or log.failed_attempts > 3:
             send_alert(log)
-    ```
+    ```python
   </Accordion>
 </AccordionGroup>
 
@@ -473,7 +473,7 @@ client.delete_secret(
     ```bash
     # Extract from .env
     grep -v '^#' .env | grep -v '^$' > secrets.txt
-    ```
+    ```html
   </Step>
 
   <Step title="Import to Infisical">
@@ -488,7 +488,7 @@ client.delete_secret(
                 project_id=project_id,
                 environment="production"
             )
-    ```
+    ```sql
 
   </Step>
 
@@ -501,14 +501,14 @@ client.delete_secret(
     echo "INFISICAL_CLIENT_ID=..." > .env
     echo "INFISICAL_CLIENT_SECRET=..." >> .env
     echo "INFISICAL_PROJECT_ID=..." >> .env
-    ```
+    ```html
   </Step>
 
   <Step title="Verify">
     ```bash
     # Test application loads secrets
     python -c "from mcp_server_langgraph.config import settings; print(settings.anthropic_api_key[:10])"
-    ```
+    ```markdown
   </Step>
 </Steps>
 
@@ -525,7 +525,7 @@ client.delete_secret(
     curl -X POST https://app.infisical.com/api/v1/auth/universal-auth/login \
       -H "Content-Type: application/json" \
       -d "{\"clientId\":\"$INFISICAL_CLIENT_ID\",\"clientSecret\":\"$INFISICAL_CLIENT_SECRET\"}"
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Secret not found">
@@ -542,7 +542,7 @@ client.delete_secret(
         environment="production"
     )
     print([s.secret_name for s in secrets])
-    ```
+    ```markdown
   </Accordion>
 
   <Accordion title="Slow secret loading">

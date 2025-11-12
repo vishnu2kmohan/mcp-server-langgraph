@@ -24,6 +24,8 @@ from typing import List, Dict
 from navigation_validator import NavigationValidator
 from mdx_extension_validator import MDXExtensionValidator
 from frontmatter_validator import FrontmatterValidator
+from image_validator import ImageValidator
+from codeblock_validator import CodeBlockValidator
 
 try:
     from link_validator import LinkValidator
@@ -78,7 +80,7 @@ class DocumentationValidator:
         print("=" * 80)
 
         # 1. Navigation Validator
-        print("\n[1/4] Running Navigation Validator...")
+        print("\n[1/6] Running Navigation Validator...")
         nav_validator = NavigationValidator(self.docs_dir)
         nav_result = nav_validator.validate()
         results["navigation"] = nav_result
@@ -90,7 +92,7 @@ class DocumentationValidator:
             print(f"  ❌ Navigation validation failed ({len(nav_result.errors)} errors)")
 
         # 2. MDX Extension Validator
-        print("\n[2/4] Running MDX Extension Validator...")
+        print("\n[2/6] Running MDX Extension Validator...")
         ext_validator = MDXExtensionValidator(self.docs_dir)
         ext_result = ext_validator.validate()
         results["extension"] = ext_result
@@ -104,7 +106,7 @@ class DocumentationValidator:
             )
 
         # 3. Frontmatter Validator
-        print("\n[3/4] Running Frontmatter Validator...")
+        print("\n[3/6] Running Frontmatter Validator...")
         fm_validator = FrontmatterValidator(self.docs_dir)
         fm_result = fm_validator.validate()
         results["frontmatter"] = fm_result
@@ -117,9 +119,37 @@ class DocumentationValidator:
                 f"  ❌ Frontmatter validation failed ({len(fm_result.errors)} errors)"
             )
 
-        # 4. Link Validator (optional)
+        # 4. Image Validator
+        print("\n[4/6] Running Image Validator...")
+        img_validator = ImageValidator(self.docs_dir)
+        img_result = img_validator.validate()
+        results["images"] = img_result
+        summary["images"] = img_result.is_valid
+
+        if img_result.is_valid:
+            print("  ✅ Image validation passed")
+        else:
+            print(
+                f"  ❌ Image validation failed ({len(img_result.errors)} errors)"
+            )
+
+        # 5. Code Block Validator
+        print("\n[5/6] Running Code Block Validator...")
+        cb_validator = CodeBlockValidator(self.docs_dir)
+        cb_result = cb_validator.validate()
+        results["codeblocks"] = cb_result
+        summary["codeblocks"] = cb_result.is_valid
+
+        if cb_result.is_valid:
+            print("  ✅ Code block validation passed")
+        else:
+            print(
+                f"  ❌ Code block validation failed ({len(cb_result.errors)} errors)"
+            )
+
+        # 6. Link Validator (optional)
         if not self.skip_links and LINK_VALIDATOR_AVAILABLE:
-            print("\n[4/4] Running Link Validator...")
+            print("\n[6/6] Running Link Validator...")
             link_validator = LinkValidator(self.docs_dir)
             link_result = link_validator.validate()
             results["links"] = link_result
@@ -133,9 +163,9 @@ class DocumentationValidator:
                 )
         else:
             if self.skip_links:
-                print("\n[4/4] Skipping Link Validator (--skip-links)")
+                print("\n[6/6] Skipping Link Validator (--skip-links)")
             else:
-                print("\n[4/4] Link Validator not available (optional)")
+                print("\n[6/6] Link Validator not available (optional)")
             summary["links"] = True  # Don't fail if skipped
 
         # Determine overall validity

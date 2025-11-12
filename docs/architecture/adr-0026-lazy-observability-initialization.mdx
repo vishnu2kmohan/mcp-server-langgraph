@@ -23,7 +23,7 @@ This approach caused several operational and ergonomic issues:
 #### 1. Circular Import Dependency
 
 **Problem**: The import chain created a circular dependency:
-```
+```text
 config.py (line 9)
   → imports secrets/manager.py
       → imports observability/telemetry.py (line 17)
