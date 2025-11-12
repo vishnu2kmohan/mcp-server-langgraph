@@ -41,6 +41,27 @@ patches:
       kind: Secret
       name: mcp-server-langgraph-secrets
 
+  # Delete base ServiceAccounts - replace with GCP-specific versions with Workload Identity
+  - patch: |-
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: keycloak-sa
+      $patch: delete
+    target:
+      kind: ServiceAccount
+      name: keycloak-sa
+
+  - patch: |-
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: openfga-sa
+      $patch: delete
+    target:
+      kind: ServiceAccount
+      name: openfga-sa
+
   # Exclude self-hosted database resources - use cloud-managed services instead
   # PostgreSQL → Cloud SQL, Redis → Memorystore Redis
   - patch: |-
