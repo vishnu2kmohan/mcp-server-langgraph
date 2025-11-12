@@ -1008,3 +1008,53 @@ class TestAuthFallbackWithExternalProviders:
 
         # Assert: Keycloak provider was NOT called (because OpenFGA worked)
         mock_keycloak.get_user_by_username.assert_not_called()
+
+
+@pytest.mark.xdist_group(name="auth_middleware_production_tests")
+class TestAuthMiddlewareProductionControls:
+    """
+    CRITICAL P0: Test production environment security controls
+
+    In production, fallback should be disabled to prevent security bypasses
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_authorize_fallback_disabled_in_production(self):
+        """
+        SECURITY P0: authorize() should NOT use fallback in production
+
+        CWE-863: Incorrect Authorization
+        """
+        from mcp_server_langgraph.core.config import Settings
+
+        # Given: Production settings with fallback disabled and production-grade providers
+        settings = Settings(
+            environment="production",
+            allow_auth_fallback=False,
+            auth_provider="keycloak",  # Production-grade provider
+            gdpr_storage_backend="postgres",  # Production-grade storage
+        )
+
+        mock_provider = AsyncMock(spec=KeycloakUserProvider)
+
+        # When: Create AuthMiddleware without OpenFGA
+        auth = AuthMiddleware(
+            secret_key="prod-key",
+            user_provider=mock_provider,
+            settings=settings,
+            openfga_client=None,  # No OpenFGA available
+        )
+
+        # Then: authorize() should return False (deny access) instead of using fallback
+        result = await auth.authorize(
+            user_id="user:alice",
+            relation="viewer",
+            resource="document:sensitive",
+        )
+
+        # Should deny access (no OpenFGA, fallback disabled)
+        assert result is False

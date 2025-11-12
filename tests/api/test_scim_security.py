@@ -276,3 +276,158 @@ class TestSCIMSecurityControls:
 
         # Cleanup
         await openfga_client_real.delete_tuples([{"user": "user:alice", "relation": "admin", "object": "organization:acme"}])
+
+
+@pytest.mark.xdist_group(name="scim_filter_injection_tests")
+class TestSCIMFilterInjection:
+    """
+    SECURITY TEST: SCIM filter injection protection
+
+    CWE-20: Improper Input Validation
+    OWASP A03:2021 - Injection
+
+    Tests that SCIM filter parsing safely handles malicious input and prevents injection attacks.
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_scim_filter_username_eq_safe_parsing(self):
+        """
+        SECURITY TEST: userName eq filter should safely parse without injection
+
+        CWE-20: Improper Input Validation
+        """
+        from mcp_server_langgraph.api.scim import list_users
+
+        # Given: Admin user
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        # Given: Safe filter with userName eq
+        filter_expr = 'userName eq "alice@example.com"'
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.search_users.return_value = [
+            {
+                "id": "user-123",
+                "username": "alice@example.com",
+                "email": "alice@example.com",
+                "firstName": "Alice",
+                "lastName": "Smith",
+                "enabled": True,
+            }
+        ]
+
+        # When: Filter is processed
+        result = await list_users(
+            filter=filter_expr,
+            startIndex=1,
+            count=100,
+            current_user=current_user,
+            keycloak=mock_keycloak,
+        )
+
+        # Then: Should safely extract username
+        assert result.totalResults == 1  # Should return the mocked user
+        mock_keycloak.search_users.assert_called_once()
+        call_args = mock_keycloak.search_users.call_args
+        assert call_args[1]["query"]["username"] == "alice@example.com"
+        assert call_args[1]["query"]["exact"] == "true"
+
+    @pytest.mark.asyncio
+    async def test_scim_filter_malformed_no_quotes_fail_safe(self):
+        """
+        SECURITY TEST: Malformed filter without quotes should fail safely (not crash)
+
+        CWE-20: Improper Input Validation
+        OWASP A03:2021 - Injection
+        """
+        from mcp_server_langgraph.api.scim import list_users
+
+        current_user = {"user_id": "user:admin", "username": "admin", "roles": ["admin"]}
+
+        # Given: Malformed filter (no quotes - IndexError case)
+        filter_expr = "userName eq alice"
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.search_users.return_value = []
+
+        # When: Malformed filter is processed
+        # Then: Should NOT crash, should fail-safe to empty query
+        await list_users(
+            filter=filter_expr,
+            startIndex=1,
+            count=100,
+            current_user=current_user,
+            keycloak=mock_keycloak,
+        )
+        # Should call search_users with empty query (fail-safe behavior)
+        call_args = mock_keycloak.search_users.call_args
+        assert call_args[1]["query"] == {}  # Empty query due to malformed filter
+
+
+@pytest.mark.xdist_group(name="scim_error_handling_tests")
+class TestSCIMErrorHandling:
+    """
+    Tests for SCIM error handling functions and CRUD operation error paths
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    async def test_scim_error_with_scim_type(self):
+        """Test scim_error() helper with scimType parameter"""
+        from mcp_server_langgraph.api.scim import scim_error
+
+        # When: Create SCIM error with scimType
+        response = scim_error(404, "Resource not found", scim_type="notFound")
+
+        # Then: Should return JSONResponse with correct format
+        assert response.status_code == 404
+        import json
+
+        body = json.loads(response.body)
+        assert body["status"] == 404
+        assert body["detail"] == "Resource not found"
+        assert body["scimType"] == "notFound"
+
+    @pytest.mark.asyncio
+    async def test_delete_user_openfga_cleanup(self):
+        """
+        Test that delete_user calls OpenFGA delete_tuples_for_object
+
+        GDPR/Data Protection: User deletion must clean up all authorization tuples
+        """
+        from mcp_server_langgraph.api.scim import delete_user
+
+        # Given: Admin user
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        mock_keycloak = AsyncMock()
+        mock_openfga = AsyncMock()
+
+        # When: Delete user
+        await delete_user(
+            user_id="user-to-delete-123",
+            current_user=current_user,
+            keycloak=mock_keycloak,
+            openfga=mock_openfga,
+        )
+
+        # Then: Should disable user in Keycloak
+        mock_keycloak.update_user.assert_called_once_with("user-to-delete-123", {"enabled": False})
+
+        # Then: Should delete OpenFGA tuples
+        mock_openfga.delete_tuples_for_object.assert_called_once_with("user:user-to-delete-123")

@@ -5,6 +5,9 @@ Verifies that create_app() accepts settings_override parameter,
 allowing tests to customize configuration without affecting global state.
 """
 
+import gc
+from unittest.mock import patch
+
 import pytest
 from fastapi import FastAPI
 
@@ -142,6 +145,40 @@ class TestAppFactoryBackwardCompatibility:
         assert app is not None
         assert isinstance(app, FastAPI)
 
+
+@pytest.mark.xdist_group(name="app_factory_router_tests")
+class TestAppFactoryRouterMounting:
+    """
+    P1: Test router mounting order and registration
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_health_router_mounted(self):
+        """
+        Test that health router is mounted and accessible
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.app import create_app
+        from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+        try:
+            # Given: App
+            app = create_app()
+            client = TestClient(app)
+
+            # When: Request health endpoint
+            response = client.get("/health")
+
+            # Then: Should return 200
+            assert response.status_code == 200
+            assert response.json()["status"] == "healthy"
+        finally:
+            shutdown_observability()
+
     def test_uvicorn_can_import_app(self):
         """
         Test that uvicorn can import the app variable.
@@ -156,3 +193,37 @@ class TestAppFactoryBackwardCompatibility:
 
         assert app is not None
         assert isinstance(app, FastAPI)
+
+
+@pytest.mark.xdist_group(name="app_factory_router_tests")
+class TestAppFactoryRouterMounting:
+    """
+    P1: Test router mounting order and registration
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_health_router_mounted(self):
+        """
+        Test that health router is mounted and accessible
+        """
+        from fastapi.testclient import TestClient
+
+        from mcp_server_langgraph.app import create_app
+        from mcp_server_langgraph.observability.telemetry import shutdown_observability
+
+        try:
+            # Given: App
+            app = create_app()
+            client = TestClient(app)
+
+            # When: Request health endpoint
+            response = client.get("/health")
+
+            # Then: Should return 200
+            assert response.status_code == 200
+            assert response.json()["status"] == "healthy"
+        finally:
+            shutdown_observability()
