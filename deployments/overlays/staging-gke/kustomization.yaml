@@ -190,6 +190,12 @@ patches:
       kind: Deployment
       name: otel-collector
 
+  # OpenTelemetry Collector - Workload Identity
+  - path: serviceaccount-otel-collector-patch.yaml
+    target:
+      kind: ServiceAccount
+      name: otel-collector
+
 # Image configuration
 # Codex Finding #6 (P1): Use full registry path for image name matching
 images:

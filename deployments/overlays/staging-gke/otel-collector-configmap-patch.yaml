@@ -50,7 +50,7 @@ data:
             value: staging
             action: insert
           - key: service.version
-            value: ${SERVICE_VERSION:-unknown}
+            value: unknown
             action: insert
           - key: cloud.provider
             value: gcp
@@ -81,13 +81,7 @@ data:
           service_resource_labels: true
         trace:
           # Cloud Trace configuration
-        use_insecure: false
         timeout: 12s
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_interval: 30s
-          max_elapsed_time: 300s
 
       # Prometheus (for local metrics scraping)
       prometheus:
@@ -137,7 +131,11 @@ data:
           encoding: json
         metrics:
           level: detailed
-          address: 0.0.0.0:8888
 
-      # Extensions
-      extensions: []
+      # Extensions - enable health_check for liveness/readiness probes
+      extensions: [health_check]
+
+    # Extension definitions
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133

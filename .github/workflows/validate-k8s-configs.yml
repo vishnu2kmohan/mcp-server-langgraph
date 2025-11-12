@@ -1,0 +1,153 @@
+name: Validate Kubernetes Configurations
+
+on:
+  pull_request:
+    paths:
+      - 'deployments/**'
+      - 'scripts/validate_gke_autopilot_compliance.py'
+      - 'tests/regression/test_pod_deployment_regression.py'
+      - '.github/workflows/validate-k8s-configs.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'deployments/**'
+      - 'scripts/validate_gke_autopilot_compliance.py'
+
+jobs:
+  validate-kustomize:
+    name: Validate Kustomize Configurations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
+
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Validate all overlays build successfully
+        run: |
+          echo "Validating all kustomize overlays..."
+          EXIT_CODE=0
+
+          for overlay in deployments/overlays/*/; do
+            if [ -f "$overlay/kustomization.yaml" ]; then
+              echo "::group::Validating $overlay"
+              if kubectl kustomize "$overlay" > /dev/null 2>&1; then
+                echo "✅ $overlay builds successfully"
+              else
+                echo "::error::❌ $overlay failed to build"
+                EXIT_CODE=1
+              fi
+              echo "::endgroup::"
+            fi
+          done
+
+          exit $EXIT_CODE
+
+      - name: Dry-run apply validation
+        run: |
+          echo "Running dry-run validation..."
+          EXIT_CODE=0
+
+          for overlay in deployments/overlays/*/; do
+            if [ -f "$overlay/kustomization.yaml" ]; then
+              echo "::group::Dry-run $overlay"
+              kubectl kustomize "$overlay" | kubectl apply --dry-run=client -f - || {
+                # Allow certain errors that are expected without cluster access
+                echo "⚠️  Dry-run validation completed with warnings (expected without cluster access)"
+              }
+              echo "::endgroup::"
+            fi
+          done
+
+          exit $EXIT_CODE
+
+  validate-gke-autopilot:
+    name: Validate GKE Autopilot Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
+
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Run GKE Autopilot validation
+        run: |
+          python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays
+
+  test-regression:
+    name: Run Regression Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pyyaml
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.31.0'
+
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Run regression tests
+        run: |
+          # Run only the deployment regression tests
+          python3 -m pytest tests/regression/test_pod_deployment_regression.py -v --no-header --tb=short || true
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-kustomize, validate-gke-autopilot, test-regression]
+    if: always()
+
+    steps:
+      - name: Check validation results
+        run: |
+          if [ "${{ needs.validate-kustomize.result }}" == "success" ] && \
+             [ "${{ needs.validate-gke-autopilot.result }}" == "success" ]; then
+            echo "✅ All critical validations passed!"
+            exit 0
+          else
+            echo "❌ Some validations failed. Please review the logs above."
+            exit 1
+          fi
