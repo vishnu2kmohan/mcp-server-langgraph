@@ -81,7 +81,7 @@ resources:
     cpu: 1000m      # $35/month
     memory: 2Gi     # $8/month
 ## Per pod: $43/month
-```
+```yaml
 ```yaml After (Optimized)
 resources:
   requests:
@@ -89,6 +89,7 @@ resources:
     memory: 512Mi   # $2/month
 ## Per pod: $11/month (74% savings!)
 ```
+
 </CodeGroup>
 
 **Action**:
@@ -101,8 +102,7 @@ kubectl patch deployment production-mcp-server-langgraph \
   -n mcp-production \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
-```
-
+```bash
 #### Strategy 2: Committed Use Discounts (CUDs)
 
 Commit to 1-year or 3-year usage for significant discounts:
@@ -141,6 +141,7 @@ gcloud scheduler jobs create http scale-up-dev \
   --schedule="0 6 * * 1-5" \
   --message-body='{"desiredNodeCount":3}'
 ```
+
 **Savings**: ~$50-70/month per dev environment
 
 #### Strategy 4: Database Optimization
@@ -188,7 +189,7 @@ gcloud scheduler jobs create http scale-up-dev \
 ## Check usage
 gcloud monitoring time-series list \
   --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
-```
+```rust
 **If usage < 60%**, downgrade:
 - 5 GB → 3 GB: **Save $88/month** (40%)
 
@@ -214,6 +215,7 @@ gcloud billing budgets create \
   --threshold-rule=percent=90 \
   --threshold-rule=percent=100
 ```
+
 <Check>Alerts fire at 50%, 90%, and 100% of budget</Check>
 
 #### Cost Allocation Labels
@@ -227,7 +229,7 @@ labels = {
   cost_center = "engineering"
   application = "mcp-server"
 }
-```
+```python
 **View costs by label** in BigQuery:
 ```sql
 SELECT
@@ -240,6 +242,7 @@ WHERE
 GROUP BY team
 ORDER BY total_cost DESC
 ```
+
 ---
 
 ### Quick Wins Checklist
@@ -382,8 +385,7 @@ spot_node_group_instance_types = [
   "t3.large", "t3a.large",
   "t3.xlarge", "t3a.xlarge"
 ]
-```
-
+```bash
 **Use Cases**:
 - Development/staging environments
 - Batch processing workloads
@@ -463,8 +465,7 @@ aws cloudwatch get-metric-statistics \
 
 # If avg < 40%, downsize instance class
 # db.t3.large ($240/mo) → db.t3.medium ($120/mo) = $120 saved
-```
-
+```bash
 #### Strategy 4: VPC Endpoints (70% Data Transfer Savings)
 
 **Avoid NAT gateway data transfer charges**:
@@ -502,8 +503,7 @@ kubectl set env deployment/cluster-autoscaler \
   -n kube-system \
   --containers=cluster-autoscaler \
   AWS_REGION=us-east-1
-```
-
+```yaml
 **HPA** scales pods based on utilization:
 
 ```yaml
@@ -537,8 +537,7 @@ spec:
 # Lambda function to stop EKS node groups
 # Runs Mon-Fri at 6 PM, starts at 6 AM
 # Savings: ~65 hours/week off = $200-300/month
-```
-
+```bash
 **Single NAT Gateway for Non-Production**:
 ```hcl
 # terraform/environments/dev/terraform.tfvars
@@ -622,8 +621,7 @@ aws sns subscribe \
 aws budgets create-budget \
   --account-id ACCOUNT_ID \
   --budget file://budget.json
-```
-
+```json
 **budget.json**:
 ```json
 {

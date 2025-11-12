@@ -54,8 +54,7 @@ docker run -d --name kong-gateway \
   -p 8443:8443 \
   -p 8001:8001 \
   kong:latest
-```
-
+```bash
 ### 2. Import OpenAPI Specification
 
 ```bash
@@ -85,8 +84,7 @@ plugins:
       add:
         headers:
           - "Authorization: Bearer {{jwt_token}}"
-```
-
+```bash
 ### 4. Enable Rate Limiting
 
 ```bash
@@ -112,8 +110,7 @@ aws apigateway import-rest-api \
 
 # Save API ID
 export API_ID=<api-id-from-output>
-```
-
+```bash
 ### 2. Configure JWT Authorizer
 
 ```bash
@@ -136,8 +133,7 @@ aws apigateway create-deployment \
 
 # Get invoke URL
 echo "https://${API_ID}.execute-api.region.amazonaws.com/production"
-```
-
+```bash
 ### 4. Add Usage Plan (Rate Limiting)
 
 ```bash
@@ -167,8 +163,7 @@ gcloud api-gateway api-configs create mcp-api-v1 \
   --openapi-spec=openapi/v1.json \
   --project=$PROJECT_ID \
   --backend-auth-service-account=$SERVICE_ACCOUNT
-```
-
+```bash
 ### 2. Create Gateway
 
 ```bash
@@ -198,8 +193,7 @@ securityDefinitions:
 
 security:
   - api_key: []
-```
-
+```yaml
 **Option B: JWT (Firebase Auth)**
 ```yaml
 securityDefinitions:
@@ -255,8 +249,7 @@ az apim api import \
 ```xml
 <rate-limit calls="100" renewal-period="60" />
 <quota calls="10000" renewal-period="86400" />
-```
-
+```yaml
 ---
 
 ## Kubernetes Ingress (NGINX/Traefik)
@@ -313,8 +306,7 @@ spec:
         - name: jwt-auth
   tls:
     certResolver: letsencrypt
-```
-
+```bash
 ---
 
 ## Environment Configuration
@@ -361,8 +353,7 @@ curl https://api.example.com/health
 
 curl https://api.example.com/health/ready
 # Expected: {"status": "ready", "checks": {...}}
-```
-
+```bash
 ### 2. OpenAPI Documentation
 
 ```bash
@@ -392,8 +383,7 @@ export TOKEN="<access_token from response>"
 
 curl https://api.example.com/api/v1/api-keys/ \
   -H "Authorization: Bearer $TOKEN"
-```
-
+```bash
 ### 4. Rate Limiting Test
 
 ```bash
@@ -420,8 +410,7 @@ done
 # - http_request_duration_seconds
 # - circuit_breaker_state
 # - rate_limit_exceeded_total
-```
-
+```bash
 ### Grafana Dashboard
 
 ```bash
@@ -438,8 +427,7 @@ done
 # Export to Jaeger
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318"
 export OTEL_SERVICE_NAME="mcp-server"
-```
-
+```bash
 ---
 
 ## Security Checklist
@@ -581,8 +569,7 @@ spec:
 curl https://api.example.com/api/v1/users/me/data \
   -H "X-API-Version: 1.0" \
   -H "Authorization: Bearer $TOKEN"
-```
-
+```bash
 ### Deprecation Policy
 1. **Announce deprecation** - 6 months notice
 2. **Mark as deprecated** - Add `deprecated: true` to OpenAPI
@@ -677,8 +664,7 @@ jobs:
         run: |
           deck file openapi2kong -s openapi/v1.json -o kong.yaml
           deck gateway sync kong.yaml --kong-addr https://kong-admin.example.com
-```
-
+```bash
 ---
 
 ## Troubleshooting

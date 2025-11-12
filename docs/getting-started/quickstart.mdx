@@ -169,7 +169,7 @@ async def test_agent():
 
 ## Run the test
 asyncio.run(test_agent())
-```
+```bash
 ```bash cURL
 ## First, get a JWT token (in production, use proper auth)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; from mcp_server_langgraph.core.config import settings; auth = AuthMiddleware(secret_key=settings.jwt_secret_key); print(auth.create_token('alice'))")
@@ -198,7 +198,7 @@ const response = await axios.post('http://localhost:8000/message', {
 });
 
 console.log(response.data);
-```
+```json
 </CodeGroup>
 
 ### Understanding the Response

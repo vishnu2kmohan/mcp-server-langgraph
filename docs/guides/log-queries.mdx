@@ -63,8 +63,7 @@ fields @timestamp, message, duration_ms
 fields @timestamp, level
 | filter level = "ERROR"
 | stats count() as error_count by bin(5m)
-```
-
+```python
 #### Top Error Messages
 ```python
 fields message
@@ -95,8 +94,7 @@ severity="ERROR"
 ```
 resource.type="k8s_container"
 jsonPayload.trace_id="0af7651916cd43dd8448eb211c80319c"
-```
-
+```toml
 #### Errors in Last Hour
 ```toml
 resource.type="k8s_container"
@@ -121,8 +119,7 @@ severity="WARNING" OR severity="ERROR"
 ```
 resource.type="k8s_container"
 jsonPayload.message=~"memory.*exceeded"
-```
-
+```sql
 ---
 
 ## Azure Monitor (KQL)
@@ -141,14 +138,14 @@ traces
 | order by timestamp desc
 | take 100
 ```
+
 #### Errors by Service
 ```kql
 traces
 | where severityLevel >= 3
 | summarize count() by tostring(customDimensions.service)
 | order by count_ desc
-```
-
+```sql
 #### Trace-Specific Logs
 ```kql
 traces
@@ -156,6 +153,7 @@ traces
 | project timestamp, severityLevel, message
 | order by timestamp asc
 ```
+
 #### Request Duration Analysis
 ```kql
 traces
@@ -163,8 +161,7 @@ traces
 | extend duration_ms = todouble(customDimensions.duration_ms)
 | summarize avg(duration_ms), percentile(duration_ms, 95), percentile(duration_ms, 99) by bin(timestamp, 5m)
 | render timechart
-```
-
+```sql
 #### User Activity Timeline
 ```kql
 traces
@@ -172,6 +169,7 @@ traces
 | project timestamp, message, customDimensions.action
 | order by timestamp desc
 ```
+
 #### Error Rate Trend
 ```kql
 traces
@@ -181,7 +179,7 @@ traces
     by bin(timestamp, 5m)
 | extend error_rate = (errors * 100.0) / total
 | render timechart
-```
+```json
 ---
 
 ## Elasticsearch (Kibana)
@@ -208,6 +206,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   "size": 100
 }
 ```
+
 #### Trace-Specific Logs
 ```json
 {
@@ -220,8 +219,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     { "timestamp": { "order": "asc" } }
   ]
 }
-```
-
+```json
 #### Time Range + Level Filter
 ```json
 {
@@ -242,6 +240,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
   }
 }
 ```
+
 #### Aggregation: Errors by User
 ```json
 {
@@ -258,8 +257,7 @@ Elasticsearch uses **Query DSL** (JSON-based) or **KQL** in Kibana.
     }
   }
 }
-```
-
+```yaml
 #### Kibana KQL (Discover Tab)
 ```yaml
 level: "ERROR" AND timestamp > now-1h
@@ -267,8 +265,7 @@ level: "ERROR" AND timestamp > now-1h
 
 ```yaml
 trace_id: "0af7651916cd43dd8448eb211c80319c"
-```
-
+```yaml
 ```yaml
 message: "authentication failed" AND user_id: "alice"
 ```
@@ -291,7 +288,7 @@ status:error
 #### Trace-Specific Logs
 ```
 @trace_id:0af7651916cd43dd8448eb211c80319c
-```
+```yaml
 #### Errors by Service
 ```yaml
 status:error service:mcp-server-langgraph
@@ -313,7 +310,7 @@ status:error @timestamp:[now-1h TO now]
 #### High Latency Requests
 ```
 @duration_ms:&gt;1000 @message:"request completed"
-```
+```python
 #### Errors with Stack Traces
 ```yaml
 status:error @exception.stacktrace:*
@@ -329,7 +326,7 @@ status:error | count by @user_id
 #### P95 Request Duration
 ```
 @message:"request completed" | p95(@duration_ms) by @http.route
-```
+```yaml
 #### Error Rate Over Time
 ```yaml
 status:error | timeseries count()
@@ -351,7 +348,7 @@ index=main source="mcp-server-langgraph" level="ERROR"
 | table _time, message, trace_id, user_id
 | sort -_time
 | head 100
-```
+```bash
 #### Trace-Specific Logs
 ```spl
 index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c80319c"
@@ -363,7 +360,7 @@ index=main source="mcp-server-langgraph" trace_id="0af7651916cd43dd8448eb211c803
 index=main source="mcp-server-langgraph" level="ERROR"
 | stats count by user_id
 | sort -count
-```
+```bash
 #### Time Range + Level Filter
 ```spl
 index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
@@ -375,7 +372,7 @@ index=main source="mcp-server-langgraph" earliest=-1h level="ERROR"
 index=main source="mcp-server-langgraph"
 | timechart span=5m count(eval(level="ERROR")) as errors, count as total
 | eval error_rate=(errors/total)*100
-```
+```bash
 #### Top Error Messages
 ```spl
 index=main source="mcp-server-langgraph" level="ERROR"
@@ -389,7 +386,7 @@ index=main source="mcp-server-langgraph" level="ERROR"
 index=main source="mcp-server-langgraph" message="request completed"
 | stats avg(duration_ms) as avg_duration, p95(duration_ms) as p95_duration, max(duration_ms) as max_duration by http_route
 | sort -p95_duration
-```
+```bash
 #### User Activity Timeline
 ```spl
 index=main source="mcp-server-langgraph" user_id="alice"
@@ -594,7 +591,7 @@ fields @timestamp, level, message, trace_id
 | filter @timestamp >= 1697385600000
 | filter @timestamp <= 1697472000000
 | sort @timestamp desc
-```
+```sql
 #### Azure (KQL)
 ```kql
 traces
@@ -617,8 +614,7 @@ traces
 fields duration_ms
 | filter message like /request completed/
 | stats avg(duration_ms) as avg, pct(duration_ms, 95) as p95, pct(duration_ms, 99) as p99
-```
-
+```sql
 #### Azure (KQL)
 ```kql
 traces
@@ -629,12 +625,12 @@ traces
     percentile(duration, 95),
     percentile(duration, 99)
 ```
+
 #### Splunk
 ```spl
 message="request completed"
 | stats avg(duration_ms) as avg, p95(duration_ms) as p95, p99(duration_ms) as p99
-```
-
+```rust
 ---
 
 ## Best Practices
@@ -644,6 +640,7 @@ message="request completed"
 Always query on structured fields (not text search on message):
 
 ```
+
 - ✅ user_id = "alice"
 ❌ message like /user alice/
 ```
@@ -654,20 +651,22 @@ Always specify time ranges for better performance:
 ```
 - ✅ timestamp:[now-1h TO now]
 ❌ No time filter (searches all data)
-```
+```rust
 ### 3. Use Trace IDs
 
 For request debugging, always use trace_id:
 
 ```
+
 - ✅ trace_id = "0af7651916cd43dd..."
 ❌ Searching multiple unrelated fields
-```
+```rust
 ### 4. Aggregate When Possible
 
 Use aggregations instead of returning all results:
 
 ```
+
 - ✅ stats count() by user_id
 ❌ return 10000 individual log entries
 ```

@@ -127,7 +127,7 @@ flowchart TB
     class Jaeger tracingStyle
     class Prom metricsStyle
     class Grafana dashStyle
-```
+```bash
 ### Supported Platforms
 
 <Tabs>
@@ -255,6 +255,7 @@ docker compose -f docker-compose.yml up -d
 ## 3. Verify
 curl http://localhost:8000/health
 ```
+
 ### Production Deploy (Kubernetes)
 
 For production deployment:
@@ -277,7 +278,7 @@ helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
 
 ## 4. Verify deployment
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
+```bash
 ### Environment Configuration
 
 <Tabs>
@@ -344,6 +345,7 @@ helm install jaeger jaegertracing/jaeger \
 ## OpenTelemetry Collector
 kubectl apply -f kubernetes/otel-collector/
 ```
+
 Access dashboards:
 - **Grafana**: http://grafana.yourdomain.com (admin/admin)
 - **Jaeger**: http://jaeger.yourdomain.com
@@ -378,7 +380,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```
+```bash
 #### Vertical Pod Autoscaling
 
 ```bash

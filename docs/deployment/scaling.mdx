@@ -69,7 +69,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```
+```bash
 **Deploy**:
 ```bash
 kubectl apply -f hpa.yaml
@@ -80,6 +80,7 @@ kubectl get hpa -n mcp-server-langgraph
 ## Watch scaling
 kubectl get hpa -n mcp-server-langgraph --watch
 ```
+
 #### Advanced HPA
 
 ```yaml
@@ -142,7 +143,7 @@ spec:
         value: 4    # Or add 4 pods
         periodSeconds: 30
       selectPolicy: Max  # Use most aggressive
-```
+```bash
 #### Custom Metrics
 
 **Install Prometheus Adapter**:
@@ -151,6 +152,7 @@ helm install prometheus-adapter prometheus-community/prometheus-adapter \
   --namespace monitoring \
   --set prometheus.url=http://prometheus:9090
 ```
+
 **Configure custom metrics**:
 ```yaml
 apiVersion: v1
@@ -167,7 +169,7 @@ data:
         matches: "^(.*)_total"
         as: "${1}_per_second"
       metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
-```
+```bash
 ### Vertical Pod Autoscaling (VPA)
 
 #### Install VPA
@@ -177,6 +179,7 @@ git clone https://github.com/kubernetes/autoscaler.git
 cd autoscaler/vertical-pod-autoscaler
 ./hack/vpa-up.sh
 ```
+
 #### VPA Configuration
 
 ```yaml
@@ -204,11 +207,12 @@ spec:
       controlledResources:
       - cpu
       - memory
-```
+```bash
 **Check recommendations**:
 ```bash
 kubectl describe vpa mcp-server-langgraph-vpa -n mcp-server-langgraph
 ```
+
 ### Cluster Autoscaling
 
 #### GKE
@@ -219,7 +223,7 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=10 \
   --zone=us-central1-a
-```
+```yaml
 #### EKS
 
 ```yaml
@@ -241,6 +245,7 @@ nodeGroups:
       withAddonPolicies:
         autoScaler: true
 ```
+
 #### AKS
 
 ```bash
@@ -250,7 +255,7 @@ az aks update \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 10
-```
+```bash
 ### Load Testing
 
 #### Generate Load
@@ -301,6 +306,7 @@ EOF
 export AUTH_TOKEN="your-token"
 k6 run load-test.js
 ```
+
 #### Monitor Scaling
 
 ```bash
@@ -313,7 +319,7 @@ watch kubectl get hpa -n mcp-server-langgraph
 ## View metrics
 kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
-```
+```yaml
 ### Resource Limits
 
 #### Right-Sizing
@@ -327,6 +333,7 @@ resources:
     cpu: 4000m      # Max CPU
     memory: 4Gi     # Max memory
 ```
+
 **Guidelines**:
 - **Requests**: Set to average usage (p50)
 - **Limits**: Set to peak usage (p95-p99)
@@ -430,7 +437,7 @@ checkpoint_completion_target = 0.9
 wal_buffers = 16MB
 default_statistics_target = 100
 random_page_cost = 1.1
-```
+```bash
 ### Cost Optimization
 
 #### Right-Size Instances
@@ -445,6 +452,7 @@ resources:
     cpu: 800m     # Reduced from 1000m
     memory: 1.5Gi # Reduced from 2Gi
 ```
+
 #### Spot/Preemptible Instances
 
 **GKE**:
@@ -456,7 +464,7 @@ gcloud container node-pools create spot-pool \
   --enable-autoscaling \
   --min-nodes=0 \
   --max-nodes=10
-```
+```yaml
 **EKS**:
 ```yaml
 nodeGroups:
@@ -469,6 +477,7 @@ nodeGroups:
     minSize: 0
     maxSize: 10
 ```
+
 #### Scheduled Scaling
 
 ```yaml
@@ -512,7 +521,7 @@ spec:
             - -c
             - kubectl scale deployment mcp-server-langgraph --replicas=5
           restartPolicy: OnFailure
-```
+```css
 ### Monitoring Scaling
 
 #### Key Metrics
@@ -533,6 +542,7 @@ rate(http_requests_total{namespace="mcp-server-langgraph"}[5m])
 ## HPA desired replicas
 kube_horizontalpodautoscaler_status_desired_replicas{namespace="mcp-server-langgraph"}
 ```
+
 #### Alerts
 
 ```yaml

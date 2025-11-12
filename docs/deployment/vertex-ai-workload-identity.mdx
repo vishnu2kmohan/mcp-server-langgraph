@@ -36,7 +36,7 @@ flowchart TB
     class K8sSA k8sStyle
     class GCPSA gcpStyle
     class VertexAI apiStyle
-```
+```python
 ### Prerequisites
 
 Before starting, ensure you have:
@@ -57,6 +57,7 @@ The easiest way to set up Vertex AI with Workload Identity:
 ## Run the automated setup script
 ./scripts/gcp/setup-vertex-ai-staging.sh
 ```
+
 This script will:
 1. ✅ Enable Vertex AI API
 2. ✅ Create `vertex-ai-staging` service account
@@ -74,7 +75,7 @@ If you prefer manual setup or need to understand each step:
 ```bash
 gcloud services enable aiplatform.googleapis.com \
   --project=vishnu-sandbox-20250310
-```
+```sql
 #### Step 2: Create Service Account
 
 ```bash
@@ -84,6 +85,7 @@ gcloud iam service-accounts create vertex-ai-staging \
   --description="Service account for Vertex AI access in staging" \
   --project=vishnu-sandbox-20250310
 ```
+
 #### Step 3: Grant Permissions
 
 ```bash
@@ -126,7 +128,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
   -n staging-mcp-server-langgraph \
   iam.gke.io/gcp-service-account=vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --overwrite
-```
+```python
 </Accordion>
 
 ### Configuration
@@ -151,6 +153,7 @@ env:
   - name: MODEL_NAME
     value: "gemini-2.5-flash"  # or gemini-2.5-pro
 ```
+
 #### Service Account Annotation
 
 The Kubernetes service account is annotated to use Workload Identity:
@@ -163,7 +166,7 @@ metadata:
   name: mcp-server-langgraph
   annotations:
     iam.gke.io/gcp-service-account: vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```
+```bash
 ### Deployment
 
 #### Deploy to Staging
@@ -180,6 +183,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n staging-mcp-server-lan
 ## Verify pods are running
 kubectl get pods -n staging-mcp-server-langgraph
 ```
+
 ### Verification
 
 #### 1. Verify Workload Identity Binding
@@ -191,7 +195,7 @@ gcloud iam service-accounts get-iam-policy \
 
 ## Should include binding for:
 ## serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-staging/mcp-server-langgraph]
-```
+```bash
 #### 2. Verify Kubernetes Annotation
 
 ```bash
@@ -202,6 +206,7 @@ kubectl get serviceaccount mcp-server-langgraph -n staging-mcp-server-langgraph 
 ## Expected output:
 ## vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
 ```
+
 #### 3. Test Authentication from Pod
 
 ```bash
@@ -214,7 +219,7 @@ kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
 ## Expected output:
 ## ACTIVE  ACCOUNT
 ## *       vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```
+```bash
 #### 4. Test Vertex AI Access
 
 ```bash
@@ -232,6 +237,7 @@ models = aiplatform.Model.list()
 print(f"✓ Vertex AI access working! Found {len(models)} models")
 EOF
 ```
+
 #### 5. Test with LiteLLM
 
 ```bash
@@ -249,7 +255,7 @@ response = completion(
 print(f"✓ LiteLLM integration working!")
 print(f"Response: {response.choices[0].message.content}")
 EOF
-```
+```bash
 ### Troubleshooting
 
 <AccordionGroup>
@@ -419,6 +425,7 @@ gcloud ai quota update \
   --model=gemini-2.5-flash \
   --limit=1000000  # 1M requests per day
 ```
+
 #### Monitoring Costs
 
 ```bash

@@ -69,7 +69,7 @@ LANGSMITH_PROJECT=mcp-server-langgraph
 
 ## Enable dual observability
 OBSERVABILITY_BACKEND=both  # OpenTelemetry + LangSmith
-```
+```python
 #### 3. Start Tracing
 
 That's it! All agent invocations are now automatically traced:
@@ -84,6 +84,7 @@ result = agent_graph.invoke({
     "request_id": "req123"
 })
 ```
+
 #### 4. View Traces
 
 Visit [smith.langchain.com](https://smith.langchain.com/) to see your traces in real-time!
@@ -146,7 +147,7 @@ config = langsmith_config.create_run_config(
 
 ## Use in invocation
 result = agent_graph.invoke(inputs, config=config)
-```
+```python
 Now you can filter traces by:
 - **User tier**: Find all premium user interactions
 - **Department**: Analyze usage by cost center
@@ -184,6 +185,7 @@ results = client.run_on_dataset(
     project_name="eval-gpt4-vs-claude"
 )
 ```
+
 View results in LangSmith UI to see:
 - **Latency comparison**: Which model is faster?
 - **Cost analysis**: Which is more cost-effective?
@@ -206,7 +208,7 @@ client.create_feedback(
     comment="Very helpful response!",
     source_info={"user_id": "alice"}
 )
-```
+```bash
 <Tip>
   Integrate feedback collection into your UI to gather real user sentiment on responses.
 </Tip>
@@ -347,6 +349,7 @@ result = agent_graph.invoke({
     "user_id": "alice"
 })
 ```
+
 ```python Advanced metadata
 from langsmith_config import langsmith_config
 
@@ -358,7 +361,7 @@ config = langsmith_config.create_run_config(
 )
 
 result = agent_graph.invoke(inputs, config=config)
-```
+```python
 ```python Feedback collection
 from langsmith import Client
 
@@ -370,6 +373,7 @@ client.create_feedback(
     comment="Great response!"
 )
 ```
+
 </CodeGroup>
 
 ### Resources

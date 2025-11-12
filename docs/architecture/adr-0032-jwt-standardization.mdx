@@ -57,7 +57,7 @@ We will **standardize on JSON Web Tokens (JWT) as the sole authentication token 
     "scope": "openid profile email"
   }
 }
-```
+```bash
 #### Authentication Flows → JWT
 
 1. **User Login (Password)**: `User → Keycloak (ROPC) → JWT + Refresh Token`
@@ -73,6 +73,7 @@ ACCESS_TOKEN_LIFESPAN=900  # 15 minutes
 REFRESH_TOKEN_LIFESPAN=1800  # 30 minutes (interactive)
 SERVICE_ACCOUNT_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days (batch jobs)
 ```
+
 ### Consequences
 
 #### Positive Consequences
@@ -115,7 +116,7 @@ async def authenticate(self, username: str, password: str) -> AuthResponse:
     }
     response = await self.client.post(self.config.token_endpoint, data=data)
     return AuthResponse(access_token=response.json()["access_token"], ...)
-```
+```python
 **JWT Validation** (`src/mcp_server_langgraph/auth/keycloak.py:89-219`):
 ```python
 async def verify_token(self, token: str) -> Dict[str, Any]:

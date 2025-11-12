@@ -59,8 +59,7 @@ Send a message to the AI agent and receive an intelligent response optimized for
   },
   "required": ["message", "username"]
 }
-```
-
+```python
 <Info>
 **Response Format Control**: New in v2.6.0. Agents can optimize for speed vs comprehensiveness:
 - **`concise`** (default): ~500 tokens, 2-5 seconds - ideal for quick answers
@@ -114,8 +113,7 @@ legacy_response = await client.call_tool("chat", {
     }
   }
 }
-```
-
+```python
 #### Conversation Search Tool
 
 Search conversations using keywords and filters. **Replaces** the old `list_conversations` tool following Anthropic's guidance: "Implement search-focused tools rather than list-all tools."
@@ -188,8 +186,7 @@ recent = await client.call_tool("conversation_search", {
     "username": "alice",
     "limit": 5
 })
-```
-
+```json
 **Response**:
 ```json
 {
@@ -214,8 +211,7 @@ When results exceed the limit:
     }
   ]
 }
-```
-
+```rust
 #### Conversation Get Tool
 
 Retrieve a specific conversation thread by ID.
@@ -261,8 +257,7 @@ conversation = await client.call_tool("conversation_get", {
 })
 
 print(conversation.content[0].text)
-```
-
+```json
 **Response**:
 ```json
 {
@@ -311,8 +306,7 @@ Execute code in a sandboxed environment (if enabled).
   },
   "required": ["code"]
 }
-```
-
+```python
 **Example Usage**:
 ```python
 result = await client.call_tool("execute_code", {
@@ -347,8 +341,7 @@ print(result.content[0].text)
     "language": "python"
   }
 }
-```
-
+```json
 #### Database Query Tool
 
 Query databases (if configured and authorized).
@@ -391,8 +384,7 @@ results = await client.call_tool("query_database", {
     "database": "users",
     "limit": 10
 })
-```
-
+```json
 **Response**:
 ```json
 {
@@ -422,8 +414,7 @@ for tool in tools:
     print(f"Tool: {tool.name}")
     print(f"  Description: {tool.description}")
     print(f"  Input Schema: {json.dumps(tool.inputSchema, indent=2)}")
-```
-
+```python
 **Response Format**:
 ```json
 {
@@ -457,8 +448,7 @@ if not result.isError:
     print(result.content[0].text)
 else:
     print(f"Error: {result.content[0].text}")
-```
-
+```python
 #### Asynchronous Execution
 
 For long-running tools:
@@ -489,8 +479,7 @@ async for chunk in client.call_tool_stream(
     arguments={"query": "Write a long essay", "stream": True}
 ):
     print(chunk.delta, end="", flush=True)
-```
-
+```json
 ### Error Handling
 
 Tools may return errors in the response:
@@ -524,8 +513,7 @@ if result.isError:
     print(f"Error ({error_code}): {error_message}")
 else:
     print(result.content[0].text)
-```
-
+```python
 ### Custom Tools
 
 Extend the server with custom tools:
@@ -577,8 +565,7 @@ result = await client.call_tool("calculate_mortgage", {
 
 print(result.content[0].text)
 ## Output: Monthly payment: $1347.13
-```
-
+```python
 ### Tool Permissions
 
 Tools respect authorization rules:
@@ -603,8 +590,7 @@ await openfga_client.write_tuples([{
     "relation": "executor",
     "object": "tool:search_web"
 }])
-```
-
+```python
 ### Tool Composition
 
 Chain multiple tools:

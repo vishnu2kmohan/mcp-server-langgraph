@@ -27,8 +27,7 @@ This document catalogues all deployment issues encountered and provides universa
 RUN uv pip install --no-deps -e .
 # Only copies site-packages to final stage, not full venv
 COPY --from=build /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-```
-
+```bash
 **Root Cause**: Editable install (`-e`) creates `.pth` pointer files in `site-packages` that reference `/app/src/`. When only `site-packages` is copied (not the full venv), the pointers break.
 
 **Prevention**:
@@ -48,8 +47,7 @@ RUN python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version
 - name: Validate Docker image
   run: |
     docker run --rm $IMAGE_NAME python -c "import mcp_server_langgraph"
-```
-
+```bash
 ---
 
 ### Issue #2: Cloud SQL shared_buffers Configuration
@@ -111,8 +109,7 @@ validate_postgres_config() {
 ```
 ERROR: NETWORK_NOT_PEERED
 VPC not connected to servicenetworking.googleapis.com
-```
-
+```bash
 **Root Cause**: Private Cloud SQL/RDS/managed database instances require VPC peering to be established before creation.
 
 **Prevention**:
@@ -142,8 +139,7 @@ aws rds create-db-subnet-group \
   --db-subnet-group-name staging-db-subnet \
   --db-subnet-group-description "Private subnets for RDS" \
   --subnet-ids subnet-xxx subnet-yyy
-```
-
+```bash
 **Azure**:
 ```bash
 # Configure service endpoint
@@ -178,8 +174,7 @@ az network vnet subnet update \
           --query serviceEndpoints
         ;;
     esac
-```
-
+```bash
 ---
 
 ### Issue #4: Pod Security Context Missing
@@ -213,8 +208,7 @@ securityContext:
   readOnlyRootFilesystem: true  # or false if needed
   runAsNonRoot: true
   runAsUser: 65532  # or appropriate UID
-```
-
+```yaml
 2. **Pod-level security context**:
 
 ```yaml
@@ -240,8 +234,7 @@ spec:
       select(.securityContext == null) |
       "Missing securityContext in container: " + .name
     '
-```
-
+```bash
 ---
 
 ### Issue #5: RBAC Resources Not Needed
@@ -271,8 +264,7 @@ grep -r "@kubernetes/client-node" src/
 grep -r "k8s.io/client-go" src/
 
 # If NO results → Remove Role/RoleBinding
-```
-
+```bash
 2. **Keep ONLY ServiceAccount with workload identity**:
 
 ```yaml
@@ -303,8 +295,7 @@ metadata:
         exit 1
       fi
     fi
-```
-
+```bash
 ---
 
 ### Issue #6: kubectl Client-Side vs Server-Side Validation
@@ -329,8 +320,7 @@ kubectl apply --dry-run=client -f manifests.yaml
 ```yaml
 # CORRECT - validates against actual cluster
 kubectl apply --dry-run=server -f manifests.yaml
-```
-
+```bash
 2. **Verify CRDs exist first**:
 
 ```bash
@@ -356,8 +346,7 @@ kubectl api-resources | grep externalsecret
 
     # Server-side validation
     kubectl apply --dry-run=server -f /tmp/manifests.yaml
-```
-
+```bash
 ---
 
 ### Issue #7: Namespace Creation Timing
@@ -392,8 +381,7 @@ kubectl api-resources | grep externalsecret
 - name: Deploy
   run: |
     kubectl apply -k deployments/overlays/$ENV
-```
-
+```bash
 2. **Make namespace creation idempotent** (using `--dry-run=client | kubectl apply`)
 
 ---
@@ -435,8 +423,7 @@ metadata:
   name: config
 data:
   llm_provider: "google"  # ✅ Overrides ConfigMap value
-```
-
+```bash
 2. **Use strategic merge patch for env array replacement**:
 
 ```yaml
@@ -464,8 +451,7 @@ spec:
       select(.value != null and .valueFrom != null) |
       "ERROR: Env var has both value and valueFrom: " + .name
     '
-```
-
+```bash
 ---
 
 ## Universal Prevention Checklist
@@ -657,8 +643,7 @@ jobs:
               exit 1
             fi
           done
-```
-
+```bash
 ---
 
 ## Testing Methodology

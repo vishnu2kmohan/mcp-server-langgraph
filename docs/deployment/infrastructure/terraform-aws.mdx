@@ -101,8 +101,7 @@ flowchart TB
     class CP,NG1,NG2,NG3 compute
     class RDS,Redis,S3,DDB storage
     class KMS,SM security
-```
-
+```python
 ## Modules Overview
 
 The implementation consists of 4 production-ready Terraform modules:
@@ -117,6 +116,7 @@ The implementation consists of 4 production-ready Terraform modules:
 ### Module Architecture
 
 ```
+
 terraform/
 ├── backend-setup/              # S3 + DynamoDB state backend
 │   ├── main.tf
@@ -158,8 +158,7 @@ terraform/
         ├── variables.tf
         ├── outputs.tf
         └── kubernetes.tf
-```
-
+```bash
 ---
 
 ## Module 1: VPC
@@ -250,8 +249,7 @@ output "public_subnet_ids" {
   description = "Public subnet IDs for load balancers"
   value       = module.vpc.public_subnet_ids
 }
-```
-
+```bash
 ### Cost Breakdown
 
 | Component | Monthly Cost | Notes |
@@ -430,8 +428,7 @@ output "application_irsa_role_arn" {
   description = "ARN of IRSA role for application pods"
   value       = module.eks.application_irsa_role_arn
 }
-```
-
+```bash
 ### Cost Breakdown
 
 | Component | Monthly Cost | Notes |
@@ -535,8 +532,7 @@ output "db_secret_yaml" {
   value       = module.rds.db_secret_yaml
   sensitive   = true
 }
-```
-
+```bash
 ### Cost Breakdown
 
 | Component | Monthly Cost | Notes |
@@ -665,8 +661,7 @@ output "redis_secret_yaml" {
   value       = module.elasticache.redis_secret_yaml
   sensitive   = true
 }
-```
-
+```python
 ### Cost Breakdown
 
 | Component | Monthly Cost | Notes |

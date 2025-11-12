@@ -45,8 +45,7 @@ validation {
   condition = !contains(var.cluster_endpoint_public_access_cidrs, "0.0.0.0/0") || var.environment == "dev"
   error_message = "EKS endpoint must not be accessible from 0.0.0.0/0 in non-dev environments..."
 }
-```
-
+```bash
 **Test**: `tests/terraform/test_no_placeholders.py::TestEKSEndpointSecurity`
 
 ---
@@ -106,8 +105,7 @@ projectID: "YOUR_PROJECT_ID"
 
 # After (GCP)
 projectID: "my-gcp-project"
-```
-
+```bash
 **Test**: `tests/kubernetes/test_external_secrets.py`
 
 ---
@@ -157,8 +155,7 @@ commonLabels:
 # After
 # Note: GKE Autopilot manages node pools automatically
 # cloud.google.com/gke-nodepool label is deprecated for Autopilot clusters
-```
-
+```bash
 **Test**: `tests/kubernetes/test_gke_labels.py`
 
 ---
@@ -201,8 +198,7 @@ value: 12345678-1234-1234-1234-123456789012
 
 # Dry run (preview changes)
 ./scripts/substitute-variables.sh --dry-run
-```
-
+```bash
 ### 2. Environment Configuration Template
 
 **File**: `.env.template`

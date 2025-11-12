@@ -134,8 +134,7 @@ flowchart TB
     class J successStyle
     class K errorStyle
     class L secretStyle
-```
-
+```bash
 **Flow**:
 1. CI/CD builds and tests image
 2. Push image to Artifact Registry
@@ -311,8 +310,7 @@ spec:
 
   admissionWhitelistPatterns:
     - namePattern: gcr.io/gke-release/*
-```
-
+```yaml
 ```yaml Development Policy
 apiVersion: binaryauthorization.googleapis.com/v1
 kind: Policy
@@ -323,6 +321,7 @@ spec:
     evaluationMode: ALWAYS_ALLOW  # No restrictions
     enforcementMode: ENFORCING_MODE
 ```
+
 </CodeGroup>
 
 ---
@@ -385,8 +384,7 @@ jobs:
       - name: Deploy to GKE
         run: |
           kubectl apply -k deployments/overlays/production-gke
-```
-
+```bash
 ```bash Manual Signing Script
 #!/bin/bash
 # deployments/security/binary-authorization/sign-image.sh
@@ -420,6 +418,7 @@ gcloud beta container binauthz attestations sign-and-create \
 
 echo "✅ Image signed successfully"
 ```
+
 </CodeGroup>
 
 ---
@@ -441,8 +440,7 @@ gcloud container binauthz attestations list \
   --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph@sha256:ABC123" \
   --attestor=production-attestor \
   --attestor-project=PROJECT_ID
-```
-
+```bash
 ### View Denials in Logs
 
 ```bash
@@ -536,8 +534,7 @@ production-binauthz/attestor-key
 staging-binauthz/attestor-key
 
 # Development (no signing required)
-```
-
+```bash
 **Benefit**: Key compromise doesn't affect all environments
 
 <Check>**Rotate KMS keys regularly**</Check>
@@ -558,8 +555,7 @@ gcloud kms keys update attestor-key \
   --keyring=production-binauthz \
   --rotation-period=90d \
   --next-rotation-time=2025-04-01T00:00:00Z
-```
-
+```bash
 <Check>**Audit attestations regularly**</Check>
 
 ```bash

@@ -304,7 +304,7 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-sonnet-4-5
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=gemini-2.5-flash,gpt-5,ollama/llama3.1:8b
-```
+```python
 **Fallback Flow**:
 
 ```mermaid
@@ -336,6 +336,7 @@ flowchart TD
     class Response successStyle
     class Error errorStyle
 ```
+
 **Configuration**:
 
 ```python
@@ -354,7 +355,7 @@ llm = LLMFactory(
 
 ## Automatically falls back on error
 response = llm.invoke(messages)
-```
+```python
 **Common Failure Scenarios**:
 - API quota exceeded
 - Rate limiting
@@ -432,6 +433,7 @@ response = await router.acompletion(
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
+
 #### Rate Limiting
 
 Prevent quota exhaustion:
@@ -446,7 +448,7 @@ router = Router(
     rpm=1000,  # Requests per minute
     tpm=100000  # Tokens per minute
 )
-```
+```python
 #### Cost Tracking
 
 Monitor LLM costs:
@@ -465,6 +467,7 @@ cost = completion_cost(
 
 print(f"Cost: ${cost:.4f}")
 ```
+
 #### Caching
 
 Cache responses to reduce costs:
@@ -485,7 +488,7 @@ response = completion(
     messages=messages,
     cache=cache
 )
-```
+```bash
 ---
 
 ### Configuration Reference
@@ -522,6 +525,7 @@ AZURE_DEPLOYMENT_NAME=gpt-4
 AWS_REGION_NAME=us-east-1
 OLLAMA_API_BASE=http://localhost:11434
 ```
+
 #### Model IDs
 
 <Tabs>

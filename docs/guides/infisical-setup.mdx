@@ -168,7 +168,7 @@ from mcp_server_langgraph.core.config import settings
 api_key = settings.anthropic_api_key
 db_password = settings.redis_password
 jwt_secret = settings.jwt_secret_key
-```
+```python
 #### Manual Secret Retrieval
 
 ```python
@@ -196,6 +196,7 @@ secrets = client.get_all_secrets(
 for secret in secrets:
     print(f"{secret.secret_name}: {secret.secret_value}")
 ```
+
 #### Environment-Specific Secrets
 
 ```python
@@ -206,7 +207,7 @@ secrets = client.get_all_secrets(
     project_id=project_id,
     environment=environment  # dev, staging, production
 )
-```
+```bash
 ### Kubernetes Integration
 
 #### Infisical Operator
@@ -233,6 +234,7 @@ spec:
     secretName: mcp-server-langgraph-secrets
     secretNamespace: mcp-server-langgraph
 ```
+
 #### Service Account Credentials
 
 ```yaml
@@ -245,7 +247,7 @@ type: Opaque
 stringData:
   clientId: your-client-id
   clientSecret: your-client-secret
-```
+```python
 #### Auto-Inject Secrets
 
 ```yaml
@@ -262,6 +264,7 @@ spec:
         - secretRef:
             name: mcp-server-langgraph-secrets  # Auto-synced from Infisical
 ```
+
 ### Secret Organization
 
 #### Folder Structure
@@ -312,7 +315,7 @@ service_account_write = client.create_service_account(
     name="cicd-deploy",
     permissions=["read", "write"]
 )
-```
+```python
 #### Audit Logging
 
 Enable audit logs to track secret access:
@@ -328,6 +331,7 @@ logs = client.get_audit_logs(
 for log in logs:
     print(f"{log.timestamp}: {log.user} {log.action} {log.secret_name}")
 ```
+
 ### Secret Rotation
 
 #### Manual Rotation
@@ -342,7 +346,7 @@ client.update_secret(
 )
 
 ## Application automatically picks up new value on next fetch
-```
+```python
 #### Automatic Rotation
 
 ```python
@@ -369,6 +373,7 @@ while True:
     schedule.run_pending()
     time.sleep(3600)
 ```
+
 #### Zero-Downtime Rotation
 
 ```python

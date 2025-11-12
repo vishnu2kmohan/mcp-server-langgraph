@@ -130,7 +130,7 @@ class TestStandardUserJourney:
     6. Refresh token
     """
 
-    async def test_01_login(self, test_user_credentials):
+    async def test_01_login(self, test_user_credentials, test_infrastructure_check):
         """Step 1: User logs in and receives JWT token"""
         from tests.e2e.real_clients import real_keycloak_auth
 
@@ -790,7 +790,7 @@ class TestErrorRecoveryJourney:
     5. Rate limiting
     """
 
-    async def test_01_expired_token_refresh(self):
+    async def test_01_expired_token_refresh(self, test_user_credentials, test_infrastructure_check):
         """
         Test automatic token refresh on expiration.
 
@@ -802,7 +802,7 @@ class TestErrorRecoveryJourney:
 
         # Login to get initial tokens
         async with real_keycloak_auth() as auth:
-            tokens = await auth.login("e2e_test_user", "test_password_123")
+            tokens = await auth.login(test_user_credentials["username"], test_user_credentials["password"])
 
             # Use the refresh token to get a new access token
             new_tokens = await auth.refresh(tokens["refresh_token"])

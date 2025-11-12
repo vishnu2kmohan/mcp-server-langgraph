@@ -35,7 +35,7 @@ Perfect for local development and testing:
 ## .env configuration
 AUTH_PROVIDER=inmemory
 AUTH_MODE=token  # JWT tokens
-```
+```python
 **Pre-defined users**:
 - `alice` - Premium user, admin of organization:acme
 - `bob` - Standard user, member of organization:acme
@@ -49,6 +49,7 @@ auth = AuthMiddleware()
 token = auth.create_token("alice", expires_in=3600)
 print(f"Token: {token}")
 ```
+
 ```bash cURL
 ## Get token (development only!)
 TOKEN=$(python -c "from mcp_server_langgraph.auth.middleware import AuthMiddleware; print(AuthMiddleware().create_token('alice'))")

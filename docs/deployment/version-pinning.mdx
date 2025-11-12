@@ -42,7 +42,7 @@ image: gcr.io/project/app:2.4.0
 ## 🔴 NEVER DO THIS
 image: mcp-server-langgraph:latest
 image: mcp-server-langgraph  # defaults to latest
-```
+```python
 #### Staging (Recommended)
 
 Staging environments **SHOULD** use explicit version tags with environment prefix:
@@ -58,6 +58,7 @@ newTag: staging-beta
 ## 🔴 AVOID
 newTag: staging-latest
 ```
+
 #### Development (Flexible)
 
 Development environments **MAY** use latest tags for rapid iteration:
@@ -69,7 +70,7 @@ newTag: dev-${GIT_SHA}
 
 ## ✅ BETTER (traceable)
 newTag: dev-2.4.0-${GIT_SHA}
-```
+```bash
 ---
 
 ### Current Version Matrix
@@ -106,13 +107,14 @@ newTag: dev-2.4.0-${GIT_SHA}
 We follow [Semantic Versioning 2.0.0](https://semver.org/):
 
 ```
+
 MAJOR.MINOR.PATCH
 
 2.4.0
 │ │ └─ PATCH: Backwards compatible bug fixes
 │ └─── MINOR: Backwards compatible new features
 └───── MAJOR: Breaking changes
-```
+```bash
 #### Version Bumping Rules
 
 **PATCH version** (2.4.0 → 2.4.1):
@@ -148,7 +150,7 @@ version = "2.5.0"  # New version
 ## Commit version bump
 git add pyproject.toml
 git commit -m "chore: bump version to 2.5.0"
-```
+```sql
 #### 2. Update Deployment Configurations
 
 Run the version sync script:
@@ -166,7 +168,7 @@ Run the version sync script:
 ## - deployments/kustomize/overlays/staging/kustomization.yaml
 ## - deployments/kustomize/overlays/production/kustomization.yaml
 ## - deployments/cloudrun/service.yaml
-```
+```bash
 #### 3. Create Git Tag
 
 ```bash
@@ -176,6 +178,7 @@ git tag -a v2.5.0 -m "Release version 2.5.0"
 ## Push tag to trigger release workflow
 git push origin v2.5.0
 ```
+
 #### 4. CI/CD Automatic Tagging
 
 Our CI/CD pipeline automatically creates:
@@ -193,7 +196,7 @@ Our CI/CD pipeline automatically creates:
 
 ## On feature branch:
 - mcp-server-langgraph:${BRANCH}-${GIT_SHA}
-```
+```bash
 **Note**: The `:latest` tag is created automatically for convenience but **MUST NOT** be used in production deployments.
 
 ---
@@ -219,6 +222,7 @@ mcp-server-langgraph:v2.4.0-rc1
 mcp-server-langgraph:staging-2.4.0
 mcp-server-langgraph:prod-2.4.0
 ```
+
 #### Anti-Patterns (DO NOT USE)
 
 ```yaml
@@ -233,7 +237,7 @@ mcp-server-langgraph:production
 ## ❌ Mutable tags
 mcp-server-langgraph:v2
 mcp-server-langgraph:v2.4
-```
+```yaml
 ---
 
 ### Deployment Environment Strategies
@@ -246,6 +250,7 @@ images:
   - name: mcp-server-langgraph
     newTag: dev-latest  # Or dev-${GIT_SHA}
 ```
+
 **Rationale**: Rapid iteration, auto-deploy on commit
 
 #### Staging
@@ -255,7 +260,7 @@ images:
 images:
   - name: mcp-server-langgraph
     newTag: staging-2.4.0  # Explicit version
-```
+```yaml
 **Rationale**: Testing specific versions before production
 
 #### Production
@@ -266,6 +271,7 @@ images:
   - name: mcp-server-langgraph
     newTag: v2.4.0  # Production version tag
 ```
+
 **Rationale**: Absolute reproducibility, auditable deployments
 
 ---
@@ -282,7 +288,7 @@ imagePullPolicy: IfNotPresent
 ## ⚠️ REQUIRED (with latest tag)
 image: mcp-server-langgraph:latest
 imagePullPolicy: Always
-```
+```bash
 **Rationale**:
 - `IfNotPresent`: Reduces registry pulls, faster deployments
 - `Always`: Required for mutable tags (latest) to get updates
@@ -313,6 +319,7 @@ Before deploying to production:
 ## ✅ No :latest tags found in production configurations
 ## ✅ All versions consistent: 2.4.0
 ```
+
 ---
 
 ### Rollback Procedures
@@ -329,7 +336,7 @@ kubectl apply -k deployments/kustomize/overlays/production
 
 ## Verify rollback
 kubectl rollout status deployment/prod-mcp-server-langgraph
-```
+```bash
 #### Helm Rollback
 
 ```bash
@@ -344,6 +351,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set image.tag=2.3.0 \
   --reuse-values
 ```
+
 #### Kubernetes Native Rollback
 
 ```bash
@@ -355,7 +363,7 @@ kubectl rollout undo deployment/mcp-server-langgraph --to-revision=5
 
 ## Check rollout history
 kubectl rollout history deployment/mcp-server-langgraph
-```
+```bash
 ---
 
 ### Version Drift Detection
@@ -371,6 +379,7 @@ kubectl get deployment mcp-server-langgraph -o jsonpath='{.spec.template.spec.co
 ## Check all deployments across namespaces
 kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.template.spec.containers[0].image}{"\n"}{end}' | grep mcp-server-langgraph
 ```
+
 #### Automated Monitoring
 
 ```yaml
@@ -381,7 +390,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
   for: 5m
   annotations:
     summary: "Deployment using unexpected image version"
-```
+```bash
 ---
 
 ### CI/CD Integration
@@ -407,6 +416,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
       --set image.tag=$VERSION \
       --wait
 ```
+
 #### Pre-commit Hook
 
 ```bash
@@ -428,8 +438,7 @@ if [ -n "$LATEST_TAGS" ]; then
 fi
 
 echo "✅ No :latest tags found in production configurations"
-```
-
+```bash
 ---
 
 ### Infrastructure Image Versions
@@ -488,6 +497,7 @@ docker build -t mcp-server-langgraph:2.4.0 .
 docker tag mcp-server-langgraph:2.4.0 gcr.io/PROJECT/mcp-server-langgraph:2.4.0
 docker push gcr.io/PROJECT/mcp-server-langgraph:2.4.0
 ```
+
 #### Issue: "Deployment using old version"
 
 ```bash
@@ -497,7 +507,7 @@ kubectl rollout restart deployment/mcp-server-langgraph
 ## Or update deployment
 kubectl set image deployment/mcp-server-langgraph \
   mcp-server-langgraph=mcp-server-langgraph:2.4.0
-```
+```bash
 #### Issue: "Version mismatch across environments"
 
 ```bash

@@ -97,7 +97,7 @@ Trace: POST /message
 │  │  │  └─ Span: litellm_completion
 │  │  └─ Span: tool_execution
 │  └─ Span: refresh_session
-```
+```python
 #### Trace Attributes
 
 Each span includes rich metadata:
@@ -282,7 +282,7 @@ active_gauge = meter.create_up_down_counter(
     unit="1"
 )
 active_gauge.add(1)
-```
+```yaml
 ### Prometheus Configuration
 
 #### Scraping
@@ -331,7 +331,7 @@ groups:
         for: 1m
         annotations:
           summary: "Authentication failure spike"
-```
+```bash
 ### Grafana Dashboards
 
 #### Import Dashboards
@@ -458,7 +458,7 @@ def custom_function(input_data):
     # Automatically traced to LangSmith
     result = process(input_data)
     return result
-```
+```python
 ### Logging
 
 #### Structured Logging
@@ -540,7 +540,7 @@ All logs are JSON-formatted with trace context:
   volumeMounts:
     - name: otel-config
       mountPath: /conf
-```
+```python
 #### Sampling
 
 Configure trace sampling for high-traffic:

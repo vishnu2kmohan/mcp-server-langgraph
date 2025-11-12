@@ -21,6 +21,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -163,12 +167,4 @@ resource "google_storage_bucket_iam_member" "terraform_logs_admin" {
   member = "serviceAccount:${var.terraform_service_account}"
 }
 
-# Random ID provider
-terraform {
-  required_providers {
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
-  }
-}
+# Random ID provider configuration already in main terraform block above

@@ -39,7 +39,7 @@ helm status mcp-server-langgraph -n mcp-server-langgraph
 
 ## Get service URL
 kubectl get ingress -n mcp-server-langgraph
-```
+```bash
 ### Prerequisites
 
 <Steps>
@@ -103,6 +103,7 @@ deployments/helm/mcp-server-langgraph/
 │   └── _helpers.tpl        # Template helpers
 └── README.md
 ```
+
 ### Installation
 
 #### Basic Installation
@@ -117,7 +118,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=api.yourdomain.com
-```
+```bash
 #### With Custom Values File
 
 <Tabs>
@@ -391,6 +392,7 @@ config:
   observabilityBackend: "opentelemetry"
   otlpEndpoint: "http://otel-collector:4317"
 ```
+
 #### Secrets Configuration
 
 <Warning>
@@ -423,7 +425,7 @@ secrets:
   infisicalClientId: ""
   infisicalClientSecret: ""
   infisicalProjectId: ""
-```
+```bash
 Set secrets via command line:
 ```bash
 helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
@@ -433,6 +435,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.keycloakClientSecret="${KEYCLOAK_CLIENT_SECRET}" \
   --set secrets.redisPassword="$(openssl rand -base64 32)"
 ```
+
 #### Dependencies Configuration
 
 <Tabs>
@@ -567,7 +570,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 ## Check rollout
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
+```bash
 #### Major Version Upgrade
 
 ```bash
@@ -588,6 +591,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 helm list -n mcp-server-langgraph
 kubectl get pods -n mcp-server-langgraph
 ```
+
 #### Rollback
 
 ```bash
@@ -599,7 +603,7 @@ helm rollback mcp-server-langgraph -n mcp-server-langgraph
 
 ## Or rollback to specific revision
 helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
-```
+```bash
 ### Uninstallation
 
 ```bash
@@ -616,6 +620,7 @@ kubectl get pvc -n mcp-server-langgraph
 ## Delete PVCs (WARNING: Deletes data!)
 kubectl delete pvc --all -n mcp-server-langgraph
 ```
+
 ### Customization
 
 #### Custom Init Containers
@@ -632,7 +637,7 @@ initContainers:
           echo "Waiting for PostgreSQL..."
           sleep 2
         done
-```
+```yaml
 #### Custom Sidecars
 
 ```yaml
@@ -651,6 +656,7 @@ sidecars:
         memory: "256Mi"
         cpu: "100m"
 ```
+
 #### Custom Volumes
 
 ```yaml
@@ -663,7 +669,7 @@ extraVolumes:
 extraVolumeMounts:
   - name: model-cache
     mountPath: /app/.cache/models
-```
+```yaml
 #### Environment Variables
 
 ```yaml
@@ -677,6 +683,7 @@ extraEnv:
         name: external-secret
         key: secret-key
 ```
+
 ### Monitoring
 
 #### Prometheus Integration
@@ -695,7 +702,7 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
-```
+```bash
 #### Grafana Dashboards
 
 ```bash
@@ -709,6 +716,7 @@ kubectl label configmap langgraph-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
 ```
+
 ### Troubleshooting
 
 <AccordionGroup>

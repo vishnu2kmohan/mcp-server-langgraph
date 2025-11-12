@@ -42,8 +42,7 @@ All endpoints require Bearer token authentication:
 
 ```bash
 Authorization: Bearer YOUR_JWT_TOKEN
-```
-
+```bash
 ### Create Service Principal
 
 Creates a new service principal for machine-to-machine authentication.
@@ -316,8 +315,7 @@ All endpoints require Bearer token authentication:
 
 ```bash
 Authorization: Bearer YOUR_JWT_TOKEN
-```
-
+```bash
 ### Create API Key
 
 Creates a new API key for the authenticated user.
@@ -508,12 +506,12 @@ SCIM endpoints support two authentication methods:
 **Option 1: Bearer Token (Recommended)**
 ```http
 Authorization: Bearer JWT_TOKEN
-```
-
+```yaml
 **Option 2: OAuth 2.0 Client Credentials**
 ```http
 Authorization: Bearer ACCESS_TOKEN
 ```
+
 (obtained via service principal client credentials flow)
 
 ### Supported Schemas
@@ -817,8 +815,7 @@ Create, update, or delete multiple resources in a single request.
     }
   ]
 }
-```
-
+```json
 **Response:** `200 OK`
 ```json
 {
@@ -851,8 +848,7 @@ All SCIM endpoints return errors in SCIM format:
   "scimType": "invalidValue",
   "detail": "userName is required"
 }
-```
-
+```yaml
 **SCIM Error Types:**
 - `invalidValue`: Invalid attribute value
 - `tooMany`: Too many results
@@ -889,8 +885,7 @@ X-RateLimit-Reset: 1643370000
   "message": "Too many requests. Please try again later.",
   "retry_after": 60
 }
-```
-
+```json
 ---
 
 ## Error Handling

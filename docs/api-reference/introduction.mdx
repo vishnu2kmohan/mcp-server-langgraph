@@ -17,15 +17,14 @@ The MCP Server with LangGraph exposes a RESTful API following the [Model Context
 <CodeGroup>
 ```bash Local Development
 http://localhost:8000
-```
-
+```yaml
 ```bash Production
 https://your-domain.com
 ```
 
 ```bash Kubernetes
 http://mcp-server-langgraph.mcp-server-langgraph.svc.cluster.local:8000
-```
+```python
 </CodeGroup>
 
 ### Authentication
@@ -46,8 +45,7 @@ token = auth.create_token("username", expires_in=3600)
 curl -X POST http://localhost:8000/auth/token \
   -H "Content-Type: application/json" \
   -d '{"username": "alice", "password": "password"}'
-```
-
+```javascript
 ```javascript JavaScript
 const response = await fetch('http://localhost:8000/auth/token', {
   method: 'POST',
@@ -60,6 +58,7 @@ const response = await fetch('http://localhost:8000/auth/token', {
 
 const { token } = await response.json();
 ```
+
 </CodeGroup>
 
 #### Using the Token
@@ -68,8 +67,7 @@ Include the token in the `Authorization` header:
 
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
+```json
 ### Rate Limiting
 
 <Info>
@@ -109,8 +107,7 @@ All successful responses follow this structure:
   "trace_id": "abc123-def456-ghi789",
   "authorized": true
 }
-```
-
+```json
 ### Error Handling
 
 Error responses include detailed information:
@@ -215,11 +212,11 @@ Access the OpenAPI spec interactively:
 <CodeGroup>
 ```bash Swagger UI
 http://localhost:8000/docs
-```
-
+```yaml
 ```bash ReDoc
 http://localhost:8000/redoc
 ```
+
 </CodeGroup>
 
 ### Versioning
@@ -230,8 +227,7 @@ The API uses URL versioning:
 /v1/message
 /v1/tools
 /v1/health
-```
-
+```python
 Current version: **v1**
 
 <Note>
@@ -258,8 +254,7 @@ messages = [
 ]
 
 responses = await client.batch_send(messages)
-```
-
+```sql
 #### Context Management
 
 ```python

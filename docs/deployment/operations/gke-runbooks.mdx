@@ -289,7 +289,7 @@ kubectl apply -k .
 
 ## Monitor
 kubectl rollout status deployment/production-mcp-server-langgraph -n production-mcp-server-langgraph
-```
+```bash
 #### Rollback Deployment
 
 <Tabs>
@@ -334,6 +334,7 @@ gcloud sql backups create \
 ## List backups
 gcloud sql backups list --instance=mcp-prod-postgres
 ```
+
 #### Restore from Backup
 
 <Warning>
@@ -387,12 +388,13 @@ gcloud sql instances patch mcp-prod-postgres \
 kubectl scale deployment production-mcp-server-langgraph \
   -n production-mcp-server-langgraph \
   --replicas=10
-```
+```bash
 ```bash Update HPA
 kubectl patch hpa production-mcp-server-langgraph \
   -n production-mcp-server-langgraph \
   --patch '{"spec":{"minReplicas":5,"maxReplicas":30}}'
 ```
+
 ```bash Update Cluster Limits
 ## Via Terraform
 cd terraform/environments/gcp-prod
@@ -402,7 +404,7 @@ cd terraform/environments/gcp-prod
 ## max_cluster_memory = 20000
 
 terraform apply
-```
+```bash
 </CodeGroup>
 
 #### Cluster Resource Monitoring
@@ -417,6 +419,7 @@ gcloud monitoring time-series list \
   --filter='metric.type="kubernetes.io/container/cpu/core_usage_time"' \
   --project=PROJECT_ID
 ```
+
 ---
 
 ### Security Operations
@@ -604,7 +607,7 @@ gcloud alpha monitoring policies list \
 
 ## Get alert details
 gcloud alpha monitoring policies describe POLICY_ID
-```
+```sql
 #### Create Custom Alert
 
 ```bash
@@ -614,6 +617,7 @@ gcloud alpha monitoring policies create \
   --condition-threshold-value=0.05 \
   --condition-threshold-duration=300s
 ```
+
 #### View Metrics
 
 Access Cloud Monitoring dashboards:
@@ -673,7 +677,7 @@ kubectl scale deployment production-mcp-server-langgraph \
 kubectl scale deployment production-mcp-server-langgraph \
   -n production-mcp-server-langgraph \
   --replicas=3
-```
+```yaml
 #### Emergency Maintenance Mode
 
 ```yaml

@@ -242,8 +242,7 @@ resource "google_storage_bucket" "terraform_state" {
     log_bucket = google_storage_bucket.terraform_logs.name
   }
 }
-```
-
+```yaml
 ```yaml Features
 - Versioning: Enabled (keep last 3 versions)
 - Encryption: Google-managed keys
@@ -252,6 +251,7 @@ resource "google_storage_bucket" "terraform_state" {
 - Location: us-central1 (configurable)
 - Storage Class: STANDARD (instant access)
 ```
+
 </CodeGroup>
 
 ### 2. Log Bucket
@@ -271,8 +271,7 @@ resource "google_storage_bucket" "terraform_logs" {
     }
   }
 }
-```
-
+```bash
 **Purpose**: Audit trail for all state bucket operations (reads, writes, deletes).
 
 ---

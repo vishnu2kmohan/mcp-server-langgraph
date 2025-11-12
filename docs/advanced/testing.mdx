@@ -108,8 +108,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "e2e: End-to-end tests (full system)")
     config.addinivalue_line("markers", "slow: Slow running tests")
     config.addinivalue_line("markers", "security: Security tests")
-```
-
+```python
 **Usage**:
 ```bash
 ## Run unit tests only
@@ -309,8 +308,7 @@ async def test_session_delete(mock_redis):
 
     assert result is True
     mock_redis.delete.assert_called_once_with("session:session_123")
-```
-
+```python
 ### Integration Testing
 
 #### Setup Test Environment
@@ -513,8 +511,7 @@ def test_llm_factory_properties(provider, temperature, max_tokens):
 
     assert llm is not None
     assert hasattr(llm, 'ainvoke')
-```
-
+```python
 ### Load Testing
 
 #### Using Locust
@@ -581,8 +578,7 @@ locust -f tests/load/locustfile.py \
 
 ## Open web UI
 open http://localhost:8089
-```
-
+```bash
 #### Using k6
 
 ```javascript
@@ -734,8 +730,7 @@ async def test_expired_token_rejected(client):
     )
 
     assert response.status_code == 401
-```
-
+```bash
 ### Continuous Integration
 
 #### GitHub Actions Workflow
@@ -1094,8 +1089,7 @@ pre-commit run validate-test-dependencies --all-files
 
 # Test workflow validation
 python scripts/validation/validate_workflow_test_deps.py
-```
-
+```bash
 ```yaml Workflow Configuration
 # .github/workflows/quality-tests.yaml
 - name: Setup Python and dependencies

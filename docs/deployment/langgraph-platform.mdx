@@ -57,7 +57,7 @@ This will prompt for your LangSmith API key (get it from [smith.langchain.com/se
 
 ```bash
 langgraph deploy
-```
+```json
 That's it! Your agent is now live on LangGraph Platform.
 
 <Check>
@@ -91,6 +91,7 @@ The `langgraph.json` file configures your deployment:
   "python_version": "3.12"
 }
 ```
+
 <ParamField path="dependencies" type="array">
   List of dependency sources. `["."]` means current directory.
 </ParamField>
@@ -121,7 +122,7 @@ langsmith secret set JWT_SECRET_KEY "your-secret"
 
 ## View secrets
 langsmith secret list
-```
+```python
 <Warning>
   **Never** hardcode API keys in code or commit them to git. Always use LangSmith secrets.
 </Warning>
@@ -140,6 +141,7 @@ langgraph deploy my-agent-prod
 ## Deploy with environment tag
 langgraph deploy my-agent-prod --tag production
 ```
+
 #### Test Locally First
 
 ```bash
@@ -149,7 +151,7 @@ langgraph dev
 ## Test in another terminal
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "test"}]}'
-```
+```python
 #### Invoke Deployed Graph
 
 ```bash
@@ -167,6 +169,7 @@ langgraph deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Story"}]}' \
   --stream
 ```
+
 #### Manage Deployments
 
 ```bash
@@ -184,7 +187,7 @@ langgraph deployment rollback my-agent-prod --revision 4
 
 ## Delete deployment
 langgraph deployment delete my-agent-prod
-```
+```sql
 ### Environment Management
 
 #### Multiple Environments
@@ -198,6 +201,7 @@ langgraph deploy my-agent-staging --tag staging
 ## Production
 langgraph deploy my-agent-prod --tag production
 ```
+
 #### Environment Variables
 
 Set environment-specific variables:
@@ -208,8 +212,7 @@ LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
 
 ## Production
 LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
-```
-
+```bash
 ### Monitoring
 
 #### LangSmith Integration
@@ -279,6 +282,7 @@ jobs:
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
         run: langgraph deploy my-agent-prod --tag production
 ```
+
 See complete workflow in `.github/workflows/deploy-langgraph-platform.yml`.
 
 #### GitLab CI

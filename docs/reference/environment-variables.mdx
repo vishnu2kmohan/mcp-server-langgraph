@@ -219,8 +219,7 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 ## Observability (Optional)
 ## LANGSMITH_API_KEY=ls__your-key
 LOG_JSON_INDENT=2
-```
-
+```bash
 #### Production
 
 **⚠️ Security Warning**: Never commit `.env` files to version control!
@@ -243,8 +242,7 @@ Then run:
 
 ```bash
 make validate-openapi
-```
-
+```yaml
 Or:
 
 ```bash
@@ -253,7 +251,7 @@ python scripts/validation/validate_openapi.py
 
 The validation will fail with the following error if `JWT_SECRET_KEY` is not set:
 
-```
+```yaml
 CRITICAL: JWT secret key not configured. Set JWT_SECRET_KEY environment variable
 or configure via Infisical. The service cannot start without a secure secret key.
 ```
@@ -285,8 +283,7 @@ export ANTHROPIC_API_KEY="your-anthropic-key"
 
 ## 3. Verify configuration
 make test-unit
-```
-
+```bash
 #### Full Setup (with Infrastructure)
 
 ```bash
@@ -312,8 +309,7 @@ make test
 **Solution**: Set the JWT secret key:
 ```bash
 export JWT_SECRET_KEY="$(openssl rand -hex 32)"
-```
-
+```bash
 #### "HIPAA_INTEGRITY_SECRET not configured" error
 
 **Solution**: Either:

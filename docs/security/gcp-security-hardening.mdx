@@ -148,8 +148,7 @@ master_authorized_networks_cidrs = [
     display_name = "Office Network"
   }
 ]
-```
-
+```toml
 #### 4. Enable Security Posture Dashboard
 
 ```hcl
@@ -162,8 +161,7 @@ security_posture_vulnerability_mode = "VULNERABILITY_ENTERPRISE"
 ```bash
 ## Console: Kubernetes → Security
 ## https://console.cloud.google.com/kubernetes/security?project=PROJECT_ID
-```
-
+```dockerfile
 ---
 
 ### Security Checklist
@@ -289,8 +287,7 @@ gh run list --workflow=gcp-compliance-scan.yaml
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-gke.yaml
 kubectl logs job/kube-bench
-```
-
+```python
 #### SOC 2 Type II
 
 **Required controls** (all implemented):

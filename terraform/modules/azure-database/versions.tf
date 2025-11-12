@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7" # Minimum 1.7 required for proper sensitive value handling
+  required_version = ">= 1.5" # Compatible with CI environment (1.6.6)
 
   required_providers {
     azurerm = {

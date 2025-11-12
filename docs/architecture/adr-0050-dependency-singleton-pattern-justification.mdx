@@ -28,8 +28,7 @@ def get_keycloak_client() -> KeycloakClient:
     if _keycloak_client is None:
         _keycloak_client = KeycloakClient(config=keycloak_config)
     return _keycloak_client
-```
-
+```bash
 **Concern raised**: Could leak state between requests/tests and make TDD brittle.
 
 ## Decision Drivers
@@ -105,8 +104,7 @@ async def lifespan(app: FastAPI):
     app.state.clients = clients
     yield
     # Cleanup clients
-```
-
+```python
 **Pros**:
 * Explicit lifecycle management
 * Clear initialization and cleanup points
@@ -193,8 +191,7 @@ def test_endpoint(test_client, mock_keycloak_client):
 async def get_resource(keycloak: KeycloakClient = Depends(get_keycloak_client)):
     user = await keycloak.get_user(user_id)
     return user
-```
-
+```bash
 ### For Tests
 
 ```python

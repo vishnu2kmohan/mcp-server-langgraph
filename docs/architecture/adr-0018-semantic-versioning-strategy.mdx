@@ -35,7 +35,7 @@ We will adopt **Semantic Versioning 2.0.0** (SemVer) with the following conventi
 
 #### Version Format
 
-```
+```yaml
 MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]
 
 Examples:
@@ -107,7 +107,7 @@ Supported pre-release identifiers:
 Format: `X.Y.Z+BUILD.INFO`
 
 Used for CI/CD builds:
-```
+```bash
 2.2.0+build.123        # CI build number
 2.2.0+sha.a5b8c3d      # Git commit SHA
 2.2.0+20251013.1420    # Timestamp build
@@ -146,7 +146,7 @@ __version__ = "2.2.0"
 ## pyproject.toml
 [project]
 version = "2.2.0"
-```
+```bash
 **Single Source of Truth**: `__init__.py` is authoritative, `pyproject.toml` syncs on release
 
 #### Changelog Format
@@ -174,6 +174,7 @@ We use [Keep a Changelog](https://keepachangelog.com/) format:
 #### Security
 - Security fixes (PATCH or MINOR depending on severity)
 ```
+
 #### Git Tagging Convention
 
 ```bash
@@ -182,7 +183,7 @@ git tag -a v2.2.0 -m "Release 2.2.0: Session Management & Role Mapping"
 
 ## Pre-releases
 git tag -a v3.0.0-beta.1 -m "Release 3.0.0-beta.1: OpenAPI v3 Support"
-```
+```bash
 **Tag format**: `v{VERSION}` (lowercase 'v' prefix)
 
 #### Automated Version Bumping
@@ -209,6 +210,7 @@ jobs:
       - name: Build and publish
         run: uv build && uv publish
 ```
+
 #### Dependency Version Constraints
 
 In `pyproject.toml`, we follow these constraints:
@@ -239,7 +241,7 @@ When making MAJOR version increments:
 v2.8.0: Deprecate InMemoryUserProvider (warning logged)
 v2.9.0: Add migration guide in docs/migrations/v3.md
 v3.0.0: Remove InMemoryUserProvider
-```
+```bash
 ### Alternatives Considered
 
 #### 1. Calendar Versioning (CalVer)
@@ -314,6 +316,7 @@ v3.0.0: Remove InMemoryUserProvider
 ## deployment.yaml
 image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
 ```
+
 **LangGraph Platform**: Deploy specific versions
 ```bash
 langgraph deploy --version v2.2.0
@@ -332,7 +335,7 @@ langgraph deploy --version v2.2.0
     "version": "2.2.0"
   }
 }
-```
+```python
 #### Health Endpoint
 
 ```python

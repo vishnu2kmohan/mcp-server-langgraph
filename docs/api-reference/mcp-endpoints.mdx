@@ -20,8 +20,7 @@ MCP (Model Context Protocol) is a standard protocol for connecting AI applicatio
 
 ```yaml
 http://localhost:8000/mcp
-```
-
+```json
 ### Endpoints
 
 #### Initialize Connection
@@ -46,6 +45,7 @@ http://localhost:8000/mcp
   }
 }
 ```
+
 **Response**:
 ```json
 {
@@ -68,8 +68,7 @@ http://localhost:8000/mcp
     "version": "2.7.0"
   }
 }
-```
-
+```python
 **Example**:
 ```python
 import httpx
@@ -88,6 +87,7 @@ async with httpx.AsyncClient() as client:
     server_info = response.json()
     print(f"Connected to: {server_info['serverInfo']['name']}")
 ```
+
 #### List Tools
 
 <ParamField path="POST /mcp/tools/list" type="endpoint">
@@ -99,8 +99,7 @@ async with httpx.AsyncClient() as client:
 {
   "method": "tools/list"
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -140,6 +139,7 @@ async with httpx.AsyncClient() as client:
   ]
 }
 ```
+
 **Example**:
 ```python
 async def list_available_tools():
@@ -153,8 +153,7 @@ async def list_available_tools():
     for tool in tools:
         print(f"Tool: {tool['name']}")
         print(f"  Description: {tool['description']}")
-```
-
+```python
 #### Call Tool
 
 <ParamField path="POST /mcp/tools/call" type="endpoint">
@@ -174,6 +173,7 @@ async def list_available_tools():
   }
 }
 ```
+
 **Response**:
 ```json
 {
@@ -185,8 +185,7 @@ async def list_available_tools():
   ],
   "isError": false
 }
-```
-
+```python
 **Example**:
 ```python
 async def call_chat_tool(query: str):
@@ -208,6 +207,7 @@ async def call_chat_tool(query: str):
     else:
         raise Exception(f"Tool error: {result['content']}")
 ```
+
 #### List Resources
 
 <ParamField path="POST /mcp/resources/list" type="endpoint">
@@ -219,8 +219,7 @@ async def call_chat_tool(query: str):
 {
   "method": "resources/list"
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -240,6 +239,7 @@ async def call_chat_tool(query: str):
   ]
 }
 ```
+
 #### Read Resource
 
 <ParamField path="POST /mcp/resources/read" type="endpoint">
@@ -254,8 +254,7 @@ async def call_chat_tool(query: str):
     "uri": "conversation://conv_123"
   }
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -268,6 +267,7 @@ async def call_chat_tool(query: str):
   ]
 }
 ```
+
 #### List Prompts
 
 <ParamField path="POST /mcp/prompts/list" type="endpoint">
@@ -279,8 +279,7 @@ async def call_chat_tool(query: str):
 {
   "method": "prompts/list"
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -304,6 +303,7 @@ async def call_chat_tool(query: str):
   ]
 }
 ```
+
 #### Get Prompt
 
 <ParamField path="POST /mcp/prompts/get" type="endpoint">
@@ -322,8 +322,7 @@ async def call_chat_tool(query: str):
     }
   }
 }
-```
-
+```json
 **Response**:
 ```json
 {
@@ -339,6 +338,7 @@ async def call_chat_tool(query: str):
   ]
 }
 ```
+
 #### Send Message
 
 <ParamField path="POST /mcp/message" type="endpoint">
@@ -352,8 +352,7 @@ async def call_chat_tool(query: str):
   "conversation_id": "conv_123",
   "stream": false
 }
-```
-
+```go
 **Response (Non-Streaming)**:
 ```json
 {
@@ -369,7 +368,7 @@ async def call_chat_tool(query: str):
 ```
 
 **Response (Streaming)**:
-```
+```yaml
 data: {"type": "content_start"}
 
 data: {"type": "content_delta", "delta": "Quantum"}
@@ -382,6 +381,7 @@ data: {"type": "content_end"}
 
 data: {"type": "message_complete", "conversation_id": "conv_123"}
 ```
+
 **Example (Streaming)**:
 ```python
 async def stream_message(query: str):
@@ -397,8 +397,7 @@ async def stream_message(query: str):
                     data = json.loads(line[6:])
                     if data["type"] == "content_delta":
                         print(data["delta"], end="", flush=True)
-```
-
+```json
 #### Logging
 
 <ParamField path="POST /mcp/logging/setLevel" type="endpoint">
@@ -414,13 +413,13 @@ async def stream_message(query: str):
   }
 }
 ```
+
 **Response**:
 ```json
 {
   "success": true
 }
-```
-
+```yaml
 ### Authentication
 
 All MCP endpoints require authentication. Include a valid JWT token in the `Authorization` header:
@@ -525,8 +524,7 @@ response = await client.call_tool("chat", {
 })
 
 print(response.content[0].text)
-```
-
+```python
 #### JavaScript/TypeScript
 
 ```typescript
@@ -550,6 +548,7 @@ const response = await client.callTool('chat', {
 
 console.log(response.content[0].text);
 ```
+
 #### cURL
 
 ```bash
@@ -579,8 +578,7 @@ curl -X POST http://localhost:8000/mcp/tools/call \
       "arguments": {"query": "Hello!"}
     }
   }'
-```
-
+```yaml
 ### Rate Limiting
 
 MCP endpoints are subject to rate limiting:
@@ -603,8 +601,7 @@ For real-time bidirectional communication, use the WebSocket endpoint:
 
 ```yaml
 ws://localhost:8000/mcp/ws
-```
-
+```python
 **Example**:
 ```python
 import websockets

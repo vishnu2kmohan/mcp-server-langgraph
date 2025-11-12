@@ -47,7 +47,7 @@ flowchart TB
     class Exporter,Collector collectorStyle
     class Jaeger,Prometheus,LSCloud backendStyle
     class Grafana,Dashboard1,Dashboard2 dashStyle
-```
+```bash
 ### Quick Start
 
 <Steps>
@@ -121,6 +121,7 @@ Trace: POST /message
 │  │  └─ Span: tool_execution
 │  └─ Span: refresh_session
 ```
+
 #### Trace Attributes
 
 Each span includes rich metadata:
@@ -185,7 +186,7 @@ def my_function():
         result = do_work()
         span.set_attribute("result.count", len(result))
         return result
-```
+```python
 ### Metrics
 
 #### Available Metrics
@@ -305,6 +306,7 @@ active_gauge = meter.create_up_down_counter(
 )
 active_gauge.add(1)
 ```
+
 ### Prometheus Configuration
 
 #### Scraping
@@ -319,7 +321,7 @@ scrape_configs:
     static_configs:
       - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
-```
+```yaml
 #### Alerting Rules
 
 ```yaml
@@ -353,6 +355,7 @@ groups:
         annotations:
           summary: "Authentication failure spike"
 ```
+
 ### Grafana Dashboards
 
 #### Import Dashboards
@@ -367,7 +370,7 @@ kubectl create configmap grafana-dashboards \
 kubectl label configmap grafana-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```
+```bash
 #### Key Panels
 
 <Tabs>
@@ -479,6 +482,7 @@ def custom_function(input_data):
     result = process(input_data)
     return result
 ```
+
 ### Logging
 
 #### Structured Logging
@@ -500,7 +504,7 @@ All logs are JSON-formatted with trace context:
   "latency_ms": 1245,
   "status": "success"
 }
-```
+```python
 #### Log Aggregation
 
 <Tabs>
@@ -560,6 +564,7 @@ All logs are JSON-formatted with trace context:
     - name: otel-config
       mountPath: /conf
 ```
+
 #### Sampling
 
 Configure trace sampling for high-traffic:

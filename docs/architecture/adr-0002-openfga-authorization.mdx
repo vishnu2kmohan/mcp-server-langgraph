@@ -86,7 +86,7 @@ Implementation in `openfga_client.py`:
 ```python
 if user.has_role('admin') or user.has_role('premium'):
     allow_tool_execution()
-```
+```python
 **Pros**:
 - Simple to understand
 - No external dependencies
@@ -197,6 +197,7 @@ type conversation
     define viewer: [user, user:*] or owner
     define editor: [user] or owner
 ```
+
 #### Usage
 
 ```python

@@ -18,7 +18,7 @@ The Authentication API provides endpoints for user authentication, token managem
 
 ### Base URL
 
-```
+```yaml
 https://api.yourdomain.com
 ```
 
@@ -78,8 +78,7 @@ curl -X POST https://api.yourdomain.com/auth/login \
     "username": "alice",
     "password": "password123"
   }'
-```
-
+```python
 ```python Python
 import httpx
 
@@ -107,7 +106,7 @@ const response = await fetch('https://api.yourdomain.com/auth/login', {
 
 const data = await response.json();
 console.log('Access Token:', data.access_token);
-```
+```json
 </CodeGroup>
 
 **Response (Token Mode)**:
@@ -140,8 +139,7 @@ console.log('Access Token:', data.access_token);
   },
   "expires_at": "2025-10-13T10:30:00Z"
 }
-```
-
+```bash
 **Status Codes**:
 
 <ResponseField name="200" type="Success">
@@ -198,8 +196,7 @@ curl -X POST https://api.yourdomain.com/auth/refresh \
   "token_type": "Bearer",
   "expires_in": 3600
 }
-```
-
+```bash
 <Note>
 Refresh tokens are rotated on each refresh for security. The old refresh token is invalidated.
 </Note>
@@ -241,7 +238,7 @@ curl -X POST https://api.yourdomain.com/auth/logout \
 ```bash Session Mode
 curl -X POST https://api.yourdomain.com/auth/logout \
   -H "Cookie: session_id=abc123def456..."
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -277,8 +274,7 @@ Get current authenticated user information.
 ```bash
 curl https://api.yourdomain.com/auth/me \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```json
 **Response**:
 
 ```json
@@ -319,8 +315,7 @@ List active sessions for current user (session mode only).
 ```bash
 curl https://api.yourdomain.com/auth/sessions \
   -H "Cookie: session_id=abc123def456..."
-```
-
+```json
 **Response**:
 
 ```json
@@ -374,8 +369,7 @@ Revoke a specific session (session mode only).
 ```bash
 curl -X DELETE https://api.yourdomain.com/auth/sessions/xyz789... \
   -H "Cookie: session_id=abc123def456..."
-```
-
+```json
 **Response**:
 
 ```json
@@ -412,8 +406,7 @@ Verify token validity and get user information.
 ```bash
 curl -X POST https://api.yourdomain.com/auth/verify \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```json
 **Response**:
 
 ```json
@@ -467,8 +460,7 @@ curl https://api.yourdomain.com/auth/keycloak/login?redirect_uri=https://app.you
 ```
 302 Found
 Location: https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/auth?client_id=...
-```
-
+```bash
 ---
 
 #### GET /auth/keycloak/callback
@@ -496,7 +488,7 @@ curl https://api.yourdomain.com/auth/keycloak/logout \
 
 **Response**:
 
-```
+```yaml
 302 Found
 Location: https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/logout
 ```
@@ -515,8 +507,7 @@ All authentication endpoints may return the following errors:
   "message": "Invalid credentials or expired token",
   "code": "AUTH_INVALID_CREDENTIALS"
 }
-```
-
+```json
 #### 403 Forbidden
 
 ```json
@@ -536,8 +527,7 @@ All authentication endpoints may return the following errors:
   "retry_after": 60,
   "code": "AUTH_RATE_LIMIT"
 }
-```
-
+```json
 #### 500 Internal Server Error
 
 ```json
@@ -572,8 +562,7 @@ response = httpx.post(
     headers={"Authorization": f"Bearer {token}"},
     json={"query": "Hello!"}
 )
-```
-
+```python
 #### JavaScript/TypeScript
 
 ```javascript

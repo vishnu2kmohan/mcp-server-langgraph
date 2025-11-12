@@ -72,7 +72,7 @@ These requirements apply to ALL user-facing documentation (docs/*.mdx).
 ### For Flowcharts/Graphs
 
 **Mandatory Pattern:**
-```
+```python
 flowchart TD
     [your diagram content]
 
@@ -105,7 +105,7 @@ sequenceDiagram
 ### Flowchart Syntax
 
 - ✅ **ALWAYS USE** modern flowchart syntax:
-```
+```python
 flowchart TD   # Top to bottom
 flowchart TB   # Top to bottom (same as TD)
 flowchart LR   # Left to right
@@ -113,7 +113,7 @@ flowchart BT   # Bottom to top
 ```
 
 ❌ **NEVER USE** deprecated graph syntax:
-```
+```rust
 graph TB      # DEPRECATED - use flowchart TB instead
 graph LR      # DEPRECATED - use flowchart LR instead
 ```
@@ -144,7 +144,7 @@ sequenceDiagram
 ### Styling (Flowcharts/Graphs)
 
 - ✅ **USE** classDef for reusable styles:
-```
+```python
 flowchart TB
     A[Node]
 
@@ -209,8 +209,7 @@ flowchart TB
     class Decision decisionStyle
     class Success successStyle
     class Retry errorStyle
-```
-
+```python
 ### Template 2: Themed Sequence Diagram
 
 ```mermaid
@@ -280,8 +279,7 @@ Checks:
 
 ```bash
 python3 scripts/fix_mermaid_sequence_diagrams.py docs
-```
-
+```python
 Automatically removes invalid `classDef` statements from sequence diagrams.
 
 ### Add Theme to Sequence Diagrams

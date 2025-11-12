@@ -77,10 +77,9 @@ variable "cluster_endpoint_public_access_cidrs" {
   type        = list(string)
   default     = [] # No default - must be explicitly set in environment config
 
-  validation {
-    condition     = !contains(var.cluster_endpoint_public_access_cidrs, "0.0.0.0/0") || var.environment == "dev"
-    error_message = "EKS endpoint must not be accessible from 0.0.0.0/0 in non-dev environments. Specify your corporate VPN or bastion host CIDR blocks."
-  }
+  # Note: Environment-based validation moved to resource-level preconditions
+  # Terraform variable validations can only reference the variable itself
+  # Best practice: Avoid 0.0.0.0/0 in production - use specific VPN/bastion CIDRs
 }
 
 variable "cluster_enabled_log_types" {

@@ -22,7 +22,7 @@ The **DELETE /me** endpoint permanently deletes user data and cannot be reversed
 
 ### Base URL
 
-```
+```yaml
 http://localhost:8000/api/v1/users
 ```
 
@@ -40,8 +40,7 @@ http://localhost:8000/api/v1/users
 ```bash
 GET /api/v1/users/me/data
 Authorization: Bearer <token>
-```
-
+```json
 **Response**:
 ```json
 {
@@ -111,8 +110,7 @@ async with httpx.AsyncClient() as client:
     print(f"Export ID: {user_data['export_id']}")
     print(f"Total sessions: {len(user_data['sessions'])}")
     print(f"Total conversations: {len(user_data['conversations'])}")
-```
-
+```bash
 #### Export User Data (Article 20: Right to Data Portability)
 
 <ParamField path="GET /me/export" type="endpoint">
@@ -133,7 +131,7 @@ Authorization: Bearer <token>
 **Response**: File download with appropriate Content-Type header
 
 **Response Headers**:
-```
+```yaml
 Content-Type: application/json
 Content-Disposition: attachment; filename="user_data_alice_20251102.json"
 ```
@@ -152,8 +150,7 @@ async def export_user_data_json():
             f.write(response.content)
 
         print(f"Downloaded {len(response.content)} bytes")
-```
-
+```python
 **Example (CSV)**:
 ```python
 async def export_user_data_csv():
@@ -186,8 +183,7 @@ async def export_user_data_csv():
     "language": "en"
   }
 }
-```
-
+```json
 **Fields** (all optional):
 - `name` (string): User's full name (1-100 characters)
 - `email` (string): User's email address
@@ -225,8 +221,7 @@ async def update_profile():
 
         updated = response.json()
         print(f"Profile updated at: {updated['updated_at']}")
-```
-
+```python
 #### Delete User Account (Article 17: Right to Erasure)
 
 <ParamField path="DELETE /me" type="endpoint">
@@ -265,8 +260,7 @@ Authorization: Bearer <token>
   },
   "audit_record_id": "deletion_user:alice_20251102_121500"
 }
-```
-
+```python
 **What gets deleted**:
 - User profile and account
 - All sessions
@@ -309,8 +303,7 @@ async def delete_account():
   "consent_type": "analytics",
   "granted": true
 }
-```
-
+```json
 **Consent Types**:
 - `analytics`: Analytics and usage tracking
 - `marketing`: Marketing communications and promotions
@@ -358,8 +351,7 @@ await update_consent("analytics", True)
 
 # Revoke marketing consent
 await update_consent("marketing", False)
-```
-
+```yaml
 #### Get Consent Status (Article 21: Right to Object)
 
 <ParamField path="GET /me/consent" type="endpoint">
@@ -397,8 +389,7 @@ Authorization: Bearer <token>
     }
   }
 }
-```
-
+```python
 **Example**:
 ```python
 async def get_consent_status():
@@ -420,8 +411,7 @@ All GDPR endpoints require authentication. Include a valid JWT token in the `Aut
 
 ```bash
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
-```
-
+```bash
 The authenticated user's identity is used to determine which data to access, export, or delete. Users can only access their own data.
 
 See [Authentication API](/api-reference/authentication) for obtaining tokens.
@@ -659,8 +649,7 @@ const url = URL.createObjectURL(jsonBlob);
 
 // Update consent
 await gdpr.updateConsent('analytics', true);
-```
-
+```bash
 #### cURL
 
 ```bash

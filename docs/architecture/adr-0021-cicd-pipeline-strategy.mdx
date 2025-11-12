@@ -68,7 +68,7 @@ flowchart TD
     class Quality qualityStyle
     class Security securityStyle
     class Release releaseStyle
-```
+```python
 ### Consequences
 
 #### Positive Consequences
@@ -133,6 +133,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 ```
+
 **Duration**: ~5 minutes
 
 **Fail Fast**: Yes (blocks PR merge if fails)
@@ -180,7 +181,7 @@ jobs:
 
       - name: Validate Kustomize overlays
         run: kustomize build deployments/kustomize/overlays/production
-```
+```bash
 **Duration**: ~15 minutes
 
 **Artifacts**: Docker image (tagged with git SHA)
@@ -232,6 +233,7 @@ jobs:
       - name: Detect breaking changes
         run: oasdiff breaking openapi-previous.json openapi.json
 ```
+
 **Duration**: ~60-90 minutes (mutation testing is slow)
 
 **Frequency**: Nightly (1:00 AM UTC)
@@ -280,7 +282,7 @@ jobs:
           image-ref: test-image
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-```
+```bash
 **Duration**: ~10 minutes
 
 **Frequency**: Daily (2:00 AM UTC)
@@ -325,6 +327,7 @@ jobs:
             --notes-file RELEASE_NOTES.md \
             --verify-tag
 ```
+
 **Duration**: ~8 minutes
 
 **Artifacts**:
@@ -348,7 +351,7 @@ jobs:
           stale-issue-message: 'This issue is stale. Please update or it will be closed.'
           days-before-stale: 60
           days-before-close: 14
-```
+```bash
 ### Testing Strategy Matrix
 
 | Test Type | Frequency | Duration | Coverage | Purpose |
@@ -387,6 +390,7 @@ kind create cluster --name test-cluster
 kubectl apply -f deployments/kubernetes/
 kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 ```
+
 #### Docker Build Validation
 
 ```yaml
@@ -403,7 +407,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
   run: |
     docker run --rm test-image:latest mcp-server-langgraph --version
     docker run --rm test-image:latest mcp-server-langgraph-http --help
-```
+```bash
 ### Alternatives Considered
 
 #### 1. Jenkins
@@ -520,6 +524,7 @@ jobs:
   unit-tests:
     needs: lint  # Only run tests if lint passes
 ```
+
 #### 2. Matrix Testing
 ```yaml
 ## Test multiple Python versions
@@ -527,7 +532,7 @@ strategy:
   matrix:
     python-version: ['3.10', '3.11', '3.12']
     os: [ubuntu-latest, macos-latest]
-```
+```bash
 #### 3. Caching
 ```yaml
 ## Cache dependencies to speed up runs
@@ -536,6 +541,7 @@ strategy:
     path: ~/.cache/pip
     key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
 ```
+
 #### 4. Conditional Workflows
 ```yaml
 ## Skip expensive tests on docs-only changes
@@ -544,7 +550,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-```
+```rust
 #### 5. Secure Secrets
 ```yaml
 ## Use GitHub Secrets for sensitive data

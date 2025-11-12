@@ -37,8 +37,7 @@ Create `.vscode/extensions.json`:
     "GitHub.copilot-chat"
   ]
 }
-```
-
+```sql
 #### Python Settings
 
 Create `.vscode/settings.json`:
@@ -112,8 +111,7 @@ Create `.vscode/launch.json`:
     }
   ]
 }
-```
-
+```json
 #### Tasks
 
 Create `.vscode/tasks.json`:
@@ -174,8 +172,7 @@ Create `.claude/settings.local.json`:
     "testing": "pytest"
   }
 }
-```
-
+```python
 #### Guidance Files
 
 The project includes comprehensive AI assistant guidance:
@@ -239,8 +236,7 @@ Create `.cursor/settings.json`:
   "cursor.chat.model": "claude-3-5-sonnet-20241022",
   "cursor.tab.model": "claude-3-5-sonnet-20241022"
 }
-```
-
+```python
 ---
 
 ### GitHub Copilot Workspace
@@ -302,8 +298,7 @@ These files contain:
 - Code standards
 - Testing strategy
 - Common issues & solutions
-```
-
+```python
 Create `.ai/prompts.md` with your custom prompts for reuse.
 
 ---
@@ -353,8 +348,7 @@ cp .mcp.json.example .mcp.json
 ## Edit with your absolute paths
 ## Replace /absolute/path/to/mcp-server-langgraph with your actual project path
 nano .mcp.json  # or use your preferred editor
-```
-
+```json
 **Note**: `.mcp.json` is gitignored (user-specific configuration). Each developer needs to create their own based on where they cloned the repository.
 
 ##### Manual Configuration
@@ -440,8 +434,7 @@ Add Make commands as external tools:
 uv run pytest -m unit -v
 uv run python -m mcp_server_langgraph.mcp.server_stdio
 uv run python examples/demo.py
-```
-
+```bash
 **Alternative**: Activate the virtual environment manually (if running multiple commands):
 ```bash
 source .venv/bin/activate  # Linux/macOS

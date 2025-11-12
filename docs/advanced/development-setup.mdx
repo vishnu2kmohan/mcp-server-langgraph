@@ -44,8 +44,7 @@ This setup is optimized for productivity with hot reload, debugging support, cod
 ## Install core tools
 brew install python@3.12 git docker docker compose # Install uv (fast Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
+```bash
 **Ubuntu/Debian**:
 ```bash
 ## Update package list
@@ -73,8 +72,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 wsl --install -d Ubuntu-22.04
 
 ## Inside WSL2, follow Ubuntu instructions above
-```
-
+```bash
 #### Verify Installation
 
 ```bash
@@ -105,8 +103,7 @@ git remote add upstream https://github.com/vishnu2kmohan/mcp-server-langgraph.gi
 
 ## Verify remotes
 git remote -v
-```
-
+```bash
 ### Python Environment
 
 #### Create Virtual Environment and Install Dependencies
@@ -165,8 +162,7 @@ source .venv/Scripts/activate
 
 ## Then install
 uv sync
-```
-
+```bash
 #### Development Dependencies
 
 The `pyproject.toml` `[dependency-groups]` section includes:
@@ -278,8 +274,7 @@ code --install-extension charliermarsh.ruff
     }
   ]
 }
-```
-
+```bash
 #### PyCharm
 
 **Configure Interpreter**:
@@ -354,8 +349,7 @@ LANGSMITH_ENABLED=false
 ## JAEGER_URL=http://localhost:4318
 ## LANGSMITH_API_KEY=your-langsmith-key
 ## LANGSMITH_PROJECT=langgraph-dev
-```
-
+```bash
 #### Using direnv (Optional but Recommended)
 
 ```bash
@@ -389,8 +383,7 @@ pre-commit install
 
 ## Run manually on all files
 pre-commit run --all-files
-```
-
+```yaml
 #### Pre-commit Configuration
 
 Already configured in `.pre-commit-config.yaml`:
@@ -456,8 +449,7 @@ docker compose down
 
 ## Clean up (including volumes)
 docker compose down -v
-```
-
+```bash
 #### Docker Compose for Development
 
 **docker-compose.dev.yml**:
@@ -550,8 +542,7 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 ## Check it's running
 curl http://localhost:8000/health/live
-```
-
+```bash
 #### Run with Docker
 
 ```bash
@@ -592,8 +583,7 @@ uv run pytest -v --tb=short
 
 ## Watch mode (requires pytest-watch)
 uv run pytest-watch
-```
-
+```python
 #### Debugging Tests
 
 ```bash
@@ -621,8 +611,7 @@ isort src/ tests/
 
 ## Or use make command
 make format
-```
-
+```bash
 #### Lint Code
 
 ```bash
@@ -650,8 +639,7 @@ black src/
 
 ## Fix common issues
 autopep8 --in-place --aggressive --aggressive src/
-```
-
+```bash
 ### Database Migrations
 
 #### Using Alembic
@@ -696,8 +684,7 @@ import ipdb; ipdb.set_trace()
 
 ## Or use breakpoint() (Python 3.7+)
 breakpoint()
-```
-
+```bash
 #### Remote Debugging
 
 ```python
@@ -781,8 +768,7 @@ services-down:  ## Stop development services
 
 services-logs:  ## View service logs
 	docker compose -f docker-compose.dev.yml logs -f
-```
-
+```bash
 **Usage**:
 ```bash
 ## Show all commands

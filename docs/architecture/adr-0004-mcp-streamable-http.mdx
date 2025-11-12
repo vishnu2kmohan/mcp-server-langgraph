@@ -181,7 +181,7 @@ async def handle_mcp_request(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-```
+```python
 #### stdio Server
 
 ```python
@@ -192,6 +192,7 @@ async def main():
     async with stdio_server() as streams:
         await server.run(streams[0], streams[1])
 ```
+
 #### Docker Configuration
 
 ```dockerfile

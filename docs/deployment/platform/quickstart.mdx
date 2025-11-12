@@ -53,7 +53,7 @@ When you run `langgraph deploy`, the CLI:
 ```bash
 langgraph deployment invoke my-agent \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
-```
+```bash
 #### Via HTTP
 
 ```bash
@@ -66,6 +66,7 @@ curl -X POST https://your-deployment.langchain.com/invoke \
     }
   }'
 ```
+
 #### Via Python SDK
 
 ```python
@@ -79,8 +80,7 @@ response = client.runs.stream(
 
 for chunk in response:
     print(chunk)
-```
-
+```bash
 ### View Traces in LangSmith
 
 All invocations are automatically traced in LangSmith:
@@ -101,6 +101,7 @@ langgraph dev
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "Test"}]}'
 ```
+
 ### Deployment Commands
 
 <AccordionGroup>

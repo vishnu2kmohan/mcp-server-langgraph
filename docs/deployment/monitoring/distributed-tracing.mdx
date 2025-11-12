@@ -33,7 +33,7 @@ spec:
       es:
         server-urls: http://elasticsearch:9200
 EOF
-```
+```bash
 **Docker Compose**:
 ```yaml
 services:
@@ -46,6 +46,7 @@ services:
     environment:
       - COLLECTOR_OTLP_ENABLED=true
 ```
+
 #### OpenTelemetry Configuration
 
 **Install dependencies**:
@@ -54,7 +55,7 @@ uv pip install opentelemetry-api \
                opentelemetry-sdk \
                opentelemetry-instrumentation-fastapi \
                opentelemetry-exporter-otlp
-```
+```bash
 **Instrument FastAPI**:
 ```python
 from opentelemetry import trace
@@ -110,6 +111,7 @@ async def chat(query: str):
 
         return response
 ```
+
 #### Trace Context Propagation
 
 ```python

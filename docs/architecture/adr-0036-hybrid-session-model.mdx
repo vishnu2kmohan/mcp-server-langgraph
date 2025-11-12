@@ -89,7 +89,7 @@ flowchart TB
     end
     style NoSession1 fill:#f0f0f0,stroke:#999,stroke-dasharray: 5 5
 
-```
+```python
 #### Session Lifecycle Flow
 
 ```mermaid
@@ -138,6 +138,7 @@ sequenceDiagram
     Note over Redis: Automatic cleanup after 30 days of inactivity
 
 ```
+
 #### Core Principles
 
 1. **JWT First**: Always use JWTs for authentication (not opaque session IDs)
@@ -164,7 +165,7 @@ SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in &lt;5 min
 
 ## User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
-```
+```python
 ### Consequences
 
 #### Positive Consequences
@@ -208,6 +209,7 @@ class ServicePrincipalSession:
     expires_at: str  # 30 days from last activity
     metadata: Dict[str, Any]
 ```
+
 **Session Manager** (`src/mcp_server_langgraph/auth/session.py`):
 ```python
 class RedisSessionStore:
@@ -226,7 +228,7 @@ class RedisSessionStore:
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]
             await self.update_session(session)
-```
+```python
 **Middleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 ```python
 async def get_current_user(request: Request):

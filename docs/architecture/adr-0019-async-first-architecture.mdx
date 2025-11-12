@@ -31,7 +31,7 @@ auth_check = openfga.check(user, resource)           # 50ms
 
 ## Total: 5.07 seconds to handle 1 request
 ## Throughput: ~0.2 requests/second per worker
-```
+```python
 This creates severe bottlenecks:
 - **Low throughput**: Each worker handles only 1 request at a time
 - **Poor scalability**: Need 100 workers to handle 20 concurrent users
@@ -64,6 +64,7 @@ def calculate_similarity(text1: str, text2: str) -> float:
     # Pure computation, no I/O
     return difflib.SequenceMatcher(None, text1, text2).ratio()
 ```
+
 #### Async Everywhere
 
 All layers of the application use async:
@@ -106,7 +107,7 @@ async def enrich_user_data(user_id: str) -> UserData:
     )
     # Total: ~50ms (not 100ms)
     return UserData(session=session, roles=roles, preferences=preferences)
-```
+```python
 ##### Pattern 2: Async Iteration
 ```python
 ## Stream results instead of blocking
@@ -115,6 +116,7 @@ async def process_batch(user_ids: List[str]):
         result = await process_user(user_id)
         yield result  # Stream results as they complete
 ```
+
 ##### Pattern 3: Timeout Management
 ```python
 ## Prevent operations from hanging
@@ -126,7 +128,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
         )
     except asyncio.TimeoutError:
         raise LLMTimeoutError(f"LLM call exceeded {timeout}s timeout")
-```
+```bash
 ### Consequences
 
 #### Positive Consequences
@@ -218,7 +220,7 @@ async def export_user_data(
     roles = await get_user_roles(user_id)
     data = await export_service.export(user_id)
     return data
-```
+```python
 #### Async Context Managers
 
 ```python
@@ -227,6 +229,7 @@ async with redis.asyncio.from_url(redis_url) as client:
     await client.set("key", "value")
     # Connection auto-closed on exit
 ```
+
 #### Running Sync Code in Async Context
 
 When unavoidable sync code must run:
@@ -244,7 +247,7 @@ async def run_sync_in_async(sync_func, *args):
 
 ## Usage
 result = await run_sync_in_async(blocking_cpu_work, data)
-```
+```python
 #### Async Testing
 
 ```python
@@ -269,6 +272,7 @@ async def test_session_creation():
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 ```
+
 ### Alternatives Considered
 
 #### 1. Synchronous Architecture (Traditional)
@@ -378,7 +382,7 @@ asyncio_mode = "strict"
 
 From production deployments:
 
-```
+```yaml
 Sync Architecture:
 - Workers: 32 (Gunicorn)
 - Memory: 4 GB
@@ -391,6 +395,7 @@ Async Architecture:
 - Throughput: 200 req/s
 - CPU: 25% (efficient I/O wait)
 ```
+
 ### Integration Points
 
 #### Uvicorn ASGI Server
@@ -401,7 +406,7 @@ uvicorn mcp_server_langgraph.mcp.server_streamable:app \
     --workers 4 \
     --host 0.0.0.0 \
     --port 8000
-```
+```python
 **Why Uvicorn**: Native async support, ASGI protocol, high performance
 
 #### LangGraph Async Support
@@ -419,6 +424,7 @@ graph.add_node("llm", call_llm)       # Async node
 compiled = graph.compile()
 result = await compiled.ainvoke({"messages": [user_message]})
 ```
+
 #### Redis Async Client
 
 ```python
@@ -432,7 +438,7 @@ class RedisSessionStore(SessionStore):
     async def create(self, user_id: str, ...) -> str:
         await self.redis.setex(session_key, ttl, session_data)
         return session_id
-```
+```python
 #### OpenFGA Async Client
 
 ```python
@@ -444,6 +450,7 @@ class OpenFGAClient:
         response = await self.client.check(...)
         return response.allowed
 ```
+
 ### Best Practices
 
 #### 1. Always Await Async Functions
@@ -453,7 +460,7 @@ result = async_function()
 
 ## ✅ GOOD: Properly awaited
 result = await async_function()
-```
+```rust
 #### 2. Use `asyncio.gather()` for Concurrent I/O
 ```python
 ## ❌ BAD: Sequential (slow)
@@ -468,11 +475,12 @@ result1, result2, result3 = await asyncio.gather(
     call3()
 )
 ```
+
 #### 3. Set Timeouts for I/O Operations
 ```python
 ## Always use timeouts to prevent hanging
 result = await asyncio.wait_for(external_api_call(), timeout=30)
-```
+```python
 #### 4. Use Async Context Managers
 ```python
 async with httpx.AsyncClient() as client:

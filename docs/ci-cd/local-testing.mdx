@@ -34,8 +34,7 @@ import mcp_server_langgraph.builder.codegen.generator
 # generator.py imports black ❌ ModuleNotFoundError
 
 # Result: 40 E2E tests + 100+ other tests failed in CI
-```
-
+```bash
 **If We Had Tested with act**:
 ```bash
 $ act push -W .github/workflows/e2e-tests.yaml -j e2e-tests
@@ -79,8 +78,7 @@ act push -W .github/workflows/ci.yaml -j test
 make validate-workflows     # Fast: Validate YAML syntax only
 make test-workflow-ci       # Test ci.yaml
 make test-workflows         # Test all critical workflows
-```
-
+```bash
 ---
 
 ## Common Testing Patterns
@@ -107,8 +105,7 @@ act push -W .github/workflows/ci.yaml -j test
 
 # Test with specific matrix value
 act push -W .github/workflows/ci.yaml -j test --matrix python-version:3.12
-```
-
+```bash
 **Use when**: Modified specific job, want fast feedback
 
 ---
@@ -135,8 +132,7 @@ act schedule -W .github/workflows/quality-tests.yaml
 
 # Test workflow_dispatch (manual trigger)
 act workflow_dispatch -W .github/workflows/deploy-staging-gke.yaml
-```
-
+```bash
 ---
 
 ## Testing Workflow Changes - Complete Example
@@ -157,8 +153,7 @@ act workflow_dispatch -W .github/workflows/deploy-staging-gke.yaml
 ```bash
 make validate-workflows
 # Output: ✓ ci.yaml (valid)
-```
-
+```bash
 **Step 3: Test with act**
 
 ```bash
@@ -187,8 +182,7 @@ Step: Run skipped test tracker
 # Retest with act:
 act push -W .github/workflows/track-skipped-tests.yaml -j track-skipped-tests
 # ✅ Now works!
-```
-
+```bash
 **Step 5: Commit & Push**
 
 ```bash
@@ -207,7 +201,7 @@ gh run watch
 ### Issue #1: Docker Not Running
 
 **Symptom**:
-```
+```bash
 Cannot connect to the Docker daemon
 ```
 
@@ -230,8 +224,7 @@ docker ps
 **Symptom**:
 ```
 Error: image not found: catthehacker/ubuntu:act-latest
-```
-
+```bash
 **Solution**:
 ```bash
 # Pull image manually
@@ -246,7 +239,7 @@ docker pull catthehacker/ubuntu:act-latest
 ### Issue #3: Workflow Runs But Fails Due to Missing Infrastructure
 
 **Symptom**:
-```
+```python
 Tests fail with connection errors to PostgreSQL/Redis/etc.
 ```
 
@@ -264,7 +257,7 @@ Tests fail with connection errors to PostgreSQL/Redis/etc.
 ### Issue #4: Secrets Not Available
 
 **Symptom**:
-```
+```yaml
 Error: secret MY_SECRET not found
 ```
 
@@ -278,8 +271,7 @@ EOF
 
 # Test with secrets
 act push -W .github/workflows/deploy-staging-gke.yaml --secret-file .secrets
-```
-
+```bash
 ---
 
 ## Makefile Integration
@@ -308,7 +300,7 @@ make act-dry-run
 
 ### ✅ Success Indicators
 
-```
+```python
 [Run unit tests]
 | uv sync --extra dev --extra builder
 | ✓ Dependencies installed from lockfile with dev+builder extras
@@ -328,7 +320,7 @@ make act-dry-run
 
 ### ❌ Failure Indicators to Fix
 
-```
+```bash
 | pip install requests  ← Should be: uv pip install OR uv sync --group
 | /bin/bash: jq: command not found  ← Missing: sudo apt-get install -y jq
 | python scripts/ci/check-links.py  ← Should be: uv run python scripts/...
@@ -362,8 +354,7 @@ act push -W .github/workflows/ci.yaml --pull=false
 
 # Test only changed files (manual)
 act push -W .github/workflows/ci.yaml -j test --env CHANGED_FILES=src/core/agent.py
-```
-
+```bash
 ### Parallel Testing
 
 ```bash
@@ -402,8 +393,7 @@ Located at: `/home/vishnu/.config/act/actrc`
 
 # Reuse containers for speed
 --reuse
-```
-
+```bash
 ### .secrets File (Optional)
 
 Create `.secrets` for workflows that need credentials:
@@ -439,8 +429,7 @@ flowchart LR
     J -->|No| L[Compare with act Results]
     L --> M[Fix Discrepancies]
     M --> A
-```
-
+```bash
 ### Before Every Workflow Commit:
 
 1. ✅ **Validate**: `make validate-workflows`
@@ -472,8 +461,7 @@ act --version
 # Use full path from repo root
 cd /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph
 act push -W .github/workflows/ci.yaml
-```
-
+```bash
 ### Too Slow
 
 ```bash
@@ -496,8 +484,7 @@ act -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-22.04
 
 # Minimal image (fast, may not have all tools)
 act -P ubuntu-latest=node:16-buster-slim
-```
-
+```bash
 ### Debugging Specific Steps
 
 ```bash

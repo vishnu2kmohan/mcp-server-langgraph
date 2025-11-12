@@ -47,7 +47,7 @@ flowchart TB
     class API serverStyle
     class Store,PG dataStyle
     class Model,Relations,Tuples modelStyle
-```
+```bash
 ### Quick Start
 
 <Steps>
@@ -235,6 +235,7 @@ type document
     define editor: [user]
     define viewer: [user] or editor or owner
 ```
+
 #### Type Definitions
 
 <Tabs>
@@ -312,7 +313,7 @@ OPENFGA_API_SCHEME=https               # http or https
 ## Optional: Performance
 OPENFGA_MAX_RETRIES=3                  # Retry failed requests
 OPENFGA_TIMEOUT=30                     # Request timeout (seconds)
-```
+```python
 #### Client Configuration
 
 ```python
@@ -339,6 +340,7 @@ client = OpenFGAClient(
     cache_backend="redis"
 )
 ```
+
 ---
 
 ### Managing Relationship Tuples
@@ -366,7 +368,7 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```
+```python
 #### Checking Permissions
 
 ```python
@@ -384,6 +386,7 @@ if allowed:
 else:
     raise PermissionError("Access denied")
 ```
+
 #### Listing Permissions
 
 ```python
@@ -463,7 +466,7 @@ spec:
           limits:
             cpu: 1000m
             memory: 1Gi
-```
+```python
 #### PostgreSQL Backend
 
 **Always use PostgreSQL in production** (not in-memory):
@@ -477,6 +480,7 @@ OPENFGA_DATASTORE_MAX_OPEN_CONNS=25
 OPENFGA_DATASTORE_MAX_IDLE_CONNS=10
 OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
 ```
+
 **PostgreSQL Configuration**:
 ```sql
 -- Create database
@@ -489,7 +493,7 @@ GRANT ALL PRIVILEGES ON DATABASE openfga TO openfga;
 -- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-```
+```bash
 #### Performance Tuning
 
 ```bash
@@ -506,6 +510,7 @@ OPENFGA_MAX_AUTHORIZATION_MODEL_SIZE_IN_BYTES=262144
 OPENFGA_LOG_LEVEL=info  # debug, info, warn, error
 OPENFGA_LOG_FORMAT=json
 ```
+
 #### Monitoring
 
 ```yaml
@@ -549,7 +554,7 @@ tuples = await client.read_tuples()
 import json
 with open('openfga-backup.json', 'w') as f:
     json.dump(tuples, f, indent=2)
-```
+```python
 #### Restore Tuples
 
 ```python
@@ -560,6 +565,7 @@ with open('openfga-backup.json', 'r') as f:
 
 await client.write_tuples(tuples)
 ```
+
 #### Database Backup
 
 ```bash

@@ -49,7 +49,7 @@ GCP Production Stack:
 
 ### Terraform Module Structure
 
-```
+```python
 terraform/
 ├── backend-setup-gcp/           # GCS state backend
 ├── modules/
@@ -126,8 +126,7 @@ volumes:
 - name: gcp-key
   secret:
     secretName: gcp-service-account-key
-```
-
+```bash
 **Problems**:
 - Keys can be exfiltrated
 - Must rotate manually

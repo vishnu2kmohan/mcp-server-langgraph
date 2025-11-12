@@ -33,8 +33,7 @@ Automates the initial Keycloak setup for the MCP Server with LangGraph, includin
 
 ```bash
 python scripts/setup/setup_keycloak.py
-```
-
+```bash
 #### Environment Variables
 
 <AccordionGroup>
@@ -123,8 +122,7 @@ Enables enterprise LDAP/Active Directory integration where users authenticate ag
 
 ```bash
 python scripts/setup/setup_ldap_federation.py
-```
-
+```bash
 #### Environment Variables
 
 <AccordionGroup>
@@ -214,8 +212,7 @@ export LDAP_USERNAME_ATTRIBUTE=uid
 export LDAP_VENDOR=other
 
 python scripts/setup/setup_ldap_federation.py
-```
-
+```python
 #### Configuration File
 
 The script uses `/config/ldap_mappers.yaml` for attribute mapping configuration. See [Configuration Files Reference](/reference/configuration-files) for details.
@@ -323,8 +320,7 @@ After configuration, test SAML authentication:
 ```bash
 ## Get Keycloak SP metadata for configuring external IdP
 curl https://keycloak.example.com/realms/langgraph-agent/protocol/saml/descriptor
-```
-
+```python
 #### Related ADRs
 
 - [ADR-0037: Identity Federation](/architecture/adr-0037-identity-federation)
@@ -445,8 +441,7 @@ python scripts/update_kong_jwks.py
 
 ## Kubernetes CronJob (recommended)
 kubectl apply -f deployments/kubernetes/kong/kong-jwks-updater-cronjob.yaml
-```
-
+```python
 #### Environment Variables
 
 | Variable | Default | Description |
@@ -547,8 +542,7 @@ All scripts include health checks for dependencies:
 ## Wait for Keycloak to be ready (max 30 retries, 2s delay)
 ./scripts/setup/setup_keycloak.py
 ## ✓ Keycloak is ready!
-```
-
+```python
 #### Idempotent Execution
 
 Scripts can be run multiple times safely:

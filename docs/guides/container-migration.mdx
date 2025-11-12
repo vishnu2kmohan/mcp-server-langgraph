@@ -34,8 +34,7 @@ os.environ.setdefault("OPENFGA_STORE_ID", "")
 def pytest_configure(config):
     from mcp_server_langgraph.observability.telemetry import init_observability
     init_observability(settings=test_settings)
-```
-
+```bash
 **After:**
 ```python
 # tests/conftest.py
@@ -60,8 +59,7 @@ from mcp_server_langgraph.core.agent import get_agent_graph
 
 # Singleton - returns same instance every time
 agent = get_agent_graph()
-```
-
+```bash
 **After:**
 ```python
 from mcp_server_langgraph.core.agent import create_agent
@@ -93,8 +91,7 @@ The old `get_agent_graph()` function still works:
 # Still works (deprecated)
 from mcp_server_langgraph.core.agent import get_agent_graph
 agent = get_agent_graph()  # Returns singleton
-```
-
+```python
 **Deprecation Timeline:**
 - ✅ **Now**: New code uses `create_agent()`
 - **v2.0**: `get_agent_graph()` marked as deprecated in docstring
@@ -135,8 +132,7 @@ def test_my_agent_simple():
     result = agent.invoke({"messages": [...]})
 
     assert result is not None
-```
-
+```bash
 ## Common Migration Patterns
 
 ### Pattern 1: Test Setup
@@ -166,8 +162,7 @@ def test_something(test_container):
 
     agent = create_agent(container=test_container)
     # test agent
-```
-
+```bash
 ### Pattern 2: Custom Configuration
 
 **Before:**
@@ -193,8 +188,7 @@ def test_with_custom_model():
     agent = create_agent(settings=custom_settings)
 
     # No impact on other tests!
-```
-
+```bash
 ### Pattern 3: Multiple Agents
 
 **Before:**
@@ -213,8 +207,7 @@ agent1 = create_agent()
 agent2 = create_agent()
 
 assert agent1 is not agent2  # True - different instances!
-```
-
+```bash
 ## Helper Functions Reference
 
 ### Container Helpers
@@ -245,8 +238,7 @@ from mcp_server_langgraph.core.agent import (
 agent = create_agent()
 agent = create_agent(container=container)
 agent = create_agent(settings=settings)
-```
-
+```bash
 ### Test Helpers
 
 ```python
@@ -282,8 +274,7 @@ init_observability()
 from mcp_server_langgraph.core.container import create_test_container
 container = create_test_container()
 # Telemetry is automatically handled
-```
-
+```bash
 ### Issue: Multiple tests share state
 
 **Cause:** Using singleton `get_agent_graph()`

@@ -58,8 +58,7 @@ try:
     enable_langsmith_flag = settings.langsmith_tracing  # Often False due to timing
 except ImportError:
     enable_langsmith_flag = False
-```
-
+```python
 **Impact**:
 - Users couldn't reliably configure `langsmith_tracing` or `log_format`
 - Environment variables weren't consistently honored
@@ -109,6 +108,7 @@ tracer = type('LazyTracer', (), {
     '__getattr__': lambda self, name: getattr(get_tracer(), name)
 })()
 ```
+
 **Benefits**:
 - Import statements remain unchanged: `from ... import logger`
 - Type checkers see correct types
@@ -127,7 +127,7 @@ def _get_logger():
     except (ImportError, RuntimeError):
         pass
     return logging.getLogger(__name__)  # stdlib fallback
-```
+```python
 **Benefits**:
 - Breaks circular dependency
 - Works during early initialization
@@ -144,6 +144,7 @@ def _setup_logging(self, enable_file_logging: bool = False):
 
     logging.basicConfig(handlers=handlers)
 ```
+
 **Benefits**:
 - Works in read-only filesystems by default
 - Users opt-in via `enable_file_logging=True`
@@ -206,7 +207,7 @@ from mcp_server_langgraph.observability.telemetry import (
     config,    # Lazy proxy
     metrics,   # Lazy proxy (alias for config)
 )
-```
+```python
 #### Usage Pattern
 
 ```python

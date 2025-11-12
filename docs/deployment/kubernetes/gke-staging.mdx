@@ -73,7 +73,7 @@ flowchart TB
     class Pods,NetPol,ExtSec appStyle
     class CloudSQL,Redis dataStyle
     class SecretMgr,ArtifactReg secretStyle
-```
+```bash
 ### Prerequisites
 
 - **GCP Project**: `vishnu-sandbox-20250310` (or your project ID)
@@ -94,6 +94,7 @@ export GCP_PROJECT_ID=vishnu-sandbox-20250310
 ## Run the setup script
 ./scripts/gcp/setup-staging-infrastructure.sh
 ```
+
 This script will create:
 - ✅ Staging VPC network (10.1.0.0/20)
 - ✅ GKE Autopilot cluster with security hardening
@@ -124,7 +125,7 @@ gcloud compute networks subnets create staging-gke-subnet \
   --secondary-range pods=10.2.0.0/16,services=10.3.0.0/16 \
   --enable-flow-logs \
   --enable-private-ip-google-access
-```
+```sql
 #### 1.2 Create GKE Cluster
 
 ```bash
@@ -138,6 +139,7 @@ gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
   --shielded-secure-boot \
   --binauthz-evaluation-mode=PROJECT_SINGLETON_POLICY_ENFORCE
 ```
+
 #### 1.3 Create Managed Services
 
 See the [full setup script](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/scripts/gcp/setup-staging-infrastructure.sh) for complete Cloud SQL and Redis setup.
@@ -148,7 +150,7 @@ See the [full setup script](https://github.com/vishnu2kmohan/mcp-server-langgrap
 
 After running the setup script, you'll receive:
 
-```
+```python
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Staging Infrastructure Setup Complete!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -164,20 +166,21 @@ Security Features Enabled:
   ✓ Workload Identity
   ✓ Network isolation (separate VPC)
 ```
+
 **⚠️ Important**: Save the Workload Identity Provider value - you'll need it for GitHub Actions.
 
 ### Step 2: Update API Keys
 
 Update the placeholder secrets with real API keys:
 
-```
-
+```sql
 ## Update Anthropic API key
 echo -n "sk-ant-YOUR_REAL_KEY" | gcloud secrets versions add staging-anthropic-api-key --data-file=-
 
 ## Update Google API key
 echo -n "YOUR_REAL_GOOGLE_KEY" | gcloud secrets versions add staging-google-api-key --data-file=-
 ```
+
 ### Step 3: Install External Secrets Operator
 
 External Secrets Operator syncs secrets from GCP Secret Manager to Kubernetes:
@@ -192,7 +195,7 @@ helm install external-secrets \
   --namespace external-secrets-system \
   --create-namespace \
   --set installCRDs=true
-```
+```bash
 Verify installation:
 
 ```bash
@@ -224,7 +227,7 @@ gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"
 
 ## Update these lines in the workflow:
 workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-```
+```bash
 ### Step 5: Deploy Application
 
 #### First-Time Deployment (Manual)
@@ -248,6 +251,7 @@ kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-se
 ## Verify pods
 kubectl get pods -n staging-mcp-server-langgraph
 ```
+
 #### Automated Deployments (GitHub Actions)
 
 Once manual deployment succeeds, GitHub Actions will handle future deployments:
@@ -284,7 +288,7 @@ Passed:       11
 Failed:       0
 
 ✓ All smoke tests passed!
-```
+```bash
 #### Check Health Endpoints
 
 ```bash
@@ -296,6 +300,7 @@ curl http://localhost:8080/health
 curl http://localhost:8080/health/ready
 curl http://localhost:8080/health/live
 ```
+
 #### View Logs
 
 **Cloud Logging** (recommended):
@@ -307,12 +312,13 @@ gcloud logging read \
    resource.labels.namespace_name=mcp-staging" \
   --limit=50 \
   --format=json
-```
+```bash
 **Kubectl logs**:
 
 ```bash
 kubectl logs -n staging-mcp-server-langgraph -l app=mcp-server-langgraph --tail=100
 ```
+
 ### Security Features
 
 #### Network Isolation
@@ -325,7 +331,7 @@ Verify network policies:
 
 ```bash
 kubectl get networkpolicies -n staging-mcp-server-langgraph
-```
+```bash
 #### Workload Identity
 
 Pods authenticate as GCP service accounts without keys:
@@ -341,6 +347,7 @@ kubectl run -it --rm test \
   --namespace=mcp-staging \
   -- gcloud auth list
 ```
+
 #### Binary Authorization
 
 Only signed/approved images can be deployed:
@@ -350,7 +357,7 @@ Only signed/approved images can be deployed:
 gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization)'
-```
+```bash
 #### Secret Management
 
 Secrets are stored in GCP Secret Manager and synced via External Secrets:
@@ -362,6 +369,7 @@ gcloud secrets list --filter="name:staging-*"
 ## View External Secrets sync status
 kubectl get externalsecrets -n staging-mcp-server-langgraph
 ```
+
 ### Monitoring & Observability
 
 #### Cloud Console Dashboards
@@ -390,7 +398,7 @@ Create alert policies for:
 ## Pod restart count > 5
 ## Deployment replica mismatch
 ## Cloud SQL connection failures
-```
+```bash
 ### Troubleshooting
 
 <AccordionGroup>
@@ -461,6 +469,7 @@ kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-serv
 ## Verify rollback
 kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 ```
+
 ### Cost Optimization
 
 #### Current Costs (Estimated)

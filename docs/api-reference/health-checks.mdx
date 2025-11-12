@@ -27,8 +27,7 @@ Use this endpoint for:
 
 ```bash
 curl https://api.yourdomain.com/health
-```
-
+```json
 **Response (Healthy)**:
 
 ```json
@@ -64,8 +63,7 @@ curl https://api.yourdomain.com/health
     "Keycloak connection timeout - authentication may be slow"
   ]
 }
-```
-
+```json
 **Response (Unhealthy)**:
 
 ```json
@@ -115,8 +113,7 @@ Returns 200 only when **all critical dependencies** are available. Service may b
 
 ```bash
 curl https://api.yourdomain.com/health/ready
-```
-
+```json
 **Response (Ready)**:
 
 ```json
@@ -150,8 +147,7 @@ curl https://api.yourdomain.com/health/ready
     "OpenFGA authorization service not responding"
   ]
 }
-```
-
+```yaml
 **Status Codes**:
 
 <ResponseField name="200" type="OK">
@@ -194,8 +190,7 @@ Failing liveness checks triggers pod restarts. Only use for detecting unrecovera
 
 ```bash
 curl https://api.yourdomain.com/health/live
-```
-
+```json
 **Response (Alive)**:
 
 ```json
@@ -216,8 +211,7 @@ curl https://api.yourdomain.com/health/live
   "timestamp": "2025-10-12T10:30:00Z",
   "reason": "Event loop blocked for 30+ seconds"
 }
-```
-
+```yaml
 **Status Codes**:
 
 <ResponseField name="200" type="OK">
@@ -260,8 +254,7 @@ Prevents premature liveness/readiness checks during startup. Useful for services
 
 ```bash
 curl https://api.yourdomain.com/health/startup
-```
-
+```json
 **Response (Started)**:
 
 ```json
@@ -294,8 +287,7 @@ curl https://api.yourdomain.com/health/startup
   },
   "progress": "30%"
 }
-```
-
+```yaml
 **Status Codes**:
 
 <ResponseField name="200" type="OK">
@@ -334,8 +326,7 @@ Use this endpoint for:
 
 ```bash
 curl https://api.yourdomain.com/health/dependencies
-```
-
+```json
 **Response**:
 
 ```json
@@ -492,8 +483,7 @@ dependency_status{dependency="redis"} 1
 
 ## Health check response time
 health_check_duration_seconds{endpoint="/health"} 0.015
-```
-
+```yaml
 **Example Alerts**:
 
 ```yaml
@@ -559,8 +549,7 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3  # Remove after 15s
-```
-
+```yaml
 #### Cloud Run
 
 ```yaml

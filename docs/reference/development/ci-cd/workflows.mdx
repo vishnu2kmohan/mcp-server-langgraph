@@ -24,8 +24,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-```
-
+```bash
 ##### Test Job
 
 ```yaml
@@ -85,8 +84,7 @@ lint:
     - name: Run mypy
       run: mypy src/ --ignore-missing-imports
       continue-on-error: true
-```
-
+```bash
 **Purpose**: Enforces code quality standards
 
 **Checks**:
@@ -167,8 +165,7 @@ validate-deployments:
           echo "Validating $env overlay..."
           kubectl kustomize deployments/kustomize/overlays/$env > /dev/null
         done
-```
-
+```bash
 **Purpose**: Ensures all deployment configurations are valid before merge
 
 **Validations**:
@@ -195,7 +192,7 @@ python3 scripts/validation/validate_deployments.py
 ```
 
 **Example Output**:
-```
+```bash
 ✓ Validating YAML syntax...
 ✓ Validating Kubernetes manifests...
 ✓ Validating Docker Compose...
@@ -252,8 +249,7 @@ build-and-push:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-```
-
+```python
 **Features**:
 - **Multi-architecture builds**: amd64 and arm64
 - **Automatic tagging**: Branch names, PRs, semantic versions, commit SHAs

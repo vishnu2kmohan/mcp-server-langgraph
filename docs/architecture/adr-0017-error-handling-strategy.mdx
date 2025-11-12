@@ -78,7 +78,7 @@ All API errors return a consistent JSON structure:
     "request_id": "req_xyz"
   }
 }
-```
+```python
 **Fields**:
 - `code`: Machine-readable error code (uppercase snake_case)
 - `message`: Human-readable error message
@@ -103,11 +103,12 @@ All API errors return a consistent JSON structure:
 ##### LLM Fallback
 When primary model fails:
 ```
+
 1. Try fallback model #1 (gemini-2.5-pro)
 2. Try fallback model #2 (claude-3-5-sonnet)
 3. Try fallback model #3 (gpt-5)
 4. Return error if all fail
-```
+```rust
 ##### Authorization Fallback
 When OpenFGA is unavailable:
 ```python
@@ -118,6 +119,7 @@ else:
     # Fail-open: use role-based fallback
     return check_fallback_authorization(user, resource)
 ```
+
 ##### Session Storage Fallback
 When Redis is unavailable:
 ```
@@ -157,7 +159,7 @@ logger.error(
     },
     exc_info=True  # Include stack trace
 )
-```
+```python
 #### 7. OpenTelemetry Integration
 
 All errors are captured in distributed traces:
@@ -172,6 +174,7 @@ with tracer.start_as_current_span("llm.call") as span:
         span.record_exception(e)
         raise
 ```
+
 **Span Attributes**:
 - `error.type`: Exception class name
 - `error.message`: Error message
@@ -233,7 +236,7 @@ error_duration = Histogram(
     "Time spent handling errors",
     ["error_code"]
 )
-```
+```python
 #### 10. Security Considerations
 
 **Never expose**:
@@ -298,6 +301,7 @@ async def verify_token(self, token: str) -> TokenVerification:
                 error_message="Invalid authentication token"
             )
 ```
+
 #### Example 2: LLM Fallback
 
 ```python
@@ -355,7 +359,7 @@ async def create_llm_with_fallback(
                     error_code="EXT_LLM_API_ERROR",
                     models_tried=models_to_try
                 )
-```
+```bash
 #### Example 3: Service Layer Error
 
 ```python

@@ -39,7 +39,7 @@ gcloud services enable \
   secretmanager.googleapis.com \
   cloudkms.googleapis.com \
   servicenetworking.googleapis.com
-```
+```sql
 ### Create GKE Cluster
 
 #### Autopilot Cluster (Recommended)
@@ -59,6 +59,7 @@ gcloud container clusters create-auto langgraph-cluster \
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
 ```
+
 #### Standard Cluster
 
 For more control over node configuration:
@@ -87,7 +88,7 @@ gcloud container clusters create langgraph-cluster \
 ## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```
+```bash
 ### Setup Workload Identity
 
 Workload Identity allows pods to authenticate as Google Cloud service accounts:
@@ -122,6 +123,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
   --namespace mcp-server-langgraph \
   iam.gke.io/gcp-service-account=mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com
 ```
+
 ### Cloud SQL for PostgreSQL
 
 #### Create Cloud SQL Instance
@@ -159,8 +161,7 @@ gcloud sql users create keycloak \
 gcloud sql users create gdpr_user \
   --instance=langgraph-postgres \
   --password=$(openssl rand -base64 32)
-```
-
+```bash
 <Info>
 **Three databases required**: Keycloak (identity), OpenFGA (authorization), and GDPR (compliance data storage per [ADR-0041](/architecture/adr-0041-postgresql-gdpr-storage)).
 </Info>
@@ -263,12 +264,13 @@ CLOUDSQL_PRIVATE_IP=$(gcloud sql instances describe langgraph-postgres \
 
 ## Use private IP directly
 KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
-```
+```sql
 ### Memorystore for Redis
 
 #### Create Redis Instance
 
 ```
+
 ## Create Redis instance
 gcloud redis instances create langgraph-redis \
   --size=5 \
@@ -337,8 +339,7 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
 gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
-```
-
+```bash
 #### Use External Secrets Operator
 
 ```bash
@@ -394,11 +395,12 @@ spec:
       key: jwt-secret
 EOF
 ```
+
 ### Google Container Registry (GCR)
 
 #### Build and Push Images
 
-```
+```bash
 ## Configure Docker for GCR
 gcloud auth configure-docker
 
@@ -424,9 +426,10 @@ spec:
         imagePullPolicy: Always
 EOF
 ```
+
 #### Artifact Registry (Recommended)
 
-```
+```bash
 ## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
@@ -440,11 +443,12 @@ gcloud auth configure-docker us-central1-docker.pkg.dev
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
 ```
+
 ### Load Balancer and Ingress
 
 #### Install NGINX Ingress Controller
 
-```
+```bash
 ## Install NGINX Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
@@ -454,9 +458,10 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --create-namespace \
   --set controller.service.type=LoadBalancer
 ```
+
 #### Configure Ingress
 
-```
+```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -484,11 +489,12 @@ spec:
             port:
               number: 8000
 ```
+
 #### Google Cloud Load Balancer
 
 For GCP-native load balancing:
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -524,19 +530,21 @@ spec:
   cdn:
     enabled: false
 ```
+
 ### Monitoring with Cloud Operations
 
 #### Enable Google Cloud Monitoring
 
-```
+```bash
 ## Install Google Cloud Ops agent
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
 ```
+
 #### Configure Pod Monitoring
 
-```
+```yaml
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
@@ -550,6 +558,7 @@ spec:
   - port: metrics
     interval: 30s
 ```
+
 #### Cloud Logging
 
 Configure structured logging to Cloud Logging:

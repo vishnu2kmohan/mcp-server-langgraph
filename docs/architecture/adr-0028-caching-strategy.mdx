@@ -69,7 +69,7 @@ flowchart TB
     class L2 l2Style
     class L3 l3Style
     class External externalStyle
-```
+```python
 #### Multi-Layer Caching Flow
 
 ```mermaid
@@ -94,6 +94,7 @@ flowchart TB
     L3Hit --> Response
 
 ```
+
 **Cache Lookup Sequence with Fallback**:
 ```mermaid
 %% ColorBrewer2 Set3 palette - each component type uniquely colored
@@ -147,7 +148,7 @@ sequenceDiagram
 
     App-->>Client: Response (5ms) ✓<br/>400x faster
 
-```
+```rust
 #### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)
@@ -160,6 +161,7 @@ L1_CACHE_SIZE = 1000        # Max entries
 L1_CACHE_TTL = 60           # 1 minute
 L1_CACHE_MAXSIZE_MB = 100   # Max memory usage
 ```
+
 **What to Cache**:
 - OpenFGA authorization results
 - User profile lookups
@@ -173,7 +175,7 @@ from functools import lru_cache
 @lru_cache(maxsize=1000)
 def check_permission_cached(user: str, resource: str, action: str) -> bool:
     return openfga_client.check(user, resource, action)
-```
+```python
 #### Layer 2: Redis Distributed Cache
 
 **Use Case**: Shared across instances, larger data, longer TTL
@@ -186,6 +188,7 @@ L2_CACHE_REDIS_URL = "redis://localhost:6379/2"  # DB 2 for cache
 L2_CACHE_DEFAULT_TTL = 300   # 5 minutes
 L2_CACHE_MAX_SIZE_MB = 1000  # 1GB cache limit
 ```
+
 **What to Cache**:
 - LLM responses (with semantic similarity)
 - Embedding vectors
@@ -204,7 +207,7 @@ async def get_llm_response_cached(prompt: str) -> str:
     response = await llm_client.generate(prompt)
     cache_set(cache_key, response, ttl=300)
     return response
-```
+```rust
 #### Layer 3: Provider-Native Caching
 
 **Use Case**: Leverage provider-specific caching features
@@ -224,6 +227,7 @@ response = anthropic.messages.create(
 )
 ## Saves 90% on input tokens for repeated system prompts
 ```
+
 ##### Google Gemini Caching
 
 ```python
@@ -295,7 +299,7 @@ async def update_user_profile(user_id: str, updates: dict):
     ]
     for key in cache_keys:
         redis_client.delete(key)
-```
+```python
 #### Cache Stampede Prevention
 
 ```python
@@ -314,6 +318,7 @@ async def get_with_lock(key: str, fetcher: Callable, ttl: int):
         cache_set(key, value, ttl)
         return value
 ```
+
 ### Implementation
 
 #### New Module: `core/cache.py`
@@ -348,7 +353,7 @@ class CacheService:
                 return value
 
         return None
-```
+```python
 #### Usage with Decorator
 
 ```python
@@ -358,6 +363,7 @@ from mcp_server_langgraph.core.cache import cached
 async def get_llm_response(prompt: str) -> str:
     return await llm_client.generate(prompt)
 ```
+
 ### Configuration
 
 #### Environment Variables
@@ -373,7 +379,7 @@ CACHE_L2_MAX_SIZE_MB=1000
 ## Provider Caching
 ANTHROPIC_ENABLE_PROMPT_CACHING=true
 GEMINI_ENABLE_CONTEXT_CACHING=true
-```
+```css
 ### Metrics & Observability
 
 #### New Metrics

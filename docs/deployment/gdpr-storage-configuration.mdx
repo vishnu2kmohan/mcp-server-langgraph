@@ -93,7 +93,7 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
-```
+```bash
 ### Environment Variables
 
 #### Required Configuration
@@ -107,6 +107,7 @@ ENVIRONMENT=production
 ## Required: Choose persistent backend (postgres or redis)
 GDPR_STORAGE_BACKEND=postgres  # or "redis"
 ```
+
 #### Development/Testing
 
 For local development and testing only:
@@ -114,7 +115,7 @@ For local development and testing only:
 ```bash
 ENVIRONMENT=development
 GDPR_STORAGE_BACKEND=memory
-```
+```python
 ### Storage Backend Options
 
 #### Option 1: PostgreSQL (Recommended) ✅
@@ -207,8 +208,7 @@ CREATE TABLE audit_logs (
 CREATE INDEX idx_audit_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp);
 CREATE INDEX idx_audit_action ON audit_logs(action);
-```
-
+```bash
 **Kubernetes Deployment:**
 
 The schema is deployed via ConfigMap in Kubernetes:
@@ -240,7 +240,7 @@ async def my_endpoint(
 
     # Log audit event
     await gdpr_storage.audit_logs.log(audit_entry)
-```
+```python
 #### Option 2: Redis
 
 Redis provides fast, persistent key-value storage suitable for consent management.
@@ -251,6 +251,7 @@ Redis provides fast, persistent key-value storage suitable for consent managemen
 GDPR_STORAGE_BACKEND=redis
 GDPR_REDIS_URL=redis://localhost:6379/2  # Use separate DB from sessions
 ```
+
 **Implementation Required:**
 
 1. Create `RedisConsentStore` class
@@ -291,7 +292,7 @@ RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage in productio
 Set GDPR_STORAGE_BACKEND=postgres or GDPR_STORAGE_BACKEND=redis,
 or set ENVIRONMENT=development for testing.
 Data subject rights (GDPR compliance) require persistent storage.
-```
+```python
 ### Migration Checklist
 
 Before deploying GDPR endpoints to production:
@@ -333,8 +334,7 @@ psql $GDPR_POSTGRES_URL
 # Run migrations in order
 \i migrations/001_initial_schema.sql
 \i migrations/002_add_audit_indexes.sql
-```
-
+```python
 **Automated Migration (Kubernetes):**
 
 Migrations are automatically applied via the `postgres-gdpr-schema` ConfigMap during PostgreSQL StatefulSet initialization. See `deployments/base/postgres-statefulset.yaml` for implementation details.
@@ -354,7 +354,7 @@ Configure retention policies based on your legal requirements:
 ## Example: 90-day retention for consent records
 CONSENT_RETENTION_DAYS=90
 PROFILE_RETENTION_DAYS=365
-```
+```go
 #### Audit Trail
 
 All GDPR operations are logged with:
@@ -376,6 +376,7 @@ All GDPR operations are logged with:
   "timestamp": "2025-10-18T12:34:56Z"
 }
 ```
+
 #### Data Deletion (Article 17)
 
 When users exercise right to erasure:
@@ -400,7 +401,7 @@ Some data may be retained for legal/compliance reasons:
 
 ```bash
 pytest tests/integration/test_gdpr_endpoints.py -v
-```
+```python
 #### Integration Tests
 
 Test with real database:
@@ -414,6 +415,7 @@ GDPR_STORAGE_BACKEND=postgres \
 GDPR_POSTGRES_URL=postgresql://test:test@localhost:5432/test_db \
 pytest tests/integration/test_gdpr_endpoints.py
 ```
+
 #### Production Guard Test
 
 Verify production guard:
@@ -424,7 +426,7 @@ ENVIRONMENT=production GDPR_STORAGE_BACKEND=memory python -c "import mcp_server_
 
 ## Should succeed
 ENVIRONMENT=production GDPR_STORAGE_BACKEND=postgres python -c "import mcp_server_langgraph.api.gdpr"
-```
+```bash
 ### Deployment Examples
 
 #### Docker Compose
@@ -452,6 +454,7 @@ services:
 volumes:
   postgres_data:
 ```
+
 #### Kubernetes
 
 ```yaml
@@ -471,7 +474,7 @@ metadata:
 type: Opaque
 stringData:
   GDPR_POSTGRES_URL: "postgresql://gdpr:password@postgres-service:5432/gdpr_db"
-```
+```bash
 ### Troubleshooting
 
 #### Error: "GDPR endpoints use in-memory storage"
@@ -484,6 +487,7 @@ stringData:
 export GDPR_STORAGE_BACKEND=postgres
 export GDPR_POSTGRES_URL=postgresql://...
 ```
+
 #### Error: "RuntimeError: CRITICAL: GDPR endpoints cannot use in-memory storage"
 
 **Cause:** Running in production with memory backend

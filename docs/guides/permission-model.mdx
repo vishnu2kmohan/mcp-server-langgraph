@@ -26,7 +26,7 @@ type organization
   relations
     define admin: [user]
     define member: [user] or admin
-```
+```go
 #### Key Concepts
 
 <CardGroup cols={3}>
@@ -79,6 +79,7 @@ type document
     define editor: [user]
     define viewer: [user] or editor or owner
 ```
+
 **Supported Patterns**:
 - Hierarchical roles (admin → member → viewer)
 - Organization-based access (organization#member)
@@ -111,7 +112,7 @@ type task
     define project: [project]
     define assignee: [user]
     define viewer: [user] from project
-```
+```json
 **Usage**:
 ```python
 ## Team lead creates project
@@ -128,6 +129,7 @@ allowed = await client.check_permission(
 )
 ## Returns: True
 ```
+
 #### Example: Multi-Tenant SaaS
 
 ```typescript
@@ -153,7 +155,7 @@ type resource
     define owner: [user]
     define editor: [user, workspace#member]
     define viewer: [user] or editor
-```
+```json
 **Isolation**:
 ```python
 ## Tenant A admin
@@ -170,6 +172,7 @@ allowed = await client.check_permission(
 )
 ## Returns: True
 ```
+
 #### Example: Content Management
 
 ```typescript
@@ -191,7 +194,7 @@ type file
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner or viewer from parent
-```
+```python
 **Inheritance**:
 ```python
 ## Set folder permissions
@@ -208,6 +211,7 @@ allowed = await client.check_permission(
 )
 ## Returns: True
 ```
+
 ### Relation Operators
 
 #### Direct Assignment
@@ -228,7 +232,7 @@ User is member OR admin.
 
 ```typescript
 define can_delete: admin and owner
-```
+```dockerfile
 User must be admin AND owner.
 
 #### Exclusion (BUT NOT)
@@ -236,13 +240,14 @@ User must be admin AND owner.
 ```typescript
 define active_member: member but not suspended
 ```
+
 User is member but not suspended.
 
 #### Computed Relations
 
 ```typescript
 define viewer: [user] or viewer from parent
-```
+```python
 User is viewer OR inherits from parent.
 
 ### Conditional Permissions
@@ -264,6 +269,7 @@ condition time_limited_access(current_time: timestamp, expiry: timestamp) {
   current_time < expiry
 }
 ```
+
 **Usage**:
 ```python
 ## Check with context
@@ -276,7 +282,7 @@ allowed = await client.check_permission(
         "expiry": "2025-10-13T10:00:00Z"
     }
 )
-```
+```bash
 ### Testing Models
 
 #### Model Validation
@@ -289,6 +295,7 @@ fga model validate --file model.fga
 curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
   -d @model.json
 ```
+
 #### Test Assertions
 
 ```python
@@ -314,8 +321,7 @@ for test in test_cases:
         object=test["object"]
     )
     assert result == test["expected"], f"Test failed: {test}"
-```
-
+```json
 ### Deploying Models
 
 #### Via Setup Script
@@ -350,6 +356,7 @@ AUTHORIZATION_MODEL = {
 response = await client.write_authorization_model(AUTHORIZATION_MODEL)
 model_id = response["authorization_model_id"]
 ```
+
 #### Via API
 
 ```bash
@@ -359,7 +366,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     "schema_version": "1.1",
     "type_definitions": [...]
   }'
-```
+```python
 ### Best Practices
 
 <AccordionGroup>
@@ -450,6 +457,7 @@ for user_id in range(100):
         "object": "document:report"
     }])
 ```
+
 **Good** (1 tuple):
 ```python
 await client.write_tuples([{

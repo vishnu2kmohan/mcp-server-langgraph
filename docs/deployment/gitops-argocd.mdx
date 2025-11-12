@@ -117,8 +117,7 @@ flowchart TB
     class E,F,G argocdStyle
     class H,I,J clusterStyle
     class K registryStyle
-```
-
+```bash
 **Flow**:
 1. Developer pushes code → GitHub
 2. CI/CD builds image → Artifact Registry
@@ -349,7 +348,7 @@ spec:
    - Cluster: gcp-production
    - Path: deployments/overlays/production-gke
    - Namespace: mcp-production
-```
+```bash
 </CodeGroup>
 
 ### Sync Policies
@@ -635,8 +634,7 @@ spec:
       thresholdRange:
         max: 500
       interval: 1m
-```
-
+```bash
 **Flow**:
 1. ArgoCD syncs new version
 2. Flagger creates canary deployment (10% traffic)
@@ -803,8 +801,7 @@ data:
   audit.log.enabled: "true"
   audit.log.maxsize: "100"  # MB
   audit.log.maxage: "30"    # days
-```
-
+```bash
 <Check>**Restrict allowed Git repos**</Check>
 
 ```yaml

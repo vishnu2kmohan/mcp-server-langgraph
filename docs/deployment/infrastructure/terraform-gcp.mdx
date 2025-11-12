@@ -63,7 +63,7 @@ flowchart TB
     class SQL,Redis dataStyle
     class WI authStyle
     class Dev,Staging,Prod envStyle
-```
+```bash
 ---
 
 ### Quick Start
@@ -82,6 +82,7 @@ EOF
 terraform init
 terraform apply
 ```
+
 <Info>
   This creates a GCS bucket for Terraform state with versioning, encryption, and logging.
   See [Backend Setup Guide](/deployment/infrastructure/backend-setup) for details.
@@ -163,7 +164,7 @@ module "vpc" {
   pods_cidr     = "10.4.0.0/14"   # 262k IPs
   services_cidr = "10.8.0.0/20"   # 4096 IPs
 }
-```
+```bash
 ```hcl Production
 module "vpc" {
   source = "../../modules/gcp-vpc"
@@ -191,6 +192,7 @@ module "vpc" {
   }
 }
 ```
+
 </CodeGroup>
 
 **Outputs**: Network ID, subnet names, NAT IPs, firewall rule IDs
@@ -234,7 +236,7 @@ module "gke" {
   regional_cluster = true
   release_channel  = "STABLE"
 }
-```
+```bash
 ```hcl Production
 module "gke" {
   source = "../../modules/gke-autopilot"
@@ -279,6 +281,7 @@ module "gke" {
   }
 }
 ```
+
 </CodeGroup>
 
 **Key Features**:
@@ -341,7 +344,7 @@ module "cloudsql" {
   read_replica_count   = 1
   read_replica_regions = ["us-east1"]
 }
-```
+```bash
 **Supports PostgreSQL**: 11, 12, 13, 14, 15, 16
 
 ---
@@ -388,6 +391,7 @@ module "memorystore" {
   rdb_snapshot_period = "TWELVE_HOURS"
 }
 ```
+
 **Memory Sizes**: 1-300 GB
 **Redis Versions**: 4.0, 5.0, 6.X, 7.0, 7.2
 
@@ -422,7 +426,7 @@ module "workload_identity" {
     }
   }
 }
-```
+```bash
 **Features**:
 - Replaces service account key files (more secure)
 - Pod-level IAM permissions
@@ -454,6 +458,7 @@ EOF
 terraform init
 terraform apply
 ```
+
 **One-time setup** per GCP project. Provides centralized state management with locking.
 
 ---
@@ -558,7 +563,7 @@ module "workload_identity" {
 
   depends_on = [module.gke]
 }
-```
+```bash
 ---
 
 ### Environment Configurations
@@ -589,6 +594,7 @@ cd terraform/environments/gcp-dev
 terraform init
 terraform apply
 ```
+
 ---
 
 #### Staging (Production-Like)
@@ -718,7 +724,7 @@ module "vpc" {
 
 ## ❌ Bad - Copying module code
 ## (creates maintenance burden)
-```
+```bash
 #### 2. Pin Module Versions
 
 For stability, consider pinning to specific versions:
@@ -728,6 +734,7 @@ module "vpc" {
   source = "git::https://github.com/yourorg/terraform-modules.git//gcp-vpc?ref=v1.2.0"
 }
 ```
+
 #### 3. Use terraform.tfvars for Secrets
 
 Never commit sensitive values to Git:
@@ -740,7 +747,7 @@ cloudsql_additional_users = {
     password = "generated-password"
   }
 }
-```
+```rust
 #### 4. Remote State for Teams
 
 Use GCS backend for collaboration:
@@ -753,6 +760,7 @@ terraform {
   }
 }
 ```
+
 #### 5. Module Dependencies
 
 Use `depends_on` when modules have dependencies:
@@ -792,13 +800,14 @@ terraform plan
 
 ## Apply changes
 terraform apply
-```
+```python
 #### Import Existing Resources
 
 ```bash
 terraform import module.gke.google_container_cluster.autopilot \
   projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_NAME
 ```
+
 #### Destroy Environment
 
 <Warning>
@@ -812,7 +821,7 @@ terraform import module.gke.google_container_cluster.autopilot \
 
 terraform apply  # Remove protection
 terraform destroy
-```
+```bash
 ---
 
 ### Troubleshooting
@@ -896,6 +905,7 @@ terraform/modules/my-module/
 ├── versions.tf      # Provider requirements
 └── README.md        # Documentation with examples
 ```
+
 #### Module Template
 
 ```hcl

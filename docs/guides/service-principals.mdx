@@ -46,7 +46,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
     "associated_user_id": "user:alice",
     "inherit_permissions": true
   }'
-```
+```json
 **Response**:
 ```json
 {
@@ -57,6 +57,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
   "message": "Save the client_secret securely. It will not be shown again."
 }
 ```
+
 **Authentication**:
 ```python
 import httpx
@@ -81,7 +82,7 @@ response = await httpx.post(
     headers={"Authorization": f"Bearer {access_token}"},
     json={"query": "Process data"}
 )
-```
+```bash
 #### Mode 2: Service Account User
 
 Special user account marked as service principal.
@@ -101,6 +102,7 @@ curl -X POST https://api.example.com/api/v1/service-principals \
     "authentication_mode": "service_account_user"
   }'
 ```
+
 **Authentication**:
 ```python
 ## Use Resource Owner Password Credentials (ROPC)
@@ -113,7 +115,7 @@ response = await httpx.post(
         "password": "service-password",
     }
 )
-```
+```bash
 ### Permission Inheritance
 
 Service principals can inherit permissions from user principals via the `acts_as` relationship.
@@ -132,11 +134,13 @@ curl -X POST /api/v1/service-principals \
     "inherit_permissions": true
   }'
 ```
+
 **OpenFGA Tuples Created**:
-```
+```yaml
 service:scheduled-reports acts_as user:alice
 user:alice owner conversation:thread1
 ```
+
 **Permission Check**:
 ```
 Can service:scheduled-reports view conversation:thread1?
@@ -156,7 +160,7 @@ Service principals support 30-day refresh tokens for persistent authentication.
 SERVICE_PRINCIPAL_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days
 SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
-```
+```python
 #### Client Implementation
 
 ```python
@@ -214,6 +218,7 @@ class ServicePrincipalClient:
         self.refresh_token = data.get("refresh_token", self.refresh_token)
         self.expires_at = time.time() + data["expires_in"]
 ```
+
 ### Management Operations
 
 #### List Service Principals
@@ -221,7 +226,7 @@ class ServicePrincipalClient:
 ```bash
 curl -X GET https://api.example.com/api/v1/service-principals \
   -H "Authorization: Bearer YOUR_JWT"
-```
+```bash
 #### Rotate Secret
 
 ```bash

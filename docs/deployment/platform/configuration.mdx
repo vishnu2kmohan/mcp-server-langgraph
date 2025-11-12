@@ -26,7 +26,7 @@ The `langgraph.json` file in your project root defines your deployment configura
   },
   "python_version": "3.11"
 }
-```
+```bash
 ### Configuration Options
 
 <ParamField path="dependencies" type="array" required>
@@ -92,6 +92,7 @@ workflow.add_edge("agent", END)
 ## IMPORTANT: Export as 'graph' variable
 graph = workflow.compile(checkpointer=MemorySaver())
 ```
+
 <Warning>
   The variable name in `langgraph.json` must match the exported variable name in your Python file.
 </Warning>
@@ -134,7 +135,7 @@ import os
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
 model_name = os.environ.get("MODEL_NAME", "claude-3-5-sonnet-20241022")
-```
+```bash
 ### Multiple Environments
 
 Create separate deployments for each environment:
@@ -185,6 +186,7 @@ Add custom build commands:
   ]
 }
 ```
+
 #### Multiple Graphs
 
 Deploy multiple graphs in one deployment:
@@ -197,7 +199,7 @@ Deploy multiple graphs in one deployment:
     "summary": "./langgraph/summary.py:summary_graph"
   }
 }
-```
+```python
 Access via different endpoints:
 - `POST /chat/invoke`
 - `POST /analysis/invoke`
@@ -214,6 +216,7 @@ langgraph dev
 ## Verify graph can be imported
 python -c "from langgraph.agent import graph; print(graph)"
 ```
+
 ### Next Steps
 
 <CardGroup cols={2}>

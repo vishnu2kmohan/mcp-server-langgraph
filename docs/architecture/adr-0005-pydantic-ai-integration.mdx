@@ -109,8 +109,7 @@ Implementation:
 ```python
 if "search" in message.lower():
     action = "use_tools"
-```
-
+```python
 **Pros**:
 - Instant (no LLM call)
 - Free (no tokens)
@@ -201,6 +200,7 @@ class RoutingDecision(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
 ```
+
 #### Response Model
 
 ```python
@@ -228,7 +228,7 @@ except Exception:
     # Fallback to keyword matching
     decision = keyword_based_routing(message)
     decision.confidence = 0.5
-```
+```yaml
 #### Confidence Threshold
 
 ```python

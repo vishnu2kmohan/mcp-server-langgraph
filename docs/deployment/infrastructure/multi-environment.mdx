@@ -83,7 +83,7 @@ MCP Server uses a **multi-environment Terraform strategy** to maintain consisten
 
 ## Directory Structure
 
-```
+```python
 terraform/environments/
 ├── gcp-dev/
 │   ├── main.tf              # Module composition
@@ -593,8 +593,7 @@ variable "enable_binary_authorization" {
   type        = bool
   default     = false
 }
-```
-
+```bash
 ### Environment-Specific Values (terraform.tfvars)
 
 **Only `terraform.tfvars` differs** across environments:
@@ -699,8 +698,7 @@ kubectl top pods -n staging-mcp-server-langgraph --containers
 kubectl patch deployment mcp-server-langgraph \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
-```
-
+```rust
 **Savings**: $50-100/month (15-30%)
 
 ### Production

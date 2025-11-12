@@ -58,7 +58,7 @@ uv sync  # That's it! Creates venv + installs everything
   run: |
     pip install --upgrade pip
     pip install -r requirements.txt
-```
+```bash
 **After (uv)**:
 ```yaml
 - name: Install uv
@@ -67,6 +67,7 @@ uv sync  # That's it! Creates venv + installs everything
 - name: Install dependencies
   run: uv sync --frozen
 ```
+
 ### Detailed Migration Steps
 
 #### Step 1: Install uv
@@ -101,7 +102,7 @@ uv --version
 ```bash
 ## Optional: Start fresh
 rm -rf .venv
-```
+```python
 #### Step 3: Install Dependencies with uv
 
 ```bash
@@ -136,12 +137,13 @@ Replace old commands with new ones:
 ```makefile
 install:
     pip install -r requirements.txt
-```
+```yaml
 **After**:
 ```makefile
 install:
     uv sync --frozen --no-dev
 ```
+
 ### Common Workflows
 
 #### Development Workflow
@@ -159,7 +161,7 @@ uv run black src/
 
 ## Run your application
 uv run python -m mcp_server_langgraph.mcp.server_streamable
-```
+```bash
 #### Adding New Dependencies
 
 **Before (pip)**:
@@ -167,6 +169,7 @@ uv run python -m mcp_server_langgraph.mcp.server_streamable
 pip install new-package
 pip freeze > requirements.txt
 ```
+
 **After (uv)**:
 ```bash
 ## Add to pyproject.toml [project.dependencies]
@@ -174,7 +177,7 @@ uv add new-package
 
 ## Or manually edit pyproject.toml, then:
 uv sync
-```
+```sql
 #### Updating Dependencies
 
 ```bash
@@ -185,6 +188,7 @@ uv sync
 uv lock --upgrade
 uv sync
 ```
+
 #### Installing Optional Dependencies
 
 ```bash
@@ -196,7 +200,7 @@ uv sync --extra embeddings
 
 ## Install all optional features
 uv sync --all-extras
-```
+```bash
 ### CI/CD Migration
 
 #### GitHub Actions
@@ -215,6 +219,7 @@ uv sync --all-extras
     pip install -r requirements.txt
     pip install -r requirements-test.txt
 ```
+
 **After**:
 ```yaml
 - name: Set up Python
@@ -235,7 +240,7 @@ uv sync --all-extras
 
 - name: Install dependencies
   run: uv sync --frozen
-```
+```bash
 #### Docker
 
 **Current approach (still works)**:
@@ -243,6 +248,7 @@ uv sync --all-extras
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 ```
+
 **Future approach (optional)**:
 ```dockerfile
 ## Install uv
@@ -253,7 +259,7 @@ COPY pyproject.toml uv.lock ./
 
 ## Install dependencies
 RUN uv sync --frozen --no-dev
-```
+```bash
 ### Troubleshooting
 
 #### Issue: "uv: command not found"
@@ -266,6 +272,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 ## Or reinstall uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
 #### Issue: Dependencies not found
 
 **Solution**:
@@ -275,7 +282,7 @@ uv lock
 
 ## Then sync
 uv sync
-```
+```bash
 #### Issue: Version conflicts
 
 **Solution**:
@@ -288,6 +295,7 @@ rm uv.lock
 uv lock
 uv sync
 ```
+
 #### Issue: "No module named X" when running code
 
 **Solution**:
@@ -298,7 +306,7 @@ uv run python script.py
 ## Or activate venv manually
 source .venv/bin/activate
 python script.py
-```
+```bash
 #### Issue: CI/CD cache issues
 
 **Solution**:
@@ -330,7 +338,7 @@ Check `.python-version` file:
 ```bash
 cat .python-version
 ## Output: 3.12
-```
+```bash
 #### Can I use uv with existing venv?
 
 **Yes**, but starting fresh is recommended:
@@ -338,6 +346,7 @@ cat .python-version
 rm -rf .venv
 uv sync
 ```
+
 #### Does uv work on Windows?
 
 **Yes**. uv supports Windows, macOS, and Linux.

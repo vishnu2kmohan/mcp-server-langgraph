@@ -22,7 +22,7 @@ Run the complete MCP Server with LangGraph stack locally with Docker Compose for
 
 ```bash
 ./scripts/setup/docker-compose-quickstart.sh
-```
+```bash
 This script will:
 1. Check prerequisites (Docker, Docker Compose)
 2. Create `.env` from template if needed
@@ -134,6 +134,7 @@ Use development mode for hot reload and debugging:
 ```bash
 docker compose -f docker-compose.yml -f docker/docker-compose.dev.yml up
 ```
+
 **Development features**:
 - 🔄 **Hot reload** - Code changes restart server automatically
 - 🐛 **Debug logging** - LOG_LEVEL=DEBUG
@@ -152,7 +153,7 @@ vim agent.py
 ## Save file - server automatically reloads!
 ## Check logs to see reload
 docker compose logs -f agent
-```
+```bash
 ### Testing
 
 #### Run Tests
@@ -173,6 +174,7 @@ pytest tests/
 ## Stop services
 docker compose down
 ```
+
 #### Test Agent Endpoint
 
 ```bash
@@ -199,7 +201,7 @@ curl -X POST http://localhost:8000/message \
       "content": "Hello!"
     }]
   }'
-```
+```bash
 ### Configuration
 
 #### Environment Variables
@@ -219,6 +221,7 @@ JWT_SECRET_KEY=your-secret-key
 OBSERVABILITY_BACKEND=both  # opentelemetry, langsmith, both
 LANGSMITH_TRACING=false  # Enable for LangSmith
 ```
+
 #### Service URLs (Docker Compose)
 
 Services communicate via Docker network:
@@ -227,7 +230,7 @@ Services communicate via Docker network:
 ## In docker-compose.yml, agent uses internal URLs:
 OPENFGA_API_URL=http://openfga:8080
 OTLP_ENDPOINT=http://otel-collector:4317
-```
+```bash
 #### Custom Configuration
 
 Override settings with environment variables:
@@ -285,7 +288,7 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 
 ## LLM token usage
 sum(llm_tokens_total) by (model)
-```
+```bash
 #### Grafana Dashboards
 
 Access at [http://localhost:3001](http://localhost:3001) (admin/admin):
@@ -321,6 +324,7 @@ python scripts/setup_openfga.py
 ## Restart agent to use new IDs
 docker compose restart agent
 ```
+
 ### Common Commands
 
 <AccordionGroup>

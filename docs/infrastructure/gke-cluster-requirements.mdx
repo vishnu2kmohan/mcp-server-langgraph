@@ -29,8 +29,7 @@ cd terraform/environments/gcp-staging
 terraform init
 terraform plan
 terraform apply
-```
-
+```sql
 **Manual Creation:**
 ```bash
 gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
@@ -55,8 +54,7 @@ cd terraform/environments/gcp-prod
 terraform init
 terraform plan
 terraform apply
-```
-
+```bash
 ## CI/CD Workflow Dependencies
 
 ### deploy-staging-gke.yaml
@@ -135,7 +133,7 @@ The GKE Autopilot module is located at:
 ### Error: Cluster not found
 
 **Symptom:**
-```
+```yaml
 Error: NOT_FOUND: projects/vishnu-sandbox-20250310/locations/us-central1/clusters/staging-mcp-server-langgraph-gke not found
 ```
 
@@ -145,7 +143,7 @@ The cluster doesn't exist. Create it using the methods above.
 ### Error: Permission denied
 
 **Symptom:**
-```
+```yaml
 Error: github-actions-staging does not have permission to access cluster
 ```
 
@@ -155,8 +153,7 @@ Verify the service account has the `container.developer` role:
 gcloud projects get-iam-policy vishnu-sandbox-20250310 \
   --flatten="bindings[].members" \
   --filter="bindings.members:github-actions-staging*"
-```
-
+```bash
 ### Error: Artifact Registry repository not found
 
 **Solution:**

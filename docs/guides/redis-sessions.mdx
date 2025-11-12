@@ -242,7 +242,7 @@ sequenceDiagram
     User->>App: Logout
     App->>Redis: Delete session
     App-->>User: Clear cookie
-```
+```bash
 ### Session Configuration
 
 #### Session TTL
@@ -257,6 +257,7 @@ SESSION_TTL_SECONDS=86400  # 24 hours
 SESSION_SLIDING_WINDOW=true
 SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
 ```
+
 **Fixed TTL**: Session expires exactly after TTL, regardless of activity.
 
 **Sliding Window**: Session extends on each request, up to max TTL.
@@ -270,7 +271,7 @@ SESSION_MAX_CONCURRENT=5
 ## Behavior when limit exceeded:
 ## - Oldest session is automatically revoked
 ## - User notified of revoked session
-```
+```python
 Use cases:
 - **1 session**: Single device login (revokes other devices)
 - **3-5 sessions**: Normal multi-device usage
@@ -292,12 +293,13 @@ session = await session_mgr.create_session(
     }
 )
 ```
+
 Access metadata:
 ```python
 session = await session_mgr.get_session(session_id)
 print(f"Device: {session.metadata['device_id']}")
 print(f"Location: {session.metadata['location']}")
-```
+```python
 ### API Operations
 
 #### Create Session
@@ -322,6 +324,7 @@ session = await session_mgr.create_session(
     ttl_seconds=7200  # 2 hours (overrides default)
 )
 ```
+
 #### Get Session
 
 ```python
@@ -337,7 +340,7 @@ else:
 sessions = await session_mgr.get_user_sessions(user_id="alice")
 for s in sessions:
     print(f"{s.session_id}: {s.created_at}")
-```
+```python
 #### Refresh Session
 
 ```python
@@ -348,6 +351,7 @@ print(f"Extended until: {session.expires_at}")
 ## Automatic refresh (if sliding window enabled)
 ## Happens automatically on get_session() calls
 ```
+
 #### Revoke Session
 
 ```python
@@ -362,7 +366,7 @@ await session_mgr.revoke_session(
     session_id,
     reason="Password changed"
 )
-```
+```python
 #### Session Analytics
 
 ```python
@@ -378,6 +382,7 @@ print(f"Alice has {user_count} active sessions")
 users = await session_mgr.list_active_users()
 print(f"Active users: {users}")
 ```
+
 ### Integration with Authentication
 
 #### Keycloak + Redis Sessions
@@ -432,7 +437,7 @@ async def logout(session_id: str):
 
     # Delete session
     await session_mgr.revoke_session(session_id)
-```
+```bash
 ### Production Deployment
 
 #### High Availability
@@ -452,6 +457,7 @@ helm install redis-session bitnami/redis \
 ## Application connects to sentinel
 REDIS_URL=redis-sentinel://redis-session:26379/mymaster
 ```
+
 Benefits:
 - **Automatic failover** - Sentinel promotes replica on master failure
 - **Zero downtime** - Sessions preserved during failover
@@ -470,7 +476,7 @@ save 60 10000    # Save after 60s if >= 10000 keys changed
 ## AOF (append-only file) for durability
 appendonly yes
 appendfsync everysec
-```
+```python
 Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cache).
 
 #### Security
@@ -481,6 +487,7 @@ Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cac
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
 ```
+
 **Encryption**:
 ```bash
 ## TLS/SSL in production
@@ -490,7 +497,7 @@ REDIS_URL=rediss://redis-session:6380/0
 ## Redis 6+ with ACL
 REDIS_USERNAME=sessions
 REDIS_PASSWORD=password
-```
+```python
 **Network isolation**:
 - Private VPC/subnet
 - Firewall rules (allow only app servers)
@@ -506,10 +513,11 @@ maxmemory-policy allkeys-lru  # Evict least recently used
 ## Or volatile-lru (evict only keys with TTL)
 maxmemory-policy volatile-lru
 ```
+
 Monitor memory usage:
 ```bash
 redis-cli INFO memory
-```
+```css
 #### Monitoring
 
 **Key metrics to track**:
@@ -531,6 +539,7 @@ rate(redis_keyspace_hits_total[5m]) /
 ## Evicted keys (should be low)
 rate(redis_evicted_keys_total[5m])
 ```
+
 **Alerts**:
 - Memory usage > 80%
 - Evicted keys > 0

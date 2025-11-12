@@ -136,8 +136,7 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: latest
-```
-
+```yaml
 #### base/deployment.yaml
 
 ```yaml
@@ -208,8 +207,7 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```
-
+```yaml
 #### base/serviceaccount.yaml
 
 ```yaml
@@ -218,6 +216,7 @@ kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
 ```
+
 ### Development Overlay
 
 #### overlays/development/kustomization.yaml
@@ -262,8 +261,7 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: dev
-```
-
+```yaml
 #### overlays/development/deployment-patch.yaml
 
 ```yaml
@@ -285,6 +283,7 @@ spec:
             memory: "512Mi"
             cpu: "250m"
 ```
+
 ### Staging Overlay
 
 #### overlays/staging/kustomization.yaml
@@ -329,8 +328,7 @@ images:
   - name: mcp-server-langgraph
     newName: gcr.io/project-id/mcp-server-langgraph
     newTag: staging
-```
-
+```yaml
 #### overlays/staging/deployment-patch.yaml
 
 ```yaml
@@ -374,7 +372,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-```
+```yaml
 ### Production Overlay
 
 #### overlays/production/kustomization.yaml
@@ -472,8 +470,7 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```
-
+```yaml
 #### overlays/production/pdb.yaml
 
 ```yaml
@@ -539,7 +536,7 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-```
+```yaml
 ### Advanced Techniques
 
 #### JSON Patches
@@ -559,6 +556,7 @@ patchesJson6902:
           name: CUSTOM_ENV
           value: "production-value"
 ```
+
 #### Strategic Merge Patch
 
 ```yaml
@@ -577,7 +575,7 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "project:region:instance"
-```
+```yaml
 #### Transformers
 
 ```yaml
@@ -593,13 +591,14 @@ transformers:
     fieldSpecs:
       - path: metadata/name
 ```
+
 #### Generators
 
 ```yaml
 ## overlays/production/kustomization.yaml
 generators:
   - secret-generator.yaml
-```
+```yaml
 **secret-generator.yaml**:
 ```yaml
 apiVersion: builtin
@@ -611,6 +610,7 @@ literals:
   - password=changeme
 type: Opaque
 ```
+
 ### Multi-Environment Workflow
 
 #### Build and Preview
@@ -624,7 +624,7 @@ kubectl kustomize overlays/staging
 
 ## Production
 kubectl kustomize overlays/production
-```
+```bash
 #### Deploy
 
 ```bash
@@ -637,12 +637,13 @@ kubectl apply -k overlays/staging
 ## Production
 kubectl apply -k overlays/production
 ```
+
 #### Delete
 
 ```bash
 ## Delete environment
 kubectl delete -k overlays/staging
-```
+```bash
 ### CI/CD Integration
 
 #### GitHub Actions
@@ -676,6 +677,7 @@ jobs:
         run: |
           kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
+
 #### GitLab CI
 
 ```yaml
@@ -687,7 +689,7 @@ deploy:production:
     - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
-```
+```python
 ### GitOps with ArgoCD
 
 #### Create Application
@@ -724,6 +726,7 @@ spec:
         factor: 2
         maxDuration: 3m
 ```
+
 #### Deploy with ArgoCD
 
 ```bash
@@ -736,7 +739,7 @@ kubectl apply -f argocd-application.yaml
 
 ## Sync application
 argocd app sync mcp-server-langgraph-production
-```
+```bash
 ### Best Practices
 
 <AccordionGroup>

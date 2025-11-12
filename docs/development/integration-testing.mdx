@@ -34,8 +34,7 @@ make test-integration
 ## - Waits for services to be healthy
 ## - Runs pytest -m integration
 ## - Cleans up containers
-```
-
+```bash
 ---
 
 ### Commands
@@ -75,8 +74,7 @@ make test-integration-cleanup
 docker compose -f docker/docker-compose.test.yml up -d
 pytest -m integration tests/test_openfga_client.py -v
 docker compose -f docker/docker-compose.test.yml down -v
-```
-
+```bash
 ---
 
 ### Architecture
@@ -155,8 +153,7 @@ async def test_openfga_check(openfga_client_real):
         object="conversation:1"
     )
     assert isinstance(allowed, bool)
-```
-
+```bash
 #### Available Fixtures
 
 From `tests/conftest.py`:
@@ -205,8 +202,7 @@ docker compose -f docker/docker-compose.test.yml exec redis-test redis-cli
 
 ## Clean up when done
 docker compose -f docker/docker-compose.test.yml down -v
-```
-
+```bash
 #### Run Single Test
 
 ```bash
@@ -244,8 +240,7 @@ Integration tests run automatically in CI:
   run: |
     chmod +x scripts/test-integration.sh
     ./scripts/test-integration.sh
-```
-
+```bash
 **Key Changes**:
 - ✅ Removed `continue-on-error: true` (tests are now reliable)
 - ✅ No manual service setup required
@@ -293,8 +288,7 @@ docker compose -f docker/docker-compose.test.yml logs postgres-test
 
 ## Verify Docker resources (need 2GB RAM minimum)
 docker system info
-```
-
+```bash
 #### Port Conflicts
 
 Integration tests use isolated network with no exposed ports. If you see port conflicts:
@@ -317,8 +311,7 @@ chmod +x scripts/wait-for-services.sh
 
 ## Check Docker permissions
 docker ps  # Should work without sudo
-```
-
+```bash
 ---
 
 ### Local Development Workflow

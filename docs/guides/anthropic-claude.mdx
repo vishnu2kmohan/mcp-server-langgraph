@@ -89,7 +89,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is machine learning?")
 print(response.content)
-```
+```python
 #### Advanced Configuration
 
 ```python
@@ -118,6 +118,7 @@ llm = ChatAnthropic(
     }
 )
 ```
+
 #### Model Selection Strategy
 
 ```python
@@ -144,7 +145,7 @@ llm = LLMFactory(
     provider="anthropic",
     model_name=select_claude_model(task_type="code", complexity="high")
 )
-```
+```python
 ### Features
 
 #### Extended Context (200K tokens)
@@ -167,6 +168,7 @@ Document:
 response = await llm.ainvoke(prompt)
 print(response.content)
 ```
+
 #### Tool Use (Function Calling)
 
 ```python
@@ -208,7 +210,7 @@ result = await agent.ainvoke({
 })
 
 print(result["messages"][-1].content)
-```
+```python
 #### Vision (Claude 3.5 Sonnet)
 
 ```python
@@ -240,6 +242,7 @@ message = HumanMessage(
 response = await llm.ainvoke([message])
 print(response.content)
 ```
+
 #### Structured Output
 
 ```python
@@ -273,7 +276,7 @@ print(response.model_dump_json(indent=2))
 ## "suggestions": ["Add type hints", "Add documentation"],
 ## "rating": 6
 ## }
-```
+```python
 #### Streaming
 
 ```python
@@ -293,6 +296,7 @@ async def stream_message(request: MessageRequest):
         media_type="text/event-stream"
     )
 ```
+
 #### System Prompts
 
 ```python
@@ -335,7 +339,7 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```
+```python
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -383,6 +387,7 @@ spec:
             cpu: 4000m
             memory: 4Gi
 ```
+
 #### Rate Limiting
 
 ```python
@@ -406,7 +411,7 @@ async def send_message(request: Request):
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```
+```python
 #### Error Handling
 
 ```python
@@ -459,6 +464,7 @@ async def call_with_fallback(query: str):
         fallback_llm = LLMFactory(provider="google", model_name="gemini-2.5-flash")
         return await fallback_llm.ainvoke(query)
 ```
+
 ### Performance Optimization
 
 #### Prompt Caching
@@ -493,7 +499,7 @@ response = client.messages.create(
 
 ## Subsequent requests reuse cached content
 ## (only charged for cache read, not full input tokens)
-```
+```python
 #### Batching
 
 ```python
@@ -516,6 +522,7 @@ results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
 ```
+
 #### Token Management
 
 ```python
@@ -543,7 +550,7 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
 ## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=190000)  # Leave room for response
 response = await llm.ainvoke(query)
-```
+```python
 ### Cost Optimization
 
 #### Model Selection
@@ -563,6 +570,7 @@ llm = LLMFactory(
     model_name=get_optimal_model(analyze_complexity(query))
 )
 ```
+
 #### Usage Tracking
 
 ```python
@@ -585,7 +593,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```
+```python
 #### Budget Limits
 
 ```python
@@ -616,6 +624,7 @@ async def send_message(
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
 ```
+
 ### Monitoring
 
 #### LangSmith Integration
@@ -632,7 +641,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```
+```python
 #### Custom Metrics
 
 ```python
@@ -698,6 +707,7 @@ async def call_claude_with_metrics(query: str):
             model="claude-sonnet-4-5"
         ).observe(duration)
 ```
+
 ### Troubleshooting
 
 <AccordionGroup>

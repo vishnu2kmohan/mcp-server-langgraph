@@ -35,7 +35,7 @@ curl -X POST https://api.example.com/api/v1/api-keys \
     "name": "Production API Key",
     "expires_days": 365
   }'
-```
+```json
 **Response**:
 ```json
 {
@@ -47,13 +47,14 @@ curl -X POST https://api.example.com/api/v1/api-keys \
   "message": "Save this API key securely. It will not be shown again."
 }
 ```
+
 ⚠️ **Save the `api_key` value immediately** - it cannot be retrieved later.
 
 #### Via CLI
 
 ```bash
 python scripts/create_api_key.py --name "My API Key" --expires 90
-```
+```bash
 ### Using API Keys
 
 #### Direct API Calls
@@ -64,6 +65,7 @@ curl -X POST https://api.example.com/message \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello, world!"}'
 ```
+
 #### Python Client
 
 ```python
@@ -79,7 +81,7 @@ async def make_request(query: str):
             json={"query": query}
         )
         return response.json()
-```
+```javascript
 #### JavaScript Client
 
 ```javascript
@@ -97,11 +99,12 @@ async function makeRequest(query) {
   return response.json();
 }
 ```
+
 ### How API Keys Work
 
 #### Exchange Flow
 
-```
+```python
 1. Client sends request with API key header
 2. Kong custom plugin intercepts request
 3. Plugin validates key with Keycloak (via MCP server)
@@ -110,6 +113,7 @@ async function makeRequest(query) {
 6. Request forwarded to MCP server with JWT
 7. MCP server validates JWT (standard flow)
 ```
+
 #### Storage Format
 
 API keys are stored in Keycloak user attributes as bcrypt hashes:
@@ -128,7 +132,7 @@ API keys are stored in Keycloak user attributes as bcrypt hashes:
     "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
   }
 }
-```
+```bash
 ### Managing API Keys
 
 #### List Keys
@@ -137,6 +141,7 @@ API keys are stored in Keycloak user attributes as bcrypt hashes:
 curl -X GET https://api.example.com/api/v1/api-keys \
   -H "Authorization: Bearer YOUR_JWT"
 ```
+
 **Response**:
 ```json
 [
@@ -154,13 +159,14 @@ curl -X GET https://api.example.com/api/v1/api-keys \
     "expires_at": "2025-04-15T00:00:00Z"
   }
 ]
-```
+```bash
 #### Rotate Key
 
 ```bash
 curl -X POST https://api.example.com/api/v1/api-keys/abc123/rotate \
   -H "Authorization: Bearer YOUR_JWT"
 ```
+
 **Response**:
 ```json
 {
@@ -168,13 +174,14 @@ curl -X POST https://api.example.com/api/v1/api-keys/abc123/rotate \
   "new_api_key": "sk_live_NEW_KEY_HERE...",
   "message": "API key rotated successfully. Update your configuration."
 }
-```
+```bash
 #### Revoke Key
 
 ```bash
 curl -X DELETE https://api.example.com/api/v1/api-keys/abc123 \
   -H "Authorization: Bearer YOUR_JWT"
 ```
+
 ### Security Best Practices
 
 #### Storage
@@ -210,11 +217,12 @@ API keys are subject to rate limits based on user tier:
 | Enterprise | 1,000 req/min, 100,000 req/hour |
 
 Rate limit headers:
-```
+```yaml
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
 X-RateLimit-Reset: 1706480400
 ```
+
 ### Monitoring
 
 #### Key Usage
@@ -277,7 +285,7 @@ curl http://kong-admin:8001/consumers
 
 ## Export key-auth credentials
 curl http://kong-admin:8001/consumers/USER/key-auth
-```
+```bash
 #### Step 2: Recreate in Keycloak
 
 ```bash
@@ -318,7 +326,7 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-```
+```python
 #### Webhook Integration
 
 ```python

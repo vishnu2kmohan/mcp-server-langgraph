@@ -34,7 +34,7 @@ llm = ChatAnthropic(
 
 ## This call is automatically traced
 response = await llm.ainvoke("Hello!")
-```
+```python
 #### Custom LangSmith Runs
 
 ```python
@@ -58,6 +58,7 @@ async def chat_with_auth(query: str, user_id: str):
 ## Call function
 result = await chat_with_auth("What is AI?", user_id="alice")
 ```
+
 #### Feedback Collection
 
 ```python

@@ -34,8 +34,7 @@ From **"Building Agents with the Claude Agent SDK"**, the recommended agent loop
 2. Take Action → Execute tasks using available tools
 3. Verify Work → Evaluate and improve outputs
 4. Repeat → Iterate until goals are achieved
-```
-
+```python
 ### Decision
 
 We will implement the **full agentic loop** in our LangGraph agent with the following components:
@@ -57,6 +56,7 @@ class ContextManager:
     - Progressive disclosure: Keep recent messages, summarize older ones
     """
 ```
+
 **Features**:
 - Automatic token counting using tiktoken
 - Compaction triggered at 8,000 tokens (configurable)
@@ -96,7 +96,7 @@ class OutputVerifier:
     - Safety: Is it appropriate?
     - Sources: Are sources cited?
     """
-```
+```python
 **Features**:
 - LLM-as-judge evaluation with structured prompts (XML format)
 - Multi-criterion scoring (0.0-1.0 for each criterion)
@@ -121,6 +121,7 @@ workflow.add_edge("verify", END)  # if passed
 workflow.add_edge("verify", "refine")  # if failed
 workflow.add_edge("refine", "respond")  # loop back
 ```
+
 **Features**:
 - Maximum 3 refinement attempts (configurable)
 - Feedback injection via SystemMessage
@@ -175,7 +176,7 @@ class AgentState(TypedDict):
     verification_feedback: str | None
     refinement_attempts: int | None
     user_request: str | None
-```
+```bash
 ### Configuration
 
 Added feature flags and configuration options:
@@ -195,6 +196,7 @@ VERIFICATION_QUALITY_THRESHOLD=0.7
 MAX_REFINEMENT_ATTEMPTS=3
 VERIFICATION_MODE=standard  # strict, standard, lenient
 ```
+
 ### Implementation Files
 
 #### New Files Created
@@ -310,7 +312,7 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true  # Test with verification enabled
-```
+```bash
 #### Phase 2: Canary Deployment
 ```bash
 ## Deploy to 10% of users
@@ -318,12 +320,13 @@ ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=lenient  # Lower threshold initially
 ```
+
 #### Phase 3: Full Rollout
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=standard
-```
+```python
 ### Success Metrics
 
 #### Key Performance Indicators
@@ -358,6 +361,7 @@ def test_llm_as_judge_scoring()
 def test_rules_based_validation()
 def test_verification_feedback_quality()
 ```
+
 #### Integration Tests
 
 ```python
@@ -366,7 +370,7 @@ def test_full_loop_with_refinement()
 def test_compaction_triggers_correctly()
 def test_verification_prevents_bad_responses()
 def test_max_refinement_attempts_respected()
-```
+```python
 #### Property-Based Tests
 
 ```python

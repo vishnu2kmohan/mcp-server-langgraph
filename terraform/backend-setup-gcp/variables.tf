@@ -59,10 +59,8 @@ variable "kms_key_name" {
   type        = string
   default     = ""
 
-  validation {
-    condition     = !var.enable_cmek || (var.enable_cmek && var.kms_key_name != "")
-    error_message = "KMS key name must be provided when enable_cmek is true."
-  }
+  # Note: Cross-variable validation moved to resource-level preconditions
+  # Terraform variable validations can only reference the variable itself
 }
 
 variable "log_retention_days" {

@@ -68,7 +68,7 @@ async def chat(query: str, user_id: str):
             exc_info=True
         )
         raise
-```
+```python
 #### Correlation IDs
 
 Track requests across services:
@@ -96,7 +96,6 @@ async def add_correlation_id(request: Request, call_next):
 
     return response
 ```
-
 
 ## Next Steps
 

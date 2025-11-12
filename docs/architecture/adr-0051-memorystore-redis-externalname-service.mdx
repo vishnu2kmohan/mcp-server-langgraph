@@ -74,8 +74,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 │ IP: 10.x.x.x                                 │
 │ Port: 6378                                   │
 └──────────────────────────────────────────────┘
-```
-
+```yaml
 ### Implementation
 
 **File:** `deployments/overlays/staging-gke/redis-session-service-patch.yaml`
@@ -207,8 +206,7 @@ subsets:
   - ip: 10.x.x.x  # Memorystore IP
   ports:
   - port: 6378
-```
-
+```yaml
 **Rejected Because:**
 - Manual Endpoint management (must update both Service and Endpoints)
 - IP hardcoded in manifest (defeats environment portability)

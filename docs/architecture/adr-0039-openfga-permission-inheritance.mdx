@@ -95,7 +95,7 @@ flowchart TB
     class Tuple1,Tuple2,Tuple3 style2
     class Conv,Tool,Org style3
 
-```
+```python
 **Permission Check Flow with Inheritance**:
 ```mermaid
 %% ColorBrewer2 Set3 palette - each component type uniquely colored
@@ -128,6 +128,7 @@ sequenceDiagram
     App->>App: Log action<br/>Actor: service:batch-etl-job<br/>Effective User: user:alice<br/>Action: view conversation:thread1
 
 ```
+
 #### Core Principles
 
 1. **Explicit Association**: `acts_as` tuples created deliberately (not automatic)
@@ -147,7 +148,7 @@ type service_principal
     define acts_as: [user]
     define viewer: owner
     define editor: owner
-```
+```python
 **Relationship Tuples**:
 ```python
 [
@@ -171,6 +172,7 @@ type service_principal
     }
 ]
 ```
+
 #### Permission Check Implementation
 
 **Enhanced Authorization** (`src/mcp_server_langgraph/auth/openfga.py`):
@@ -207,7 +209,7 @@ async def check_permission(
                 return True
 
     return False
-```
+```bash
 #### Configuration
 
 ```bash
@@ -216,6 +218,7 @@ OPENFGA_PERMISSION_INHERITANCE_ENABLED=true
 OPENFGA_LOG_INHERITED_ACCESS=true  # Log when service uses inherited permissions
 OPENFGA_CACHE_ACTS_AS_RELATIONS=true  # Cache acts_as lookups (5 min TTL)
 ```
+
 ### Consequences
 
 #### Positive Consequences
@@ -264,7 +267,7 @@ def get_model_definition() -> dict:
             }
         ]
     }
-```
+```python
 **Tuple Creation** (in ServicePrincipalManager):
 ```python
 async def associate_with_user(
@@ -277,6 +280,7 @@ async def associate_with_user(
             "object": user_id
         }])
 ```
+
 **Authorization Check Enhancement**:
 ```python
 ## In middleware or route handlers

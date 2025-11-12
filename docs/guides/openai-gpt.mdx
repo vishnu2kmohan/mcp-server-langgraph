@@ -90,7 +90,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is quantum computing?")
 print(response.content)
-```
+```python
 #### Advanced Configuration
 
 ```python
@@ -123,6 +123,7 @@ llm = ChatOpenAI(
     }
 )
 ```
+
 #### Model Selection Strategy
 
 ```python
@@ -153,7 +154,7 @@ llm = LLMFactory(
     provider="openai",
     model_name=select_openai_model(task_type="chat", complexity="medium")
 )
-```
+```python
 ### Features
 
 #### Function Calling (Tools)
@@ -198,6 +199,7 @@ result = await agent.ainvoke({
 
 print(result["messages"][-1].content)
 ```
+
 #### Vision (GPT-5, GPT-5 Pro)
 
 ```python
@@ -227,7 +229,7 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```
+```python
 #### Structured Output (JSON Mode)
 
 ```python
@@ -257,6 +259,7 @@ print(response.model_dump_json(indent=2))
 ## "key_phrases": ["absolutely love", "exceeded expectations"]
 ## }
 ```
+
 #### Streaming
 
 ```python
@@ -275,7 +278,7 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```
+```python
 #### System Prompts
 
 ```python
@@ -310,6 +313,7 @@ response = await chain.ainvoke({
 
 print(response.content)
 ```
+
 #### Response Format (JSON Mode)
 
 ```python
@@ -327,7 +331,7 @@ import json
 data = json.loads(response.content)
 print(data)
 ## Output: {"name": "John Smith", "age": 35, "occupation": "software engineer"}
-```
+```python
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -379,6 +383,7 @@ spec:
             cpu: 4000m
             memory: 4Gi
 ```
+
 #### Rate Limiting
 
 ```python
@@ -402,7 +407,7 @@ async def send_message(request: Request):
 @limiter.limit("200/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```
+```python
 #### Error Handling
 
 ```python
@@ -455,6 +460,7 @@ async def call_with_fallback(query: str):
         fallback_llm = LLMFactory(provider="anthropic", model_name="claude-sonnet-4-5")
         return await fallback_llm.ainvoke(query)
 ```
+
 ### Performance Optimization
 
 #### Batching
@@ -478,7 +484,7 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```
+```python
 #### Token Management
 
 ```python
@@ -507,6 +513,7 @@ def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-5") -> str:
 query = truncate_to_tokens(long_query, max_tokens=120000)  # Leave room for response
 response = await llm.ainvoke(query)
 ```
+
 #### Caching
 
 ```python
@@ -538,7 +545,7 @@ async def call_with_redis_cache(query: str):
     await redis.setex(cache_key, 3600, json.dumps(response.content))
 
     return response.content
-```
+```python
 ### Cost Optimization
 
 #### Model Selection
@@ -560,6 +567,7 @@ llm = LLMFactory(
     model_name=get_optimal_model(analyze_complexity(query))
 )
 ```
+
 #### Usage Tracking
 
 ```python
@@ -582,7 +590,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```
+```python
 #### Budget Limits
 
 ```python
@@ -613,6 +621,7 @@ async def send_message(
     response = await llm.ainvoke(request.query)
     return {"response": response.content}
 ```
+
 ### Monitoring
 
 #### LangSmith Integration
@@ -629,7 +638,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```
+```python
 #### Custom Metrics
 
 ```python
@@ -693,6 +702,7 @@ async def call_openai_with_metrics(query: str):
         duration = time.time() - start_time
         openai_latency.labels(model="gpt-5").observe(duration)
 ```
+
 ### Troubleshooting
 
 <AccordionGroup>

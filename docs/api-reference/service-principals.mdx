@@ -59,7 +59,7 @@ The Service Principals API provides endpoints for creating and managing service 
 
 ## Base URL
 
-```
+```yaml
 https://api.yourdomain.com/api/v1/service-principals
 ```
 
@@ -115,8 +115,7 @@ curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
     "associated_user_id": "user:alice",
     "inherit_permissions": true
   }'
-```
-
+```bash
 ```python Python
 import httpx
 
@@ -158,7 +157,7 @@ const data = await response.json();
 console.log('Service ID:', data.service_id);
 console.log('Client Secret:', data.client_secret);
 // IMPORTANT: Save the client_secret securely!
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -227,8 +226,7 @@ Returns all service principals where the current user is the owner. Does not inc
 ```bash cURL
 curl https://api.yourdomain.com/api/v1/service-principals/ \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```python
 ```python Python
 import httpx
 
@@ -251,7 +249,7 @@ const servicePrincipals = await response.json();
 servicePrincipals.forEach(sp => {
   console.log(`${sp.service_id}: ${sp.name}`);
 });
-```
+```bash
 </CodeGroup>
 
 **Response**:
@@ -312,8 +310,7 @@ Returns service principal details if the current user is the owner.
 ```bash
 curl https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```json
 **Response**:
 
 ```json
@@ -380,8 +377,7 @@ Generates a new client secret for the service principal. The old secret is inval
 ```bash cURL
 curl -X POST https://api.yourdomain.com/api/v1/service-principals/batch-etl-job/rotate-secret \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```bash
 ```python Python
 import httpx
 
@@ -407,7 +403,7 @@ const response = await fetch(
 const data = await response.json();
 console.log('New Client Secret:', data.client_secret);
 // IMPORTANT: Update your service configuration immediately!
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -462,8 +458,7 @@ Permanently deletes the service principal from Keycloak and OpenFGA. This action
 ```bash cURL
 curl -X DELETE https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```python
 ```python Python
 import httpx
 
@@ -488,7 +483,7 @@ const response = await fetch(
 if (response.status === 204) {
   console.log('Service principal deleted successfully');
 }
-```
+```bash
 </CodeGroup>
 
 **Response**:
@@ -559,8 +554,7 @@ response = httpx.post(
 
 data = response.json()
 print(f"Associated with: {data['associated_user_id']}")
-```
-
+```javascript
 ```javascript JavaScript
 const params = new URLSearchParams({
   user_id: 'user:alice',
@@ -578,6 +572,7 @@ const response = await fetch(
 const data = await response.json();
 console.log('Associated with:', data.associated_user_id);
 ```
+
 </CodeGroup>
 
 **Response**:
@@ -594,8 +589,7 @@ console.log('Associated with:', data.associated_user_id);
   "enabled": true,
   "created_at": "2025-10-29T10:00:00Z"
 }
-```
-
+```bash
 **Status Codes**:
 
 <ResponseField name="200" type="Success">
@@ -648,8 +642,7 @@ curl -X POST https://api.yourdomain.com/auth/token \
   "token_type": "Bearer",
   "expires_in": 3600
 }
-```
-
+```bash
 ### 3. Make API Requests
 
 ```bash

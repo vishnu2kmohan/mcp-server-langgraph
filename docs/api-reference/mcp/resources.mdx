@@ -20,7 +20,7 @@ Resources enable AI agents to access conversation history, documents, databases,
 
 Resources are identified by URIs following this pattern:
 
-```
+```json
 {scheme}://{path}
 ```
 
@@ -48,8 +48,7 @@ messages = content["messages"]
 
 for msg in messages:
     print(f"{msg['role']}: {msg['content']}")
-```
-
+```json
 **Response**:
 ```json
 {
@@ -76,8 +75,7 @@ resource = await client.read_resource("file:///docs/manual.pdf")
 
 print(f"MIME Type: {resource.contents[0].mimeType}")
 print(f"Size: {len(resource.contents[0].text)} bytes")
-```
-
+```json
 **Response**:
 ```json
 {
@@ -109,8 +107,7 @@ results = json.loads(resource.contents[0].text)
 for doc in results["documents"]:
     print(f"Title: {doc['title']}")
     print(f"Content: {doc['content'][:200]}...\n")
-```
-
+```json
 **Response**:
 ```json
 {
@@ -139,8 +136,7 @@ resource = await client.read_resource(
 
 user_data = json.loads(resource.contents[0].text)
 print(f"User: {user_data['name']}")
-```
-
+```json
 **Response**:
 ```json
 {
@@ -170,8 +166,7 @@ resource = await client.read_resource(
 
 events = json.loads(resource.contents[0].text)
 print(f"Found {len(events['rows'])} events")
-```
-
+```json
 **Response**:
 ```json
 {
@@ -200,8 +195,7 @@ for resource in resources:
     print(f"Name: {resource.name}")
     print(f"Description: {resource.description}")
     print(f"MIME Type: {resource.mimeType}\n")
-```
-
+```python
 **Response**:
 ```json
 {
@@ -234,8 +228,7 @@ for content in resource.contents:
     print(f"URI: {content.uri}")
     print(f"MIME Type: {content.mimeType}")
     print(f"Content: {content.text[:200]}...")
-```
-
+```python
 **With Parameters**:
 ```python
 ## Read with parameters
@@ -264,8 +257,7 @@ async def on_resource_updated(uri: str):
     process_update(updated)
 
 client.on("resource_updated", on_resource_updated)
-```
-
+```json
 **Notification Format**:
 ```json
 {
@@ -284,8 +276,7 @@ Stop receiving updates:
 ```python
 ## Unsubscribe
 await client.unsubscribe_resource("conversation://conv_123")
-```
-
+```rust
 ### Resource Templates
 
 Define reusable resource patterns:
@@ -355,8 +346,7 @@ await openfga_client.write_tuples([{
     "total_tokens": number
   }
 }
-```
-
+```json
 #### Knowledge Base Schema
 
 ```typescript
@@ -388,8 +378,7 @@ await openfga_client.write_tuples([{
   "created_at": string,
   "modified_at": string
 }
-```
-
+```python
 ### MIME Types
 
 Supported MIME types for resources:
@@ -469,8 +458,7 @@ async def cached_read_resource(uri: str):
 
 ## Use cached version
 resource = await cached_read_resource("conversation://conv_123")
-```
-
+```python
 **Redis caching**:
 ```python
 async def read_resource_with_cache(uri: str):

@@ -83,7 +83,7 @@ flowchart TB
 
     %% Styling
 
-```
+```python
 **Authentication Flows by Provider Type**:
 ```mermaid
 %% ColorBrewer2 Set3 palette - each component type uniquely colored
@@ -126,6 +126,7 @@ sequenceDiagram
     KC-->>User: JWT (sub: user:alice)
 
 ```
+
 #### Federation Strategies
 
 ##### 1. LDAP/Active Directory (User Storage Provider)
@@ -144,7 +145,7 @@ sequenceDiagram
     "vendor": "ad"
   }
 }
-```
+```rust
 **Flow**: User logs in → Keycloak binds to LDAP → LDAP validates → Keycloak issues JWT
 
 ##### 2. SAML 2.0 (Identity Broker)
@@ -162,6 +163,7 @@ sequenceDiagram
   }
 }
 ```
+
 **Flow**: User → Keycloak → Redirect to ADFS → SAML assertion → Keycloak → JWT
 
 ##### 3. OIDC (Identity Broker)
@@ -181,7 +183,7 @@ sequenceDiagram
     "hostedDomain": "example.com"
   }
 }
-```
+```json
 **Flow**: User → Keycloak → Redirect to Google → OIDC auth → Keycloak → JWT
 
 #### Attribute Mapping
@@ -195,6 +197,7 @@ sequenceDiagram
   {"ldap": "department", "keycloak": "department"}
 ]
 ```
+
 **SAML → Keycloak**:
 ```python
 [
@@ -203,7 +206,7 @@ sequenceDiagram
   {"saml": "http://schemas.xmlsoap.org/claims/Group",
    "keycloak": "groups"}
 ]
-```
+```json
 **OIDC → Keycloak**:
 ```python
 [
@@ -212,6 +215,7 @@ sequenceDiagram
   {"oidc": "family_name", "keycloak": "lastName"}
 ]
 ```
+
 #### Configuration
 
 ```bash

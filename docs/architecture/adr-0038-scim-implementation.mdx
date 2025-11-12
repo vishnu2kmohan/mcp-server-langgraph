@@ -103,7 +103,7 @@ sequenceDiagram
 
     Note over IDP: User no longer has access
 
-```
+```python
 **Bulk Provisioning (Initial Sync)**:
 ```mermaid
 sequenceDiagram
@@ -128,6 +128,7 @@ sequenceDiagram
     Note over SCIM: Idempotent - safe to retry
 
 ```
+
 #### Core Principles
 
 1. **SCIM 2.0 Compliance**: Implement RFC 7643/7644 endpoints
@@ -164,7 +165,7 @@ sequenceDiagram
   "active": true,
   "groups": [{"value": "engineering", "display": "Engineering"}]
 }
-```
+```json
 **Enterprise Extension**:
 ```json
 {
@@ -178,6 +179,7 @@ sequenceDiagram
   }
 }
 ```
+
 #### Configuration
 
 ```bash
@@ -190,7 +192,7 @@ SCIM_AUTHENTICATION=jwt  # Require JWT tokens
 SCIM_AUTO_SYNC_TO_OPENFGA=true
 SCIM_DEFAULT_ROLES=["user"]  # Default roles for new users
 SCIM_SEND_WELCOME_EMAIL=false
-```
+```python
 ### Consequences
 
 #### Positive Consequences
@@ -275,6 +277,7 @@ async def deprovision_user(user_id: str, keycloak: KeycloakClient = Depends(...)
 
     return {"status": "deprovisioned"}
 ```
+
 **SCIM Schema Validation** (`src/mcp_server_langgraph/scim/schema.py`):
 ```python
 def validate_scim_user(data: dict) -> bool:

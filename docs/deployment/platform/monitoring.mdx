@@ -111,7 +111,7 @@ View key metrics in LangSmith:
 
 #### By Status
 
-```
+```yaml
 status:error
 status:success
 ```
@@ -131,7 +131,7 @@ metadata.user_id:"alice@example.com"
 
 #### By Tags
 
-```
+```yaml
 tags:"production"
 tags:"high-priority"
 ```
@@ -243,8 +243,7 @@ config = RunnableConfig(
 )
 
 result = await graph.ainvoke(input, config=config)
-```
-
+```python
 Now filter in LangSmith:
 - `tags:"premium-user"`
 - `metadata.cost_center:"sales"`
@@ -284,6 +283,7 @@ results = client.run_on_dataset(
     project_name="eval-claude-vs-gpt4"
 )
 ```
+
 View results in LangSmith to compare:
 - Latency
 - Token usage

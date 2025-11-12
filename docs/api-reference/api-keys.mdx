@@ -58,7 +58,7 @@ The API Keys API provides endpoints for creating and managing API keys - long-li
 
 ## Base URL
 
-```
+```yaml
 https://api.yourdomain.com/api/v1/api-keys
 ```
 
@@ -99,8 +99,7 @@ curl -X POST https://api.yourdomain.com/api/v1/api-keys/ \
     "name": "Production CLI Tool",
     "expires_days": 365
   }'
-```
-
+```bash
 ```python Python
 import httpx
 
@@ -136,7 +135,7 @@ const data = await response.json();
 console.log('API Key:', data.api_key);
 console.log('Key ID:', data.key_id);
 // IMPORTANT: Save the api_key securely!
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -190,8 +189,7 @@ Returns metadata for all keys (name, created, expires, last_used). Does not incl
 ```bash cURL
 curl https://api.yourdomain.com/api/v1/api-keys/ \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```python
 ```python Python
 import httpx
 
@@ -214,7 +212,7 @@ const apiKeys = await response.json();
 apiKeys.forEach(key => {
   console.log(`${key.name} (ID: ${key.key_id}) - Expires: ${key.expires_at}`);
 });
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -268,8 +266,7 @@ Generates a new API key while keeping the same `key_id`. The old key is invalida
 ```bash cURL
 curl -X POST https://api.yourdomain.com/api/v1/api-keys/key_abc123def456/rotate \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```bash
 ```python Python
 import httpx
 
@@ -295,7 +292,7 @@ const response = await fetch(
 const data = await response.json();
 console.log('New API Key:', data.new_api_key);
 // IMPORTANT: Update your client configuration immediately!
-```
+```json
 </CodeGroup>
 
 **Response**:
@@ -352,8 +349,7 @@ Permanently deletes the API key. This action cannot be undone. Any clients using
 ```bash cURL
 curl -X DELETE https://api.yourdomain.com/api/v1/api-keys/key_abc123def456 \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
+```python
 ```python Python
 import httpx
 
@@ -378,7 +374,7 @@ const response = await fetch(
 if (response.status === 204) {
   console.log('API key revoked successfully');
 }
-```
+```bash
 </CodeGroup>
 
 **Response**:
@@ -433,8 +429,7 @@ curl -X POST https://api.yourdomain.com/api/v1/api-keys/validate \
   "user_id": "user:alice",
   "username": "alice"
 }
-```
-
+```bash
 **Status Codes**:
 
 <ResponseField name="200" type="Success">
@@ -480,8 +475,7 @@ export API_KEY="ak_live_abc123def456xyz789..."
 curl https://api.yourdomain.com/message \
   -H "X-API-Key: $API_KEY" \
   -d '{"query": "Hello!"}'
-```
-
+```bash
 ### 3. Use API Key (via Kong Gateway)
 
 When Kong gateway is configured with the API key plugin:

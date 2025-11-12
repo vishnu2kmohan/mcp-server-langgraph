@@ -46,7 +46,7 @@ The default model supports:
 - Tools (agent tools like chat, search)
 - Organizations (multi-tenant support)
 - Documents (context resources)
-```
+```bash
 ### Quick Start
 
 <Steps>
@@ -130,6 +130,7 @@ type document
     define editor: [user]
     define viewer: [user] or editor
 ```
+
 #### Relationship Examples
 
 <Tabs>
@@ -260,7 +261,7 @@ await client.write_tuples([{
     "relation": "viewer",
     "object": "document:report-q4"
 }])
-```
+```python
 ### Keycloak Integration 🆕
 
 **NEW in v2.1.0**: Automatic role synchronization from Keycloak to OpenFGA.
@@ -283,6 +284,7 @@ await sync_user_to_openfga(
     groups=user_info['groups']
 )
 ```
+
 #### Role Mapping
 
 Configure role mapping in `config/role_mappings.yaml`:
@@ -308,7 +310,7 @@ conditional_mappings:
       operator: ==
       value: true
     relation: member
-```
+```python
 See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
 ### API Operations
@@ -329,6 +331,7 @@ if allowed:
 else:
     raise PermissionError("Access denied")
 ```
+
 #### Grant Permission
 
 ```python
@@ -345,7 +348,7 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```
+```sql
 #### Revoke Permission
 
 ```python
@@ -360,6 +363,7 @@ await client.delete_tuples([{
 tuples = await client.read_tuples(object="tool:chat")
 await client.delete_tuples([t for t in tuples if t['user'] == 'user:bob'])
 ```
+
 #### List User Permissions
 
 ```python
@@ -378,7 +382,7 @@ users = await client.list_users(
     object="tool:chat"
 )
 print(f"Can execute chat: {users}")
-```
+```bash
 ### Monitoring & Debugging
 
 #### Enable Authorization Logging
@@ -390,6 +394,7 @@ LOG_LEVEL=DEBUG
 ## Kubernetes
 kubectl set env deployment/mcp-server-langgraph LOG_LEVEL=DEBUG
 ```
+
 #### View Authorization Decisions
 
 Check application logs for authorization events:

@@ -12,7 +12,7 @@ contentType: "how-to"
 
 #### Environment Strategy
 
-```
+```bash
 Development → Staging → Production
     ↓           ↓          ↓
  Kustomize   Kustomize   Helm
@@ -27,8 +27,7 @@ Development → Staging → Production
 
 ```bash
 make deploy-dev
-```
-
+```bash
 **Configuration**:
 - Namespace: `mcp-server-langgraph-dev`
 - Auth: `inmemory` (no Keycloak)
@@ -62,8 +61,7 @@ make deploy-staging
 
 ```bash
 make deploy-production
-```
-
+```bash
 **Configuration**:
 - Namespace: `mcp-server-langgraph`
 - Auth: `keycloak` (SSL verified)
@@ -90,8 +88,7 @@ make deploy-rollback-dev
 **Staging**:
 ```bash
 make deploy-rollback-staging
-```
-
+```bash
 **Production**:
 ```bash
 make deploy-rollback-production
@@ -112,8 +109,7 @@ kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph --t
 
 ## Monitor rollback
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```
-
+```bash
 **Helm Rollback**:
 ```bash
 ## List release history
@@ -125,7 +121,6 @@ helm rollback mcp-server-langgraph -n mcp-server-langgraph
 ## Rollback to specific revision
 helm rollback mcp-server-langgraph 2 -n mcp-server-langgraph
 ```
-
 
 ## Next Steps
 

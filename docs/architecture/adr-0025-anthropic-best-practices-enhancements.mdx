@@ -61,7 +61,7 @@ class DynamicContextLoader:
     - Progressive discovery patterns
     - Token-aware batch loading
     - LRU caching for performance
-```
+```python
 **Integration**:
 - New `load_context` node in agent graph (before compaction)
 - Flow: START → load_context → compact → router → ...
@@ -92,6 +92,7 @@ class ParallelToolExecutor:
     - Configurable parallelism limits
     - Result aggregation
 ```
+
 **Features**:
 - Automatic dependency detection
 - Level-based parallel execution
@@ -116,7 +117,7 @@ async def extract_key_information_llm(messages):
     - 6-category extraction
     - LLM-based analysis
     - Fallback to keyword-based
-```
+```python
 **Categories**:
 1. Decisions: Choices made, agreements
 2. Requirements: Needs, constraints
@@ -175,15 +176,17 @@ DYNAMIC_CONTEXT_TOP_K=3
 EMBEDDING_MODEL=all-MiniLM-L6-v2
 CONTEXT_CACHE_SIZE=100
 ```
+
 **Parallel Execution**:
 ```bash
 ENABLE_PARALLEL_EXECUTION=false  # Default off
 MAX_PARALLEL_TOOLS=5
-```
+```bash
 **Enhanced Note-Taking**:
 ```bash
 ENABLE_LLM_EXTRACTION=false  # Default off
 ```
+
 #### Dependencies
 
 **New Dependencies** (added to `pyproject.toml`):
@@ -326,7 +329,7 @@ Use threads instead of asyncio for parallel execution.
 - extraction.llm.success_rate
 - extraction.llm.fallback_rate
 - extraction.categories.items_per_category
-```
+```bash
 #### Alerts
 
 1. **Qdrant Health**: Alert if unavailable > 5 minutes
@@ -356,12 +359,13 @@ await loader.index_context(
     summary="Brief summary"
 )
 ```
+
 **Enabling Parallel Execution**:
 ```bash
 ## Enable in .env
 ENABLE_PARALLEL_EXECUTION=true
 MAX_PARALLEL_TOOLS=5
-```
+```bash
 **Enabling LLM Extraction**:
 ```bash
 ## Enable in .env

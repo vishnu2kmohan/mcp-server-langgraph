@@ -164,7 +164,7 @@ llm = LLMFactory(
     location="us-central1",
     temperature=0.7
 )
-```
+```python
 #### Advanced Configuration
 
 ```python
@@ -195,6 +195,7 @@ llm = ChatGoogleGenerativeAI(
     }
 )
 ```
+
 ### Features
 
 #### Multimodal Capabilities
@@ -310,7 +311,7 @@ response = await agent.ainvoke({
     "messages": [("user", "What's the weather in Paris?")]
 })
 print(response["messages"][-1].content)
-```
+```python
 #### Structured Output
 
 ```python
@@ -331,6 +332,7 @@ response = await structured_llm.ainvoke(
 print(response.model_dump())
 ## Output: {'name': 'John Smith', 'age': 35, 'occupation': 'software engineer'}
 ```
+
 ### Production Deployment
 
 #### Kubernetes with Vertex AI
@@ -370,13 +372,14 @@ spec:
       - name: gcp-credentials
         secret:
           secretName: gcp-service-account
-```
+```bash
 **Create secret**:
 ```bash
 kubectl create secret generic gcp-service-account \
   --from-file=key.json=vertex-key.json \
   --from-literal=project_id=YOUR_PROJECT_ID
 ```
+
 #### Workload Identity (GKE)
 
 ```bash
@@ -409,7 +412,7 @@ spec:
         env:
         - name: LLM_PROVIDER
           value: "vertex_ai"
-```
+```python
 ### Performance Optimization
 
 #### Caching
@@ -430,6 +433,7 @@ response1 = await llm.ainvoke("Analyze this long document...")
 ## Second call with similar prompt - cached, cheaper
 response2 = await llm.ainvoke("What are the key points in the document?")
 ```
+
 #### Batching
 
 ```python
@@ -449,7 +453,7 @@ responses = await asyncio.gather(*[
 
 for query, response in zip(queries, responses):
     print(f"Q: {query}\nA: {response.content}\n")
-```
+```python
 #### Streaming
 
 ```python
@@ -471,6 +475,7 @@ async def stream_message(request: Request):
         media_type="text/event-stream"
     )
 ```
+
 ### Cost Optimization
 
 #### Model Selection
@@ -490,7 +495,7 @@ llm = LLMFactory(
     provider="google",
     model_name=select_model(analyze_complexity(query))
 )
-```
+```python
 #### Token Usage Tracking
 
 ```python
@@ -511,6 +516,7 @@ MAX_TOKENS_PER_REQUEST = 10000
 if cb.total_tokens > MAX_TOKENS_PER_REQUEST:
     raise ValueError("Token limit exceeded")
 ```
+
 #### Quota Management
 
 ```bash
@@ -525,7 +531,7 @@ gcloud alpha monitoring policies create \
   --condition-display-name="80% quota usage" \
   --condition-threshold-value=0.8 \
   --condition-threshold-duration=300s
-```
+```python
 ### Safety & Content Filtering
 
 ```python
@@ -551,6 +557,7 @@ except Exception as e:
         return "I cannot provide a response to that query due to safety concerns."
     raise
 ```
+
 ### Monitoring
 
 #### LangSmith Integration
@@ -564,7 +571,7 @@ os.environ["LANGCHAIN_PROJECT"] = "langgraph-gemini"
 ## Calls automatically tracked
 response = await llm.ainvoke(query)
 ## View in https://smith.langchain.com
-```
+```python
 #### Custom Metrics
 
 ```python
@@ -596,6 +603,7 @@ async def call_gemini(query: str):
         gemini_requests.labels(model="gemini-2.5-flash", status="error").inc()
         raise
 ```
+
 ### Troubleshooting
 
 <AccordionGroup>
