@@ -22,7 +22,23 @@ Docker images are cached and only rebuilt when explicitly requested or when the 
 
 ### How to Identify This Issue
 
-#### Method 1: Check Image Build Time
+#### Method 1: Automated Validation (Recommended)
+
+```bash
+# Run the validation script
+make validate-docker-image
+
+# Or directly:
+./scripts/validation/validate_docker_image_freshness.sh --check-commits
+```
+
+This will automatically:
+- Check if the Docker image exists
+- Verify the image age
+- Compare against recent commits
+- Provide actionable error messages if stale
+
+#### Method 2: Check Image Build Time
 
 ```bash
 # Check when the Docker test image was last built
@@ -106,7 +122,39 @@ After rebuilding, verify the fix is working:
 
 ### Prevention
 
-#### 1. Always Rebuild After Significant Changes
+#### 1. Automated Validation (CI/CD Integration)
+
+The project now includes automated validation to detect stale Docker images:
+
+**Makefile Target:**
+```bash
+# Validate before running tests
+make validate-docker-image
+
+# Include in your workflow
+make validate-all  # Runs all validations including Docker image check
+```
+
+**Pre-commit Hook** (Optional):
+Add to `.pre-commit-config.yaml`:
+```yaml
+- repo: local
+  hooks:
+    - id: validate-docker-image
+      name: Validate Docker Test Image Freshness
+      entry: scripts/validation/validate_docker_image_freshness.sh --check-commits
+      language: system
+      pass_filenames: false
+```
+
+**CI/CD Integration:**
+```yaml
+# GitHub Actions
+- name: Validate Docker Image Freshness
+  run: make validate-docker-image
+```
+
+#### 2. Always Rebuild After Significant Changes
 
 ```bash
 # Before committing changes that affect tests
@@ -220,6 +268,10 @@ docker compose -f docker/docker-compose.test.yml build --build-arg BUILDKIT_INLI
 ## Diagnostic Commands Cheat Sheet
 
 ```bash
+# Automated validation (recommended)
+make validate-docker-image
+./scripts/validation/validate_docker_image_freshness.sh --check-commits --verbose
+
 # Check Docker image status
 docker images | grep -E "mcp-server-langgraph|test-runner"
 docker image inspect docker-test-runner:latest --format='{{.Created}}'

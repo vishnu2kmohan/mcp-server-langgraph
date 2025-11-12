@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -115,6 +115,7 @@ help:
 	@echo "  make validate-openapi         Validate OpenAPI schema"
 	@echo "  make validate-deployments     Validate all deployment configs"
 	@echo "  make validate-docker-compose  Validate Docker Compose"
+	@echo "  make validate-docker-image    Validate Docker test image freshness"
 	@echo "  make validate-helm            Validate Helm chart"
 	@echo "  make validate-kustomize       Validate Kustomize overlays"
 	@echo "  make validate-all             Run all deployment validations"
@@ -451,6 +452,11 @@ validate-docker-compose:
 	$(DOCKER_COMPOSE) -f docker-compose.yml config --quiet
 	@echo "✓ Docker Compose valid"
 
+validate-docker-image:
+	@echo "Validating Docker test image freshness..."
+	@./scripts/validation/validate_docker_image_freshness.sh --check-commits
+	@echo "✓ Docker image is up-to-date"
+
 validate-helm:
 	@echo "Validating Helm chart..."
 	helm lint deployments/helm/mcp-server-langgraph
@@ -471,7 +477,7 @@ validate-kustomize:
 	wait $$pid1 $$pid2 $$pid3
 	@echo "✓ All Kustomize overlays valid"
 
-validate-all: validate-deployments validate-docker-compose validate-helm validate-kustomize
+validate-all: validate-deployments validate-docker-compose validate-docker-image validate-helm validate-kustomize
 	@echo "✓ All deployment validations passed"
 
 # GitHub Actions workflow testing with act

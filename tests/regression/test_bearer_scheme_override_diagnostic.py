@@ -214,6 +214,10 @@ class TestBearerSchemeOverrideDiagnostic:
 
         This test checks if commit 05a54e1 is in the git history.
         If not, the codebase is too old and needs to be updated.
+
+        NOTE: Skips in CI shallow clones (fetch-depth: 1) since historical
+        commits aren't available. The actual fix validation happens via
+        test_bearer_scheme_override_code_is_present() which checks source code.
         """
         import os
         import subprocess
@@ -221,6 +225,29 @@ class TestBearerSchemeOverrideDiagnostic:
         # Skip if not in a git repository
         if not os.path.exists(".git"):
             pytest.skip("Not in a git repository - skipping git diagnostic")
+
+        # Skip in CI shallow clones (fetch-depth: 1)
+        # CI workflows use shallow clones for performance, so historical commits unavailable
+        if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
+            try:
+                # Check if this is a shallow clone
+                is_shallow = (
+                    subprocess.run(
+                        ["git", "rev-parse", "--is-shallow-repository"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    ).stdout.strip()
+                    == "true"
+                )
+
+                if is_shallow:
+                    pytest.skip(
+                        "Skipping git history check in CI shallow clone (fetch-depth: 1). "
+                        "Fix validation performed via test_bearer_scheme_override_code_is_present() instead."
+                    )
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass  # Continue with normal check
 
         try:
             # Check if commit 05a54e1 is in the history
