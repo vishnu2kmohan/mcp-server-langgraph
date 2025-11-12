@@ -93,7 +93,7 @@ resources:
 </CodeGroup>
 
 **Action**:
-```bash
+```
 ## Profile actual usage
 kubectl top pods -n mcp-production --containers
 
@@ -102,7 +102,7 @@ kubectl patch deployment production-mcp-server-langgraph \
   -n mcp-production \
   --type='json' \
   -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "250m"}]'
-```bash
+```
 #### Strategy 2: Committed Use Discounts (CUDs)
 
 Commit to 1-year or 3-year usage for significant discounts:
@@ -128,7 +128,7 @@ Commit to 1-year or 3-year usage for significant discounts:
 
 **Auto-shutdown dev clusters** after hours:
 
-```bash
+```
 ## Cloud Scheduler: Scale down at 6 PM weekdays
 gcloud scheduler jobs create http scale-down-dev \
   --schedule="0 18 * * 1-5" \
@@ -185,7 +185,7 @@ gcloud scheduler jobs create http scale-up-dev \
 #### Strategy 5: Redis Optimization
 
 **Right-size memory**:
-```bash
+```
 ## Check usage
 gcloud monitoring time-series list \
   --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
@@ -229,7 +229,7 @@ labels = {
   cost_center = "engineering"
   application = "mcp-server"
 }
-```python
+```
 **View costs by label** in BigQuery:
 ```sql
 SELECT
@@ -385,7 +385,7 @@ spot_node_group_instance_types = [
   "t3.large", "t3a.large",
   "t3.xlarge", "t3a.xlarge"
 ]
-```bash
+```
 **Use Cases**:
 - Development/staging environments
 - Batch processing workloads
@@ -465,7 +465,7 @@ aws cloudwatch get-metric-statistics \
 
 # If avg < 40%, downsize instance class
 # db.t3.large ($240/mo) → db.t3.medium ($120/mo) = $120 saved
-```bash
+```
 #### Strategy 4: VPC Endpoints (70% Data Transfer Savings)
 
 **Avoid NAT gateway data transfer charges**:
@@ -503,7 +503,7 @@ kubectl set env deployment/cluster-autoscaler \
   -n kube-system \
   --containers=cluster-autoscaler \
   AWS_REGION=us-east-1
-```yaml
+```
 **HPA** scales pods based on utilization:
 
 ```yaml
@@ -537,7 +537,7 @@ spec:
 # Lambda function to stop EKS node groups
 # Runs Mon-Fri at 6 PM, starts at 6 AM
 # Savings: ~65 hours/week off = $200-300/month
-```bash
+```
 **Single NAT Gateway for Non-Production**:
 ```hcl
 # terraform/environments/dev/terraform.tfvars
@@ -621,7 +621,7 @@ aws sns subscribe \
 aws budgets create-budget \
   --account-id ACCOUNT_ID \
   --budget file://budget.json
-```json
+```
 **budget.json**:
 ```json
 {

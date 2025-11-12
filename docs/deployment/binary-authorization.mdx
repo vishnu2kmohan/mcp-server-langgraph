@@ -134,7 +134,7 @@ flowchart TB
     class J successStyle
     class K errorStyle
     class L secretStyle
-```bash
+```
 **Flow**:
 1. CI/CD builds and tests image
 2. Push image to Artifact Registry
@@ -440,7 +440,7 @@ gcloud container binauthz attestations list \
   --artifact-url="us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph@sha256:ABC123" \
   --attestor=production-attestor \
   --attestor-project=PROJECT_ID
-```bash
+```
 ### View Denials in Logs
 
 ```bash
@@ -534,7 +534,7 @@ production-binauthz/attestor-key
 staging-binauthz/attestor-key
 
 # Development (no signing required)
-```bash
+```
 **Benefit**: Key compromise doesn't affect all environments
 
 <Check>**Rotate KMS keys regularly**</Check>
