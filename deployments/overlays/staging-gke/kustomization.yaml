@@ -128,6 +128,14 @@ patches:
       kind: Deployment
       name: mcp-server-langgraph
 
+  # JSON 6902 patch to fix REDIS_URL and CHECKPOINT_REDIS_URL env vars
+  # This replaces the entire env array to prevent strategic merge from combining
+  # configMapKeyRef and secretKeyRef (which is invalid in Kubernetes)
+  - path: deployment-redis-url-json-patch.yaml
+    target:
+      kind: Deployment
+      name: mcp-server-langgraph
+
   # ConfigMap patches
   - path: configmap-patch.yaml
     target:

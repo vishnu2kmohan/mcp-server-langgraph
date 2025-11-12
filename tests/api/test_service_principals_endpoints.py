@@ -111,8 +111,19 @@ def mock_openfga_client():
     return mock_client
 
 
+@pytest.fixture
+def mock_keycloak_client():
+    """Mock Keycloak client for service principal management"""
+    mock_client = AsyncMock()
+    # Default mocks for Keycloak operations (tests can override)
+    mock_client.create_client = AsyncMock(return_value="client-uuid-123")
+    mock_client.get_client_secret = AsyncMock(return_value="sp_secret_abc123xyz789")
+    mock_client.delete_client = AsyncMock()
+    return mock_client
+
+
 @pytest.fixture(scope="function")
-def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga_client):
+def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga_client, mock_keycloak_client):
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
@@ -156,6 +167,12 @@ def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga
 
     monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
 
+    # Patch Keycloak client getter
+    def mock_get_keycloak_sync():
+        return mock_keycloak_client
+
+    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_sync)
+
     # CRITICAL: If router already imported, reload it to capture patched dependencies
     if "mcp_server_langgraph.api.service_principals" in sys.modules:
         router_module = sys.modules["mcp_server_langgraph.api.service_principals"]
@@ -178,7 +195,7 @@ def sp_test_client(monkeypatch, mock_sp_manager, mock_current_user, mock_openfga
 
 
 @pytest.fixture(scope="function")
-def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfga_client):
+def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfga_client, mock_keycloak_client):
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
@@ -211,6 +228,12 @@ def admin_test_client(monkeypatch, mock_sp_manager, mock_admin_user, mock_openfg
         return mock_openfga_client
 
     monkeypatch.setattr(dependencies, "get_openfga_client", mock_get_openfga_sync)
+
+    # Patch Keycloak client getter
+    def mock_get_keycloak_sync():
+        return mock_keycloak_client
+
+    monkeypatch.setattr(dependencies, "get_keycloak_client", mock_get_keycloak_sync)
 
     # CRITICAL: Reload router to capture patched dependencies
     if "mcp_server_langgraph.api.service_principals" in sys.modules:

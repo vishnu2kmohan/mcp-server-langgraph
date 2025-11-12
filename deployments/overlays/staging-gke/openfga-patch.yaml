@@ -79,3 +79,10 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
+
+      # Volumes for writable directories (required with readOnlyRootFilesystem)
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
