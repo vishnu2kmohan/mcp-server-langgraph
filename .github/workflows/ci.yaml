@@ -158,8 +158,12 @@ jobs:
     # OPTIMIZATION: Use uv sync for lockfile-based installation (no resolution)
     - name: Install dependencies (fast path)
       run: |
+        # CRITICAL: Create venv with matrix Python version BEFORE sync
+        # uv sync uses existing venv or creates with default Python (3.12)
+        # We must create venv with correct Python first to match matrix version
+        uv venv --python ${{ matrix.python-version }} .venv
+
         # Install from lockfile (no resolution, 60s faster)
-        # uv sync automatically creates/uses .venv
         # Include dev and builder dependencies:
         #   dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)
         #   builder: Visual workflow builder (black, jinja2, ast-comments)
@@ -167,7 +171,9 @@ jobs:
         # --frozen: Fail if lock file is out of sync (prevents dependency drift)
         uv sync --frozen --extra dev --extra builder
 
-        echo "✓ Dependencies installed from lockfile with dev+builder extras"
+        # Verify correct Python version is active
+        .venv/bin/python --version
+        echo "✓ Dependencies installed from lockfile with dev+builder extras for Python ${{ matrix.python-version }}"
 
     - name: Validate lockfile is up-to-date
       run: |
