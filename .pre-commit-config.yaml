@@ -375,6 +375,25 @@ repos:
           context variables (e.g., github.event.workflow_run.* when workflow_run
           trigger is not enabled). Prevents CI/CD failures from context errors.
 
+      - id: validate-gke-autopilot-compliance
+        name: Validate GKE Autopilot Resource Compliance
+        entry: python3 scripts/validate_gke_autopilot_compliance.py
+        language: system
+        files: ^deployments/.*\.ya?ml$
+        pass_filenames: false
+        description: |
+          Validates that Kubernetes manifests comply with GKE Autopilot constraints:
+          - CPU limit/request ratio ≤ 4.0x
+          - Memory limit/request ratio ≤ 4.0x
+          - No environment variables with both 'value' and 'valueFrom'
+
+          Prevents deployment failures and pod creation errors on GKE Autopilot.
+
+          Regression prevention for:
+          - Run #19310965220: GKE Autopilot validation failure
+          - Run #19310965206: Deployment validation failure
+          - Run #19310965249: Deploy to GKE Staging failure
+
       - id: validate-dependency-injection
         name: Validate Dependency Injection Configuration
         entry: python3 .githooks/pre-commit-dependency-validation

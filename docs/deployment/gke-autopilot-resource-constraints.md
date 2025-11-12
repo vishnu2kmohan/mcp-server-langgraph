@@ -1,0 +1,411 @@
+# GKE Autopilot Resource Constraints
+
+## Overview
+
+Google Kubernetes Engine (GKE) Autopilot enforces strict resource constraints via LimitRange policies to optimize cost and performance. Violations cause pod creation failures.
+
+**Critical Rule**: CPU and memory limit/request ratios must not exceed **4.0x**.
+
+## CPU Ratio Constraint
+
+### The 4.0x Rule
+
+```
+CPU Limit / CPU Request ≤ 4.0
+```
+
+**Why**: GKE Autopilot prevents resource waste and ensures predictable billing. A 4.0x ratio allows reasonable burst capacity while preventing excessive over-commitment.
+
+### Examples
+
+#### ✅ Compliant Configurations
+
+```yaml
+resources:
+  requests:
+    cpu: 250m  # Base allocation
+  limits:
+    cpu: 1000m  # 1000m / 250m = 4.0x ✅
+```
+
+```yaml
+resources:
+  requests:
+    cpu: 500m
+  limits:
+    cpu: 2000m  # 2000m / 500m = 4.0x ✅
+```
+
+```yaml
+resources:
+  requests:
+    cpu: 125m
+  limits:
+    cpu: 500m  # 500m / 125m = 4.0x ✅
+```
+
+#### ❌ Non-Compliant Configurations
+
+```yaml
+resources:
+  requests:
+    cpu: 200m
+  limits:
+    cpu: 1000m  # 1000m / 200m = 5.0x ❌ VIOLATION
+```
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+  limits:
+    cpu: 1000m  # 1000m / 100m = 10.0x ❌ VIOLATION
+```
+
+## Common Services - Resource Sizing Guide
+
+### otel-collector
+**Recommended**: 250m request / 1000m limit (4.0x ratio)
+- Handles telemetry data collection
+- Needs burst capacity for traffic spikes
+
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+```
+
+### qdrant (Vector Database)
+**Recommended**: 250m request / 1000m limit (4.0x ratio)
+- Performs vector similarity search
+- CPU-intensive during query processing
+
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+```
+
+### postgres (Database)
+**Recommended**: 500m request / 2000m limit (4.0x ratio)
+- Primary data store
+- Higher baseline due to query processing
+
+```yaml
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+```
+
+### redis-session (Cache)
+**Recommended**: 125m request / 500m limit (4.0x ratio)
+- Session storage and caching
+- Lower resource requirements
+
+```yaml
+resources:
+  requests:
+    cpu: 125m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+```
+
+### mcp-server-langgraph (Application)
+**Recommended**:
+- **Dev**: 125m request / 500m limit (4.0x ratio)
+- **Production**: 500m request / 2000m limit (4.0x ratio)
+
+```yaml
+# Development
+resources:
+  requests:
+    cpu: 125m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Production
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+```
+
+## Fixing Ratio Violations
+
+### Step 1: Calculate Current Ratio
+
+```bash
+# Example: otel-collector
+Request: 200m
+Limit: 1000m
+Ratio: 1000 / 200 = 5.0x ❌
+```
+
+### Step 2: Choose Fix Strategy
+
+**Option A: Increase Request (Recommended)**
+- Preserves burst capacity
+- Ensures adequate baseline resources
+- Better for production workloads
+
+```yaml
+# Fix: Increase request from 200m to 250m
+resources:
+  requests:
+    cpu: 250m  # 1000m / 250m = 4.0x ✅
+  limits:
+    cpu: 1000m
+```
+
+**Option B: Decrease Limit**
+- Reduces burst capacity
+- Lower resource costs
+- Better for cost-sensitive environments
+
+```yaml
+# Alternative: Decrease limit from 1000m to 800m
+resources:
+  requests:
+    cpu: 200m
+  limits:
+    cpu: 800m  # 800m / 200m = 4.0x ✅
+```
+
+### Step 3: Create Overlay Patch
+
+Create `deployments/overlays/{environment}/{service}-patch.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment  # or StatefulSet
+metadata:
+  name: {service-name}
+spec:
+  template:
+    spec:
+      containers:
+      - name: {container-name}
+        resources:
+          requests:
+            cpu: 250m  # Fixed value
+          limits:
+            cpu: 1000m
+```
+
+### Step 4: Update Kustomization
+
+Add patch to `deployments/overlays/{environment}/kustomization.yaml`:
+
+```yaml
+patches:
+  - path: {service}-patch.yaml
+    target:
+      kind: Deployment  # Match resource type
+      name: {service-name}
+```
+
+### Step 5: Validate
+
+```bash
+# Run GKE Autopilot validator
+python3 scripts/validate_gke_autopilot_compliance.py
+
+# Build with kubectl kustomize
+kubectl kustomize deployments/overlays/{environment}
+
+# Verify resources in output
+kubectl kustomize deployments/overlays/{environment} | grep -A 10 "resources:"
+```
+
+## Validation Tools
+
+### Pre-deployment Validation
+
+```bash
+# Validate all overlays
+python3 scripts/validate_gke_autopilot_compliance.py
+
+# Validate specific overlay
+python3 scripts/validate_gke_autopilot_compliance.py deployments/overlays/production
+```
+
+### Pre-commit Hook
+
+The repository includes automatic validation via pre-commit hooks:
+
+```yaml
+# .pre-commit-config.yaml
+- id: gke-autopilot-validation
+  name: Validate GKE Autopilot Compliance
+  entry: python3 scripts/validate_gke_autopilot_compliance.py
+  language: python
+  files: ^deployments/.*\.yaml$
+  pass_filenames: false
+```
+
+### Unit Tests
+
+Test coverage ensures validator correctness:
+
+```bash
+# Run validator unit tests
+uv run pytest tests/unit/test_gke_autopilot_validator.py -v
+```
+
+## Environment Variable Conflicts
+
+### Issue: value + valueFrom
+
+Kubernetes strategic merge can create conflicts when overlays override base configurations:
+
+```yaml
+# Base deployment
+env:
+- name: LLM_PROVIDER
+  valueFrom:
+    configMapKeyRef:
+      name: config
+      key: llm-provider
+
+# Overlay patch (WRONG - creates conflict)
+env:
+- name: LLM_PROVIDER
+  value: "google"  # ❌ Now has BOTH value and valueFrom
+```
+
+### Solution: Explicit null
+
+Set `valueFrom: null` to remove base definition:
+
+```yaml
+# Overlay patch (CORRECT)
+env:
+- name: LLM_PROVIDER
+  value: "google"
+  valueFrom: null  # ✅ Removes valueFrom from base
+```
+
+## Common Pitfalls
+
+### 1. Wrong Resource Type in Patch
+
+❌ Using `kind: Deployment` for a StatefulSet:
+
+```yaml
+# redis-session is a StatefulSet, not Deployment
+kind: Deployment  # ❌ WRONG
+metadata:
+  name: redis-session
+```
+
+✅ Correct:
+
+```yaml
+kind: StatefulSet  # ✅ CORRECT
+metadata:
+  name: redis-session
+```
+
+### 2. Forgetting Kustomization Update
+
+After creating a patch file, you MUST update `kustomization.yaml`:
+
+```yaml
+patches:
+  - path: new-service-patch.yaml  # Don't forget this!
+    target:
+      kind: Deployment
+      name: new-service
+```
+
+### 3. Memory Ratio Violations
+
+The 4.0x ratio also applies to memory:
+
+```yaml
+resources:
+  requests:
+    memory: 256Mi
+  limits:
+    memory: 2Gi  # 2048Mi / 256Mi = 8.0x ❌ VIOLATION
+```
+
+Fix:
+
+```yaml
+resources:
+  requests:
+    memory: 512Mi  # 2048Mi / 512Mi = 4.0x ✅
+  limits:
+    memory: 2Gi
+```
+
+## Quick Reference Calculator
+
+| Request | Max Limit (4.0x) | Common Limits |
+|---------|------------------|---------------|
+| 100m    | 400m             | 400m          |
+| 125m    | 500m             | 500m          |
+| 200m    | 800m             | 800m          |
+| 250m    | 1000m            | 1000m         |
+| 500m    | 2000m            | 2000m         |
+| 1000m   | 4000m            | 4000m         |
+
+## Additional Resources
+
+- [GKE Autopilot Documentation](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- [LimitRange Policies](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#resource-limits)
+- Validation Script: `scripts/validate_gke_autopilot_compliance.py`
+- Unit Tests: `tests/unit/test_gke_autopilot_validator.py`
+
+## Troubleshooting
+
+### Pod Creation Failed
+
+```
+Error: Pod creation failed: CPU limit/request ratio exceeds 4.0
+```
+
+**Solution**: Review pod resources and adjust according to this guide.
+
+### Kustomize Build Error
+
+```
+Error: no matches for kind "Deployment" for redis-session
+```
+
+**Solution**: redis-session is a StatefulSet, not Deployment. Update patch file.
+
+### Pre-commit Hook Failures
+
+```
+❌ ERRORS:
+  - staging-redis-session/redis: CPU limit/request ratio 5.00 exceeds max 4.0
+```
+
+**Solution**: Fix the violation before committing. The hook prevents bad configs from reaching CI/CD.
+
+---
+
+**Last Updated**: 2025-11-12
+**Maintained By**: Infrastructure Team
+**Contact**: #infrastructure-support
