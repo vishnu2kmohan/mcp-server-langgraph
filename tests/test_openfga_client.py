@@ -652,3 +652,108 @@ class TestOpenFGACircuitBreakerCriticality:
 
         assert result_critical is True  # OpenFGA allowed
         assert result_non_critical is True  # OpenFGA allowed
+
+
+@pytest.mark.xdist_group(name="openfga_expansion_tree_tests")
+class TestOpenFGAExpansionTree:
+    """
+    P0: Test OpenFGA permission expansion tree extraction
+
+    Critical for GDPR delete_tuples_for_object() functionality
+    """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_extract_users_from_expansion_leaf_node(self):
+        """
+        Test _extract_users_from_expansion with leaf node (single user)
+        """
+        from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
+
+        # Given: Leaf expansion (single user) - direct structure, no tree/root wrapper
+        expansion = {"leaf": {"users": {"users": ["user:alice"]}}}
+
+        # When: Extract users
+        users = _extract_users_from_expansion(expansion)
+
+        # Then: Should extract alice
+        assert "user:alice" in users
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_extract_users_from_expansion_union_node(self):
+        """
+        Test _extract_users_from_expansion with union node (multiple branches)
+        """
+        from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
+
+        # Given: Union expansion (multiple users from different branches)
+        expansion = {
+            "union": {
+                "nodes": [
+                    {"leaf": {"users": {"users": ["user:alice"]}}},
+                    {"leaf": {"users": {"users": ["user:bob"]}}},
+                ]
+            }
+        }
+
+        # When: Extract users
+        users = _extract_users_from_expansion(expansion)
+
+        # Then: Should extract both users
+        assert "user:alice" in users
+        assert "user:bob" in users
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_extract_users_from_expansion_nested_tree(self):
+        """
+        Test _extract_users_from_expansion with deeply nested expansion tree
+        """
+        from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
+
+        # Given: Nested expansion tree (union of unions)
+        expansion = {
+            "union": {
+                "nodes": [
+                    {
+                        "union": {
+                            "nodes": [
+                                {"leaf": {"users": {"users": ["user:alice"]}}},
+                                {"leaf": {"users": {"users": ["user:bob"]}}},
+                            ]
+                        }
+                    },
+                    {"leaf": {"users": {"users": ["user:charlie"]}}},
+                ]
+            }
+        }
+
+        # When: Extract users
+        users = _extract_users_from_expansion(expansion)
+
+        # Then: Should extract all users from nested tree
+        assert "user:alice" in users
+        assert "user:bob" in users
+        assert "user:charlie" in users
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    async def test_extract_users_from_expansion_empty_expansion(self):
+        """
+        Test _extract_users_from_expansion with empty expansion
+        """
+        from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
+
+        # Given: Empty expansion
+        expansion = {}
+
+        # When: Extract users
+        users = _extract_users_from_expansion(expansion)
+
+        # Then: Should return empty list
+        assert len(users) == 0

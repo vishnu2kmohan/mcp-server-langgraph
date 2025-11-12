@@ -431,3 +431,206 @@ class TestSCIMErrorHandling:
 
         # Then: Should delete OpenFGA tuples
         mock_openfga.delete_tuples_for_object.assert_called_once_with("user:user-to-delete-123")
+
+    @pytest.mark.asyncio
+    async def test_get_user_not_found_returns_404(self):
+        """
+        Test that get_user returns 404 when user not found
+        """
+        from mcp_server_langgraph.api.scim import get_user
+
+        # Given: User
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.get_user.return_value = None  # User not found
+
+        # When: Get non-existent user
+        # Then: Should return 404
+        with pytest.raises(HTTPException) as exc_info:
+            await get_user(
+                user_id="non-existent-user-id",
+                current_user=current_user,
+                keycloak=mock_keycloak,
+            )
+
+        assert exc_info.value.status_code == 404
+        assert "not found" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_create_user_generic_exception_returns_500(self):
+        """
+        Test that generic exceptions during user creation return 500
+        """
+        from mcp_server_langgraph.api.scim import create_user
+
+        # Given: Admin user
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        user_data = {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "userName": "newuser@example.com",
+            "name": {"givenName": "New", "familyName": "User"},
+            "emails": [{"value": "newuser@example.com", "primary": True}],
+            "active": True,
+        }
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.create_user.side_effect = Exception("Keycloak connection error")
+
+        mock_openfga = AsyncMock()
+
+        # When: Keycloak raises exception
+        # Then: Should return 500
+        with pytest.raises(HTTPException) as exc_info:
+            await create_user(
+                user_data=user_data,
+                current_user=current_user,
+                keycloak=mock_keycloak,
+                openfga=mock_openfga,
+            )
+
+        assert exc_info.value.status_code == 500
+        assert "Failed to create user" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_update_user_patch_active_field(self):
+        """
+        Test that update_user (PATCH) correctly updates active field
+        """
+        from mcp_server_langgraph.api.scim import update_user
+        from mcp_server_langgraph.scim.schema import SCIMPatchOperation, SCIMPatchRequest
+
+        # Given: Admin user
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        patch_request = SCIMPatchRequest(Operations=[SCIMPatchOperation(op="replace", path="active", value=False)])
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.get_user.return_value = {
+            "id": "user-123",
+            "username": "alice@example.com",
+            "email": "alice@example.com",
+            "enabled": True,
+        }
+        mock_keycloak.update_user.return_value = None
+
+        # Mock second get_user call to return updated user
+        mock_keycloak.get_user.side_effect = [
+            {
+                "id": "user-123",
+                "username": "alice@example.com",
+                "email": "alice@example.com",
+                "enabled": True,
+            },
+            {
+                "id": "user-123",
+                "username": "alice@example.com",
+                "email": "alice@example.com",
+                "enabled": False,  # Updated
+            },
+        ]
+
+        mock_openfga = AsyncMock()
+
+        # When: PATCH user to disable
+        result = await update_user(
+            user_id="user-123",
+            patch_request=patch_request,
+            current_user=current_user,
+            keycloak=mock_keycloak,
+            openfga=mock_openfga,
+        )
+
+        # Then: Should update user and return updated SCIM user
+        assert result.active is False
+        mock_keycloak.update_user.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_create_group_with_members(self):
+        """
+        Test that create_group adds all members to the group
+        """
+        from mcp_server_langgraph.api.scim import create_group
+
+        # Given: Admin user
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        group_data = {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+            "displayName": "Engineering",
+            "members": [
+                {"value": "user-1", "display": "Alice"},
+                {"value": "user-2", "display": "Bob"},
+            ],
+        }
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.create_group.return_value = "group-123"
+        mock_keycloak.get_group.return_value = {
+            "id": "group-123",
+            "name": "Engineering",
+        }
+
+        mock_openfga = AsyncMock()
+
+        # When: Create group with members
+        result = await create_group(
+            group_data=group_data,
+            current_user=current_user,
+            keycloak=mock_keycloak,
+            openfga=mock_openfga,
+        )
+
+        # Then: Should add both members
+        assert mock_keycloak.add_user_to_group.call_count == 2
+        mock_keycloak.add_user_to_group.assert_any_call("user-1", "group-123")
+        mock_keycloak.add_user_to_group.assert_any_call("user-2", "group-123")
+        assert result.displayName == "Engineering"
+
+    @pytest.mark.asyncio
+    async def test_get_group_not_found_returns_scim_error(self):
+        """
+        Test that get_group returns SCIM error when group not found
+        """
+        from mcp_server_langgraph.api.scim import get_group
+
+        # Given: User
+        current_user = {
+            "user_id": "user:admin",
+            "username": "admin",
+            "roles": ["admin"],
+        }
+
+        mock_keycloak = AsyncMock()
+        mock_keycloak.get_group.return_value = None  # Group not found
+
+        # When: Get non-existent group
+        result = await get_group(
+            group_id="non-existent-group",
+            current_user=current_user,
+            keycloak=mock_keycloak,
+        )
+
+        # Then: Should return SCIM error
+        import json
+
+        assert result.status_code == 404
+        body = json.loads(result.body)
+        assert body["scimType"] == "notFound"
