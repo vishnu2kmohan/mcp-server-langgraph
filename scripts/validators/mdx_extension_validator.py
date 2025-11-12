@@ -56,6 +56,7 @@ class MDXExtensionValidator:
 
     # Patterns to exclude from validation
     EXCLUDE_PATTERNS = [
+        ".mintlify/",  # Mintlify internal files
         "node_modules/",  # Dependencies
         ".git/",  # Git directory
         "__pycache__/",  # Python cache

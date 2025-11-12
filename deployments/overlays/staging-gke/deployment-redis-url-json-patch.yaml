@@ -41,41 +41,41 @@
   - name: ANTHROPIC_API_KEY
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: anthropic-api-key
   - name: GOOGLE_API_KEY
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: google-api-key
 
   # Authentication & Secrets
   - name: JWT_SECRET_KEY
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: jwt-secret
 
   # Redis Configuration - FIXED: Use secretKeyRef only (not configMapKeyRef)
   - name: REDIS_HOST
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: redis-host
   - name: REDIS_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: redis-password
   - name: REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: redis-url
   - name: CHECKPOINT_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: checkpoint-redis-url
 
   # PostgreSQL Configuration
@@ -84,7 +84,7 @@
   - name: POSTGRES_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: keycloak-db-password
 
   # GDPR Configuration
@@ -96,7 +96,7 @@
   - name: GDPR_POSTGRES_URL
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: gdpr-postgres-url
   - name: GDPR_RETENTION_DAYS
     valueFrom:
@@ -110,29 +110,29 @@
   - name: OPENFGA_STORE_ID
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: openfga-store-id
   - name: OPENFGA_MODEL_ID
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: openfga-model-id
 
   # Infisical Configuration
   - name: INFISICAL_PROJECT_ID
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: infisical-project-id
   - name: INFISICAL_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: infisical-client-id
   - name: INFISICAL_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: infisical-client-secret
 
   # Keycloak Configuration
@@ -146,12 +146,12 @@
   - name: KEYCLOAK_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: keycloak-client-id
   - name: KEYCLOAK_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: keycloak-client-secret
 
   # Qdrant Configuration
@@ -162,7 +162,7 @@
   - name: QDRANT_API_KEY
     valueFrom:
       secretKeyRef:
-        name: mcp-server-langgraph-secrets
+        name: staging-mcp-server-langgraph-secrets
         key: qdrant-api-key
 
   # Session Configuration

@@ -58,7 +58,8 @@
               "security/remediation-guide",
               "security/audit-checklist",
               "security/gke-staging-checklist",
-              "security/compliance"
+              "security/compliance",
+              "security/TRY_EXCEPT_PASS_ANALYSIS"
             ]
           },
           {
@@ -117,6 +118,12 @@
               "ci-cd/overview",
               "ci-cd/local-testing",
               "ci-cd/badges"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "workflows/SECRETS"
             ]
           },
           {
@@ -194,6 +201,7 @@
               "deployment/kubernetes/gke",
               "deployment/kubernetes/gke-production",
               "deployment/kubernetes/gke-staging",
+              "deployment/gke-autopilot-resource-constraints",
               "deployment/kubernetes/eks",
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",
