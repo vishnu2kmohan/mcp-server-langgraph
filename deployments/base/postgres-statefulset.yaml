@@ -1,6 +1,3 @@
----
-# PostgreSQL for OpenFGA and Keycloak
-# Production deployment using StatefulSet
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,80 +6,21 @@ metadata:
   labels:
     app: postgres
 data:
-  init-multiple-databases.sh: |
-    #!/bin/bash
-    set -e
-    set -u
-
-    function create_database() {
-        local database=$1
-        echo "Creating database '$database'"
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-            CREATE DATABASE $database;
-            GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
-    EOSQL
-    }
-
-    if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
-        echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
-        for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
-            create_database $db
-        done
-        echo "Multiple databases created"
-    fi
-
-    # Run GDPR schema migration if database exists
-    echo "Initializing GDPR schema..."
-    if psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw gdpr; then
-        echo "Running GDPR schema migration..."
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname=gdpr -f /docker-entrypoint-initdb.d/001_gdpr_schema.sql
-        echo "GDPR schema migration complete"
-    else
-        echo "GDPR database not found, skipping schema migration"
-    fi
-
+  init-multiple-databases.sh: "#!/bin/bash\nset -e\nset -u\n\nfunction create_database()\
+    \ {\n    local database=$1\n    echo \"Creating database '$database'\"\n    psql\
+    \ -v ON_ERROR_STOP=1 --username \"$POSTGRES_USER\" <<-EOSQL\n        CREATE DATABASE\
+    \ $database;\n        GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;\n\
+    EOSQL\n}\n\nif [ -n \"$POSTGRES_MULTIPLE_DATABASES\" ]; then\n    echo \"Multiple\
+    \ database creation requested: $POSTGRES_MULTIPLE_DATABASES\"\n    for db in $(echo\
+    \ $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do\n        create_database $db\n\
+    \    done\n    echo \"Multiple databases created\"\nfi\n\n# Run GDPR schema migration\
+    \ if database exists\necho \"Initializing GDPR schema...\"\nif psql -v ON_ERROR_STOP=1\
+    \ --username \"$POSTGRES_USER\" -lqt | cut -d \\| -f 1 | grep -qw gdpr; then\n\
+    \    echo \"Running GDPR schema migration...\"\n    psql -v ON_ERROR_STOP=1 --username\
+    \ \"$POSTGRES_USER\" --dbname=gdpr -f /docker-entrypoint-initdb.d/001_gdpr_schema.sql\n\
+    \    echo \"GDPR schema migration complete\"\nelse\n    echo \"GDPR database not\
+    \ found, skipping schema migration\"\nfi\n"
 ---
-# ============================================================================
-# PostgreSQL StatefulSet - Development/Testing Configuration
-# ============================================================================
-#
-# ⚠️  PRODUCTION DEPLOYMENT RECOMMENDATIONS:
-#
-# This is a single-instance PostgreSQL suitable for development and testing.
-# For production deployments, use managed database services or HA solutions:
-#
-# 1. **RECOMMENDED: Managed Databases (Highest Availability)**
-#    - Google Cloud SQL (GKE): https://cloud.google.com/sql/docs/postgres
-#    - AWS RDS (EKS): https://aws.amazon.com/rds/postgresql/
-#    - Azure Database for PostgreSQL (AKS)
-#    - Benefits: Automated backups, point-in-time recovery, HA, read replicas
-#
-# 2. **Self-Hosted High Availability Options:**
-#    - Patroni: https://github.com/zalando/patroni
-#    - Crunchy Data PGO: https://www.crunchydata.com/products/crunchy-postgresql-for-kubernetes
-#    - Stolon: https://github.com/sorintlab/stolon
-#    - CloudNativePG: https://cloudnative-pg.io/
-#
-# 3. **Backup Strategy (Required for Production):**
-#    - WAL archiving to cloud storage (S3, GCS, Azure Blob)
-#    - Automated pg_dump/pg_basebackup to persistent storage
-#    - Point-in-time recovery (PITR) capability
-#    - Regular backup testing and restore validation
-#    - Example: Use WAL-G (https://github.com/wal-g/wal-g) for backup automation
-#
-# 4. **Storage Configuration:**
-#    - Use SSD-backed storage classes (pd-ssd on GKE, gp3 on EKS)
-#    - Enable volume snapshots for disaster recovery
-#    - Set appropriate storage size based on data growth projections
-#
-# 5. **Migration Path to Managed Database:**
-#    - Use pg_dump to export data from this instance
-#    - Create Cloud SQL/RDS instance with same PostgreSQL version
-#    - Import data using pg_restore
-#    - Update application connection strings to point to managed instance
-#    - Remove this StatefulSet from production deployments
-#
-# ============================================================================
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -93,7 +31,7 @@ metadata:
     component: database
 spec:
   serviceName: postgres
-  replicas: 1  # Single instance - NOT suitable for production without HA configuration
+  replicas: 1
   selector:
     matchLabels:
       app: postgres
@@ -106,19 +44,19 @@ spec:
       serviceAccountName: postgres-sa
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999  # PostgreSQL user
+        runAsUser: 10000
         fsGroup: 999
-
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: postgres
         image: postgres:16.8-alpine
-        imagePullPolicy: IfNotPresent
-
+        imagePullPolicy: Always
         ports:
         - name: postgres
           containerPort: 5432
           protocol: TCP
-
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -133,10 +71,9 @@ spec:
               key: postgres-password
               optional: true
         - name: POSTGRES_MULTIPLE_DATABASES
-          value: "openfga,keycloak,gdpr"
+          value: openfga,keycloak,gdpr
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
-
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
@@ -145,8 +82,6 @@ spec:
         - name: gdpr-schema
           mountPath: /docker-entrypoint-initdb.d/001_gdpr_schema.sql
           subPath: 001_gdpr_schema.sql
-
-        # Health check probes
         startupProbe:
           exec:
             command:
@@ -157,7 +92,6 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 30
-
         livenessProbe:
           exec:
             command:
@@ -168,7 +102,6 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-
         readinessProbe:
           exec:
             command:
@@ -179,69 +112,41 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-
-        # Resource limits
         resources:
           requests:
             cpu: 250m
             memory: 512Mi
+            ephemeral-storage: 500Mi
           limits:
             cpu: 2000m
             memory: 2Gi
-
-        # Security context
+            ephemeral-storage: 1Gi
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false  # PostgreSQL needs write access
+          readOnlyRootFilesystem: false
           runAsNonRoot: true
-          runAsUser: 999
+          runAsUser: 10000
           capabilities:
             drop:
             - ALL
-
+          runAsGroup: 10000
       volumes:
       - name: init-scripts
         configMap:
           name: postgres-init-scripts
-          defaultMode: 0755
+          defaultMode: 493
       - name: gdpr-schema
         configMap:
           name: postgres-gdpr-schema
-          defaultMode: 0644
-
+          defaultMode: 420
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
       labels:
         app: postgres
     spec:
-      accessModes: ["ReadWriteOnce"]
+      accessModes:
+      - ReadWriteOnce
       resources:
         requests:
           storage: 10Gi
-      # ========================================================================
-      # Storage Class Configuration - IMPORTANT for Production Performance
-      # ========================================================================
-      # Uncomment and set appropriate storage class for your environment:
-      #
-      # Google Cloud (GKE):
-      # storageClassName: pd-ssd          # SSD persistent disk (recommended)
-      # storageClassName: pd-balanced     # Balanced persistent disk
-      # storageClassName: pd-standard     # Standard persistent disk (HDD)
-      #
-      # AWS (EKS):
-      # storageClassName: gp3             # General Purpose SSD (recommended)
-      # storageClassName: gp2             # General Purpose SSD (older)
-      # storageClassName: io2             # Provisioned IOPS SSD (high performance)
-      #
-      # Azure (AKS):
-      # storageClassName: managed-csi-premium  # Premium SSD (recommended)
-      # storageClassName: managed-csi         # Standard SSD
-      #
-      # On-premises/Other:
-      # storageClassName: fast-ssd        # Configure based on your CSI driver
-      #
-      # Note: Database performance heavily depends on storage IOPS and latency.
-      # Always use SSD-backed storage for production PostgreSQL workloads.
-      # ========================================================================
-      # storageClassName: pd-ssd  # Uncomment and adjust for your environment

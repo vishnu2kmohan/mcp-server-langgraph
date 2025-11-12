@@ -1,6 +1,3 @@
----
-# Redis for Session Management
-# Separate from Kong's Redis instance
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,47 +7,39 @@ metadata:
     app: redis-session
     component: session-store
 data:
-  redis.conf: |
-    # Session storage configuration
+  redis.conf: '# Session storage configuration
+
     maxmemory 512mb
+
     maxmemory-policy allkeys-lru
 
+
     # Persistence for sessions (optional but recommended)
+
     save 900 1
+
     save 300 10
+
     save 60 10000
 
+
     # AOF for durability
+
     appendonly yes
+
     appendfsync everysec
 
+
     # Performance tuning
+
     tcp-backlog 511
+
     timeout 300
+
     tcp-keepalive 300
 
+    '
 ---
-# ==============================================================================
-# Redis StatefulSet - Session Storage with Persistence
-# ==============================================================================
-#
-# IMPORTANT: This configuration uses StatefulSet with persistent volumes to
-# ensure session data survives pod restarts and rescheduling.
-#
-# For production high availability, consider:
-# 1. Managed Redis services (Google Cloud Memorystore, AWS ElastiCache, Azure Cache)
-# 2. Redis Sentinel for automatic failover (3+ nodes)
-# 3. Redis Cluster for horizontal scaling
-#
-# This single-instance configuration is suitable for:
-# - Development and testing environments
-# - Small production deployments with acceptable brief downtime
-#
-# Persistence strategy:
-# - AOF (Append-Only File) enabled for durability
-# - PersistentVolumeClaim for data storage
-# - Survives pod restarts and upgrades
-# ==============================================================================
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -60,8 +49,8 @@ metadata:
     app: redis-session
     component: session-store
 spec:
-  serviceName: redis-session  # Required for StatefulSet
-  replicas: 1  # For HA, use Redis Sentinel or managed Redis
+  serviceName: redis-session
+  replicas: 1
   selector:
     matchLabels:
       app: redis-session
@@ -74,51 +63,46 @@ spec:
       serviceAccountName: redis-sa
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999  # Redis user
+        runAsUser: 10000
         fsGroup: 999
-
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: redis
         image: redis:7-alpine
-        imagePullPolicy: IfNotPresent
-
+        imagePullPolicy: Always
         ports:
         - name: redis
           containerPort: 6379
           protocol: TCP
-
         command:
-          - redis-server
-          - /usr/local/etc/redis/redis.conf
-
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
         args:
-          - --requirepass
-          - "$(REDIS_PASSWORD)"
-
+        - --requirepass
+        - $(REDIS_PASSWORD)
         env:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mcp-server-langgraph-secrets
               key: redis-password
-              # Security: Password is required for production deployments
               optional: false
-
         volumeMounts:
         - name: config
           mountPath: /usr/local/etc/redis
         - name: data
           mountPath: /data
-
         resources:
           requests:
             cpu: 100m
             memory: 256Mi
+            ephemeral-storage: 500Mi
           limits:
             cpu: 500m
             memory: 1Gi
-
-        # Health check probes
+            ephemeral-storage: 1Gi
         startupProbe:
           exec:
             command:
@@ -129,7 +113,6 @@ spec:
           periodSeconds: 3
           timeoutSeconds: 2
           failureThreshold: 20
-
         livenessProbe:
           exec:
             command:
@@ -140,7 +123,6 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 2
           failureThreshold: 3
-
         readinessProbe:
           exec:
             command:
@@ -151,29 +133,19 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 2
           failureThreshold: 3
-
-        # Security context
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false  # Redis needs write for data
+          readOnlyRootFilesystem: false
           runAsNonRoot: true
-          runAsUser: 999
+          runAsUser: 10000
           capabilities:
             drop:
             - ALL
-
+          runAsGroup: 10000
       volumes:
       - name: config
         configMap:
           name: redis-session-config
-      # data volume is now provided by volumeClaimTemplates below
-
-  # ==============================================================================
-  # Persistent Volume Claims for Redis Data
-  # ==============================================================================
-  # StatefulSet volumeClaimTemplates automatically create PVCs for each replica
-  # Data persists across pod restarts, upgrades, and rescheduling
-  # ==============================================================================
   volumeClaimTemplates:
   - metadata:
       name: data
@@ -181,28 +153,8 @@ spec:
         app: redis-session
         component: session-store
     spec:
-      accessModes: ["ReadWriteOnce"]
+      accessModes:
+      - ReadWriteOnce
       resources:
         requests:
           storage: 5Gi
-      # ========================================================================
-      # Storage Class Configuration for Redis
-      # ========================================================================
-      # Uncomment and set appropriate storage class for your environment:
-      #
-      # Google Cloud (GKE):
-      # storageClassName: pd-ssd          # Recommended for low latency
-      # storageClassName: pd-balanced     # Good balance of cost/performance
-      #
-      # AWS (EKS):
-      # storageClassName: gp3             # General Purpose SSD (recommended)
-      # storageClassName: gp2             # Older General Purpose SSD
-      #
-      # Azure (AKS):
-      # storageClassName: managed-csi-premium  # Premium SSD
-      # storageClassName: managed-csi         # Standard SSD
-      #
-      # Note: Redis performance depends on storage latency.
-      # Use SSD-backed storage for production workloads.
-      # ========================================================================
-      # storageClassName: pd-ssd  # Uncomment for your environment

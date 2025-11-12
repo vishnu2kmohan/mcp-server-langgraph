@@ -20,21 +20,23 @@ spec:
       serviceAccountName: qdrant-sa
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
+        runAsUser: 10000
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+        runAsGroup: 10000
       containers:
       - name: qdrant
         image: qdrant/qdrant:v1.14.0
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
-          runAsUser: 1000
+          runAsUser: 10000
           capabilities:
             drop:
             - ALL
+          runAsGroup: 10000
         ports:
         - name: http
           containerPort: 6333
@@ -44,11 +46,11 @@ spec:
           protocol: TCP
         env:
         - name: QDRANT__SERVICE__HTTP_PORT
-          value: "6333"
+          value: '6333'
         - name: QDRANT__SERVICE__GRPC_PORT
-          value: "6334"
+          value: '6334'
         - name: QDRANT__LOG_LEVEL
-          value: "INFO"
+          value: INFO
         volumeMounts:
         - name: qdrant-storage
           mountPath: /qdrant/storage
@@ -56,9 +58,11 @@ spec:
           requests:
             cpu: 100m
             memory: 256Mi
+            ephemeral-storage: 500Mi
           limits:
             cpu: 1000m
             memory: 1Gi
+            ephemeral-storage: 1Gi
         livenessProbe:
           httpGet:
             path: /
@@ -83,6 +87,7 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 10
+        imagePullPolicy: Always
       volumes:
       - name: qdrant-storage
         persistentVolumeClaim:
@@ -98,9 +103,7 @@ metadata:
     component: vector-database
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
-  # Uncomment and set storageClassName for specific storage class
-  # storageClassName: standard

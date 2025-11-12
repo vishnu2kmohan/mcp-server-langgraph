@@ -120,20 +120,24 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
     - scope="function" ensures fresh app instance per test
     - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
     - Overrides must be set BEFORE app.include_router() for proper resolution
+
+    PYTEST-XDIST FIX (2025-11-12):
+    - Use explicit module references to avoid import caching issues
+    - Import router AFTER setting overrides
+    - Use raise_server_exceptions=False in TestClient
+    - Force gc.collect() in cleanup
     """
     from fastapi import FastAPI
 
-    # Import inside fixture to avoid module-level caching issues
-    from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-    from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
+    # Import middleware and dependencies modules for stable references
+    from mcp_server_langgraph.auth import middleware
+    from mcp_server_langgraph.core import dependencies
 
     # Create fresh FastAPI app for each test
     app = FastAPI()
 
     # Override dependencies - must match async/sync of original functions
     # IMPORTANT: get_current_user is async, manager and openfga_client getter are sync
-    # Using wrong async/sync causes FastAPI to ignore override in pytest-xdist
     async def mock_get_current_user_async():
         return mock_current_user
 
@@ -143,22 +147,27 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
     def mock_get_openfga_sync():
         return mock_openfga_client
 
-    # CRITICAL FIX: Override bearer_scheme to prevent module-level singleton pollution
-    # Without this, tests fail intermittently with 401 in pytest-xdist
-    app.dependency_overrides[bearer_scheme] = lambda: None
-    app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
-    app.dependency_overrides[get_current_user] = mock_get_current_user_async
-    app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
+    # CRITICAL FIX: Use explicit module references (middleware.bearer_scheme)
+    # This ensures we override the actual singleton instance used at runtime
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: None
+    app.dependency_overrides[dependencies.get_service_principal_manager] = mock_get_sp_manager_sync
+    app.dependency_overrides[middleware.get_current_user] = mock_get_current_user_async
+    app.dependency_overrides[dependencies.get_openfga_client] = mock_get_openfga_sync
 
-    # Include router AFTER setting overrides
+    # Import and include router AFTER setting overrides
+    from mcp_server_langgraph.api.service_principals import router
+
     app.include_router(router)
 
-    client = TestClient(app)
+    # Create TestClient with raise_server_exceptions=False
+    # Prevents auth exceptions from breaking pytest-xdist workers
+    client = TestClient(app, raise_server_exceptions=False)
 
     yield client
 
     # CRITICAL: Cleanup to prevent state pollution in xdist workers
     app.dependency_overrides.clear()
+    gc.collect()  # Force cleanup of mock objects
 
 
 @pytest.fixture(scope="function")
@@ -170,13 +179,18 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
     - scope="function" ensures fresh app instance per test
     - bearer_scheme MUST be overridden to prevent pytest-xdist state pollution
     - Overrides must be set BEFORE app.include_router() for proper resolution
+
+    PYTEST-XDIST FIX (2025-11-12):
+    - Use explicit module references to avoid import caching issues
+    - Import router AFTER setting overrides
+    - Use raise_server_exceptions=False in TestClient
+    - Force gc.collect() in cleanup
     """
     from fastapi import FastAPI
 
-    # Import inside fixture to avoid module-level caching issues
-    from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-    from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
+    # Import middleware and dependencies modules for stable references
+    from mcp_server_langgraph.auth import middleware
+    from mcp_server_langgraph.core import dependencies
 
     # Create fresh FastAPI app for each test
     app = FastAPI()
@@ -192,22 +206,27 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client):
     def mock_get_openfga_sync():
         return mock_openfga_client
 
-    # CRITICAL FIX: Override bearer_scheme to prevent module-level singleton pollution
-    # Without this, tests fail intermittently with 401 in pytest-xdist
-    app.dependency_overrides[bearer_scheme] = lambda: None
-    app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
-    app.dependency_overrides[get_current_user] = mock_get_admin_user_async
-    app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync
+    # CRITICAL FIX: Use explicit module references (middleware.bearer_scheme)
+    # This ensures we override the actual singleton instance used at runtime
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: None
+    app.dependency_overrides[dependencies.get_service_principal_manager] = mock_get_sp_manager_sync
+    app.dependency_overrides[middleware.get_current_user] = mock_get_admin_user_async
+    app.dependency_overrides[dependencies.get_openfga_client] = mock_get_openfga_sync
 
-    # Include router AFTER setting overrides
+    # Import and include router AFTER setting overrides
+    from mcp_server_langgraph.api.service_principals import router
+
     app.include_router(router)
 
-    client = TestClient(app)
+    # Create TestClient with raise_server_exceptions=False
+    # Prevents auth exceptions from breaking pytest-xdist workers
+    client = TestClient(app, raise_server_exceptions=False)
 
     yield client
 
     # CRITICAL: Cleanup to prevent state pollution in xdist workers
     app.dependency_overrides.clear()
+    gc.collect()  # Force cleanup of mock objects
 
 
 # ==============================================================================
