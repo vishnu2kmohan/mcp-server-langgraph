@@ -18,6 +18,9 @@ data:
   # Session Management (use Redis for staging)
   session_backend: "redis"
   session_ttl_seconds: "43200"  # 12 hours
+  session_cookie_secure: "false"  # HTTPS not enabled in staging
+  session_cookie_samesite: "lax"
+  session_max_age_seconds: "43200"  # 12 hours
 
   # Cloud SQL connection
   # Uses Cloud DNS for robust failover support
@@ -57,6 +60,8 @@ data:
   # Rate limiting (slightly more lenient than production)
   rate_limit_enabled: "true"
   rate_limit_requests_per_minute: "120"
+  rate_limit_per_minute: "120"
+  rate_limit_burst: "20"
 
   # Resource limits
   max_concurrent_requests: "50"
@@ -66,3 +71,21 @@ data:
   # Override base config to use Cloud SQL connection instead of deleted in-cluster postgres
   # Uses Cloud DNS for failover support - see DNS_SETUP.md
   gdpr_postgres_url: "postgresql://postgres@cloudsql-staging.staging.internal:5432/gdpr?sslmode=disable"
+  gdpr_storage_backend: "postgres"
+  gdpr_retention_days: "90"  # 90 days retention for staging environment
+
+  # Circuit Breaker Configuration
+  circuit_breaker_failure_threshold: "5"
+  circuit_breaker_recovery_timeout: "30"
+  circuit_breaker_expected_exception_rate: "0.5"
+  circuit_breaker_half_open_max_calls: "3"
+
+  # Retry Configuration
+  retry_max_attempts: "3"
+  retry_base_delay_seconds: "1"
+  retry_max_delay_seconds: "10"
+
+  # Timeout Configuration
+  default_timeout_seconds: "30"
+  llm_timeout_seconds: "60"
+  database_timeout_seconds: "10"
