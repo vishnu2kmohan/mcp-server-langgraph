@@ -47,6 +47,12 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /opt/keycloak/data/tmp  # Keycloak temp directory
+        - name: work-dir
+          mountPath: /opt/keycloak/data  # Keycloak work directory
+        - name: providers
+          mountPath: /opt/keycloak/providers  # Keycloak providers directory
+        - name: themes
+          mountPath: /opt/keycloak/themes  # Keycloak themes directory
 
         env:
         # Update database connection to use Cloud SQL via localhost
@@ -147,4 +153,10 @@ spec:
       - name: tmp
         emptyDir: {}
       - name: cache
+        emptyDir: {}
+      - name: work-dir
+        emptyDir: {}
+      - name: providers
+        emptyDir: {}
+      - name: themes
         emptyDir: {}

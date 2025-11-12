@@ -113,7 +113,8 @@ repos:
       - id: check-test-sleep-duration
         name: Check Test Sleep Durations
         entry: python3 scripts/check_test_sleep_duration.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*\.py$
         exclude: ^tests/meta/test_sleep_duration_linter\.py$
         pass_filenames: true
@@ -129,7 +130,8 @@ repos:
       - id: validate-pytest-config
         name: Validate Pytest Configuration Compatibility
         entry: python3 scripts/validate_pytest_config.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^pyproject\.toml$
         pass_filenames: false
         always_run: false
@@ -157,7 +159,8 @@ repos:
       - id: fix-mdx-syntax
         name: Fix MDX Syntax Errors (Code Block Closings)
         entry: python3 scripts/fix_mdx_syntax.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: \.mdx$
         args: ['--file']
         pass_filenames: true
@@ -176,7 +179,8 @@ repos:
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
         entry: python3 scripts/validate_mintlify_docs.py docs
-        language: system
+        language: python
+        additional_dependencies: ['pyyaml>=6.0.0', 'rich>=13.0.0']
         files: \.mdx$
         pass_filenames: false
         always_run: false  # Only run when .mdx files change
@@ -184,7 +188,8 @@ repos:
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
         entry: python3 scripts/standardize_frontmatter.py docs --dry-run
-        language: system
+        language: python
+        additional_dependencies: ['pyyaml>=6.0.0']
         files: \.mdx$
         pass_filenames: false
         always_run: false
@@ -192,7 +197,8 @@ repos:
       - id: check-doc-links
         name: Check Documentation Internal Links
         entry: python3 scripts/ci/check-links.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: \.(md|mdx)$
         pass_filenames: false
         always_run: false
@@ -254,7 +260,8 @@ repos:
       - id: validate-adr-index
         name: Validate ADR Index is Up-to-Date
         entry: python scripts/generate_adr_index.py --check
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^adr/.*\.md$
         pass_filenames: false
         always_run: false
@@ -303,7 +310,8 @@ repos:
       - id: check-mermaid-styling
         name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
         entry: python3 scripts/check_mermaid_styling.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^docs/.*\.mdx$
         pass_filenames: true
         always_run: false
@@ -335,7 +343,8 @@ repos:
       - id: validate-dependency-injection
         name: Validate Dependency Injection Configuration
         entry: python3 .githooks/pre-commit-dependency-validation
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/unit/test_(dependencies_wiring|cache_redis_config)\.py)$
         always_run: false  # Only run when relevant files change
@@ -351,7 +360,8 @@ repos:
       - id: validate-test-fixtures
         name: Validate Test Fixtures for Common Issues
         entry: python3 scripts/validate_test_fixtures.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*test_.*\.py$
         pass_filenames: true
         always_run: false  # Only run when test files change
@@ -377,7 +387,8 @@ repos:
       - id: validate-pytest-markers
         name: Validate Pytest Markers
         entry: python3 scripts/validate_pytest_markers.py
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^(tests/.*\.py|pyproject\.toml)$
         description: |
@@ -428,7 +439,8 @@ repos:
       - id: detect-dead-test-code
         name: Detect Dead Code in Test Fixtures (Codex P0)
         entry: python3 scripts/detect_dead_test_code.py tests/
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*test_.*\.py$
         pass_filenames: false
         always_run: false  # Only run when test files change
@@ -456,7 +468,8 @@ repos:
       - id: validate-api-schemas
         name: Validate API Response Schemas
         entry: python3 scripts/validate_api_schemas.py
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
         always_run: false  # Only run when API/auth files change
@@ -479,7 +492,8 @@ repos:
       - id: validate-test-time-bombs
         name: Detect Test Time Bombs (Future Dates/Models)
         entry: python3 scripts/validate_test_time_bombs.py
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^tests/.*test_.*\.py$
         always_run: false  # Only run when test files change
@@ -504,7 +518,8 @@ repos:
       - id: check-e2e-completion
         name: Check E2E Test Implementation Progress
         entry: python3 scripts/check_e2e_completion.py --min-percent 25
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^tests/e2e/test_full_user_journey\.py$
         always_run: false
@@ -522,7 +537,8 @@ repos:
       - id: check-test-sleep-budget
         name: Monitor Test Wall-Clock Sleep Time Budget
         entry: python3 scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
-        language: system
+        language: python
+        additional_dependencies: []
         pass_filenames: false
         files: ^tests/.*test_.*\.py$
         always_run: false
@@ -753,7 +769,8 @@ repos:
       - id: check-test-memory-safety
         name: Check Test Memory Safety (pytest-xdist OOM prevention)
         entry: python scripts/check_test_memory_safety.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*test_.*\.py$
         pass_filenames: true
         always_run: false  # Only run when test files change
@@ -782,7 +799,8 @@ repos:
       - id: check-async-mock-usage
         name: Check Async Mock Usage (prevent hanging tests)
         entry: python scripts/check_async_mock_usage.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*test_.*\.py$
         pass_filenames: true
         always_run: false  # Only run when test files change
@@ -808,7 +826,8 @@ repos:
       - id: validate-code-block-languages
         name: Validate Code Block Language Tags
         entry: python scripts/validate_code_block_languages.py
-        language: system
+        language: python
+        additional_dependencies: []
         files: \.(md|mdx)$
         pass_filenames: true
         always_run: false  # Only run when markdown files change
@@ -835,7 +854,8 @@ repos:
       - id: validate-test-isolation
         name: Validate Test Isolation for Pytest-xdist
         entry: python scripts/validation/validate_test_isolation.py tests/
-        language: system
+        language: python
+        additional_dependencies: []
         files: ^tests/.*test_.*\.py$
         pass_filenames: false
         always_run: false  # Only run when test files change
