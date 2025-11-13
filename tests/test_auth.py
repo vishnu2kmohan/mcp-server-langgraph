@@ -54,7 +54,24 @@ class TestAuthMiddleware:
     """Test AuthMiddleware class"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     def test_init(self, auth_middleware_with_users):
@@ -373,7 +390,24 @@ class TestRequireAuthDecorator:
     """Test require_auth decorator"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     @pytest.mark.asyncio
@@ -453,7 +487,24 @@ class TestStandaloneVerifyToken:
     """Test standalone verify_token function"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     @pytest.mark.asyncio
@@ -498,7 +549,24 @@ class TestGetCurrentUser:
     """Test get_current_user FastAPI dependency for bearer token authentication"""
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     @pytest.mark.asyncio
@@ -765,7 +833,24 @@ class TestAuthFallbackWithExternalProviders:
     """
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     @pytest.mark.asyncio
@@ -1019,7 +1104,24 @@ class TestAuthMiddlewareProductionControls:
     """
 
     def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
+        """
+        Force GC to prevent mock accumulation in xdist workers.
+
+        CRITICAL: Reset global state to prevent test pollution.
+        Without this, tests running in parallel (-n auto) will interfere with each other
+        because they share global variables and environment variables across the worker process.
+        """
+        # Reset global auth middleware to prevent cross-test pollution
+        import mcp_server_langgraph.auth.middleware as middleware_module
+        middleware_module._global_auth_middleware = None
+
+        # Reset MCP_SKIP_AUTH env var (set by tests/api/conftest.py)
+        # Without this, auth tests will use the test mode bypass instead of real auth
+        import os
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
+        # Force garbage collection
         gc.collect()
 
     @pytest.mark.asyncio
