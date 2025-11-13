@@ -247,6 +247,38 @@ pre-commit run --all-files --hook-stage push  # Phase 4
 - Categorization: `docs-internal/HOOK_CATEGORIZATION.md`
 - Migration guide: `docs-internal/PRE_COMMIT_PRE_PUSH_REORGANIZATION.md`
 
+#### CI/Local Parity
+
+**Pre-push hooks are designed to exactly match CI validation** to eliminate surprises after pushing.
+
+**Identical Configurations:**
+- ✅ **pytest worker count**: Both use `-n auto` (adapts to available cores)
+- ✅ **MyPy type checking**: Both are **blocking** (push/build fails on type errors)
+- ✅ **Hypothesis profile**: Both use `HYPOTHESIS_PROFILE=ci` (100 examples)
+- ✅ **OpenTelemetry**: Both use `OTEL_SDK_DISABLED=true` to disable SDK
+
+**Intentional Differences:**
+
+| Aspect | Local Pre-push | CI | Rationale |
+|--------|---------------|-----|-----------|
+| **Test markers** | `unit and not contract` | `unit and not llm` | Contract tests may need services; LLM tests need API keys |
+| **Integration tests** | Last-failed only (`--lf`), non-blocking | Full suite | Speed optimization - full suite in CI |
+| **Smoke tests** | Always run | Dedicated workflow | Critical path validation before push |
+
+**Validation Tests:**
+- `tests/meta/test_hook_sync_validation.py` - Validates hook configuration
+- `tests/meta/test_local_ci_parity.py` - Validates CI/local parity
+- `tests/meta/test_pytest_xdist_enforcement.py` - Validates xdist isolation
+
+**Why This Matters:**
+- **Zero CI surprises**: What passes locally will pass in CI
+- **Fast feedback**: Catch issues in seconds, not minutes waiting for CI
+- **Consistent environment**: Same Python runtime (uv), same worker count, same strictness
+- **Memory safety**: `-n auto` ensures consistent pytest-xdist behavior locally and in CI
+
+**Enforcement:**
+If hook configuration drifts from CI, meta-tests will fail with clear instructions to fix.
+
 ### 5. Test Workflow Changes (If Applicable)
 
 If you modified `.github/workflows/*.yaml`:

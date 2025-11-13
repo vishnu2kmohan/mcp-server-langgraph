@@ -1,4 +1,25 @@
 #!/bin/bash
+# ⚠️ OBSOLETE: This template is no longer used - kept for historical reference only
+#
+# The actual pre-push hook at .git/hooks/pre-push is now installed via pre-commit
+# and includes comprehensive 4-phase validation (lockfile, type checking, tests, hooks)
+# that exactly matches CI/CD configuration.
+#
+# DO NOT USE THIS FILE. It is a legacy lint-only version.
+#
+# To install the current pre-push hook, run: make git-hooks
+# Or manually: pre-commit install --hook-type pre-push
+#
+# See: .git/hooks/pre-push for the current comprehensive validation hook
+# See: tests/meta/test_hook_sync_validation.py for hook configuration tests
+# See: tests/meta/test_local_ci_parity.py for CI parity tests
+#
+# This file is retained for historical reference and should not be executed.
+#
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# LEGACY LINT-ONLY VERSION (OBSOLETE)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
 # Pre-push hook to ensure code quality before pushing upstream
 # This prevents CI/CD failures by running comprehensive lint checks locally
 
