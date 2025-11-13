@@ -549,6 +549,8 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 
     def _send_smtp(self, msg: MIMEMultipart) -> None:
         """Send SMTP message (blocking, meant to be called via to_thread)."""
+        # Type guard: smtp_host guaranteed non-None by _send_email_alert guard
+        assert self._smtp_host is not None, "smtp_host must be configured to send emails"
         with smtplib.SMTP(self._smtp_host, self._smtp_port) as server:
             server.starttls()
             if self._smtp_username and self._smtp_password:
