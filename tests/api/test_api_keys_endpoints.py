@@ -149,6 +149,26 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
 class TestCreateAPIKey:
     """Tests for POST /api/v1/api-keys/"""
 
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -254,6 +274,26 @@ class TestCreateAPIKey:
 class TestListAPIKeys:
     """Tests for GET /api/v1/api-keys/"""
 
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -311,6 +351,26 @@ class TestListAPIKeys:
 class TestRotateAPIKey:
     """Tests for POST /api/v1/api-keys/{key_id}/rotate"""
 
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -364,6 +424,26 @@ class TestRotateAPIKey:
 class TestRevokeAPIKey:
     """Tests for DELETE /api/v1/api-keys/{key_id}"""
 
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -402,6 +482,26 @@ class TestRevokeAPIKey:
 @pytest.mark.xdist_group(name="api_keys_validate_tests")
 class TestValidateAPIKey:
     """Tests for POST /api/v1/api-keys/validate (Kong plugin)"""
+
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -497,6 +597,26 @@ class TestValidateAPIKey:
 @pytest.mark.xdist_group(name="api_keys_auth_tests")
 class TestAPIKeyEndpointAuthorization:
     """Tests for endpoint authorization (JWT required)"""
+
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset global state BEFORE test starts to prevent pollution from previous tests.
+        This is essential because tests/api/conftest.py sets MCP_SKIP_AUTH=true globally,
+        which causes get_current_user() to return hardcoded username="test" instead of validating tokens.
+        """
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        # Reset global auth middleware to prevent cross-test pollution
+        middleware_module._global_auth_middleware = None
+
+        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # Without this, tests get username="test" instead of the user they create
+        if "MCP_SKIP_AUTH" in os.environ:
+            del os.environ["MCP_SKIP_AUTH"]
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
