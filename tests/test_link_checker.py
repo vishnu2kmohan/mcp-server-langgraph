@@ -5,10 +5,11 @@ Test suite for documentation link checker.
 Following TDD principles - tests define expected behavior.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import sys
+import tempfile
+from pathlib import Path
+
+import pytest
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
@@ -29,8 +30,8 @@ class TestInternalLinkParsing:
         links = extract_internal_links(content)
 
         assert len(links) >= 2
-        assert any('../getting-started/installation.mdx' in link for link in links)
-        assert any('./api-reference.mdx' in link for link in links)
+        assert any("../getting-started/installation.mdx" in link for link in links)
+        assert any("./api-reference.mdx" in link for link in links)
 
     def test_ignores_external_links(self):
         """Test that external links are ignored."""
@@ -57,7 +58,7 @@ class TestInternalLinkParsing:
         links = extract_internal_links(content)
 
         # Should find the link with file, may or may not include pure anchors
-        assert any('guide.mdx' in link for link in links)
+        assert any("guide.mdx" in link for link in links)
 
     def test_handles_mdx_link_components(self):
         """Test parsing of MDX Link components."""
@@ -69,7 +70,7 @@ class TestInternalLinkParsing:
 
         links = extract_internal_links(content)
 
-        assert any('installation' in link for link in links)
+        assert any("installation" in link for link in links)
 
 
 class TestLinkResolution:
@@ -134,12 +135,14 @@ class TestLinkValidation:
         from check_internal_links import validate_file_links
 
         # Create temp file with mixed links
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.mdx', delete=False) as f:
-            f.write("""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".mdx", delete=False) as f:
+            f.write(
+                """
             Valid: [Guide](./guide.mdx)
             External: [GitHub](https://github.com)
             Broken: [Missing](./nonexistent.mdx)
-            """)
+            """
+            )
             temp_file = Path(f.name)
 
         try:
@@ -151,7 +154,7 @@ class TestLinkValidation:
 
             # Should find the broken link
             assert len(broken_links) >= 1
-            assert any('nonexistent.mdx' in link for link in broken_links)
+            assert any("nonexistent.mdx" in link for link in broken_links)
 
         finally:
             temp_file.unlink(missing_ok=True)
@@ -165,13 +168,13 @@ class TestRealWorldExamples:
         """Test that ADR cross-references are valid."""
         # ADRs frequently reference each other
         # This test would check actual ADR files if they exist
-        adr_dir = Path('adr')
+        adr_dir = Path("adr")
         if not adr_dir.exists():
             pytest.skip("ADR directory not found")
 
         from check_internal_links import validate_file_links
 
-        adr_files = list(adr_dir.glob('*.md'))
+        adr_files = list(adr_dir.glob("*.md"))
         if not adr_files:
             pytest.skip("No ADR files found")
 
@@ -185,7 +188,7 @@ class TestRealWorldExamples:
         """Test that docs.json references existing files."""
         import json
 
-        docs_json = Path('docs/docs.json')
+        docs_json = Path("docs/docs.json")
         if not docs_json.exists():
             pytest.skip("docs.json not found")
 
@@ -197,20 +200,20 @@ class TestRealWorldExamples:
 
         def extract_pages(obj):
             if isinstance(obj, dict):
-                if 'pages' in obj:
-                    pages.extend(obj['pages'])
+                if "pages" in obj:
+                    pages.extend(obj["pages"])
                 for v in obj.values():
                     extract_pages(v)
             elif isinstance(obj, list):
                 for item in obj:
                     extract_pages(item)
 
-        extract_pages(data.get('navigation', {}))
+        extract_pages(data.get("navigation", {}))
 
         # Verify files exist
         missing = []
         for page in pages:
-            file_path = Path('docs') / f"{page}.mdx"
+            file_path = Path("docs") / f"{page}.mdx"
             if not file_path.exists():
                 missing.append(page)
 

@@ -68,12 +68,27 @@ def create_test_endpoint_with_auth():
 
 @pytest.mark.regression
 @pytest.mark.xdist_isolation
+@pytest.mark.xdist_group(name="service_principal_isolation_tests")
 class TestServicePrincipalTestIsolation:
     """
     Regression tests for pytest-xdist state isolation in service principal tests.
 
     Validates that the fix from 2025-11-12 prevents 401 errors in parallel execution.
     """
+
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
 
     def test_bearer_scheme_override_prevents_401(self):
         """
@@ -98,9 +113,10 @@ class TestServicePrincipalTestIsolation:
         # WITHOUT override - should get 401 or 403
         client_without_override = TestClient(app)
         response_unauth = client_without_override.get("/protected")
-        assert response_unauth.status_code in [401, 403], (
-            "Should fail without auth override (401 Unauthorized or 403 Forbidden)"
-        )
+        assert response_unauth.status_code in [
+            401,
+            403,
+        ], "Should fail without auth override (401 Unauthorized or 403 Forbidden)"
 
         # WITH override - should succeed
         app.dependency_overrides[bearer] = lambda: None
@@ -110,8 +126,7 @@ class TestServicePrincipalTestIsolation:
         response_auth = client_with_override.get("/protected")
 
         assert response_auth.status_code == 200, (
-            f"Bearer override should allow request through. "
-            f"Got {response_auth.status_code}: {response_auth.text}"
+            f"Bearer override should allow request through. " f"Got {response_auth.status_code}: {response_auth.text}"
         )
         assert response_auth.json()["user"]["user_id"] == "mocked-user"
 
@@ -149,9 +164,7 @@ class TestServicePrincipalTestIsolation:
         app2, bearer2, get_user2 = create_test_endpoint_with_auth()
 
         # Should start with empty overrides (fresh app)
-        assert len(app2.dependency_overrides) == 0, (
-            "Fresh app should have no dependency overrides from previous test"
-        )
+        assert len(app2.dependency_overrides) == 0, "Fresh app should have no dependency overrides from previous test"
 
         app2.dependency_overrides[bearer2] = lambda: None
         app2.dependency_overrides[get_user2] = lambda: {"user_id": "test2"}
@@ -231,11 +244,7 @@ class TestServicePrincipalFixtureConfiguration:
 
         Validates the fixture that implements the fix is present.
         """
-        test_file = (
-            Path(__file__).parent.parent
-            / "api"
-            / "test_service_principals_endpoints.py"
-        )
+        test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
 
         if not test_file.exists():
             pytest.skip("Service principal test file not found")
@@ -245,11 +254,11 @@ class TestServicePrincipalFixtureConfiguration:
         assert "def sp_test_client(" in content, "sp_test_client fixture not found"
         assert 'scope="function"' in content, "Fixture should have function scope"
         # Check for dependency override pattern (more flexible - can use bearer_scheme or get_current_user)
-        assert ("app.dependency_overrides[get_current_user]" in content or
-                "app.dependency_overrides[bearer_scheme]" in content or
-                "override" in content.lower()), (
-            "Fixture should override authentication dependencies"
-        )
+        assert (
+            "app.dependency_overrides[get_current_user]" in content
+            or "app.dependency_overrides[bearer_scheme]" in content
+            or "override" in content.lower()
+        ), "Fixture should override authentication dependencies"
 
     def test_service_principal_tests_use_function_scoped_fixture(self):
         """
@@ -257,11 +266,7 @@ class TestServicePrincipalFixtureConfiguration:
 
         Ensures tests don't share app instances across parallel execution.
         """
-        test_file = (
-            Path(__file__).parent.parent
-            / "api"
-            / "test_service_principals_endpoints.py"
-        )
+        test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
 
         if not test_file.exists():
             pytest.skip("Service principal test file not found")
@@ -274,9 +279,7 @@ class TestServicePrincipalFixtureConfiguration:
 
         matches = re.findall(fixture_pattern, content)
 
-        assert len(matches) > 0, (
-            "Service principal fixtures should use scope='function' to prevent state pollution"
-        )
+        assert len(matches) > 0, "Service principal fixtures should use scope='function' to prevent state pollution"
 
     def test_teardown_method_includes_gc_collect(self):
         """
@@ -284,11 +287,7 @@ class TestServicePrincipalFixtureConfiguration:
 
         Prevents mock accumulation in pytest-xdist workers.
         """
-        test_file = (
-            Path(__file__).parent.parent
-            / "api"
-            / "test_service_principals_endpoints.py"
-        )
+        test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
 
         if not test_file.exists():
             pytest.skip("Service principal test file not found")
@@ -306,11 +305,7 @@ def test_service_principal_tests_have_xdist_groups():
 
     Prevents concurrent execution of tests that might interfere.
     """
-    test_file = (
-        Path(__file__).parent.parent
-        / "api"
-        / "test_service_principals_endpoints.py"
-    )
+    test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
 
     if not test_file.exists():
         pytest.skip("Service principal test file not found")

@@ -8,14 +8,11 @@ Tests validate that:
 4. Broken image references are detected
 """
 
-import pytest
 from pathlib import Path
-from scripts.validators.image_validator import (
-    ImageValidator,
-    ImageError,
-    MissingImageError,
-    InvalidImageFormatError,
-)
+
+import pytest
+
+from scripts.validators.image_validator import ImageError, ImageValidator, InvalidImageFormatError, MissingImageError
 
 
 class TestImageValidator:

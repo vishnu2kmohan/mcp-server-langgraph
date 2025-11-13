@@ -9,9 +9,10 @@ TDD Context:
 Following TDD: Tests ensure validator correctly identifies non-compliant resources.
 """
 
-import pytest
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import pytest
 
 # Add scripts directory to path for importing validator
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -126,10 +127,10 @@ class TestCPURatioValidation:
         # All fixed ratios should be 4.0 or less
         test_cases = [
             ("otel-collector", "250m", "1000m"),  # 4.0
-            ("qdrant", "250m", "1000m"),           # 4.0
-            ("postgres", "500m", "2000m"),         # 4.0
-            ("redis-session", "125m", "500m"),     # 4.0
-            ("mcp-server", "125m", "500m"),        # 4.0
+            ("qdrant", "250m", "1000m"),  # 4.0
+            ("postgres", "500m", "2000m"),  # 4.0
+            ("redis-session", "125m", "500m"),  # 4.0
+            ("mcp-server", "125m", "500m"),  # 4.0
         ]
 
         for name, request, limit in test_cases:

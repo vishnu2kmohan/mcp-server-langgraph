@@ -29,14 +29,15 @@ import yaml
 
 class Color:
     """ANSI color codes for terminal output"""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 def print_header(message: str) -> None:
@@ -68,6 +69,7 @@ def print_info(message: str) -> None:
 
 class ValidationResult:
     """Result of a validation check"""
+
     def __init__(self, passed: bool, message: str, fix_command: str = None):
         self.passed = passed
         self.message = message
@@ -98,10 +100,7 @@ class CICDValidator:
         )
 
         if result.returncode == 0:
-            return ValidationResult(
-                passed=True,
-                message="uv.lock is synchronized with pyproject.toml"
-            )
+            return ValidationResult(passed=True, message="uv.lock is synchronized with pyproject.toml")
         else:
             return ValidationResult(
                 passed=False,
@@ -110,23 +109,23 @@ class CICDValidator:
                     f"  This blocks all CI/CD workflows (see commit 67f8942)\n"
                     f"  Output: {result.stderr.strip()}"
                 ),
-                fix_command="uv lock && git add uv.lock"
+                fix_command="uv lock && git add uv.lock",
             )
 
     def validate_yaml_files(self) -> ValidationResult:
         """Validate all YAML files have correct syntax"""
-        yaml_files = list(self.project_root.glob("**/*.yaml")) + \
-                     list(self.project_root.glob("**/*.yml"))
+        yaml_files = list(self.project_root.glob("**/*.yaml")) + list(self.project_root.glob("**/*.yml"))
 
         # Exclude certain paths (Helm templates have Go syntax, not pure YAML)
         exclude_patterns = [
-            "node_modules", ".venv", "venv", ".git",
-            "/helm/", "/templates/",  # Helm templates use Go templating
+            "node_modules",
+            ".venv",
+            "venv",
+            ".git",
+            "/helm/",
+            "/templates/",  # Helm templates use Go templating
         ]
-        yaml_files = [
-            f for f in yaml_files
-            if not any(pattern in str(f) for pattern in exclude_patterns)
-        ]
+        yaml_files = [f for f in yaml_files if not any(pattern in str(f) for pattern in exclude_patterns)]
 
         errors = []
         for yaml_file in yaml_files:
@@ -138,18 +137,14 @@ class CICDValidator:
                 errors.append(f"{yaml_file.relative_to(self.project_root)}: {str(e)}")
 
         if not errors:
-            return ValidationResult(
-                passed=True,
-                message=f"All {len(yaml_files)} YAML files are valid"
-            )
+            return ValidationResult(passed=True, message=f"All {len(yaml_files)} YAML files are valid")
         else:
             return ValidationResult(
                 passed=False,
                 message=(
-                    f"YAML syntax errors in {len(errors)} files:\n" +
-                    "\n".join(f"  - {e}" for e in errors[:5])  # Show first 5
+                    f"YAML syntax errors in {len(errors)} files:\n" + "\n".join(f"  - {e}" for e in errors[:5])  # Show first 5
                 ),
-                fix_command="yamllint --fix <file> or manually fix syntax errors"
+                fix_command="yamllint --fix <file> or manually fix syntax errors",
             )
 
     def validate_ci_python_versions(self) -> ValidationResult:
@@ -161,10 +156,7 @@ class CICDValidator:
         ci_workflow = self.project_root / ".github" / "workflows" / "ci.yaml"
 
         if not ci_workflow.exists():
-            return ValidationResult(
-                passed=False,
-                message="CI workflow file not found at .github/workflows/ci.yaml"
-            )
+            return ValidationResult(passed=False, message="CI workflow file not found at .github/workflows/ci.yaml")
 
         with open(ci_workflow) as f:
             content = f.read()
@@ -173,29 +165,22 @@ class CICDValidator:
         issues = []
 
         if "uv sync --python" not in content:
-            issues.append(
-                "Missing 'uv sync --python' flag - will cause Python version mismatch"
-            )
+            issues.append("Missing 'uv sync --python' flag - will cause Python version mismatch")
 
         if "matrix.python-version" in content and "uv sync --python ${{ matrix.python-version }}" not in content:
-            issues.append(
-                "Python matrix exists but uv sync doesn't use matrix.python-version"
-            )
+            issues.append("Python matrix exists but uv sync doesn't use matrix.python-version")
 
         if issues:
             return ValidationResult(
                 passed=False,
                 message=(
-                    "CI Python version configuration issues:\n" +
-                    "\n".join(f"  - {issue}" for issue in issues) +
-                    "\n  See commits: c193936, ba5296f"
-                )
+                    "CI Python version configuration issues:\n"
+                    + "\n".join(f"  - {issue}" for issue in issues)
+                    + "\n  See commits: c193936, ba5296f"
+                ),
             )
 
-        return ValidationResult(
-            passed=True,
-            message="CI workflow uses correct Python version setup"
-        )
+        return ValidationResult(passed=True, message="CI workflow uses correct Python version setup")
 
     def validate_test_markers(self) -> ValidationResult:
         """
@@ -210,6 +195,7 @@ class CICDValidator:
 
         # Extract markers (simple regex approach)
         import re
+
         marker_matches = re.findall(r'"(\w+):[^"]*"', content)
         registered_markers = set(marker_matches)
 
@@ -224,7 +210,7 @@ class CICDValidator:
 
             # Remove all comments and docstrings before scanning
             # This prevents false positives from examples in comments
-            lines = content.split('\n')
+            lines = content.split("\n")
             in_docstring = False
             code_lines = []
 
@@ -237,29 +223,40 @@ class CICDValidator:
                     continue
 
                 # Skip if in docstring or comment
-                if in_docstring or stripped.startswith('#'):
+                if in_docstring or stripped.startswith("#"):
                     continue
 
                 code_lines.append(line)
 
             # Find markers only in actual code
-            code_content = '\n'.join(code_lines)
-            matches = re.findall(r'@pytest\.mark\.(\w+)', code_content)
+            code_content = "\n".join(code_lines)
+            matches = re.findall(r"@pytest\.mark\.(\w+)", code_content)
             used_markers.update(matches)
 
         # Check for unregistered markers
         # Exclude built-in pytest markers and common patterns
         builtin_markers = {
-            'parametrize', 'skip', 'skipif', 'xfail', 'filterwarnings',
-            'timeout', 'usefixtures', 'asyncio', 'fixture', 'tryfirst',
-            'trylast', 'hookwrapper', 'optionalhook', 'first', 'last'
+            "parametrize",
+            "skip",
+            "skipif",
+            "xfail",
+            "filterwarnings",
+            "timeout",
+            "usefixtures",
+            "asyncio",
+            "fixture",
+            "tryfirst",
+            "trylast",
+            "hookwrapper",
+            "optionalhook",
+            "first",
+            "last",
         }
 
         # Filter out markers that are just partial matches (like 'foo' from conftest, 'requires_' prefix)
         # Only consider markers that appear as full @pytest.mark.marker_name decorators
         valid_used_markers = {
-            m for m in used_markers
-            if len(m) > 2 and not m.startswith('requires_')  # requires_ is a pattern, not a marker
+            m for m in used_markers if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
         }
 
         unregistered = valid_used_markers - registered_markers - builtin_markers
@@ -271,13 +268,10 @@ class CICDValidator:
                     f"Unregistered pytest markers found: {sorted(unregistered)}\n"
                     f"  Add to pyproject.toml [tool.pytest.ini_options] markers list"
                 ),
-                fix_command=f"Add markers to pyproject.toml: {', '.join(sorted(unregistered))}"
+                fix_command=f"Add markers to pyproject.toml: {', '.join(sorted(unregistered))}",
             )
 
-        return ValidationResult(
-            passed=True,
-            message=f"All {len(used_markers)} used markers are registered"
-        )
+        return ValidationResult(passed=True, message=f"All {len(used_markers)} used markers are registered")
 
     def validate_dependency_overrides_pattern(self) -> ValidationResult:
         """
@@ -297,26 +291,23 @@ class CICDValidator:
                 continue
 
             # If it uses monkeypatch for get_current_user or dependencies, that's wrong
-            if "monkeypatch.setattr" in content and ("get_current_user" in content or "get_service_principal_manager" in content or "get_api_key_manager" in content):
+            if "monkeypatch.setattr" in content and (
+                "get_current_user" in content or "get_service_principal_manager" in content or "get_api_key_manager" in content
+            ):
                 if "app.dependency_overrides" not in content:
-                    issues.append(
-                        f"{test_file.name}: Uses monkeypatch instead of dependency_overrides"
-                    )
+                    issues.append(f"{test_file.name}: Uses monkeypatch instead of dependency_overrides")
 
         if issues:
             return ValidationResult(
                 passed=False,
                 message=(
-                    "FastAPI tests using monkeypatch (should use dependency_overrides):\n" +
-                    "\n".join(f"  - {issue}" for issue in issues) +
-                    "\n  See commit 709adda for correct pattern"
-                )
+                    "FastAPI tests using monkeypatch (should use dependency_overrides):\n"
+                    + "\n".join(f"  - {issue}" for issue in issues)
+                    + "\n  See commit 709adda for correct pattern"
+                ),
             )
 
-        return ValidationResult(
-            passed=True,
-            message="FastAPI tests use correct dependency_overrides pattern"
-        )
+        return ValidationResult(passed=True, message="FastAPI tests use correct dependency_overrides pattern")
 
     def run_all_validations(self) -> Tuple[int, int, int]:
         """Run all validations and return (passed, warned, failed) counts"""
@@ -349,12 +340,7 @@ class CICDValidator:
                 if self.auto_fix and result.fix_command:
                     print_info(f"  Attempting auto-fix...")
                     try:
-                        subprocess.run(
-                            result.fix_command,
-                            shell=True,
-                            cwd=self.project_root,
-                            check=True
-                        )
+                        subprocess.run(result.fix_command, shell=True, cwd=self.project_root, check=True)
                         print_success("  Auto-fix completed")
                     except subprocess.CalledProcessError:
                         print_error("  Auto-fix failed - manual intervention required")
@@ -390,13 +376,9 @@ Examples:
 
 This script prevents CI failures by catching issues locally.
 See tests/regression/test_uv_lockfile_sync.py for documented regressions.
-        """
+        """,
     )
-    parser.add_argument(
-        "--fix",
-        action="store_true",
-        help="Automatically fix issues where possible"
-    )
+    parser.add_argument("--fix", action="store_true", help="Automatically fix issues where possible")
 
     args = parser.parse_args()
 

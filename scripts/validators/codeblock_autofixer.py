@@ -36,17 +36,11 @@ def detect_language(code: str) -> str:
     code = code.strip()
 
     # Python patterns
-    if any(
-        pattern in code
-        for pattern in ["def ", "import ", "from ", "class ", "__init__", "self."]
-    ):
+    if any(pattern in code for pattern in ["def ", "import ", "from ", "class ", "__init__", "self."]):
         return "python"
 
     # Bash/shell patterns
-    if any(
-        pattern in code
-        for pattern in ["#!/bin/bash", "#!/bin/sh", "echo ", "export ", "cd ", "ls "]
-    ):
+    if any(pattern in code for pattern in ["#!/bin/bash", "#!/bin/sh", "echo ", "export ", "cd ", "ls "]):
         return "bash"
 
     # JavaScript/TypeScript patterns
@@ -78,17 +72,11 @@ def detect_language(code: str) -> str:
         return "json"
 
     # SQL patterns
-    if any(
-        pattern in code.upper()
-        for pattern in ["SELECT ", "INSERT ", "UPDATE ", "DELETE ", "CREATE TABLE"]
-    ):
+    if any(pattern in code.upper() for pattern in ["SELECT ", "INSERT ", "UPDATE ", "DELETE ", "CREATE TABLE"]):
         return "sql"
 
     # Dockerfile patterns
-    if any(
-        pattern in code
-        for pattern in ["FROM ", "RUN ", "COPY ", "CMD ", "ENTRYPOINT ", "WORKDIR "]
-    ):
+    if any(pattern in code for pattern in ["FROM ", "RUN ", "COPY ", "CMD ", "ENTRYPOINT ", "WORKDIR "]):
         return "dockerfile"
 
     # Markdown patterns
@@ -137,10 +125,7 @@ class CodeBlockAutoFixer:
     ]
 
     # Regex pattern for code blocks without language
-    CODE_BLOCK_PATTERN = re.compile(
-        r'^(\s*)```(\w+)?([^\n]*)\n(.*?)^(\s*)```',
-        re.MULTILINE | re.DOTALL
-    )
+    CODE_BLOCK_PATTERN = re.compile(r"^(\s*)```(\w+)?([^\n]*)\n(.*?)^(\s*)```", re.MULTILINE | re.DOTALL)
 
     def __init__(self, docs_dir: Path, dry_run: bool = True):
         """
@@ -185,9 +170,7 @@ class CodeBlockAutoFixer:
 
         for mdx_path in self.docs_dir.rglob("*.mdx"):
             relative_path = mdx_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(mdx_path)
@@ -236,9 +219,7 @@ class CodeBlockAutoFixer:
             replacement = f"{opening}{code_content}{closing}"
 
             # Replace in content
-            new_content = (
-                new_content[: match.start()] + replacement + new_content[match.end() :]
-            )
+            new_content = new_content[: match.start()] + replacement + new_content[match.end() :]
             blocks_fixed += 1
 
         # Write back if modified and not dry-run
@@ -274,9 +255,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Auto-fix code blocks by adding language identifiers"
-    )
+    parser = argparse.ArgumentParser(description="Auto-fix code blocks by adding language identifiers")
     parser.add_argument(
         "--docs-dir",
         type=Path,

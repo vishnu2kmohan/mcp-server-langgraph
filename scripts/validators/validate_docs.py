@@ -19,13 +19,13 @@ Exit codes:
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
-from navigation_validator import NavigationValidator
-from mdx_extension_validator import MDXExtensionValidator
+from codeblock_validator import CodeBlockValidator
 from frontmatter_validator import FrontmatterValidator
 from image_validator import ImageValidator
-from codeblock_validator import CodeBlockValidator
+from mdx_extension_validator import MDXExtensionValidator
+from navigation_validator import NavigationValidator
 
 try:
     from link_validator import LinkValidator
@@ -101,9 +101,7 @@ class DocumentationValidator:
         if ext_result.is_valid:
             print("  ✅ Extension validation passed")
         else:
-            print(
-                f"  ❌ Extension validation failed ({len(ext_result.errors)} errors)"
-            )
+            print(f"  ❌ Extension validation failed ({len(ext_result.errors)} errors)")
 
         # 3. Frontmatter Validator
         print("\n[3/6] Running Frontmatter Validator...")
@@ -115,9 +113,7 @@ class DocumentationValidator:
         if fm_result.is_valid:
             print("  ✅ Frontmatter validation passed")
         else:
-            print(
-                f"  ❌ Frontmatter validation failed ({len(fm_result.errors)} errors)"
-            )
+            print(f"  ❌ Frontmatter validation failed ({len(fm_result.errors)} errors)")
 
         # 4. Image Validator
         print("\n[4/6] Running Image Validator...")
@@ -129,9 +125,7 @@ class DocumentationValidator:
         if img_result.is_valid:
             print("  ✅ Image validation passed")
         else:
-            print(
-                f"  ❌ Image validation failed ({len(img_result.errors)} errors)"
-            )
+            print(f"  ❌ Image validation failed ({len(img_result.errors)} errors)")
 
         # 5. Code Block Validator
         print("\n[5/6] Running Code Block Validator...")
@@ -143,9 +137,7 @@ class DocumentationValidator:
         if cb_result.is_valid:
             print("  ✅ Code block validation passed")
         else:
-            print(
-                f"  ❌ Code block validation failed ({len(cb_result.errors)} errors)"
-            )
+            print(f"  ❌ Code block validation failed ({len(cb_result.errors)} errors)")
 
         # 6. Link Validator (optional)
         if not self.skip_links and LINK_VALIDATOR_AVAILABLE:
@@ -158,9 +150,7 @@ class DocumentationValidator:
             if link_result.is_valid:
                 print("  ✅ Link validation passed")
             else:
-                print(
-                    f"  ❌ Link validation failed ({len(link_result.errors)} errors)"
-                )
+                print(f"  ❌ Link validation failed ({len(link_result.errors)} errors)")
         else:
             if self.skip_links:
                 print("\n[6/6] Skipping Link Validator (--skip-links)")
@@ -171,9 +161,7 @@ class DocumentationValidator:
         # Determine overall validity
         is_valid = all(summary.values())
 
-        return MasterValidationResult(
-            is_valid=is_valid, results=results, summary=summary
-        )
+        return MasterValidationResult(is_valid=is_valid, results=results, summary=summary)
 
     def print_summary(self, result: MasterValidationResult) -> None:
         """Print overall validation summary."""
@@ -205,9 +193,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Run all documentation validators"
-    )
+    parser = argparse.ArgumentParser(description="Run all documentation validators")
     parser.add_argument(
         "--docs-dir",
         type=Path,
@@ -237,7 +223,7 @@ def main():
             if hasattr(val_result, "errors") and val_result.errors:
                 print(f"\n{'=' * 80}")
                 print(f"Detailed {name.capitalize()} Report:")
-                print('=' * 80)
+                print("=" * 80)
                 for error in val_result.errors:
                     print(f"  ❌ {error}")
 

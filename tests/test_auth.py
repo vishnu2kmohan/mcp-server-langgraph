@@ -68,10 +68,10 @@ class TestAuthMiddleware:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
@@ -426,10 +426,10 @@ class TestRequireAuthDecorator:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
@@ -545,10 +545,10 @@ class TestStandaloneVerifyToken:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
@@ -629,10 +629,10 @@ class TestGetCurrentUser:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
@@ -935,10 +935,10 @@ class TestAuthFallbackWithExternalProviders:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """
@@ -1228,10 +1228,10 @@ class TestAuthMiddlewareProductionControls:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
+        # We explicitly set to "false" rather than deleting, to override tests/api/conftest.py
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """

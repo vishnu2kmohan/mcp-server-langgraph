@@ -15,8 +15,24 @@ from fastapi.testclient import TestClient
 
 @pytest.mark.diagnostic
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="bearer_scheme_diagnostic_tests")
 class TestBearerSchemeOverrideDiagnostic:
     """Diagnostic tests to understand bearer_scheme override behavior."""
+
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
 
     def test_bearer_scheme_identity_check(self):
         """
@@ -26,10 +42,9 @@ class TestBearerSchemeOverrideDiagnostic:
         is the same object used by get_current_user.
         """
         # Import bearer_scheme from middleware
-        from mcp_server_langgraph.auth.middleware import bearer_scheme as imported_bearer
-
         # Import the middleware module itself
         from mcp_server_langgraph.auth import middleware
+        from mcp_server_langgraph.auth.middleware import bearer_scheme as imported_bearer
 
         # Check if they're the same object
         print(f"\nImported bearer_scheme id: {id(imported_bearer)}")
@@ -150,10 +165,7 @@ class TestBearerSchemeOverrideDiagnostic:
 
         from mcp_server_langgraph.api.service_principals import router
         from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-        from mcp_server_langgraph.core.dependencies import (
-            get_openfga_client,
-            get_service_principal_manager,
-        )
+        from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
 
         # Create fresh app
         app = FastAPI()

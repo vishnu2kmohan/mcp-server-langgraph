@@ -139,6 +139,15 @@ class TestMCPServerExceptionBase:
 class TestAuthenticationExceptions:
     """Test authentication exception types"""
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -170,6 +179,16 @@ class TestAuthenticationExceptions:
     @pytest.mark.unit
     def test_mfa_required_error(self):
         """Test MFARequiredError"""
+
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
         exc = MFARequiredError()
         assert exc.status_code == 403
         assert "mfa" in exc.user_message.lower()
@@ -178,6 +197,15 @@ class TestAuthenticationExceptions:
 @pytest.mark.xdist_group(name="core_exceptions_tests")
 class TestAuthorizationExceptions:
     """Test authorization exception types"""
+
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""

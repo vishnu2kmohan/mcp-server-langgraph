@@ -9,10 +9,11 @@ TDD Context:
 Following TDD: Tests ensure validator prevents marker registration issues.
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import sys
+import tempfile
+from pathlib import Path
+
+import pytest
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
@@ -129,9 +130,7 @@ class TestRegressionPrevention:
         """Ensure deployment marker exists (used as alternative to staging)"""
         registered = get_registered_markers()
 
-        assert "deployment" in registered, (
-            "deployment marker should exist as it's related to staging tests"
-        )
+        assert "deployment" in registered, "deployment marker should exist as it's related to staging tests"
 
 
 class TestMarkerValidatorBehavior:
@@ -238,6 +237,4 @@ class TestMarkerCount:
 
         # After the fix, we have 39 markers
         # This will fail if someone removes markers
-        assert len(registered) >= 39, (
-            f"Expected 39+ markers after adding 'staging', but found {len(registered)}"
-        )
+        assert len(registered) >= 39, f"Expected 39+ markers after adding 'staging', but found {len(registered)}"

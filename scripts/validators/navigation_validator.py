@@ -18,7 +18,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set, Optional
+from typing import Dict, List, Optional, Set
 
 
 class NavigationError(Exception):
@@ -199,9 +199,7 @@ class NavigationValidator:
 
         return missing
 
-    def _find_orphaned_files(
-        self, all_mdx_files: Set[Path], referenced_pages: List[str]
-    ) -> List[str]:
+    def _find_orphaned_files(self, all_mdx_files: Set[Path], referenced_pages: List[str]) -> List[str]:
         """Find MDX files not referenced in navigation."""
         # Convert referenced pages to absolute paths
         referenced_paths = set()
@@ -280,9 +278,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate documentation navigation consistency"
-    )
+    parser = argparse.ArgumentParser(description="Validate documentation navigation consistency")
     parser.add_argument(
         "--docs-dir",
         type=Path,

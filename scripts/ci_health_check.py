@@ -94,9 +94,7 @@ class CIHealthChecker:
 
         docs_dir = self.root_dir / "docs"
         if not docs_dir.exists():
-            self.results.append(
-                HealthCheckResult("doc-code-blocks", True, "No docs directory found (skipped)")
-            )
+            self.results.append(HealthCheckResult("doc-code-blocks", True, "No docs directory found (skipped)"))
             return
 
         mdx_files = list(docs_dir.rglob("*.mdx"))
@@ -119,9 +117,8 @@ class CIHealthChecker:
                     in_code_block = False
 
         if untagged_blocks:
-            message = (
-                f"Found {len(untagged_blocks)} untagged code blocks\n"
-                + "\n".join(f"  - {block}" for block in untagged_blocks[:5])
+            message = f"Found {len(untagged_blocks)} untagged code blocks\n" + "\n".join(
+                f"  - {block}" for block in untagged_blocks[:5]
             )
             if len(untagged_blocks) > 5:
                 message += f"\n  ... and {len(untagged_blocks) - 5} more"
@@ -142,9 +139,7 @@ class CIHealthChecker:
 
         terraform_dir = self.root_dir / "terraform"
         if not terraform_dir.exists():
-            self.results.append(
-                HealthCheckResult("terraform-duplicates", True, "No terraform directory (skipped)")
-            )
+            self.results.append(HealthCheckResult("terraform-duplicates", True, "No terraform directory (skipped)"))
             return
 
         tf_files = list(terraform_dir.rglob("*.tf"))
@@ -159,9 +154,8 @@ class CIHealthChecker:
                 files_with_duplicates.append(f"{relative_path} ({len(terraform_blocks)} blocks)")
 
         if files_with_duplicates:
-            message = (
-                f"Found {len(files_with_duplicates)} files with duplicate terraform{{}} blocks:\n"
-                + "\n".join(f"  - {file}" for file in files_with_duplicates)
+            message = f"Found {len(files_with_duplicates)} files with duplicate terraform{{}} blocks:\n" + "\n".join(
+                f"  - {file}" for file in files_with_duplicates
             )
             self.results.append(HealthCheckResult("terraform-duplicates", False, message))
             print(f"  {RED}✗{RESET} Duplicate terraform blocks found")
@@ -175,11 +169,7 @@ class CIHealthChecker:
 
         terraform_dir = self.root_dir / "terraform"
         if not terraform_dir.exists():
-            self.results.append(
-                HealthCheckResult(
-                    "terraform-validations", True, "No terraform directory (skipped)"
-                )
-            )
+            self.results.append(HealthCheckResult("terraform-validations", True, "No terraform directory (skipped)"))
             return
 
         variables_files = list(terraform_dir.rglob("variables.tf"))
@@ -206,17 +196,15 @@ class CIHealthChecker:
                         if ref != current_variable:
                             relative_path = file_path.relative_to(self.root_dir)
                             invalid_validations.append(
-                                f"{relative_path}:{line_num} - "
-                                f"variable '{current_variable}' references var.{ref}"
+                                f"{relative_path}:{line_num} - " f"variable '{current_variable}' references var.{ref}"
                             )
 
                 if in_validation and "}" in line:
                     in_validation = False
 
         if invalid_validations:
-            message = (
-                f"Found {len(invalid_validations)} invalid cross-variable validations:\n"
-                + "\n".join(f"  - {item}" for item in invalid_validations[:5])
+            message = f"Found {len(invalid_validations)} invalid cross-variable validations:\n" + "\n".join(
+                f"  - {item}" for item in invalid_validations[:5]
             )
             self.results.append(HealthCheckResult("terraform-validations", False, message))
             print(f"  {RED}✗{RESET} Invalid variable validations")
@@ -230,9 +218,7 @@ class CIHealthChecker:
 
         terraform_dir = self.root_dir / "terraform"
         if not terraform_dir.exists():
-            self.results.append(
-                HealthCheckResult("terraform-versions", True, "No terraform directory (skipped)")
-            )
+            self.results.append(HealthCheckResult("terraform-versions", True, "No terraform directory (skipped)"))
             return
 
         # Assume CI runs Terraform 1.6.6 (update if changed)
@@ -253,22 +239,16 @@ class CIHealthChecker:
                         min_major, min_minor = map(int, min_version.split("."))
                         ci_major, ci_minor, _ = map(int, CI_TERRAFORM_VERSION.split("."))
 
-                        if min_major > ci_major or (
-                            min_major == ci_major and min_minor > ci_minor
-                        ):
+                        if min_major > ci_major or (min_major == ci_major and min_minor > ci_minor):
                             relative_path = file_path.relative_to(self.root_dir)
-                            incompatible_files.append(
-                                f"{relative_path}: requires >= {min_version}"
-                            )
+                            incompatible_files.append(f"{relative_path}: requires >= {min_version}")
 
         if incompatible_files:
             message = (
                 f"Found {len(incompatible_files)} files incompatible with CI Terraform {CI_TERRAFORM_VERSION}:\n"
                 + "\n".join(f"  - {file}" for file in incompatible_files[:5])
             )
-            self.results.append(
-                HealthCheckResult("terraform-versions", False, message, warning=True)
-            )
+            self.results.append(HealthCheckResult("terraform-versions", False, message, warning=True))
             print(f"  {YELLOW}⚠{RESET}  Version compatibility warnings")
         else:
             self.results.append(HealthCheckResult("terraform-versions", True))
@@ -280,9 +260,7 @@ class CIHealthChecker:
 
         precommit_config = self.root_dir / ".pre-commit-config.yaml"
         if not precommit_config.exists():
-            self.results.append(
-                HealthCheckResult("precommit-deps", True, "No .pre-commit-config.yaml (skipped)")
-            )
+            self.results.append(HealthCheckResult("precommit-deps", True, "No .pre-commit-config.yaml (skipped)"))
             return
 
         try:
@@ -292,9 +270,7 @@ class CIHealthChecker:
                 config = yaml.safe_load(f)
         except ImportError:
             self.results.append(
-                HealthCheckResult(
-                    "precommit-deps", True, "pyyaml not available, skipping check", warning=True
-                )
+                HealthCheckResult("precommit-deps", True, "pyyaml not available, skipping check", warning=True)
             )
             return
 
@@ -317,9 +293,7 @@ class CIHealthChecker:
             self.results.append(HealthCheckResult("precommit-deps", True))
             print(f"  {GREEN}✓{RESET} Pre-commit hook dependencies satisfied")
         else:
-            self.results.append(
-                HealthCheckResult("precommit-deps", True, "Hook not found (skipped)")
-            )
+            self.results.append(HealthCheckResult("precommit-deps", True, "Hook not found (skipped)"))
             print(f"  {BLUE}ℹ{RESET}  validate-workflow-test-deps hook not found")
 
     def check_github_workflow_structure(self):
@@ -328,9 +302,7 @@ class CIHealthChecker:
 
         workflows_dir = self.root_dir / ".github" / "workflows"
         if not workflows_dir.exists():
-            self.results.append(
-                HealthCheckResult("github-workflows", True, "No workflows directory (skipped)")
-            )
+            self.results.append(HealthCheckResult("github-workflows", True, "No workflows directory (skipped)"))
             return
 
         workflow_files = list(workflows_dir.glob("*.y*ml"))
@@ -353,12 +325,8 @@ class CIHealthChecker:
                 issues.append(f"{relative_path}: Parse error - {e}")
 
         if issues:
-            message = f"Found {len(issues)} workflow issues:\n" + "\n".join(
-                f"  - {issue}" for issue in issues[:5]
-            )
-            self.results.append(
-                HealthCheckResult("github-workflows", False, message, warning=True)
-            )
+            message = f"Found {len(issues)} workflow issues:\n" + "\n".join(f"  - {issue}" for issue in issues[:5])
+            self.results.append(HealthCheckResult("github-workflows", False, message, warning=True))
             print(f"  {YELLOW}⚠{RESET}  Workflow structure warnings")
         else:
             self.results.append(HealthCheckResult("github-workflows", True))
@@ -397,12 +365,8 @@ class CIHealthChecker:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="CI/CD Health Check")
-    parser.add_argument(
-        "--quick", action="store_true", help="Run only fast checks"
-    )
-    parser.add_argument(
-        "--fix", action="store_true", help="Auto-fix issues where possible"
-    )
+    parser.add_argument("--quick", action="store_true", help="Run only fast checks")
+    parser.add_argument("--fix", action="store_true", help="Auto-fix issues where possible")
     args = parser.parse_args()
 
     root_dir = Path(__file__).parent.parent

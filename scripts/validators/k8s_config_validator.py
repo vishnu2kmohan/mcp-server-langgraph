@@ -37,11 +37,12 @@ import yaml
 
 class Colors:
     """ANSI color codes for terminal output."""
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    RESET = '\033[0m'
+
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    RESET = "\033[0m"
 
 
 class K8sConfigValidator:
@@ -75,12 +76,7 @@ class K8sConfigValidator:
             return []
 
         try:
-            result = subprocess.run(
-                ["kustomize", "build", str(overlay_dir)],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True)
             return list(yaml.safe_load_all(result.stdout))
         except subprocess.CalledProcessError as e:
             self.log_error(f"Kustomize build failed for {overlay_path}: {e.stderr}")
@@ -151,9 +147,7 @@ class K8sConfigValidator:
 
             missing = keys - actual_keys[cm_name]
             if missing:
-                self.log_error(
-                    f"{overlay_path}: Missing keys in '{cm_name}': {sorted(missing)}"
-                )
+                self.log_error(f"{overlay_path}: Missing keys in '{cm_name}': {sorted(missing)}")
                 has_errors = True
 
         if not has_errors:
@@ -190,14 +184,9 @@ class K8sConfigValidator:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Validate Kubernetes configuration files",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        description="Validate Kubernetes configuration files", formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        "--overlay",
-        action="append",
-        help="Specific overlay to validate (can be specified multiple times)"
-    )
+    parser.add_argument("--overlay", action="append", help="Specific overlay to validate (can be specified multiple times)")
 
     args = parser.parse_args()
 

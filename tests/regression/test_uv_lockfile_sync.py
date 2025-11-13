@@ -58,6 +58,7 @@ This test validates that:
 - Fix Commits: 709adda (test fixes), c193936 (CI Python version), ba5296f (uv sync --python)
 - CI Run: https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/runs/19306810940
 """
+
 import subprocess
 from pathlib import Path
 
@@ -81,8 +82,7 @@ class TestUVLockfileSynchronization:
         lockfile = project_root / "uv.lock"
 
         assert lockfile.exists(), (
-            "uv.lock not found! This file is required for reproducible builds. "
-            "Run 'uv lock' to create it."
+            "uv.lock not found! This file is required for reproducible builds. " "Run 'uv lock' to create it."
         )
 
         assert lockfile.stat().st_size > 0, "uv.lock exists but is empty!"
@@ -133,15 +133,13 @@ class TestUVLockfileSynchronization:
                         uv_lock_hook_found = True
 
                         # Validate hook configuration
-                        assert "uv lock --check" in hook.get("entry", ""), (
-                            "uv-lock-check hook must run 'uv lock --check'"
-                        )
+                        assert "uv lock --check" in hook.get("entry", ""), "uv-lock-check hook must run 'uv lock --check'"
 
                         # Should trigger on pyproject.toml or uv.lock changes
                         files_pattern = hook.get("files", "")
-                        assert "pyproject" in files_pattern or "uv\\.lock" in files_pattern, (
-                            "uv-lock-check hook must monitor pyproject.toml and uv.lock files"
-                        )
+                        assert (
+                            "pyproject" in files_pattern or "uv\\.lock" in files_pattern
+                        ), "uv-lock-check hook must monitor pyproject.toml and uv.lock files"
 
                         break
 
@@ -179,9 +177,9 @@ class TestUVLockfileSynchronization:
         # Check that error message provides remediation
         if "uv lock --check" in workflow_content:
             # Find the section with uv lock --check
-            assert "Run 'uv lock'" in workflow_content or "uv lock" in workflow_content, (
-                "Lockfile validation error should tell developers how to fix it"
-            )
+            assert (
+                "Run 'uv lock'" in workflow_content or "uv lock" in workflow_content
+            ), "Lockfile validation error should tell developers how to fix it"
 
 
 @pytest.mark.regression
@@ -215,8 +213,7 @@ class TestCIPythonVersionMatrix:
             workflow_content = f.read()
 
         # Must use --python flag with matrix variable
-        assert "uv sync --python ${{ matrix.python-version }}" in workflow_content or \
-               "uv sync --python" in workflow_content, (
+        assert "uv sync --python ${{ matrix.python-version }}" in workflow_content or "uv sync --python" in workflow_content, (
             "❌ CI workflow must use 'uv sync --python ${{ matrix.python-version }}'\n\n"
             "Without this flag, uv sync recreates venv with default Python (3.12)\n"
             "instead of using the matrix Python version (3.10, 3.11, 3.12).\n\n"
@@ -233,10 +230,8 @@ class TestCIPythonVersionMatrix:
             workflow_content = f.read()
 
         # Should verify Python version
-        assert ".venv/bin/python --version" in workflow_content or \
-               "python --version" in workflow_content, (
-            "CI workflow should verify Python version after venv creation.\n"
-            "This catches Python version mismatches early."
+        assert ".venv/bin/python --version" in workflow_content or "python --version" in workflow_content, (
+            "CI workflow should verify Python version after venv creation.\n" "This catches Python version mismatches early."
         )
 
 
@@ -274,8 +269,7 @@ class TestFastAPIDependencyOverridesPattern:
         )
 
         # Should NOT use monkeypatch for dependencies
-        assert "monkeypatch.setattr" not in content or \
-               "monkeypatch, mock_sp_manager" not in content, (
+        assert "monkeypatch.setattr" not in content or "monkeypatch, mock_sp_manager" not in content, (
             "Should not use monkeypatch for dependency injection.\n"
             "Use app.dependency_overrides instead.\n"
             "See tests/api/test_service_principals_endpoints.py:130-145"
@@ -289,8 +283,7 @@ class TestFastAPIDependencyOverridesPattern:
             content = f.read()
 
         assert "app.dependency_overrides[" in content, (
-            "API keys tests must use app.dependency_overrides.\n"
-            "See commit 709adda for implementation."
+            "API keys tests must use app.dependency_overrides.\n" "See commit 709adda for implementation."
         )
 
 

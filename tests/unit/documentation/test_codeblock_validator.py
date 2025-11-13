@@ -8,13 +8,11 @@ Tests validate that:
 4. Template files are excluded
 """
 
-import pytest
 from pathlib import Path
-from scripts.validators.codeblock_validator import (
-    CodeBlockValidator,
-    CodeBlockError,
-    MissingLanguageError,
-)
+
+import pytest
+
+from scripts.validators.codeblock_validator import CodeBlockError, CodeBlockValidator, MissingLanguageError
 
 
 class TestCodeBlockValidator:
@@ -412,5 +410,5 @@ code without language on line 11
         assert not result.is_valid
         assert len(result.errors) == 1
         error = result.errors[0]
-        assert hasattr(error, 'line_number')
+        assert hasattr(error, "line_number")
         assert error.line_number > 0

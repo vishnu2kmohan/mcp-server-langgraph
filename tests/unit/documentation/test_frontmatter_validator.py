@@ -8,14 +8,16 @@ Tests validate that:
 4. Optional fields are validated when present
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from scripts.validators.frontmatter_validator import (
-    FrontmatterValidator,
     FrontmatterError,
+    FrontmatterValidator,
+    InvalidYAMLError,
     MissingFrontmatterError,
     MissingRequiredFieldError,
-    InvalidYAMLError,
 )
 
 

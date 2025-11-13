@@ -15,7 +15,7 @@ Exit codes:
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import Dict, List, Set
 
 
 class ExtensionError(Exception):
@@ -29,9 +29,7 @@ class InvalidExtensionError(ExtensionError):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        super().__init__(
-            f"Invalid extension: {file_path} (use .mdx in docs/ directory)"
-        )
+        super().__init__(f"Invalid extension: {file_path} (use .mdx in docs/ directory)")
 
 
 @dataclass
@@ -126,9 +124,7 @@ class MDXExtensionValidator:
         for file_path in self.docs_dir.rglob(pattern):
             # Check if file should be excluded
             relative_path = file_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(file_path)
@@ -150,15 +146,11 @@ class MDXExtensionValidator:
         # Errors
         if result.errors:
             print(f"\n❌ Errors ({len(result.errors)}):")
-            print(
-                "\n  The following files use .md extension instead of .mdx:"
-            )
+            print("\n  The following files use .md extension instead of .mdx:")
             for error in result.errors:
                 if isinstance(error, InvalidExtensionError):
                     print(f"    ❌ {error.file_path}")
-            print(
-                "\n  💡 Solution: Convert .md files to .mdx or move them outside docs/"
-            )
+            print("\n  💡 Solution: Convert .md files to .mdx or move them outside docs/")
             print("     Example: mv file.md file.mdx")
 
         # Summary
@@ -175,9 +167,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate that all files in docs/ use .mdx extension"
-    )
+    parser = argparse.ArgumentParser(description="Validate that all files in docs/ use .mdx extension")
     parser.add_argument(
         "--docs-dir",
         type=Path,

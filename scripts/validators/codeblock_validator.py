@@ -35,9 +35,7 @@ class MissingLanguageError(CodeBlockError):
         self.file_path = file_path
         self.line_number = line_number
         self.snippet = snippet
-        super().__init__(
-            f"Code block without language in {file_path} at line {line_number}"
-        )
+        super().__init__(f"Code block without language in {file_path} at line {line_number}")
 
 
 @dataclass
@@ -72,10 +70,7 @@ class CodeBlockValidator:
     # Regex pattern for fenced code blocks
     # Matches: ```language or ``` (without language)
     # Also handles attributes like ```python {1,3-5}
-    CODE_BLOCK_PATTERN = re.compile(
-        r'^(\s*)```(\w+)?([^\n]*)\n(.*?)^(\s*)```',
-        re.MULTILINE | re.DOTALL
-    )
+    CODE_BLOCK_PATTERN = re.compile(r"^(\s*)```(\w+)?([^\n]*)\n(.*?)^(\s*)```", re.MULTILINE | re.DOTALL)
 
     def __init__(self, docs_dir: Path):
         """
@@ -126,18 +121,14 @@ class CodeBlockValidator:
 
         for mdx_path in self.docs_dir.rglob("*.mdx"):
             relative_path = mdx_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(mdx_path)
 
         return files
 
-    def _validate_file(
-        self, file_path: Path, relative_path: str, stats: Dict[str, int]
-    ) -> List[CodeBlockError]:
+    def _validate_file(self, file_path: Path, relative_path: str, stats: Dict[str, int]) -> List[CodeBlockError]:
         """Validate code blocks in a single file."""
         errors = []
 
@@ -156,18 +147,16 @@ class CodeBlockValidator:
             code_content = match.group(4)
 
             # Check if language is missing
-            if not language or language.strip() == '':
+            if not language or language.strip() == "":
                 # Get line number (approximate)
-                line_number = content[:match.start()].count('\n') + 1
+                line_number = content[: match.start()].count("\n") + 1
 
                 # Get snippet of code (first 50 chars)
                 snippet = code_content[:50].strip()
                 if len(code_content) > 50:
                     snippet += "..."
 
-                errors.append(
-                    MissingLanguageError(relative_path, line_number, snippet)
-                )
+                errors.append(MissingLanguageError(relative_path, line_number, snippet))
 
         return errors
 
@@ -181,9 +170,7 @@ class CodeBlockValidator:
         print("\n📊 Statistics:")
         print(f"  Total files scanned: {result.stats.get('total_files', 0)}")
         print(f"  Total code blocks: {result.stats.get('total_code_blocks', 0)}")
-        print(
-            f"  Blocks without language: {result.stats.get('blocks_without_language', 0)}"
-        )
+        print(f"  Blocks without language: {result.stats.get('blocks_without_language', 0)}")
 
         # Errors
         if result.errors:
@@ -195,9 +182,7 @@ class CodeBlockValidator:
                 if isinstance(error, MissingLanguageError):
                     if error.file_path not in errors_by_file:
                         errors_by_file[error.file_path] = []
-                    errors_by_file[error.file_path].append(
-                        (error.line_number, error.snippet)
-                    )
+                    errors_by_file[error.file_path].append((error.line_number, error.snippet))
 
             for file_path, blocks in sorted(errors_by_file.items()):
                 print(f"\n  📄 {file_path}:")
@@ -210,9 +195,7 @@ class CodeBlockValidator:
             print("     # Your code here")
             print("     ```")
             print("\n     Common languages:")
-            print(
-                "     python, javascript, typescript, bash, yaml, json, sql, dockerfile"
-            )
+            print("     python, javascript, typescript, bash, yaml, json, sql, dockerfile")
 
         # Summary
         print("\n" + "=" * 80)
@@ -227,9 +210,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate code block language tags in MDX files"
-    )
+    parser = argparse.ArgumentParser(description="Validate code block language tags in MDX files")
     parser.add_argument(
         "--docs-dir",
         type=Path,

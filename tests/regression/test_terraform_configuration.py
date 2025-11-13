@@ -122,10 +122,10 @@ class TestTerraformDuplicateBlocks:
                 + "\n".join(f"  - {file}" for file in files_with_duplicates)
                 + "\n\n💡 Fix: Merge terraform{{}} blocks into a single block:\n"
                 + "  terraform {{\n"
-                + "    required_version = \">= 1.5.0\"\n"
+                + '    required_version = ">= 1.5.0"\n'
                 + "    required_providers {{\n"
-                + "      google = {{ source = \"hashicorp/google\", version = \"~> 6.0\" }}\n"
-                + "      random = {{ source = \"hashicorp/random\", version = \"~> 3.0\" }}\n"
+                + '      google = {{ source = "hashicorp/google", version = "~> 6.0" }}\n'
+                + '      random = {{ source = "hashicorp/random", version = "~> 3.0" }}\n'
                 + "    }}\n"
                 + "  }}\n"
             )
@@ -144,9 +144,7 @@ class TestTerraformDuplicateBlocks:
             content = file_path.read_text()
 
             # Extract terraform blocks
-            terraform_blocks = re.findall(
-                r"terraform\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}", content, re.DOTALL
-            )
+            terraform_blocks = re.findall(r"terraform\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}", content, re.DOTALL)
 
             for block in terraform_blocks:
                 # Count required_providers within this terraform block
@@ -155,9 +153,7 @@ class TestTerraformDuplicateBlocks:
 
                 if len(matches) > 1:
                     relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
-                    files_with_duplicates.append(
-                        f"{relative_path} ({len(matches)} required_providers blocks)"
-                    )
+                    files_with_duplicates.append(f"{relative_path} ({len(matches)} required_providers blocks)")
 
         if files_with_duplicates:
             pytest.fail(
@@ -224,9 +220,7 @@ class TestTerraformVariableValidations:
                     var_refs = re.findall(r"var\.(\w+)", line)
                     for ref in var_refs:
                         if ref != current_variable:
-                            relative_path = file_path.relative_to(
-                                Path(__file__).parent.parent.parent
-                            )
+                            relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
                             invalid_validations.append(
                                 f"{relative_path}:{line_num} - "
                                 f"variable '{current_variable}' validation references var.{ref}"
@@ -242,11 +236,11 @@ class TestTerraformVariableValidations:
                 + "\n".join(f"  - {item}" for item in invalid_validations)
                 + "\n\n💡 Fix: Terraform variable validations can only reference the variable itself.\n"
                 + "Move cross-variable validation to resource-level preconditions:\n"
-                + "  resource \"example\" \"name\" {{\n"
+                + '  resource "example" "name" {{\n'
                 + "    lifecycle {{\n"
                 + "      precondition {{\n"
-                + "        condition     = !var.enable_cmek || var.kms_key_name != \"\"\n"
-                + "        error_message = \"...\"\n"
+                + '        condition     = !var.enable_cmek || var.kms_key_name != ""\n'
+                + '        error_message = "..."\n'
                 + "      }}\n"
                 + "    }}\n"
                 + "  }}\n"
@@ -288,9 +282,7 @@ class TestTerraformProviderVersions:
 
             # Find google provider version constraints
             # Pattern: google = { ... version = "~> 6.0" }
-            google_version_pattern = re.compile(
-                r'google\s*=\s*\{[^}]*version\s*=\s*"([^"]+)"', re.DOTALL
-            )
+            google_version_pattern = re.compile(r'google\s*=\s*\{[^}]*version\s*=\s*"([^"]+)"', re.DOTALL)
             matches = google_version_pattern.findall(content)
 
             if matches:
@@ -363,12 +355,8 @@ class TestTerraformProviderVersions:
                         min_major, min_minor = map(int, min_version.split("."))
                         ci_major, ci_minor, ci_patch = map(int, CI_TERRAFORM_VERSION.split("."))
 
-                        if min_major > ci_major or (
-                            min_major == ci_major and min_minor > ci_minor
-                        ):
-                            relative_path = file_path.relative_to(
-                                Path(__file__).parent.parent.parent
-                            )
+                        if min_major > ci_major or (min_major == ci_major and min_minor > ci_minor):
+                            relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
                             incompatible_files.append(
                                 f"{relative_path}: requires >= {min_version}, CI has {CI_TERRAFORM_VERSION}"
                             )

@@ -19,7 +19,6 @@ from typing import Dict, List, Set
 
 import pytest
 
-
 # Project root is 3 levels up from this file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DOCS_DIR = PROJECT_ROOT / "docs"
@@ -111,10 +110,7 @@ class TestDocumentationNavigation:
         with open(DOCS_JSON) as f:
             docs_config = json.load(f)
 
-        nav_pages = self._extract_navigation_pages(
-            docs_config.get("navigation", {}),
-            return_list=True
-        )
+        nav_pages = self._extract_navigation_pages(docs_config.get("navigation", {}), return_list=True)
 
         # Find duplicates
         seen = set()
@@ -130,11 +126,7 @@ class TestDocumentationNavigation:
             + "\n\nRemove duplicate entries from docs/docs.json."
         )
 
-    def _extract_navigation_pages(
-        self,
-        nav_obj: Dict,
-        return_list: bool = False
-    ):
+    def _extract_navigation_pages(self, nav_obj: Dict, return_list: bool = False):
         """Extract all page references from navigation object."""
         pages = []
 
@@ -187,19 +179,13 @@ class TestADRNumbering:
             adr_num = parts[1]
 
             if adr_num in adr_numbers:
-                duplicates.append({
-                    "number": adr_num,
-                    "files": [adr_numbers[adr_num], filename]
-                })
+                duplicates.append({"number": adr_num, "files": [adr_numbers[adr_num], filename]})
             else:
                 adr_numbers[adr_num] = filename
 
         assert not duplicates, (
             f"Found duplicate ADR numbers:\n"
-            + "\n".join(
-                f"  - ADR-{d['number']}: {', '.join(d['files'])}"
-                for d in duplicates
-            )
+            + "\n".join(f"  - ADR-{d['number']}: {', '.join(d['files'])}" for d in duplicates)
             + "\n\nRenumber one of the duplicate ADRs to the next available number."
         )
 
@@ -290,8 +276,7 @@ class TestADRNumbering:
             # This is informational, not a failure
             print(
                 f"\nINFO: Found {len(gaps)} gaps in ADR numbering: "
-                f"{', '.join(f'ADR-{n:04d}' for n in gaps[:5])}"
-                + ("..." if len(gaps) > 5 else "")
+                f"{', '.join(f'ADR-{n:04d}' for n in gaps[:5])}" + ("..." if len(gaps) > 5 else "")
             )
 
 
@@ -335,10 +320,7 @@ class TestVersionConsistency:
 
         # Note: This test is informational - version references may be intentional
         if version_issues:
-            print(
-                f"\nINFO: Project version {version} not found in:\n"
-                + "\n".join(f"  - {f}" for f in version_issues)
-            )
+            print(f"\nINFO: Project version {version} not found in:\n" + "\n".join(f"  - {f}" for f in version_issues))
 
     def test_readme_adr_badge_accuracy(self):
         """
@@ -359,10 +341,7 @@ class TestVersionConsistency:
         readme_content = readme.read_text()
 
         # Match badge pattern: [![ADRs](https://img.shields.io/badge/ADRs-XX-informational.svg)]
-        badge_match = re.search(
-            r'!\[ADRs\]\(https://img\.shields\.io/badge/ADRs-(\d+)-',
-            readme_content
-        )
+        badge_match = re.search(r"!\[ADRs\]\(https://img\.shields\.io/badge/ADRs-(\d+)-", readme_content)
 
         if not badge_match:
             pytest.fail(
@@ -387,6 +366,7 @@ class TestVersionConsistency:
 
         # Simple regex to find version
         import re
+
         match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
         if match:
             return match.group(1)
@@ -418,7 +398,7 @@ class TestDocumentationQuality:
         # Directories/files to exclude from TODO checking
         excluded_patterns = [
             ".mintlify/templates/",  # Template files intentionally have TODOs
-            "archive/",               # Archive docs can have TODOs
+            "archive/",  # Archive docs can have TODOs
         ]
 
         docs_with_todos = []
@@ -449,13 +429,13 @@ class TestDocumentationQuality:
             todo_markers = []
 
             # Pattern 1: TODO/FIXME with colon (TODO: task)
-            todo_markers.extend(re.findall(r'(?:^|\s)(?:TODO|FIXME)\s*:', content, re.IGNORECASE | re.MULTILINE))
+            todo_markers.extend(re.findall(r"(?:^|\s)(?:TODO|FIXME)\s*:", content, re.IGNORECASE | re.MULTILINE))
 
             # Pattern 2: Comment markers (# TODO, <!-- TODO, // TODO)
-            todo_markers.extend(re.findall(r'(?:#|<!--|//)\s*(?:TODO|FIXME)\b', content, re.IGNORECASE))
+            todo_markers.extend(re.findall(r"(?:#|<!--|//)\s*(?:TODO|FIXME)\b", content, re.IGNORECASE))
 
             # Pattern 3: TODO with parentheses (TODO(username))
-            todo_markers.extend(re.findall(r'(?:^|\s)(?:TODO|FIXME)\s*\([^)]+\)', content, re.IGNORECASE | re.MULTILINE))
+            todo_markers.extend(re.findall(r"(?:^|\s)(?:TODO|FIXME)\s*\([^)]+\)", content, re.IGNORECASE | re.MULTILINE))
 
             # Pattern 4: Standalone TODO at start of line followed by dash and text (- TODO something)
             # But be very careful here - only match if it's clearly a task marker
@@ -464,8 +444,8 @@ class TestDocumentationQuality:
             todos = len(todo_markers)
 
             # Count FIXMEs separately for reporting
-            fixme_count = len([m for m in todo_markers if 'FIXME' in m.upper()])
-            todo_count = len([m for m in todo_markers if 'TODO' in m.upper() and 'FIXME' not in m.upper()])
+            fixme_count = len([m for m in todo_markers if "FIXME" in m.upper()])
+            todo_count = len([m for m in todo_markers if "TODO" in m.upper() and "FIXME" not in m.upper()])
 
             # For compatibility, use total for todos, specific count for fixmes
             todos = todo_count
@@ -533,7 +513,7 @@ class TestDocumentationQuality:
         broken_links = []
 
         # Pattern to match markdown links: [text](url)
-        link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+        link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
         for mdx_file in DOCS_DIR.rglob("*.mdx"):
             content = mdx_file.read_text()
@@ -545,16 +525,16 @@ class TestDocumentationQuality:
                 link_url = match.group(2)
 
                 # Skip external links (http/https)
-                if link_url.startswith(('http://', 'https://', 'mailto:')):
+                if link_url.startswith(("http://", "https://", "mailto:")):
                     continue
 
                 # Skip anchor-only links (they reference the same page)
-                if link_url.startswith('#'):
+                if link_url.startswith("#"):
                     # TODO: Could validate anchors exist, but that's complex
                     continue
 
                 # Handle links with anchors
-                link_path = link_url.split('#')[0] if '#' in link_url else link_url
+                link_path = link_url.split("#")[0] if "#" in link_url else link_url
 
                 # Skip empty links
                 if not link_path:
@@ -570,7 +550,7 @@ class TestDocumentationQuality:
                 target_paths.append(current_dir / link_path)
 
                 # 2. If it ends with .mdx, try as-is
-                if link_path.endswith('.mdx'):
+                if link_path.endswith(".mdx"):
                     target_paths.append(current_dir / link_path)
                 # 3. If it doesn't end with .mdx, try adding it
                 else:
@@ -578,7 +558,7 @@ class TestDocumentationQuality:
 
                 # 4. Try relative to docs root
                 target_paths.append(DOCS_DIR / link_path)
-                if not link_path.endswith('.mdx'):
+                if not link_path.endswith(".mdx"):
                     target_paths.append(DOCS_DIR / f"{link_path}.mdx")
 
                 # 5. Try relative to project root (for files like README.md)
@@ -588,12 +568,14 @@ class TestDocumentationQuality:
                 link_valid = any(p.exists() for p in target_paths)
 
                 if not link_valid:
-                    broken_links.append({
-                        'file': str(rel_path),
-                        'link_text': link_text,
-                        'link_url': link_url,
-                        'tried_paths': [str(p) for p in target_paths[:3]]  # Show first 3
-                    })
+                    broken_links.append(
+                        {
+                            "file": str(rel_path),
+                            "link_text": link_text,
+                            "link_url": link_url,
+                            "tried_paths": [str(p) for p in target_paths[:3]],  # Show first 3
+                        }
+                    )
 
         # Report broken links
         if broken_links:

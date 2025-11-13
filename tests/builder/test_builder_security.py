@@ -26,6 +26,15 @@ from mcp_server_langgraph.builder.codegen.generator import CodeGenerator, Workfl
 class TestBuilderAuthentication:
     """Test that builder endpoints require authentication"""
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
     def test_save_workflow_requires_authentication(self):
         """
         SECURITY TEST: /api/builder/save should require authentication.

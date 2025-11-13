@@ -12,8 +12,9 @@ TDD Context:
 Following TDD: Tests written FIRST to catch security violations, then fixes applied.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 import yaml
 
 
@@ -180,23 +181,17 @@ class TestKubernetesSecurityHardening:
 
                 # Check runAsNonRoot
                 if not security_context.get("runAsNonRoot"):
-                    violations.append(
-                        f"{file_path}: Container '{container_name}' missing runAsNonRoot: true"
-                    )
+                    violations.append(f"{file_path}: Container '{container_name}' missing runAsNonRoot: true")
 
                 # Check allowPrivilegeEscalation
                 if security_context.get("allowPrivilegeEscalation") is not False:
-                    violations.append(
-                        f"{file_path}: Container '{container_name}' missing allowPrivilegeEscalation: false"
-                    )
+                    violations.append(f"{file_path}: Container '{container_name}' missing allowPrivilegeEscalation: false")
 
                 # Check capabilities are dropped
                 capabilities = security_context.get("capabilities", {})
                 drop = capabilities.get("drop", [])
                 if "ALL" not in drop:
-                    violations.append(
-                        f"{file_path}: Container '{container_name}' missing capabilities.drop: [ALL]"
-                    )
+                    violations.append(f"{file_path}: Container '{container_name}' missing capabilities.drop: [ALL]")
 
         assert not violations, (
             "\n\nSecurity violations (least-privilege principles):\n"

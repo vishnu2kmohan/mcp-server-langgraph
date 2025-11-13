@@ -11,8 +11,9 @@ TDD Context:
 Following TDD: Tests written FIRST to catch deployment issues, preventing production incidents.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 import yaml
 
 
@@ -119,8 +120,7 @@ class TestStagingDeploymentRequirements:
         # Validate format
         parts = instance_arg.split(":")
         assert len(parts) == 3, (
-            f"Invalid instance connection string format: {instance_arg}\n"
-            f"Expected: PROJECT:REGION:INSTANCE"
+            f"Invalid instance connection string format: {instance_arg}\n" f"Expected: PROJECT:REGION:INSTANCE"
         )
 
     def test_cloud_sql_proxy_has_health_checks(self):
@@ -146,13 +146,9 @@ class TestStagingDeploymentRequirements:
         liveness = proxy["livenessProbe"]
         readiness = proxy["readinessProbe"]
 
-        assert liveness.get("httpGet", {}).get("path") == "/liveness", (
-            "Liveness probe should use /liveness endpoint"
-        )
+        assert liveness.get("httpGet", {}).get("path") == "/liveness", "Liveness probe should use /liveness endpoint"
 
-        assert readiness.get("httpGet", {}).get("path") == "/readiness", (
-            "Readiness probe should use /readiness endpoint"
-        )
+        assert readiness.get("httpGet", {}).get("path") == "/readiness", "Readiness probe should use /readiness endpoint"
 
     def test_cloud_sql_proxy_uses_private_ip(self):
         """
@@ -196,9 +192,9 @@ class TestStagingDeploymentRequirements:
 
         # Check readOnlyRootFilesystem is enabled
         security_context = keycloak.get("securityContext", {})
-        assert security_context.get("readOnlyRootFilesystem") is True, (
-            "Keycloak should have readOnlyRootFilesystem: true (security requirement)"
-        )
+        assert (
+            security_context.get("readOnlyRootFilesystem") is True
+        ), "Keycloak should have readOnlyRootFilesystem: true (security requirement)"
 
         # Verify required volume mounts exist
         volume_mounts = keycloak.get("volumeMounts", [])

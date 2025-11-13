@@ -181,12 +181,50 @@ class MemorySafetyChecker(ast.NodeVisitor):
                     )
                 )
 
+        # Check if auth test class is missing setup_method for MCP_SKIP_AUTH cleanup
+        # This prevents environment variable pollution from tests/api/conftest.py
+        if self._is_auth_test_class():
+            has_setup = "setup_method" in self.current_class_methods
+            if not has_setup:
+                self.violations.append(
+                    Violation(
+                        file_path=self.file_path,
+                        line_number=self.current_class_line,
+                        violation_type="missing_setup_method_auth",
+                        message=f"Auth test class {self.current_class} missing setup_method() to reset MCP_SKIP_AUTH",
+                        fix_suggestion=f"Add setup_method() to class {self.current_class}:\n"
+                        f"    def setup_method(self):\n"
+                        f'        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""\n'
+                        f"        import os\n"
+                        f"        import mcp_server_langgraph.auth.middleware as middleware_module\n"
+                        f"        middleware_module._global_auth_middleware = None\n"
+                        f'        os.environ["MCP_SKIP_AUTH"] = "false"',
+                    )
+                )
+
         # Check if performance test is missing skipif for xdist
         if self.class_is_performance:
             # Check all test methods in the class
             for item in ast.walk(ast.Module(body=[])):  # Placeholder, actual check done in visit_FunctionDef
                 pass
             # This is handled in visit_FunctionDef
+
+    def _is_auth_test_class(self) -> bool:
+        """Check if this is an authentication-related test class that needs MCP_SKIP_AUTH reset."""
+        if not self.current_class:
+            return False
+
+        # Check if this is in test_auth.py file
+        if "test_auth.py" in self.file_path:
+            return True
+
+        # Check if class name contains auth-related keywords
+        auth_keywords = ["Auth", "GetCurrentUser", "VerifyToken", "Bearer", "JWT"]
+        for keyword in auth_keywords:
+            if keyword in self.current_class:
+                return True
+
+        return False
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Visit function definitions to check for performance test patterns."""

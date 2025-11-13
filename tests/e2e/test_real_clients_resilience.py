@@ -17,6 +17,15 @@ import pytest
 class TestKeycloakAuthErrorHandling:
     """Test error handling in RealKeycloakAuth client"""
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()

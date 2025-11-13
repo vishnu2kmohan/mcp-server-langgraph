@@ -45,9 +45,7 @@ class InvalidImageFormatError(ImageError):
         self.file_path = file_path
         self.image_path = image_path
         self.format = format
-        super().__init__(
-            f"Unsupported image format in {file_path}: {image_path} ({format})"
-        )
+        super().__init__(f"Unsupported image format in {file_path}: {image_path} ({format})")
 
 
 @dataclass
@@ -83,7 +81,7 @@ class ImageValidator:
     SUPPORTED_FORMATS = {".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp"}
 
     # Regex patterns for image detection
-    MARKDOWN_IMAGE_PATTERN = re.compile(r'!\[([^\]]*)\]\(([^\)]+)\)')
+    MARKDOWN_IMAGE_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^\)]+)\)")
     HTML_IMAGE_PATTERN = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']')
 
     def __init__(self, docs_dir: Path):
@@ -135,18 +133,14 @@ class ImageValidator:
 
         for mdx_path in self.docs_dir.rglob("*.mdx"):
             relative_path = mdx_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(mdx_path)
 
         return files
 
-    def _validate_file(
-        self, file_path: Path, relative_path: str, stats: Dict[str, int]
-    ) -> List[ImageError]:
+    def _validate_file(self, file_path: Path, relative_path: str, stats: Dict[str, int]) -> List[ImageError]:
         """Validate image references in a single file."""
         errors = []
 
@@ -187,14 +181,14 @@ class ImageValidator:
 
     def _is_external_image(self, image_path: str) -> bool:
         """Check if image is external (http/https)."""
-        return image_path.startswith(('http://', 'https://', '//'))
+        return image_path.startswith(("http://", "https://", "//"))
 
     def _validate_image(self, source_file: Path, image_path: str) -> bool:
         """Validate that image exists."""
         # Remove leading slash for docs-relative paths
-        if image_path.startswith('/'):
+        if image_path.startswith("/"):
             # Absolute path relative to docs directory
-            target = self.docs_dir / image_path.lstrip('/')
+            target = self.docs_dir / image_path.lstrip("/")
         else:
             # Relative path from source file directory
             source_dir = source_file.parent

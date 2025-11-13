@@ -76,7 +76,7 @@ class LinkValidator:
     ]
 
     # Regex patterns
-    MARKDOWN_LINK_PATTERN = re.compile(r'\[([^\]]+)\]\(([^\)]+)\)')
+    MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\(([^\)]+)\)")
     MDX_LINK_PATTERN = re.compile(r'<a\s+href=["\']([^"\']+)["\']')
 
     def __init__(self, docs_dir: Path):
@@ -130,18 +130,14 @@ class LinkValidator:
 
         for mdx_path in self.docs_dir.rglob("*.mdx"):
             relative_path = mdx_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(mdx_path)
 
         return files
 
-    def _validate_file(
-        self, file_path: Path, relative_path: str, stats: Dict[str, int]
-    ) -> List[LinkError]:
+    def _validate_file(self, file_path: Path, relative_path: str, stats: Dict[str, int]) -> List[LinkError]:
         """Validate links in a single file."""
         errors = []
 
@@ -156,7 +152,7 @@ class LinkValidator:
 
         for link in links:
             # Skip anchors and special links
-            if link.startswith('#') or link.startswith('mailto:') or link.startswith('tel:'):
+            if link.startswith("#") or link.startswith("mailto:") or link.startswith("tel:"):
                 continue
 
             # Check if internal or external
@@ -189,12 +185,12 @@ class LinkValidator:
 
     def _is_internal_link(self, link: str) -> bool:
         """Check if link is internal (relative path)."""
-        return not link.startswith(('http://', 'https://', '//', 'www.'))
+        return not link.startswith(("http://", "https://", "//", "www."))
 
     def _validate_internal_link(self, source_file: Path, link: str) -> bool:
         """Validate that internal link target exists."""
         # Remove anchor if present
-        link = link.split('#')[0]
+        link = link.split("#")[0]
         if not link:  # Just an anchor
             return True
 
@@ -207,7 +203,7 @@ class LinkValidator:
             return True
 
         # Try with .mdx extension
-        if not link.endswith('.mdx'):
+        if not link.endswith(".mdx"):
             target_mdx = source_dir / f"{link}.mdx"
             if target_mdx.exists():
                 return True
@@ -218,7 +214,7 @@ class LinkValidator:
         """Basic URL validation."""
         try:
             result = urlparse(url)
-            return all([result.scheme, result.netloc]) or url.startswith('//')
+            return all([result.scheme, result.netloc]) or url.startswith("//")
         except Exception:
             return False
 

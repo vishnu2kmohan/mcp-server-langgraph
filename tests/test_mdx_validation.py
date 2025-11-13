@@ -6,10 +6,11 @@ This test suite follows TDD principles to ensure MDX syntax errors
 are caught and fixed correctly, preventing regressions.
 """
 
-import pytest
+import sys
 import tempfile
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
@@ -123,7 +124,7 @@ Just a note
 
     def test_all_supported_languages(self):
         """Test that all supported languages are handled."""
-        languages = ['bash', 'python', 'javascript', 'json', 'yaml', 'text', 'ini', 'hcl']
+        languages = ["bash", "python", "javascript", "json", "yaml", "text", "ini", "hcl"]
 
         for lang in languages:
             content = f"""```{lang}
@@ -155,11 +156,9 @@ import httpx
         # The duplicate ```python should be removed
         assert "```\n\n```python Python" in fixed or "```python Python" in fixed
         # Should not have duplicate pattern
-        lines = fixed.split('\n')
+        lines = fixed.split("\n")
         consecutive_python = any(
-            lines[i].strip() == '```' and
-            lines[i+1].strip() == '```python'
-            for i in range(len(lines)-1)
+            lines[i].strip() == "```" and lines[i + 1].strip() == "```python" for i in range(len(lines) - 1)
         )
         assert not consecutive_python, "Should not have ```\\n```python pattern"
 
@@ -251,7 +250,7 @@ Next section"""
 @pytest.fixture
 def temp_mdx_file():
     """Create a temporary MDX file for testing."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.mdx', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".mdx", delete=False) as f:
         yield Path(f.name)
     Path(f.name).unlink(missing_ok=True)
 

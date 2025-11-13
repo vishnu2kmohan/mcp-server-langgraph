@@ -15,9 +15,9 @@ Returns:
 """
 import sys
 from pathlib import Path
-from typing import Set, List, Tuple
-import yaml
+from typing import List, Set, Tuple
 
+import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
@@ -41,8 +41,7 @@ def load_base_serviceaccount_names() -> Set[str]:
 
                     # Validate base name follows convention
                     if not name.endswith("-sa"):
-                        print(f"WARNING: Base ServiceAccount '{name}' doesn't follow -sa naming convention",
-                              file=sys.stderr)
+                        print(f"WARNING: Base ServiceAccount '{name}' doesn't follow -sa naming convention", file=sys.stderr)
         except yaml.YAMLError as e:
             print(f"ERROR: Failed to parse {BASE_SA_PATH}: {e}", file=sys.stderr)
 
@@ -85,7 +84,7 @@ def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, s
                     clean_name = sa_name
                     for prefix in ["staging-", "production-", "dev-", "test-"]:
                         if clean_name.startswith(prefix):
-                            clean_name = clean_name[len(prefix):]
+                            clean_name = clean_name[len(prefix) :]
                             break
 
                     # Skip overlay-only ServiceAccounts (they don't need to match base)
@@ -98,12 +97,14 @@ def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, s
                         if not clean_name.endswith("-sa"):
                             potential_name = f"{clean_name}-sa"
                             if potential_name in base_names:
-                                errors.append((
-                                    sa_file,
-                                    sa_name,
-                                    f"ServiceAccount '{sa_name}' should be named with -sa suffix to match base. "
-                                    f"Expected: {sa_name}-sa (which would match base: {potential_name})"
-                                ))
+                                errors.append(
+                                    (
+                                        sa_file,
+                                        sa_name,
+                                        f"ServiceAccount '{sa_name}' should be named with -sa suffix to match base. "
+                                        f"Expected: {sa_name}-sa (which would match base: {potential_name})",
+                                    )
+                                )
                             # Else: Overlay-only SA not in allowed list - could be added later
 
         except yaml.YAMLError as e:

@@ -114,9 +114,8 @@ class TestDocumentationCodeBlocks:
                     untagged_blocks.append(f"{relative_path}:{line_num}")
 
         if untagged_blocks:
-            error_message = (
-                f"\n❌ Found {len(untagged_blocks)} untagged code blocks:\n\n"
-                + "\n".join(f"  - {block}" for block in untagged_blocks[:10])
+            error_message = f"\n❌ Found {len(untagged_blocks)} untagged code blocks:\n\n" + "\n".join(
+                f"  - {block}" for block in untagged_blocks[:10]
             )
             if len(untagged_blocks) > 10:
                 error_message += f"\n  ... and {len(untagged_blocks) - 10} more"
@@ -141,8 +140,7 @@ class TestDocumentationCodeBlocks:
         script_path = Path(__file__).parent.parent.parent / "scripts" / "add_code_block_languages.py"
 
         assert script_path.exists(), (
-            f"Auto-fix script not found: {script_path}\n"
-            "This script is required to fix untagged code blocks."
+            f"Auto-fix script not found: {script_path}\n" "This script is required to fix untagged code blocks."
         )
 
         # Verify script is a valid Python file

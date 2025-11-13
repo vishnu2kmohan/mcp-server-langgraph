@@ -13,9 +13,9 @@ Exit codes:
     1: Broken links found
 """
 
+import argparse
 import re
 import sys
-import argparse
 from pathlib import Path
 from typing import List, Optional, Set
 from urllib.parse import urlparse
@@ -34,18 +34,18 @@ def extract_internal_links(content: str) -> List[str]:
     links = []
 
     # Pattern 1: [text](path) markdown links
-    markdown_links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', content)
+    markdown_links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)
     for text, url in markdown_links:
         # Skip external URLs
-        if url.startswith(('http://', 'https://', 'mailto:', 'tel:')):
+        if url.startswith(("http://", "https://", "mailto:", "tel:")):
             continue
 
         # Skip pure anchors
-        if url.startswith('#'):
+        if url.startswith("#"):
             continue
 
         # Remove anchor from URL
-        url = url.split('#')[0]
+        url = url.split("#")[0]
 
         if url:
             links.append(url)
@@ -53,14 +53,14 @@ def extract_internal_links(content: str) -> List[str]:
     # Pattern 2: MDX Link components
     mdx_links = re.findall(r'<Link\s+href=["\']([^"\']+)["\']', content)
     for url in mdx_links:
-        if not url.startswith(('http://', 'https://', '#')):
+        if not url.startswith(("http://", "https://", "#")):
             links.append(url)
 
     # Pattern 3: Card/Button href attributes
     component_links = re.findall(r'href=["\']([^"\']+)["\']', content)
     for url in component_links:
-        if not url.startswith(('http://', 'https://', 'mailto:', '#')):
-            url_clean = url.split('#')[0]
+        if not url.startswith(("http://", "https://", "mailto:", "#")):
+            url_clean = url.split("#")[0]
             if url_clean and url_clean not in links:
                 links.append(url_clean)
 
@@ -80,12 +80,12 @@ def resolve_link(source_file: Path, target: str, docs_root: Optional[Path] = Non
         Resolved Path or None if cannot be resolved
     """
     if docs_root is None:
-        docs_root = Path('docs').resolve()
+        docs_root = Path("docs").resolve()
 
     try:
         # Absolute path from docs root
-        if target.startswith('/'):
-            resolved = docs_root / target.lstrip('/')
+        if target.startswith("/"):
+            resolved = docs_root / target.lstrip("/")
         else:
             # Relative path from source file
             resolved = (source_file.parent / target).resolve()
@@ -95,11 +95,11 @@ def resolve_link(source_file: Path, target: str, docs_root: Optional[Path] = Non
             return resolved
 
         if not resolved.suffix:
-            mdx_version = resolved.with_suffix('.mdx')
+            mdx_version = resolved.with_suffix(".mdx")
             if mdx_version.exists():
                 return mdx_version
 
-            md_version = resolved.with_suffix('.md')
+            md_version = resolved.with_suffix(".md")
             if md_version.exists():
                 return md_version
 
@@ -123,7 +123,7 @@ def validate_file_links(file_path: Path, docs_root: Optional[Path] = None) -> Li
     broken_links = []
 
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         links = extract_internal_links(content)
@@ -140,10 +140,10 @@ def validate_file_links(file_path: Path, docs_root: Optional[Path] = None) -> Li
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Check internal documentation links')
+    parser = argparse.ArgumentParser(description="Check internal documentation links")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--file', type=str, help='Check a single file')
-    group.add_argument('--all', action='store_true', help='Check all documentation files')
+    group.add_argument("--file", type=str, help="Check a single file")
+    group.add_argument("--all", action="store_true", help="Check all documentation files")
     args = parser.parse_args()
 
     if not args.file and not args.all:
@@ -153,11 +153,11 @@ def main():
         files = [Path(args.file).resolve()]
     else:
         # Check all markdown and MDX files
-        md_files = list(Path('.').rglob('*.md'))
-        mdx_files = list(Path('docs').rglob('*.mdx')) if Path('docs').exists() else []
+        md_files = list(Path(".").rglob("*.md"))
+        mdx_files = list(Path("docs").rglob("*.mdx")) if Path("docs").exists() else []
         files = md_files + mdx_files
         # Exclude node_modules, .venv, etc.
-        files = [f for f in files if 'node_modules' not in str(f) and '.venv' not in str(f)]
+        files = [f for f in files if "node_modules" not in str(f) and ".venv" not in str(f)]
 
     print(f"Checking {len(files)} files for broken internal links...\n")
 

@@ -8,12 +8,11 @@ Tests validate that:
 4. Backup is created before modification
 """
 
-import pytest
 from pathlib import Path
-from scripts.validators.codeblock_autofixer import (
-    CodeBlockAutoFixer,
-    detect_language,
-)
+
+import pytest
+
+from scripts.validators.codeblock_autofixer import CodeBlockAutoFixer, detect_language
 
 
 class TestLanguageDetection:

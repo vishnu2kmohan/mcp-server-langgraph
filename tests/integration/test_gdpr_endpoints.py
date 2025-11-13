@@ -189,7 +189,7 @@ class TestGDPREndpoints:
         """Test PATCH /api/v1/users/me updates profile."""
         update_data = {"name": "Alice Updated", "email": "alice.updated@example.com"}
 
-        response = client.patch("/api/v1/users/me", json={"profile_update": update_data})
+        response = client.patch("/api/v1/users/me", json=update_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -200,7 +200,7 @@ class TestGDPREndpoints:
 
     def test_update_user_profile_empty_data(self, client):
         """Test PATCH /api/v1/users/me with no data returns 400."""
-        response = client.patch("/api/v1/users/me", json={"profile_update": {}})
+        response = client.patch("/api/v1/users/me", json={})
 
         assert response.status_code == 400
         assert "No fields provided" in response.json()["detail"]

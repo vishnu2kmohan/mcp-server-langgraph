@@ -8,13 +8,11 @@ Tests validate that:
 4. Proper error reporting
 """
 
-import pytest
 from pathlib import Path
-from scripts.validators.mdx_extension_validator import (
-    MDXExtensionValidator,
-    ExtensionError,
-    InvalidExtensionError,
-)
+
+import pytest
+
+from scripts.validators.mdx_extension_validator import ExtensionError, InvalidExtensionError, MDXExtensionValidator
 
 
 class TestMDXExtensionValidator:

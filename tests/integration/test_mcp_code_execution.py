@@ -27,9 +27,8 @@ class TestMCPCodeExecutionEndpoint:
     @pytest.fixture
     async def mcp_server(self):
         """Create MCP server instance"""
-        # This will fail initially - we need to register the tool
+        # MCPAgentServer initializes in __init__, no separate initialize() method needed
         server = MCPAgentServer()
-        await server.initialize()
         return server
 
     @pytest.mark.asyncio
@@ -122,8 +121,8 @@ class TestMCPToolDiscoveryEndpoint:
     @pytest.fixture
     async def mcp_server(self):
         """Create MCP server instance"""
+        # MCPAgentServer initializes in __init__, no separate initialize() method needed
         server = MCPAgentServer()
-        await server.initialize()
         return server
 
     @pytest.mark.asyncio

@@ -16,10 +16,11 @@ Exit codes:
 
 import re
 import sys
-import yaml
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+
+import yaml
 
 
 class FrontmatterError(Exception):
@@ -87,9 +88,7 @@ class FrontmatterValidator:
     ]
 
     # Regex to extract frontmatter
-    FRONTMATTER_PATTERN = re.compile(
-        r"^---\s*\n(.*?)\n---\s*\n", re.MULTILINE | re.DOTALL
-    )
+    FRONTMATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.MULTILINE | re.DOTALL)
 
     def __init__(self, docs_dir: Path):
         """
@@ -145,18 +144,14 @@ class FrontmatterValidator:
         for mdx_path in self.docs_dir.rglob("*.mdx"):
             # Check if file should be excluded
             relative_path = mdx_path.relative_to(self.docs_dir)
-            if any(
-                pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS
-            ):
+            if any(pattern in str(relative_path) for pattern in self.EXCLUDE_PATTERNS):
                 continue
 
             files.add(mdx_path)
 
         return files
 
-    def _validate_file(
-        self, file_path: Path, relative_path: str
-    ) -> List[FrontmatterError]:
+    def _validate_file(self, file_path: Path, relative_path: str) -> List[FrontmatterError]:
         """
         Validate frontmatter in a single file.
 
@@ -173,9 +168,7 @@ class FrontmatterValidator:
         try:
             content = file_path.read_text()
         except Exception as e:
-            errors.append(
-                InvalidYAMLError(relative_path, f"Cannot read file: {e}")
-            )
+            errors.append(InvalidYAMLError(relative_path, f"Cannot read file: {e}"))
             return errors
 
         # Extract frontmatter
@@ -195,18 +188,14 @@ class FrontmatterValidator:
 
         # Check if frontmatter is a dict
         if not isinstance(frontmatter, dict):
-            errors.append(
-                InvalidYAMLError(relative_path, "Frontmatter must be a YAML object")
-            )
+            errors.append(InvalidYAMLError(relative_path, "Frontmatter must be a YAML object"))
             return errors
 
         # Validate required fields
         for field in self.REQUIRED_FIELDS:
             if field not in frontmatter:
                 errors.append(MissingRequiredFieldError(relative_path, field))
-            elif not frontmatter[field] or (
-                isinstance(frontmatter[field], str) and not frontmatter[field].strip()
-            ):
+            elif not frontmatter[field] or (isinstance(frontmatter[field], str) and not frontmatter[field].strip()):
                 errors.append(MissingRequiredFieldError(relative_path, field))
 
         return errors
@@ -266,9 +255,7 @@ def main():
     """Main CLI entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate MDX file frontmatter"
-    )
+    parser = argparse.ArgumentParser(description="Validate MDX file frontmatter")
     parser.add_argument(
         "--docs-dir",
         type=Path,

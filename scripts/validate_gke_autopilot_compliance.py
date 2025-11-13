@@ -13,16 +13,18 @@ Exit codes:
     1: Validation failures found
 """
 
-import sys
-import yaml
 import re
-from pathlib import Path
-from typing import Dict, List, Tuple, Any
 import subprocess
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import yaml
 
 
 class ValidationError(Exception):
     """Custom exception for validation errors"""
+
     pass
 
 
@@ -46,7 +48,7 @@ class GKEAutopilotValidator:
         """Parse CPU string to millicores"""
         if not cpu_str:
             return 0.0
-        if cpu_str.endswith('m'):
+        if cpu_str.endswith("m"):
             return float(cpu_str[:-1])
         return float(cpu_str) * 1000
 
@@ -56,19 +58,19 @@ class GKEAutopilotValidator:
             return 0.0
 
         units = {
-            'Ki': 1 / 1024,
-            'Mi': 1,
-            'Gi': 1024,
-            'Ti': 1024 * 1024,
-            'K': 1 / 1024,
-            'M': 1,
-            'G': 1024,
-            'T': 1024 * 1024,
+            "Ki": 1 / 1024,
+            "Mi": 1,
+            "Gi": 1024,
+            "Ti": 1024 * 1024,
+            "K": 1 / 1024,
+            "M": 1,
+            "G": 1024,
+            "T": 1024 * 1024,
         }
 
         for unit, multiplier in units.items():
             if mem_str.endswith(unit):
-                return float(mem_str[:-len(unit)]) * multiplier
+                return float(mem_str[: -len(unit)]) * multiplier
 
         # Assume bytes if no unit
         return float(mem_str) / (1024 * 1024)
@@ -77,10 +79,7 @@ class GKEAutopilotValidator:
         """Build kustomize overlay and return parsed manifests"""
         try:
             result = subprocess.run(
-                ['kubectl', 'kustomize', str(self.overlay_path)],
-                capture_output=True,
-                text=True,
-                check=True
+                ["kubectl", "kustomize", str(self.overlay_path)], capture_output=True, text=True, check=True
             )
             # Parse multi-document YAML
             manifests = list(yaml.safe_load_all(result.stdout))
@@ -90,22 +89,17 @@ class GKEAutopilotValidator:
         except yaml.YAMLError as e:
             raise ValidationError(f"Failed to parse YAML: {e}")
 
-    def validate_cpu_ratio(self, deployment_name: str, container_name: str,
-                           request: str, limit: str) -> None:
+    def validate_cpu_ratio(self, deployment_name: str, container_name: str, request: str, limit: str) -> None:
         """Validate CPU limit/request ratio"""
         req_cpu = self.parse_cpu(request)
         lim_cpu = self.parse_cpu(limit)
 
         if req_cpu == 0:
-            self.errors.append(
-                f"{deployment_name}/{container_name}: CPU request not specified"
-            )
+            self.errors.append(f"{deployment_name}/{container_name}: CPU request not specified")
             return
 
         if lim_cpu == 0:
-            self.errors.append(
-                f"{deployment_name}/{container_name}: CPU limit not specified"
-            )
+            self.errors.append(f"{deployment_name}/{container_name}: CPU limit not specified")
             return
 
         ratio = lim_cpu / req_cpu
@@ -116,22 +110,17 @@ class GKEAutopilotValidator:
                 f"(request: {request}, limit: {limit})"
             )
 
-    def validate_memory_ratio(self, deployment_name: str, container_name: str,
-                              request: str, limit: str) -> None:
+    def validate_memory_ratio(self, deployment_name: str, container_name: str, request: str, limit: str) -> None:
         """Validate memory limit/request ratio"""
         req_mem = self.parse_memory(request)
         lim_mem = self.parse_memory(limit)
 
         if req_mem == 0:
-            self.warnings.append(
-                f"{deployment_name}/{container_name}: Memory request not specified"
-            )
+            self.warnings.append(f"{deployment_name}/{container_name}: Memory request not specified")
             return
 
         if lim_mem == 0:
-            self.warnings.append(
-                f"{deployment_name}/{container_name}: Memory limit not specified"
-            )
+            self.warnings.append(f"{deployment_name}/{container_name}: Memory limit not specified")
             return
 
         ratio = lim_mem / req_mem
@@ -142,52 +131,45 @@ class GKEAutopilotValidator:
                 f"(request: {request}, limit: {limit})"
             )
 
-    def validate_env_vars(self, deployment_name: str, container_name: str,
-                          env_vars: List[Dict[str, Any]]) -> None:
+    def validate_env_vars(self, deployment_name: str, container_name: str, env_vars: List[Dict[str, Any]]) -> None:
         """Validate environment variables don't have conflicting sources"""
         for env in env_vars:
-            name = env.get('name', 'unknown')
-            has_value = 'value' in env
-            has_value_from = 'valueFrom' in env
+            name = env.get("name", "unknown")
+            has_value = "value" in env
+            has_value_from = "valueFrom" in env
 
             if has_value and has_value_from:
                 self.errors.append(
-                    f"{deployment_name}/{container_name}: Env var '{name}' "
-                    f"has both 'value' and 'valueFrom' specified"
+                    f"{deployment_name}/{container_name}: Env var '{name}' " f"has both 'value' and 'valueFrom' specified"
                 )
 
             # Check for empty valueFrom
-            if has_value_from and not env['valueFrom']:
-                self.errors.append(
-                    f"{deployment_name}/{container_name}: Env var '{name}' "
-                    f"has empty 'valueFrom'"
-                )
+            if has_value_from and not env["valueFrom"]:
+                self.errors.append(f"{deployment_name}/{container_name}: Env var '{name}' " f"has empty 'valueFrom'")
 
             # Check valueFrom has exactly one source
-            if has_value_from and env['valueFrom']:
-                sources = [k for k in env['valueFrom'].keys() if k != 'optional']
+            if has_value_from and env["valueFrom"]:
+                sources = [k for k in env["valueFrom"].keys() if k != "optional"]
                 if len(sources) > 1:
                     self.errors.append(
-                        f"{deployment_name}/{container_name}: Env var '{name}' "
-                        f"has multiple valueFrom sources: {sources}"
+                        f"{deployment_name}/{container_name}: Env var '{name}' " f"has multiple valueFrom sources: {sources}"
                     )
                 elif len(sources) == 0:
                     self.errors.append(
-                        f"{deployment_name}/{container_name}: Env var '{name}' "
-                        f"has valueFrom but no source specified"
+                        f"{deployment_name}/{container_name}: Env var '{name}' " f"has valueFrom but no source specified"
                     )
 
-    def validate_readonly_filesystem(self, deployment_name: str, container_name: str,
-                                      security_context: Dict[str, Any],
-                                      volume_mounts: List[Dict[str, Any]]) -> None:
+    def validate_readonly_filesystem(
+        self, deployment_name: str, container_name: str, security_context: Dict[str, Any], volume_mounts: List[Dict[str, Any]]
+    ) -> None:
         """Validate readOnlyRootFilesystem has appropriate volume mounts"""
-        readonly_fs = security_context.get('readOnlyRootFilesystem', False)
+        readonly_fs = security_context.get("readOnlyRootFilesystem", False)
 
         if readonly_fs:
-            mount_paths = {vm['mountPath'] for vm in volume_mounts}
+            mount_paths = {vm["mountPath"] for vm in volume_mounts}
 
             # Common writable paths that should be mounted
-            recommended_mounts = ['/tmp', '/var/tmp']
+            recommended_mounts = ["/tmp", "/var/tmp"]
             missing_mounts = [path for path in recommended_mounts if path not in mount_paths]
 
             if missing_mounts:
@@ -198,45 +180,44 @@ class GKEAutopilotValidator:
 
     def validate_deployment(self, manifest: Dict[str, Any]) -> None:
         """Validate a Deployment manifest"""
-        kind = manifest.get('kind')
-        if kind not in ['Deployment', 'StatefulSet', 'DaemonSet']:
+        kind = manifest.get("kind")
+        if kind not in ["Deployment", "StatefulSet", "DaemonSet"]:
             return
 
-        metadata = manifest.get('metadata', {})
-        name = metadata.get('name', 'unknown')
-        spec = manifest.get('spec', {})
-        template = spec.get('template', {})
-        pod_spec = template.get('spec', {})
-        containers = pod_spec.get('containers', [])
+        metadata = manifest.get("metadata", {})
+        name = metadata.get("name", "unknown")
+        spec = manifest.get("spec", {})
+        template = spec.get("template", {})
+        pod_spec = template.get("spec", {})
+        containers = pod_spec.get("containers", [])
 
         for container in containers:
-            container_name = container.get('name', 'unknown')
-            resources = container.get('resources', {})
-            requests = resources.get('requests', {})
-            limits = resources.get('limits', {})
+            container_name = container.get("name", "unknown")
+            resources = container.get("resources", {})
+            requests = resources.get("requests", {})
+            limits = resources.get("limits", {})
 
             # Validate CPU ratio
-            cpu_request = requests.get('cpu')
-            cpu_limit = limits.get('cpu')
+            cpu_request = requests.get("cpu")
+            cpu_limit = limits.get("cpu")
             if cpu_request and cpu_limit:
                 self.validate_cpu_ratio(name, container_name, cpu_request, cpu_limit)
 
             # Validate Memory ratio
-            mem_request = requests.get('memory')
-            mem_limit = limits.get('memory')
+            mem_request = requests.get("memory")
+            mem_limit = limits.get("memory")
             if mem_request and mem_limit:
                 self.validate_memory_ratio(name, container_name, mem_request, mem_limit)
 
             # Validate environment variables
-            env_vars = container.get('env', [])
+            env_vars = container.get("env", [])
             if env_vars:
                 self.validate_env_vars(name, container_name, env_vars)
 
             # Validate readOnlyRootFilesystem
-            security_context = container.get('securityContext', {})
-            volume_mounts = container.get('volumeMounts', [])
-            self.validate_readonly_filesystem(name, container_name,
-                                              security_context, volume_mounts)
+            security_context = container.get("securityContext", {})
+            volume_mounts = container.get("volumeMounts", [])
+            self.validate_readonly_filesystem(name, container_name, security_context, volume_mounts)
 
     def validate(self) -> bool:
         """Run all validations and return True if passed"""
@@ -282,9 +263,8 @@ def main():
         sys.exit(1)
 
     # If it's a directory with subdirectories, validate each overlay
-    if overlay.is_dir() and not (overlay / 'kustomization.yaml').exists():
-        overlays = [d for d in overlay.iterdir() if d.is_dir()
-                    and (d / 'kustomization.yaml').exists()]
+    if overlay.is_dir() and not (overlay / "kustomization.yaml").exists():
+        overlays = [d for d in overlay.iterdir() if d.is_dir() and (d / "kustomization.yaml").exists()]
         if not overlays:
             print(f"❌ ERROR: No kustomization.yaml found in {overlay_path}")
             sys.exit(1)
@@ -304,5 +284,5 @@ def main():
         sys.exit(0 if success else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

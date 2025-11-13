@@ -201,6 +201,15 @@ class TestTelemetryProvider:
 class TestAuthProvider:
     """Test the auth provider abstraction"""
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
     def test_noop_auth_provider(self):
         """Test that no-op auth provider works for tests"""
         from mcp_server_langgraph.core.container import NoOpAuthProvider
@@ -281,6 +290,15 @@ class TestContainerTestHelpers:
         from mcp_server_langgraph.core.config import Settings
         from mcp_server_langgraph.core.container import create_test_container
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
+
         custom_settings = Settings(environment="test", log_level="DEBUG")
 
         container = create_test_container(settings=custom_settings)
@@ -290,6 +308,15 @@ class TestContainerTestHelpers:
 
 class TestProductionAuthValidation:
     """Test that production environments require proper external auth"""
+
+    def setup_method(self):
+        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+        import os
+
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def test_production_validates_auth_provider_at_settings_level(self):
         """

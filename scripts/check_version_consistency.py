@@ -28,9 +28,9 @@ except ImportError:
 def get_current_version() -> str:
     """Get current version from pyproject.toml."""
     try:
-        with open('pyproject.toml', 'r') as f:
+        with open("pyproject.toml", "r") as f:
             data = toml.load(f)
-            return data['project']['version']
+            return data["project"]["version"]
     except Exception as e:
         print(f"Error reading version from pyproject.toml: {e}")
         sys.exit(1)
@@ -51,9 +51,9 @@ def find_version_references(file_path: Path, current_version: str) -> List[Tuple
 
     # Files that should have historical versions
     historical_files = [
-        'releases/',
-        'CHANGELOG.md',
-        'adr-0018-semantic-versioning-strategy',  # Shows version progression examples
+        "releases/",
+        "CHANGELOG.md",
+        "adr-0018-semantic-versioning-strategy",  # Shows version progression examples
     ]
 
     # Skip historical files
@@ -61,21 +61,21 @@ def find_version_references(file_path: Path, current_version: str) -> List[Tuple
         return []
 
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         for i, line in enumerate(lines, 1):
             # Match version patterns: v2.X.X, 2.X.X, version: 2.X.X, etc.
             # But skip inline code, URLs, and comments
-            if re.search(r'^\s*#', line) or '```' in line:
+            if re.search(r"^\s*#", line) or "```" in line:
                 continue
 
             # Find version patterns
             patterns = [
-                r'v(\d+\.\d+\.\d+)',
+                r"v(\d+\.\d+\.\d+)",
                 r'version[:\s]+["\']?(\d+\.\d+\.\d+)',
-                r'@(\d+\.\d+\.\d+)',
-                r'\s(\d+\.\d+\.\d+)\s',
+                r"@(\d+\.\d+\.\d+)",
+                r"\s(\d+\.\d+\.\d+)\s",
             ]
 
             for pattern in patterns:
@@ -88,15 +88,15 @@ def find_version_references(file_path: Path, current_version: str) -> List[Tuple
                         continue
 
                     # Skip obviously non-project versions (e.g., dependency versions, years)
-                    if found_version.startswith(('1.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')):
+                    if found_version.startswith(("1.", "3.", "4.", "5.", "6.", "7.", "8.", "9.")):
                         continue
 
                     # Skip if it's clearly a dependency version
-                    if 'python' in line.lower() or 'node' in line.lower():
+                    if "python" in line.lower() or "node" in line.lower():
                         continue
 
                     # Skip dates (e.g., 2025.11.12)
-                    if int(found_version.split('.')[0]) > 10:
+                    if int(found_version.split(".")[0]) > 10:
                         continue
 
                     context = line.strip()[:80]
@@ -111,20 +111,20 @@ def find_version_references(file_path: Path, current_version: str) -> List[Tuple
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='Check version consistency in documentation')
-    parser.add_argument('--fix', action='store_true', help='Automatically fix version references')
+    parser = argparse.ArgumentParser(description="Check version consistency in documentation")
+    parser.add_argument("--fix", action="store_true", help="Automatically fix version references")
     args = parser.parse_args()
 
     current_version = get_current_version()
     print(f"Current version: {current_version}\n")
 
-    docs_dir = Path('docs').resolve()
+    docs_dir = Path("docs").resolve()
     if not docs_dir.exists():
         print("Error: docs/ directory not found")
         sys.exit(1)
 
-    mdx_files = list(docs_dir.rglob('*.mdx'))
-    md_files = [f.resolve() for f in Path('.').glob('*.md')]
+    mdx_files = list(docs_dir.rglob("*.mdx"))
+    md_files = [f.resolve() for f in Path(".").glob("*.md")]
     all_files = mdx_files + md_files
 
     issues: Dict[Path, List[Tuple[int, str, str]]] = {}

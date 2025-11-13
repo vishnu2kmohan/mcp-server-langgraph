@@ -40,7 +40,7 @@ class GKEResourceCalculator:
     def parse_cpu(self, cpu_str: str) -> float:
         """Parse CPU string to millicores"""
         cpu_str = cpu_str.strip()
-        if cpu_str.endswith('m'):
+        if cpu_str.endswith("m"):
             return float(cpu_str[:-1])
         return float(cpu_str) * 1000
 
@@ -72,7 +72,7 @@ class GKEResourceCalculator:
         limit_mc = self.parse_cpu(limit)
 
         if request_mc == 0:
-            return False, float('inf')
+            return False, float("inf")
 
         ratio = limit_mc / request_mc
         is_compliant = ratio <= self.MAX_RATIO
@@ -93,7 +93,7 @@ class GKEResourceCalculator:
             "limit": limit,
             "ratio": self.MAX_RATIO,
             "pros": "Preserves burst capacity, better for production",
-            "cons": f"Increases baseline cost by {((new_request_mc - request_mc) / request_mc * 100):.1f}%"
+            "cons": f"Increases baseline cost by {((new_request_mc - request_mc) / request_mc * 100):.1f}%",
         }
 
         # Option 2: Decrease limit (reduce burst capacity)
@@ -104,13 +104,13 @@ class GKEResourceCalculator:
             "limit": self.format_cpu(new_limit_mc),
             "ratio": self.MAX_RATIO,
             "pros": "Lower resource costs",
-            "cons": f"Reduces burst capacity by {((limit_mc - new_limit_mc) / limit_mc * 100):.1f}%"
+            "cons": f"Reduces burst capacity by {((limit_mc - new_limit_mc) / limit_mc * 100):.1f}%",
         }
 
         return {
             "current": {"request": request, "limit": limit, "ratio": current_ratio},
             "option1": option1,
-            "option2": option2
+            "option2": option2,
         }
 
     def get_service_examples(self) -> dict:
@@ -299,15 +299,13 @@ Examples:
 
   # Interactive mode
   %(prog)s --interactive
-        """
+        """,
     )
 
     parser.add_argument("--request", help="CPU request (e.g., 250m, 0.5)")
     parser.add_argument("--limit", help="CPU limit (e.g., 1000m, 2)")
-    parser.add_argument("--interactive", "-i", action="store_true",
-                        help="Run in interactive mode")
-    parser.add_argument("--examples", "-e", action="store_true",
-                        help="Show common service configuration examples")
+    parser.add_argument("--interactive", "-i", action="store_true", help="Run in interactive mode")
+    parser.add_argument("--examples", "-e", action="store_true", help="Show common service configuration examples")
 
     args = parser.parse_args()
 

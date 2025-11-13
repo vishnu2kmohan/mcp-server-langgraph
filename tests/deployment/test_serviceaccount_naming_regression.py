@@ -17,6 +17,7 @@ Regression Prevention:
 - Run #19311976718: 5 deployment validation failures
   Root cause: Naming inconsistencies between base and overlays
 """
+
 import subprocess
 from pathlib import Path
 
@@ -139,7 +140,7 @@ class TestOverlayServiceAccountNaming:
                         clean_name = sa_name
                         for prefix in ["staging-", "production-", "dev-", "test-"]:
                             if clean_name.startswith(prefix):
-                                clean_name = clean_name[len(prefix):]
+                                clean_name = clean_name[len(prefix) :]
                                 break
 
                         # Skip overlay-only ServiceAccounts
@@ -163,9 +164,7 @@ class TestWorkloadIdentityAnnotations:
             doc = yaml.safe_load(f)
 
         annotations = doc["metadata"].get("annotations", {})
-        assert (
-            "iam.gke.io/gcp-service-account" in annotations
-        ), "OpenFGA ServiceAccount missing Workload Identity annotation"
+        assert "iam.gke.io/gcp-service-account" in annotations, "OpenFGA ServiceAccount missing Workload Identity annotation"
 
         # Verify it's not empty
         wi_annotation = annotations["iam.gke.io/gcp-service-account"]
@@ -180,9 +179,7 @@ class TestWorkloadIdentityAnnotations:
             doc = yaml.safe_load(f)
 
         annotations = doc["metadata"].get("annotations", {})
-        assert (
-            "iam.gke.io/gcp-service-account" in annotations
-        ), "Keycloak ServiceAccount missing Workload Identity annotation"
+        assert "iam.gke.io/gcp-service-account" in annotations, "Keycloak ServiceAccount missing Workload Identity annotation"
 
         # Verify it's not empty
         wi_annotation = annotations["iam.gke.io/gcp-service-account"]
@@ -237,7 +234,9 @@ class TestRegressionPrevention:
         # Load base component names (without -sa suffix)
         with open(BASE_SA_PATH) as f:
             docs = list(yaml.safe_load_all(f))
-        base_components = {doc["metadata"]["name"].replace("-sa", "") for doc in docs if doc and doc.get("kind") == "ServiceAccount"}
+        base_components = {
+            doc["metadata"]["name"].replace("-sa", "") for doc in docs if doc and doc.get("kind") == "ServiceAccount"
+        }
 
         # Check overlays
         for overlay_dir in [STAGING_OVERLAY, PRODUCTION_OVERLAY]:

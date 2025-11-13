@@ -9,17 +9,13 @@ Tests validate that:
 """
 
 import json
-import pytest
 from pathlib import Path
 from typing import Dict, List, Set
 
+import pytest
+
 # Import will be created
-from scripts.validators.navigation_validator import (
-    NavigationValidator,
-    NavigationError,
-    OrphanedFileError,
-    MissingFileError,
-)
+from scripts.validators.navigation_validator import MissingFileError, NavigationError, NavigationValidator, OrphanedFileError
 
 
 class TestNavigationValidator:
@@ -60,12 +56,8 @@ class TestNavigationValidator:
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
         (docs_dir / "getting-started").mkdir()
-        (docs_dir / "getting-started" / "introduction.mdx").write_text(
-            "---\ntitle: Intro\n---\n# Introduction"
-        )
-        (docs_dir / "getting-started" / "quickstart.mdx").write_text(
-            "---\ntitle: Quick\n---\n# Quickstart"
-        )
+        (docs_dir / "getting-started" / "introduction.mdx").write_text("---\ntitle: Intro\n---\n# Introduction")
+        (docs_dir / "getting-started" / "quickstart.mdx").write_text("---\ntitle: Quick\n---\n# Quickstart")
 
         docs_json = {
             "navigation": {
@@ -134,9 +126,7 @@ class TestNavigationValidator:
         # Arrange
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
-        (docs_dir / "orphaned.mdx").write_text(
-            "---\ntitle: Orphaned\n---\n# Orphaned File"
-        )
+        (docs_dir / "orphaned.mdx").write_text("---\ntitle: Orphaned\n---\n# Orphaned File")
 
         docs_json = {"navigation": {"tabs": []}}
         (docs_dir / "docs.json").write_text(json.dumps(docs_json))
@@ -158,9 +148,7 @@ class TestNavigationValidator:
         docs_dir.mkdir()
         templates_dir = docs_dir / ".mintlify" / "templates"
         templates_dir.mkdir(parents=True)
-        (templates_dir / "template.mdx").write_text(
-            "---\ntitle: Template\n---\n# Template"
-        )
+        (templates_dir / "template.mdx").write_text("---\ntitle: Template\n---\n# Template")
 
         docs_json = {"navigation": {"tabs": []}}
         (docs_dir / "docs.json").write_text(json.dumps(docs_json))
@@ -221,8 +209,9 @@ class TestNavigationValidator:
         """Test extraction of all referenced pages from navigation."""
         # Arrange
         # Use validator without tmp_path to avoid filesystem operations
-        from scripts.validators.navigation_validator import NavigationValidator
         from pathlib import Path
+
+        from scripts.validators.navigation_validator import NavigationValidator
 
         # Create a minimal validator instance (path doesn't matter for this test)
         validator = NavigationValidator(Path("/tmp"))
@@ -272,9 +261,7 @@ class TestNavigationValidator:
         # Create file that should be included
         (docs_dir / "valid.mdx").write_text("# Valid")
 
-        docs_json = {
-            "navigation": {"tabs": [{"tab": "T", "groups": [{"group": "G", "pages": ["valid"]}]}]}
-        }
+        docs_json = {"navigation": {"tabs": [{"tab": "T", "groups": [{"group": "G", "pages": ["valid"]}]}]}}
         (docs_dir / "docs.json").write_text(json.dumps(docs_json))
 
         # Act

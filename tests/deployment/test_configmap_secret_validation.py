@@ -24,7 +24,6 @@ from typing import Dict, List, Set
 import pytest
 import yaml
 
-
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -37,12 +36,7 @@ class TestConfigMapValidation:
             pytest.skip("kustomize not installed")
 
         overlay_dir = REPO_ROOT / overlay_path
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True)
 
         # Parse all YAML documents
         return list(yaml.safe_load_all(result.stdout))
@@ -100,10 +94,13 @@ class TestConfigMapValidation:
 
         return references
 
-    @pytest.mark.parametrize("overlay,namespace", [
-        ("deployments/overlays/staging-gke", "staging-mcp-server-langgraph"),
-        ("deployments/overlays/production-gke", "production-mcp-server-langgraph"),
-    ])
+    @pytest.mark.parametrize(
+        "overlay,namespace",
+        [
+            ("deployments/overlays/staging-gke", "staging-mcp-server-langgraph"),
+            ("deployments/overlays/production-gke", "production-mcp-server-langgraph"),
+        ],
+    )
     def test_all_configmap_keys_exist(self, overlay, namespace):
         """
         Test that all ConfigMap keys referenced in deployments actually exist.
@@ -131,31 +128,23 @@ class TestConfigMapValidation:
         missing_keys = {}
         for cm_name, keys in referenced_keys.items():
             if cm_name not in actual_keys:
-                missing_keys[cm_name] = {
-                    "error": "ConfigMap not found",
-                    "keys": keys
-                }
+                missing_keys[cm_name] = {"error": "ConfigMap not found", "keys": keys}
                 continue
 
             missing = keys - actual_keys[cm_name]
             if missing:
-                missing_keys[cm_name] = {
-                    "error": "Missing keys",
-                    "keys": missing,
-                    "available": actual_keys[cm_name]
-                }
+                missing_keys[cm_name] = {"error": "Missing keys", "keys": missing, "available": actual_keys[cm_name]}
 
-        assert not missing_keys, (
-            f"Missing ConfigMap keys in {overlay}:\n"
-            + "\n".join(
-                f"  {cm}: {info['error']} - {info['keys']}"
-                for cm, info in missing_keys.items()
-            )
+        assert not missing_keys, f"Missing ConfigMap keys in {overlay}:\n" + "\n".join(
+            f"  {cm}: {info['error']} - {info['keys']}" for cm, info in missing_keys.items()
         )
 
-    @pytest.mark.parametrize("overlay", [
-        "deployments/overlays/staging-gke",
-    ])
+    @pytest.mark.parametrize(
+        "overlay",
+        [
+            "deployments/overlays/staging-gke",
+        ],
+    )
     def test_required_configmap_keys_present_staging(self, overlay):
         """
         Test that required ConfigMap keys are present for the application (staging only).
@@ -173,28 +162,23 @@ class TestConfigMapValidation:
             "session_cookie_secure",
             "session_cookie_samesite",
             "session_max_age_seconds",
-
             # Rate limiting
             "rate_limit_enabled",
             "rate_limit_per_minute",
             "rate_limit_burst",
-
             # Circuit breaker
             "circuit_breaker_failure_threshold",
             "circuit_breaker_recovery_timeout",
             "circuit_breaker_expected_exception_rate",
             "circuit_breaker_half_open_max_calls",
-
             # Retry configuration
             "retry_max_attempts",
             "retry_base_delay_seconds",
             "retry_max_delay_seconds",
-
             # Timeouts
             "default_timeout_seconds",
             "llm_timeout_seconds",
             "database_timeout_seconds",
-
             # GDPR
             "gdpr_storage_backend",
             "gdpr_retention_days",
@@ -234,12 +218,7 @@ class TestSecretValidation:
             pytest.skip("kustomize not installed")
 
         overlay_dir = REPO_ROOT / overlay_path
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True)
 
         return list(yaml.safe_load_all(result.stdout))
 
@@ -296,10 +275,13 @@ class TestSecretValidation:
 
         return external_secrets
 
-    @pytest.mark.parametrize("overlay,expected_prefix", [
-        ("deployments/overlays/staging-gke", "staging-"),
-        ("deployments/overlays/production-gke", "production-"),
-    ])
+    @pytest.mark.parametrize(
+        "overlay,expected_prefix",
+        [
+            ("deployments/overlays/staging-gke", "staging-"),
+            ("deployments/overlays/production-gke", "production-"),
+        ],
+    )
     def test_primary_app_secret_names_match_external_secrets(self, overlay, expected_prefix):
         """
         Test that primary application secret names match ExternalSecret targets.
@@ -334,21 +316,20 @@ class TestSecretValidation:
             if secret_name not in external_secrets:
                 missing_secrets[secret_name] = {
                     "error": "Secret not found in ExternalSecrets",
-                    "available": list(external_secrets.keys())
+                    "available": list(external_secrets.keys()),
                 }
 
-        assert not missing_secrets, (
-            f"Secret name mismatches in {overlay}:\n"
-            + "\n".join(
-                f"  {secret}: {info['error']}\n    Available: {info['available']}"
-                for secret, info in missing_secrets.items()
-            )
+        assert not missing_secrets, f"Secret name mismatches in {overlay}:\n" + "\n".join(
+            f"  {secret}: {info['error']}\n    Available: {info['available']}" for secret, info in missing_secrets.items()
         )
 
-    @pytest.mark.parametrize("overlay,expected_prefix", [
-        ("deployments/overlays/staging-gke", "staging-"),
-        ("deployments/overlays/production-gke", "production-"),
-    ])
+    @pytest.mark.parametrize(
+        "overlay,expected_prefix",
+        [
+            ("deployments/overlays/staging-gke", "staging-"),
+            ("deployments/overlays/production-gke", "production-"),
+        ],
+    )
     def test_all_external_secret_data_mappings_exist(self, overlay, expected_prefix):
         """
         Test that all ExternalSecret data mappings are complete.
@@ -377,14 +358,16 @@ class TestSecretValidation:
             # Validate GCP secret keys have expected prefix
             for secret_key, remote_key in data_mappings.items():
                 assert remote_key.startswith(expected_prefix), (
-                    f"GCP secret key '{remote_key}' for {target_name}.{secret_key} "
-                    f"should start with '{expected_prefix}'"
+                    f"GCP secret key '{remote_key}' for {target_name}.{secret_key} " f"should start with '{expected_prefix}'"
                 )
 
-    @pytest.mark.parametrize("overlay", [
-        "deployments/overlays/staging-gke",
-        "deployments/overlays/production-gke",
-    ])
+    @pytest.mark.parametrize(
+        "overlay",
+        [
+            "deployments/overlays/staging-gke",
+            "deployments/overlays/production-gke",
+        ],
+    )
     def test_all_secret_keys_referenced_are_created(self, overlay):
         """
         Test that all secret keys referenced in deployments are actually created by ExternalSecrets.
@@ -417,19 +400,11 @@ class TestSecretValidation:
 
             missing = keys - external_secrets[secret_name]
             if missing:
-                missing_keys[secret_name] = {
-                    "missing": missing,
-                    "available": external_secrets[secret_name]
-                }
+                missing_keys[secret_name] = {"missing": missing, "available": external_secrets[secret_name]}
 
-        assert not missing_keys, (
-            f"Secret keys referenced but not created in {overlay}:\n"
-            + "\n".join(
-                f"  {secret}:\n"
-                f"    Missing: {sorted(info['missing'])}\n"
-                f"    Available: {sorted(info['available'])}"
-                for secret, info in missing_keys.items()
-            )
+        assert not missing_keys, f"Secret keys referenced but not created in {overlay}:\n" + "\n".join(
+            f"  {secret}:\n" f"    Missing: {sorted(info['missing'])}\n" f"    Available: {sorted(info['available'])}"
+            for secret, info in missing_keys.items()
         )
 
 
@@ -448,10 +423,13 @@ class TestKustomizePrefixConsistency:
         with open(patch_path) as f:
             return f.read()
 
-    @pytest.mark.parametrize("overlay,expected_prefix", [
-        ("deployments/overlays/staging-gke", "staging-"),
-        ("deployments/overlays/production-gke", "production-"),
-    ])
+    @pytest.mark.parametrize(
+        "overlay,expected_prefix",
+        [
+            ("deployments/overlays/staging-gke", "staging-"),
+            ("deployments/overlays/production-gke", "production-"),
+        ],
+    )
     def test_patch_files_use_prefixed_secret_names(self, overlay, expected_prefix):
         """
         Test that patch files use the prefixed secret names.
@@ -480,7 +458,7 @@ class TestKustomizePrefixConsistency:
             content = self.read_patch_file(overlay, patch_file)
 
             # Look for secret references
-            secret_pattern = r'name:\s+([a-z0-9-]+secrets)'
+            secret_pattern = r"name:\s+([a-z0-9-]+secrets)"
             matches = re.findall(secret_pattern, content)
 
             for match in matches:
