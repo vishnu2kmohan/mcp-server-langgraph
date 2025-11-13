@@ -73,7 +73,7 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
         # Phase 2: Type checking
         "mypy src/mcp_server_langgraph": "MyPy type checking",
         # Phase 3: Test suite validation (NEW)
-        "pytest tests/ -m unit": "Unit tests",
+        "pytest tests/ -m": "Unit tests",  # Flexible - allows "unit and not contract"
         "pytest tests/smoke/": "Smoke tests",
         "pytest tests/integration/": "Integration tests (last failed)",
         "HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
