@@ -69,6 +69,45 @@ Validate:
 7. Verify code blocks have proper language tags
 8. Check for missing images referenced in docs
 
+### Phase 1.5: Mintlify CLI Validation (Critical)
+**IMPORTANT**: These checks ensure documentation builds correctly and has no broken links.
+
+1. **Verify Mintlify CLI Installation**
+   ```bash
+   mintlify --version || npm install -g mintlify
+   ```
+
+2. **Run Mintlify Broken Links Check**
+   ```bash
+   cd docs && npx mintlify broken-links
+   ```
+   - Validates all internal links work correctly
+   - Checks anchor links and page references
+   - Reports any broken navigation paths
+   - **Must pass before committing changes**
+
+3. **Run Mintlify Dev Build**
+   ```bash
+   cd docs && mintlify dev
+   ```
+   - Verifies MDX parsing succeeds
+   - Checks for build-time errors
+   - Validates all components render correctly
+   - Detects syntax errors that Python validators might miss
+   - **Must complete without errors before committing**
+
+4. **Parse Mintlify Output**
+   - Capture any error messages
+   - Report parsing failures
+   - Identify problematic files
+   - Note warnings that should be addressed
+
+5. **Document Mintlify-Specific Issues**
+   - MDX syntax errors not caught by Python validators
+   - Component rendering failures
+   - Build-time configuration issues
+   - Version compatibility problems
+
 ### Phase 2: Documentation Consistency
 1. Check version numbers across all docs match project version
 2. Validate API endpoint documentation matches actual endpoints
@@ -153,6 +192,20 @@ For each issue, provide:
 - Navigation depth analysis
 - Suggested reorganization (if needed)
 
+### Mintlify CLI Validation Report
+- **Mintlify CLI Version**: X.X.X
+- **Broken Links Check**: ✅ Pass / ❌ Fail
+  - Broken internal links found: X
+  - Broken anchor links found: X
+  - Invalid navigation references: X
+- **Build Validation**: ✅ Pass / ❌ Fail
+  - Build errors: X
+  - Build warnings: X
+  - MDX parsing errors: X
+  - Component rendering failures: X
+- **Build Performance**: X seconds
+- **Action Required**: Yes/No
+
 ### Link Health Report
 - Total links found: X
 - Valid links: X
@@ -219,20 +272,32 @@ Enhancements and optimizations:
 
 After remediation, run these checks:
 ```bash
-# Validate Mintlify docs can build
+# 1. Run Python validators (fast, comprehensive)
+python scripts/validators/validate_docs.py
+
+# 2. Validate Mintlify docs broken links
+cd docs && npx mintlify broken-links
+
+# 3. Validate Mintlify docs can build (starts dev server)
 cd docs && mintlify dev
+# Note: Press Ctrl+C after verifying build succeeds
 
-# Check for broken links (if you have a link checker)
-find docs -name "*.mdx" -exec grep -h "http" {} \;
+# 4. Alternative: Use Makefile target
+make docs-validate-mintlify
 
-# Validate all navigation targets exist
-# (custom script output if available)
+# 5. Run all pre-commit hooks
+pre-commit run --all-files
+
+# 6. Validate all navigation targets exist
+python scripts/validators/navigation_validator.py
 ```
 
 ## Success Criteria
 
 Documentation is considered "clean" when:
 - ✅ All navigation links resolve to existing files
+- ✅ **Mintlify broken-links check passes (CRITICAL)**
+- ✅ **Mintlify dev build completes without errors (CRITICAL)**
 - ✅ No critical broken links
 - ✅ Version numbers are consistent
 - ✅ API documentation matches implementation
@@ -242,6 +307,8 @@ Documentation is considered "clean" when:
 - ✅ All deployment guides are current
 - ✅ Security documentation is complete
 - ✅ No orphaned documentation files
+- ✅ All Python validators pass
+- ✅ Pre-commit hooks pass
 
 ---
 

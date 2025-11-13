@@ -95,7 +95,7 @@ make docs-test
 ```
 
 **Output**:
-```
+```text
 🧪 Running documentation validation tests...
 ======================== 27 passed in 3.16s =========================
 ✅ All tests passed!
@@ -112,7 +112,7 @@ make docs-audit
 ```
 
 **Output**:
-```
+```text
 📊 Running comprehensive documentation audit...
 Current version: 2.8.0
 
@@ -126,6 +126,71 @@ See docs-internal/DOCUMENTATION_AUDIT_*.md for detailed reports
 ```
 
 **Time**: ~15 seconds
+
+---
+
+## 🎯 Mintlify CLI Validation (CRITICAL for Docs Changes)
+
+### Why Use Mintlify CLI?
+
+Mintlify CLI provides the **final validation** that your documentation will work correctly in production. Python validators catch most issues, but Mintlify CLI validates:
+- **Actual build process** - Ensures docs compile without errors
+- **Link resolution** - Validates internal links and anchors work correctly
+- **Component rendering** - Checks MDX components render properly
+- **Production accuracy** - Same validation that runs on Mintlify hosting
+
+### When to Run Mintlify Validation
+
+**ALWAYS run before committing docs changes**:
+```bash
+make docs-validate-mintlify
+```
+
+**Run manually via pre-commit hook** (optional):
+```bash
+SKIP= pre-commit run mintlify-broken-links-check --all-files
+```
+
+**During /docs-audit** (recommended monthly):
+```bash
+# Via Claude Code slash command
+/docs-audit
+# This automatically runs Mintlify validation as part of comprehensive audit
+```
+
+### Understanding Mintlify Validation Output
+
+```bash
+$ make docs-validate-mintlify
+
+📋 Validating Mintlify configuration...
+🔗 Checking for broken links...
+✅ Broken links check passed
+
+🏗️  Validating Mintlify build...
+   Note: This will start the dev server briefly to validate the build.
+   The server will auto-stop after validation.
+✅ Mintlify build validation passed
+```
+
+**If you see errors**:
+1. Read the error message carefully
+2. Check the file and line number mentioned
+3. Fix the issue (usually MDX syntax or broken link)
+4. Run validation again
+5. Repeat until all checks pass
+
+### Mintlify CLI vs Python Validators
+
+| Aspect | Python Validators | Mintlify CLI |
+|--------|------------------|--------------|
+| **Speed** | Fast (2-8s) | Slower (15-20s) |
+| **Coverage** | MDX syntax, frontmatter, basic links | Full build, all links, components |
+| **When to use** | Every commit (via pre-commit) | Before push, during audit |
+| **Automation** | Pre-commit hooks | Manual or /docs-audit |
+| **Accuracy** | Catches 80% of issues | Catches 100% of issues |
+
+**Best Practice**: Use Python validators frequently, Mintlify CLI before pushing.
 
 ---
 
@@ -167,7 +232,7 @@ pre-commit install
 | `make docs-validate-mdx` | MDX syntax only | 2-3s |
 | `make docs-validate-links` | Internal links only | 5-8s |
 | `make docs-validate-version` | Version consistency | 2-3s |
-| `make docs-validate-mintlify` | Mintlify build | 8-12s |
+| `make docs-validate-mintlify` | Mintlify broken links + build validation | 15-20s |
 
 ### Fixing
 
@@ -238,8 +303,22 @@ git checkout .
 ### "Mintlify validation fails"
 
 ```bash
-# Get detailed error
-cd docs && npx mintlify broken-links
+# Option 1: Run comprehensive Mintlify validation (recommended)
+make docs-validate-mintlify
+# This runs both 'broken-links' and 'dev' build validation
+
+# Option 2: Run individual Mintlify checks
+cd docs
+
+# Check for broken links
+npx mintlify broken-links
+
+# Validate build (starts dev server briefly)
+mintlify dev
+# Press Ctrl+C after verifying build succeeds
+
+# Option 3: Manual pre-commit hook
+SKIP= pre-commit run mintlify-broken-links-check --all-files
 
 # Fix the specific file
 python3 ../scripts/fix_mdx_syntax.py --file path/to/file.mdx
@@ -249,6 +328,11 @@ npx mintlify broken-links
 
 # Repeat until clean
 ```
+
+**Common Mintlify Issues**:
+- **Broken links**: Check anchor links and page references in MDX
+- **Build errors**: Look for unclosed JSX tags, invalid frontmatter, or syntax errors
+- **Missing pages**: Verify all navigation items in `docs.json` have corresponding files
 
 ---
 

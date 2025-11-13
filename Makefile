@@ -1013,13 +1013,32 @@ docs-validate-version:
 	@python3 scripts/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
 
-docs-validate-mintlify:
+docs-validate-mintlify:  ## Validate Mintlify docs with broken links check and build validation
 	@echo "📋 Validating Mintlify configuration..."
 	@if command -v npx >/dev/null 2>&1; then \
+		echo "🔗 Checking for broken links..."; \
 		cd docs && npx mintlify broken-links || \
-			(echo "❌ Mintlify validation failed." && exit 1); \
+			(echo "❌ Mintlify broken links check failed." && exit 1); \
+		echo "✅ Broken links check passed"; \
+		echo ""; \
+		echo "🏗️  Validating Mintlify build..."; \
+		echo "   Note: This will start the dev server briefly to validate the build."; \
+		echo "   The server will auto-stop after validation."; \
+		cd docs && timeout 30s mintlify dev > /tmp/mintlify-build.log 2>&1 & \
+		MINTLIFY_PID=$$!; \
+		sleep 8; \
+		if grep -qi "error\|failed\|exception" /tmp/mintlify-build.log 2>/dev/null; then \
+			echo "❌ Mintlify build validation failed. Check /tmp/mintlify-build.log for details."; \
+			cat /tmp/mintlify-build.log; \
+			kill $$MINTLIFY_PID 2>/dev/null || true; \
+			exit 1; \
+		else \
+			echo "✅ Mintlify build validation passed"; \
+			kill $$MINTLIFY_PID 2>/dev/null || true; \
+		fi; \
 	else \
 		echo "⚠️  npx not found. Skipping Mintlify validation."; \
+		echo "   Install Node.js and npm to enable Mintlify validation."; \
 	fi
 
 docs-fix-mdx:
