@@ -180,9 +180,9 @@ install:
 	@echo "  Note: Uses uv.lock for reproducible builds"
 
 install-dev:
-	uv sync
+	uv sync --extra dev --extra builder
 	@echo "✓ Development dependencies installed"
-	@echo "  Note: Includes all [dependency-groups] from pyproject.toml"
+	@echo "  Note: Includes all [dependency-groups] from pyproject.toml plus dev and builder extras"
 
 setup-infra:
 	$(DOCKER_COMPOSE) up -d
@@ -567,8 +567,8 @@ validate-pre-push:
 	@echo "PHASE 4: Pre-commit Hooks (All Files - push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Pre-commit Hooks (All Files)..."
-	@pre-commit run --all-files --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo "▶ Pre-commit Hooks (All Files - Push Stage)..."
+	@pre-commit run --all-files --hook-stage push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed!"

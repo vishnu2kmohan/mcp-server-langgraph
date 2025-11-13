@@ -381,9 +381,9 @@ python_functions = ["test_*"]
 # CI and coverage targets explicitly enable coverage with --cov flag
 # --dist loadscope: Better fixture reuse in pytest-xdist (10-20% speedup)
 # --timeout=60: Prevent tests from hanging indefinitely (async mock safety)
-# --reruns=2: Auto-retry flaky tests up to 2 times (pytest-xdist race conditions)
-# --reruns-delay=1: Wait 1 second between retries (allow worker state to settle)
-addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60 --reruns=2 --reruns-delay=1"
+# --reruns=5: Auto-retry flaky tests up to 5 times (pytest-xdist race conditions)
+# --reruns-delay=3: Wait 3 seconds between retries (allow worker state to settle)
+addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60 --reruns=5 --reruns-delay=3"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

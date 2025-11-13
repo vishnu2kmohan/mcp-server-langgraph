@@ -76,7 +76,7 @@ class TestIsolationValidator(ast.NodeVisitor):
 
             # Validate test class has proper markers
             if not self.has_xdist_group_marker:
-                self.warnings.append(
+                self.violations.append(
                     (
                         node.lineno,
                         "missing_xdist_group",
@@ -85,7 +85,7 @@ class TestIsolationValidator(ast.NodeVisitor):
                 )
 
             if not self.has_teardown_method or not self.has_gc_collect:
-                self.warnings.append(
+                self.violations.append(
                     (
                         node.lineno,
                         "missing_gc_collect",

@@ -94,7 +94,7 @@ repos:
     hooks:
       - id: actionlint-workflow-validation
         name: Validate GitHub Actions with actionlint
-        entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1 || true'
+        entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1'
         language: system
         files: ^\.github/workflows/.*\.ya?ml$
         pass_filenames: false

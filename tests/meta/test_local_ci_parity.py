@@ -970,6 +970,645 @@ class TestMakefilePrePushParity:
             )
 
 
+class TestActionlintHookStrictness:
+    """Validate that actionlint hook fails on errors (no || true bypass).
+
+    CRITICAL: Codex finding #1 - actionlint hook currently has || true which
+    causes it to NEVER fail even when workflows are invalid. This creates a
+    local/CI divergence where CI fails but local validation passes.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_commit_config_path(self, repo_root: Path) -> Path:
+        """Get path to pre-commit config."""
+        return repo_root / ".pre-commit-config.yaml"
+
+    @pytest.fixture
+    def pre_commit_config_content(self, pre_commit_config_path: Path) -> str:
+        """Read pre-commit config content."""
+        with open(pre_commit_config_path, "r") as f:
+            return f.read()
+
+    def test_actionlint_hook_has_no_bypass(self, pre_commit_config_content: str):
+        """Test that actionlint hook does NOT have || true bypass.
+
+        CRITICAL: Without this test, developers can push invalid workflows that
+        only fail in CI, wasting time and breaking builds.
+        """
+        # Find the actionlint hook entry
+        actionlint_section_match = re.search(
+            r"- repo:.*actionlint.*?(?=- repo:|\Z)",
+            pre_commit_config_content,
+            re.DOTALL,
+        )
+
+        assert actionlint_section_match, "Could not find actionlint hook in .pre-commit-config.yaml"
+
+        actionlint_section = actionlint_section_match.group(0)
+
+        # Check for || true bypass
+        assert "|| true" not in actionlint_section, (
+            "Actionlint hook MUST NOT have '|| true' bypass\n"
+            "\n"
+            "Current issue (Codex finding #1):\n"
+            "  - .pre-commit-config.yaml:97 has: actionlint ... 2>&1 || true\n"
+            "  - This causes hook to ALWAYS return exit code 0\n"
+            "  - Invalid workflows pass locally but fail in CI\n"
+            "\n"
+            "Impact:\n"
+            "  - Developers push broken workflow files\n"
+            "  - CI catches errors that should have been caught locally\n"
+            "  - Wastes developer time and CI resources\n"
+            "\n"
+            "CI behavior (ci.yaml:106-110):\n"
+            "  actionlint -color -shellcheck= .github/workflows/*.{yml,yaml}\n"
+            "  ^ No || true, fails on errors ✅\n"
+            "\n"
+            "Fix: Remove || true from .pre-commit-config.yaml:97\n"
+            "  entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1'\n"
+        )
+
+    def test_actionlint_hook_configured_for_pre_push(self, pre_commit_config_content: str):
+        """Test that actionlint hook runs during pre-push stage."""
+        actionlint_section_match = re.search(
+            r"- repo:.*actionlint.*?(?=- repo:|\Z)",
+            pre_commit_config_content,
+            re.DOTALL,
+        )
+
+        assert actionlint_section_match, "Could not find actionlint hook"
+
+        actionlint_section = actionlint_section_match.group(0)
+
+        # Should be configured for pre-push stage
+        assert (
+            "stages:" in actionlint_section and "push" in actionlint_section
+        ), "Actionlint hook should be configured to run during pre-push stage"
+
+
+class TestMyPyBlockingParity:
+    """Validate that MyPy blocking behavior matches between local and CI.
+
+    CRITICAL: Codex finding #2 - MyPy is currently non-blocking in pre-push hook
+    but blocking in CI. This creates local/CI divergence where type errors pass
+    locally but fail in CI.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_mypy_is_blocking_locally(self, pre_push_content: str):
+        """Test that MyPy is BLOCKING in pre-push hook (matches CI).
+
+        CRITICAL: User chose "Make local MyPy blocking (match CI strictness)".
+        This test enforces that decision.
+        """
+        # Find the MyPy validation command
+        # Should be in Phase 2 with run_validation function
+        mypy_section_match = re.search(
+            r"# PHASE 2.*?(?=# PHASE 3|\Z)",
+            pre_push_content,
+            re.DOTALL,
+        )
+
+        assert mypy_section_match, "Could not find PHASE 2 (type checking) in pre-push hook"
+
+        phase_2_content = mypy_section_match.group(0)
+
+        # Find the run_validation call for mypy
+        mypy_call_match = re.search(
+            r'run_validation.*?"MyPy.*?".*?mypy.*?(?:true|false)',
+            phase_2_content,
+            re.DOTALL | re.IGNORECASE,
+        )
+
+        assert mypy_call_match, "Could not find run_validation call for MyPy in Phase 2"
+
+        mypy_call = mypy_call_match.group(0)
+
+        # Check that the third parameter is 'true' (blocking), not 'false' (non-blocking)
+        assert not re.search(r"\bfalse\s*(?:#.*)?$", mypy_call, re.MULTILINE), (
+            "MyPy MUST be blocking in pre-push hook to match CI behavior\n"
+            "\n"
+            "Current issue (Codex finding #2):\n"
+            "  - .git/hooks/pre-push:90 has: run_validation ... false  # Non-blocking\n"
+            "  - This makes MyPy warnings-only, doesn't fail on errors\n"
+            "  - CI has NO continue-on-error, so MyPy FAILS THE BUILD\n"
+            "\n"
+            "Impact:\n"
+            "  - Type errors pass locally but fail in CI\n"
+            "  - 'Works locally, fails in CI' syndrome\n"
+            "  - Wastes developer time debugging in CI\n"
+            "\n"
+            "Local behavior (pre-push:87-90):\n"
+            '  run_validation "MyPy Type Checking (Warning Only)" \\\n'
+            '      "uv run mypy src/mcp_server_langgraph" \\\n'
+            "      false  # Non-blocking ❌\n"
+            "\n"
+            "CI behavior (ci.yaml:255-260):\n"
+            "  - name: Run mypy type checking\n"
+            "    run: mypy src/mcp_server_langgraph --no-error-summary\n"
+            "  ^ No continue-on-error, fails build ✅\n"
+            "\n"
+            "Fix: Change .git/hooks/pre-push:90 from 'false' to 'true'\n"
+            '  run_validation "MyPy Type Checking (Critical)" \\\n'
+            '      "uv run mypy src/mcp_server_langgraph --no-error-summary" \\\n'
+            "      true  # Critical (matches CI)\n"
+        )
+
+        # The third parameter should be 'true'
+        assert re.search(r"\btrue\s*(?:#.*)?$", mypy_call, re.MULTILINE), (
+            "MyPy run_validation third parameter must be 'true' (blocking)\n"
+            "Found in pre-push hook but not set to blocking.\n"
+            "Fix: Set third parameter to 'true' in run_validation call"
+        )
+
+    def test_mypy_comment_reflects_blocking_behavior(self, pre_push_content: str):
+        """Test that MyPy phase comment reflects blocking behavior."""
+        phase_2_match = re.search(
+            r"# PHASE 2.*?(?=# PHASE 3|\Z)",
+            pre_push_content,
+            re.DOTALL,
+        )
+
+        assert phase_2_match, "Could not find PHASE 2"
+
+        phase_2_content = phase_2_match.group(0)
+
+        # Should NOT say "Warning Only" if it's blocking
+        # Should say "Critical" or similar
+        if "false" not in phase_2_content:  # If it's blocking
+            assert "Warning Only" not in phase_2_content or "Critical" in phase_2_content, (
+                "MyPy phase comment should reflect that it's CRITICAL/BLOCKING\n"
+                "Comments should match behavior to avoid confusion\n"
+                "Fix: Update comment in .git/hooks/pre-push:83-87 to say 'Critical' not 'Warning Only'"
+            )
+
+    def test_ci_mypy_is_blocking(self, ci_workflow_content: str):
+        """Test that CI MyPy step is blocking (no continue-on-error)."""
+        # Find the mypy step
+        mypy_step_match = re.search(
+            r"- name:.*mypy.*?(?=\n  - name:|\njobs:|\Z)",
+            ci_workflow_content,
+            re.DOTALL | re.IGNORECASE,
+        )
+
+        assert mypy_step_match, "Could not find mypy step in CI workflow"
+
+        mypy_step = mypy_step_match.group(0)
+
+        # Should NOT have continue-on-error: true
+        assert "continue-on-error: true" not in mypy_step, (
+            "CI MyPy step must NOT have 'continue-on-error: true'\n"
+            "MyPy should fail the build in CI (and locally) to maintain quality\n"
+            "If this test fails, CI has been made non-blocking - align local to match"
+        )
+
+
+class TestIsolationValidationStrictness:
+    """Validate that test isolation validation script promotes warnings to errors.
+
+    CRITICAL: Codex finding from pytest-xdist section - validate_test_isolation.py
+    currently returns 0 (success) when tests are missing xdist_group or gc.collect,
+    allowing regressions to slip through.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def validation_script_path(self, repo_root: Path) -> Path:
+        """Get path to validation script."""
+        return repo_root / "scripts" / "validation" / "validate_test_isolation.py"
+
+    @pytest.fixture
+    def validation_script_content(self, validation_script_path: Path) -> str:
+        """Read validation script content."""
+        with open(validation_script_path, "r") as f:
+            return f.read()
+
+    def test_missing_xdist_group_is_error_not_warning(self, validation_script_content: str):
+        """Test that missing xdist_group marker is treated as ERROR not WARNING.
+
+        CRITICAL: User chose "Promote warnings to errors (strict enforcement)".
+        Missing xdist_group markers cause memory explosion in pytest-xdist.
+        """
+        # Find where xdist_group violations are appended
+        # Look for the code that handles missing xdist_group
+        xdist_group_check = re.search(
+            r"if not self\.has_xdist_group_marker.*?self\.(warnings|violations)\.append",
+            validation_script_content,
+            re.DOTALL,
+        )
+
+        assert xdist_group_check, "Could not find xdist_group validation logic"
+
+        check_code = xdist_group_check.group(0)
+
+        # Should append to 'violations' NOT 'warnings'
+        assert "self.violations.append" in check_code, (
+            "Missing xdist_group marker MUST be treated as VIOLATION not WARNING\n"
+            "\n"
+            "Current issue (Codex finding - pytest-xdist section):\n"
+            "  - validate_test_isolation.py:79-94 appends to self.warnings\n"
+            "  - Script returns 0 (success) when warnings present\n"
+            "  - Allows regressions to slip through\n"
+            "\n"
+            "Impact (ADR-0052, Memory Safety Guidelines):\n"
+            "  - Missing @pytest.mark.xdist_group causes memory explosion\n"
+            "  - Observed: 217GB VIRT, 42GB RES memory usage\n"
+            "  - Tests become too slow or OOM kill\n"
+            "\n"
+            "Fix: Change scripts/validation/validate_test_isolation.py:79-94\n"
+            "  From: self.warnings.append(...)\n"
+            "  To:   self.violations.append(...)\n"
+        )
+
+    def test_missing_gc_collect_is_error_not_warning(self, validation_script_content: str):
+        """Test that missing gc.collect() is treated as ERROR not WARNING."""
+        # Find where gc.collect violations are appended
+        gc_collect_check = re.search(
+            r"if not self\.has_teardown_method or not self\.has_gc_collect.*?self\.(warnings|violations)\.append",
+            validation_script_content,
+            re.DOTALL,
+        )
+
+        assert gc_collect_check, "Could not find gc.collect validation logic"
+
+        check_code = gc_collect_check.group(0)
+
+        # Should append to 'violations' NOT 'warnings'
+        assert "self.violations.append" in check_code, (
+            "Missing gc.collect() MUST be treated as VIOLATION not WARNING\n"
+            "\n"
+            "Missing teardown_method() with gc.collect() causes pytest-xdist OOM:\n"
+            "  - AsyncMock/MagicMock create circular references\n"
+            "  - Without explicit GC, workers accumulate mocks\n"
+            "  - Memory explosion: 200GB+ observed\n"
+            "\n"
+            "Fix: Change scripts/validation/validate_test_isolation.py:79-94\n"
+            "  From: self.warnings.append(...)\n"
+            "  To:   self.violations.append(...)\n"
+        )
+
+
+class TestMakefileDependencyExtras:
+    """Validate that Makefile install-dev includes all required dependency extras.
+
+    CRITICAL: Codex finding #4 - install-dev runs 'uv sync' without --extra flags,
+    while CI uses --extra dev --extra builder. This causes missing import errors
+    when running pre-push validation locally.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_install_dev_includes_dev_extra(self, makefile_content: str):
+        """Test that install-dev target includes --extra dev.
+
+        CRITICAL: User chose "Add --extra dev --extra builder to install-dev".
+        Without dev extra, pytest and testing tools are missing.
+        """
+        # Find install-dev target
+        install_dev_match = re.search(
+            r"^install-dev:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        assert install_dev_match, "Could not find install-dev target in Makefile"
+
+        install_dev_content = install_dev_match.group(0)
+
+        # Should have uv sync with --extra dev
+        assert "--extra dev" in install_dev_content, (
+            "Makefile install-dev MUST include '--extra dev' to match CI\n"
+            "\n"
+            "Current issue (Codex finding #4):\n"
+            "  - Makefile:182 runs: uv sync\n"
+            "  - CI runs: uv sync --extra dev --extra builder\n"
+            "  - Missing dev extra means no pytest, mypy, black, etc.\n"
+            "\n"
+            "Impact:\n"
+            "  - Developers hit ImportError when running pre-push validation\n"
+            "  - 'make validate-pre-push' fails with missing packages\n"
+            "  - Documentation says to use install-dev, but it's incomplete\n"
+            "\n"
+            "CI behavior (ci.yaml:200-214):\n"
+            "  uv sync --python $VERSION --frozen --extra dev --extra builder\n"
+            "  ^ Includes dev extras ✅\n"
+            "\n"
+            "Fix: Update Makefile:182\n"
+            "  From: uv sync\n"
+            "  To:   uv sync --extra dev --extra builder\n"
+        )
+
+    def test_install_dev_includes_builder_extra(self, makefile_content: str):
+        """Test that install-dev target includes --extra builder.
+
+        Required because unit tests import builder modules (per CI comments).
+        """
+        install_dev_match = re.search(
+            r"^install-dev:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        assert install_dev_match, "Could not find install-dev target in Makefile"
+
+        install_dev_content = install_dev_match.group(0)
+
+        # Should have uv sync with --extra builder
+        assert "--extra builder" in install_dev_content, (
+            "Makefile install-dev MUST include '--extra builder' to match CI\n"
+            "\n"
+            "Why builder extra is required (from ci.yaml:210-213):\n"
+            "  'dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)'\n"
+            "  'builder: Visual workflow builder (black, jinja2, ast-comments)'\n"
+            "  'Both required because unit tests import builder modules'\n"
+            "\n"
+            "Without builder extra:\n"
+            "  - Unit tests fail with ImportError\n"
+            "  - Builder tool development impossible locally\n"
+            "\n"
+            "Fix: Update Makefile:182 to include both extras"
+        )
+
+    def test_ci_uses_dev_and_builder_extras(self, ci_workflow_content: str):
+        """Verify that CI uses both dev and builder extras (baseline check)."""
+        # CI should have both extras
+        assert "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content, (
+            "CI workflow must use both --extra dev and --extra builder\n"
+            "This is the baseline that local install-dev should match\n"
+            "If CI doesn't use these extras, update this test"
+        )
+
+
+class TestPrePushDependencyValidation:
+    """Validate that pre-push hook includes dependency validation (uv pip check).
+
+    CRITICAL: User chose "Yes, add uv pip check to pre-push". CI runs this check
+    (ci.yaml:220-235) but pre-push hook doesn't, allowing dependency conflicts
+    to slip through to CI.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_pre_push_includes_uv_pip_check(self, pre_push_content: str):
+        """Test that pre-push hook Phase 1 includes 'uv pip check'.
+
+        CRITICAL: User chose to add this check. Without it, dependency conflicts
+        pass locally but fail in CI.
+        """
+        # Find Phase 1 (fast checks)
+        phase_1_match = re.search(
+            r"# PHASE 1.*?(?=# PHASE 2|\Z)",
+            pre_push_content,
+            re.DOTALL,
+        )
+
+        assert phase_1_match, "Could not find PHASE 1 in pre-push hook"
+
+        phase_1_content = phase_1_match.group(0)
+
+        # Should contain 'uv pip check' command
+        assert "uv pip check" in phase_1_content, (
+            "Pre-push hook Phase 1 MUST include 'uv pip check' to match CI\n"
+            "\n"
+            "Current issue:\n"
+            "  - CI validates dependencies with uv pip check (ci.yaml:220-235)\n"
+            "  - Pre-push hook Phase 1 doesn't include this check\n"
+            "  - Dependency conflicts only caught in CI\n"
+            "\n"
+            "Impact:\n"
+            "  - Conflicting dependencies pass locally, fail in CI\n"
+            "  - Version mismatches go undetected until push\n"
+            "  - Wastes CI time and developer time\n"
+            "\n"
+            "CI behavior (ci.yaml:220-235):\n"
+            "  - name: Validate lockfile is up-to-date\n"
+            "    run: |\n"
+            "      uv lock --check || { ... }\n"
+            "  (Includes dependency validation)\n"
+            "\n"
+            "Fix: Add to .git/hooks/pre-push Phase 1 (after uv lock --check):\n"
+            '  echo "  → Validating dependency tree..."\n'
+            "  uv pip check || {\n"
+            '    echo "❌ Dependency conflicts detected!"\n'
+            "    echo \"Fix: Run 'uv pip check' to see details\"\n"
+            "    exit 1\n"
+            "  }\n"
+        )
+
+    def test_ci_includes_dependency_validation(self, ci_workflow_content: str):
+        """Verify that CI includes dependency validation (baseline check)."""
+        # CI should validate dependencies
+        # This might be in lockfile validation step
+        has_lockfile_check = "uv lock --check" in ci_workflow_content
+        has_frozen_sync = "--frozen" in ci_workflow_content
+
+        assert has_lockfile_check or has_frozen_sync, (
+            "CI workflow must validate dependencies\n"
+            "Expected: uv lock --check OR uv sync --frozen\n"
+            "This is the baseline that pre-push should match"
+        )
+
+
+class TestPreCommitHookStageFlag:
+    """Validate that Makefile validate-pre-push uses --hook-stage push.
+
+    CRITICAL: Codex finding #3 - Makefile validate-pre-push runs
+    'pre-commit run --all-files' without --hook-stage push, so none of the
+    push-only hooks execute when developers follow documented command.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
+            return f.read()
+
+    def test_validate_pre_push_uses_hook_stage_push(self, makefile_content: str):
+        """Test that validate-pre-push includes --hook-stage push flag.
+
+        CRITICAL: Without --hook-stage push, the 45 push-stage hooks configured
+        in .pre-commit-config.yaml won't execute, creating false confidence.
+        """
+        # Find validate-pre-push target
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Find pre-commit run commands
+        precommit_commands = re.findall(r"pre-commit run[^\n]*", target_content)
+
+        assert precommit_commands, "validate-pre-push should run pre-commit"
+
+        # At least one pre-commit command should have --hook-stage push
+        has_hook_stage_push = any("--hook-stage push" in cmd for cmd in precommit_commands)
+
+        assert has_hook_stage_push, (
+            "Makefile validate-pre-push MUST use '--hook-stage push' flag\n"
+            "\n"
+            "Current issue (Codex finding #3):\n"
+            "  - Makefile:570 runs: pre-commit run --all-files\n"
+            "  - Missing --hook-stage push flag\n"
+            "  - None of the 45 push-stage hooks execute!\n"
+            "  - CONTRIBUTING.md:28 documents 'make validate-pre-push' as the command to use\n"
+            "\n"
+            "Impact:\n"
+            "  - Developers run 'make validate-pre-push' thinking it validates everything\n"
+            "  - Push-only hooks (actionlint, workflow validation, etc.) don't run\n"
+            "  - False confidence: validation passes but push will fail\n"
+            "  - Documentation misleads developers\n"
+            "\n"
+            "Pre-push hooks that are skipped without --hook-stage push:\n"
+            "  - actionlint-workflow-validation (validates GitHub Actions)\n"
+            "  - validate-pytest-xdist-enforcement\n"
+            "  - check-test-memory-safety\n"
+            "  - ... and 42 more hooks!\n"
+            "\n"
+            "Git pre-push hook behavior:\n"
+            "  Uses: pre-commit run --all-files --hook-stage push ✅\n"
+            "\n"
+            "Fix: Update Makefile:570\n"
+            "  From: pre-commit run --all-files\n"
+            "  To:   pre-commit run --all-files --hook-stage push\n"
+        )
+
+
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
 
