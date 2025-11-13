@@ -156,6 +156,34 @@ repos:
 
           Reference: Codex finding - pytest addopts compatibility validation
 
+      - id: validate-pre-push-hook
+        name: Validate Pre-Push Hook Configuration
+        entry: python3 scripts/validate_pre_push_hook.py
+        language: python
+        additional_dependencies: []
+        files: ^\.git/hooks/pre-push$
+        pass_filenames: false
+        always_run: true
+        description: |
+          Validates that .git/hooks/pre-push contains all required validation steps.
+
+          Prevents regressions where:
+          - Pre-push hook is accidentally modified or removed
+          - Local validation diverges from CI requirements
+          - Required validation steps are missing
+
+          Required validations:
+          - Lockfile validation (uv lock --check)
+          - Workflow validation tests
+          - MyPy type checking
+          - Pre-commit hooks on ALL files
+          - Property tests with CI profile (100 examples)
+
+          This ensures local validation always matches CI exactly, preventing
+          surprises after push.
+
+          Fix: Run 'make git-hooks' to restore proper configuration
+
       - id: fix-mdx-syntax
         name: Fix MDX Syntax Errors (Code Block Closings)
         entry: python3 scripts/fix_mdx_syntax.py
@@ -1156,6 +1184,46 @@ repos:
 
           Regression prevention for commit 7b51437 (2025-11-12)
           See: scripts/validation/validate_workflow_test_deps.py for implementation
+
+      - id: validate-fixture-scopes
+        name: Validate Pytest Fixture Scopes
+        entry: bash -c 'source .venv/bin/activate && pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible -v --tb=short'
+        language: system
+        files: ^tests/conftest\.py$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Prevents pytest ScopeMismatch errors by validating fixture scope compatibility.
+
+          Validates that fixtures with wider scopes don't depend on fixtures with narrower scopes.
+
+          Scope hierarchy (widest to narrowest):
+          - session: Fixture runs once per test session
+          - module: Fixture runs once per module
+          - class: Fixture runs once per class
+          - function: Fixture runs once per test function (default)
+
+          RULE: A fixture can only depend on fixtures with equal or wider scope.
+
+          Common violations:
+          - session-scoped fixture depending on function-scoped fixture ❌
+          - module-scoped fixture depending on function-scoped fixture ❌
+          - function-scoped fixture depending on session-scoped fixture ✅ (OK)
+
+          This hook catches the issue that caused integration test failures with pytest-xdist:
+          - ScopeMismatch: session-scoped fixtures (postgres_connection_real, redis_client_real,
+            openfga_client_real) depended on function-scoped fixture (integration_test_env)
+          - Tests passed individually but failed in parallel execution
+          - Root cause: integration_test_env missing scope="session" parameter
+
+          Quick fix: Add or update scope parameter in fixture decorator:
+            @pytest.fixture(scope="session")
+            def my_fixture(dependency_fixture):
+                ...
+
+          Prevention: This hook runs automatically on conftest.py changes
+          See: tests/meta/test_fixture_validation.py for implementation
+          Regression test added: 2025-11-13
 
   # Terraform validation - prevent syntax errors
   - repo: https://github.com/antonbabenko/pre-commit-terraform

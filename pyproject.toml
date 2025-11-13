@@ -372,6 +372,7 @@ strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

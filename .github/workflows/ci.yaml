@@ -128,6 +128,48 @@ jobs:
           uv run python scripts/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
+  validate-local-ci-parity:
+    name: Validate Local/CI Parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'parity-validation'
+
+      - name: Install pre-commit (for local hook validation)
+        run: |
+          pip install pre-commit
+
+      - name: Install git hooks
+        run: |
+          pre-commit install --hook-type pre-commit --hook-type pre-push
+
+      - name: Validate pre-push hook configuration
+        run: |
+          echo "🔍 Validating pre-push hook configuration..."
+          uv run python scripts/validate_pre_push_hook.py
+          echo "✅ Pre-push hook configuration is valid"
+
+      - name: Run local/CI parity tests
+        run: |
+          echo "🧪 Running local/CI parity validation tests..."
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_local_ci_parity.py -v --tb=short
+          echo "✅ Local validation matches CI validation"
+
+      - name: Verify Makefile validate-pre-push target
+        run: |
+          echo "🔍 Verifying Makefile validate-pre-push target..."
+          # Dry-run to verify syntax
+          make -n validate-pre-push
+          echo "✅ Makefile validate-pre-push target is valid"
+
   # ============================================================================
   # TESTING (Parallelized by Python version)
   # ============================================================================

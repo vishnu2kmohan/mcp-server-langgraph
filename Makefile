@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -28,6 +28,7 @@ help-common:
 	@echo ""
 	@echo "📝 Daily Development:"
 	@echo "  make test-dev              🚀 Run tests (fast, parallel, recommended)"
+	@echo "  make validate-pre-push     ✅ Validate before push (matches CI exactly)"
 	@echo "  make format                Format code (black, isort)"
 	@echo "  make lint-check            Check code quality"
 	@echo "  make run-streamable        Start HTTP server"
@@ -112,6 +113,7 @@ help:
 	@echo "  make test-quick-new           Quick check of new tests (parallel)"
 	@echo ""
 	@echo "Validation:"
+	@echo "  make validate-pre-push        🚀 Run comprehensive pre-push validation (CI-equivalent)"
 	@echo "  make validate-openapi         Validate OpenAPI schema"
 	@echo "  make validate-deployments     Validate all deployment configs"
 	@echo "  make validate-docker-compose  Validate Docker Compose"
@@ -514,6 +516,46 @@ validate-workflows:
 		python -c "import yaml; yaml.safe_load(open('$$file'))" 2>/dev/null && echo "  ✓ $$(basename $$file)" || echo "  ✗ $$(basename $$file) INVALID"; \
 	done
 	@echo "✓ Workflow syntax validation complete"
+
+validate-pre-push:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Running comprehensive pre-push validation (CI-equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Lockfile Validation..."
+	@uv lock --check && echo "✓ Lockfile valid" || (echo "✗ Lockfile validation failed" && exit 1)
+	@echo ""
+	@echo "▶ Workflow Validation Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 2: Type Checking (Warning Only)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ MyPy Type Checking (Warning Only)..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || echo "⚠ MyPy found issues (non-blocking)"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 3: Pre-commit Hooks (All Files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Pre-commit Hooks (All Files)..."
+	@pre-commit run --all-files --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 4: Property Tests (CI Profile)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Property Tests (100 examples)..."
+	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✓ All pre-push validations passed!"
+	@echo "✓ Your push should pass CI checks"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."

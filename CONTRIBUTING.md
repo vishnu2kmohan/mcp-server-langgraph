@@ -7,6 +7,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 - [Development Setup](#development-setup)
 - [Testing GitHub Actions Workflows](#testing-github-actions-workflows)
 - [Code Contribution Process](#code-contribution-process)
+  - [Pre-Push Validation](#4-pre-push-validation-recommended)
 - [Testing Requirements](#testing-requirements)
 - [Code Style](#code-style)
 - [Commit Guidelines](#commit-guidelines)
@@ -25,6 +26,10 @@ cd mcp-server-langgraph
 
 # Install dependencies
 uv sync --extra dev --extra builder
+
+# Setup git hooks (REQUIRED)
+make git-hooks
+# Or manually: pre-commit install --hook-type pre-commit --hook-type pre-push
 
 # Setup infrastructure
 make dev-setup
@@ -118,7 +123,57 @@ make lint-check
 make security-check
 ```
 
-### 4. Test Workflow Changes (If Applicable)
+### 4. Pre-Push Validation (RECOMMENDED)
+
+**🚨 CRITICAL: Eliminate CI Surprises**
+
+To ensure your changes pass CI before pushing, run comprehensive pre-push validation:
+
+```bash
+# Run ALL validations that CI runs (matches CI exactly)
+make validate-pre-push
+```
+
+This command runs:
+1. **Lockfile Validation** - Ensures `uv.lock` is in sync
+2. **Workflow Validation Tests** - Validates GitHub Actions workflows
+3. **MyPy Type Checking** - Type checking (warning-only, non-blocking)
+4. **Pre-commit Hooks (All Files)** - Runs all hooks on entire repository
+5. **Property Tests (CI Profile)** - 100 examples like CI (vs 25 locally)
+
+**Why is this important?**
+- **Local hooks run on changed files only** - CI runs on ALL files
+- **Local tests use 25 examples** - CI uses 100 examples (property tests)
+- **Local validation is incremental** - CI is comprehensive
+- **Pre-push hook automatically runs this** - But you can run manually anytime
+
+**Auto-runs on push**: The pre-push Git hook automatically runs this validation.
+
+**Manual run**: If you want to validate before committing:
+```bash
+make validate-pre-push
+```
+
+**Bypass (EMERGENCY ONLY)**:
+```bash
+git push --no-verify   # ⚠️ NOT RECOMMENDED - will likely fail CI
+```
+
+**Pro Tip**: Add to your workflow:
+```bash
+# Before committing
+make format              # Auto-fix formatting
+make lint-check          # Check code quality
+make validate-pre-push   # Final validation before push
+```
+
+**Troubleshooting**:
+- **Lockfile error**: Run `uv lock` to update lockfile
+- **Pre-commit failures**: Run `pre-commit run --all-files` to see details
+- **Property test failures**: Run with `HYPOTHESIS_PROFILE=ci pytest -m property`
+- **Type errors**: Run `uv run mypy src/mcp_server_langgraph` (warning-only)
+
+### 5. Test Workflow Changes (If Applicable)
 
 If you modified `.github/workflows/*.yaml`:
 
@@ -129,17 +184,19 @@ act push -W .github/workflows/YOUR_FILE.yaml -j JOB_NAME
 # See: .github/WORKFLOW_TESTING_CHECKLIST.md
 ```
 
-### 5. Run Pre-commit Hooks
+### 6. Run Pre-commit Hooks
 
 ```bash
 # Install hooks (first time)
 make lint-install
 
-# Run hooks
+# Run hooks manually (if needed)
 pre-commit run --all-files
 ```
 
-### 6. Commit and Push
+**Note**: The pre-push hook (step 4) automatically runs comprehensive validation, so manual pre-commit execution is usually not needed.
+
+### 7. Commit and Push
 
 ```bash
 git add .
@@ -147,7 +204,9 @@ git commit -m "feat: your feature description"
 git push origin feature/your-feature-name
 ```
 
-### 7. Create Pull Request
+**Note**: The pre-push Git hook will automatically run `validate-pre-push` before pushing.
+
+### 8. Create Pull Request
 
 - Open PR on GitHub
 - Fill out PR template
@@ -182,6 +241,55 @@ This project follows TDD principles (see global CLAUDE.md for details):
 | **Bug Fix** | Regression test + Unit test |
 | **Refactoring** | Existing tests must pass |
 | **API Changes** | Contract tests + Integration tests |
+
+### Multi-Python Version Testing
+
+**Supported Python Versions**: 3.10, 3.11, 3.12 (3.13+ not supported)
+
+#### Local Testing Limitations
+
+**Challenge**: Local environments typically have only one Python version installed.
+
+**CI Testing**: CI runs tests on all three Python versions (3.10, 3.11, 3.12) in parallel.
+
+**Recommendation**:
+- **Primary**: Test locally with Python 3.12 (most common)
+- **Rely on CI**: Multi-version testing handled by CI
+- **Optional**: Use Docker matrix for local multi-version testing
+
+#### Optional: Local Multi-Version Testing with Docker
+
+If you need to test multiple Python versions locally:
+
+```bash
+# Using Docker to test against Python 3.10
+docker run --rm -v $(pwd):/app -w /app python:3.10 bash -c "pip install uv && uv sync && uv run pytest tests/"
+
+# Using Docker to test against Python 3.11
+docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run pytest tests/"
+
+# Using Docker to test against Python 3.12
+docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run pytest tests/"
+```
+
+#### Python Version Compatibility
+
+**Best Practices**:
+1. **Avoid version-specific features** - Don't use features only available in one Python version
+2. **Check type hints** - Some type hint syntax varies between versions
+3. **Test imports** - Ensure all imports work across versions
+4. **Monitor CI** - Watch CI results for version-specific failures
+
+**Common Compatibility Issues**:
+- **Type hints**: Use `from __future__ import annotations` for compatibility
+- **AsyncIO**: Behavior varies slightly between versions
+- **Typing**: Some `typing` module features added in specific versions
+
+**When CI Finds Version-Specific Issues**:
+1. Check the failing Python version in CI logs
+2. Use Docker locally to reproduce the failure
+3. Fix the issue ensuring compatibility
+4. Verify all versions pass in CI
 
 ---
 

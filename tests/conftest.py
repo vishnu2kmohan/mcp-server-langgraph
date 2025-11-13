@@ -967,7 +967,7 @@ def mock_openfga_response():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def integration_test_env(test_infrastructure):
     """
     Check if running in integration test environment (Docker).
@@ -978,6 +978,9 @@ def integration_test_env(test_infrastructure):
     The test_infrastructure fixture now automatically manages the full
     docker-compose lifecycle, so this fixture will always return True
     when test_infrastructure is active.
+
+    Scope: session - Must match the scope of dependent fixtures
+    (postgres_connection_real, redis_client_real, openfga_client_real)
     """
     return test_infrastructure["ready"]
 
