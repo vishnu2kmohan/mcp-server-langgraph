@@ -362,7 +362,7 @@ class Settings(BaseSettings):
 
     @field_validator("cors_allowed_origins", "code_execution_allowed_domains", "code_execution_allowed_imports", mode="before")
     @classmethod
-    def parse_comma_separated_list(cls, v):
+    def parse_comma_separated_list(cls, v: Any) -> Any:
         """Parse comma-separated strings from environment variables into lists"""
         if isinstance(v, str):
             # Split by comma and strip whitespace

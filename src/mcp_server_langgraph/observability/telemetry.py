@@ -667,7 +667,7 @@ def extract_context(carrier: dict[str, str]) -> Any:
 # These are lazy proxies that safely no-op if observability not initialized
 
 
-def _safe_metric_operation(metric_name: str, operation: str, *args, **kwargs):
+def _safe_metric_operation(metric_name: str, operation: str, *args: Any, **kwargs: Any) -> None:
     """
     Safely perform metric operation, no-op if observability not initialized.
 

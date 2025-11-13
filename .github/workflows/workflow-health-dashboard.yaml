@@ -112,16 +112,16 @@ jobs:
             failed_runs=$(echo "$runs" | jq '[.[] | select(.conclusion == "failure")] | length')
             cancelled_runs=$(echo "$runs" | jq '[.[] | select(.conclusion == "cancelled")] | length')
 
-            success_rate=$(echo "scale=1; $successful_runs * 100 / $total_runs" | bc)
+            success_rate=$(awk "BEGIN {printf \"%.1f\", $successful_runs * 100 / $total_runs}")
 
             # Calculate average duration (in seconds)
             avg_duration=$(echo "$runs" | jq '[.[] | select(.run_duration_ms != null) | .run_duration_ms] | add / length / 1000 | floor')
 
             # Format duration
             if [ "$avg_duration" -gt 3600 ]; then
-              duration_str="$(echo "scale=1; $avg_duration / 3600" | bc)h"
+              duration_str="$(awk "BEGIN {printf \"%.1f\", $avg_duration / 3600}")h"
             elif [ "$avg_duration" -gt 60 ]; then
-              duration_str="$(echo "scale=0; $avg_duration / 60" | bc)m"
+              duration_str="$(awk "BEGIN {printf \"%d\", $avg_duration / 60}")m"
             else
               duration_str="${avg_duration}s"
             fi
@@ -129,9 +129,9 @@ jobs:
             # Determine status
             status_icon="✅"
             status_text="Healthy"
-            if (( $(echo "$success_rate >= 95" | bc -l) )); then
+            if (( $(awk "BEGIN {print ($success_rate >= 95)}") )); then
               healthy_workflows=$((healthy_workflows + 1))
-            elif (( $(echo "$success_rate >= 80" | bc -l) )); then
+            elif (( $(awk "BEGIN {print ($success_rate >= 80)}") )); then
               degraded_workflows=$((degraded_workflows + 1))
               status_icon="⚠️"
               status_text="Degraded"

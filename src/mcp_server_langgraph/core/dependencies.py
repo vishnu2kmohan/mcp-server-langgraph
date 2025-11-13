@@ -12,7 +12,7 @@ from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
-from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.config import Settings, settings
 
 # Singleton instances (will be initialized on first use)
 _keycloak_client: Optional[KeycloakClient] = None
@@ -73,7 +73,7 @@ def get_openfga_client() -> Optional[OpenFGAClient]:
     return _openfga_client
 
 
-def validate_production_auth_config(settings_obj) -> None:
+def validate_production_auth_config(settings_obj: Settings) -> None:
     """
     Validate that production deployments have proper authorization configured.
 

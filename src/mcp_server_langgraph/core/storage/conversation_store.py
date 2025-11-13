@@ -17,7 +17,7 @@ try:
     REDIS_AVAILABLE = True
     # Note: Redis is not a generic class in redis-py >= 5.0
     # Using plain Redis type instead of Redis[str] to avoid TypeError
-    RedisType = Redis  # type: ignore[assignment]
+    RedisType = Redis
 except ImportError:
     REDIS_AVAILABLE = False
     RedisType = None  # type: ignore[assignment]
