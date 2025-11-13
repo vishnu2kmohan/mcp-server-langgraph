@@ -51,14 +51,32 @@ def get_used_markers() -> Set[str]:
         sys.exit(1)
 
     # Pattern matches: @pytest.mark.marker_name or pytest.mark.marker_name()
-    marker_pattern = re.compile(r"@?pytest\.mark\.(\w+)")
+    # But NOT in comments or docstrings
+    marker_pattern = re.compile(r"^\s*@pytest\.mark\.(\w+)", re.MULTILINE)
 
     used_markers = set()
 
     for test_file in tests_dir.rglob("*.py"):
         content = test_file.read_text()
 
-        for match in marker_pattern.finditer(content):
+        # Remove comments and docstrings to avoid false positives
+        # Simple approach: remove lines starting with # and content in """..."""
+        lines = content.split("\n")
+        code_lines = []
+        in_docstring = False
+        for line in lines:
+            stripped = line.strip()
+            # Toggle docstring state
+            if '"""' in line:
+                in_docstring = not in_docstring
+                continue
+            # Skip comment lines and docstring content
+            if not in_docstring and not stripped.startswith("#"):
+                code_lines.append(line)
+
+        code_content = "\n".join(code_lines)
+
+        for match in marker_pattern.finditer(code_content):
             marker_name = match.group(1)
             # Skip built-in markers
             if marker_name not in {"parametrize", "skip", "skipif", "xfail", "usefixtures", "filterwarnings"}:

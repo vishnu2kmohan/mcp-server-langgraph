@@ -87,6 +87,8 @@ IMPORT_TO_PACKAGE = {
     "click": "click",
     "rich": "rich",
     "toml": "toml",
+    "tomli": "tomli",  # Python < 3.11 backport of tomllib
+    "tomllib": "STDLIB",  # Python 3.11+ stdlib (no package needed)
 }
 
 
@@ -191,7 +193,12 @@ class TestPreCommitHookDependencies:
             for hook in repo.get("hooks", []):
                 entry = hook.get("entry", "")
                 language = hook.get("language", "")
+                hook_id = hook.get("id", "unknown")
                 additional_deps = hook.get("additional_dependencies", [])
+
+                # SKIP: Hooks using uv run manage their own dependencies via project venv
+                if entry.startswith("uv run") or "source .venv/bin/activate" in entry:
+                    continue
 
                 # Extract Python script path from entry
                 # Format: "python3 scripts/something.py" or "scripts/something.py"
@@ -230,6 +237,31 @@ class TestPreCommitHookDependencies:
                     "dataclasses",
                     "enum",
                     "abc",
+                    "argparse",  # Standard library in all Python versions
+                    "ast",  # Standard library - Abstract Syntax Trees
+                    "subprocess",
+                    "tempfile",
+                    "shutil",
+                    "textwrap",
+                    "inspect",
+                    "warnings",
+                    "contextlib",
+                    "copy",
+                    "io",
+                    "traceback",
+                    "logging",
+                    "urllib",
+                    "http",
+                    "email",
+                    "hashlib",
+                    "hmac",
+                    "base64",
+                    "uuid",
+                    "time",
+                    "math",
+                    "random",
+                    "string",
+                    "secrets",
                 }
 
                 missing_deps = []
@@ -239,6 +271,10 @@ class TestPreCommitHookDependencies:
 
                     # Map import to package name
                     package_name = IMPORT_TO_PACKAGE.get(import_name, import_name).lower()
+
+                    # Skip if mapped to STDLIB (e.g., tomllib in Python 3.11+)
+                    if package_name == "stdlib":
+                        continue
 
                     if package_name not in declared_packages:
                         missing_deps.append(f"{import_name} (package: {package_name})")
@@ -377,7 +413,6 @@ class TestPreCommitHookConfiguration:
         for repo in config.get("repos", []):
             for hook in repo.get("hooks", []):
                 if hook.get("language") == "python":
-                    hook_id = hook.get("id", "unknown")
                     if "pass_filenames" not in hook:
                         # This is informational, not a hard requirement
                         pass  # Could add to a recommendations list if needed

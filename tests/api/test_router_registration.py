@@ -24,16 +24,15 @@ def test_client(monkeypatch):
     - RED (Before): Tests fail with "httpx.ConnectError: All connection attempts failed"
     - GREEN (After): Keycloak client mocked, tests check router registration only
     - REFACTOR: Proper dependency mocking pattern for contract tests
-    """
-    from unittest.mock import AsyncMock
-    import os
 
-    # Set environment variable to skip authentication
+    CRITICAL FIX (2025-11-13): Set MCP_SKIP_AUTH BEFORE importing app to prevent
+    Keycloak connection attempts during module initialization.
+    """
+    # CRITICAL: Set environment variable BEFORE importing app
+    # This prevents Keycloak connection attempts during app initialization
     monkeypatch.setenv("MCP_SKIP_AUTH", "true")
 
-    # Mock Keycloak initialization to prevent connection attempts during app startup
-    # The app module may try to connect to Keycloak during import, so we need
-    # to ensure SKIP_AUTH is set before importing
+    # Import app AFTER setting MCP_SKIP_AUTH
     from mcp_server_langgraph.mcp.server_streamable import app
 
     return TestClient(app)
