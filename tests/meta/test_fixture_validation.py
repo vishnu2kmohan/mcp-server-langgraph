@@ -521,6 +521,167 @@ class TestFixtureDecorators:
 
         return False
 
+    @pytest.mark.unit
+    def test_fixture_scope_dependencies_are_compatible(self):
+        """
+        TDD REGRESSION TEST: Ensure fixture scopes are compatible with their dependencies
+
+        GIVEN: All fixtures in conftest.py and test files
+        WHEN: Analyzing fixture dependencies
+        THEN: Fixtures with wider scopes should not depend on fixtures with narrower scopes
+
+        Scope hierarchy (widest to narrowest):
+        - session: Fixture runs once per test session
+        - package: Fixture runs once per package
+        - module: Fixture runs once per module
+        - class: Fixture runs once per class
+        - function: Fixture runs once per test function (default)
+
+        RULE: A fixture can only depend on fixtures with equal or wider scope.
+        Example violations:
+        - session-scoped fixture depending on function-scoped fixture ❌
+        - module-scoped fixture depending on function-scoped fixture ❌
+        - function-scoped fixture depending on session-scoped fixture ✅ (OK)
+
+        This prevents pytest ScopeMismatch errors and ensures fixtures work correctly.
+        """
+        violations = self._find_fixture_scope_violations()
+
+        if violations:
+            error_msg = "Found fixture scope compatibility violations:\n"
+            for file_path, fixture_name, fixture_scope, dep_name, dep_scope, line_num in violations:
+                error_msg += f"\n  {file_path}:{line_num} - {fixture_name}() [scope={fixture_scope}]\n"
+                error_msg += f"    depends on: {dep_name}() [scope={dep_scope}]\n"
+                error_msg += f"    ❌ {fixture_scope}-scoped fixture cannot depend on {dep_scope}-scoped fixture\n"
+            error_msg += (
+                "\n💡 Fix: Change fixture scope to match or be narrower than its dependencies.\n"
+                "Example: If fixture depends on function-scoped fixtures, it must also be function-scoped."
+            )
+            pytest.fail(error_msg)
+
+    def _find_fixture_scope_violations(self) -> List[Tuple[str, str, str, str, str, int]]:
+        """
+        Find fixtures with scope incompatibilities
+
+        Returns:
+            List of (file_path, fixture_name, fixture_scope, dependency_name, dependency_scope, line_number) tuples
+        """
+        violations = []
+        tests_dir = Path(__file__).parent.parent
+
+        # Define scope hierarchy (wider scopes have higher values)
+        scope_hierarchy = {
+            "function": 1,  # Narrowest scope (default)
+            "class": 2,
+            "module": 3,
+            "package": 4,
+            "session": 5,  # Widest scope
+        }
+
+        # Get all fixtures with their scopes and dependencies
+        fixtures_info = self._get_all_fixtures_with_dependencies()
+
+        # Check each fixture
+        for fixture_file, fixture_name, fixture_scope, dep_names, line_num in fixtures_info:
+            # Get scope value (default to function if not specified)
+            fixture_scope_value = scope_hierarchy.get(fixture_scope, scope_hierarchy["function"])
+
+            # Check each dependency
+            for dep_name in dep_names:
+                # Find the dependency fixture
+                dep_scope = None
+                dep_found = False
+                for dep_file, dep_fixture_name, dep_fixture_scope, _, _ in fixtures_info:
+                    if dep_fixture_name == dep_name:
+                        dep_scope = dep_fixture_scope
+                        dep_found = True
+                        break
+
+                # Only check fixtures (skip built-in params like 'request', 'monkeypatch', etc.)
+                if dep_found:
+                    dep_scope_value = scope_hierarchy.get(dep_scope, scope_hierarchy["function"])
+
+                    # Violation: Fixture has wider scope than its dependency
+                    if fixture_scope_value > dep_scope_value:
+                        rel_path = fixture_file.relative_to(tests_dir.parent)
+                        violations.append(
+                            (
+                                str(rel_path),
+                                fixture_name,
+                                fixture_scope or "function",
+                                dep_name,
+                                dep_scope or "function",
+                                line_num,
+                            )
+                        )
+
+        return violations
+
+    def _get_all_fixtures_with_dependencies(self) -> List[Tuple[Path, str, str, List[str], int]]:
+        """
+        Get all fixtures with their scopes and parameter dependencies
+
+        Returns:
+            List of (file_path, fixture_name, scope, dependency_names, line_number) tuples
+        """
+        fixtures_info = []
+        tests_dir = Path(__file__).parent.parent
+
+        # Search in conftest.py and test files
+        search_patterns = ["test_*.py", "conftest.py"]
+
+        for pattern in search_patterns:
+            for test_file in tests_dir.rglob(pattern):
+                try:
+                    with open(test_file, "r") as f:
+                        content = f.read()
+                        tree = ast.parse(content, filename=str(test_file))
+
+                    for node in ast.walk(tree):
+                        # Check both regular and async functions
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            if self._has_fixture_decorator(node):
+                                # Get fixture scope
+                                scope = self._get_fixture_scope(node)
+
+                                # Get parameter names (dependencies)
+                                param_names = [arg.arg for arg in node.args.args if arg.arg != "self"]
+
+                                fixtures_info.append((test_file, node.name, scope, param_names, node.lineno))
+
+                except (SyntaxError, UnicodeDecodeError):
+                    continue
+
+        return fixtures_info
+
+    def _get_fixture_scope(self, func_node: ast.FunctionDef) -> str:
+        """
+        Extract the scope parameter from @pytest.fixture decorator
+
+        Args:
+            func_node: AST node for the fixture function
+
+        Returns:
+            Scope string ("session", "module", "class", "function") or None if not specified
+        """
+        for decorator in func_node.decorator_list:
+            # Check for @pytest.fixture(scope="session")
+            if isinstance(decorator, ast.Call):
+                if isinstance(decorator.func, ast.Attribute):
+                    if (
+                        isinstance(decorator.func.value, ast.Name)
+                        and decorator.func.value.id == "pytest"
+                        and decorator.func.attr == "fixture"
+                    ):
+                        # Look for scope keyword argument
+                        for keyword in decorator.keywords:
+                            if keyword.arg == "scope":
+                                if isinstance(keyword.value, ast.Constant):
+                                    return keyword.value.value
+
+        # No scope specified = function scope (default)
+        return None
+
     def _get_all_defined_fixtures(self) -> Set[str]:
         """
         Get all fixture names defined in the test suite
