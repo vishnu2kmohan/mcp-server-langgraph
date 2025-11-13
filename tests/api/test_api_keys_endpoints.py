@@ -124,7 +124,11 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     app.include_router(router)
 
     # Override dependencies using FastAPI's built-in mechanism
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    async def override_get_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
 

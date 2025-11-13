@@ -33,16 +33,24 @@ assert response.status_code == status.HTTP_200_OK
 # ❌ BAD: Missing get_openfga_client override
 @pytest.fixture
 def test_client(mock_sp_manager, mock_current_user):
+    # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    async def override_get_current_user():
+        return mock_current_user
+
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_current_user] = override_get_current_user
     # MISSING: get_openfga_client override!
     return TestClient(app)
 
-# ✅ GOOD: All dependencies overridden
+# ✅ GOOD: All dependencies overridden (with correct async pattern)
 @pytest.fixture
 def test_client(mock_sp_manager, mock_current_user, mock_openfga_client):
+    # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    async def override_get_current_user():
+        return mock_current_user
+
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
     return TestClient(app)
 ```

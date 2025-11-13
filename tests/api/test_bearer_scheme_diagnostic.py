@@ -66,8 +66,12 @@ class TestBearerSchemeOverrideDiagnostic:
         app = FastAPI()
 
         # Current pattern: Override imported bearer_scheme
+        # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+        async def override_get_current_user():
+            return {"user_id": "test-user"}
+
         app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = lambda: {"user_id": "test-user"}
+        app.dependency_overrides[get_current_user] = override_get_current_user
 
         @app.get("/test")
         async def test_endpoint(user=Depends(get_current_user)):
@@ -98,8 +102,12 @@ class TestBearerSchemeOverrideDiagnostic:
         app = FastAPI()
 
         # Alternative pattern: Override via module reference
+        # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+        async def override_get_current_user():
+            return {"user_id": "test-user-2"}
+
         app.dependency_overrides[middleware.bearer_scheme] = lambda: None
-        app.dependency_overrides[middleware.get_current_user] = lambda: {"user_id": "test-user-2"}
+        app.dependency_overrides[middleware.get_current_user] = override_get_current_user
 
         @app.get("/test2")
         async def test_endpoint(user=Depends(middleware.get_current_user)):
@@ -130,7 +138,11 @@ class TestBearerSchemeOverrideDiagnostic:
         app = FastAPI()
 
         # Try ONLY overriding get_current_user (not bearer_scheme)
-        app.dependency_overrides[get_current_user] = lambda: {"user_id": "test-user-3"}
+        # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+        async def override_get_current_user():
+            return {"user_id": "test-user-3"}
+
+        app.dependency_overrides[get_current_user] = override_get_current_user
 
         @app.get("/test3")
         async def test_endpoint(user=Depends(get_current_user)):

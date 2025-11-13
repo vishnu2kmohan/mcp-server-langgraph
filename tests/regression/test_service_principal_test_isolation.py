@@ -36,6 +36,7 @@ These tests validate that the isolation mechanisms are in place and working.
 """
 
 import gc
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -79,6 +80,7 @@ class TestServicePrincipalTestIsolation:
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
         import os
+
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
@@ -119,8 +121,12 @@ class TestServicePrincipalTestIsolation:
         ], "Should fail without auth override (401 Unauthorized or 403 Forbidden)"
 
         # WITH override - should succeed
+        # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+        async def override_get_current_user():
+            return {"user_id": "mocked-user"}
+
         app.dependency_overrides[bearer] = lambda: None
-        app.dependency_overrides[get_current_user] = lambda: {"user_id": "mocked-user"}
+        app.dependency_overrides[get_current_user] = override_get_current_user
 
         client_with_override = TestClient(app)
         response_auth = client_with_override.get("/protected")
@@ -215,7 +221,8 @@ class TestServicePrincipalTestIsolation:
         """
         # Create multiple mock objects
         mocks = [MagicMock() for _ in range(10)]
-        weak_refs = [id(m) for m in mocks]
+        # Store object IDs for potential future validation
+        _ = [id(m) for m in mocks]  # noqa: F841
 
         # Clear references
         mocks.clear()
@@ -322,9 +329,6 @@ def test_service_principal_tests_have_xdist_groups():
         "Example: @pytest.mark.xdist_group(name='sp_create_tests')"
     )
 
-
-# Import Path here to avoid issues if pathlib not imported
-from pathlib import Path
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
