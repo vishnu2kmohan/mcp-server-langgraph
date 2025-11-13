@@ -127,7 +127,8 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     """
     FastAPI TestClient with mocked dependencies for service principals endpoints.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 4 - CRITICAL):
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 5 - CRITICAL):
+    - Delete MCP_SKIP_AUTH BEFORE creating app to prevent race condition
     - Use app.dependency_overrides instead of monkeypatch
     - Monkeypatch + reload causes FastAPI parameter name collision:
       * Endpoint has parameter: request: CreateServicePrincipalRequest
@@ -143,11 +144,19 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
 
     Solution: Use dependency_overrides which properly isolates dependencies.
     """
+    import os
+
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
+
+    # CRITICAL: Delete MCP_SKIP_AUTH BEFORE creating app
+    # Without this, app.include_router() evaluates dependencies with MCP_SKIP_AUTH=true
+    # and dependency_overrides won't work correctly (race condition)
+    if "MCP_SKIP_AUTH" in os.environ:
+        del os.environ["MCP_SKIP_AUTH"]
 
     # Create fresh FastAPI app
     app = FastAPI()
@@ -176,15 +185,22 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     """
     FastAPI TestClient with admin user for tests requiring elevated permissions.
 
-    PYTEST-XDIST FIX (2025-11-12 - REVISION 4):
+    PYTEST-XDIST FIX (2025-11-12 - REVISION 5):
+    - Delete MCP_SKIP_AUTH BEFORE creating app to prevent race condition
     - Use app.dependency_overrides instead of monkeypatch
     - Same fix as sp_test_client to avoid FastAPI parameter name collision
     """
+    import os
+
     from fastapi import FastAPI
 
     from mcp_server_langgraph.api.service_principals import router
     from mcp_server_langgraph.auth.middleware import get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
+
+    # CRITICAL: Delete MCP_SKIP_AUTH BEFORE creating app (same fix as sp_test_client)
+    if "MCP_SKIP_AUTH" in os.environ:
+        del os.environ["MCP_SKIP_AUTH"]
 
     # Create fresh FastAPI app
     app = FastAPI()
