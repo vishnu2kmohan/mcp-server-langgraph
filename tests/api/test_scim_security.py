@@ -55,6 +55,10 @@ class TestSCIMSecurityControls:
 
         mock_keycloak = AsyncMock()
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Regular user attempts to create a user
         # Then: Should be REJECTED with 403 Forbidden
@@ -83,6 +87,10 @@ class TestSCIMSecurityControls:
 
         mock_keycloak = AsyncMock()
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Regular user tries to delete a user
         # Then: Should be REJECTED
@@ -190,6 +198,8 @@ class TestSCIMSecurityControls:
         }
 
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Admin creates a user
         # Then: Should SUCCEED
@@ -236,6 +246,8 @@ class TestSCIMSecurityControls:
         }
 
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: SCIM client creates a user
         # Then: Should SUCCEED
@@ -423,6 +435,8 @@ class TestSCIMErrorHandling:
 
         mock_keycloak = AsyncMock()
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Delete user
         await delete_user(
@@ -493,6 +507,8 @@ class TestSCIMErrorHandling:
         mock_keycloak.create_user.side_effect = Exception("Keycloak connection error")
 
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Keycloak raises exception
         # Then: Should return 500
@@ -550,6 +566,8 @@ class TestSCIMErrorHandling:
         ]
 
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: PATCH user to disable
         result = await update_user(
@@ -595,6 +613,8 @@ class TestSCIMErrorHandling:
         }
 
         mock_openfga = AsyncMock()
+        # Configure mock to return False for permission check
+        mock_openfga.check_permission.return_value = False
 
         # When: Create group with members
         result = await create_group(
