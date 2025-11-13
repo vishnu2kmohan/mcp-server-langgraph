@@ -502,6 +502,11 @@ class BudgetMonitor:
 
     async def _send_email_alert(self, level: str, message: str, budget_id: str, utilization: float) -> None:
         """Send email alert via SMTP."""
+        # Guard: Skip if SMTP not configured
+        if not self._smtp_host or not self._email_from or not self._email_to:
+            logger.warning("Email alerts not configured - skipping email notification")
+            return
+
         subject = f"[{level.upper()}] Budget Alert: {budget_id}"
 
         # Create HTML email body
@@ -552,6 +557,11 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 
     async def _send_webhook_alert(self, level: str, message: str, budget_id: str, utilization: float) -> None:
         """Send webhook notification via HTTP POST."""
+        # Guard: Skip if webhook not configured
+        if not self._webhook_url:
+            logger.warning("Webhook URL not configured - skipping webhook notification")
+            return
+
         payload = {
             "alert_type": "budget",
             "level": level,

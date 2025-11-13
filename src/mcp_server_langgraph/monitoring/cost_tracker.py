@@ -124,13 +124,13 @@ except ImportError:
             self.parent._values[self.label_values] += amount
 
     # Mock Prometheus metrics (fallback when prometheus_client not installed)
-    llm_token_usage = MockPrometheusCounter(
+    llm_token_usage = MockPrometheusCounter(  # type: ignore[assignment]  # Mock has compatible interface
         name="llm_token_usage_total",
         description="Total tokens used by LLM calls",
         labelnames=["provider", "model", "token_type"],
     )
 
-    llm_cost = MockPrometheusCounter(
+    llm_cost = MockPrometheusCounter(  # type: ignore[assignment]  # Mock has compatible interface
         name="llm_cost_usd_total",
         description="Total estimated cost in USD",
         labelnames=["provider", "model"],
@@ -349,10 +349,13 @@ class CostMetricsCollector:
                 from mcp_server_langgraph.database import get_async_session
                 from mcp_server_langgraph.database.models import TokenUsageRecord
 
+                # Type guard: _database_url is guaranteed non-None when _enable_persistence is True
+                assert self._database_url is not None, "database_url must be set when persistence is enabled"
+
                 async with get_async_session(self._database_url) as session:
                     stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)
                     result = await session.execute(stmt)
-                    db_deleted = result.rowcount
+                    db_deleted = result.rowcount  # type: ignore[attr-defined]  # SQLAlchemy Result has rowcount
                     deleted_count += db_deleted
 
                     import logging

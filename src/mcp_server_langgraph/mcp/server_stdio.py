@@ -272,7 +272,7 @@ class MCPAgentServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
 
-        @self.server.list_tools()  # type: ignore[misc]
+        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]  # MCP library decorator lacks type stubs
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -358,7 +358,7 @@ class MCPAgentServer:
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
-        @self.server.list_resources()  # type: ignore[misc]
+        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]  # MCP library decorator lacks type stubs
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

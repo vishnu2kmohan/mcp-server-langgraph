@@ -326,4 +326,4 @@ def rate_limit_for_search(func: Callable[..., Any]) -> Callable[..., Any]:
 
 def exempt_from_rate_limit(func: Callable[..., Any]) -> Callable[..., Any]:
     """Exempt endpoint from rate limiting (health checks, metrics)"""
-    return limiter.exempt(func)  # type: ignore[no-any-return]
+    return limiter.exempt(func)  # type: ignore[no-any-return,no-untyped-call]  # slowapi library lacks complete type stubs

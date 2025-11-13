@@ -179,7 +179,7 @@ class PrometheusClient:
         if not self._initialized:
             await self.initialize()
 
-        params = {
+        params: dict[str, str | float] = {
             "query": promql,
             "start": start.timestamp(),
             "end": end.timestamp(),
@@ -190,7 +190,7 @@ class PrometheusClient:
 
         try:
             if self.client is not None:
-                response = await self.client.get(url, params=params)
+                response = await self.client.get(url, params=params)  # type: ignore[arg-type]  # httpx accepts str|float params
                 response.raise_for_status()
             else:
                 raise ValueError("Prometheus client not initialized")
