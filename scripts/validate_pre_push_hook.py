@@ -18,6 +18,7 @@ Updated 2025-11-13: Added comprehensive test suite validation to match CI exactl
 """
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -62,32 +63,33 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
     with open(pre_push_path, "r") as f:
         content = f.read()
 
-    # Check 3: Required validation steps
+    # Check 3: Required validation steps (using regex patterns to handle "uv run" wrappers)
     required_validations = {
         # Phase 1: Fast checks
-        "uv lock --check": "Lockfile validation",
-        "test_workflow_syntax.py": "Workflow syntax validation",
-        "test_workflow_security.py": "Workflow security validation",
-        "test_workflow_dependencies.py": "Workflow dependencies validation",
-        "test_docker_paths.py": "Docker paths validation",
+        r"uv lock --check": "Lockfile validation",
+        r"test_workflow_syntax\.py": "Workflow syntax validation",
+        r"test_workflow_security\.py": "Workflow security validation",
+        r"test_workflow_dependencies\.py": "Workflow dependencies validation",
+        r"test_docker_paths\.py": "Docker paths validation",
         # Phase 2: Type checking
-        "mypy src/mcp_server_langgraph": "MyPy type checking",
-        # Phase 3: Test suite validation (UPDATED: Now includes API/MCP + parallel execution)
-        "pytest tests/ -m": "Unit tests",  # Flexible - allows "unit and not contract"
-        "pytest tests/smoke/": "Smoke tests",
-        "pytest tests/integration/": "Integration tests (last failed)",
-        "pytest -m 'api and unit": "API endpoint tests",  # NEW: API tests
-        "pytest tests/unit/test_mcp_stdio_server.py": "MCP server tests",  # NEW: MCP tests
-        "HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
-        "pytest -m property": "Property tests",
+        r"(uv run )?mypy src/mcp_server_langgraph": "MyPy type checking",
+        # Phase 3: Test suite validation (handles "uv run pytest" or just "pytest")
+        r"(uv run )?pytest.*tests/.*-m.*unit": "Unit tests",
+        r"(uv run )?pytest.*tests/smoke/": "Smoke tests",
+        r"(uv run )?pytest.*tests/integration/": "Integration tests",
+        r"(uv run )?pytest.*-m.*['\"]api and unit": "API endpoint tests",
+        r"(uv run )?pytest.*test_mcp_stdio_server\.py": "MCP server tests",
+        r"HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
+        r"(uv run )?pytest.*-m.*property": "Property tests",
+        r"(uv run )?pytest.*test_pytest_xdist_enforcement\.py": "pytest-xdist enforcement meta-tests",
         # Phase 4: Pre-commit hooks (push stage)
-        "pre-commit run --all-files --hook-stage push": "Pre-commit hooks (push stage)",
+        r"pre-commit run --all-files.*--hook-stage push": "Pre-commit hooks (push stage)",
     }
 
     missing_validations = []
-    for validation_cmd, description in required_validations.items():
-        if validation_cmd not in content:
-            missing_validations.append(f"   - {description} ({validation_cmd})")
+    for validation_pattern, description in required_validations.items():
+        if not re.search(validation_pattern, content):
+            missing_validations.append(f"   - {description} (pattern: {validation_pattern})")
 
     if missing_validations:
         errors.append(

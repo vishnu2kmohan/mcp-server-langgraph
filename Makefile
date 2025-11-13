@@ -560,6 +560,9 @@ validate-pre-push:
 	@echo "▶ Property Tests (100 examples)..."
 	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
 	@echo ""
+	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
+	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 4: Pre-commit Hooks (All Files - push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
