@@ -14,6 +14,7 @@ Regression Prevention:
 - Helm unittest plugin template resolution errors (Run #19311976718)
 - Checksum template pattern issues with include (print $.Template.BasePath)
 """
+
 import subprocess
 from pathlib import Path
 
@@ -24,6 +25,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 
 
+@pytest.mark.requires_helm
 class TestHelmTemplateRendering:
     """Test Helm chart template rendering."""
 
@@ -102,6 +104,7 @@ class TestHelmTemplateRendering:
         assert secret_checksum.isalnum(), "checksum/secret should be alphanumeric"
 
 
+@pytest.mark.requires_helm
 class TestHelmLint:
     """Test Helm chart lint passes."""
 
@@ -129,8 +132,9 @@ class TestHelmLint:
 
         # Helm lint success messages
         output = result.stdout + result.stderr
-        assert "linted" in output.lower() or "no failures" in output.lower(), \
-            f"Helm lint output doesn't indicate success:\n{output}"
+        assert (
+            "linted" in output.lower() or "no failures" in output.lower()
+        ), f"Helm lint output doesn't indicate success:\n{output}"
 
 
 class TestHelmDependencies:
@@ -170,6 +174,7 @@ class TestHelmDependencies:
         assert len(template_files) > 0, "No template files found in templates directory"
 
 
+@pytest.mark.requires_helm
 class TestHelmTemplateWithValues:
     """Test Helm template rendering with different values."""
 
