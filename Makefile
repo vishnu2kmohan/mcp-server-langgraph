@@ -539,18 +539,33 @@ validate-pre-push:
 	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || echo "⚠ MyPy found issues (non-blocking)"
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 3: Pre-commit Hooks (All Files)"
+	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Unit Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not contract' -x --tb=short && echo "✓ Unit tests passed" || (echo "✗ Unit tests failed" && exit 1)
+	@echo ""
+	@echo "▶ Smoke Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)
+	@echo ""
+	@echo "▶ Integration Tests (Last Failed)..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/integration/ -x --tb=short --lf && echo "✓ Integration tests passed" || echo "⚠ Integration tests failed (non-blocking)"
+	@echo ""
+	@echo "▶ API Endpoint Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m 'api and unit and not llm' -v --tb=short && echo "✓ API tests passed" || (echo "✗ API tests failed" && exit 1)
+	@echo ""
+	@echo "▶ MCP Server Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit/test_mcp_stdio_server.py -m 'not llm' -v --tb=short && echo "✓ MCP tests passed" || (echo "✗ MCP tests failed" && exit 1)
+	@echo ""
+	@echo "▶ Property Tests (100 examples)..."
+	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 4: Pre-commit Hooks (All Files - push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "▶ Pre-commit Hooks (All Files)..."
 	@pre-commit run --all-files --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
-	@echo ""
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 4: Property Tests (CI Profile)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ Property Tests (100 examples)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed!"

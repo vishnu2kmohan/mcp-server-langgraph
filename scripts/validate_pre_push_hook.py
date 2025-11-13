@@ -72,10 +72,12 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
         "test_docker_paths.py": "Docker paths validation",
         # Phase 2: Type checking
         "mypy src/mcp_server_langgraph": "MyPy type checking",
-        # Phase 3: Test suite validation (NEW)
+        # Phase 3: Test suite validation (UPDATED: Now includes API/MCP + parallel execution)
         "pytest tests/ -m": "Unit tests",  # Flexible - allows "unit and not contract"
         "pytest tests/smoke/": "Smoke tests",
         "pytest tests/integration/": "Integration tests (last failed)",
+        "pytest -m 'api and unit": "API endpoint tests",  # NEW: API tests
+        "pytest tests/unit/test_mcp_stdio_server.py": "MCP server tests",  # NEW: MCP tests
         "HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
         "pytest -m property": "Property tests",
         # Phase 4: Pre-commit hooks (push stage)
@@ -92,6 +94,60 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
             "❌ Pre-push hook is missing required validation steps:\n"
             + "\n".join(missing_validations)
             + "\n   Fix: Restore .git/hooks/pre-push from template or run 'make git-hooks'"
+        )
+
+    # Check 4: Parallel execution with pytest-xdist (-n auto)
+    # All test commands should use -n auto to match CI and catch isolation bugs
+    pytest_commands = [
+        ("Unit tests", "pytest tests/ -m", "-n auto"),
+        ("Smoke tests", "pytest tests/smoke/", "-n auto"),
+        ("Integration tests", "pytest tests/integration/", "-n auto"),
+        ("API tests", "pytest -n auto -m 'api", "-n auto"),
+        ("MCP tests", "test_mcp_stdio_server.py", "-n auto"),
+        ("Property tests", "pytest -m property", "-n auto"),
+    ]
+
+    missing_n_auto = []
+    for test_name, test_cmd, flag in pytest_commands:
+        # Find lines containing the test command
+        lines = [line for line in content.split("\n") if test_cmd in line]
+        if lines:
+            # Check if any of those lines have -n auto
+            if not any(flag in line for line in lines):
+                missing_n_auto.append(f"   - {test_name} (missing '-n auto')")
+
+    if missing_n_auto:
+        errors.append(
+            "❌ Pre-push hook must use '-n auto' for parallel execution to match CI:\n"
+            + "\n".join(missing_n_auto)
+            + "\n   Fix: Add '-n auto' to all pytest commands in .git/hooks/pre-push"
+        )
+
+    # Check 5: OTEL_SDK_DISABLED=true environment variable
+    # All test commands should set this to match CI environment
+    otel_commands = [
+        ("Unit tests", "pytest tests/ -m", "OTEL_SDK_DISABLED=true"),
+        ("Smoke tests", "pytest tests/smoke/", "OTEL_SDK_DISABLED=true"),
+        ("Integration tests", "pytest tests/integration/", "OTEL_SDK_DISABLED=true"),
+        ("API tests", "pytest -n auto -m 'api", "OTEL_SDK_DISABLED=true"),
+        ("MCP tests", "test_mcp_stdio_server.py", "OTEL_SDK_DISABLED=true"),
+        ("Property tests", "pytest -m property", "OTEL_SDK_DISABLED=true"),
+    ]
+
+    missing_otel = []
+    for test_name, test_cmd, env_var in otel_commands:
+        # Find lines containing the test command
+        lines = [line for line in content.split("\n") if test_cmd in line]
+        if lines:
+            # Check if any of those lines have OTEL_SDK_DISABLED=true
+            if not any(env_var in line for line in lines):
+                missing_otel.append(f"   - {test_name} (missing 'OTEL_SDK_DISABLED=true')")
+
+    if missing_otel:
+        errors.append(
+            "❌ Pre-push hook must set 'OTEL_SDK_DISABLED=true' to match CI environment:\n"
+            + "\n".join(missing_otel)
+            + "\n   Fix: Add 'OTEL_SDK_DISABLED=true' to all pytest commands in .git/hooks/pre-push"
         )
 
     # Check 4: Has proper structure (phases)

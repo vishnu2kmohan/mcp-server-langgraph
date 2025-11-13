@@ -45,6 +45,11 @@ make test
 - **Docker**: For test infrastructure and workflow testing
 - **act**: For local GitHub Actions testing (install: `brew install act`)
 
+**Additional Tools for Pre-commit Hooks** (required for full validation):
+- **helm**: Kubernetes manifest validation (install: `brew install helm` or see [helm.sh](https://helm.sh/docs/intro/install/))
+- **kubectl**: Kustomize validation (install: `brew install kubectl` or see [kubernetes.io](https://kubernetes.io/docs/tasks/tools/))
+- **actionlint**: GitHub Actions workflow validation (install: `brew install actionlint` or see [github.com/rhysd/actionlint](https://github.com/rhysd/actionlint))
+
 ---
 
 ## Testing GitHub Actions Workflows

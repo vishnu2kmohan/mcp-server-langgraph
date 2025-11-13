@@ -419,6 +419,557 @@ class TestCIGapPrevention:
                 pytest.skip("README doesn't mention validation (optional)")
 
 
+class TestPytestXdistParity:
+    """Validate that local tests use pytest-xdist (-n auto) like CI does.
+
+    CRITICAL: These tests enforce Codex finding #7 - ensure local pre-push runs
+    tests in parallel with -n auto to catch pytest-xdist isolation bugs before CI.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_unit_tests_use_pytest_xdist_n_auto(self, pre_push_content: str):
+        """Test that unit tests run with -n auto for parallel execution.
+
+        CRITICAL: Without -n auto, pytest-xdist isolation bugs are only caught in CI.
+        This causes "works locally, fails in CI" issues.
+        """
+        # Find unit test command
+        unit_test_pattern = r"uv run pytest.*tests/.*-m.*unit"
+
+        # Check that unit tests exist in pre-push hook
+        assert re.search(unit_test_pattern, pre_push_content), (
+            "Pre-push hook must run unit tests\n" "Expected pattern: uv run pytest tests/ -m unit"
+        )
+
+        # Now check that unit tests use -n auto
+        # The pattern should be: pytest -n auto OR pytest tests/ ... -n auto
+        unit_test_lines = [
+            line for line in pre_push_content.split("\n") if "pytest" in line and "unit" in line and "uv run" in line
+        ]
+
+        assert unit_test_lines, "Could not find unit test command in pre-push hook"
+
+        for line in unit_test_lines:
+            # Skip comments
+            if line.strip().startswith("#"):
+                continue
+
+            assert "-n auto" in line, (
+                f"Unit tests must use '-n auto' for parallel execution like CI does\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: uv run pytest -n auto tests/ -m 'unit and not contract'\n"
+                f"\n"
+                f"Without -n auto:\n"
+                f"  - Tests run 2-3x slower locally\n"
+                f"  - pytest-xdist isolation bugs only caught in CI\n"
+                f"  - 'Works locally, fails in CI' issues\n"
+                f"\n"
+                f"Fix: Add -n auto to pytest command in .git/hooks/pre-push:~100"
+            )
+
+    def test_smoke_tests_use_pytest_xdist_n_auto(self, pre_push_content: str):
+        """Test that smoke tests run with -n auto for parallel execution."""
+        # Find smoke test command
+        smoke_test_lines = [
+            line for line in pre_push_content.split("\n") if "pytest" in line and "smoke" in line and "uv run" in line
+        ]
+
+        assert smoke_test_lines, "Pre-push hook must run smoke tests"
+
+        for line in smoke_test_lines:
+            if line.strip().startswith("#"):
+                continue
+
+            assert "-n auto" in line, (
+                f"Smoke tests must use '-n auto' for parallel execution\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: uv run pytest -n auto tests/smoke/\n"
+                f"Fix: Add -n auto to pytest command in .git/hooks/pre-push:~104"
+            )
+
+    def test_integration_tests_use_pytest_xdist_n_auto(self, pre_push_content: str):
+        """Test that integration tests run with -n auto for parallel execution."""
+        # Find integration test command
+        integration_test_lines = [
+            line for line in pre_push_content.split("\n") if "pytest" in line and "integration" in line and "uv run" in line
+        ]
+
+        assert integration_test_lines, "Pre-push hook must run integration tests"
+
+        for line in integration_test_lines:
+            if line.strip().startswith("#"):
+                continue
+
+            assert "-n auto" in line, (
+                f"Integration tests must use '-n auto' for parallel execution\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: uv run pytest -n auto tests/integration/ --lf\n"
+                f"Fix: Add -n auto to pytest command in .git/hooks/pre-push:~108"
+            )
+
+    def test_property_tests_use_pytest_xdist_n_auto(self, pre_push_content: str):
+        """Test that property tests run with -n auto for parallel execution."""
+        # Find property test command
+        property_test_lines = [
+            line for line in pre_push_content.split("\n") if "pytest" in line and "property" in line and "uv run" in line
+        ]
+
+        assert property_test_lines, "Pre-push hook must run property tests"
+
+        for line in property_test_lines:
+            if line.strip().startswith("#"):
+                continue
+
+            # Property tests should use -n auto (they already have HYPOTHESIS_PROFILE=ci)
+            assert "-n auto" in line, (
+                f"Property tests must use '-n auto' for parallel execution\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true uv run pytest -n auto -m property\n"
+                f"Fix: Add -n auto to pytest command in .git/hooks/pre-push:~113"
+            )
+
+    def test_ci_uses_pytest_xdist_n_auto(self, ci_workflow_content: str):
+        """Verify that CI uses -n auto (this is the baseline we're matching)."""
+        # CI should use -n auto for unit tests
+        assert "pytest -n auto" in ci_workflow_content, (
+            "CI workflow must use 'pytest -n auto' for parallel execution\n" "If CI doesn't use it, this test needs updating"
+        )
+
+
+class TestOtelSdkDisabledParity:
+    """Validate that local tests set OTEL_SDK_DISABLED=true like CI does.
+
+    CRITICAL: These tests enforce Codex finding #2B - ensure local pre-push sets
+    OTEL_SDK_DISABLED=true to match CI environment exactly.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_unit_tests_set_otel_sdk_disabled(self, pre_push_content: str):
+        """Test that unit tests set OTEL_SDK_DISABLED=true to match CI."""
+        # Find unit test command lines
+        unit_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line and "unit" in line and "uv run" in line and not line.strip().startswith("#")
+        ]
+
+        assert unit_test_lines, "Pre-push hook must run unit tests"
+
+        for line in unit_test_lines:
+            assert "OTEL_SDK_DISABLED=true" in line, (
+                f"Unit tests must set OTEL_SDK_DISABLED=true to match CI environment\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: OTEL_SDK_DISABLED=true uv run pytest -n auto ...\n"
+                f"\n"
+                f"Without OTEL_SDK_DISABLED=true:\n"
+                f"  - OpenTelemetry SDK may initialize (performance overhead)\n"
+                f"  - Different execution environment vs CI\n"
+                f"  - Potential telemetry-related side effects\n"
+                f"\n"
+                f"Fix: Add OTEL_SDK_DISABLED=true to pytest command in .git/hooks/pre-push:~100"
+            )
+
+    def test_smoke_tests_set_otel_sdk_disabled(self, pre_push_content: str):
+        """Test that smoke tests set OTEL_SDK_DISABLED=true to match CI."""
+        smoke_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line and "smoke" in line and "uv run" in line and not line.strip().startswith("#")
+        ]
+
+        assert smoke_test_lines, "Pre-push hook must run smoke tests"
+
+        for line in smoke_test_lines:
+            assert "OTEL_SDK_DISABLED=true" in line, (
+                f"Smoke tests must set OTEL_SDK_DISABLED=true to match CI\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/\n"
+                f"Fix: Add OTEL_SDK_DISABLED=true to pytest command in .git/hooks/pre-push:~104"
+            )
+
+    def test_integration_tests_set_otel_sdk_disabled(self, pre_push_content: str):
+        """Test that integration tests set OTEL_SDK_DISABLED=true to match CI."""
+        integration_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line and "integration" in line and "uv run" in line and not line.strip().startswith("#")
+        ]
+
+        assert integration_test_lines, "Pre-push hook must run integration tests"
+
+        for line in integration_test_lines:
+            assert "OTEL_SDK_DISABLED=true" in line, (
+                f"Integration tests must set OTEL_SDK_DISABLED=true to match CI\n"
+                f"Found: {line.strip()}\n"
+                f"Expected: OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/\n"
+                f"Fix: Add OTEL_SDK_DISABLED=true to pytest command in .git/hooks/pre-push:~108"
+            )
+
+    def test_property_tests_already_set_otel_sdk_disabled(self, pre_push_content: str):
+        """Verify that property tests already set OTEL_SDK_DISABLED=true (should pass)."""
+        property_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line and "property" in line and "uv run" in line and not line.strip().startswith("#")
+        ]
+
+        assert property_test_lines, "Pre-push hook must run property tests"
+
+        for line in property_test_lines:
+            assert "OTEL_SDK_DISABLED=true" in line, (
+                f"Property tests must set OTEL_SDK_DISABLED=true\n" f"Found: {line.strip()}"
+            )
+
+    def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
+        """Verify that CI sets OTEL_SDK_DISABLED=true (this is the baseline)."""
+        assert "OTEL_SDK_DISABLED=true" in ci_workflow_content, (
+            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n" "If CI doesn't use it, this test needs updating"
+        )
+
+
+class TestApiMcpTestSuiteParity:
+    """Validate that local pre-push runs API/MCP test suites like CI does.
+
+    CRITICAL: These tests enforce Codex finding #2D - ensure API and MCP tests
+    run locally before push to prevent CI-only failures.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_api_endpoint_tests_run_locally(self, pre_push_content: str):
+        """Test that API endpoint tests run in pre-push hook like in CI."""
+        # CI runs: pytest -n auto -m "api and unit and not llm"
+        # Pre-push should too
+
+        # Look for API test markers
+        has_api_tests = (
+            "api and unit" in pre_push_content or "'api and unit'" in pre_push_content or '"api and unit"' in pre_push_content
+        )
+
+        assert has_api_tests, (
+            "Pre-push hook must run API endpoint tests to match CI\n"
+            "\n"
+            "CI runs (ci.yaml:249):\n"
+            "  OTEL_SDK_DISABLED=true pytest -n auto -m 'api and unit and not llm'\n"
+            "\n"
+            "Pre-push hook should run:\n"
+            "  OTEL_SDK_DISABLED=true uv run pytest -n auto -m 'api and unit and not llm' -v --tb=short\n"
+            "\n"
+            "Without API tests locally:\n"
+            "  - Developers can push code that breaks API tests\n"
+            "  - API failures only caught in CI\n"
+            "  - Wastes CI time and developer time\n"
+            "\n"
+            "Fix: Add API test suite to Phase 3 in .git/hooks/pre-push"
+        )
+
+    def test_mcp_server_tests_run_locally(self, pre_push_content: str):
+        """Test that MCP server tests run in pre-push hook like in CI."""
+        # CI runs: pytest tests/unit/test_mcp_stdio_server.py -m "not llm"
+        # Pre-push should too
+
+        has_mcp_tests = "test_mcp_stdio_server.py" in pre_push_content
+
+        assert has_mcp_tests, (
+            "Pre-push hook must run MCP server tests to match CI\n"
+            "\n"
+            "CI runs (ci.yaml:253):\n"
+            "  OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -m 'not llm'\n"
+            "\n"
+            "Pre-push hook should run:\n"
+            "  OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m 'not llm' -v --tb=short\n"
+            "\n"
+            "Without MCP tests locally:\n"
+            "  - MCP protocol changes can break without local detection\n"
+            "  - MCP failures only caught in CI\n"
+            "\n"
+            "Fix: Add MCP test suite to Phase 3 in .git/hooks/pre-push"
+        )
+
+    def test_ci_runs_api_tests(self, ci_workflow_content: str):
+        """Verify that CI runs API tests (this is the baseline)."""
+        assert "api and unit" in ci_workflow_content, (
+            "CI workflow must run API endpoint tests\n"
+            "Expected: pytest -m 'api and unit'\n"
+            "If CI doesn't run API tests, this test needs updating"
+        )
+
+    def test_ci_runs_mcp_tests(self, ci_workflow_content: str):
+        """Verify that CI runs MCP tests (this is the baseline)."""
+        assert "test_mcp_stdio_server.py" in ci_workflow_content, (
+            "CI workflow must run MCP server tests\n"
+            "Expected: pytest tests/unit/test_mcp_stdio_server.py\n"
+            "If CI doesn't run MCP tests, this test needs updating"
+        )
+
+
+class TestMakefilePrePushParity:
+    """Validate that Makefile validate-pre-push target matches pre-push hook exactly.
+
+    CRITICAL: These tests enforce Codex finding #3 - ensure developers running
+    'make validate-pre-push' get the same validation as the git pre-push hook.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    def test_makefile_includes_unit_tests(self, makefile_content: str):
+        """Test that Makefile validate-pre-push runs unit tests."""
+        # Extract validate-pre-push target
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Should run unit tests
+        has_unit_tests = "-m unit" in target_content or '-m "unit' in target_content or "-m 'unit" in target_content
+
+        assert has_unit_tests, (
+            "Makefile validate-pre-push must run unit tests to match pre-push hook\n"
+            "\n"
+            "Pre-push hook runs (Phase 3a):\n"
+            "  OTEL_SDK_DISABLED=true uv run pytest -n auto tests/ -m 'unit and not contract'\n"
+            "\n"
+            "Makefile should include this in validate-pre-push target\n"
+            "\n"
+            "Without unit tests in Makefile:\n"
+            "  - 'make validate-pre-push' gives false confidence\n"
+            "  - Documentation claims it matches hook, but it doesn't\n"
+            "  - Misleading for developers\n"
+            "\n"
+            "Fix: Add unit test phase to Makefile:~540 validate-pre-push target"
+        )
+
+    def test_makefile_includes_smoke_tests(self, makefile_content: str):
+        """Test that Makefile validate-pre-push runs smoke tests."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Should run smoke tests
+        has_smoke_tests = "tests/smoke" in target_content or "smoke" in target_content
+
+        assert has_smoke_tests, (
+            "Makefile validate-pre-push must run smoke tests to match pre-push hook\n"
+            "Pre-push hook runs: uv run pytest -n auto tests/smoke/\n"
+            "Fix: Add smoke test phase to Makefile validate-pre-push target"
+        )
+
+    def test_makefile_includes_integration_tests(self, makefile_content: str):
+        """Test that Makefile validate-pre-push runs integration tests."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Should run integration tests
+        has_integration_tests = "tests/integration" in target_content or "integration" in target_content
+
+        assert has_integration_tests, (
+            "Makefile validate-pre-push must run integration tests to match pre-push hook\n"
+            "Pre-push hook runs: uv run pytest -n auto tests/integration/ --lf\n"
+            "Fix: Add integration test phase to Makefile validate-pre-push target"
+        )
+
+    def test_makefile_includes_api_mcp_tests(self, makefile_content: str):
+        """Test that Makefile validate-pre-push runs API/MCP tests."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Should run API/MCP tests
+        has_api_tests = "api" in target_content or "test_mcp_stdio_server" in target_content
+
+        assert has_api_tests, (
+            "Makefile validate-pre-push must run API/MCP tests to match pre-push hook\n"
+            "Pre-push hook should run:\n"
+            "  - API tests: pytest -m 'api and unit'\n"
+            "  - MCP tests: pytest tests/unit/test_mcp_stdio_server.py\n"
+            "Fix: Add API/MCP test phases to Makefile validate-pre-push target"
+        )
+
+    def test_makefile_uses_n_auto(self, makefile_content: str):
+        """Test that Makefile validate-pre-push uses -n auto like pre-push hook."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # If it runs pytest, it should use -n auto
+        if "pytest" in target_content:
+            assert "-n auto" in target_content, (
+                "Makefile validate-pre-push must use '-n auto' to match pre-push hook\n"
+                "All pytest commands in validate-pre-push should include -n auto\n"
+                "Fix: Add -n auto to pytest commands in Makefile validate-pre-push target"
+            )
+
+    def test_makefile_sets_otel_sdk_disabled(self, makefile_content: str):
+        """Test that Makefile validate-pre-push sets OTEL_SDK_DISABLED=true."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # If it runs pytest, it should set OTEL_SDK_DISABLED=true
+        if "pytest" in target_content:
+            assert "OTEL_SDK_DISABLED=true" in target_content, (
+                "Makefile validate-pre-push must set OTEL_SDK_DISABLED=true to match pre-push hook\n"
+                "All pytest commands should be prefixed with OTEL_SDK_DISABLED=true\n"
+                "Fix: Add OTEL_SDK_DISABLED=true to pytest commands in Makefile"
+            )
+
+
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
 
