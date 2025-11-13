@@ -1179,6 +1179,39 @@ repos:
 
           See: tests/monitoring/test_cost_tracker.py:350 (correct usage)
 
+      - id: check-async-mock-configuration
+        name: Check AsyncMock Configuration (prevent authorization bypass)
+        entry: python scripts/check_async_mock_configuration.py
+        language: python
+        additional_dependencies: []
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: true
+        always_run: false  # Only run when test files change
+        stages: [manual]  # Manual: Initially non-blocking, will become pre-push after fixing violations
+        description: |
+          Validates that all AsyncMock instances have explicit return_value or side_effect configuration.
+
+          SECURITY CRITICAL: Unconfigured AsyncMock returns truthy values, causing authorization
+          checks to incorrectly pass. This was the root cause of SCIM security bug (commit abb04a6a).
+
+          Issue prevented:
+          - Unconfigured AsyncMock() returns <AsyncMock> (truthy) instead of False
+          - Authorization checks like "if await openfga.check_permission()" evaluate to True
+          - Security controls bypassed, granting access when it should be denied
+          - Tests pass incorrectly, hiding authorization bugs
+
+          Required pattern:
+          - Authorization denial: mock.check_permission.return_value = False
+          - Authorization grant: mock.check_permission.return_value = True
+          - Void functions: mock.write_tuples.return_value = None
+          - Exceptions: mock.method.side_effect = Exception("error")
+
+          Current status: 65 unconfigured high-risk instances (authorization/permission checks)
+          Future: Will move to pre-push stage after fixing all violations
+
+          See: tests/ASYNC_MOCK_GUIDELINES.md for complete guide
+          Meta-test: tests/meta/test_async_mock_configuration.py validates this
+
       - id: validate-code-block-languages
         name: Validate Code Block Language Tags
         entry: python scripts/validate_code_block_languages.py
