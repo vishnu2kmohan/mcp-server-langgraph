@@ -1,0 +1,808 @@
+====================================================================================================
+PYTEST-XDIST STATE POLLUTION VULNERABILITY SCAN
+====================================================================================================
+
+SUMMARY
+----------------------------------------------------------------------------------------------------
+Total files analyzed: 147
+Files with issues: 147
+Critical issues: 2
+High issues: 143
+Medium issues: 8
+Low issues: 0
+
+====================================================================================================
+CRITICAL PRIORITY - IMMEDIATE ACTION REQUIRED
+====================================================================================================
+
+These issues WILL cause memory explosions in pytest-xdist (200GB+ memory usage)
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_pytest_xdist_environment_pollution.py
+  Issue: missing_teardown_method
+  Description: Uses AsyncMock/MagicMock but missing teardown_method with gc.collect()
+  Recommendation: Add teardown_method() with gc.collect() to prevent mock accumulation in xdist workers
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_pytest_xdist_worker_database_isolation.py
+  Issue: missing_teardown_method
+  Description: Uses AsyncMock/MagicMock but missing teardown_method with gc.collect()
+  Recommendation: Add teardown_method() with gc.collect() to prevent mock accumulation in xdist workers
+
+====================================================================================================
+HIGH PRIORITY - ADDRESS SOON
+====================================================================================================
+
+These issues cause test isolation problems and flaky tests in parallel execution
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_api_versioning.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAPIVersionMetadata, TestAPIVersionPrefixes, TestVersionNegotiation, TestDeprecationSupport, TestBackwardCompatibility, TestVersionDocumentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_api_versioning.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 1 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_openapi_compliance.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestOpenAPIStructure, TestEndpointDocumentation, TestSchemaDefinitions, TestResponseSchemas, TestAPIContractIntegration, TestBreakingChanges, TestSecuritySchemes) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_pagination.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPaginationModels, TestPaginationDefaults, TestPaginationOpenAPISchema, TestPaginationResponse, TestPaginationLinks, TestPaginationHelpers) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_router_registration.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestRouterRegistration, TestEndpointAccessibility, TestOpenAPIInclusion, TestRouterDependencies) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/api/test_router_registration.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 1 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/builder/test_builder_security.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestBuilderAuthentication, TestPathTraversalProtection, TestCodeGenerationSecurity, TestBuilderProductionSafety) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/ci/test_dora_metrics.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDORAMetricsCalculation, TestDORAMetricsCollection, TestDORAMetricsStorage, TestDORAMetricsReporting) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/ci/test_performance_regression.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPerformanceBaseline, TestRegressionDetection, TestPerformanceBenchmarking, TestRegressionReporting, TestBaselineUpdate) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/ci/test_track_costs.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestLoadRuns, TestAnalyzeUsage, TestCostConstants, TestMainExecution, TestEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/ci/test_track_costs.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 1 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/cli/test_add_tool.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGenerateTool, TestToolTemplate, TestGenerateToolEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/cli/test_create_agent.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGenerateAgent, TestAgentTemplates, TestGenerateAgentEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/core/interrupts/test_interrupts.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestInterruptType, TestInterruptConfig, TestInterruptHandler, TestCreateInterruptHandler, TestCreateConditionalInterrupt, TestCreateTimeoutInterrupt, TestInterruptWorkflowIntegration, TestInterruptEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/core/test_agent_di.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAgentFactory, TestAgentGraphFactory, TestBackwardCompatibility, TestAgentStateManagement, TestAgentConfiguration, TestAgentIsolation, TestAgentTestHelperIntegration, TestAgentDocumentation, TestSettingsInjectionRegression) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/core/test_container.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestContainerConfiguration, TestApplicationContainer, TestTelemetryProvider, TestAuthProvider, TestStorageProvider, TestContainerTestHelpers, TestProductionAuthValidation, TestContainerIntegrationWithExistingCode) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/core/test_test_helpers.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAgentHelpers, TestServerHelpers, TestSettingsHelpers, TestContainerHelpers, TestMockHelpers, TestPytestFixtureHelpers, TestHelperDocumentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_codex_findings_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCriticalIssues, TestMediumPriorityIssues, TestLowPriorityIssues, TestDocumentationConsistency, TestRedisSSLConsistency) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_configmap_secret_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestConfigMapValidation, TestSecretValidation, TestKustomizePrefixConsistency) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_dns_failover_verification.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDNSConfiguration, TestDNSResolution, TestServiceConfiguration, TestDNSFailoverSimulation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_external_secrets_template_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestExternalSecretsRedisURLEncoding, TestExternalSecretsRegressionPrevention, TestExternalSecretsMultiEnvironmentConsistency) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_helm_placeholder_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestHelmPlaceholderValidation, TestPlaceholderDetectionPreCommit) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_helm_templates.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestHelmTemplateRendering, TestHelmLint, TestHelmDependencies, TestHelmTemplateWithValues) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_kustomize_builds.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestKustomizeBuilds, TestStagingGKEOverlay, TestProductionGKEOverlay, TestBaseResources, TestServiceMeshConfig) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_network_policies.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestNetworkPolicyPorts, TestNetworkPolicySelectors, TestNetworkPolicyComments) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_security_hardening.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestKubernetesSecurityHardening) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_service_accounts.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestServiceAccountSeparation, TestWorkloadIdentityBindings, TestRBACConfiguration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_serviceaccount_naming_regression.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestBaseServiceAccountNaming, TestOverlayServiceAccountNaming, TestWorkloadIdentityAnnotations, TestValidationScript, TestRegressionPrevention) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployment/test_staging_deployment_requirements.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestStagingDeploymentRequirements) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/deployments/test_langgraph_platform.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestLangGraphPlatformDeployment) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/e2e/test_full_user_journey.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestStandardUserJourney, TestGDPRComplianceJourney, TestServicePrincipalJourney, TestAPIKeyJourney, TestErrorRecoveryJourney, TestMultiUserCollaboration, TestPerformanceE2E) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/e2e/test_scim_provisioning.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestSCIMUserProvisioning, TestSCIMGroupProvisioning, TestSCIMCompleteWorkflows, TestSCIMErrorHandling) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_app_factory.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAppFactory, TestMiddlewareFactory, TestLifespanManager, TestOpenAPICustomization, TestAppConfiguration, TestTransportAdapters, TestAppFactoryIntegration, TestAppFactoryDocumentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_ci_workflows.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCIWorkflowTerraformSetup, TestDeploymentValidationWorkflow, TestWorkflowPerformanceOptimizations, TestStagingDeployWorkflow) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_database_ha.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDatabaseHA, TestDatabaseFailover, TestDatabaseBackupRestore, TestDatabaseMonitoring) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_external_secrets_rbac.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGCPServiceAccountIAM, TestESOCRDs, TestESORBACResources, TestClusterSecretStoreConnectivity, TestExternalSecretSync) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_terraform_security.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAzureKeyVaultSecurityDefaults, TestAWSSecretsManagerSecurity, TestDynamoDBBackendSecurity, TestS3BackendSecurity, TestCheckovCompliance) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_topology_spread.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTopologySpreadConstraints, TestPodAntiAffinity, TestMultiZoneSupport) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/infrastructure/test_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPhase1Validation, TestPhase2Validation, TestPhase3Validation, TestPhase4Validation, TestDocumentation, TestYAMLSyntax) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/execution/test_docker_sandbox.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDockerSandbox, TestDockerSandboxResourceLimits, TestDockerSandboxNetworkIsolation, TestDockerSandboxSecurity, TestDockerSandboxCleanup, TestDockerSandboxConfiguration, TestDockerSandboxErrorHandling, TestDockerSandboxSecurity) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/execution/test_kubernetes_sandbox.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestKubernetesSandbox, TestKubernetesSandboxResourceLimits, TestKubernetesSandboxCleanup, TestKubernetesSandboxConfiguration, TestKubernetesSandboxErrorHandling) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_app_startup_validation.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 30 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_docker_health_checks.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDockerComposeHealthChecksIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_fixture_cleanup.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPostgreSQLCleanup, TestRedisCleanup, TestOpenFGACleanup, TestCleanupFixturePerformance) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_gdpr_endpoints.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 6 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_mcp_startup_validation.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 17 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_parallel_tool_execution.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestParallelToolExecution, TestParallelExecutionPerformance) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_postgres_storage.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPostgresAuditLogStore, TestPostgresConsentStore, TestPostgresStorageEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/integration/test_tool_improvements.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestResponseFormatControl, TestSearchFocusedTools, TestToolNamingAndBackwardCompatibility, TestEnhancedErrorMessages, TestToolDescriptions, TestInputValidation, TestEndToEndToolImprovements) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_critical_deployment_issues.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCriticalNetworkPolicyIssues, TestCriticalTopologySpreadIssues, TestCriticalSecretIssues, TestCriticalNamespaceIssues) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_external_secrets.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestExternalSecretsValidation, TestExternalSecretsServiceAccounts) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_gke_labels.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGKEAutopilotLabels) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_high_priority_improvements.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPostgreSQLHighAvailability, TestRedisStatefulSetWithPersistence, TestRBACLeastPrivilege, TestContainerImageBestPractices) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_kube_score_compliance.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestImagePullPolicy, TestResourceLimits, TestSecurityContext, TestProbeConfiguration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/kubernetes/test_serviceaccount_annotations.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestServiceAccountAnnotations, TestKustomizeVariableSubstitution) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/llm/test_pydantic_model_names.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPydanticModelNameFormatting, TestPydanticWrapperIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_codex_regression_prevention.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestUnconditionalSkipDetection, TestStateIsolationPatterns, TestCLIToolGuards, TestPrivateAPIUsage, TestXFailStrictUsage, TestMonkeypatchUsage, TestRequiresToolDecorator, TestDeadCodeInFixtures, TestCodexFindingCompliance) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_codex_validations.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCodexFindingsRemediation, TestCodexValidationMetaTest) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_context_manager_quality.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestContextManagerTestQuality, TestContextManagerNaming) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_documentation_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMDXParsing, TestMintlifyNavigation, TestADRConsistency, TestFrontmatter, TestLinkIntegrity) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_fixture_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestFixtureDecorators) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_github_actions_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGitHubActionsVersions, TestGitHubActionsPermissions, TestGitHubActionsWorkflowDependencies, TestGitHubActionsStructure) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_kubectl_safety.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestKubectlSafetyEnforcement, TestKubectlTestNaming) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_local_ci_parity.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPrePushHookConfiguration, TestMakefileValidationTarget, TestLocalCIParity, TestCIGapPrevention, TestPytestXdistParity, TestOtelSdkDisabledParity, TestApiMcpTestSuiteParity, TestMakefilePrePushParity, TestRegressionPrevention) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_makefile_parallelization.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMakefileParallelization, TestMakefileParallelizationBestPractices) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_performance_regression.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTimeoutTestPerformance, TestTimeBudgets, TestPropertyTestBudgets, TestBulkheadPerformance, TestPollingOptimizations, TestVirtualClockAvailability) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_plugin_guards.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPluginCLIModeGuards) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_property_test_quality.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPropertyTestQuality, TestPropertyTestNaming) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/meta/test_suite_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMarkerConsistency, TestImportGuards, TestInfrastructureFixtures, TestCLIToolGuards) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/property/test_resilience_properties.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCircuitBreakerProperties, TestRetryProperties, TestTimeoutProperties, TestBulkheadProperties, TestFallbackProperties, TestCacheProperties, TestRetryExceptionHandling, TestCacheKeyGenerationProperties, TestFallbackStrategyProperties, TestResilienceComposition, TestResilienceInvariants) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_documentation_code_blocks.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDocumentationCodeBlocks) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_documentation_structure.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDocumentationNavigation, TestADRNumbering, TestVersionConsistency, TestDocumentationQuality, TestRootDocumentationFiles) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_pod_deployment_regression.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGKEAutopilotCompliance, TestEnvironmentVariableConfiguration, TestReadOnlyRootFilesystem, TestOTELCollectorConfiguration, TestKustomizeBuildValidity, TestPodStartupIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_precommit_hook_dependencies.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPreCommitHookDependencies, TestPreCommitHookConfiguration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_pytest_xdist_environment_pollution.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 2 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_terraform_configuration.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTerraformDuplicateBlocks, TestTerraformVariableValidations, TestTerraformProviderVersions) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/regression/test_uv_lockfile_sync.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestUVLockfileSynchronization, TestCIPythonVersionMatrix, TestFastAPIDependencyOverridesPattern) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_bulkhead.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestBulkheadBasics, TestBulkheadFailFast, TestBulkheadContextManager, TestBulkheadStatistics, TestBulkheadConfiguration, TestBulkheadMetrics, TestBulkheadEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_circuit_breaker.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCircuitBreakerBasics, TestCircuitBreakerStateTransitions, TestCircuitBreakerWithFallback, TestCircuitBreakerMetrics, TestCircuitBreakerReset, TestCircuitBreakerConfiguration, TestCircuitBreakerEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_fallback.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestBasicFallback, TestFallbackStrategies, TestConvenienceDecorators, TestFallbackWithSpecificExceptions, TestFallbackMetrics, TestFallbackEdgeCases, TestFallbackComposition) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_integration.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestFullResilienceStack, TestRealWorldScenarios, TestMetricsIntegration, TestErrorPropagation, TestConcurrentOperations) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_retry.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestRetryBasics, TestExponentialBackoff, TestRetryWithSpecificExceptions, TestShouldRetryException, TestRetryStrategies, TestRetryMetrics, TestRetryWithOtherPatterns, TestRedisOptionalDependency) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/resilience/test_timeout.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTimeoutBasics, TestTimeoutByOperationType, TestTimeoutContextManager, TestTimeoutMetrics, TestTimeoutEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/security/test_accurate_token_counting.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestAccurateTokenCounting, TestTokenCounterRegistry, TestTokenCountingAccuracy) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/security/test_deployment_security_regression.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestQdrantSecurityContext, TestOpenFGAWorkloadIdentity, TestQdrantHealthCheckSecurity, TestHelmPlaceholderSecurity) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/security/test_injection_attacks.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCommandInjection, TestCodeInjection, TestDeserializationAttacks, TestPathTraversal, TestPrivilegeEscalation, TestReflectionAndIntrospection, TestNetworkAttacks, TestResourceExhaustion, TestFuzzingAttacks, TestOWASPTop10) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/security/test_no_hardcoded_credentials.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestNoHardcodedCredentials, TestNoHardcodedCredentialsInSourceCode, TestCredentialCreationDocumentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/security/test_sql_injection_gdpr.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestConversationStoreSQLInjection, TestAuditLogStoreSQLInjection) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/smoke/test_ci_startup_smoke.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 31 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/terraform/test_no_placeholders.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTerraformPlaceholders, TestEKSEndpointSecurity, TestGKENetworkSecurity) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_auth_metrics.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMetricDefinitions, TestRecordLoginAttempt, TestRecordTokenVerification, TestRecordSessionOperation, TestRecordJWKSOperation, TestRecordOpenFGASync, TestRecordRoleMapping, TestMetricAttributes) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_ci_cd_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestKustomizeConfigurations, TestGitHubActionsWorkflows, TestDockerComposeTestInfra) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_cli.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCLISmoke, TestCLITemplateOptions) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_code_execution_config.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCodeExecutionSettings, TestCodeExecutionSettingsFromEnv, TestCodeExecutionSettingsValidation, TestCodeExecutionSettingsIntegration, TestCodeExecutionSettingsDefaults) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_code_execution_config.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 12 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_deployment_manifests.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestRBACConfiguration, TestNetworkPolicy, TestKustomizeOverlays, TestBaseKustomization, TestHelmChart, TestCloudRunManifest, TestArgoCDApplication, TestHealthProbeConsistency, TestDocumentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_docker_compose_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestDockerComposeYAMLSyntax, TestDockerComposeHealthChecks, TestDockerComposeQdrantSpecific) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_documentation_integrity.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestADRSynchronization, TestDocsJsonIntegrity, TestMDXSyntax, TestArchitectureOverview, TestMermaidDiagrams, TestDocumentationCompleteness) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_feature_flags.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestFeatureFlags, TestFeatureFlagEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_gitignore_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGitignoreValidation, TestGitignoreComprehensiveness) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_gitleaks_config.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestGitleaksConfig, TestGitleaksWorkflowIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_hipaa.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestEmergencyAccess, TestPHIAuditLogging, TestDataIntegrity, TestHIPAAControlsGlobal, TestPydanticModels, TestHIPAAIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_infisical_optional.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 12 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_json_logger.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCustomJSONFormatter, TestSetupJSONLogging, TestLogWithContext, TestEdgeCases, TestPerformance) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_kubernetes_security.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestSecurityContexts, TestImagePullPolicy, TestRedisExternalNameService, TestKubernetesValidation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_link_checker.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestInternalLinkParsing, TestLinkResolution, TestLinkValidation, TestRealWorldExamples) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_mcp_streamable.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMCPStreamableHTTP, TestTokenRefresh, TestTokenValidation, TestMCPEndToEnd) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_mdx_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCodeBlockClosingFixes, TestRealWorldExamples, TestEdgeCases, TestFileOperations) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_parallel_executor.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestParallelToolExecutor, TestParallelExecutorIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_regression_prevention.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPytestFixtureValidation, TestMonkeypatchReloadPattern, TestWorkflowToolMaintenance, TestWorkflowActionVersions, TestWorkflowSyntaxValidation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_resilience_metrics.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCircuitBreakerMetrics, TestRetryMetrics, TestTimeoutMetrics, TestBulkheadMetrics, TestFallbackMetrics, TestMetricsSummary, TestMetricsIntegration, TestMetricsOpenTelemetryIntegration, TestEdgeCases) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_response_optimizer.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestResponseOptimizer, TestGlobalFunctions, TestEdgeCases, TestPerformance, TestLiteLLMTokenCounting) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_retention.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestRetentionPolicy, TestRetentionResult, TestDataRetentionServiceInit, TestSessionCleanup, TestConversationCleanup, TestAuditLogCleanup, TestRunAllCleanups, TestRetentionMetrics, TestRetentionLogging, TestRetentionCompliance, TestConversationStorageIntegration, TestAuditLogStorageIntegration, TestFullStorageBackendIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_role_mapper.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestSimpleRoleMapping, TestGroupMapping, TestConditionalMapping, TestRoleMapper, TestRoleMapperIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_shell_and_docker.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestShellScriptSafety, TestDockerComposeHealthChecks) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_storage.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestUserProfile, TestConversation, TestUserPreferences, TestAuditLogEntry, TestConsentRecord, TestInMemoryUserProfileStore, TestInMemoryConversationStore, TestInMemoryPreferencesStore, TestInMemoryAuditLogStore, TestInMemoryConsentStore) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_validate_mintlify_docs.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMermaidArrowRegex, TestFrontmatterParsing, TestFilenamConvention, TestInternalLinks, TestValidationReport) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_workflow_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestWorkflowValidation, TestCoverageArtifactScenarios) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_yaml_syntax.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestPreCommitConfigSyntax, TestKubernetesYAMLSyntax, TestYAMLFileEncoding, TestYAMLIndentation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/core/test_cache_isolation.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 1 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/core/test_config_network_security.py
+  Issue: env_var_pollution
+  Description: Environment variables modified at 5 location(s) without setup_method to reset
+  Recommendation: Add setup_method to reset environment variables before each test or use monkeypatch fixture properly
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_codeblock_autofixer.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestLanguageDetection, TestCodeBlockAutoFixer) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_codeblock_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCodeBlockValidator) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_frontmatter_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestFrontmatterValidator) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_image_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestImageValidator) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_mdx_extension_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMDXExtensionValidator) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_navigation_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestNavigationValidator) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/documentation/test_todo_audit.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestTodoAuditor, TestTodoMarker, TestAuditResult) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/execution/test_code_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCodeValidator, TestSecurityInjectionPatterns, TestCodeValidatorProperties, TestValidationResult, TestCodeValidationError) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/execution/test_resource_limits.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestResourceLimits, TestResourceLimitsProperties, TestResourceLimitError, TestPresetResourceProfiles, TestResourceLimitsComparison) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_calculator_tools.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCalculatorTool, TestAddTool, TestSubtractTool, TestMultiplyTool, TestDivideTool, TestToolSchemas) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_conversation_store.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestConversationStore, TestConversationMetadata) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_filesystem_tools.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestReadFile, TestListDirectory, TestSearchFiles, TestFilesystemToolSchemas) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_gke_autopilot_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestCPUParsing, TestMemoryParsing, TestCPURatioValidation, TestGKEAutopilotConstants, TestRegressionPrevention) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_input_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestThreadIdValidation, TestConversationIdUsageInCode) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_observability_lazy_init.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestObservabilitySafeFallback, TestObservabilityIntegration) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_parallel_executor_timeout.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestParallelExecutorTimeouts) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_pytest_marker_validator.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestMarkerRegistration, TestRegressionPrevention, TestMarkerValidatorBehavior, TestSpecificMarkerCategories, TestMarkerCount) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_redis_url_encoding.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestRedisURLEncoding) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_security_headers.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestHeaderSanitization, TestHeaderSanitizationForFilenames, TestIntegrationWithGDPREndpoint) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_security_logging.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestLogSanitization, TestLogSanitizationWithRealWorldPayloads) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_serializable_mocks_validation.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestSerializableLLMMockValidation, TestSerializableToolMockValidation, TestMockCompatibilityGuards) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_tools_catalog.py
+  Issue: missing_xdist_group
+  Description: Test classes found (TestToolsCatalog, TestToolInvocation) but no @pytest.mark.xdist_group marker
+  Recommendation: Add @pytest.mark.xdist_group(name="unique_group_name") to test classes to ensure they run in the same worker
+
+====================================================================================================
+MEDIUM PRIORITY - PLAN TO FIX
+====================================================================================================
+
+These issues may cause occasional test failures or inconsistent behavior
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/builder/api/test_server.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/builder/test_code_generator.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/test_pydantic_ai.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/core/test_cache_isolation.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/execution/test_network_mode_logic.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/storage/test_conversation_store_async.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_conversation_retrieval.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+File: /home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/unit/test_llm_fallback_kwargs.py
+  Issue: patch_without_context
+  Description: Uses patch - ensure it's used as context manager or decorator
+  Recommendation: Use patch as context manager (with patch(...)) or decorator to ensure cleanup
+
+====================================================================================================
+ISSUE TYPE BREAKDOWN
+====================================================================================================
+
+missing_xdist_group: 131 occurrences
+env_var_pollution: 12 occurrences
+patch_without_context: 8 occurrences
+missing_teardown_method: 2 occurrences
+
+====================================================================================================
+END OF REPORT
+====================================================================================================
