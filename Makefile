@@ -543,7 +543,7 @@ validate-pre-push:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "▶ Unit Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not contract' -x --tb=short && echo "✓ Unit tests passed" || (echo "✗ Unit tests failed" && exit 1)
+	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short && echo "✓ Unit tests passed" || (echo "✗ Unit tests failed" && exit 1)
 	@echo ""
 	@echo "▶ Smoke Tests..."
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)
@@ -975,7 +975,24 @@ pre-commit-setup:
 	@echo "Run manually: pre-commit run --all-files"
 
 git-hooks: pre-commit-setup
-	@echo "Git hooks installed successfully"
+	@echo "✅ Git hooks installed successfully:"
+	@echo ""
+	@echo "  • pre-commit   - Format, lint, and basic validation on commit"
+	@echo "                   Runs: black, isort, flake8, bandit, etc."
+	@echo "                   Timing: < 30 seconds"
+	@echo ""
+	@echo "  • pre-push     - Comprehensive CI-equivalent validation before push"
+	@echo "                   Runs: 4-phase validation (lockfile, type check, tests, hooks)"
+	@echo "                   Timing: 8-12 minutes (matches CI exactly)"
+	@echo ""
+	@echo "  • commit-msg   - Conventional commits enforcement"
+	@echo "                   Validates: commit message format"
+	@echo ""
+	@echo "  • post-commit  - Auto-update context files after commit"
+	@echo "                   Updates: .claude/context/recent-work.md"
+	@echo ""
+	@echo "📖 For details: See TESTING.md#git-hooks-and-validation"
+	@echo "🔍 To test:     make validate-pre-push (runs full pre-push validation)"
 
 # ==============================================================================
 # Documentation

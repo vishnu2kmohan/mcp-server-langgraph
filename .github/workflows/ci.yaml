@@ -418,6 +418,64 @@ jobs:
         echo "- Mintlify documentation validation" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================================
+  # PUSH-STAGE VALIDATORS (Comprehensive pre-push hooks)
+  # ============================================================================
+
+  push-stage-validators:
+    name: Push-Stage Validators
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies
+      run: |
+        uv sync --frozen --extra dev --extra builder
+        echo "✓ Dependencies installed"
+
+    - name: Install pre-commit
+      run: |
+        uv tool install pre-commit
+        echo "✓ pre-commit installed via uv tool"
+
+    - name: Run push-stage pre-commit hooks
+      run: |
+        pre-commit run --all-files --hook-stage push --show-diff-on-failure
+        echo "✓ All push-stage validators passed"
+
+    - name: Push-Stage Validators Summary
+      if: always()
+      run: |
+        echo "## Push-Stage Validators Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Validators Executed" >> $GITHUB_STEP_SUMMARY
+        echo "- actionlint (GitHub Actions validation)" >> $GITHUB_STEP_SUMMARY
+        echo "- check-test-memory-safety (OOM prevention)" >> $GITHUB_STEP_SUMMARY
+        echo "- validate-test-isolation (xdist isolation)" >> $GITHUB_STEP_SUMMARY
+        echo "- validate-pytest-config" >> $GITHUB_STEP_SUMMARY
+        echo "- validate-pre-push-hook" >> $GITHUB_STEP_SUMMARY
+        echo "- deployment validators" >> $GITHUB_STEP_SUMMARY
+        echo "- security scanners" >> $GITHUB_STEP_SUMMARY
+        echo "- and 40+ more comprehensive validators" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
   # DOCKER BUILDS (Parallel by variant)
   # ============================================================================
 

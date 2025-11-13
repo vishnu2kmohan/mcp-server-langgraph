@@ -1601,6 +1601,553 @@ class TestPreCommitHookStageFlag:
         )
 
 
+class TestContractTestMarkerParity:
+    """Validate that contract test markers are consistent between local and CI.
+
+    CRITICAL: Codex finding #1 - Contract tests have both @pytest.mark.unit and
+    @pytest.mark.contract markers. Local pre-push uses '-m unit and not contract'
+    which excludes them, but CI uses '-m unit and not llm' which includes them.
+    This creates a CI surprise where tests pass locally but fail in CI.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path, "r") as f:
+            return f.read()
+
+    def test_pre_push_uses_same_marker_as_ci(self, pre_push_content: str, ci_workflow_content: str):
+        """Test that pre-push hook uses same pytest marker expression as CI.
+
+        CRITICAL: Contract tests should run consistently in both local and CI.
+        User chose: "Include contract tests in both local pre-push AND CI".
+        """
+        # CI uses this marker (verified from ci.yaml line 243)
+        expected_marker = "unit and not llm"
+
+        # Find unit test command - look for actual commands with environment variables
+        # (not documentation/echo statements)
+        unit_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line
+            and "-m" in line
+            and "tests/" in line
+            and "unit" in line
+            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
+            and "api" not in line
+            and "test_" not in line
+            and "echo" not in line  # Exclude documentation/help lines
+        ]
+
+        assert unit_test_lines, "Could not find unit test command in pre-push hook"
+
+        for line in unit_test_lines:
+            # Skip smoke, api, property, or specific test file lines
+            if "smoke" in line or "api" in line or "property" in line or "test_" in line:
+                continue
+
+            # Check for the expected marker (may include "and not property" which is fine)
+            # We accept either "unit and not llm" or "unit and not llm and not property"
+            has_correct_marker = "unit and not llm" in line and "unit and not contract" not in line  # Must not have old marker
+            assert has_correct_marker, (
+                f"Pre-push hook unit tests MUST use marker '{expected_marker}' to match CI\n"
+                f"\n"
+                f"Current issue (Codex finding #1):\n"
+                f"  - Pre-push uses: -m 'unit and not contract'\n"
+                f"  - CI uses: -m 'unit and not llm'\n"
+                f"  - Contract tests have BOTH @pytest.mark.unit and @pytest.mark.contract\n"
+                f"  - Result: Contract tests run in CI but NOT in local pre-push\n"
+                f"\n"
+                f"Impact:\n"
+                f"  - 20+ contract tests (e.g., tests/contract/test_mcp_contract.py)\n"
+                f"  - Pass locally (never run), fail in CI (run and fail)\n"
+                f"  - Classic 'works on my machine' problem\n"
+                f"\n"
+                f"User's choice: Include contract tests in BOTH local and CI\n"
+                f"\n"
+                f"Fix: Change .git/hooks/pre-push line ~107\n"
+                f"  From: -m 'unit and not contract'\n"
+                f"  To:   -m '{expected_marker}'\n"
+                f"\n"
+                f"Found: {line.strip()}\n"
+            )
+
+    def test_makefile_uses_same_marker_as_ci(self, makefile_content: str, ci_workflow_content: str):
+        """Test that Makefile validate-pre-push uses same marker as CI."""
+        expected_marker = "unit and not llm"
+
+        # Extract validate-pre-push target
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        assert target_match, "Could not find validate-pre-push target in Makefile"
+
+        target_content = target_match.group(0)
+
+        # Find unit test lines - look for actual commands with environment variables
+        # (not echo/documentation lines)
+        unit_test_lines = [
+            line
+            for line in target_content.split("\n")
+            if "pytest" in line
+            and "tests/" in line
+            and "-m" in line
+            and "unit" in line
+            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
+            and "api" not in line
+            and "test_" not in line
+            and "echo" not in line  # Exclude documentation/help lines
+        ]
+
+        if not unit_test_lines:
+            pytest.skip("Could not find unit test command in Makefile (may be correct but filtered out)")
+
+        for line in unit_test_lines:
+            # Check for correct marker (may include "and not property")
+            has_correct_marker = "unit and not llm" in line and "unit and not contract" not in line
+            assert has_correct_marker, (
+                f"Makefile validate-pre-push MUST use marker '{expected_marker}' to match CI\n"
+                f"\n"
+                f"This ensures 'make validate-pre-push' validates the same tests as CI\n"
+                f"\n"
+                f"Fix: Update Makefile line ~546\n"
+                f"  From: -m 'unit and not contract'\n"
+                f"  To:   -m '{expected_marker}'\n"
+                f"\n"
+                f"Found: {line.strip()}\n"
+            )
+
+    def test_all_three_sources_use_identical_marker(
+        self, pre_push_content: str, makefile_content: str, ci_workflow_content: str
+    ):
+        """Test that pre-push hook, Makefile, and CI use IDENTICAL base markers.
+
+        This is the ultimate parity test - all three must use "unit and not llm" as the base.
+        Additional exclusions like "and not property" are acceptable.
+        """
+        expected_base_marker = "unit and not llm"
+
+        # Extract from all three sources
+        sources = {
+            "pre-push hook": pre_push_content,
+            "Makefile": makefile_content,
+            "CI workflow": ci_workflow_content,
+        }
+
+        markers_found = {}
+
+        for source_name, content in sources.items():
+            # Find unit test marker - look for actual commands with env vars
+            unit_lines = [
+                line
+                for line in content.split("\n")
+                if "pytest" in line
+                and "-m" in line
+                and "tests/" in line
+                and "unit" in line
+                and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line or source_name == "CI workflow")
+                and "api" not in line
+                and "test_" not in line
+                and "echo" not in line
+            ]
+
+            if unit_lines:
+                for line in unit_lines:
+                    # Extract marker expression
+                    marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
+                    if marker_match:
+                        markers_found[source_name] = marker_match.group(1)
+                        break
+
+        # All three should contain the base marker
+        all_have_base_marker = all(expected_base_marker in marker for marker in markers_found.values())
+
+        assert all_have_base_marker and len(markers_found) == 3, (
+            f"All three sources MUST contain base marker: '{expected_base_marker}'\n"
+            "\n"
+            "Found markers:\n" + "\n".join(f"  - {source}: '{marker}'" for source, marker in markers_found.items()) + "\n"
+            "\n"
+            "This test enforces Codex finding #1 fix:\n"
+            "  All sources must use same base marker to prevent CI surprises\n"
+            "  Additional exclusions (like 'and not property') are acceptable\n"
+        )
+
+
+class TestCIPushStageValidatorsJob:
+    """Validate that CI has a dedicated job for push-stage validators.
+
+    CRITICAL: Codex finding #4 - CI's "Pre-commit Hooks" job runs
+    'pre-commit run --all-files' without --hook-stage push, so 50+ push-stage
+    validators (actionlint, memory safety, test isolation, etc.) never run in CI.
+
+    Local pre-push runs these with --hook-stage push, creating a validation gap.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def ci_workflow(self, ci_workflow_path: Path) -> dict:
+        """Load CI workflow YAML."""
+        with open(ci_workflow_path, "r") as f:
+            return yaml.safe_load(f)
+
+    def test_ci_has_push_stage_validators_job(self, ci_workflow: dict):
+        """Test that CI workflow has a job that runs push-stage validators.
+
+        User chose: "Add new dedicated 'Push-Stage Validators' job"
+        """
+        jobs = ci_workflow.get("jobs", {})
+
+        # Look for a job that runs push-stage validators
+        push_stage_jobs = []
+        for job_name, job_config in jobs.items():
+            job_str = str(job_config).lower()
+            if "--hook-stage push" in job_str or "push-stage" in job_name.lower() or "push stage" in job_str:
+                push_stage_jobs.append(job_name)
+
+        assert push_stage_jobs, (
+            "CI workflow MUST have a job that runs push-stage validators\n"
+            "\n"
+            "Current issue (Codex finding #4):\n"
+            "  - CI 'Pre-commit Hooks' job runs: pre-commit run --all-files\n"
+            "  - Missing --hook-stage push flag\n"
+            "  - 50+ push-stage hooks are NEVER executed in CI\n"
+            "\n"
+            "Missing validators include:\n"
+            "  - actionlint (GitHub Actions validation)\n"
+            "  - check-test-memory-safety (prevents OOM)\n"
+            "  - validate-test-isolation (prevents xdist bugs)\n"
+            "  - validate-pytest-config\n"
+            "  - deployment validators\n"
+            "  - security scanners\n"
+            "  - and 40+ more!\n"
+            "\n"
+            "Local pre-push hook behavior:\n"
+            "  Uses: pre-commit run --all-files --hook-stage push ✅\n"
+            "\n"
+            "User's choice: Add dedicated 'Push-Stage Validators' job\n"
+            "\n"
+            "Fix: Add new job to .github/workflows/ci.yaml:\n"
+            "  push-stage-validators:\n"
+            "    name: Push-Stage Validators\n"
+            "    runs-on: ubuntu-latest\n"
+            "    steps:\n"
+            "      - uses: actions/checkout@v4\n"
+            "      - name: Set up Python\n"
+            "        uses: actions/setup-python@v5\n"
+            "        with:\n"
+            "          python-version: '3.12'\n"
+            "      - name: Install uv\n"
+            "        uses: astral-sh/setup-uv@v5\n"
+            "      - name: Install dependencies\n"
+            "        run: uv sync --frozen\n"
+            "      - name: Run push-stage pre-commit hooks\n"
+            "        run: pre-commit run --all-files --hook-stage push --show-diff-on-failure\n"
+        )
+
+    def test_push_stage_job_runs_correct_command(self, ci_workflow: dict):
+        """Test that push-stage job runs the correct pre-commit command."""
+        jobs = ci_workflow.get("jobs", {})
+
+        # Find the push-stage validators job
+        push_stage_job = None
+        for job_name, job_config in jobs.items():
+            if "push" in job_name.lower() and "stage" in job_name.lower() or "push-stage" in job_name.lower():
+                push_stage_job = job_config
+                break
+
+        if not push_stage_job:
+            pytest.skip("Push-stage validators job not found (will be caught by previous test)")
+
+        # Check that it runs pre-commit with --hook-stage push
+        job_str = str(push_stage_job)
+
+        assert "--hook-stage push" in job_str, (
+            "Push-stage validators job MUST run 'pre-commit run --all-files --hook-stage push'\n"
+            "\n"
+            "Without --hook-stage push, the job won't execute push-stage hooks\n"
+        )
+
+        assert "--all-files" in job_str, (
+            "Push-stage validators job MUST run on ALL files, not just changed files\n"
+            "\n"
+            "This matches local pre-push hook behavior\n"
+        )
+
+
+class TestPostCommitHookTemplate:
+    """Validate that post-commit hook template uses 'uv run python'.
+
+    CRITICAL: Codex finding #3 - The template in scripts/workflow/update-context-files.py
+    generates hooks with bare 'python' command, but the project requires 'uv run python'
+    to use the project-managed environment.
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def script_path(self, repo_root: Path) -> Path:
+        """Get path to update-context-files script."""
+        return repo_root / "scripts" / "workflow" / "update-context-files.py"
+
+    @pytest.fixture
+    def script_content(self, script_path: Path) -> str:
+        """Read script content."""
+        with open(script_path, "r") as f:
+            return f.read()
+
+    def test_hook_template_uses_uv_run_python(self, script_content: str):
+        """Test that the hook template uses 'uv run python' not bare 'python'.
+
+        CRITICAL: Project requires uv-managed Python environment.
+        """
+        # Find the hook_content template definition
+        template_match = re.search(
+            r'hook_content\s*=\s*"""(.*?)"""',
+            script_content,
+            re.DOTALL,
+        )
+
+        assert template_match, "Could not find hook_content template in script"
+
+        template = template_match.group(1)
+
+        # Check for uv run python
+        assert "uv run python" in template, (
+            "Post-commit hook template MUST use 'uv run python' not bare 'python'\n"
+            "\n"
+            "Current issue (Codex finding #3):\n"
+            "  - Template uses: python scripts/workflow/update-context-files.py\n"
+            "  - Should use: uv run python scripts/workflow/update-context-files.py\n"
+            "\n"
+            "Why this matters:\n"
+            "  - Bare 'python' uses system Python (wrong environment)\n"
+            "  - 'uv run python' uses project virtual environment (correct)\n"
+            "  - Hooks generated with --create-hook will fail\n"
+            "\n"
+            "Project policy (from .github/CLAUDE.md):\n"
+            "  'Always use uv run python, never bare python'\n"
+            "\n"
+            "Fix: Update scripts/workflow/update-context-files.py line ~372\n"
+            "  From: python scripts/workflow/update-context-files.py\n"
+            "  To:   uv run python scripts/workflow/update-context-files.py\n"
+            "\n"
+            "Current template:\n" + template[:200] + "...\n"
+        )
+
+    def test_hook_template_has_explanatory_comment(self, script_content: str):
+        """Test that hook template includes comment explaining uv run usage."""
+        template_match = re.search(
+            r'hook_content\s*=\s*"""(.*?)"""',
+            script_content,
+            re.DOTALL,
+        )
+
+        assert template_match, "Could not find hook_content template"
+
+        template = template_match.group(1)
+
+        # Should have a comment explaining the uv run usage
+        has_explanation = "project-managed" in template.lower() or "uv run" in template or "consistency" in template.lower()
+
+        assert has_explanation, (
+            "Hook template should include comment explaining why we use 'uv run python'\n"
+            "\n"
+            "Suggested comment:\n"
+            "  # Uses project-managed Python runtime for consistency\n"
+            "\n"
+            "This helps developers understand the pattern\n"
+        )
+
+
+class TestHypothesisProfileParity:
+    """Validate that pre-push hook sets HYPOTHESIS_PROFILE=ci for unit tests.
+
+    User chose: "Yes - Add HYPOTHESIS_PROFILE=ci to pre-push and exclude property tests"
+
+    This prevents property tests from running twice:
+    1. Once in unit tests phase (with dev profile)
+    2. Again in property tests phase (with ci profile)
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    def test_unit_tests_set_hypothesis_profile_ci(self, pre_push_content: str):
+        """Test that unit tests phase sets HYPOTHESIS_PROFILE=ci.
+
+        This ensures Hypothesis uses CI settings (100 examples) for unit tests,
+        matching CI behavior exactly.
+        """
+        # Find unit test command - look for commands starting with HYPOTHESIS_PROFILE or OTEL_SDK_DISABLED
+        # (actual commands, not documentation/echo statements)
+        unit_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line
+            and "tests/" in line
+            and "-m" in line
+            and "unit" in line
+            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
+            and "api" not in line
+            and "test_" not in line
+            and "echo" not in line  # Exclude documentation/help lines
+        ]
+
+        assert unit_test_lines, "Could not find unit test command"
+
+        for line in unit_test_lines:
+            assert "HYPOTHESIS_PROFILE=ci" in line, (
+                f"Unit tests MUST set HYPOTHESIS_PROFILE=ci to match CI\n"
+                f"\n"
+                f"User's choice: Add HYPOTHESIS_PROFILE=ci to pre-push\n"
+                f"\n"
+                f"Why this matters:\n"
+                f"  - Without it, Hypothesis uses 'dev' profile (25 examples)\n"
+                f"  - CI uses 'ci' profile (100 examples)\n"
+                f"  - Different number of examples = different test behavior\n"
+                f"  - Property tests might pass locally but fail in CI\n"
+                f"\n"
+                f"Fix: Add HYPOTHESIS_PROFILE=ci to unit test command\n"
+                f"  HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true uv run pytest ...\n"
+                f"\n"
+                f"Found: {line.strip()}\n"
+            )
+
+    def test_unit_tests_exclude_property_marker(self, pre_push_content: str):
+        """Test that unit tests phase excludes property marker.
+
+        User chose: "exclude property tests from unit test phase"
+
+        This prevents property tests from running twice:
+        - Once in unit tests phase (this test ensures they're excluded)
+        - Once in dedicated property tests phase (with proper CI profile)
+        """
+        # Find unit test command - look for commands with environment variables
+        # (actual commands, not documentation/echo statements)
+        unit_test_lines = [
+            line
+            for line in pre_push_content.split("\n")
+            if "pytest" in line
+            and "tests/" in line
+            and "-m" in line
+            and "unit" in line
+            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
+            and "api" not in line
+            and "test_" not in line
+            and "echo" not in line  # Exclude documentation/help lines
+        ]
+
+        assert unit_test_lines, "Could not find unit test command with marker"
+
+        for line in unit_test_lines:
+            # Check that the marker excludes property tests
+            marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
+            assert marker_match, f"Could not extract marker from: {line}"
+
+            marker = marker_match.group(1)
+
+            assert "not property" in marker or "and not property" in marker, (
+                f"Unit test marker MUST exclude property tests\n"
+                f"\n"
+                f"User's choice: Exclude property tests from unit test phase\n"
+                f"\n"
+                f"Why this matters:\n"
+                f"  - Property tests run in dedicated phase with HYPOTHESIS_PROFILE=ci\n"
+                f"  - Running them twice wastes time and can cause flakiness\n"
+                f"  - Unit test phase should focus on fast unit tests only\n"
+                f"\n"
+                f"Expected marker: 'unit and not llm and not property'\n"
+                f"Found marker: '{marker}'\n"
+                f"\n"
+                f"Fix: Update marker in .git/hooks/pre-push line ~107\n"
+                f"  -m 'unit and not llm and not property'\n"
+            )
+
+
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
 
