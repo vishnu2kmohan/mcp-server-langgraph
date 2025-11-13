@@ -356,6 +356,45 @@ repos:
         pass_filenames: false
         always_run: false
 
+      - id: audit-todo-fixme-markers
+        name: Audit TODO/FIXME/XXX Markers in Documentation
+        entry: uv run python scripts/validators/todo_audit.py --quiet
+        language: python
+        additional_dependencies: []
+        files: ^docs/.*\.(md|mdx)$
+        pass_filenames: false
+        always_run: false
+        stages: [manual]  # Manual: Run to audit outstanding work items
+        description: |
+          Audits documentation for TODO/FIXME/XXX markers (TDD):
+          - Finds all TODO and FIXME comments
+          - Detects XXX placeholders in examples
+          - Reports location and content
+          - Tracks outstanding work items
+
+          Note: This is informational only (exit code 0). Use for audits.
+          Run manually: python scripts/validators/todo_audit.py --docs-dir docs
+          Tests: tests/unit/documentation/test_todo_audit.py (14 tests ✅)
+
+      - id: validate-adr-sync
+        name: Validate ADR Synchronization (/adr ↔ /docs/architecture)
+        entry: uv run python scripts/validators/adr_sync_validator.py
+        language: python
+        additional_dependencies: []
+        files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates ADR synchronization between source and docs (TDD):
+          - All ADRs in /adr exist in /docs/architecture
+          - All ADRs in /docs/architecture exist in /adr
+          - Reports missing or orphaned ADRs
+          - Prevents documentation drift
+
+          Ensures Architecture Decision Records stay synchronized.
+          Run: python scripts/validators/adr_sync_validator.py
+          Exit code 1 if out of sync, 0 if synchronized
+
       - id: check-doc-links
         name: Check Documentation Internal Links
         entry: uv run python scripts/ci/check-links.py

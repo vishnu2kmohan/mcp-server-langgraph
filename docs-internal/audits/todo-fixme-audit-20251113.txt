@@ -1,0 +1,103 @@
+
+================================================================================
+📋 TODO/FIXME/XXX Marker Audit Report
+================================================================================
+
+📊 Statistics:
+  Total files scanned: 244
+  Total markers found: 37
+
+  By type:
+    XXX: 37
+
+📝 Markers Found:
+
+  📄 api-reference/health-checks.mdx (1 markers):
+    ⚠️  Line 346: [XXX] "store_id": "01HXXXXXXXXX",
+
+  📄 ci-cd-troubleshooting.mdx (1 markers):
+    ⚠️  Line 250: [XXX] CVE-2024-XXXXX  # Reason: False positive, not exploitable in our use c...
+
+  📄 compliance/gdpr/dpa-template.mdx (1 markers):
+    ⚠️  Line 292: [XXX] "phone": "+XX XXX XXX XXXX"
+
+  📄 deployment/infrastructure/backend-setup-aws.mdx (1 markers):
+    ⚠️  Line 325: [XXX] --mfa "arn:aws:iam::123456789012:mfa/root-account-mfa-device XXXXXX"
+
+  📄 deployment/kubernetes/gke-production.mdx (1 markers):
+    ⚠️  Line 246: [XXX] sed -i "s/bucket = \"mcp-langgraph-terraform-state-us-central1-XXXXX\"...
+
+  📄 deployment/kubernetes/gke.mdx (1 markers):
+    ⚠️  Line 508: [XXX] loadBalancerIP: 34.xxx.xxx.xxx  # Reserve static IP
+
+  📄 deployment/operations/eks-runbooks.mdx (6 markers):
+    ⚠️  Line 106: [XXX] # Output: pod/mcp-server-xxxx  0/1  CrashLoopBackOff
+    ⚠️  Line 112: [XXX] kubectl logs mcp-server-xxxx -n mcp-server-langgraph --previous
+    ⚠️  Line 180: [XXX] kubectl logs -f mcp-server-xxxx -n mcp-server-langgraph
+    ⚠️  Line 344: [XXX] --group-ids sg-XXXXX \
+    ⚠️  Line 429: [XXX] --vpc-security-group-ids sg-XXXXX \
+    ⚠️  Line 468: [XXX] --identifier db-XXXXX \
+
+  📄 deployment/operations/issue-prevention.mdx (1 markers):
+    ⚠️  Line 141: [XXX] --subnet-ids subnet-xxx subnet-yyy
+
+  📄 deployment/version-compatibility.mdx (1 markers):
+    ⚠️  Line 159: [XXX] 3. Backup Prometheus data: `kubectl cp prometheus-xxx:/prometheus ./pr...
+
+  📄 getting-started/authorization.mdx (2 markers):
+    ⚠️  Line 74: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+    ⚠️  Line 83: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+
+  📄 getting-started/installation.mdx (1 markers):
+    ⚠️  Line 285: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+
+  📄 getting-started/quickstart.mdx (1 markers):
+    ⚠️  Line 102: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+
+  📄 guides/migration-guide.mdx (1 markers):
+    ⚠️  Line 428: [XXX] OPENFGA_STORE_ID=01HXXX...
+
+  📄 guides/openfga-setup.mdx (5 markers):
+    ⚠️  Line 147: [XXX] ✓ Store created: 01HXXXXXXXXXXXXXXXXXX
+    ⚠️  Line 151: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+    ⚠️  Line 175: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
+    ⚠️  Line 306: [XXX] OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX # Store ID (from setup)
+    ⚠️  Line 325: [XXX] store_id="01HXXXXXXXXXXXXXXXXXX",
+
+  📄 kubernetes/KEYCLOAK_READONLY_FILESYSTEM.md (4 markers):
+    ⚠️  Line 140: [XXX] kubectl logs staging-keycloak-xxx -c keycloak
+    ⚠️  Line 184: [XXX] kubectl exec -it staging-keycloak-xxx -c keycloak -- curl http://local...
+    ⚠️  Line 190: [XXX] kubectl exec -it staging-keycloak-xxx -c keycloak -- touch /test
+    ⚠️  Line 196: [XXX] kubectl exec -it staging-keycloak-xxx -c keycloak -- touch /tmp/test
+
+  📄 kubernetes/POD_CRASH_RESOLUTION_2025-11-12.md (1 markers):
+    ⚠️  Line 287: [XXX] kubectl logs staging-mcp-server-langgraph-796b46bbf4-xxx
+
+  📄 reference/development/development.mdx (2 markers):
+    ⚠️  Line 271: [XXX] ## ✓ Created OpenFGA store: 01HXXXXXXXXX
+    ⚠️  Line 276: [XXX] echo "OPENFGA_STORE_ID=01HXXXXXXXXX" >> .env
+
+  📄 reference/development/github-actions.mdx (1 markers):
+    ⚠️  Line 49: [XXX] OPENFGA_STORE_ID=01HXXX...
+
+  📄 reference/environment-variables.mdx (1 markers):
+    ⚠️  Line 196: [XXX] - Example: `export INFISICAL_TOKEN="st.xxx.yyy.zzz"`
+
+  📄 security/audit-checklist.mdx (3 markers):
+    ⚠️  Line 98: [XXX] curl -X POST http://openfga:8080/stores/xxx/check \
+    ⚠️  Line 575: [XXX] kubectl -n kube-system get pod kube-apiserver-xxx \
+    ⚠️  Line 622: [XXX] kubectl logs -n kube-system kube-apiserver-xxx | grep audit
+
+  📄 workflows/SECRETS.mdx (1 markers):
+    ⚠️  Line 136: [XXX] - **Format**: `https://hooks.slack.com/services/T00000000/B00000000/XX...
+
+  💡 Recommendations:
+     1. Review each marker and determine if it's still relevant
+     2. Complete or remove TODO items that are done
+     3. Fix FIXME issues or create tracking tickets
+     4. Replace XXX placeholders with realistic values
+     5. Document any intentional TODOs with context
+
+================================================================================
+📋 Found 37 markers to review
+================================================================================
