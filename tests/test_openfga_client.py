@@ -481,6 +481,18 @@ class TestOpenFGACircuitBreakerCriticality:
     resets the circuit breaker at the start to ensure clean state.
     """
 
+    def setup_method(self):
+        """
+        Setup clean state BEFORE each test.
+
+        CRITICAL: Reset circuit breaker BEFORE test starts to prevent state pollution.
+        Without this, tests running in parallel can see circuit breaker state from other tests.
+        """
+        from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+
+        # Reset circuit breaker to ensure clean state before test starts
+        reset_circuit_breaker("openfga")
+
     def teardown_method(self):
         """
         Force GC to prevent mock accumulation in xdist workers.
