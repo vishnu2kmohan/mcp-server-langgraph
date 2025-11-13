@@ -16,7 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 Base = declarative_base()
 
 
-class TokenUsageRecord(Base):
+class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
     """
     Persistent storage for LLM token usage and cost data.
 

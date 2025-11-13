@@ -20,7 +20,7 @@ try:
     RedisType = Redis
 except ImportError:
     REDIS_AVAILABLE = False
-    RedisType = None  # type: ignore[assignment]
+    RedisType = None  # type: ignore[assignment,misc]
 
 
 @dataclass

@@ -836,26 +836,6 @@ if FASTAPI_AVAILABLE:  # noqa: C901
         Raises:
             HTTPException: If authentication fails (401)
         """
-        # TEST MODE: Bypass authentication in tests (pytest-xdist compatible)
-        # This allows dependency_overrides to work across xdist workers
-        # Set in tests/api/conftest.py:pytest_configure()
-        import os
-
-        if os.getenv("MCP_SKIP_AUTH") == "true":
-            # Return mock user for testing
-            # Can be customized via request.state.user if test sets it
-            if hasattr(request.state, "user") and request.state.user:
-                return request.state.user  # type: ignore[no-any-return]
-
-            # Default test user
-            return {
-                "user_id": "user:test",
-                "keycloak_id": "test-user-id",
-                "username": "test",
-                "email": "test@example.com",
-                "roles": ["user"],
-            }
-
         # Check if user already set by middleware
         if hasattr(request.state, "user") and request.state.user:
             return request.state.user  # type: ignore[no-any-return]
@@ -972,7 +952,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         async def dependency(
             request: Request,
-            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,
+            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,  # type: ignore[assignment]
         ) -> Dict[str, Any]:
             # Get authenticated user
             user = await get_current_user(request, credentials)

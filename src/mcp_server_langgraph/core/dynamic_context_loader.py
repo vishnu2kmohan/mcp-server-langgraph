@@ -95,7 +95,7 @@ def _create_embeddings(
                     embedding = self.model.encode(text)
                     return embedding.tolist()  # type: ignore[no-any-return]
 
-            embeddings = SentenceTransformerEmbeddings(model_name)
+            embeddings = SentenceTransformerEmbeddings(model_name)  # type: ignore[assignment]
 
             logger.info(
                 "Initialized local sentence-transformers embeddings",

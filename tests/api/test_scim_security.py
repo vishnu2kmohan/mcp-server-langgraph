@@ -20,6 +20,12 @@ from mcp_server_langgraph.api.scim import create_group, create_user, delete_user
 class TestSCIMSecurityControls:
     """Test that SCIM endpoints require admin authorization"""
 
+    def setup_method(self):
+        """Reset state BEFORE test to prevent cross-test pollution"""
+        import mcp_server_langgraph.auth.middleware as middleware_module
+
+        middleware_module._global_auth_middleware = None
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()

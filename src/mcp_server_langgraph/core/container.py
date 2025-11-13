@@ -355,9 +355,9 @@ class ApplicationContainer:
             if self.config.environment == "test" or not self.config.enable_telemetry:
                 self._telemetry_instance = NoOpTelemetryProvider()
             else:
-                self._telemetry_instance = ProductionTelemetryProvider(self.settings)
+                self._telemetry_instance = ProductionTelemetryProvider(self.settings)  # type: ignore[assignment]
 
-        return self._telemetry_instance
+        return self._telemetry_instance  # type: ignore[return-value]
 
     def get_auth(self) -> AuthProvider:
         """Get auth provider (lazy initialization)"""
@@ -365,11 +365,11 @@ class ApplicationContainer:
             if self.config.environment == "test":
                 self._auth_instance = NoOpAuthProvider()
             elif self.config.environment == "development" or not self.config.enable_auth:
-                self._auth_instance = InMemoryAuthProvider()
+                self._auth_instance = InMemoryAuthProvider()  # type: ignore[assignment]
             else:
                 # Production: use real auth (Keycloak, etc.)
                 # TODO: Implement production auth provider
-                self._auth_instance = InMemoryAuthProvider()
+                self._auth_instance = InMemoryAuthProvider()  # type: ignore[assignment]
 
         return self._auth_instance
 
@@ -379,7 +379,7 @@ class ApplicationContainer:
             if self.config.environment == "test":
                 self._storage_instance = MemoryStorageProvider()
             elif self.settings.redis_host:
-                self._storage_instance = RedisStorageProvider(self.settings)
+                self._storage_instance = RedisStorageProvider(self.settings)  # type: ignore[assignment]
             else:
                 # Fallback to in-memory for development
                 self._storage_instance = MemoryStorageProvider()

@@ -388,17 +388,17 @@ class ServicePrincipalManager:
         try:
             user = await self.keycloak.get_user_by_username(f"svc_{service_id}")
             if user:
-                attrs = user.get("attributes", {})
+                attrs = user.get("attributes", {})  # type: ignore[attr-defined]
                 if attrs.get("serviceAccount") == "true":
                     return ServicePrincipal(
                         service_id=service_id,
-                        name=user.get("firstName", "") or user.get("username", ""),
+                        name=user.get("firstName", "") or user.get("username", ""),  # type: ignore[attr-defined]
                         description=attrs.get("purpose", ""),
                         authentication_mode="service_account_user",
                         associated_user_id=attrs.get("associatedUserId") or None,
                         owner_user_id=attrs.get("owner") or None,
                         inherit_permissions=attrs.get("inheritPermissions") == "true",
-                        enabled=user.get("enabled", True),
+                        enabled=user.get("enabled", True),  # type: ignore[attr-defined]
                         created_at=attrs.get("createdAt"),
                     )
         except Exception:

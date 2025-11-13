@@ -20,13 +20,10 @@ class TestBearerSchemeOverrideDiagnostic:
     """Diagnostic tests to understand bearer_scheme override behavior."""
 
     def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
-
+        """Reset state BEFORE test to prevent cross-test pollution"""
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -111,7 +108,7 @@ class TestBearerSchemeOverrideDiagnostic:
         client = TestClient(app)
         response = client.get("/test2")
 
-        print(f"\nModule reference approach:")
+        print("\nModule reference approach:")
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.json() if response.status_code == 200 else response.text}")
 
@@ -142,7 +139,7 @@ class TestBearerSchemeOverrideDiagnostic:
         client = TestClient(app)
         response = client.get("/test3")
 
-        print(f"\nNo bearer override approach:")
+        print("\nNo bearer override approach:")
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.json() if response.status_code == 200 else response.text}")
 
@@ -185,11 +182,11 @@ class TestBearerSchemeOverrideDiagnostic:
             return mock_current_user
 
         def mock_get_sp_manager_sync():
-            print(f"  [DEBUG] mock_get_sp_manager_sync called")
+            print("  [DEBUG] mock_get_sp_manager_sync called")
             return mock_sp_manager
 
         def mock_get_openfga_sync():
-            print(f"  [DEBUG] mock_get_openfga_sync called")
+            print("  [DEBUG] mock_get_openfga_sync called")
             return mock_openfga
 
         # Print bearer_scheme info

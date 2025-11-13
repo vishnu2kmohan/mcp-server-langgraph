@@ -212,7 +212,7 @@ class Swarm:
         # Add all agent nodes
         for agent_name, agent_func in self.agents.items():
             agent_wrapper = self._create_agent_wrapper(agent_name, agent_func)
-            graph.add_node(agent_name, agent_wrapper)
+            graph.add_node(agent_name, agent_wrapper)  # type: ignore[call-overload]
 
         # Add aggregator
         graph.add_node("aggregate", self._aggregate_results)

@@ -86,7 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         from mcp_server_langgraph.core.agent import cleanup_checkpointer
 
-        agent_graph = get_agent_graph()
+        agent_graph = get_agent_graph()  # type: ignore[func-returns-value]
         if agent_graph and hasattr(agent_graph, "checkpointer") and agent_graph.checkpointer:
             cleanup_checkpointer(agent_graph.checkpointer)
             logger.info("Checkpointer resources cleaned up")
@@ -186,7 +186,7 @@ try:
     app.state.limiter = limiter
 
     # Register custom exception handler for rate limit exceeded
-    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     _module_logger.info(
         "Rate limiting enabled - strategy: fixed-window, tiers: anonymous/free/standard/premium/enterprise, fail_open: True"
@@ -1521,7 +1521,7 @@ def custom_openapi() -> dict[str, Any]:
 
 
 # Apply custom OpenAPI schema
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 def main() -> None:

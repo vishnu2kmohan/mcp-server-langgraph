@@ -18,7 +18,7 @@ try:
     JsonFormatterBase = JsonFormatter
 except (ImportError, AttributeError):
     # Fallback if pythonjsonlogger is not available
-    JsonFormatterBase = logging.Formatter
+    JsonFormatterBase = logging.Formatter  # type: ignore[assignment,misc]
 
 
 class CustomJSONFormatter(JsonFormatterBase):

@@ -179,7 +179,7 @@ class CacheService:
                 f"Redis cache unavailable, L2 cache disabled: {e}",
                 extra={"redis_url": redis_url},
             )
-            self.redis = None
+            self.redis = None  # type: ignore[assignment]
             self.redis_available = False
 
         # Cache stampede prevention locks
@@ -555,7 +555,7 @@ def cached(
                 span.set_attribute("cache.hit", False)
 
                 # Cache miss: call function
-                result = await func(*args, **kwargs)
+                result = await func(*args, **kwargs)  # type: ignore[misc]
 
                 # Store in cache
                 cache.set(key, result, ttl=ttl, level=level)

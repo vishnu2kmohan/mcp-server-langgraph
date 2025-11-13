@@ -25,7 +25,6 @@ def test_client(monkeypatch):
     - REFACTOR: Proper dependency mocking pattern for contract tests
     """
     # Set environment variable to skip authentication
-    monkeypatch.setenv("MCP_SKIP_AUTH", "true")
 
     # Import app after setting environment variables
     from mcp_server_langgraph.mcp.server_streamable import app

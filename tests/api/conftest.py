@@ -31,19 +31,14 @@ def pytest_configure(config):
     This runs ONCE per worker process, ensuring test mode is enabled
     across all parallel workers.
 
-    IMPORTANT: MCP_SKIP_AUTH="true" setting causes STATE POLLUTION for auth unit tests!
+    PYTEST-XDIST FIX (2025-11-13):
+    Removed MCP_SKIP_AUTH environment variable to fix race condition.
+    Tests now use FastAPI's dependency_overrides mechanism exclusively,
+    which provides proper test isolation in parallel execution.
 
-    When pytest-xdist schedules auth tests in the same worker as API tests, the auth tests
-    will see MCP_SKIP_AUTH="true" which bypasses authentication and returns mock users.
-
-    MITIGATION: Auth test classes MUST use setup_method() to explicitly set:
-        os.environ["MCP_SKIP_AUTH"] = "false"
-
-    This ensures auth tests validate tokens correctly despite this global setting.
-    See: tests/test_auth.py for the correct pattern (all test classes have setup_method).
+    See: tests/api/test_api_keys_endpoints.py for the correct pattern.
     """
     os.environ["MCP_TEST_MODE"] = "true"
-    os.environ["MCP_SKIP_AUTH"] = "true"  # WARNING: Pollutes auth tests - see docstring
 
 
 def bypass_authentication(monkeypatch, mock_user=None):

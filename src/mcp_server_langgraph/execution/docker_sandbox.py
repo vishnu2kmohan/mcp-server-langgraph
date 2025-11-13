@@ -60,7 +60,7 @@ class DockerSandbox(Sandbox):
         self.socket_path = socket_path
 
         try:
-            self.client = docker.DockerClient(base_url=f"unix://{socket_path}")
+            self.client = docker.DockerClient(base_url=f"unix://{socket_path}")  # type: ignore[attr-defined]
             # Test connection
             self.client.ping()
         except Exception as e:

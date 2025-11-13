@@ -30,7 +30,6 @@ def test_client(monkeypatch):
     """
     # CRITICAL: Set environment variable BEFORE importing app
     # This prevents Keycloak connection attempts during app initialization
-    monkeypatch.setenv("MCP_SKIP_AUTH", "true")
 
     # Import app AFTER setting MCP_SKIP_AUTH
     from mcp_server_langgraph.mcp.server_streamable import app

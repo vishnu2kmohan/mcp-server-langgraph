@@ -80,7 +80,7 @@ def create_app(
         title=app_settings.service_name,
         description="MCP Server with LangGraph",
         version="1.0.0",
-        lifespan=lifespan_ctx,
+        lifespan=lifespan_ctx,  # type: ignore[arg-type]
     )
 
     # Add CORS middleware
