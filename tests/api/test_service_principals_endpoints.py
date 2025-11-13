@@ -146,9 +146,10 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     import os
 
     from fastapi import FastAPI
+    from fastapi.security import HTTPAuthorizationCredentials
 
     from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app
@@ -157,12 +158,24 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     # Just deleting isn't enough - need to explicitly set to "false"
     # Create fresh FastAPI app
     app = FastAPI()
+
+    # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1 + Regression notes)
+    # This prevents bearer_scheme singleton pollution in pytest-xdist
+    # See: tests/regression/test_service_principal_test_isolation.py:1-135
+    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+        scheme="Bearer", credentials="mock_token_for_testing"
+    )
+
     app.include_router(router)
 
     # Override dependencies using FastAPI's built-in mechanism
     # With MCP_SKIP_AUTH=true (set in conftest), get_current_user returns default user
     # Override it here to use our specific mock_current_user
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
+    # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    async def override_get_current_user():
+        return mock_current_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
@@ -189,19 +202,32 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     import os
 
     from fastapi import FastAPI
+    from fastapi.security import HTTPAuthorizationCredentials
 
     from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app (same fix as sp_test_client)
     # Must set explicitly to "false" to prevent conftest.py pollution
     # Create fresh FastAPI app
     app = FastAPI()
+
+    # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1 + Regression notes)
+    # This prevents bearer_scheme singleton pollution in pytest-xdist
+    # See: tests/regression/test_service_principal_test_isolation.py:1-135
+    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+        scheme="Bearer", credentials="mock_token_for_testing"
+    )
+
     app.include_router(router)
 
     # Override dependencies with admin user
-    app.dependency_overrides[get_current_user] = lambda: mock_admin_user
+    # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    async def override_get_current_user():
+        return mock_admin_user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
