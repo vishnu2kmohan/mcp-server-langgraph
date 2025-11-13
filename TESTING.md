@@ -17,7 +17,7 @@ This document describes the testing strategy, conventions, and best practices fo
 
 ## Test Organization
 
-```
+```text
 tests/
 ├── api/                        # API endpoint tests
 │   ├── test_api_keys_endpoints.py

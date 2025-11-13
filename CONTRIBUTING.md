@@ -404,7 +404,7 @@ disallow_untyped_defs = true
 
 Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -424,7 +424,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 **Examples**:
 
-```
+```text
 feat(auth): add JWT token rotation
 
 Implements automatic token refresh when token expires within 5 minutes.
@@ -433,7 +433,7 @@ Includes comprehensive tests and metrics.
 Closes #123
 ```
 
-```
+```text
 fix(ci): add missing optional dependencies to workflows
 
 - Add --extra dev --extra builder to uv sync commands
