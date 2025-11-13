@@ -114,11 +114,11 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
-    # CRITICAL: Delete MCP_SKIP_AUTH BEFORE creating app
-    # Without this, app.include_router() evaluates dependencies with MCP_SKIP_AUTH=true
-    # and dependency_overrides won't work correctly (race condition)
-    if "MCP_SKIP_AUTH" in os.environ:
-        del os.environ["MCP_SKIP_AUTH"]
+    # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app
+    # get_current_user() checks os.getenv("MCP_SKIP_AUTH") at RUNTIME (every call)
+    # We must set it to "false" explicitly to prevent conftest.py pollution
+    # Just deleting isn't enough - need to explicitly set to "false"
+    os.environ["MCP_SKIP_AUTH"] = "false"
 
     # Create fresh FastAPI app
     app = FastAPI()
@@ -172,10 +172,10 @@ class TestCreateAPIKey:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -297,10 +297,10 @@ class TestListAPIKeys:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -374,10 +374,10 @@ class TestRotateAPIKey:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -447,10 +447,10 @@ class TestRevokeAPIKey:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -506,10 +506,10 @@ class TestValidateAPIKey:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -621,10 +621,10 @@ class TestAPIKeyEndpointAuthorization:
         # Reset global auth middleware to prevent cross-test pollution
         middleware_module._global_auth_middleware = None
 
-        # CRITICAL: Delete MCP_SKIP_AUTH to ensure real auth is used (not test bypass)
+        # CRITICAL: Set MCP_SKIP_AUTH="false" to ensure real auth is used (not test bypass)
         # Without this, tests get username="test" instead of the user they create
-        if "MCP_SKIP_AUTH" in os.environ:
-            del os.environ["MCP_SKIP_AUTH"]
+        # Must set explicitly to "false" (not just delete) to prevent conftest.py pollution
+        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
