@@ -365,6 +365,87 @@ Claude Code automatically detects:
 - Test framework (pytest)
 - Code style tools (black, isort, mypy)
 
+### Git Hooks Configuration
+
+**Updated:** 2025-11-13 - Reorganized for developer productivity
+
+This project uses a **two-stage hook validation strategy**:
+
+#### Pre-commit Hooks (Fast - < 30s)
+Auto-runs on `git commit` for changed files only.
+
+**What Claude Code needs to know:**
+- Commits are fast (15-30s) - no need to wait long
+- Auto-fixers run automatically (black, isort)
+- Only changed files are validated
+- Can commit frequently without performance penalty
+
+```bash
+# When Claude Code commits changes
+git commit -m "feat: implement feature"
+# Runs: black, isort, flake8, bandit, shellcheck, etc.
+# Duration: < 30 seconds
+```
+
+#### Pre-push Hooks (Comprehensive - 8-12 min)
+Auto-runs on `git push` for all files. Matches CI exactly.
+
+**4-Phase Validation:**
+1. **Phase 1**: Lockfile + workflow validation (< 30s)
+2. **Phase 2**: MyPy type checking (1-2 min, warning only)
+3. **Phase 3**: Test suite (unit, smoke, integration, property) (3-5 min)
+4. **Phase 4**: All pre-commit hooks on all files (5-8 min)
+
+**What Claude Code needs to know:**
+- Push takes 8-12 minutes - this is expected
+- Matches CI validation exactly - prevents surprises
+- All tests run before push (unit, smoke, integration, property)
+- Cannot bypass without `--no-verify` (emergency only)
+
+```bash
+# When Claude Code pushes changes
+git push
+# Runs: Complete 4-phase validation
+# Duration: 8-12 minutes (matches CI)
+```
+
+#### Hook Installation
+
+```bash
+# Install hooks (done during setup)
+make git-hooks
+
+# Verify hooks are configured
+python scripts/validate_pre_push_hook.py
+```
+
+#### When Claude Code Should Commit/Push
+
+**Commit frequently** (fast, < 30s):
+- After implementing a feature
+- After writing tests
+- After refactoring
+- After documentation updates
+
+**Push strategically** (comprehensive, 8-12 min):
+- After completing a logical unit of work
+- Before switching context
+- At end of coding session
+- When ready for CI validation
+
+#### Performance Monitoring
+
+Claude Code can measure hook performance:
+```bash
+python scripts/measure_hook_performance.py --stage all
+```
+
+#### Documentation References
+
+- Full guide: `TESTING.md#git-hooks-and-validation`
+- Categorization: `docs-internal/HOOK_CATEGORIZATION.md`
+- Migration guide: `docs-internal/PRE_COMMIT_PRE_PUSH_REORGANIZATION.md`
+
 ### Project-Specific Settings
 
 From `pyproject.toml`:

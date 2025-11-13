@@ -99,6 +99,7 @@ repos:
         files: ^\.github/workflows/.*\.ya?ml$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive workflow validation, moved to pre-push
         description: |
           Advanced GitHub Actions workflow validation using actionlint.
 
@@ -135,6 +136,7 @@ repos:
         files: ^pyproject\.toml$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive pytest config validation, moved to pre-push
         description: |
           Validates that pytest addopts flags match installed plugin dependencies.
 
@@ -164,6 +166,7 @@ repos:
         files: ^\.git/hooks/pre-push$
         pass_filenames: false
         always_run: true
+        stages: [pre-push]  # Slow: validates pre-push hook, moved to pre-push
         description: |
           Validates that .git/hooks/pre-push contains all required validation steps.
 
@@ -212,6 +215,7 @@ repos:
         files: \.mdx$
         pass_filenames: false
         always_run: false  # Only run when .mdx files change
+        stages: [pre-push]  # Slow: comprehensive Mintlify validation, moved to pre-push
 
       # TDD-based Documentation Validators (Comprehensive)
       - id: validate-docs-navigation
@@ -222,6 +226,7 @@ repos:
         files: ^(docs/.*\.mdx|docs/docs\.json)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
         description: |
           Validates documentation navigation consistency (TDD):
           - All files referenced in docs.json exist
@@ -290,6 +295,7 @@ repos:
         files: ^docs/.*\.mdx$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive link validation, moved to pre-push
         description: |
           Validates links in MDX files (TDD):
           - Checks broken internal links (relative paths)
@@ -309,6 +315,7 @@ repos:
         files: ^docs/.*\.mdx$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive image validation, moved to pre-push
         description: |
           Validates image references in MDX files (TDD):
           - All local images exist
@@ -328,6 +335,7 @@ repos:
         files: ^docs/.*\.mdx$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive code block validation, moved to pre-push
         description: |
           Validates code blocks have language identifiers (TDD):
           - All fenced code blocks have language tags
@@ -356,6 +364,7 @@ repos:
         files: \.(md|mdx)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive link checking, moved to pre-push
         description: |
           Validates internal documentation links to prevent broken references.
           Checks ADR cross-references, GitHub links, and active documentation.
@@ -367,6 +376,7 @@ repos:
         files: \.(md|mdx|json)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
         description: |
           Comprehensive documentation validation tests (TDD):
           - Prevents MDX parsing errors (unescaped < followed by digits)
@@ -383,6 +393,7 @@ repos:
         files: \.(md|mdx|json)$|^monitoring/.*README\.md$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
         description: |
           Documentation integrity and completeness tests (TDD):
           - ADR synchronization between adr/ and docs/architecture/
@@ -400,6 +411,7 @@ repos:
         files: \.(md|mdx|json)$|^adr/.*\.md$|^README\.md$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
         description: |
           Comprehensive documentation structure validation (TDD):
           - Prevents orphaned MDX files not in docs.json navigation
@@ -422,6 +434,7 @@ repos:
         files: ^adr/.*\.md$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive ADR validation, moved to pre-push
         description: |
           Ensures adr/README.md index is up-to-date with all ADR files.
 
@@ -442,6 +455,7 @@ repos:
         language: system
         files: ^deployments/helm/.*\.(yaml|yml)$
         pass_filenames: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
 
       - id: validate-cors-security
         name: Validate CORS security configuration
@@ -449,6 +463,7 @@ repos:
         language: system
         files: ^deployments/(kong|base)/.*\.(yaml|yml)$
         pass_filenames: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
 
       - id: check-hardcoded-credentials
         name: Check for hard-coded credentials
@@ -456,6 +471,7 @@ repos:
         language: system
         files: ^deployments/base/configmap\.yaml$
         pass_filenames: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
 
       - id: validate-redis-password-required
         name: Ensure Redis password is mandatory
@@ -463,6 +479,7 @@ repos:
         language: system
         files: ^deployments/base/redis-session-deployment\.yaml$
         pass_filenames: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
 
       # Security Scanning (Trivy)
       - id: trivy-scan-k8s-manifests
@@ -478,6 +495,7 @@ repos:
         files: ^deployments/.*\.(yaml|yml)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: security scanning, moved to pre-push
         description: |
           Scans Kubernetes manifests for security misconfigurations using Trivy.
 
@@ -504,6 +522,7 @@ repos:
         files: ^docs/.*\.mdx$
         pass_filenames: true
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive diagram validation, moved to pre-push
 
       - id: prevent-local-config-commits
         name: Prevent Local Config Files from Being Committed
@@ -535,6 +554,7 @@ repos:
         language: system
         files: ^deployments/.*\.ya?ml$
         pass_filenames: false
+        stages: [pre-push]  # Slow: comprehensive deployment validation, moved to pre-push
         description: |
           Validates that Kubernetes manifests comply with GKE Autopilot constraints:
           - CPU limit/request ratio ≤ 4.0x
@@ -572,6 +592,7 @@ repos:
         pass_filenames: false
         files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/unit/test_(dependencies_wiring|cache_redis_config)\.py)$
         always_run: false  # Only run when relevant files change
+        stages: [pre-push]  # Slow: comprehensive validation, moved to pre-push
         description: |
           Validates that dependency injection is properly configured to prevent:
           1. Missing Keycloak admin credentials
@@ -589,6 +610,7 @@ repos:
         files: ^tests/.*test_.*\.py$
         pass_filenames: true
         always_run: false  # Only run when test files change
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Validates test fixtures to prevent common failures:
           1. Missing FastAPI dependency overrides (causes 401 errors)
@@ -626,6 +648,7 @@ repos:
         pass_filenames: false
         files: ^tests/.*\.py$
         always_run: false  # Only run when test files change
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Prevents duplicate autouse fixtures across test files.
 
@@ -645,6 +668,7 @@ repos:
         pass_filenames: false
         files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
         always_run: false  # Only run when test files or workflows change
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Prevents regression of critical CI/CD and testing infrastructure issues.
 
@@ -668,6 +692,7 @@ repos:
         files: ^tests/.*test_.*\.py$
         pass_filenames: false
         always_run: false  # Only run when test files change
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Detects dead code after return statements in pytest fixtures.
           This code never executes and represents lost test coverage.
@@ -697,6 +722,7 @@ repos:
         pass_filenames: false
         files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
         always_run: false  # Only run when API/auth files change
+        stages: [pre-push]  # Slow: comprehensive API validation, moved to pre-push
         description: |
           Validates that API endpoint responses match their documented Pydantic schemas.
           Prevents bugs where implementations store data but don't return it in responses.
@@ -721,6 +747,7 @@ repos:
         pass_filenames: false
         files: ^tests/.*test_.*\.py$
         always_run: false  # Only run when test files change
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Detects hard-coded future dates, versions, and model names in tests that
           will break when those futures become reality.
@@ -747,6 +774,7 @@ repos:
         pass_filenames: false
         files: ^tests/e2e/test_full_user_journey\.py$
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Tracks E2E test implementation progress to prevent regression of
           Codex Finding #1: "E2E suite effectively inert—49 scenarios are xfail placeholders"
@@ -766,6 +794,7 @@ repos:
         pass_filenames: false
         files: ^tests/.*test_.*\.py$
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Monitors total wall-clock sleep time across test suite.
 
@@ -783,6 +812,7 @@ repos:
         pass_filenames: false
         files: ^tests/.*test_.*\.py$
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Runs meta-tests that validate test suite quality (Codex Findings Prevention):
 
@@ -799,6 +829,7 @@ repos:
         pass_filenames: false
         files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
         always_run: false  # Only run when workflow or action files change
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Validates that all GitHub Actions use published, valid version tags and have correct permissions.
 
@@ -827,6 +858,7 @@ repos:
         pass_filenames: false
         files: ^deployments/.*\.(yaml|yml)$
         always_run: false  # Only run when deployment files change
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Validates that all Kustomize overlays build successfully without errors.
 
@@ -849,6 +881,7 @@ repos:
         pass_filenames: false
         files: ^deployments/.*network-policy\.(yaml|yml)$
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Validates NetworkPolicy configurations use correct database ports.
 
@@ -867,6 +900,7 @@ repos:
         pass_filenames: false
         files: ^deployments/.*serviceaccount.*\.(yaml|yml)$
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Validates Service Account configuration follows least-privilege principles.
 
@@ -886,6 +920,7 @@ repos:
         files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive SA naming validation, moved to pre-push
         description: |
           Validates ServiceAccount naming consistency between base and overlays.
 
@@ -914,6 +949,7 @@ repos:
         pass_filenames: false
         files: ^deployments/helm/values-.*\.(yaml|yml)$
         always_run: false  # Only run when Helm values change
+        stages: [pre-push]  # Slow: comprehensive placeholder validation, moved to pre-push
         description: |
           Prevents committing unresolved PROJECT_ID placeholders in Helm values.
 
@@ -941,6 +977,7 @@ repos:
         files: ^.*docker-compose.*\.(yaml|yml)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Validates Docker Compose health check configurations (TDD).
 
@@ -962,6 +999,7 @@ repos:
         language: system
         files: ^deployments/helm/.*\.(yaml|yml)$
         pass_filenames: false
+        stages: [pre-push]  # Slow: helm lint, moved to pre-push
         description: |
           Validates Helm chart passes lint checks.
 
@@ -982,6 +1020,7 @@ repos:
         language: system
         files: ^deployments/kubernetes/overlays/(aws|gcp|azure)/.*\.(yaml|yml)$
         pass_filenames: false
+        stages: [pre-push]  # Slow: kustomize builds, moved to pre-push
         description: |
           Validates cloud-specific Kustomize overlays build without errors.
 
@@ -999,6 +1038,7 @@ repos:
         language: system
         files: ^deployments/overlays/production-gke/.*\.(yaml|yml)$
         pass_filenames: false
+        stages: [pre-push]  # Slow: kustomize build, moved to pre-push
         description: |
           Validates production overlays don't contain unresolved placeholders.
 
@@ -1105,6 +1145,7 @@ repos:
         files: ^tests/.*test_.*\.py$
         pass_filenames: false
         always_run: false  # Only run when test files change
+        stages: [pre-push]  # Slow: comprehensive test validation, moved to pre-push
         description: |
           Validates that test files follow best practices for pytest-xdist parallel execution.
 
@@ -1132,6 +1173,7 @@ repos:
         files: ^(tests/.*\.py|pyproject\.toml)$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Prevents CI failures from missing test dependencies by validating that
           every package imported in tests/ is available in project dependencies.
@@ -1163,6 +1205,7 @@ repos:
         files: ^\.github/workflows/.*\.ya?ml$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: comprehensive workflow validation, moved to pre-push
         description: |
           Validates that GitHub Actions workflows installing dependencies for tests
           include the required 'dev' extras.
@@ -1192,6 +1235,7 @@ repos:
         files: ^tests/conftest\.py$
         pass_filenames: false
         always_run: false
+        stages: [pre-push]  # Slow: runs pytest, moved to pre-push
         description: |
           Prevents pytest ScopeMismatch errors by validating fixture scope compatibility.
 
@@ -1240,3 +1284,4 @@ repos:
         args:
           - --hook-config=--retry-once-with-cleanup=true
           - --tf-init-args=-backend=false
+        stages: [pre-push]  # Slow: terraform init + validate, moved to pre-push

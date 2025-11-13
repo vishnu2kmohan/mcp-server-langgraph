@@ -529,24 +529,31 @@ class TestAPIKeyEndpointAuthorization:
             # Cleanup to prevent pollution in pytest-xdist workers
             app.dependency_overrides.clear()
 
-    def test_list_without_auth(self):
+    def test_list_without_auth(self, monkeypatch):
         """Test listing API keys without authentication fails"""
         from fastapi import FastAPI
 
         from mcp_server_langgraph.api.api_keys import router
 
+        # CRITICAL: Disable test mode bypass for this specific test
+        # This test explicitly verifies auth is required
+        monkeypatch.setenv("MCP_SKIP_AUTH", "false")
+
         app = FastAPI()
         app.include_router(router)
 
+        # No dependency overrides - will fail auth
         client = TestClient(app)
 
         try:
             response = client.get("/api/v1/api-keys/")
 
+            # Should fail due to missing authentication
+            # Actual status depends on middleware implementation
             assert response.status_code in [
                 status.HTTP_401_UNAUTHORIZED,
                 status.HTTP_403_FORBIDDEN,
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status.HTTP_500_INTERNAL_SERVER_ERROR,  # If dependency fails
             ]
         finally:
             # Cleanup to prevent pollution in pytest-xdist workers

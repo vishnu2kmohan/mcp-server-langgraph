@@ -262,6 +262,7 @@ See [Docker Compose documentation](docs/deployment/docker.mdx) for details.
 
 ```bash
 uv sync                              # Install dependencies
+make git-hooks                       # Setup git hooks (REQUIRED for contributors)
 cp .env.example .env                 # Configure (add GOOGLE_API_KEY)
 docker-compose up -d openfga postgres  # Start infrastructure
 python scripts/setup/setup_openfga.py  # Setup auth (save IDs to .env)
@@ -269,7 +270,11 @@ python -m mcp_server_langgraph.mcp.server_streamable  # Run agent
 curl http://localhost:8000/health    # Test
 ```
 
-**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx)
+**Git Hooks** (2-stage validation):
+- **Pre-commit** (< 30s): Fast validation on changed files - commit frequently!
+- **Pre-push** (8-12 min): Comprehensive validation matching CI - prevents surprises!
+
+**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx) | [Git Hooks Guide](TESTING.md#git-hooks-and-validation)
 
 ### 👤 Creating Test Users
 

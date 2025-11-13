@@ -5,10 +5,16 @@ Validate that .git/hooks/pre-push is configured correctly.
 This script ensures that the pre-push hook:
 1. Exists and is executable
 2. Contains all required validation steps
-3. Matches expected configuration
+3. Matches expected configuration with 4 phases:
+   - Phase 1: Fast checks (lockfile, workflows)
+   - Phase 2: Type checking (MyPy - warning only)
+   - Phase 3: Test suite validation (unit, smoke, integration, property)
+   - Phase 4: Pre-commit hooks (push stage - comprehensive validators)
 
 This prevents regressions where the pre-push hook might be accidentally
 modified or removed, causing local validation to diverge from requirements.
+
+Updated 2025-11-13: Added comprehensive test suite validation to match CI exactly.
 """
 
 import os
@@ -58,15 +64,22 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
 
     # Check 3: Required validation steps
     required_validations = {
+        # Phase 1: Fast checks
         "uv lock --check": "Lockfile validation",
         "test_workflow_syntax.py": "Workflow syntax validation",
         "test_workflow_security.py": "Workflow security validation",
         "test_workflow_dependencies.py": "Workflow dependencies validation",
         "test_docker_paths.py": "Docker paths validation",
+        # Phase 2: Type checking
         "mypy src/mcp_server_langgraph": "MyPy type checking",
-        "pre-commit run --all-files": "Pre-commit hooks (all files)",
+        # Phase 3: Test suite validation (NEW)
+        "pytest tests/ -m unit": "Unit tests",
+        "pytest tests/smoke/": "Smoke tests",
+        "pytest tests/integration/": "Integration tests (last failed)",
         "HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
         "pytest -m property": "Property tests",
+        # Phase 4: Pre-commit hooks (push stage)
+        "pre-commit run --all-files --hook-stage push": "Pre-commit hooks (push stage)",
     }
 
     missing_validations = []
