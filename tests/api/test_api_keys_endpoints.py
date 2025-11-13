@@ -106,13 +106,21 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     import gc
 
     from fastapi import FastAPI
+    from fastapi.security import HTTPAuthorizationCredentials
 
     from mcp_server_langgraph.api.api_keys import router
-    from mcp_server_langgraph.auth.middleware import get_current_user
+    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
     # Create fresh FastAPI app
     app = FastAPI()
+
+    # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1)
+    # This prevents bearer_scheme singleton pollution in pytest-xdist
+    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+        scheme="Bearer", credentials="mock_token_for_testing"
+    )
+
     app.include_router(router)
 
     # Override dependencies using FastAPI's built-in mechanism

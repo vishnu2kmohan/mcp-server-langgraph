@@ -116,6 +116,11 @@ class TestPreCommitHookDependencies:
         REFACTOR:
         - This test ensures all Python hooks use proper configuration
         - Catches any new hooks that might use language: system incorrectly
+
+        EXCEPTION (2025-11-13):
+        - Hooks using `uv run` or `bash -c '... source .venv ...'` SHOULD use language: system
+        - uv/venv manage their own dependencies, not pre-commit's isolated environment
+        - This provides better integration with project dependencies
         """
         config = load_precommit_config()
         if not config:
@@ -129,11 +134,14 @@ class TestPreCommitHookDependencies:
                 language = hook.get("language", "")
                 hook_id = hook.get("id", "unknown")
 
+                # EXCEPTION: Allow language: system for hooks using uv run or venv activation
+                # These hooks manage their own dependencies and should use project's environment
+                if entry.startswith("uv run") or "source .venv/bin/activate" in entry:
+                    continue
+
                 # Check if hook executes Python but uses language: system
                 if ("python" in entry or ".py" in entry) and language == "system":
-                    python_hooks_using_system.append(
-                        f"{hook_id} (entry: {entry}, language: {language})"
-                    )
+                    python_hooks_using_system.append(f"{hook_id} (entry: {entry}, language: {language})")
 
         if python_hooks_using_system:
             error_message = (
@@ -173,7 +181,6 @@ class TestPreCommitHookDependencies:
         if not config:
             pytest.skip("No .pre-commit-config.yaml found")
 
-        scripts_dir = Path(__file__).parent.parent.parent / "scripts"
         mismatches = []
 
         for repo in config.get("repos", []):
@@ -184,7 +191,6 @@ class TestPreCommitHookDependencies:
             for hook in repo.get("hooks", []):
                 entry = hook.get("entry", "")
                 language = hook.get("language", "")
-                hook_id = hook.get("id", "unknown")
                 additional_deps = hook.get("additional_dependencies", [])
 
                 # Extract Python script path from entry
@@ -313,12 +319,7 @@ class TestPreCommitHookDependencies:
 
         This ensures our regression test is testing the right thing.
         """
-        script_path = (
-            Path(__file__).parent.parent.parent
-            / "scripts"
-            / "validation"
-            / "validate_workflow_test_deps.py"
-        )
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_workflow_test_deps.py"
 
         if not script_path.exists():
             pytest.skip("Script not found")
@@ -361,9 +362,7 @@ class TestPreCommitHookConfiguration:
 
         # This is a warning, not a failure
         if hooks_without_descriptions and len(hooks_without_descriptions) < 5:
-            pytest.skip(
-                f"Recommendation: Add descriptions to hooks: {', '.join(hooks_without_descriptions)}"
-            )
+            pytest.skip(f"Recommendation: Add descriptions to hooks: {', '.join(hooks_without_descriptions)}")
 
     def test_python_hooks_specify_pass_filenames_explicitly(self):
         """

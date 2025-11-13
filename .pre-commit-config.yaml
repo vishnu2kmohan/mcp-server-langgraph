@@ -113,7 +113,7 @@ repos:
 
       - id: check-test-sleep-duration
         name: Check Test Sleep Durations
-        entry: python3 scripts/check_test_sleep_duration.py
+        entry: uv run python scripts/check_test_sleep_duration.py
         language: python
         additional_dependencies: []
         files: ^tests/.*\.py$
@@ -130,7 +130,7 @@ repos:
 
       - id: validate-pytest-config
         name: Validate Pytest Configuration Compatibility
-        entry: python3 scripts/validate_pytest_config.py
+        entry: uv run python scripts/validate_pytest_config.py
         language: python
         additional_dependencies: []
         files: ^pyproject\.toml$
@@ -160,7 +160,7 @@ repos:
 
       - id: validate-pre-push-hook
         name: Validate Pre-Push Hook Configuration
-        entry: python3 scripts/validate_pre_push_hook.py
+        entry: uv run python scripts/validate_pre_push_hook.py
         language: python
         additional_dependencies: []
         files: ^\.git/hooks/pre-push$
@@ -189,7 +189,7 @@ repos:
 
       - id: fix-mdx-syntax
         name: Fix MDX Syntax Errors (Code Block Closings)
-        entry: python3 scripts/fix_mdx_syntax.py
+        entry: uv run python scripts/fix_mdx_syntax.py
         language: python
         additional_dependencies: []
         files: \.mdx$
@@ -209,7 +209,7 @@ repos:
 
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
-        entry: python3 scripts/validate_mintlify_docs.py docs
+        entry: uv run python scripts/validate_mintlify_docs.py docs
         language: python
         additional_dependencies: ['pyyaml>=6.0.0', 'rich>=13.0.0']
         files: \.mdx$
@@ -220,7 +220,7 @@ repos:
       # TDD-based Documentation Validators (Comprehensive)
       - id: validate-docs-navigation
         name: Validate Documentation Navigation Consistency
-        entry: python3 scripts/validators/navigation_validator.py
+        entry: uv run python scripts/validators/navigation_validator.py
         language: python
         additional_dependencies: []
         files: ^(docs/.*\.mdx|docs/docs\.json)$
@@ -243,7 +243,7 @@ repos:
 
       - id: validate-mdx-extensions
         name: Validate MDX File Extensions in docs/
-        entry: python3 scripts/validators/mdx_extension_validator.py
+        entry: uv run python scripts/validators/mdx_extension_validator.py
         language: python
         additional_dependencies: []
         files: ^docs/.*\.(md|mdx)$
@@ -265,7 +265,7 @@ repos:
 
       - id: validate-mdx-frontmatter
         name: Validate MDX Frontmatter (title, description)
-        entry: python3 scripts/validators/frontmatter_validator.py
+        entry: uv run python scripts/validators/frontmatter_validator.py
         language: python
         additional_dependencies: ['pyyaml>=6.0.0']
         files: ^docs/.*\.mdx$
@@ -289,7 +289,7 @@ repos:
 
       - id: validate-documentation-links
         name: Validate Documentation Internal Links
-        entry: python3 scripts/validators/link_validator.py
+        entry: uv run python scripts/validators/link_validator.py
         language: python
         additional_dependencies: []
         files: ^docs/.*\.mdx$
@@ -309,7 +309,7 @@ repos:
 
       - id: validate-documentation-images
         name: Validate Image References in Documentation
-        entry: python3 scripts/validators/image_validator.py
+        entry: uv run python scripts/validators/image_validator.py
         language: python
         additional_dependencies: []
         files: ^docs/.*\.mdx$
@@ -329,7 +329,7 @@ repos:
 
       - id: validate-code-block-languages
         name: Validate Code Block Language Tags
-        entry: python3 scripts/validators/codeblock_validator.py
+        entry: uv run python scripts/validators/codeblock_validator.py
         language: python
         additional_dependencies: []
         files: ^docs/.*\.mdx$
@@ -349,7 +349,7 @@ repos:
 
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
-        entry: python3 scripts/standardize_frontmatter.py docs --dry-run
+        entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
         language: python
         additional_dependencies: ['pyyaml>=6.0.0']
         files: \.mdx$
@@ -358,7 +358,7 @@ repos:
 
       - id: check-doc-links
         name: Check Documentation Internal Links
-        entry: python3 scripts/ci/check-links.py
+        entry: uv run python scripts/ci/check-links.py
         language: python
         additional_dependencies: []
         files: \.(md|mdx)$
@@ -385,6 +385,37 @@ repos:
           - Verifies docs.json navigation references
           - Detects orphaned documentation files
           Regression prevention for issues fixed in documentation audit (2025-11-06).
+
+      - id: mintlify-broken-links-check
+        name: Mintlify Broken Links Validation (Manual)
+        entry: bash -c 'cd docs && npx mintlify broken-links'
+        language: system
+        files: ^docs/.*\.mdx$
+        pass_filenames: false
+        always_run: false
+        stages: [manual]  # Manual: Run with SKIP= pre-commit run mintlify-broken-links-check
+        description: |
+          Validates documentation using Mintlify CLI broken links checker.
+          This is the FINAL validation before committing/pushing docs changes.
+
+          Checks:
+          - All internal links resolve correctly
+          - Anchor links are valid
+          - Navigation references work
+          - Page cross-references are accurate
+
+          Why manual stage?
+          - Mintlify CLI is slow (~8-12 seconds)
+          - Already runs in CI/CD pipeline
+          - Best run via /docs-audit slash command
+
+          Run manually:
+          $ SKIP= pre-commit run mintlify-broken-links-check --all-files
+          OR
+          $ make docs-validate-mintlify
+
+          Alternative: Use Python validators (faster):
+          $ python scripts/validators/validate_docs.py
 
       - id: validate-documentation-integrity
         name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
@@ -451,7 +482,7 @@ repos:
       # Deployment Configuration Validation (TDD)
       - id: validate-deployment-secrets
         name: Validate deployment secret keys alignment
-        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template -v --tb=short
+        entry: uv run pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template -v --tb=short
         language: system
         files: ^deployments/helm/.*\.(yaml|yml)$
         pass_filenames: false
@@ -459,7 +490,7 @@ repos:
 
       - id: validate-cors-security
         name: Validate CORS security configuration
-        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials -v --tb=short
+        entry: uv run pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials -v --tb=short
         language: system
         files: ^deployments/(kong|base)/.*\.(yaml|yml)$
         pass_filenames: false
@@ -467,7 +498,7 @@ repos:
 
       - id: check-hardcoded-credentials
         name: Check for hard-coded credentials
-        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap -v --tb=short
+        entry: uv run pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap -v --tb=short
         language: system
         files: ^deployments/base/configmap\.yaml$
         pass_filenames: false
@@ -475,7 +506,7 @@ repos:
 
       - id: validate-redis-password-required
         name: Ensure Redis password is mandatory
-        entry: python -m pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional -v --tb=short
+        entry: uv run pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional -v --tb=short
         language: system
         files: ^deployments/base/redis-session-deployment\.yaml$
         pass_filenames: false
@@ -516,7 +547,7 @@ repos:
 
       - id: check-mermaid-styling
         name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
-        entry: python3 scripts/check_mermaid_styling.py
+        entry: uv run python scripts/check_mermaid_styling.py
         language: python
         additional_dependencies: []
         files: ^docs/.*\.mdx$
@@ -550,7 +581,7 @@ repos:
 
       - id: validate-gke-autopilot-compliance
         name: Validate GKE Autopilot Resource Compliance
-        entry: python3 scripts/validate_gke_autopilot_compliance.py
+        entry: uv run python scripts/validate_gke_autopilot_compliance.py
         language: system
         files: ^deployments/.*\.ya?ml$
         pass_filenames: false
@@ -570,7 +601,7 @@ repos:
 
       - id: validate-pytest-markers
         name: Validate Pytest Markers Registration
-        entry: python3 scripts/validate_pytest_markers.py
+        entry: uv run python scripts/validate_pytest_markers.py
         language: system
         files: ^tests/.*\.py$
         pass_filenames: false
@@ -604,7 +635,7 @@ repos:
 
       - id: validate-test-fixtures
         name: Validate Test Fixtures for Common Issues
-        entry: python3 scripts/validate_test_fixtures.py
+        entry: uv run python scripts/validate_test_fixtures.py
         language: python
         additional_dependencies: []
         files: ^tests/.*test_.*\.py$
@@ -632,7 +663,7 @@ repos:
 
       - id: validate-pytest-markers
         name: Validate Pytest Markers
-        entry: python3 scripts/validate_pytest_markers.py
+        entry: uv run python scripts/validate_pytest_markers.py
         language: python
         additional_dependencies: []
         pass_filenames: false
@@ -686,7 +717,7 @@ repos:
       # Codex Findings Prevention Hooks (2025-11-10)
       - id: detect-dead-test-code
         name: Detect Dead Code in Test Fixtures (Codex P0)
-        entry: python3 scripts/detect_dead_test_code.py tests/
+        entry: uv run python scripts/detect_dead_test_code.py tests/
         language: python
         additional_dependencies: []
         files: ^tests/.*test_.*\.py$
@@ -716,7 +747,7 @@ repos:
 
       - id: validate-api-schemas
         name: Validate API Response Schemas
-        entry: python3 scripts/validate_api_schemas.py
+        entry: uv run python scripts/validate_api_schemas.py
         language: python
         additional_dependencies: []
         pass_filenames: false
@@ -741,7 +772,7 @@ repos:
 
       - id: validate-test-time-bombs
         name: Detect Test Time Bombs (Future Dates/Models)
-        entry: python3 scripts/validate_test_time_bombs.py
+        entry: uv run python scripts/validate_test_time_bombs.py
         language: python
         additional_dependencies: []
         pass_filenames: false
@@ -768,7 +799,7 @@ repos:
 
       - id: check-e2e-completion
         name: Check E2E Test Implementation Progress
-        entry: python3 scripts/check_e2e_completion.py --min-percent 25
+        entry: uv run python scripts/check_e2e_completion.py --min-percent 25
         language: python
         additional_dependencies: []
         pass_filenames: false
@@ -788,7 +819,7 @@ repos:
 
       - id: check-test-sleep-budget
         name: Monitor Test Wall-Clock Sleep Time Budget
-        entry: python3 scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+        entry: uv run python scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
         language: python
         additional_dependencies: []
         pass_filenames: false
@@ -853,7 +884,7 @@ repos:
       # Kubernetes Deployment Validation (OpenAI Codex Findings - Phase 4)
       - id: validate-kustomize-builds
         name: Validate Kustomize Overlays Build Successfully
-        entry: python -m pytest tests/deployment/test_kustomize_builds.py -v --tb=short
+        entry: uv run pytest tests/deployment/test_kustomize_builds.py -v --tb=short
         language: system
         pass_filenames: false
         files: ^deployments/.*\.(yaml|yml)$
@@ -876,7 +907,7 @@ repos:
 
       - id: validate-network-policies
         name: Validate NetworkPolicy Port Configurations
-        entry: python -m pytest tests/deployment/test_network_policies.py -v --tb=short
+        entry: uv run pytest tests/deployment/test_network_policies.py -v --tb=short
         language: system
         pass_filenames: false
         files: ^deployments/.*network-policy\.(yaml|yml)$
@@ -895,7 +926,7 @@ repos:
 
       - id: validate-service-accounts
         name: Validate Service Account Separation and RBAC
-        entry: python -m pytest tests/deployment/test_service_accounts.py -v --tb=short
+        entry: uv run pytest tests/deployment/test_service_accounts.py -v --tb=short
         language: system
         pass_filenames: false
         files: ^deployments/.*serviceaccount.*\.(yaml|yml)$
@@ -914,7 +945,7 @@ repos:
 
       - id: validate-serviceaccount-naming
         name: Validate ServiceAccount Naming Consistency
-        entry: python3 scripts/validate_serviceaccount_names.py
+        entry: uv run python scripts/validate_serviceaccount_names.py
         language: python
         additional_dependencies: ['pyyaml>=6.0.0']
         files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
@@ -1199,7 +1230,7 @@ repos:
 
       - id: validate-workflow-test-deps
         name: Validate Workflow Test Dependencies
-        entry: python3 scripts/validation/validate_workflow_test_deps.py
+        entry: uv run python scripts/validation/validate_workflow_test_deps.py
         language: python
         additional_dependencies: ['pyyaml>=6.0.0']
         files: ^\.github/workflows/.*\.ya?ml$
