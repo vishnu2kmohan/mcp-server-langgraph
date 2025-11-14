@@ -1087,6 +1087,37 @@ repos:
 
           See: ADR-0053, tests/meta/test_precommit_keycloak_validation.py
 
+      # Docker Image Contents Validation (TDD - ADR-0053)
+      - id: validate-docker-image-contents
+        name: Validate Docker image contents in Dockerfile (final-test stage)
+        entry: uv run python scripts/validate_docker_image_contents.py docker/Dockerfile
+        language: python
+        files: ^docker/Dockerfile$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates Docker image contents in Dockerfile (TDD).
+
+          Required COPY commands in final-test stage:
+          - src/ (application source code)
+          - tests/ (test suite)
+          - pyproject.toml (project configuration)
+
+          Excluded (meta-tests run on host, not in Docker):
+          - scripts/ (meta-test validation scripts)
+          - deployments/ (Kubernetes manifests, Helm charts)
+
+          Prevents regression of Codex Findings #4 & #5:
+          - ModuleNotFoundError for 'scripts' module
+          - FileNotFoundError for /app/deployments
+
+          Design rationale:
+          - Integration tests run IN Docker: need src/, tests/, pyproject.toml
+          - Meta-tests run ON host: need full repo (scripts/, deployments/)
+          - Separation prevents Docker image bloat
+
+          See: ADR-0053, tests/meta/test_precommit_docker_image_validation.py
+
       # Codex Finding #1 (P0): Helm lint validation
       - id: helm-lint
         name: Helm Lint Validation
