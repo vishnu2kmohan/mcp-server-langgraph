@@ -676,7 +676,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
         if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
             pytest.skip("OpenFGA test service did not become ready in time - skipping infrastructure tests")
         # Additional check for OpenFGA
-        if not _check_http_health("http://localhost:9080/healthz", timeout=5):
+        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
             pytest.skip("OpenFGA health check failed - skipping infrastructure tests")
         logging.info("✓ OpenFGA ready")
 
@@ -684,7 +684,7 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
         if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
             pytest.skip("Keycloak test service did not become ready in time - skipping infrastructure tests")
         # Additional check for Keycloak
-        if not _check_http_health("http://localhost:9082/health/ready", timeout=10):
+        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/health/ready", timeout=10):
             pytest.skip("Keycloak health check failed - skipping infrastructure tests")
         logging.info("✓ Keycloak ready")
 
