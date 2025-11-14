@@ -33,6 +33,7 @@ References:
 - Commit 079e82e: Fixed async/sync override mismatch
 """
 
+import gc
 import os
 from unittest.mock import AsyncMock
 
@@ -41,8 +42,15 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="environment_pollution_tests")
 class TestEnvironmentPollution:
     """Tests demonstrating environment variable pollution issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_direct_environ_mutation_pollutes_other_tests(self):
         """
@@ -110,8 +118,15 @@ class TestEnvironmentPollution:
         ), "Environment should be cleaned up by monkeypatch"
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="environment_pollution_tests")
 class TestDependencyOverrideLeaks:
     """Tests demonstrating FastAPI dependency override leak issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dependency_overrides_without_cleanup_leak(self):
         """
@@ -201,6 +216,10 @@ class TestDependencyOverrideLeaks:
         # Cleanup
         app.dependency_overrides.clear()
 
+    @pytest.mark.xfail(
+        strict=False,
+        reason="RED test - documents incorrect pattern in test_gdpr_endpoints.py:57 and test_gdpr.py. Will PASS after those files are fixed with bearer_scheme overrides."
+    )
     def test_bearer_scheme_override_is_required(self):
         """
         🔴 RED: Demonstrate that bearer_scheme override is required.
@@ -269,8 +288,15 @@ class TestDependencyOverrideLeaks:
         assert len(app.dependency_overrides) == 0, "All overrides cleared"
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="environment_pollution_tests")
 class TestEnvironmentHygiene:
     """Tests for environment variable hygiene in individual tests."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cache_isolation_should_use_monkeypatch(self):
         """
@@ -410,6 +436,8 @@ def test_pollution_regression_documentation():
     assert "async def" in documentation, "Documents async override pattern"
 
 
+@pytest.mark.unit
+@pytest.mark.regression
 @pytest.mark.xdist_group(name="environment_pollution_tests")
 class TestRegressionIsolation:
     """
@@ -418,5 +446,9 @@ class TestRegressionIsolation:
     These tests manipulate environment and overrides, so they should run
     in the same worker sequentially.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     pass

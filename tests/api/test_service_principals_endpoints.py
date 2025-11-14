@@ -135,6 +135,12 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
       * FastAPI gets confused and looks for 'request' field in body → 422 error
     - dependency_overrides avoids this issue and works reliably with pytest-xdist
 
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 6 - RE-IMPORT PATTERN):
+    - Re-import auth.middleware right before applying overrides
+    - Ensures we always override the exact objects the router currently holds
+    - Prevents 401 errors even if another test reloaded the module
+    - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
+
     ROOT CAUSE OF PREVIOUS FAILURES:
     FastAPI introspects function signatures for dependency injection. When using
     monkeypatch + reload, FastAPI sees the mock function signature with Request
@@ -148,8 +154,14 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
+    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
+    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
+    # the current instances of bearer_scheme and get_current_user when it loads.
+    # If we import router first, it caches stale middleware references!
+    from mcp_server_langgraph.auth import middleware
+
+    # Now import router and dependencies AFTER middleware is re-imported
     from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app
@@ -166,8 +178,9 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
 
     # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1 + Regression notes)
     # This prevents bearer_scheme singleton pollution in pytest-xdist
+    # Use middleware.bearer_scheme (just re-imported) instead of top-level import
     # See: tests/regression/test_service_principal_test_isolation.py:1-135
-    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
         scheme="Bearer", credentials="mock_token_for_testing"
     )
 
@@ -177,10 +190,11 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     # With MCP_SKIP_AUTH=true (set in conftest), get_current_user returns default user
     # Override it here to use our specific mock_current_user
     # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    # Use middleware.get_current_user (just re-imported) for correct instance
     async def override_get_current_user():
         return mock_current_user
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[middleware.get_current_user] = override_get_current_user
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
@@ -211,14 +225,26 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     PYTEST-XDIST FIX (2025-11-12 - REVISION 5):
     - Use app.dependency_overrides instead of monkeypatch
     - Same fix as sp_test_client to avoid FastAPI parameter name collision
+
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 6 - RE-IMPORT PATTERN):
+    - Re-import auth.middleware right before applying overrides
+    - Ensures we always override the exact objects the router currently holds
+    - Prevents 401 errors even if another test reloaded the module
+    - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
     """
     import os
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
+    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
+    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
+    # the current instances of bearer_scheme and get_current_user when it loads.
+    # If we import router first, it caches stale middleware references!
+    from mcp_server_langgraph.auth import middleware
+
+    # Now import router and dependencies AFTER middleware is re-imported
     from mcp_server_langgraph.api.service_principals import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app (same fix as sp_test_client)
@@ -233,8 +259,9 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
 
     # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1 + Regression notes)
     # This prevents bearer_scheme singleton pollution in pytest-xdist
+    # Use middleware.bearer_scheme (just re-imported) instead of top-level import
     # See: tests/regression/test_service_principal_test_isolation.py:1-135
-    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
         scheme="Bearer", credentials="mock_token_for_testing"
     )
 
@@ -242,10 +269,11 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
 
     # Override dependencies with admin user
     # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    # Use middleware.get_current_user (just re-imported) for correct instance
     async def override_get_current_user():
         return mock_admin_user
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[middleware.get_current_user] = override_get_current_user
     app.dependency_overrides[get_service_principal_manager] = lambda: mock_sp_manager
     app.dependency_overrides[get_openfga_client] = lambda: mock_openfga_client
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client

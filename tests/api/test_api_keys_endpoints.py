@@ -102,14 +102,26 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     - Removed MCP_SKIP_AUTH environment variable (caused race conditions)
     - Use app.dependency_overrides exclusively for test isolation
     - FastAPI dependency overrides provide proper pytest-xdist isolation
+
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 6 - RE-IMPORT PATTERN):
+    - Re-import auth.middleware right before applying overrides
+    - Ensures we always override the exact objects the router currently holds
+    - Prevents 401 errors even if another test reloaded the module
+    - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
     """
     import gc
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
+    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
+    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
+    # the current instances of bearer_scheme and get_current_user when it loads.
+    # If we import router first, it caches stale middleware references!
+    from mcp_server_langgraph.auth import middleware
+
+    # Now import router and dependencies AFTER middleware is re-imported
     from mcp_server_langgraph.api.api_keys import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
     # Create fresh FastAPI app
@@ -117,7 +129,8 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
 
     # CRITICAL: Override bearer_scheme BEFORE include_router (Commit 05a54e1)
     # This prevents bearer_scheme singleton pollution in pytest-xdist
-    app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+    # Use middleware.bearer_scheme (just re-imported) instead of top-level import
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
         scheme="Bearer", credentials="mock_token_for_testing"
     )
 
@@ -125,10 +138,11 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
 
     # Override dependencies using FastAPI's built-in mechanism
     # CRITICAL: get_current_user is async, so override MUST be async (not lambda)
+    # Use middleware.get_current_user (just re-imported) for correct instance
     async def override_get_current_user():
         return mock_current_user
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[middleware.get_current_user] = override_get_current_user
     app.dependency_overrides[get_api_key_manager] = lambda: mock_api_key_manager
     app.dependency_overrides[get_keycloak_client] = lambda: mock_keycloak_client
 

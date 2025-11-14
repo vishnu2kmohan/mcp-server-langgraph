@@ -49,14 +49,22 @@ References:
 - PYTEST_XDIST_BEST_PRACTICES.md: Worker isolation patterns
 """
 
+import gc
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="worker_isolation_tests")
 class TestPostgresWorkerIsolation:
     """Tests demonstrating PostgreSQL worker isolation issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_current_postgres_fixture_uses_shared_connection(self):
         """
@@ -133,8 +141,15 @@ class TestPostgresWorkerIsolation:
         )
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="worker_isolation_tests")
 class TestRedisWorkerIsolation:
     """Tests demonstrating Redis worker isolation issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_current_redis_fixture_uses_shared_database(self):
         """
@@ -231,8 +246,15 @@ class TestRedisWorkerIsolation:
         )
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="worker_isolation_tests")
 class TestOpenFGAWorkerIsolation:
     """Tests demonstrating OpenFGA worker isolation issues."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_current_openfga_fixture_uses_shared_store(self):
         """
@@ -303,8 +325,15 @@ class TestOpenFGAWorkerIsolation:
         )
 
 
+@pytest.mark.unit
+@pytest.mark.regression
+@pytest.mark.xdist_group(name="worker_isolation_tests")
 class TestWorkerIsolationIntegration:
     """Integration tests for complete worker isolation pattern."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_backends_should_be_worker_scoped(self):
         """
@@ -500,6 +529,8 @@ def test_worker_isolation_regression_documentation():
     assert "PYTEST_XDIST_WORKER" in documentation, "Documents env var usage"
 
 
+@pytest.mark.unit
+@pytest.mark.regression
 @pytest.mark.xdist_group(name="worker_isolation_tests")
 class TestRegressionIsolation:
     """
@@ -508,5 +539,9 @@ class TestRegressionIsolation:
     These tests validate worker isolation patterns, so they should run
     sequentially in the same worker.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     pass

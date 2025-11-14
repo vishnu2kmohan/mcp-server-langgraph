@@ -57,10 +57,18 @@ class TestBearerSchemeOverrideDiagnostic:
             "from mcp_server_langgraph.auth.middleware import bearer_scheme" in content or "bearer_scheme" in content
         ), "bearer_scheme not imported in test file"
 
-        # Check 2: bearer_scheme override is set
-        assert (
+        # Check 2: bearer_scheme override is set (handles both direct import and re-import patterns)
+        # Old pattern: app.dependency_overrides[bearer_scheme]
+        # New pattern (Revision 6): app.dependency_overrides[middleware.bearer_scheme]
+        has_bearer_override = (
             "app.dependency_overrides[bearer_scheme]" in content
-        ), "bearer_scheme override not found - fix from commit 05a54e1 missing!"
+            or "app.dependency_overrides[middleware.bearer_scheme]" in content
+        )
+        assert has_bearer_override, (
+            "bearer_scheme override not found - fix from commit 05a54e1 missing! "
+            "Should have either app.dependency_overrides[bearer_scheme] or "
+            "app.dependency_overrides[middleware.bearer_scheme]"
+        )
 
         # Check 3: Override is set BEFORE app.include_router()
         # Find the fixture definition
@@ -69,11 +77,13 @@ class TestBearerSchemeOverrideDiagnostic:
 
         fixture_code = fixture_match.group(0)
 
-        # Verify order: override comes before include_router
-        override_pos = fixture_code.find("app.dependency_overrides[bearer_scheme]")
+        # Verify order: override comes before include_router (handles both patterns)
+        override_pos_old = fixture_code.find("app.dependency_overrides[bearer_scheme]")
+        override_pos_new = fixture_code.find("app.dependency_overrides[middleware.bearer_scheme]")
+        override_pos = max(override_pos_old, override_pos_new)  # Use whichever pattern is found
         router_pos = fixture_code.find("app.include_router(router)")
 
-        assert override_pos > 0, "bearer_scheme override not found in fixture"
+        assert override_pos > 0, "bearer_scheme override not found in fixture (checked both [bearer_scheme] and [middleware.bearer_scheme] patterns)"
         assert router_pos > 0, "app.include_router() not found in fixture"
         assert override_pos < router_pos, "bearer_scheme override MUST come BEFORE app.include_router() - incorrect order!"
 
