@@ -48,6 +48,7 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "httpx>=0.28.1",
     "fastapi>=0.120.3",
+    "starlette>=0.48.0",  # Explicitly listed (also transitively via FastAPI) for direct imports
     "uvicorn[standard]>=0.38.0",
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",

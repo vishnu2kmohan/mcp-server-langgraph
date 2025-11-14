@@ -361,6 +361,10 @@ def get_project_modules() -> set[str]:
         "validate_mintlify_docs",
         "fix_mdx_syntax",  # Script in scripts/ directory, not a package
         "hcl2",  # Optional import for Terraform parsing (try/except in tests)
+        # Local scripts imported by tests (in scripts/ directory)
+        "check_internal_links",  # Script for checking documentation links
+        "validate_gke_autopilot_compliance",  # Script for GKE Autopilot validation
+        "validate_pytest_markers",  # Script for pytest marker validation
     }
 
 
