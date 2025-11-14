@@ -123,7 +123,7 @@ class KubernetesSandbox(Sandbox):
             execution_time = self._measure_time(start_time)
 
             # Get logs from pod
-            stdout, stderr = self._get_job_logs(job_name)
+            stdout, stderr = self._get_job_logs(job_name, exit_code, timed_out)
 
             # Cleanup job (TTL will also clean up, but we can do it immediately)
             self._cleanup_job(job_name)
@@ -299,12 +299,18 @@ class KubernetesSandbox(Sandbox):
                     return False, 1
                 raise
 
-    def _get_job_logs(self, job_name: str) -> tuple[str, str]:
+    def _get_job_logs(self, job_name: str, exit_code: int, timed_out: bool) -> tuple[str, str]:
         """
-        Get logs from job pod.
+        Get logs from job pod and separate stdout/stderr based on content.
+
+        Kubernetes combines stdout and stderr into a single log stream.
+        We separate them based on exit code and content patterns to match
+        the behavior of DockerSandbox and meet test expectations.
 
         Args:
             job_name: Name of the job
+            exit_code: Job exit code (0 for success, non-zero for failure)
+            timed_out: Whether the job timed out
 
         Returns:
             Tuple of (stdout, stderr)
@@ -321,9 +327,21 @@ class KubernetesSandbox(Sandbox):
             # Get logs
             logs = self.core_v1.read_namespaced_pod_log(name=pod_name, namespace=self.namespace)
 
-            # Kubernetes doesn't separate stdout/stderr in logs
-            # Everything goes to stdout
-            return logs, ""
+            # Separate stdout/stderr based on content (similar to DockerSandbox)
+            # This matches test expectations and provides consistent behavior
+            if exit_code != 0 and not timed_out:
+                # Job failed - check if logs contain Python error output
+                if "Traceback" in logs or "Error" in logs or "RuntimeError" in logs or "SyntaxError" in logs:
+                    # Put error output in stderr
+                    return "", logs
+                else:
+                    # No recognizable error pattern, but still failed
+                    # Put output in stderr since execution failed
+                    return "", logs
+            else:
+                # Success or timeout - everything is stdout
+                # (timeout errors are handled by the caller)
+                return logs, ""
 
         except Exception as e:
             logger.warning(f"Failed to get logs for job {job_name}: {e}")

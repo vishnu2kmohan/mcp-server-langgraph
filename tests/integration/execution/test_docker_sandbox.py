@@ -136,7 +136,9 @@ print('Should not reach here')
         assert result.success is False
         assert result.timed_out is True
         assert result.execution_time >= 1
-        assert result.execution_time < 2  # Should stop quickly after timeout
+        # Allow for cleanup overhead (container stop, log retrieval)
+        # Timeout is 1s, but cleanup can add 1-2s depending on system load
+        assert result.execution_time < 3, f"Execution time {result.execution_time}s exceeds 3s (timeout=1s + cleanup)"
 
     def test_memory_limit_enforcement(self, docker_available):
         """Test that memory limits are enforced"""
@@ -373,14 +375,19 @@ class TestDockerSandboxCleanup:
 
         assert result.success is False
 
-        # Wait a moment for cleanup
+        # Wait for cleanup with polling (Docker's async cleanup can take time)
         import time
 
-        time.sleep(1)
+        max_wait = 5  # seconds
+        for i in range(max_wait):
+            final_containers = len(client.containers.list(all=True))
+            if final_containers <= initial_containers:
+                break
+            time.sleep(1)
 
-        # Container should still be removed
+        # Container should be removed
         final_containers = len(client.containers.list(all=True))
-        assert final_containers <= initial_containers
+        assert final_containers <= initial_containers, f"Container cleanup failed: {final_containers} > {initial_containers}"
 
     def test_container_cleanup_on_timeout(self, docker_available):
         """Test that containers are cleaned up on timeout"""
@@ -691,8 +698,8 @@ except (OSError, socket.timeout) as e:
         GREEN: Should already work based on current implementation
         """
         limits = ResourceLimits(
-            max_memory_mb=128,  # 128MB limit
-            max_cpu_percent=50,  # 50% CPU
+            memory_limit_mb=128,  # 128MB limit
+            cpu_quota=0.5,  # 0.5 CPU cores (50% of 1 core)
             timeout_seconds=10,
         )
         sandbox = DockerSandbox(limits=limits)

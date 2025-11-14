@@ -83,6 +83,114 @@ print(f'Result: {result}')
 
 
 @pytest.mark.integration
+@pytest.mark.regression
+class TestKubernetesSandboxStderrSeparation:
+    """
+    Regression tests for stdout/stderr separation in Kubernetes sandbox
+
+    CODEX FINDING: OpenAI Codex identified that test_code_with_error (line 80)
+    was failing because KubernetesSandbox._get_job_logs() returned empty stderr.
+    Kubernetes combines stdout/stderr into a single log stream, so we need to
+    separate them based on content patterns to match DockerSandbox behavior.
+
+    These tests ensure stderr/stdout are properly separated, preventing regression.
+    """
+
+    @pytest.fixture
+    def sandbox(self, kubernetes_available):
+        """Create Kubernetes sandbox instance"""
+        limits = ResourceLimits.testing()
+        return KubernetesSandbox(limits=limits, namespace="default")
+
+    def test_error_output_goes_to_stderr(self, sandbox):
+        """
+        Test that Python errors are captured in stderr, not stdout
+
+        REGRESSION: Prevents empty stderr when errors occur (Codex finding)
+        """
+        code = "raise RuntimeError('Test error message')"
+        result = sandbox.execute(code)
+
+        assert result.success is False
+        assert result.exit_code != 0
+        # Error output must be in stderr
+        assert "RuntimeError" in result.stderr, "RuntimeError should be in stderr"
+        assert "Test error message" in result.stderr, "Error message should be in stderr"
+        # stdout should be empty for pure errors
+        assert result.stdout == "", "stdout should be empty for error-only execution"
+
+    def test_traceback_goes_to_stderr(self, sandbox):
+        """
+        Test that Python tracebacks are captured in stderr
+
+        REGRESSION: Ensures Traceback detection works in _get_job_logs
+        """
+        code = """
+def failing_function():
+    raise ValueError('Intentional failure')
+
+failing_function()
+"""
+        result = sandbox.execute(code)
+
+        assert result.success is False
+        assert "Traceback" in result.stderr, "Traceback should be in stderr"
+        assert "ValueError" in result.stderr, "ValueError should be in stderr"
+        assert "Intentional failure" in result.stderr
+
+    def test_syntax_error_goes_to_stderr(self, sandbox):
+        """
+        Test that syntax errors are captured in stderr
+
+        REGRESSION: Ensures SyntaxError detection works in _get_job_logs
+        """
+        code = "if True print('missing colon')"
+        result = sandbox.execute(code)
+
+        assert result.success is False
+        assert "SyntaxError" in result.stderr, "SyntaxError should be in stderr"
+
+    def test_successful_output_goes_to_stdout(self, sandbox):
+        """
+        Test that successful execution output goes to stdout, not stderr
+
+        REGRESSION: Ensures we don't incorrectly put success output in stderr
+        """
+        code = "print('Success message')"
+        result = sandbox.execute(code)
+
+        assert result.success is True
+        assert result.exit_code == 0
+        assert "Success message" in result.stdout, "Output should be in stdout"
+        assert result.stderr == "", "stderr should be empty for successful execution"
+
+    def test_matches_docker_sandbox_behavior(self, sandbox):
+        """
+        Test that stderr/stdout behavior matches DockerSandbox
+
+        This ensures consistent behavior across sandbox implementations.
+        Both should separate stdout/stderr the same way.
+        """
+        # Test error case
+        error_code = "raise TypeError('Type mismatch')"
+        result = sandbox.execute(error_code)
+
+        assert result.success is False
+        assert "TypeError" in result.stderr
+        assert "Type mismatch" in result.stderr
+        assert result.stdout == ""
+
+        # Test success case
+        success_code = "print('Output'); print('Line 2')"
+        result = sandbox.execute(success_code)
+
+        assert result.success is True
+        assert "Output" in result.stdout
+        assert "Line 2" in result.stdout
+        assert result.stderr == ""
+
+
+@pytest.mark.integration
 @pytest.mark.slow
 class TestKubernetesSandboxResourceLimits:
     """Test resource limit enforcement in Kubernetes"""

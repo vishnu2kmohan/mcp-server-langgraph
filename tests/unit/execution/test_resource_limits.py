@@ -316,3 +316,86 @@ class TestResourceLimitsComparison:
         assert strict_limits.is_within(relaxed_limits) is True
         # Relaxed should not be within strict
         assert relaxed_limits.is_within(strict_limits) is False
+
+
+@pytest.mark.unit
+@pytest.mark.regression
+class TestResourceLimitsParameterNameValidation:
+    """
+    Regression tests for ResourceLimits parameter naming
+
+    CODEX FINDING: OpenAI Codex identified that test_docker_sandbox.py:693
+    was using incorrect parameter names (max_memory_mb, max_cpu_percent)
+    instead of the correct names (memory_limit_mb, cpu_quota).
+
+    These tests ensure that incorrect parameter names are rejected,
+    preventing this issue from recurring.
+    """
+
+    def test_rejects_max_memory_mb_parameter(self):
+        """
+        Test that using old/incorrect 'max_memory_mb' parameter raises TypeError
+
+        REGRESSION: Prevents using deprecated parameter name from Codex finding
+        """
+        with pytest.raises(TypeError, match="unexpected keyword argument"):
+            ResourceLimits(max_memory_mb=128, timeout_seconds=10)
+
+    def test_rejects_max_cpu_percent_parameter(self):
+        """
+        Test that using old/incorrect 'max_cpu_percent' parameter raises TypeError
+
+        REGRESSION: Prevents using deprecated parameter name from Codex finding
+        """
+        with pytest.raises(TypeError, match="unexpected keyword argument"):
+            ResourceLimits(max_cpu_percent=50, timeout_seconds=10)
+
+    def test_rejects_both_incorrect_parameters(self):
+        """
+        Test that using both incorrect parameters raises TypeError
+
+        REGRESSION: Ensures the exact error from test_docker_sandbox.py:693 is caught
+        """
+        with pytest.raises(TypeError, match="unexpected keyword argument"):
+            ResourceLimits(
+                max_memory_mb=128,
+                max_cpu_percent=50,
+                timeout_seconds=10,
+            )
+
+    def test_correct_parameter_names_work(self):
+        """
+        Test that correct parameter names work as expected
+
+        This documents the correct usage pattern to replace incorrect names
+        """
+        limits = ResourceLimits(
+            memory_limit_mb=128,
+            cpu_quota=0.5,  # 0.5 cores (not a percentage)
+            timeout_seconds=10,
+        )
+        assert limits.memory_limit_mb == 128
+        assert limits.cpu_quota == 0.5
+        assert limits.timeout_seconds == 10
+
+    def test_cpu_quota_is_float_not_percentage(self):
+        """
+        Test that cpu_quota uses cores (float), not percentage (int)
+
+        DOCUMENTATION: cpu_quota represents CPU cores (0.5 = half a core),
+        not a percentage (50% = 50). This is intentional.
+        """
+        # 0.5 cores (50% of 1 core)
+        limits = ResourceLimits(cpu_quota=0.5)
+        assert limits.cpu_quota == 0.5
+        assert isinstance(limits.cpu_quota, float)
+
+        # 2.0 cores (2 full cores)
+        limits = ResourceLimits(cpu_quota=2.0)
+        assert limits.cpu_quota == 2.0
+
+        # Percentage values like 50 or 100 should still work,
+        # but represent that many cores, not a percentage
+        # (capped at max 8.0 by validation)
+        limits = ResourceLimits(cpu_quota=4.0)
+        assert limits.cpu_quota == 4.0  # 4 full cores

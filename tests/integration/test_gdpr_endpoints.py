@@ -263,7 +263,8 @@ class TestGDPREndpoints:
         """Test POST /api/v1/users/me/consent."""
         consent_data = {"consent_type": "analytics", "granted": True}
 
-        response = client.post("/api/v1/users/me/consent", json={"consent": consent_data})
+        # API expects ConsentRecord directly, not wrapped in {"consent": ...}
+        response = client.post("/api/v1/users/me/consent", json=consent_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -275,10 +276,10 @@ class TestGDPREndpoints:
     def test_update_consent_revoke(self, client, mock_auth_user):
         """Test POST /api/v1/users/me/consent to revoke consent."""
         # First grant
-        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": True}})
+        client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": True})
 
         # Then revoke
-        response = client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": False}})
+        response = client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": False})
 
         assert response.status_code == 200
         data = response.json()
