@@ -108,9 +108,7 @@ resource "google_storage_bucket" "terraform_state_logs" {
   storage_class = "STANDARD"
 
   # Uniform bucket-level access
-  uniform_bucket_level_access {
-    enabled = true
-  }
+  uniform_bucket_level_access = true
 
   # Lifecycle policy to delete old logs after 90 days
   lifecycle_rule {

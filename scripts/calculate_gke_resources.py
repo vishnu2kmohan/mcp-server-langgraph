@@ -152,9 +152,9 @@ def print_suggestions(calculator: GKEResourceCalculator, request: str, limit: st
     """Print suggestions for a configuration"""
     is_compliant, ratio = calculator.validate_ratio(request, limit)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"GKE Autopilot Resource Analysis")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     print(f"Current Configuration:")
     print(f"  Request: {request}")
@@ -169,9 +169,9 @@ def print_suggestions(calculator: GKEResourceCalculator, request: str, limit: st
 
         suggestions = calculator.suggest_compliant_values(request, limit)
 
-        print(f"\n{'─'*70}")
+        print(f"\n{'─' * 70}")
         print(f"Recommended Fixes:")
-        print(f"{'─'*70}\n")
+        print(f"{'─' * 70}\n")
 
         # Option 1
         opt1 = suggestions["option1"]
@@ -193,16 +193,16 @@ def print_suggestions(calculator: GKEResourceCalculator, request: str, limit: st
 
         print(f"💡 Recommendation: Use Option 1 for production workloads")
 
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 def print_examples(calculator: GKEResourceCalculator):
     """Print example service configurations"""
     examples = calculator.get_service_examples()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Common Service Configurations (GKE Autopilot Compliant)")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     for service, config in examples.items():
         print(f"{service}:")
@@ -216,14 +216,14 @@ def print_examples(calculator: GKEResourceCalculator):
         print(f"  ✅ Fixed: {fixed['request']} request / {fixed['limit']} limit = {fixed['ratio']}x")
         print()
 
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 def interactive_mode(calculator: GKEResourceCalculator):
     """Interactive calculator mode"""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("GKE Autopilot Resource Calculator (Interactive Mode)")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
     print("Calculate compliant resource values for GKE Autopilot.")
     print(f"Maximum CPU limit/request ratio: {calculator.MAX_RATIO}x\n")
 

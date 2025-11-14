@@ -46,7 +46,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name_prefix  = "staging-mcp-server-langgraph"
+  name_prefix  = "staging-mcp-svr" # Limited to 20 chars for VPC module validation
   cluster_name = "${local.name_prefix}-eks"
 
   common_tags = {

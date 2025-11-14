@@ -112,6 +112,8 @@ dev = [
     "bandit>=1.7.6",
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
+    # Documentation validation
+    "validators>=0.34.0",  # URL and data validation for MDX documentation tests
     # Deployment tools
     "langgraph-cli>=0.1.0",
 ]
