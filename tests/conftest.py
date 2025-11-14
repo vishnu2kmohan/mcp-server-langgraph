@@ -583,39 +583,44 @@ def test_infrastructure_ports():
     """
     Define test infrastructure ports (offset by 1000 from production).
 
-    **Worker-Aware Port Allocation (pytest-xdist support)**:
-    When running with pytest-xdist (pytest -n auto), each worker gets unique ports
-    to avoid conflicts when multiple workers start docker-compose on the same host.
+    **Single Shared Infrastructure (Session-Scoped)**:
+    All pytest-xdist workers connect to the SAME infrastructure instance on FIXED ports.
+    This provides a single docker-compose stack shared across all workers, with logical
+    isolation via PostgreSQL schemas, Redis DB indices, OpenFGA stores, etc.
 
-    Port Allocation Strategy:
-    - Worker gw0: Base ports (postgres=9432, redis=9379, etc.)
-    - Worker gw1: Base + 100 (postgres=9532, redis=9479, etc.)
-    - Worker gw2: Base + 200 (postgres=9632, redis=9579, etc.)
-    - Non-xdist: Base ports (PYTEST_XDIST_WORKER not set)
+    Port Allocation:
+    - All workers use base ports: postgres=9432, redis=9379, openfga=9080, etc.
+    - Ports are FIXED (no worker-based offsets)
+    - Maps directly to docker-compose.test.yml port bindings
 
-    This prevents "address already in use" errors in parallel test execution.
+    Logical Isolation Strategy:
+    - PostgreSQL: Separate schemas per worker (test_worker_gw0, test_worker_gw1, ...)
+    - Redis: Separate DB indices per worker (1, 2, 3, ...)
+    - OpenFGA: Separate stores per worker (test_store_gw0, test_store_gw1, ...)
+    - Qdrant: Separate collections per worker
+    - Keycloak: Separate realms per worker
+
+    This is faster and simpler than per-worker infrastructure with dynamic port allocation,
+    avoiding "address already in use" errors through logical isolation instead of port offsets.
 
     References:
+    - tests/meta/test_infrastructure_singleton.py (validates this architecture)
     - tests/regression/test_pytest_xdist_port_conflicts.py
-    - OpenAI Codex Finding: conftest.py:583 port conflicts
+    - OpenAI Codex Finding: conftest.py:583 port conflicts (RESOLVED)
+    - ADR: Single shared test infrastructure with logical isolation
     """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-
-    # Calculate port offset: gw0=0, gw1=100, gw2=200, etc.
-    worker_num = int(worker_id.replace("gw", "")) if worker_id.startswith("gw") else 0
-    port_offset = worker_num * 100
-
-    # Base ports (offset by 1000 from production)
+    # Return FIXED base ports for all workers
+    # All xdist workers (gw0, gw1, gw2, ...) connect to the same ports
+    # Isolation is achieved via schemas, DB indices, stores, not port offsets
     return {
-        "postgres": 9432 + port_offset,
-        "redis_checkpoints": 9379 + port_offset,
-        "redis_sessions": 9380 + port_offset,
-        "qdrant": 9333 + port_offset,
-        "qdrant_grpc": 9334 + port_offset,
-        "openfga_http": 9080 + port_offset,
-        "openfga_grpc": 9081 + port_offset,
-        "keycloak": 9082 + port_offset,
+        "postgres": 9432,
+        "redis_checkpoints": 9379,
+        "redis_sessions": 9380,
+        "qdrant": 9333,
+        "qdrant_grpc": 9334,
+        "openfga_http": 9080,
+        "openfga_grpc": 9081,
+        "keycloak": 9082,
     }
 
 

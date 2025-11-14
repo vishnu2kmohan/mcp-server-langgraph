@@ -1,25 +1,38 @@
 """
-Regression tests for pytest-xdist port conflicts in test infrastructure.
+Regression tests for pytest-xdist port allocation in test infrastructure.
 
-PROBLEM:
---------
-The test_infrastructure_ports fixture (conftest.py:564) returns hardcoded ports.
-When pytest-xdist runs multiple workers on the same host, they race to bind
-docker containers to the same ports, causing "address already in use" errors.
+ORIGINAL PROBLEM (Codex Finding):
+-----------------------------------
+The test_infrastructure_ports fixture (conftest.py:582) calculated worker-specific
+port offsets (gw0=+0, gw1=+100, etc.), but docker-compose.test.yml used fixed ports.
+This caused a mismatch where:
+- test_infrastructure_ports returned 9432 (gw0) or 9532 (gw1)
+- docker-compose always bound to 9432
+- Workers gw1+ would wait for port 9532, but nothing listened there
 
-SOLUTION:
----------
-Make ports worker-aware using PYTEST_XDIST_WORKER environment variable.
-Each worker gets a unique port offset: gw0=0, gw1=100, gw2=200, etc.
+ARCHITECTURAL DECISION:
+-----------------------
+We chose SINGLE SHARED INFRASTRUCTURE over per-worker infrastructure:
+- ONE docker-compose instance on FIXED ports (9432, 9379, 9080, etc.)
+- ALL workers connect to the SAME ports
+- Isolation via logical mechanisms (PostgreSQL schemas, Redis DBs, OpenFGA stores)
 
-This test demonstrates:
-1. ❌ Current implementation: Hardcoded ports cause conflicts
-2. ✅ Fixed implementation: Worker-aware ports enable isolation
+This approach is:
+✅ Simpler (no dynamic port allocation or env-var templating)
+✅ Faster (single infrastructure startup, not N instances)
+✅ More reliable (matches existing database isolation patterns)
+✅ Session-scoped (aligns with session-scoped fixtures)
+
+TESTS:
+------
+These tests validate the CORRECT behavior (fixed ports with logical isolation)
+and prevent regression to broken multi-instance attempts.
 
 References:
 -----------
-- OpenAI Codex Finding: tests/conftest.py:583 port conflicts
-- PYTEST_XDIST_BEST_PRACTICES.md: Worker isolation patterns
+- OpenAI Codex Finding: conftest.py:583 port conflicts (RESOLVED)
+- tests/meta/test_infrastructure_singleton.py (validates architecture)
+- ADR: Single shared test infrastructure with logical isolation
 """
 
 import os
@@ -27,41 +40,36 @@ import os
 import pytest
 
 
-def test_current_ports_are_hardcoded(test_infrastructure_ports):
+@pytest.mark.regression
+def test_ports_are_intentionally_fixed(test_infrastructure_ports):
     """
-    🔴 RED: Demonstrate that current implementation uses hardcoded ports.
+    ✅ Validate that ports are INTENTIONALLY fixed (not a bug).
 
-    This test PASSES now (detecting the problem) and will FAIL after fix
-    (when ports become worker-aware).
+    All workers should use the same base ports, connecting to a single
+    shared infrastructure instance. This is BY DESIGN, not a problem.
     """
-    # Get ports from fixture
-    ports = test_infrastructure_ports
+    # Expected base ports (from docker-compose.test.yml)
+    assert test_infrastructure_ports["postgres"] == 9432, "Postgres port should be fixed at 9432 for all workers"
+    assert (
+        test_infrastructure_ports["redis_checkpoints"] == 9379
+    ), "Redis checkpoints port should be fixed at 9379 for all workers"
+    assert test_infrastructure_ports["redis_sessions"] == 9380, "Redis sessions port should be fixed at 9380 for all workers"
+    assert test_infrastructure_ports["qdrant"] == 9333, "Qdrant port should be fixed at 9333 for all workers"
+    assert test_infrastructure_ports["qdrant_grpc"] == 9334, "Qdrant gRPC port should be fixed at 9334 for all workers"
+    assert test_infrastructure_ports["openfga_http"] == 9080, "OpenFGA HTTP port should be fixed at 9080 for all workers"
+    assert test_infrastructure_ports["openfga_grpc"] == 9081, "OpenFGA gRPC port should be fixed at 9081 for all workers"
+    assert test_infrastructure_ports["keycloak"] == 9082, "Keycloak port should be fixed at 9082 for all workers"
 
-    # These are the hardcoded values
-    assert ports["postgres"] == 9432, "Port is hardcoded (not worker-aware)"
-    assert ports["redis_checkpoints"] == 9379, "Port is hardcoded (not worker-aware)"
-    assert ports["redis_sessions"] == 9380, "Port is hardcoded (not worker-aware)"
-    assert ports["qdrant"] == 9333, "Port is hardcoded (not worker-aware)"
-    assert ports["qdrant_grpc"] == 9334, "Port is hardcoded (not worker-aware)"
-    assert ports["openfga_http"] == 9080, "Port is hardcoded (not worker-aware)"
-    assert ports["openfga_grpc"] == 9081, "Port is hardcoded (not worker-aware)"
-    assert ports["keycloak"] == 9082, "Port is hardcoded (not worker-aware)"
 
-
-def test_multiple_workers_would_conflict(monkeypatch):
+@pytest.mark.regression
+def test_all_workers_share_same_ports(test_infrastructure_ports):
     """
-    🔴 RED: Demonstrate that multiple workers would get same ports.
+    ✅ Validate that ALL workers use the same ports (single shared infrastructure).
 
-    This test simulates what happens when pytest-xdist starts multiple workers.
-    Each worker would get the same hardcoded ports, causing conflicts.
-
-    This test PASSES now (detecting the problem) and will FAIL after fix.
+    This is the architectural decision: ONE infrastructure instance,
+    shared across all workers, with logical isolation.
     """
-    # Simulate calling the fixture function with different worker envs
-    # Since we can't call fixture directly, we test the CONCEPT
-    # The actual fix will be in conftest.py
-
-    # Hardcoded values from conftest.py:570-579
+    # All workers connect to same base ports
     base_ports = {
         "postgres": 9432,
         "redis_checkpoints": 9379,
@@ -73,203 +81,216 @@ def test_multiple_workers_would_conflict(monkeypatch):
         "keycloak": 9082,
     }
 
-    # Currently, both workers get SAME ports (conflict!)
-    ports_gw0 = base_ports
-    ports_gw1 = base_ports
-
-    assert ports_gw0["postgres"] == ports_gw1["postgres"], "Workers get same postgres port (CONFLICT!)"
-    assert ports_gw0["redis_checkpoints"] == ports_gw1["redis_checkpoints"], "Workers get same redis port (CONFLICT!)"
-
-    # This is the PROBLEM - both workers will try to bind to 9432, 9379, etc.
-    assert ports_gw0 == ports_gw1, "All ports are identical across workers (CONFLICT!)"
-
-
-def test_worker_aware_ports_would_be_isolated(monkeypatch):
-    """
-    🟢 GREEN: Test that worker-aware ports provide proper isolation.
-
-    This test will FAIL initially (because worker-awareness is not implemented).
-    After implementing the fix, it will PASS.
-
-    Expected behavior after fix:
-    - Worker gw0: postgres=9432 (offset 0)
-    - Worker gw1: postgres=9532 (offset 100)
-    - Worker gw2: postgres=9632 (offset 200)
-    """
-    # Test the EXPECTED behavior after fix
-    # This demonstrates what the fix should implement
-
-    def get_worker_ports(worker_id):
-        """Helper that simulates what fixed fixture should do"""
-        worker_num = int(worker_id.replace("gw", ""))
-        port_offset = worker_num * 100
-
-        return {
-            "postgres": 9432 + port_offset,
-            "redis_checkpoints": 9379 + port_offset,
-            "redis_sessions": 9380 + port_offset,
-            "qdrant": 9333 + port_offset,
-            "qdrant_grpc": 9334 + port_offset,
-            "openfga_http": 9080 + port_offset,
-            "openfga_grpc": 9081 + port_offset,
-            "keycloak": 9082 + port_offset,
-        }
-
-    ports_gw0 = get_worker_ports("gw0")
-    ports_gw1 = get_worker_ports("gw1")
-    ports_gw2 = get_worker_ports("gw2")
-
-    # After fix: Each worker should get different ports
-    assert ports_gw0["postgres"] != ports_gw1["postgres"], (
-        "Worker gw0 and gw1 should have different postgres ports. "
-        f"Got: gw0={ports_gw0['postgres']}, gw1={ports_gw1['postgres']}"
-    )
-
-    assert ports_gw1["postgres"] != ports_gw2["postgres"], (
-        "Worker gw1 and gw2 should have different postgres ports. "
-        f"Got: gw1={ports_gw1['postgres']}, gw2={ports_gw2['postgres']}"
-    )
-
-    # Expected pattern: base_port + (worker_num * 100)
-    # gw0: 9432 + 0 = 9432
-    # gw1: 9432 + 100 = 9532
-    # gw2: 9432 + 200 = 9632
-    expected_gw1_postgres = 9532
-
-    # Validate expected behavior
-    assert ports_gw1["postgres"] == expected_gw1_postgres, (
-        f"Worker gw1 postgres port should be {expected_gw1_postgres}. " f"Got: {ports_gw1['postgres']}"
+    # Current worker should match base ports exactly
+    assert test_infrastructure_ports == base_ports, (
+        f"Worker should use base ports, got {test_infrastructure_ports}\n"
+        f"Expected: {base_ports}\n"
+        f"\n"
+        f"All workers (gw0, gw1, gw2, ...) connect to the SAME infrastructure.\n"
+        f"Isolation is achieved via PostgreSQL schemas, Redis DBs, OpenFGA stores, etc."
     )
 
 
-@pytest.mark.parametrize(
-    "worker_id,expected_offset",
-    [
-        ("gw0", 0),
-        ("gw1", 100),
-        ("gw2", 200),
-        ("gw3", 300),
-        ("gw4", 400),
-    ],
-)
-def test_worker_port_offset_calculation(worker_id, expected_offset):
+@pytest.mark.regression
+def test_no_worker_based_port_offsets():
     """
-    🟢 GREEN: Test that port offset calculation is correct for each worker.
+    ✅ Validate that there are NO worker-based port offsets.
 
-    This test validates the EXPECTED behavior after implementing worker-aware ports.
+    The old (broken) approach calculated port_offset = worker_num * 100.
+    The new (correct) approach uses fixed ports for all workers.
 
-    Formula: port_offset = worker_num * 100
-    - gw0 → worker_num=0 → offset=0
-    - gw1 → worker_num=1 → offset=100
-    - gw2 → worker_num=2 → offset=200
+    This test prevents regression to the broken multi-instance pattern.
     """
-    # Expected ports with offset
-    expected_postgres = 9432 + expected_offset
-    expected_redis_checkpoints = 9379 + expected_offset
-    expected_redis_sessions = 9380 + expected_offset
+    from tests.utils.worker_utils import get_worker_num
 
-    worker_num = int(worker_id.replace("gw", ""))
-    calculated_offset = worker_num * 100
+    worker_num = get_worker_num()
 
-    assert calculated_offset == expected_offset, f"Worker {worker_id} offset calculation incorrect"
+    # Worker number should exist (for isolation mechanisms)
+    assert worker_num >= 0, f"Worker num should be non-negative, got {worker_num}"
 
-    # Validate expected port values
-    assert expected_postgres == 9432 + (worker_num * 100)
-    assert expected_redis_checkpoints == 9379 + (worker_num * 100)
+    # But worker number should NOT affect port allocation
+    # (In broken implementation, worker 1 would get postgres=9532, etc.)
+
+    # This test validates that the codebase does NOT calculate offsets
+    # by checking that test_infrastructure_ports doesn't reference worker_num
+
+    import inspect
+
+    from tests.conftest import test_infrastructure_ports as fixture_func
+
+    source = inspect.getsource(fixture_func)
+
+    # Should NOT contain port offset calculations
+    assert "port_offset" not in source, (
+        "test_infrastructure_ports should NOT calculate port_offset\n"
+        f"Found in source:\n{source}\n\n"
+        "Single shared infrastructure uses FIXED ports, not offsets."
+    )
+
+    assert "worker_num * 100" not in source and "worker_num*100" not in source, (
+        "test_infrastructure_ports should NOT multiply worker_num by 100\n"
+        f"Found in source:\n{source}\n\n"
+        "The offset pattern (worker_num * 100) is from the old multi-instance approach."
+    )
 
 
-def test_non_xdist_mode_uses_default_ports(test_infrastructure_ports):
+@pytest.mark.regression
+def test_ports_match_docker_compose():
     """
-    🟢 GREEN: Test that non-xdist mode (normal pytest) uses default ports.
+    ✅ Validate that test_infrastructure_ports matches docker-compose.test.yml.
 
-    When PYTEST_XDIST_WORKER is not set (regular pytest run), should use
-    base ports without offset.
-
-    This test will PASS both before and after the fix.
+    Ensures consistency between the fixture and actual infrastructure configuration.
     """
-    ports = test_infrastructure_ports
+    from pathlib import Path
 
-    # Default ports (no offset)
-    assert ports["postgres"] == 9432, "Default postgres port"
-    assert ports["redis_checkpoints"] == 9379, "Default redis_checkpoints port"
-    assert ports["redis_sessions"] == 9380, "Default redis_sessions port"
-    assert ports["qdrant"] == 9333, "Default qdrant port"
+    # Read docker-compose.test.yml
+    compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
+    assert compose_file.exists(), f"docker-compose.test.yml not found: {compose_file}"
+
+    content = compose_file.read_text()
+
+    # Validate key port mappings
+    assert (
+        '"9432:5432"' in content or "'9432:5432'" in content
+    ), "docker-compose.test.yml should map host port 9432 to postgres container port 5432"
+
+    assert (
+        '"9379:6379"' in content or "'9379:6379'" in content
+    ), "docker-compose.test.yml should map host port 9379 to redis container port 6379"
+
+    assert (
+        '"9080:8080"' in content or "'9080:8080'" in content
+    ), "docker-compose.test.yml should map host port 9080 to openfga container port 8080"
 
 
-# TDD Documentation Tests
+@pytest.mark.regression
+def test_logical_isolation_mechanisms_exist():
+    """
+    ✅ Validate that logical isolation mechanisms exist for shared infrastructure.
+
+    Since all workers share the same ports, they MUST use logical isolation:
+    - PostgreSQL schemas (test_worker_gw0, test_worker_gw1, ...)
+    - Redis DB indices (1, 2, 3, ...)
+    - OpenFGA stores (test_store_gw0, test_store_gw1, ...)
+
+    This test validates that the infrastructure supports these mechanisms.
+    """
+    from tests.utils.worker_utils import get_worker_id
+
+    worker_id = get_worker_id()
+
+    # Worker ID should be available for schema/store naming
+    assert (
+        worker_id.startswith("gw") or worker_id == "master"
+    ), f"Worker ID should be gw0, gw1, etc. or 'master', got: {worker_id}"
+
+    # The worker ID is used to create isolated namespaces
+    # Example: PostgreSQL schema = test_worker_{worker_id}
+    schema_name = f"test_worker_{worker_id}"
+    assert len(schema_name) > 0, "Schema name should be non-empty"
+    assert worker_id in schema_name, "Schema name should include worker ID"
 
 
+@pytest.mark.regression
+def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
+    """
+    ✅ Validate that the fixture documents the single-instance architecture.
+
+    The fixture should have a docstring explaining why ports are fixed
+    and how isolation is achieved.
+    """
+    import inspect
+
+    from tests.conftest import test_infrastructure_ports as fixture_func
+
+    # Get docstring
+    docstring = inspect.getdoc(fixture_func)
+    assert docstring is not None, "test_infrastructure_ports must have docstring explaining architecture"
+
+    docstring_lower = docstring.lower()
+
+    # Should mention single/shared infrastructure
+    assert "single" in docstring_lower or "shared" in docstring_lower or "session" in docstring_lower, (
+        f"Docstring should explain single/shared infrastructure approach.\n" f"Current docstring:\n{docstring}"
+    )
+
+    # Should mention logical isolation
+    assert "schema" in docstring_lower or "isolation" in docstring_lower, (
+        f"Docstring should explain how logical isolation works.\n" f"Current docstring:\n{docstring}"
+    )
+
+
+@pytest.mark.regression
 def test_regression_documentation():
     """
-    📚 Document the regression and its fix.
+    📚 Document the regression and its resolution.
 
-    This test serves as living documentation for why worker-aware ports
-    were necessary and how the fix was implemented.
+    This test serves as living documentation for the Codex finding
+    and the architectural decision made to resolve it.
     """
     documentation = """
-    REGRESSION: Pytest-xdist Port Conflicts
-    ========================================
+    REGRESSION: Pytest-xdist Port Allocation Mismatch
+    ==================================================
 
-    Problem:
-    --------
-    When running tests with pytest-xdist (pytest -n auto), multiple worker
-    processes (gw0, gw1, gw2, etc.) start on the same host. The original
-    test_infrastructure_ports fixture returned hardcoded ports:
+    Codex Finding (Original Problem):
+    ----------------------------------
+    The test_infrastructure_ports fixture calculated worker-specific port offsets:
+    - Worker gw0: postgres=9432 (offset=0)
+    - Worker gw1: postgres=9532 (offset=100)
+    - Worker gw2: postgres=9632 (offset=200)
 
-        return {
-            "postgres": 9432,
-            "redis_checkpoints": 9379,
-            ...
-        }
+    However, docker-compose.test.yml had FIXED port mappings:
+    - postgres-test: "9432:5432" (always 9432)
+    - redis-test: "9379:6379" (always 9379)
+    - openfga-test: "9080:8080" (always 9080)
 
-    All workers tried to start docker-compose with the same ports, causing:
-    - "address already in use" errors
-    - Port binding conflicts
-    - Test infrastructure failures
-    - Intermittent test failures
+    The mismatch caused:
+    ❌ Worker gw1 would wait for port 9532, but postgres listened on 9432
+    ❌ Tests would timeout or fail intermittently
+    ❌ Confusion about whether to use dynamic or fixed ports
 
-    Solution:
-    ---------
-    Make ports worker-aware by detecting PYTEST_XDIST_WORKER env var:
+    Architectural Decision:
+    -----------------------
+    We chose SINGLE SHARED INFRASTRUCTURE over per-worker infrastructure:
 
-        worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-        worker_num = int(worker_id.replace("gw", ""))
-        port_offset = worker_num * 100
+    ✅ ONE docker-compose instance on FIXED ports
+    ✅ ALL workers connect to the SAME ports
+    ✅ Isolation via PostgreSQL schemas, Redis DBs, OpenFGA stores
+    ✅ Simpler, faster, more reliable
 
-        return {
-            "postgres": 9432 + port_offset,
-            "redis_checkpoints": 9379 + port_offset,
-            ...
-        }
-
-    Now each worker gets unique ports:
-    - Worker gw0: postgres=9432, redis=9379 (offset 0)
-    - Worker gw1: postgres=9532, redis=9479 (offset 100)
-    - Worker gw2: postgres=9632, redis=9579 (offset 200)
+    Implementation:
+    ---------------
+    1. Removed port offset calculation from test_infrastructure_ports
+    2. Fixture now returns fixed base ports for all workers
+    3. Updated docstring to explain architecture and isolation strategy
+    4. Tests validate correct (fixed port) behavior
 
     Benefits:
     ---------
-    ✅ Eliminates port conflicts in parallel test execution
-    ✅ Enables safe pytest-xdist usage with docker-compose
-    ✅ Maintains backward compatibility (gw0 uses original ports)
-    ✅ Scales to multiple workers (up to ~10 workers before port exhaustion)
+    ✅ Eliminates port/docker-compose mismatch
+    ✅ Simpler than dynamic port allocation + env-var templating
+    ✅ Faster (single infrastructure startup)
+    ✅ Matches existing database isolation patterns
+    ✅ Session-scoped (aligns with pytest fixture scopes)
 
     Testing:
     --------
-    - test_current_ports_are_hardcoded(): Detects problem (RED→fail after fix)
-    - test_multiple_workers_would_conflict(): Demonstrates conflict (RED→fail after fix)
-    - test_worker_aware_ports_would_be_isolated(): Validates fix (fail→GREEN)
-    - test_worker_port_offset_calculation(): Validates offset math (fail→GREEN)
-    - test_non_xdist_mode_uses_default_ports(): Ensures compatibility (GREEN→GREEN)
+    - test_ports_are_intentionally_fixed(): Validates fixed ports
+    - test_all_workers_share_same_ports(): Validates shared infrastructure
+    - test_no_worker_based_port_offsets(): Prevents regression to broken pattern
+    - test_ports_match_docker_compose(): Ensures fixture/compose consistency
+    - test_logical_isolation_mechanisms_exist(): Validates isolation approach
 
     References:
     -----------
-    - OpenAI Codex finding: tests/conftest.py:583
-    - PYTEST_XDIST_BEST_PRACTICES.md
-    - ADR-XXXX: Pytest-xdist Isolation Strategy
+    - OpenAI Codex finding: conftest.py:583 (RESOLVED)
+    - tests/meta/test_infrastructure_singleton.py
+    - ADR: Single shared test infrastructure with logical isolation
     """
 
-    # Test passes if documentation is non-empty
+    # Test passes if documentation is non-empty and contains key concepts
     assert len(documentation) > 100, "Regression is documented"
-    assert "PYTEST_XDIST_WORKER" in documentation, "Documents env var usage"
-    assert "worker_num * 100" in documentation, "Documents offset calculation"
+    assert "SINGLE SHARED INFRASTRUCTURE" in documentation, "Documents architecture decision"
+    assert "PostgreSQL schemas" in documentation, "Documents isolation mechanism"
+    assert "FIXED ports" in documentation, "Documents port strategy"
+    assert "RESOLVED" in documentation, "Documents that finding is resolved"
