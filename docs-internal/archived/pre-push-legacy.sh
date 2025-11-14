@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034  # Unused variables are fine in archived/obsolete files
 # ⚠️ OBSOLETE: This template is no longer used - kept for historical reference only
 #
 # The actual pre-push hook at .git/hooks/pre-push is now installed via pre-commit
