@@ -127,15 +127,22 @@ class TestEnforcementMechanisms:
         🟢 GREEN: Verify conftest.py uses worker-aware patterns.
 
         Critical fixtures should use PYTEST_XDIST_WORKER environment variable.
+
+        Current Architecture (Single Shared Infrastructure):
+        - FIXED ports (no per-worker offsets)
+        - Logical isolation via PostgreSQL schemas, Redis DB indices, OpenFGA stores
+        - Session-scoped infrastructure shared across all workers
         """
         root = Path(__file__).parent.parent.parent
         conftest = root / "tests" / "conftest.py"
 
         content = conftest.read_text()
 
-        # test_infrastructure_ports should use worker offset
+        # test_infrastructure_ports should use FIXED ports (current architecture)
         assert "PYTEST_XDIST_WORKER" in content, "conftest.py should use PYTEST_XDIST_WORKER"
-        assert "worker_num * 100" in content, "Port offset formula missing"
+        assert (
+            "Ports are FIXED" in content or "FIXED ports" in content
+        ), "test_infrastructure_ports should document FIXED ports architecture"
 
         # postgres_connection_clean should use worker schema
         assert "test_worker_" in content, "Worker-scoped schema missing"
