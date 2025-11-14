@@ -78,8 +78,7 @@ staging-qdrant-api-key
 staging-infisical-project-id
 staging-infisical-client-id
 staging-infisical-client-secret
-```
-
+```bash
 **Current Status**:
 - ✅ All ConfigMap keys exist
 - ✅ ExternalSecret syncing successfully (Status: Ready)
@@ -142,7 +141,7 @@ python scripts/validators/k8s_config_validator.py --overlay deployments/overlays
 ```
 
 **Output Example**:
-```
+```text
 === Kubernetes Configuration Validation ===
 
 Validating ConfigMap keys for deployments/overlays/staging-gke...
@@ -181,7 +180,7 @@ Validating ConfigMap keys for deployments/overlays/staging-gke...
 
 ### Local Test Results ✅
 
-```
+```text
 ✅ 38 tests passed
 ⚠️ 1 test skipped (production - no ExternalSecrets)
 🎯 100% pass rate for active tests
@@ -192,6 +191,8 @@ Validating ConfigMap keys for deployments/overlays/staging-gke...
 
 ```bash
 $ python scripts/validators/k8s_config_validator.py
+```
+```text
 === Kubernetes Configuration Validation ===
 ✓ All ConfigMap keys exist for deployments/overlays/staging-gke
 ✓ All ConfigMap keys exist for deployments/overlays/production-gke
@@ -202,14 +203,14 @@ $ python scripts/validators/k8s_config_validator.py
 ### Cluster State ✅
 
 **ExternalSecret Status**:
-```
+```text
 Status: Ready
 Message: secret synced
 Refresh Time: 2025-11-12T22:08:02Z
 ```
 
 **Secret Keys Created** (23 total):
-```
+```text
 anthropic-api-key ✓
 checkpoint-redis-url ✓
 gdpr-postgres-url ✓
@@ -236,7 +237,7 @@ redis-url ✓
 ```
 
 **Pod Health**:
-```
+```text
 Keycloak:          2/2 Running ✅
 MCP Server (old):  3/3 Running ✅ (serving traffic)
 MCP Server (new):  1/2 CrashLoopBackOff ⚠️ (expected - placeholder secrets)
