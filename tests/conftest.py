@@ -1830,9 +1830,12 @@ def pytest_sessionfinish(session, exitstatus):
         asyncio.set_event_loop(loop)
 
         try:
-            # Run the async cleanup in the new event loop
-            loop.run_until_complete(litellm.close_litellm_async_clients())
+            # Run the async cleanup in the new event loop with timeout
+            # Timeout prevents hanging if cleanup is stuck
+            loop.run_until_complete(asyncio.wait_for(litellm.close_litellm_async_clients(), timeout=30.0))
             logging.debug("Successfully closed all litellm async clients")
+        except asyncio.TimeoutError:
+            logging.warning("litellm async client cleanup timed out after 30s (non-critical)")
         finally:
             # Clean up the event loop
             loop.close()
