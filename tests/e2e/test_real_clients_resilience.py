@@ -18,13 +18,15 @@ class TestKeycloakAuthErrorHandling:
     """Test error handling in RealKeycloakAuth client"""
 
     def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
+        """
+        Reset auth middleware state before each test for pytest-xdist worker isolation.
 
+        Uses MCP_TEST_MODE + dependency_overrides pattern (not MCP_SKIP_AUTH).
+        See tests/api/conftest.py for the modern auth testing approach.
+        """
         import mcp_server_langgraph.auth.middleware as middleware_module
 
         middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
