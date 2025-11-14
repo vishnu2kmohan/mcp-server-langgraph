@@ -22,6 +22,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: final-test  # Use optimized test variant (880MB vs 13.3GB)
+    container_name: mcp-test-runner
     depends_on:
       postgres-test:
         condition: service_healthy
@@ -76,6 +77,7 @@ services:
   # PostgreSQL - Minimal configuration for tests
   postgres-test:
     image: postgres:16-alpine
+    container_name: mcp-postgres-test
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test
@@ -96,6 +98,7 @@ services:
   # OpenFGA - In-memory authorization
   openfga-test:
     image: openfga/openfga:v1.10.2
+    container_name: mcp-openfga-test
     command: run --datastore-engine=memory --log-level=error
     environment:
       - OPENFGA_LOG_FORMAT=json
@@ -112,6 +115,7 @@ services:
   # Redis - Session storage for tests
   redis-test:
     image: redis:7-alpine
+    container_name: mcp-redis-test
     command: redis-server --save "" --appendonly no
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
