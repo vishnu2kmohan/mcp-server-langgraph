@@ -125,7 +125,7 @@ class TestPluginCLIModeGuards:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--collect-only", "tests/meta/"],
             capture_output=True,
-            timeout=10,
+            timeout=90,  # Increased from 10s - pytest collection can trigger litellm cleanup hooks
             cwd=Path(__file__).parent.parent.parent,
         )
 

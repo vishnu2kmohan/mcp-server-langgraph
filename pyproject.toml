@@ -385,7 +385,7 @@ python_functions = ["test_*"]
 # --dist loadscope: Better fixture reuse in pytest-xdist (10-20% speedup)
 # --timeout=60: Prevent tests from hanging indefinitely (async mock safety)
 # FAIL FAST: No auto-retries - flaky tests must be fixed at the root cause
-addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60"
+addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60 --benchmark-disable"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
@@ -472,6 +472,10 @@ omit = [
 ]
 
 [tool.coverage.report]
+# Codex Recommendation: Enforce minimum 80% coverage threshold
+# Prevents coverage regressions and ensures adequate test coverage
+# Current: 64% → Target: 80%+
+fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
