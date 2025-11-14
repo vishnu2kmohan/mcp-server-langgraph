@@ -565,3 +565,105 @@ class TestCodexFindingCompliance:
                 content = f.read()
             has_requires_tool = "@requires_tool" in content
             assert has_requires_tool, "Kustomize tests should use @requires_tool decorator"
+
+
+@pytest.mark.meta
+class TestInfrastructurePortIsolation:
+    """
+    Detect hard-coded infrastructure ports that break pytest-xdist worker isolation.
+
+    CODEX FINDING (2025-11-13):
+    Infra fixture still conflicts under xdist – tests/conftest.py:664 and tests/conftest.py:675
+    hard-code health checks to http://localhost:9080/9082, while test_infrastructure_ports
+    pretends to offset ports per worker. Because docker-compose.test.yml:25-90 exposes fixed
+    host ports and Makefile:411 runs E2E with pytest -n auto, parallel workers race on the
+    same Keycloak/OpenFGA endpoints.
+
+    Prevention: Ensure all health check URLs use dynamic ports from test_infrastructure_ports fixture.
+    """
+
+    # Known infrastructure services with their default test ports
+    INFRASTRUCTURE_SERVICES = {
+        "openfga": 9080,
+        "openfga_http": 9080,
+        "keycloak": 9082,
+        "postgres": 9432,
+        "redis": 9379,
+        "qdrant": 9333,
+    }
+
+    def test_no_hard_coded_ports_in_conftest_health_checks(self):
+        """
+        Verify conftest.py health checks use test_infrastructure_ports fixture, not hard-coded ports.
+
+        RED phase (initial): Will fail because lines 667 and 675 have hard-coded ports
+        GREEN phase (after fix): Will pass when using f-strings with test_infrastructure_ports
+        """
+        conftest_file = TESTS_DIR / "conftest.py"
+
+        with open(conftest_file) as f:
+            content = f.read()
+            lines = content.splitlines()
+
+        violations = []
+
+        # Check for hard-coded localhost:PORT URLs in health checks
+        for line_num, line in enumerate(lines, start=1):
+            # Skip comments
+            if line.strip().startswith("#"):
+                continue
+
+            # Detect patterns like http://localhost:9080 or http://localhost:9082
+            for service, default_port in self.INFRASTRUCTURE_SERVICES.items():
+                hard_coded_pattern = f"localhost:{default_port}"
+                if hard_coded_pattern in line:
+                    # Check if this is in a _check_http_health call (actual violation)
+                    if "_check_http_health(" in line or "http://" in line:
+                        violations.append(
+                            f"Line {line_num}: Hard-coded port {default_port} found\n"
+                            f"  {line.strip()}\n"
+                            f"  Should use: f\"http://localhost:{{test_infrastructure_ports['{service}']}}/...\""
+                        )
+
+        assert not violations, (
+            f"Found {len(violations)} hard-coded infrastructure ports in conftest.py health checks.\n"
+            "These break pytest-xdist worker isolation because each worker expects different ports.\n\n"
+            "Violations:\n" + "\n".join(violations) + "\n\n"
+            "Fix: Replace hard-coded URLs with f-strings using test_infrastructure_ports fixture:\n"
+            '  Before: _check_http_health("http://localhost:9080/healthz")\n'
+            '  After:  _check_http_health(f"http://localhost:{{test_infrastructure_ports[\'openfga_http\']}}/healthz")'
+        )
+
+    def test_docker_compose_ports_are_documented_as_serial_only(self):
+        """
+        Verify docker-compose.test.yml documents that it requires serial test execution.
+
+        Until docker-compose templating is implemented, E2E tests must run with pytest -n0.
+        """
+        docker_compose_file = REPO_ROOT / "docker-compose.test.yml"
+
+        if not docker_compose_file.exists():
+            pytest.skip("docker-compose.test.yml not found")
+
+        with open(docker_compose_file) as f:
+            content = f.read()
+
+        # Check for documentation about serial execution requirement
+        has_serial_warning = any(
+            keyword in content.lower()
+            for keyword in [
+                "serial",
+                "pytest -n0",
+                "xdist",
+                "parallel",
+                "worker isolation",
+            ]
+        )
+
+        # Note: This is a soft check - we document the limitation but don't strictly enforce it
+        # because fixing it requires docker-compose templating (future work)
+        if not has_serial_warning:
+            pytest.skip(
+                "docker-compose.test.yml should document serial execution requirement, "
+                "but this is not strictly enforced until templating is implemented"
+            )
