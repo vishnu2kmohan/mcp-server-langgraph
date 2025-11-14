@@ -1815,10 +1815,25 @@ def pytest_sessionfinish(session, exitstatus):
     - Create event loop and run litellm cleanup in it
     - Prevents RuntimeWarning by ensuring proper async cleanup before session ends
 
+    **Optimization:**
+    - Skip cleanup for informational commands (--help, --version, --markers, --fixtures)
+    - These commands don't create litellm clients, so cleanup is unnecessary and slow
+
     **References:**
     - tests/regression/test_litellm_cleanup_warnings.py
     - https://github.com/BerriAI/litellm/issues (async client cleanup)
     """
+    # Skip cleanup for informational pytest commands that don't run tests
+    # These commands don't create litellm clients, so cleanup is unnecessary
+    if hasattr(session.config.option, "help") and session.config.option.help:
+        return  # pytest --help
+    if hasattr(session.config.option, "version") and session.config.option.version:
+        return  # pytest --version
+    if hasattr(session.config.option, "markers") and session.config.option.markers:
+        return  # pytest --markers
+    if hasattr(session.config.option, "showfixtures") and session.config.option.showfixtures:
+        return  # pytest --fixtures
+
     try:
         # Import litellm and asyncio
         import asyncio

@@ -101,6 +101,12 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         from mcp_server_langgraph.observability.telemetry import metrics
 
         return metrics
+    elif name == "api":
+        # Allow access to api submodule for importlib.reload() scenarios
+        # Used in tests/regression/test_bearer_scheme_isolation.py
+        import mcp_server_langgraph.api as api_module
+
+        return api_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -353,6 +353,12 @@ class TestMarkerConsistency:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
+                # Build a map of nodes to their parents (single pass)
+                parent_map = {}
+                for parent in ast.walk(tree):
+                    for child in ast.iter_child_nodes(parent):
+                        parent_map[child] = parent
+
                 # Check test functions and classes for integration marker
                 for node in ast.walk(tree):
                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
@@ -361,13 +367,10 @@ class TestMarkerConsistency:
 
                         # Also check parent class if this is a method
                         if not has_integration_marker:
-                            # Find parent class in AST
-                            for parent in ast.walk(tree):
-                                if isinstance(parent, ast.ClassDef):
-                                    for child in parent.body:
-                                        if child == node:
-                                            has_integration_marker = self._has_marker(parent, "integration")
-                                            break
+                            # Look up parent from pre-built map (O(1) instead of O(n))
+                            parent = parent_map.get(node)
+                            if parent and isinstance(parent, ast.ClassDef):
+                                has_integration_marker = self._has_marker(parent, "integration")
 
                         if has_integration_marker:
                             # Check for hard skip markers
