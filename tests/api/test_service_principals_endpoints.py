@@ -156,6 +156,8 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     # get_current_user() checks os.getenv("MCP_SKIP_AUTH") at RUNTIME (every call)
     # We must set it to "false" explicitly to prevent conftest.py pollution
     # Just deleting isn't enough - need to explicitly set to "false"
+    os.environ["MCP_SKIP_AUTH"] = "false"
+
     # Create fresh FastAPI app
     app = FastAPI()
 
@@ -210,6 +212,8 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app (same fix as sp_test_client)
     # Must set explicitly to "false" to prevent conftest.py pollution
+    os.environ["MCP_SKIP_AUTH"] = "false"
+
     # Create fresh FastAPI app
     app = FastAPI()
 
