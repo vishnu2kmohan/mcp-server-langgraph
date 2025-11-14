@@ -624,6 +624,94 @@ def test_infrastructure_ports():
     }
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Environment Isolation Fixtures
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@pytest.fixture
+def disable_auth_skip(monkeypatch):
+    """
+    Disable MCP_SKIP_AUTH for tests requiring real authentication.
+
+    **Purpose**:
+    Many tests need `MCP_SKIP_AUTH=false` to test actual auth behavior.
+    This fixture provides that setting with automatic cleanup via monkeypatch.
+
+    **Usage**:
+    ```python
+    def test_auth_required(disable_auth_skip):
+        # MCP_SKIP_AUTH is now "false"
+        # Test actual authentication...
+        # Cleanup happens automatically
+    ```
+
+    **Why This Exists**:
+    Replaces manual setup/teardown patterns that cause env pollution in pytest-xdist:
+    ```python
+    # OLD (manual cleanup, pollution risk):
+    def setup_method(self):
+        os.environ["MCP_SKIP_AUTH"] = "false"
+    def teardown_method(self):
+        del os.environ["MCP_SKIP_AUTH"]
+
+    # NEW (automatic cleanup, xdist-safe):
+    def test_something(self, disable_auth_skip):
+        # MCP_SKIP_AUTH already set, auto-cleanup
+    ```
+
+    **References**:
+    - OpenAI Codex Finding: 15+ test files with direct os.environ mutations (RESOLVED)
+    - tests/meta/test_environment_isolation_enforcement.py (validates this pattern)
+    - tests/PYTEST_XDIST_PREVENTION.md (documents xdist isolation)
+    """
+    monkeypatch.setenv("MCP_SKIP_AUTH", "false")
+
+
+@pytest.fixture
+def isolated_environment(monkeypatch):
+    """
+    Provide isolated environment for pollution-sensitive tests.
+
+    **Purpose**:
+    Some tests are sensitive to environment variable pollution from other tests
+    running in the same pytest-xdist worker. This fixture provides a clean
+    monkeypatch instance for the test to use.
+
+    **Usage**:
+    ```python
+    def test_env_sensitive(isolated_environment):
+        isolated_environment.setenv("SOME_VAR", "value")
+        # Test code...
+        # Cleanup happens automatically
+    ```
+
+    **Class-Level Usage (Autouse)**:
+    ```python
+    @pytest.fixture(autouse=True)
+    def _isolated_env(self, isolated_environment):
+        # All tests in this class get isolated environment
+        return isolated_environment
+
+    class TestEnvSensitive:
+        def test_one(self, isolated_environment):
+            isolated_environment.setenv("VAR", "val1")
+
+        def test_two(self, isolated_environment):
+            isolated_environment.setenv("VAR", "val2")
+            # No pollution from test_one
+    ```
+
+    **Returns**:
+    monkeypatch instance for test to use
+
+    **References**:
+    - OpenAI Codex Finding: Environment pollution in xdist workers (RESOLVED)
+    - tests/meta/test_environment_isolation_enforcement.py
+    """
+    return monkeypatch
+
+
 @pytest.fixture(scope="session")
 def test_infrastructure(docker_services_available, docker_compose_file, test_infrastructure_ports):
     """

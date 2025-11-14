@@ -156,6 +156,9 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     # get_current_user() checks os.getenv("MCP_SKIP_AUTH") at RUNTIME (every call)
     # We must set it to "false" explicitly to prevent conftest.py pollution
     # Just deleting isn't enough - need to explicitly set to "false"
+    #
+    # Save original value for cleanup (prevents env pollution in xdist workers)
+    original_skip_auth = os.environ.get("MCP_SKIP_AUTH")
     os.environ["MCP_SKIP_AUTH"] = "false"
 
     # Create fresh FastAPI app
@@ -189,6 +192,14 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
 
     # Cleanup
     app.dependency_overrides.clear()
+
+    # CRITICAL: Restore original MCP_SKIP_AUTH value to prevent worker pollution
+    # (OpenAI Codex finding: missing environment cleanup causes xdist pollution)
+    if original_skip_auth is not None:
+        os.environ["MCP_SKIP_AUTH"] = original_skip_auth
+    else:
+        os.environ.pop("MCP_SKIP_AUTH", None)
+
     gc.collect()
 
 
@@ -212,6 +223,9 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app (same fix as sp_test_client)
     # Must set explicitly to "false" to prevent conftest.py pollution
+    #
+    # Save original value for cleanup (prevents env pollution in xdist workers)
+    original_skip_auth = os.environ.get("MCP_SKIP_AUTH")
     os.environ["MCP_SKIP_AUTH"] = "false"
 
     # Create fresh FastAPI app
@@ -243,6 +257,14 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
 
     # Cleanup
     app.dependency_overrides.clear()
+
+    # CRITICAL: Restore original MCP_SKIP_AUTH value to prevent worker pollution
+    # (OpenAI Codex finding: missing environment cleanup causes xdist pollution)
+    if original_skip_auth is not None:
+        os.environ["MCP_SKIP_AUTH"] = original_skip_auth
+    else:
+        os.environ.pop("MCP_SKIP_AUTH", None)
+
     gc.collect()
 
 
