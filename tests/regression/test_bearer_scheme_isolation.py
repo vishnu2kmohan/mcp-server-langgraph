@@ -321,12 +321,12 @@ class TestCodexReloadScenario:
         from unittest.mock import AsyncMock
 
         # Step 1: Reload middleware (simulates the Codex scenario)
-        import mcp_server_langgraph.auth.middleware
+        from mcp_server_langgraph.auth import middleware as auth_middleware
 
-        old_bearer_scheme = mcp_server_langgraph.auth.middleware.bearer_scheme
-        old_get_current_user = mcp_server_langgraph.auth.middleware.get_current_user
+        old_bearer_scheme = auth_middleware.bearer_scheme
+        old_get_current_user = auth_middleware.get_current_user
 
-        importlib.reload(mcp_server_langgraph.auth.middleware)
+        importlib.reload(auth_middleware)
 
         # Step 2: Reload service_principals module so router picks up new middleware references
         import mcp_server_langgraph.api.service_principals

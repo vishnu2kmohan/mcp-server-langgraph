@@ -36,12 +36,20 @@ class TestDockerTestImageAssets:
 
     @pytest.fixture(scope="function")
     def dockerfile_path(self, project_root):
-        """Get Dockerfile path."""
+        """
+        Get Dockerfile path.
+
+        Skips if running inside Docker (where docker/ directory isn't available).
+        """
         dockerfile = project_root / "docker" / "Dockerfile"
-        assert dockerfile.exists(), f"Dockerfile not found at {dockerfile}"
+        if not dockerfile.exists():
+            pytest.skip(f"Dockerfile not found at {dockerfile} - likely running inside Docker container")
         return dockerfile
 
     @pytest.mark.integration
+    @pytest.mark.skipif(
+        os.getenv("TESTING") == "true", reason="Skipped inside Docker - Dockerfile not available in test image"
+    )
     def test_dockerfile_copies_deployments_directory(self, dockerfile_path):
         """
         Test that Dockerfile final-test stage copies deployments/ directory.
@@ -87,6 +95,9 @@ class TestDockerTestImageAssets:
         )
 
     @pytest.mark.integration
+    @pytest.mark.skipif(
+        os.getenv("TESTING") == "true", reason="Skipped inside Docker - Dockerfile not available in test image"
+    )
     def test_dockerfile_copies_scripts_directory(self, dockerfile_path):
         """
         Test that Dockerfile final-test stage copies scripts/ directory.
@@ -160,6 +171,7 @@ class TestDockerTestImageAssets:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
+    @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     def test_docker_test_image_contains_deployments_at_runtime(self, project_root):
         """
         Test that built Docker test image actually contains deployments/ at runtime.
@@ -230,6 +242,7 @@ class TestDockerTestImageAssets:
     @pytest.mark.integration
     @pytest.mark.slow
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
+    @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     def test_docker_test_image_contains_scripts_at_runtime(self, project_root):
         """
         Test that built Docker test image actually contains scripts/ at runtime.
