@@ -102,6 +102,13 @@ help:
 	@echo "  make test-all-quality         All quality tests (property+contract+regression)"
 	@echo "  make benchmark                Performance benchmarks"
 	@echo ""
+	@echo "CI-Parity Quality Tests (with coverage, matches CI exactly):"
+	@echo "  make test-precommit-validation  Validate pre-commit hook configuration"
+	@echo "  make test-property-ci          Property tests + coverage (CI mode)"
+	@echo "  make test-contract-ci          Contract tests + coverage (CI mode)"
+	@echo "  make test-regression-ci        Regression tests + coverage (CI mode)"
+	@echo "  make test-all-quality-ci       All quality tests + coverage (CI mode)"
+	@echo ""
 	@echo "New Testing Features:"
 	@echo "  make test-infra-up            Start test infrastructure (docker-compose.test.yml)"
 	@echo "  make test-infra-down          Stop and clean test infrastructure"
@@ -383,6 +390,39 @@ test-mutation:
 
 test-all-quality: test-property test-contract test-regression
 	@echo "✓ All quality tests complete"
+
+# Pre-commit Hook Validation
+test-precommit-validation:
+	@echo "Validating pre-commit hook configuration..."
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/regression/test_precommit_hook_dependencies.py -v --tb=short
+	@echo "✓ Pre-commit validation complete"
+
+# CI-Mode Quality Tests (with coverage, matches CI exactly)
+test-property-ci:
+	@echo "Running property-based tests with coverage (CI mode)..."
+	HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -v --tb=short \
+		--cov=src/mcp_server_langgraph --cov-report=xml:coverage-property.xml --cov-report=term
+	@echo "✓ Property tests complete (coverage: coverage-property.xml)"
+
+test-contract-ci:
+	@echo "Running contract tests with coverage (CI mode)..."
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m contract -v --tb=short \
+		--cov=src/mcp_server_langgraph --cov-report=xml:coverage-contract.xml --cov-report=term
+	@echo "✓ Contract tests complete (coverage: coverage-contract.xml)"
+
+test-regression-ci:
+	@echo "Running regression tests with coverage (CI mode)..."
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m regression -v --tb=short \
+		--cov=src/mcp_server_langgraph --cov-report=xml:coverage-regression.xml --cov-report=term
+	@echo "✓ Regression tests complete (coverage: coverage-regression.xml)"
+
+test-all-quality-ci: test-property-ci test-contract-ci test-regression-ci test-precommit-validation
+	@echo "✓ All quality tests complete (CI mode with coverage)"
+	@echo ""
+	@echo "Coverage reports generated:"
+	@echo "  - coverage-property.xml"
+	@echo "  - coverage-contract.xml"
+	@echo "  - coverage-regression.xml"
 
 # New Testing Infrastructure Targets
 
