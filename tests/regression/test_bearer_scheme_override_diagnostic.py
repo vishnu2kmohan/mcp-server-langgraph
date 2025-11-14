@@ -83,7 +83,9 @@ class TestBearerSchemeOverrideDiagnostic:
         override_pos = max(override_pos_old, override_pos_new)  # Use whichever pattern is found
         router_pos = fixture_code.find("app.include_router(router)")
 
-        assert override_pos > 0, "bearer_scheme override not found in fixture (checked both [bearer_scheme] and [middleware.bearer_scheme] patterns)"
+        assert (
+            override_pos > 0
+        ), "bearer_scheme override not found in fixture (checked both [bearer_scheme] and [middleware.bearer_scheme] patterns)"
         assert router_pos > 0, "app.include_router() not found in fixture"
         assert override_pos < router_pos, "bearer_scheme override MUST come BEFORE app.include_router() - incorrect order!"
 
@@ -94,16 +96,34 @@ class TestBearerSchemeOverrideDiagnostic:
         This test creates a minimal FastAPI app with the same pattern as
         api_keys_test_client and verifies that it works correctly.
 
-        If this test fails, there's a problem with the FastAPI dependency override
-        mechanism itself (possibly due to FastAPI version incompatibility).
+        UPDATED (Revision 7 - 2025-11-14):
+        Now uses importlib.reload() pattern to ensure fresh module references.
+        This is required because previous tests may have cached stale router references.
         """
+        import importlib
         from datetime import datetime, timedelta, timezone
         from unittest.mock import AsyncMock, MagicMock
 
-        from mcp_server_langgraph.api.api_keys import router
+        from fastapi.security import HTTPAuthorizationCredentials
+
+        # REVISION 7 PATTERN: Re-import and reload middleware first
+        from mcp_server_langgraph.auth import middleware
         from mcp_server_langgraph.auth.api_keys import APIKeyManager
         from mcp_server_langgraph.auth.keycloak import KeycloakClient
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+
+        importlib.reload(middleware)
+
+        # Now import router module
+        from mcp_server_langgraph.api import api_keys
+
+        # Reload router to get fresh imports from reloaded middleware
+        importlib.reload(api_keys)
+
+        # Get router and dependencies from reloaded modules
+        router = api_keys.router
+        bearer_scheme = middleware.bearer_scheme
+        get_current_user = middleware.get_current_user
+
         from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
         # Create minimal FastAPI app
@@ -139,14 +159,18 @@ class TestBearerSchemeOverrideDiagnostic:
         def mock_get_keycloak_client_sync():
             return mock_keycloak_client
 
-        # CRITICAL: Override bearer_scheme BEFORE other overrides
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
+        app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+            scheme="Bearer", credentials="mock_token_for_testing"
+        )
+
+        # Include router AFTER bearer_scheme override
+        app.include_router(router)
+
+        # Override other dependencies
         app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
         app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
-
-        # Include router AFTER setting overrides
-        app.include_router(router)
 
         # Create test client
         client = TestClient(app)

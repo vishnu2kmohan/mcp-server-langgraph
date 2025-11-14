@@ -74,6 +74,8 @@ class TestBearerSchemeIsolation:
         import importlib
         from unittest.mock import AsyncMock
 
+        from fastapi.security import HTTPAuthorizationCredentials
+
         # REVISION 7 PATTERN: Re-import and reload middleware first
         from mcp_server_langgraph.auth import middleware
 
@@ -107,7 +109,10 @@ class TestBearerSchemeIsolation:
             return AsyncMock()
 
         # ✅ CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # Return HTTPAuthorizationCredentials to match production pattern
+        app.dependency_overrides[bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+            scheme="Bearer", credentials="mock_token_for_testing"
+        )
 
         # Include router AFTER bearer_scheme override
         app.include_router(router)
