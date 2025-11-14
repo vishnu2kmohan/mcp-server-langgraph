@@ -29,12 +29,12 @@ class TestDockerTestImageAssets:
         """Force GC to prevent mock accumulation in xdist workers."""
         gc.collect()
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def project_root(self):
         """Get project root directory."""
         return Path(__file__).parent.parent.parent
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")
     def dockerfile_path(self, project_root):
         """Get Dockerfile path."""
         dockerfile = project_root / "docker" / "Dockerfile"
