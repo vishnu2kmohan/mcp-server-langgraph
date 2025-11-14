@@ -392,7 +392,7 @@ def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:
     return {name: get_circuit_breaker_state(name) for name in _circuit_breakers}
 
 
-def reset_all_circuit_breaker() -> None:
+def reset_all_circuit_breakers() -> None:
     """
     Reset all circuit breakers (for testing).
 
