@@ -474,10 +474,10 @@ class TestFixtureDecorators:
         body_statements = []
         for stmt in func_node.body:
             # Skip docstrings (first Expr node with Constant)
+            # Note: Using ast.Constant (Python 3.8+) instead of deprecated ast.Str (removed in Python 3.14)
             if isinstance(stmt, ast.Expr):
                 if isinstance(stmt.value, ast.Constant) and isinstance(stmt.value.value, str):
                     continue
-                # Note: ast.Str deprecated in Python 3.8+, removed in 3.14, use ast.Constant instead
             body_statements.append(stmt)
 
         # Check if only statement is 'pass'

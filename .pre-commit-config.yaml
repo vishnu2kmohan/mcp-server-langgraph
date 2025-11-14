@@ -327,26 +327,6 @@ repos:
           Run: python3 scripts/validators/image_validator.py --docs-dir docs
           Tests: tests/unit/documentation/test_image_validator.py (10 tests ✅)
 
-      - id: validate-code-block-languages
-        name: Validate Code Block Language Tags
-        entry: uv run python scripts/validators/codeblock_validator.py
-        language: python
-        additional_dependencies: []
-        files: ^docs/.*\.mdx$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive code block validation, moved to pre-push
-        description: |
-          Validates code blocks have language identifiers (TDD):
-          - All fenced code blocks have language tags
-          - Inline code ignored
-          - Code blocks in MDX components validated
-
-          Ensures proper syntax highlighting and accessibility.
-          Required format: ```python (not just ```)
-          Run: python3 scripts/validators/codeblock_validator.py --docs-dir docs
-          Tests: tests/unit/documentation/test_codeblock_validator.py (11 tests ✅)
-
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
         entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
@@ -637,22 +617,6 @@ repos:
           - Run #19310965220: GKE Autopilot validation failure
           - Run #19310965206: Deployment validation failure
           - Run #19310965249: Deploy to GKE Staging failure
-
-      - id: validate-pytest-markers
-        name: Validate Pytest Markers Registration
-        entry: uv run python scripts/validate_pytest_markers.py
-        language: system
-        files: ^tests/.*\.py$
-        pass_filenames: false
-        description: |
-          Validates that all @pytest.mark.* decorators used in tests are registered
-          in pyproject.toml to prevent test collection failures.
-
-          Regression prevention for:
-          - Run #19310965242: E2E Tests failure (missing 'staging' marker)
-
-          Prevents errors like:
-          "PytestUnknownMarkWarning: Unknown pytest.mark.X is not registered"
 
       - id: validate-dependency-injection
         name: Validate Dependency Injection Configuration

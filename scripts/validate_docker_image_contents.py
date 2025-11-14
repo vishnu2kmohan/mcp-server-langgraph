@@ -5,11 +5,11 @@ Pre-commit hook: validate-docker-image-contents
 Validates Docker image contents in Dockerfile (final-test stage).
 
 This script ensures:
-1. Required directories are copied (src/, tests/, pyproject.toml)
-2. Unnecessary directories are NOT copied (scripts/, deployments/)
-3. Design correctness: integration tests in Docker, meta-tests on host
+1. Required directories are copied (src/, tests/, pyproject.toml, deployments/, scripts/)
+2. All test dependencies are available in Docker image
 
-Prevents regression of Codex Findings #4 & #5:
+Prevents regression of Codex Findings:
+- Keycloak health check using curl (not available in image)
 - ModuleNotFoundError for 'scripts' module
 - FileNotFoundError for /app/deployments
 
@@ -19,7 +19,7 @@ Exit codes:
 
 References:
     - ADR-0053: Codex Integration Test Findings
-    - tests/meta/test_precommit_docker_image_validation.py
+    - tests/integration/test_docker_image_assets.py
 """
 
 import re
@@ -71,6 +71,8 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     - src/ directory (application source code)
     - tests/ directory (test suite)
     - pyproject.toml (Python project configuration)
+    - deployments/ directory (Kubernetes manifests - needed by test_pod_deployment_regression.py)
+    - scripts/ directory (validation scripts - needed by test_mdx_validation.py, test_codeblock_autofixer.py)
 
     Returns:
         Error message if validation fails, None if passes
@@ -79,6 +81,8 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
         "src/": False,
         "tests/": False,
         "pyproject.toml": False,
+        "deployments/": False,
+        "scripts/": False,
     }
 
     for cmd in copy_commands:
@@ -94,33 +98,9 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     return None  # Success
 
 
-def validate_excluded_directories(copy_commands: List[str]) -> Optional[str]:
-    """
-    Validate excluded directories are NOT copied.
-
-    Excluded (meta-tests run on host, not in Docker):
-    - scripts/ directory (meta-test validation scripts)
-    - deployments/ directory (Kubernetes manifests, Helm charts)
-
-    Returns:
-        Warning message if validation fails, None if passes
-    """
-    excluded_items = {
-        "scripts/": "scripts/ should NOT be in Docker image - meta-tests run on host",
-        "deployments/": "deployments/ should NOT be in Docker image - deployment tests run on host",
-    }
-
-    warnings = []
-
-    for cmd in copy_commands:
-        for item, message in excluded_items.items():
-            if item in cmd:
-                warnings.append(f"WARNING: {message}. Found: COPY {cmd}")
-
-    if warnings:
-        return "\n".join(warnings)
-
-    return None  # Success
+# REMOVED: validate_excluded_directories - scripts/ and deployments/ ARE required
+# The previous assumption that "meta-tests run on host" was incorrect.
+# Integration tests in Docker DO need access to scripts/ and deployments/ directories.
 
 
 def validate_docker_image_contents(dockerfile_path: str) -> int:
@@ -156,7 +136,7 @@ def validate_docker_image_contents(dockerfile_path: str) -> int:
         print("WARNING: No COPY commands found in final-test stage", file=sys.stdout)
         # This is a warning, not an error - might be intentional
 
-    # Validation 1: Required directories
+    # Validation: Required directories (including deployments/ and scripts/)
     error = validate_required_directories(copy_commands)
     if error:
         print(f"ERROR: {error}", file=sys.stderr)
@@ -164,20 +144,18 @@ def validate_docker_image_contents(dockerfile_path: str) -> int:
         print("  - src/ (application source code)", file=sys.stderr)
         print("  - tests/ (test suite)", file=sys.stderr)
         print("  - pyproject.toml (project configuration)", file=sys.stderr)
+        print("  - deployments/ (Kubernetes manifests - needed by test_pod_deployment_regression.py)", file=sys.stderr)
+        print(
+            "  - scripts/ (validation scripts - needed by test_mdx_validation.py, test_codeblock_autofixer.py)",
+            file=sys.stderr,
+        )
+        print("\nCodex Finding Resolution:", file=sys.stderr)
+        print("  Previous assumption that scripts/ and deployments/ should be excluded was incorrect.", file=sys.stderr)
+        print("  Integration tests running in Docker DO need access to these directories.", file=sys.stderr)
         return 1
 
-    # Validation 2: Excluded directories (warning only)
-    warning = validate_excluded_directories(copy_commands)
-    if warning:
-        print(warning, file=sys.stderr)
-        print("\nDesign rationale (ADR-0053):", file=sys.stderr)
-        print("  - Integration tests run IN Docker: need src/, tests/, pyproject.toml", file=sys.stderr)
-        print("  - Meta-tests run ON host: need full repo (scripts/, deployments/)", file=sys.stderr)
-        print("  - Separation prevents Docker image bloat", file=sys.stderr)
-        return 1  # Treat as error to prevent incorrect design
-
     # All validations passed
-    print("✅ Docker image contents validation passed", file=sys.stdout)
+    print("✅ Docker image contents validation passed (src/, tests/, pyproject.toml, deployments/, scripts/)", file=sys.stdout)
     return 0
 
 

@@ -157,6 +157,61 @@ class TestDockerComposeHealthChecksIntegration:
         yield
         # Cleanup happens after test
 
+    def test_keycloak_health_check_no_curl_dependency(self, docker_available, docker_compose_available):
+        """
+        Test that Keycloak health check does not depend on curl/wget.
+
+        RED phase: Will fail if health check uses 'curl' (not available in Keycloak 26.4.2)
+        GREEN phase: Will pass after switching to bash /dev/tcp check
+
+        Codex Finding: docker-compose.test.yml:143 - Keycloak health check uses curl
+        Issue: exec: "curl": executable file not found in $PATH
+        """
+        compose_file = PROJECT_ROOT / "docker" / "docker-compose.test.yml"
+
+        if not compose_file.exists():
+            pytest.skip(f"Compose file not found: {compose_file}")
+
+        # Read compose file
+        with open(compose_file) as f:
+            import yaml
+
+            config = yaml.safe_load(f)
+
+        keycloak_service = config.get("services", {}).get("keycloak-test")
+        if not keycloak_service:
+            pytest.skip("Keycloak service (keycloak-test) not found in docker-compose.test.yml")
+
+        health_check = keycloak_service.get("healthcheck", {})
+        assert health_check, "Keycloak service must have healthcheck configuration"
+
+        health_check_cmd = health_check.get("test", [])
+        assert health_check_cmd, "Keycloak healthcheck must have test command"
+
+        # Join command parts for inspection
+        full_command = " ".join(health_check_cmd) if isinstance(health_check_cmd, list) else health_check_cmd
+
+        # CRITICAL: Keycloak 26.4.2 does NOT include curl or wget
+        forbidden_commands = ["curl", "wget"]
+        for cmd in forbidden_commands:
+            assert cmd not in full_command, (
+                f"RED: Keycloak health check uses '{cmd}' which is NOT available in the image.\n"
+                f"Health check command: {full_command}\n\n"
+                f"Keycloak 26.4.2 image does not include curl or wget.\n"
+                f"Use bash with /dev/tcp for connectivity checks instead.\n\n"
+                f"Example fix:\n"
+                f'  test: ["CMD-SHELL", "timeout 5 bash -c \'</dev/tcp/localhost/8080\' || exit 1"]'
+            )
+
+        # Should use built-in shell features
+        assert any(keyword in full_command.lower() for keyword in ["bash", "sh", "/dev/tcp", "timeout"]), (
+            f"Keycloak health check should use built-in shell features.\n"
+            f"Current command: {full_command}\n"
+            f"Recommended: Use bash with /dev/tcp or other built-in commands."
+        )
+
+        print(f"PASS: Keycloak health check correctly uses built-in commands: {full_command}")
+
     def test_qdrant_health_check_works(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test that Qdrant container health check works correctly.

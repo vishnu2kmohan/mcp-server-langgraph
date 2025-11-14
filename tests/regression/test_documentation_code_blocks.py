@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pytest
+import yaml
 
 
 def find_mdx_files() -> List[Path]:
@@ -260,9 +261,45 @@ def test_pre_commit_hook_config_has_codeblock_validation():
     assert pre_commit_config.exists(), "Pre-commit config not found"
 
     content = pre_commit_config.read_text()
-    assert "validate-codeblock-languages" in content, (
-        "Pre-commit hook 'validate-codeblock-languages' not found in config. "
+    assert "validate-code-block-languages" in content, (
+        "Pre-commit hook 'validate-code-block-languages' not found in config. "
         "This hook is required to catch untagged code blocks before CI."
+    )
+
+
+@pytest.mark.regression
+def test_no_duplicate_pre_commit_hook_ids():
+    """
+    Test: Pre-commit hook IDs must be unique.
+
+    Prevents duplicate hook IDs which can cause unexpected behavior where only
+    one hook runs instead of both. This is a regression prevention test to catch
+    configuration errors early.
+
+    Context: Previously had duplicate 'validate-code-block-languages' hooks at
+    lines 330 and 1271, causing only one to execute.
+    """
+    pre_commit_config = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
+    assert pre_commit_config.exists(), "Pre-commit config not found"
+
+    with open(pre_commit_config, "r") as f:
+        config = yaml.safe_load(f)
+
+    # Extract all hook IDs
+    hook_ids = []
+    for repo in config.get("repos", []):
+        for hook in repo.get("hooks", []):
+            hook_id = hook.get("id")
+            if hook_id:
+                hook_ids.append(hook_id)
+
+    # Check for duplicates
+    duplicates = [hook_id for hook_id in set(hook_ids) if hook_ids.count(hook_id) > 1]
+
+    assert not duplicates, (
+        f"Found duplicate hook IDs in .pre-commit-config.yaml: {duplicates}\n"
+        f"Each hook ID must be unique. Duplicate IDs cause only one hook to execute.\n"
+        f"Please consolidate or rename duplicate hooks."
     )
 
 

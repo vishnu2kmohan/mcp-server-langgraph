@@ -458,8 +458,8 @@ class TestMarkerConsistency:
                         if keyword.arg == "reason":
                             if isinstance(keyword.value, ast.Constant):
                                 return keyword.value.value
-                            elif isinstance(keyword.value, ast.Str):  # Python 3.7 compatibility
-                                return keyword.value.s
+                            # Note: ast.Str removed - deprecated since Python 3.8, removed in Python 3.14
+                            # All string constants are now ast.Constant nodes
 
         return ""
 
@@ -694,12 +694,12 @@ class TestCLIToolGuards:
                     first_arg = node.args[0]
                     if isinstance(first_arg, ast.List) and first_arg.elts:
                         # Check first element of command list
+                        # Note: Using ast.Constant (Python 3.8+) instead of deprecated ast.Str (removed in Python 3.14)
                         cmd_elem = first_arg.elts[0]
                         if isinstance(cmd_elem, ast.Constant):
                             cmd = cmd_elem.value
                             if cmd in cli_tools:
                                 return cmd
-                        # Note: ast.Str deprecated in Python 3.8+, removed in 3.14, use ast.Constant instead
 
         return ""
 
