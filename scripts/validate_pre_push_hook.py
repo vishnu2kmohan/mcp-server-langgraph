@@ -6,9 +6,9 @@ This script ensures that the pre-push hook:
 1. Exists and is executable
 2. Contains all required validation steps
 3. Matches expected configuration with 4 phases:
-   - Phase 1: Fast checks (lockfile, workflows)
-   - Phase 2: Type checking (MyPy - warning only)
-   - Phase 3: Test suite validation (unit, smoke, integration, property)
+   - Phase 1: Fast checks (lockfile, dependency validation, workflows)
+   - Phase 2: Type checking (MyPy - CRITICAL, blocks on errors)
+   - Phase 3: Test suite validation (unit, smoke, integration, API, MCP, property, xdist meta)
    - Phase 4: Pre-commit hooks (push stage - comprehensive validators)
 
 This prevents regressions where the pre-push hook might be accidentally
@@ -107,6 +107,7 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
         ("API tests", "pytest -n auto -m 'api", "-n auto"),
         ("MCP tests", "test_mcp_stdio_server.py", "-n auto"),
         ("Property tests", "pytest -m property", "-n auto"),
+        ("pytest-xdist enforcement (Meta)", "test_pytest_xdist_enforcement.py", "-n auto"),
     ]
 
     missing_n_auto = []
@@ -134,6 +135,7 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
         ("API tests", "pytest -n auto -m 'api", "OTEL_SDK_DISABLED=true"),
         ("MCP tests", "test_mcp_stdio_server.py", "OTEL_SDK_DISABLED=true"),
         ("Property tests", "pytest -m property", "OTEL_SDK_DISABLED=true"),
+        ("pytest-xdist enforcement (Meta)", "test_pytest_xdist_enforcement.py", "OTEL_SDK_DISABLED=true"),
     ]
 
     missing_otel = []
