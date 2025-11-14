@@ -28,9 +28,14 @@ class TestMCPSkipAuthFixtureEnforcement:
 
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution."""
-        import mcp_server_langgraph.auth.middleware as middleware_module
+        import sys
 
-        middleware_module._global_auth_middleware = None
+        # Only reset middleware if already loaded (don't pollute import cache)
+        if "mcp_server_langgraph.auth.middleware" in sys.modules:
+            import mcp_server_langgraph.auth.middleware as middleware_module
+
+            middleware_module._global_auth_middleware = None
+
         os.environ["MCP_SKIP_AUTH"] = "false"
 
     @pytest.fixture

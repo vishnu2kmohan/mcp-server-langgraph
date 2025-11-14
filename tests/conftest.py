@@ -281,23 +281,29 @@ def reset_dependency_singletons():
     """
     yield
 
+    import sys
+
     # Reset all dependency singletons to ensure clean state for next test
     try:
-        import mcp_server_langgraph.core.dependencies as deps
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.core.dependencies" in sys.modules:
+            import mcp_server_langgraph.core.dependencies as deps
 
-        deps._keycloak_client = None
-        deps._openfga_client = None
-        deps._api_key_manager = None
-        deps._service_principal_manager = None
+            deps._keycloak_client = None
+            deps._openfga_client = None
+            deps._api_key_manager = None
+            deps._service_principal_manager = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass
 
-    # Reset global auth middleware singleton
+    # Reset global auth middleware singleton (only if already loaded)
     try:
-        import mcp_server_langgraph.auth.middleware as middleware
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.auth.middleware" in sys.modules:
+            import mcp_server_langgraph.auth.middleware as middleware
 
-        middleware._global_auth_middleware = None
+            middleware._global_auth_middleware = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass

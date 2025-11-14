@@ -1062,6 +1062,31 @@ repos:
 
           Regression prevention for Codex finding: docker-compose.test.yml:227-232
 
+      # Keycloak Configuration Validation (TDD - ADR-0053)
+      - id: validate-keycloak-config
+        name: Validate Keycloak service configuration in docker-compose.test.yml
+        entry: uv run python scripts/validate_keycloak_config.py docker/docker-compose.test.yml
+        language: python
+        additional_dependencies: ['pyyaml>=6.0.0']
+        files: ^docker/docker-compose\.test\.yml$
+        pass_filenames: false
+        always_run: false
+        description: |
+          Validates Keycloak service configuration in docker-compose.test.yml (TDD).
+
+          Critical checks:
+          - keycloak-test service exists and is uncommented
+          - Health check configuration is present
+          - Required environment variables are configured (KEYCLOAK_ADMIN, KC_DB, KC_DB_URL, KC_HEALTH_ENABLED)
+          - start_period is adequate (60s minimum for Keycloak initialization)
+
+          Prevents regression of Codex Finding #2: Keycloak service unavailable
+          causing TestStandardUserJourney::test_01_login failures.
+
+          Trade-off: +60s startup time vs. comprehensive E2E auth testing coverage.
+
+          See: ADR-0053, tests/meta/test_precommit_keycloak_validation.py
+
       # Codex Finding #1 (P0): Helm lint validation
       - id: helm-lint
         name: Helm Lint Validation
