@@ -46,7 +46,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name_prefix  = "dev-mcp-server-langgraph"
+  name_prefix  = "dev-mcp-langgraph"
   cluster_name = "${local.name_prefix}-eks"
 
   common_tags = {
