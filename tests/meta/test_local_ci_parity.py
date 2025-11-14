@@ -20,25 +20,92 @@ from typing import List, Set
 import pytest
 import yaml
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Shared Fixtures (used by all test classes)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@pytest.fixture(scope="module")
+def shared_repo_root() -> Path:
+    """
+    Get repository root directory (shared across all tests in module).
+
+    This avoids redundant git commands by computing repo root once per module.
+    """
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return Path(result.stdout.strip())
+
+
+@pytest.fixture(scope="module")
+def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
+    """
+    Get path to pre-push hook (shared across all tests in module).
+
+    **Graceful Skip on Fresh Clones**:
+    If the hook doesn't exist (expected on fresh clones), this fixture skips
+    all tests with helpful installation guidance instead of failing them.
+
+    This provides a better developer experience:
+    - Fresh clone: Tests skip with clear instructions
+    - After 'make git-hooks': Tests run and validate hook configuration
+    - CI: Hooks are installed explicitly in workflow, tests always run
+
+    References:
+    - OpenAI Codex Finding: test_local_ci_parity.py:24 assumes hook exists (RESOLVED)
+    - tests/meta/test_hook_fixture_resilience.py (validates this behavior)
+    - CONTRIBUTING.md: Documents hook installation
+    """
+    hook_path = shared_repo_root / ".git" / "hooks" / "pre-push"
+
+    if not hook_path.exists():
+        pytest.skip(
+            "\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "Pre-push hook not installed (expected on fresh clones)\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "\n"
+            "These tests validate CI/local parity by checking that your\n"
+            "local pre-push hook matches CI configuration exactly.\n"
+            "\n"
+            "📋 To install hooks and enable these tests:\n"
+            "\n"
+            "  make git-hooks\n"
+            "\n"
+            "Or manually:\n"
+            "\n"
+            "  pre-commit install --hook-type pre-commit --hook-type pre-push\n"
+            "\n"
+            "📖 Documentation: CONTRIBUTING.md (line 30-32)\n"
+            "🔍 Validation: scripts/validate_pre_push_hook.py\n"
+            "\n"
+            "After installation, re-run tests to validate hook configuration.\n"
+        )
+
+    return hook_path
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Test Classes
+# ══════════════════════════════════════════════════════════════════════════════
+
 
 class TestPrePushHookConfiguration:
     """Validate pre-push hook is configured correctly."""
 
     @pytest.fixture
-    def repo_root(self) -> Path:
-        """Get repository root directory."""
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return Path(result.stdout.strip())
+    def repo_root(self, shared_repo_root: Path) -> Path:
+        """Get repository root directory (delegates to shared fixture)."""
+        return shared_repo_root
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     def test_pre_push_hook_exists(self, pre_push_hook_path: Path):
         """Test that pre-push hook file exists."""
@@ -438,9 +505,9 @@ class TestPytestXdistParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -587,9 +654,9 @@ class TestOtelSdkDisabledParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -710,9 +777,9 @@ class TestApiMcpTestSuiteParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -828,9 +895,9 @@ class TestMakefilePrePushParity:
             return f.read()
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -1077,9 +1144,9 @@ class TestMyPyBlockingParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -1433,9 +1500,9 @@ class TestPrePushDependencyValidation:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -1612,9 +1679,9 @@ class TestContractTestMarkerParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -2036,9 +2103,9 @@ class TestHypothesisProfileParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -2158,9 +2225,9 @@ class TestPrePushEnvironmentSanityChecks:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
