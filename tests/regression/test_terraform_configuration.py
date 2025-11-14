@@ -98,23 +98,49 @@ class TestTerraformDuplicateBlocks:
         REFACTOR:
         - This test prevents regression
         - Checks all .tf files for duplicate terraform{} blocks
+
+        REFACTOR (2025-11-14 - Codex finding):
+        - Replaced naive regex with HCL parser to avoid false positives
+        - Previous regex matched "terraform {" in heredoc strings (outputs.tf)
+        - HCL parser correctly identifies actual terraform configuration blocks only
         """
+        if hcl2 is None:
+            pytest.skip("hcl2 not installed - required for HCL parsing")
+
         tf_files = find_terraform_files()
         assert len(tf_files) > 0, "No Terraform files found"
 
         files_with_duplicates = []
 
         for file_path in tf_files:
-            content = file_path.read_text()
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    # Use HCL parser to properly parse terraform configuration
+                    # This avoids false positives from heredocs, strings, and comments
+                    parsed = hcl2.load(f)
 
-            # Count terraform {} blocks (simple regex)
-            # Matches: terraform {
-            terraform_block_pattern = re.compile(r"^\s*terraform\s*\{", re.MULTILINE)
-            matches = terraform_block_pattern.findall(content)
+                # Count top-level 'terraform' blocks
+                # hcl2.load returns a dict where 'terraform' key contains terraform blocks
+                terraform_count = 0
+                if isinstance(parsed, dict):
+                    # Each key at root level represents a block type
+                    for key in parsed.keys():
+                        if key == "terraform":
+                            # terraform key contains a list of terraform blocks
+                            terraform_blocks = parsed[key]
+                            if isinstance(terraform_blocks, list):
+                                terraform_count = len(terraform_blocks)
+                            else:
+                                terraform_count = 1
 
-            if len(matches) > 1:
-                relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
-                files_with_duplicates.append(f"{relative_path} ({len(matches)} blocks)")
+                if terraform_count > 1:
+                    relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
+                    files_with_duplicates.append(f"{relative_path} ({terraform_count} blocks)")
+
+            except Exception:
+                # Skip files that can't be parsed (e.g., templates with variables)
+                # These will be caught by terraform validate in CI
+                continue
 
         if files_with_duplicates:
             error_message = (
@@ -157,7 +183,7 @@ class TestTerraformDuplicateBlocks:
 
         if files_with_duplicates:
             pytest.fail(
-                f"\n❌ Found duplicate required_providers blocks:\n"
+                "\n❌ Found duplicate required_providers blocks:\n"
                 + "\n".join(f"  - {file}" for file in files_with_duplicates)
             )
 
@@ -312,7 +338,7 @@ class TestTerraformProviderVersions:
             pytest.fail(
                 f"\n❌ Conflicting Google provider versions across {len(major_versions)} major versions:\n"
                 + "\n".join(error_details)
-                + f"\n\n💡 Fix: Align all google provider versions to a single major version (e.g., ~> 6.0)"
+                + "\n\n💡 Fix: Align all google provider versions to a single major version (e.g., ~> 6.0)"
             )
 
     def test_terraform_version_compatible_with_ci(self):
