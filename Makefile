@@ -528,15 +528,18 @@ validate-pre-push:
 	@echo "▶ Lockfile Validation..."
 	@uv lock --check && echo "✓ Lockfile valid" || (echo "✗ Lockfile validation failed" && exit 1)
 	@echo ""
+	@echo "▶ Dependency Tree Validation..."
+	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
+	@echo ""
 	@echo "▶ Workflow Validation Tests..."
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 2: Type Checking (Warning Only)"
+	@echo "PHASE 2: Type Checking (Critical - matches CI)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ MyPy Type Checking (Warning Only)..."
-	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || echo "⚠ MyPy found issues (non-blocking)"
+	@echo "▶ MyPy Type Checking (Critical)..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
@@ -561,7 +564,7 @@ validate-pre-push:
 	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
 	@echo ""
 	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 4: Pre-commit Hooks (All Files - push stage)"
@@ -969,9 +972,9 @@ pre-commit-setup:
 	@echo "  • black (code formatting)"
 	@echo "  • isort (import sorting)"
 	@echo "  • flake8 (linting)"
-	@echo "  • mypy (type checking)"
 	@echo "  • bandit (security)"
 	@echo ""
+	@echo "Note: MyPy runs separately in pre-push hook (disabled in pre-commit due to 145+ existing errors)"
 	@echo "Run manually: pre-commit run --all-files"
 
 git-hooks: pre-commit-setup
