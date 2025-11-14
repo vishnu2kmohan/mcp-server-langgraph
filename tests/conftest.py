@@ -1787,3 +1787,63 @@ def reset_resilience_state(request):
 
     # Cleanup after test (helps with test isolation)
     _reset_circuit_breakers(reset_circuit_breaker)
+    _reset_bulkheads(reset_bulkhead)
+
+
+# ==============================================================================
+# LiteLLM Async Client Cleanup (OpenAI Codex Finding)
+# ==============================================================================
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Ensure litellm's async HTTP clients are properly closed at session end.
+
+    **OpenAI Codex Finding (2025-11-14):**
+    - RuntimeWarning: coroutine 'close_litellm_async_clients' was never awaited
+    - Source: litellm/llms/custom_httpx/async_client_cleanup.py:78
+    - Occurs during test teardown when event loop closes
+
+    **Root Cause:**
+    - litellm creates async HTTP clients for API calls (via httpx)
+    - These clients have async __aexit__ handlers that must be awaited
+    - pytest's synchronous teardown doesn't await litellm's async cleanup
+    - Result: RuntimeWarning about unawaited coroutine
+
+    **Solution:**
+    - Use pytest_sessionfinish hook (runs synchronously at session end)
+    - Create event loop and run litellm cleanup in it
+    - Prevents RuntimeWarning by ensuring proper async cleanup before session ends
+
+    **References:**
+    - tests/regression/test_litellm_cleanup_warnings.py
+    - https://github.com/BerriAI/litellm/issues (async client cleanup)
+    """
+    try:
+        # Import litellm and asyncio
+        import asyncio
+
+        import litellm
+
+        # Create new event loop for cleanup (session may have closed existing loops)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            # Run the async cleanup in the new event loop
+            loop.run_until_complete(litellm.close_litellm_async_clients())
+            logging.debug("Successfully closed all litellm async clients")
+        finally:
+            # Clean up the event loop
+            loop.close()
+
+    except ImportError:
+        # litellm not installed - nothing to cleanup
+        pass
+    except AttributeError:
+        # Older version of litellm without cleanup function
+        logging.debug("litellm async client cleanup not available (older version)")
+    except Exception as e:
+        # Log but don't fail - cleanup is best-effort
+        # Failing here would cause confusing test failures
+        logging.debug(f"litellm async client cleanup failed (non-critical): {e}")

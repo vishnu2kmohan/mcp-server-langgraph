@@ -631,7 +631,7 @@ class TestInfrastructurePortIsolation:
             "Violations:\n" + "\n".join(violations) + "\n\n"
             "Fix: Replace hard-coded URLs with f-strings using test_infrastructure_ports fixture:\n"
             '  Before: _check_http_health("http://localhost:9080/healthz")\n'
-            '  After:  _check_http_health(f"http://localhost:{{test_infrastructure_ports[\'openfga_http\']}}/healthz")'
+            "  After:  _check_http_health(f\"http://localhost:{{test_infrastructure_ports['openfga_http']}}/healthz\")"
         )
 
     def test_docker_compose_ports_are_documented_as_serial_only(self):

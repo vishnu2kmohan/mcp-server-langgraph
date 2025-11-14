@@ -218,7 +218,7 @@ class TestDependencyOverrideLeaks:
 
     @pytest.mark.xfail(
         strict=False,
-        reason="RED test - documents incorrect pattern in test_gdpr_endpoints.py:57 and test_gdpr.py. Will PASS after those files are fixed with bearer_scheme overrides."
+        reason="RED test - documents incorrect pattern in test_gdpr_endpoints.py:57 and test_gdpr.py. Will PASS after those files are fixed with bearer_scheme overrides.",
     )
     def test_bearer_scheme_override_is_required(self):
         """
