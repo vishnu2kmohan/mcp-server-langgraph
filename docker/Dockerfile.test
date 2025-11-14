@@ -35,6 +35,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy source code
 COPY src/ ./src/
 COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+COPY deployments/ ./deployments/
 
 # Install Python dependencies with uv (10-100x faster than pip)
 # Includes all test dependencies from lockfile

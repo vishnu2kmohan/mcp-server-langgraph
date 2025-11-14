@@ -462,6 +462,50 @@ def terraform_available():
 
 
 @pytest.fixture(scope="session")
+def project_root():
+    """
+    Find project root directory in any environment (local, Docker, CI).
+
+    Searches for project markers (.git, pyproject.toml) starting from the test
+    file location and walking up the directory tree. This ensures tests work
+    correctly regardless of:
+    - Working directory
+    - Docker vs local environment
+    - pytest vs direct execution
+
+    Returns:
+        Path: Absolute path to project root
+
+    Usage:
+        def test_something(project_root):
+            overlays_dir = project_root / "deployments" / "overlays"
+            assert overlays_dir.exists()
+
+    Raises:
+        RuntimeError: If project root cannot be found
+
+    References:
+        - tests/regression/test_pod_deployment_regression.py (uses this pattern)
+        - tests/test_mdx_validation.py (uses this pattern)
+        - tests/unit/documentation/ (uses this pattern)
+    """
+    from pathlib import Path
+
+    # Start from this file's location and walk up
+    current = Path(__file__).resolve().parent
+
+    # Markers that identify the project root
+    markers = [".git", "pyproject.toml", "setup.py"]
+
+    while current != current.parent:
+        if any((current / marker).exists() for marker in markers):
+            return current
+        current = current.parent
+
+    raise RuntimeError("Cannot find project root - no .git or pyproject.toml found")
+
+
+@pytest.fixture(scope="session")
 def docker_compose_available():
     """
     Check if docker compose CLI tool is available and functional.

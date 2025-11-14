@@ -8,11 +8,16 @@ Tests validate that:
 4. Template files are excluded
 """
 
+import sys
 from pathlib import Path
 
 import pytest
 
-from scripts.validators.codeblock_validator import CodeBlockError, CodeBlockValidator, MissingLanguageError
+# Add scripts directory to path - environment-agnostic
+_scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
+sys.path.insert(0, str(_scripts_dir))
+
+from validators.codeblock_validator import CodeBlockError, CodeBlockValidator, MissingLanguageError  # noqa: E402
 
 
 class TestCodeBlockValidator:

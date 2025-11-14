@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+# Add scripts directory to path - use absolute path resolution
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from fix_mdx_syntax import fix_code_block_closings
+from fix_mdx_syntax import fix_code_block_closings  # noqa: E402
 
 
 class TestCodeBlockClosingFixes:

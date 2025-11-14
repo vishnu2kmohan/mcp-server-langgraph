@@ -8,11 +8,16 @@ Tests validate that:
 4. Optional fields are validated when present
 """
 
+import sys
 from pathlib import Path
 
 import pytest
 
-from scripts.validators.frontmatter_validator import (
+# Add scripts directory to path - environment-agnostic
+_scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
+sys.path.insert(0, str(_scripts_dir))
+
+from validators.frontmatter_validator import (  # noqa: E402
     FrontmatterError,
     FrontmatterValidator,
     InvalidYAMLError,

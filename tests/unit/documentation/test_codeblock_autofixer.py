@@ -8,11 +8,16 @@ Tests validate that:
 4. Backup is created before modification
 """
 
+import sys
 from pathlib import Path
 
 import pytest
 
-from scripts.validators.codeblock_autofixer import CodeBlockAutoFixer, detect_language
+# Add scripts directory to path - environment-agnostic
+_scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
+sys.path.insert(0, str(_scripts_dir))
+
+from validators.codeblock_autofixer import CodeBlockAutoFixer, detect_language  # noqa: E402
 
 
 class TestLanguageDetection:
@@ -199,7 +204,7 @@ def hello():
 
         # Act
         fixer = CodeBlockAutoFixer(docs_dir, dry_run=False)
-        result = fixer.fix()
+        _ = fixer.fix()  # Return value not needed, only checking file contents
 
         # Assert
         fixed = page.read_text()

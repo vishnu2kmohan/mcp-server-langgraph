@@ -23,13 +23,41 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
-# Test configuration
-REPO_ROOT = Path(__file__).parent.parent.parent
+
+# Test configuration - Environment-agnostic path resolution
+def _find_project_root() -> Path:
+    """
+    Find project root by searching for markers (.git, pyproject.toml).
+
+    This works in any environment:
+    - Local development (from source directory)
+    - Docker containers (from /app)
+    - CI/CD environments
+    """
+    current = Path(__file__).resolve().parent
+    markers = [".git", "pyproject.toml", "setup.py"]
+
+    while current != current.parent:
+        if any((current / marker).exists() for marker in markers):
+            return current
+        current = current.parent
+
+    raise RuntimeError("Cannot find project root - no .git or pyproject.toml found")
+
+
+REPO_ROOT = _find_project_root()
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 
 
 def get_all_overlays() -> List[Path]:
-    """Get all kustomize overlay directories"""
+    """
+    Get all kustomize overlay directories.
+
+    Returns empty list if overlays directory doesn't exist (e.g., in minimal Docker builds).
+    This allows tests to be skipped gracefully instead of failing at collection time.
+    """
+    if not OVERLAYS_DIR.exists():
+        return []
     return [d for d in OVERLAYS_DIR.iterdir() if d.is_dir() and (d / "kustomization.yaml").exists()]
 
 
