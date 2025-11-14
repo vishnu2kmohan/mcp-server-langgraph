@@ -29,12 +29,15 @@ services:
         condition: service_healthy
       redis-test:
         condition: service_healthy
+      keycloak-test:
+        condition: service_healthy
     environment:
       # Test mode flag
       - TESTING=true
 
       # Service URLs (use service names from docker-compose)
       - OPENFGA_API_URL=http://openfga-test:8080
+      - KEYCLOAK_URL=http://keycloak-test:8080
       - POSTGRES_HOST=postgres-test
       - POSTGRES_PORT=5432
       - POSTGRES_DB=testdb
@@ -120,31 +123,31 @@ services:
       - test-network
     # No ports exposed (tests access via Docker network)
 
-  # Keycloak - Optional, for auth integration tests
-  # Commented out by default (slow to start)
-  # keycloak-test:
-  #   image: quay.io/keycloak/keycloak:26.4.2
-  #   container_name: mcp-keycloak-test
-  #   command: start-dev
-  #   environment:
-  #     - KEYCLOAK_ADMIN=admin
-  #     - KEYCLOAK_ADMIN_PASSWORD=admin
-  #     - KC_DB=postgres
-  #     - KC_DB_URL=jdbc:postgresql://postgres-test:5432/testdb
-  #     - KC_DB_USERNAME=postgres
-  #     - KC_DB_PASSWORD=test
-  #     - KC_HEALTH_ENABLED=true
-  #   depends_on:
-  #     postgres-test:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 20
-  #     start_period: 60s
-  #   networks:
-  #     - test-network
+  # Keycloak - Authentication service for E2E tests
+  # Note: Takes ~60s to start (trade-off for comprehensive auth testing)
+  keycloak-test:
+    image: quay.io/keycloak/keycloak:26.4.2
+    container_name: mcp-keycloak-test
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres-test:5432/testdb
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=test
+      - KC_HEALTH_ENABLED=true
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s  # Keycloak needs 60s to initialize
+    networks:
+      - test-network
 
 networks:
   test-network:

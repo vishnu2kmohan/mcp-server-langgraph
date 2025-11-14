@@ -44,7 +44,8 @@ class TestFixtureScopeValidation:
         is_session_scoped = False
 
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name == "integration_test_env":
+            # Check both regular and async function definitions
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "integration_test_env":
                 fixture_found = True
                 # Check decorators
                 for decorator in node.decorator_list:
@@ -89,7 +90,8 @@ class TestFixtureScopeValidation:
         fixture_scopes: Dict[str, str] = {}
 
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name in required_fixtures:
+            # Check both regular and async function definitions
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in required_fixtures:
                 # Check decorators for scope
                 for decorator in node.decorator_list:
                     if isinstance(decorator, ast.Call):
@@ -363,9 +365,39 @@ class TestDockerImageContents:
 
         for test_file in test_files:
             content = test_file.read_text()
+            tree = ast.parse(content)
 
-            # Meta-tests should NOT have @pytest.mark.integration
-            assert "@pytest.mark.integration" not in content, (
+            # Meta-tests should NOT have @pytest.mark.integration as actual decorators
+            # (ignore mentions in docstrings/comments)
+            has_integration_marker = False
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    for decorator in node.decorator_list:
+                        # Check for @pytest.mark.integration decorator
+                        if isinstance(decorator, ast.Attribute):
+                            if (
+                                isinstance(decorator.value, ast.Attribute)
+                                and isinstance(decorator.value.value, ast.Name)
+                                and decorator.value.value.id == "pytest"
+                                and decorator.value.attr == "mark"
+                                and decorator.attr == "integration"
+                            ):
+                                has_integration_marker = True
+                                break
+                        elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                            if (
+                                isinstance(decorator.func.value, ast.Attribute)
+                                and isinstance(decorator.func.value.value, ast.Name)
+                                and decorator.func.value.value.id == "pytest"
+                                and decorator.func.value.attr == "mark"
+                                and decorator.func.attr == "integration"
+                            ):
+                                has_integration_marker = True
+                                break
+                    if has_integration_marker:
+                        break
+
+            assert not has_integration_marker, (
                 f"{test_file.name} is a meta-test and should NOT have @pytest.mark.integration marker. "
                 "Meta-tests run on host with full repo context, not in Docker."
             )
