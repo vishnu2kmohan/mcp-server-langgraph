@@ -47,11 +47,20 @@ def test_app(mock_get_current_user, monkeypatch):
     - Overrides bearer_scheme to prevent singleton pollution
     - Clears dependency_overrides in teardown to prevent leaks
 
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 7 - MODULE RELOAD PATTERN):
+    - Use importlib.reload() to force router to re-import from reloaded middleware
+    - Python's import system caches modules - importing again returns cached version
+    - Router module already has stale references from previous tests
+    - Reloading forces fresh import chain: middleware → router → endpoint functions
+
     References:
     - tests/regression/test_pytest_xdist_environment_pollution.py
     - OpenAI Codex Finding: test_gdpr_endpoints.py:40-57
     - PYTEST_XDIST_BEST_PRACTICES.md
+    - tests/regression/test_bearer_scheme_isolation.py (Revision 7 pattern)
     """
+    import importlib
+
     # Set environment to development to avoid production guard
     # Use monkeypatch for automatic cleanup (prevents environment pollution)
     monkeypatch.setenv("ENVIRONMENT", "development")
@@ -59,17 +68,38 @@ def test_app(mock_get_current_user, monkeypatch):
 
     # Import after setting env vars
     from fastapi import FastAPI
+    from fastapi.security import HTTPAuthorizationCredentials
 
-    from mcp_server_langgraph.api.gdpr import router
-    from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+    # CRITICAL RE-IMPORT + RELOAD PATTERN (2025-11-14 - REVISION 7):
+    # Re-import middleware FIRST to get fresh module reference
+    from mcp_server_langgraph.auth import middleware
+
+    # RELOAD middleware to ensure we get current instances (not cached from previous tests)
+    importlib.reload(middleware)
+
+    # Now import router module (gets cached version)
+    from mcp_server_langgraph.api import gdpr
+
+    # RELOAD router to force it to re-import from the reloaded middleware
+    importlib.reload(gdpr)
+
+    # Get router and dependencies from reloaded module
+    router = gdpr.router
 
     app = FastAPI()
+
+    # CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
+    # This prevents bearer_scheme singleton pollution in pytest-xdist
+    # Use middleware.bearer_scheme (just re-imported) instead of top-level import
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+        scheme="Bearer", credentials="mock_token_for_testing"
+    )
+
     app.include_router(router)
 
-    # CRITICAL: Override bearer_scheme to prevent singleton pollution (per PYTEST_XDIST_BEST_PRACTICES.md)
-    app.dependency_overrides[bearer_scheme] = lambda: None
     # Override the dependency (async function for async dependency)
-    app.dependency_overrides[get_current_user] = mock_get_current_user
+    # Use middleware.get_current_user (just re-imported) for correct instance
+    app.dependency_overrides[middleware.get_current_user] = mock_get_current_user
 
     yield app
 
@@ -294,8 +324,9 @@ class TestGDPREndpoints:
     def test_get_consent_status_success(self, client, mock_auth_user):
         """Test GET /api/v1/users/me/consent."""
         # First set some consents
-        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "analytics", "granted": True}})
-        client.post("/api/v1/users/me/consent", json={"consent": {"consent_type": "marketing", "granted": False}})
+        # API expects ConsentRecord directly, not wrapped in {"consent": ...}
+        client.post("/api/v1/users/me/consent", json={"consent_type": "analytics", "granted": True})
+        client.post("/api/v1/users/me/consent", json={"consent_type": "marketing", "granted": False})
 
         response = client.get("/api/v1/users/me/consent")
 

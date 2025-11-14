@@ -66,11 +66,30 @@ class TestBearerSchemeIsolation:
 
         This is the FIX for the 401 errors. When testing API endpoints with
         mocked authentication, we must override BOTH get_current_user AND bearer_scheme.
+
+        UPDATED (Revision 7 - 2025-11-14):
+        Now uses importlib.reload() pattern to ensure fresh module references.
+        This is required because previous tests may have cached stale router references.
         """
+        import importlib
         from unittest.mock import AsyncMock
 
-        from mcp_server_langgraph.api.api_keys import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        # REVISION 7 PATTERN: Re-import and reload middleware first
+        from mcp_server_langgraph.auth import middleware
+
+        importlib.reload(middleware)
+
+        # Now import router module
+        from mcp_server_langgraph.api import api_keys
+
+        # Reload router to get fresh imports from reloaded middleware
+        importlib.reload(api_keys)
+
+        # Get router and dependencies from reloaded modules
+        router = api_keys.router
+        bearer_scheme = middleware.bearer_scheme
+        get_current_user = middleware.get_current_user
+
         from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
         app = FastAPI()
@@ -87,13 +106,17 @@ class TestBearerSchemeIsolation:
         def mock_get_keycloak_client_sync():
             return AsyncMock()
 
-        # ✅ CRITICAL: Override bearer_scheme to bypass singleton auth check
+        # ✅ CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
         app.dependency_overrides[bearer_scheme] = lambda: None
+
+        # Include router AFTER bearer_scheme override
+        app.include_router(router)
+
+        # Override other dependencies
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
         app.dependency_overrides[get_api_key_manager] = mock_get_api_key_manager_sync
         app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_client_sync
 
-        app.include_router(router)
         client = TestClient(app)
 
         try:
