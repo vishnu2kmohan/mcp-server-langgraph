@@ -2148,6 +2148,153 @@ class TestHypothesisProfileParity:
             )
 
 
+class TestPrePushEnvironmentSanityChecks:
+    """Validate that pre-push hook has environment sanity checks.
+
+    Codex recommendation: "Add a quick sanity check at the top of the pre-push
+    script to assert that uv and .venv exist, printing a friendly setup hint
+    instead of failing deep in the workflow."
+    """
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def pre_push_hook_path(self, repo_root: Path) -> Path:
+        """Get path to pre-push hook."""
+        return repo_root / ".git" / "hooks" / "pre-push"
+
+    @pytest.fixture
+    def pre_push_content(self, pre_push_hook_path: Path) -> str:
+        """Read pre-push hook content."""
+        with open(pre_push_hook_path, "r") as f:
+            return f.read()
+
+    def test_pre_push_checks_venv_exists(self, pre_push_content: str):
+        """Test that pre-push hook checks for .venv existence.
+
+        Should fail early with helpful message if .venv doesn't exist.
+        """
+        # Should check for .venv directory
+        assert ".venv" in pre_push_content, (
+            "Pre-push hook MUST check for .venv directory\n"
+            "\n"
+            "Codex recommendation: Add sanity check at top of script\n"
+            "\n"
+            "Without this check:\n"
+            "  - Hook fails deep in workflow with cryptic errors\n"
+            "  - Developers don't know what's wrong\n"
+            "  - Wasted time debugging\n"
+            "\n"
+            "With check:\n"
+            "  - Fails immediately with clear message\n"
+            "  - Tells developer to run 'make install-dev'\n"
+            "  - Saves time and frustration\n"
+        )
+
+        # Should have helpful error message
+        has_helpful_message = (
+            "install-dev" in pre_push_content
+            or "setup" in pre_push_content.lower()
+            or "virtual environment" in pre_push_content.lower()
+        )
+
+        assert has_helpful_message, (
+            "Pre-push hook should provide helpful setup instructions\n"
+            "\n"
+            "Example message:\n"
+            '  echo "Virtual environment not found at .venv"\n'
+            "  echo \"Run 'make install-dev' first\"\n"
+        )
+
+    def test_pre_push_checks_uv_exists(self, pre_push_content: str):
+        """Test that pre-push hook checks for uv command existence.
+
+        Should fail early if uv is not installed.
+        """
+        # Should check for uv command (either via 'command -v uv' or 'which uv')
+        has_uv_check = (
+            "command -v uv" in pre_push_content or "which uv" in pre_push_content or "uv --version" in pre_push_content
+        )
+
+        assert has_uv_check, (
+            "Pre-push hook MUST check for uv command\n"
+            "\n"
+            "Codex recommendation: Add sanity check for uv at top of script\n"
+            "\n"
+            "Without this check:\n"
+            "  - Hook fails when uv command not found\n"
+            "  - Error message is cryptic ('uv: command not found')\n"
+            "  - Developer doesn't know what to do\n"
+            "\n"
+            "With check:\n"
+            "  - Fails immediately with clear message\n"
+            "  - Tells developer how to install uv\n"
+            "  - Provides installation link\n"
+            "\n"
+            "Expected check:\n"
+            "  if ! command -v uv &> /dev/null; then\n"
+            "    echo 'uv command not found'\n"
+            "    echo 'Install: curl -LsSf https://astral.sh/uv/install.sh | sh'\n"
+            "    exit 1\n"
+            "  fi\n"
+        )
+
+        # Should have helpful error message about installation
+        has_install_help = (
+            "install" in pre_push_content.lower() and "uv" in pre_push_content or "astral.sh/uv" in pre_push_content
+        )
+
+        assert has_install_help, (
+            "Pre-push hook should provide uv installation instructions\n"
+            "\n"
+            "Should include:\n"
+            "  - Link to installation guide\n"
+            "  - Quick install command\n"
+        )
+
+    def test_pre_push_sanity_checks_run_early(self, pre_push_content: str):
+        """Test that sanity checks run before any heavy work.
+
+        Checks should be at the top of the script, not buried deep.
+        """
+        lines = pre_push_content.split("\n")
+
+        # Find where .venv check happens
+        venv_check_line = None
+        for i, line in enumerate(lines):
+            if ".venv" in line and "not found" in line.lower() or ("if" in line and ".venv" in line):
+                venv_check_line = i
+                break
+
+        # Find where first pytest command runs
+        first_pytest_line = None
+        for i, line in enumerate(lines):
+            if "pytest" in line and "uv run" in line and not line.strip().startswith("#"):
+                first_pytest_line = i
+                break
+
+        if venv_check_line is not None and first_pytest_line is not None:
+            assert venv_check_line < first_pytest_line, (
+                f"Environment sanity checks should run BEFORE tests\n"
+                f"\n"
+                f"Current state:\n"
+                f"  .venv check at line {venv_check_line}\n"
+                f"  First pytest at line {first_pytest_line}\n"
+                f"\n"
+                f"Sanity checks should be near the top (lines 20-40)\n"
+                f"This ensures fast failure with helpful message\n"
+            )
+
+
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
 
