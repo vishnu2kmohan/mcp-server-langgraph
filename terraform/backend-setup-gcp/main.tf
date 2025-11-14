@@ -51,9 +51,7 @@ resource "google_storage_bucket" "terraform_state" {
   storage_class = "STANDARD"
 
   # Uniform bucket-level access (recommended over ACLs)
-  uniform_bucket_level_access {
-    enabled = true
-  }
+  uniform_bucket_level_access = true
 
   # Versioning for state file history
   versioning {
