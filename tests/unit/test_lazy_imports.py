@@ -60,9 +60,18 @@ class TestLazyImports:
 
     def test_settings_import_is_lightweight(self):
         """Test that importing settings doesn't load heavy dependencies"""
-        # Clear cached imports
-        if "mcp_server_langgraph" in sys.modules:
-            del sys.modules["mcp_server_langgraph"]
+        # Clear cached imports (must clear both root and submodules)
+        modules_to_clear = [
+            "mcp_server_langgraph",
+            "mcp_server_langgraph.auth.middleware",
+            "mcp_server_langgraph.auth.openfga",
+            "mcp_server_langgraph.core.agent",
+            "mcp_server_langgraph.llm.factory",
+        ]
+
+        for mod in modules_to_clear:
+            if mod in sys.modules:
+                del sys.modules[mod]
 
         # Import settings - should be lightweight
         from mcp_server_langgraph import settings
