@@ -392,11 +392,25 @@ def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:
     return {name: get_circuit_breaker_state(name) for name in _circuit_breakers}
 
 
-def reset_all_circuit_breakers() -> None:
+def reset_all_circuit_breaker() -> None:
     """
     Reset all circuit breakers (for testing).
 
-    This clears the global circuit breaker registry.
+    Resets the state of all existing circuit breakers to CLOSED without
+    removing them from the registry. This preserves decorator closure integrity
+    by ensuring decorators continue to reference the same circuit breaker instances.
+
+    Important: This function does NOT clear the registry. If you need to clear
+    the registry completely (e.g., in teardown), call _circuit_breakers.clear()
+    directly, but be aware that decorator closures will hold stale references.
+
+    See: tests/resilience/test_circuit_breaker_decorator_isolation.py
+    See: adr/ADR-0054-circuit-breaker-decorator-closure-isolation.md
     """
-    _circuit_breakers.clear()
-    logger.info("All circuit breakers reset")
+    # Reset state of all existing circuit breakers instead of clearing registry
+    # This preserves decorator closure integrity
+    for name, breaker in list(_circuit_breakers.items()):
+        breaker.close()  # Reset to CLOSED state
+        logger.debug(f"Circuit breaker state reset: {name}")
+
+    logger.info(f"All circuit breakers reset ({len(_circuit_breakers)} total)")
