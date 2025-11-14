@@ -141,6 +141,12 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
     - Prevents 401 errors even if another test reloaded the module
     - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
 
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 7 - MODULE RELOAD PATTERN):
+    - Use importlib.reload() to force router to re-import from reloaded middleware
+    - Python's import system caches modules - importing again returns cached version
+    - Router module already has stale references from previous tests
+    - Reloading forces fresh import chain: middleware → router → endpoint functions
+
     ROOT CAUSE OF PREVIOUS FAILURES:
     FastAPI introspects function signatures for dependency injection. When using
     monkeypatch + reload, FastAPI sees the mock function signature with Request
@@ -149,19 +155,27 @@ def sp_test_client(mock_sp_manager, mock_current_user, mock_openfga_client, mock
 
     Solution: Use dependency_overrides which properly isolates dependencies.
     """
+    import importlib
     import os
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
-    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
-    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
-    # the current instances of bearer_scheme and get_current_user when it loads.
-    # If we import router first, it caches stale middleware references!
+    # CRITICAL RE-IMPORT + RELOAD PATTERN (2025-11-14 - REVISION 7):
+    # Re-import middleware FIRST to get fresh module reference
     from mcp_server_langgraph.auth import middleware
 
-    # Now import router and dependencies AFTER middleware is re-imported
-    from mcp_server_langgraph.api.service_principals import router
+    # RELOAD middleware to ensure we get current instances (not cached from previous tests)
+    importlib.reload(middleware)
+
+    # Now import router module (gets cached version)
+    from mcp_server_langgraph.api import service_principals
+
+    # RELOAD router to force it to re-import from the reloaded middleware
+    importlib.reload(service_principals)
+
+    # Get router and dependencies from reloaded module
+    router = service_principals.router
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app
@@ -231,20 +245,34 @@ def admin_test_client(mock_sp_manager, mock_admin_user, mock_openfga_client, moc
     - Ensures we always override the exact objects the router currently holds
     - Prevents 401 errors even if another test reloaded the module
     - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
+
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 7 - MODULE RELOAD PATTERN):
+    - Use importlib.reload() to force router to re-import from reloaded middleware
+    - Python's import system caches modules - importing again returns cached version
+    - Router module already has stale references from previous tests
+    - Reloading forces fresh import chain: middleware → router → endpoint functions
     """
+    import importlib
     import os
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
-    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
-    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
-    # the current instances of bearer_scheme and get_current_user when it loads.
-    # If we import router first, it caches stale middleware references!
+    # CRITICAL RE-IMPORT + RELOAD PATTERN (2025-11-14 - REVISION 7):
+    # Re-import middleware FIRST to get fresh module reference
     from mcp_server_langgraph.auth import middleware
 
-    # Now import router and dependencies AFTER middleware is re-imported
-    from mcp_server_langgraph.api.service_principals import router
+    # RELOAD middleware to ensure we get current instances (not cached from previous tests)
+    importlib.reload(middleware)
+
+    # Now import router module (gets cached version)
+    from mcp_server_langgraph.api import service_principals
+
+    # RELOAD router to force it to re-import from the reloaded middleware
+    importlib.reload(service_principals)
+
+    # Get router and dependencies from reloaded module
+    router = service_principals.router
     from mcp_server_langgraph.core.dependencies import get_keycloak_client, get_openfga_client, get_service_principal_manager
 
     # CRITICAL: Set MCP_SKIP_AUTH="false" BEFORE creating app (same fix as sp_test_client)

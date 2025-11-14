@@ -108,20 +108,34 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     - Ensures we always override the exact objects the router currently holds
     - Prevents 401 errors even if another test reloaded the module
     - See: OpenAI Codex findings 2025-11-14 (worker pollution analysis)
+
+    PYTEST-XDIST FIX (2025-11-14 - REVISION 7 - MODULE RELOAD PATTERN):
+    - Use importlib.reload() to force router to re-import from reloaded middleware
+    - Python's import system caches modules - importing again returns cached version
+    - Router module already has stale references from previous tests
+    - Reloading forces fresh import chain: middleware → router → endpoint functions
     """
     import gc
+    import importlib
 
     from fastapi import FastAPI
     from fastapi.security import HTTPAuthorizationCredentials
 
-    # CRITICAL RE-IMPORT PATTERN (OpenAI Codex 2025-11-14):
-    # Re-import middleware FIRST, BEFORE importing router, to ensure the router gets
-    # the current instances of bearer_scheme and get_current_user when it loads.
-    # If we import router first, it caches stale middleware references!
+    # CRITICAL RE-IMPORT + RELOAD PATTERN (2025-11-14 - REVISION 7):
+    # Re-import middleware FIRST to get fresh module reference
     from mcp_server_langgraph.auth import middleware
 
-    # Now import router and dependencies AFTER middleware is re-imported
-    from mcp_server_langgraph.api.api_keys import router
+    # RELOAD middleware to ensure we get current instances (not cached from previous tests)
+    importlib.reload(middleware)
+
+    # Now import router module (gets cached version)
+    from mcp_server_langgraph.api import api_keys
+
+    # RELOAD router to force it to re-import from the reloaded middleware
+    importlib.reload(api_keys)
+
+    # Get router and dependencies from reloaded module
+    router = api_keys.router
     from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
 
     # Create fresh FastAPI app
