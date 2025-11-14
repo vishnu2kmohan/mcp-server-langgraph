@@ -271,10 +271,13 @@ def reset_dependency_singletons():
     Reset all dependency singletons after each test for complete isolation.
 
     Tests that modify singletons (_keycloak_client, _openfga_client, _api_key_manager,
-    _service_principal_manager) can cause state pollution affecting subsequent tests.
+    _service_principal_manager, _global_auth_middleware) can cause state pollution
+    affecting subsequent tests.
 
     This fixture ensures clean singleton state by resetting all to None after each test.
     The next test that needs these dependencies will create fresh instances.
+
+    See: tests/regression/test_auth_middleware_isolation.py
     """
     yield
 
@@ -286,6 +289,15 @@ def reset_dependency_singletons():
         deps._openfga_client = None
         deps._api_key_manager = None
         deps._service_principal_manager = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    # Reset global auth middleware singleton
+    try:
+        import mcp_server_langgraph.auth.middleware as middleware
+
+        middleware._global_auth_middleware = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass

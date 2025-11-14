@@ -44,18 +44,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: Setup Python and Dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          extras: 'dev'
+          cache-key-prefix: 'smoke-test'
 
       - name: Run smoke tests
         run: |
+          source .venv/bin/activate
           python tests/smoke/test_ci_startup_smoke.py
 
       - name: Smoke tests passed
@@ -71,18 +69,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and Dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          extras: 'dev'
+          cache-key-prefix: 'startup-validation'
 
       - name: Run startup validation tests
         run: |
+          source .venv/bin/activate
           pytest tests/integration/test_app_startup_validation.py -v -m integration
 
       - name: Startup validation passed

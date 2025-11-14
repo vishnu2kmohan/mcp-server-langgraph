@@ -105,6 +105,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install yamllint
+        # NOTE: Using pip for single-tool install (yamllint only). For full project deps, use uv sync --frozen
         run: pip install yamllint
 
       - name: Create yamllint config
