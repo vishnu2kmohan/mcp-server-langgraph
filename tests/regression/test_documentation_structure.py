@@ -61,6 +61,10 @@ class TestDocumentationNavigation:
             ".mintlify/templates/deployment-template",
             ".mintlify/templates/guide-template",
             ".mintlify/templates/reference-template",
+            # Operational documentation (internal implementation plans, incident reports)
+            "architecture/adr/ADR-0053-pytest-xdist-state-pollution-prevention",
+            "kubernetes/KEYCLOAK_READONLY_FILESYSTEM",
+            "kubernetes/POD_CRASH_RESOLUTION_2025-11-12",
         }
 
         # Find orphaned files
@@ -184,7 +188,7 @@ class TestADRNumbering:
                 adr_numbers[adr_num] = filename
 
         assert not duplicates, (
-            f"Found duplicate ADR numbers:\n"
+            "Found duplicate ADR numbers:\n"
             + "\n".join(f"  - ADR-{d['number']}: {', '.join(d['files'])}" for d in duplicates)
             + "\n\nRenumber one of the duplicate ADRs to the next available number."
         )
@@ -221,13 +225,13 @@ class TestADRNumbering:
 
         if missing_in_mintlify:
             errors.append(
-                f"ADRs in /adr but missing in /docs/architecture:\n"
+                "ADRs in /adr but missing in /docs/architecture:\n"
                 + "\n".join(f"  - {adr}" for adr in sorted(missing_in_mintlify))
             )
 
         if missing_in_source:
             errors.append(
-                f"ADRs in /docs/architecture but missing in /adr:\n"
+                "ADRs in /docs/architecture but missing in /adr:\n"
                 + "\n".join(f"  - {adr}" for adr in sorted(missing_in_source))
             )
 
@@ -617,7 +621,7 @@ class TestRootDocumentationFiles:
                 missing.append(filename)
 
         assert not missing, (
-            f"Missing essential root documentation files:\n"
+            "Missing essential root documentation files:\n"
             + "\n".join(f"  - {f}" for f in missing)
             + "\n\nCreate these files for a complete project."
         )

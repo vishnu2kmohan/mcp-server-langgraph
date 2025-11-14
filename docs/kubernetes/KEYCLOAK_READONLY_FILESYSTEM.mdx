@@ -1,3 +1,8 @@
+---
+title: "Keycloak readOnlyRootFilesystem Implementation Plan"
+description: "Plan to enable read-only root filesystem for Keycloak pods while maintaining functionality"
+---
+
 # Keycloak readOnlyRootFilesystem Implementation Plan
 
 ## Overview
@@ -76,7 +81,7 @@ COPY --from=builder /opt/keycloak/lib/lib/ /opt/keycloak/lib/lib/
 
 # Use optimized start command
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
-```bash
+```
 #### Phase 2: Build and Push Image
 
 ```bash
@@ -118,7 +123,7 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /opt/keycloak/data/tmp
-```bash
+```
 #### Phase 4: Testing
 
 1. **Build test**:
