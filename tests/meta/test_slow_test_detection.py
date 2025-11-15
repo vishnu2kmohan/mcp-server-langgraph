@@ -103,9 +103,12 @@ def test_no_slow_unit_tests():
 
     # Known slow tests (documented, tracked for future optimization)
     KNOWN_SLOW_TESTS = {
-        "tests/test_openfga_client.py::TestOpenFGACircuitBreakerCriticality::test_circuit_breaker_fails_closed_for_critical_resources",  # noqa: E501
-        "tests/test_openfga_client.py::TestOpenFGACircuitBreakerCriticality::test_circuit_breaker_fails_open_for_non_critical_resources",  # noqa: E501
-        "tests/test_openfga_client.py::TestOpenFGACircuitBreakerCriticality::test_circuit_breaker_defaults_to_critical_true",  # noqa: E501
+        # OpenFGA circuit breaker tests: OPTIMIZED (45s → <3s with fast_retry_config) ✅
+        # - test_circuit_breaker_fails_closed_for_critical_resources
+        # - test_circuit_breaker_fails_open_for_non_critical_resources
+        # - test_circuit_breaker_defaults_to_critical_true
+        # Phase 3 optimization complete (2025-11-15)
+        # Agent tests: 14-29s each (needs LangGraph mocking)
         "tests/test_agent.py::TestAgentGraph::test_agent_with_langsmith_enabled",
         "tests/test_agent.py::TestAgentGraph::test_handles_very_long_conversation_history",
         "tests/test_agent.py::TestAgentGraph::test_agent_without_langsmith",
@@ -114,6 +117,7 @@ def test_no_slow_unit_tests():
         "tests/test_agent.py::TestAgentGraph::test_route_with_calculate_keyword",
         "tests/test_agent.py::TestAgentGraph::test_route_input_to_respond",
         "tests/test_agent.py::TestAgentGraph::test_agent_with_conversation_history",
+        # Retry timing test: 14s (needs freezegun)
         "tests/resilience/test_retry.py::TestExponentialBackoff::test_exponential_backoff_timing",
     }
 

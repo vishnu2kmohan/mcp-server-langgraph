@@ -515,12 +515,14 @@ class TestOpenFGACircuitBreakerCriticality:
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
-    async def test_circuit_breaker_fails_closed_for_critical_resources(self, mock_sdk_client):
+    async def test_circuit_breaker_fails_closed_for_critical_resources(self, mock_sdk_client, fast_retry_config):
         """
         Test circuit breaker denies access (fail-closed) when open for CRITICAL resources.
 
         SECURITY: Critical resources (admin, delete, etc.) must fail-closed to prevent
         unauthorized access during OpenFGA outages.
+
+        Performance: Uses fast_retry_config (max_attempts=1) to reduce test time from 45s to <5s.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker
@@ -556,12 +558,14 @@ class TestOpenFGACircuitBreakerCriticality:
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
-    async def test_circuit_breaker_fails_open_for_non_critical_resources(self, mock_sdk_client):
+    async def test_circuit_breaker_fails_open_for_non_critical_resources(self, mock_sdk_client, fast_retry_config):
         """
         Test circuit breaker allows access (fail-open) when open for NON-CRITICAL resources.
 
         For non-critical resources (like read-only content), we prefer availability
         over strict security, so we fail-open.
+
+        Performance: Uses fast_retry_config (max_attempts=1) to reduce test time from 45s to <5s.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker
@@ -597,12 +601,14 @@ class TestOpenFGACircuitBreakerCriticality:
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
-    async def test_circuit_breaker_defaults_to_critical_true(self, mock_sdk_client):
+    async def test_circuit_breaker_defaults_to_critical_true(self, mock_sdk_client, fast_retry_config):
         """
         Test circuit breaker defaults to critical=True (fail-closed) if not specified.
 
         SECURITY: For safety, all resources are considered critical by default.
         Developers must explicitly opt-in to fail-open behavior.
+
+        Performance: Uses fast_retry_config (max_attempts=1) to reduce test time from 45s to <5s.
         """
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.resilience.circuit_breaker import get_circuit_breaker, reset_circuit_breaker

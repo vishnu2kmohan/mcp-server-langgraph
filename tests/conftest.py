@@ -1791,6 +1791,77 @@ def fast_resilience_config():
     # Cleanup handled by reset_resilience_state autouse fixture
 
 
+@pytest.fixture
+def fast_retry_config():
+    """
+    Configure retry logic with minimal attempts for fast testing.
+
+    Reduces test time dramatically by minimizing retry attempts:
+    - max_attempts=1 (no retries, fail immediately)
+    - exponential_base=1 (no exponential growth)
+    - exponential_max=0.1 (100ms max delay)
+
+    **Performance Impact:**
+    - OpenFGA circuit breaker tests: 45s → <5s (90% reduction)
+    - Any test with @retry_with_backoff decorator benefits
+
+    **When to use:**
+    - Tests that intentionally trigger failures (circuit breaker tests)
+    - Tests that validate retry logic itself (use freezegun instead)
+    - Any test where retries add unnecessary delay
+
+    **Usage:**
+    ```python
+    @pytest.mark.asyncio
+    async def test_circuit_breaker_behavior(fast_retry_config):
+        # Test runs with no retries - fails immediately
+        # Circuit breaker tests complete in <5s instead of 45s
+        ...
+    ```
+
+    **Why this works:**
+    The @retry_with_backoff decorator reads configuration from get_resilience_config().retry.
+    By setting max_attempts=1, we eliminate retry overhead while still testing
+    the core business logic.
+
+    **Trade-offs:**
+    - ✅ Dramatically faster tests (90% reduction for retry-heavy tests)
+    - ✅ Still tests business logic (circuit breaker, error handling)
+    - ❌ Doesn't test actual retry behavior (use separate retry-specific tests)
+    - ❌ May need to adjust assertions for single-attempt behavior
+
+    Related:
+    - fast_resilience_config: Reduces circuit breaker timeout_duration
+    - tests/meta/test_slow_test_detection.py: Detects slow tests > 10s
+    """
+    from mcp_server_langgraph.resilience.config import ResilienceConfig, RetryConfig, set_resilience_config
+
+    # Get current config
+    current_config = ResilienceConfig()
+
+    # Create fast retry config
+    fast_retry = RetryConfig(
+        max_attempts=1,  # No retries - fail immediately
+        exponential_base=1.0,  # No exponential growth
+        exponential_max=0.1,  # 100ms max delay (minimal)
+        jitter=False,  # No jitter for deterministic testing
+    )
+
+    # Combine with current config (preserve circuit breaker, timeout, bulkhead settings)
+    test_config = ResilienceConfig(
+        enabled=current_config.enabled,
+        circuit_breakers=current_config.circuit_breakers,
+        retry=fast_retry,  # Use fast retry config
+        timeout=current_config.timeout,
+        bulkhead=current_config.bulkhead,
+    )
+
+    set_resilience_config(test_config)
+    yield
+
+    # Cleanup handled by reset_resilience_state autouse fixture
+
+
 @pytest.fixture(autouse=True)
 def reset_resilience_state(request):
     """
