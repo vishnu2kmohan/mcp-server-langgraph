@@ -47,6 +47,7 @@ import pytest
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.timeout(360)  # 6 minutes - runs full coverage suite as subprocess
 def test_minimum_coverage_threshold():
     """
     Test that overall test coverage meets minimum 64% threshold.

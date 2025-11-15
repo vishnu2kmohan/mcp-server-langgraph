@@ -405,6 +405,7 @@ markers = [
     "e2e: End-to-end tests (full system tests)",
     "smoke: Smoke tests (critical path validation, CI startup verification)",
     "slow: Slow tests (> 1 second)",
+    "timeout: Custom timeout override for pytest-timeout plugin (used for meta-tests running subprocesses)",
     "auth: Authentication/authorization tests",
     "api: API endpoint tests (REST API contract testing)",
     "openfga: OpenFGA integration tests",
