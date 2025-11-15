@@ -15,7 +15,7 @@ Claude Code is an AI-powered coding assistant that provides:
 
 The project follows a pythonic src/ layout that Claude Code can navigate efficiently:
 
-```
+```python
 mcp_server_langgraph/
 ├── src/mcp_server_langgraph/     # Main package
 │   ├── core/                      # Core functionality (agent, config, feature_flags)
@@ -41,8 +41,7 @@ mcp_server_langgraph/
 ├── docs/                         # Comprehensive documentation
 ├── deployments/                  # Kubernetes, Helm, Kustomize
 └── monitoring/                   # Grafana dashboards, Prometheus alerts
-```
-
+```bash
 ## Workflow Optimization Features (New!)
 
 **Added**: 2025-10-20
@@ -75,7 +74,7 @@ The project now includes optimized workflow templates and automation to make Cla
 ### Quick Start with New Workflow
 
 **Starting a Sprint**:
-```
+```bash
 /start-sprint technical-debt
 
 # Automatically:
@@ -84,10 +83,9 @@ The project now includes optimized workflow templates and automation to make Cla
 3. Creates sprint plan from template
 4. Sets up progress tracking
 5. Provides first task to work on
-```
-
+```bash
 **Tracking Progress**:
-```
+```bash
 /progress-update
 
 # Automatically:
@@ -96,10 +94,9 @@ The project now includes optimized workflow templates and automation to make Cla
 3. Calculates completion rate and velocity
 4. Assesses sprint health
 5. Generates comprehensive update
-```
-
+```bash
 **Checking Tests**:
-```
+```bash
 /test-summary
 
 # Automatically:
@@ -108,8 +105,7 @@ The project now includes optimized workflow templates and automation to make Cla
 3. Categorizes by test type
 4. Identifies slow tests
 5. Provides actionable recommendations
-```
-
+```bash
 ### Context Loading Benefits
 
 **Before Optimization**:
@@ -123,6 +119,248 @@ The project now includes optimized workflow templates and automation to make Cla
 - Structured progress updates
 
 **Expected Efficiency Gain**: 25-35% overall workflow improvement
+
+---
+
+## Recommended Workflow: Explore → Plan → Code → Commit
+
+**CRITICAL**: Always follow this 4-phase workflow. Skipping phases leads to suboptimal results and introduces bugs.
+
+### Phase 1: EXPLORE (Research First) 🔍
+
+**DO NOT jump to coding immediately**. Understanding the codebase is prerequisite to making good changes.
+
+**Required Actions**:
+1. **Read existing code**: Use `Read` and `Grep` tools to understand current implementation
+2. **Review ADRs**: Check `/adr/` directory for architectural decisions (54 ADRs documented)
+3. **Check tests**: Look at test files in `/tests/` to understand expected behavior
+4. **Search for patterns**: Use `grep -r "pattern" src/` to find similar implementations
+5. **Ask questions**: Clarify requirements before proposing solutions
+
+**Success Criteria**:
+- ✅ Read 5-10 related files minimum
+- ✅ Identified existing patterns to follow
+- ✅ Understood test coverage expectations
+- ✅ Reviewed relevant ADRs (if architectural change)
+- ✅ Can explain current implementation in detail
+
+**Example - GOOD Exploration**:
+```bash
+User: "Add caching to the API endpoints"
+
+Claude (Exploring first):
+"Let me first understand the existing caching strategy:
+1. Reading core/cache.py to see current implementation
+2. Checking if OpenTelemetry metrics exist for cache hits/misses
+3. Reading ADR-0030 (Resilience Patterns) for caching guidance
+4. Examining tests/test_cache.py to understand test patterns
+5. Searching for existing cache decorators: grep -r '@cache' src/
+
+[After research]
+I found you already have L1/L2 caching with Redis. Your current implementation uses..."
+```yaml
+**Example - BAD (Skipped Exploration)**:
+```yaml
+User: "Add caching to the API endpoints"
+
+Claude (Jumping to code):
+"I'll add Redis caching to the API endpoints..."
+[Starts implementing without understanding existing patterns]
+```python
+### Phase 2: PLAN (Think Before Acting) 🧠
+
+**Create a detailed plan** using the `TodoWrite` tool BEFORE writing any code.
+
+**Required Actions**:
+1. **Use TodoWrite**: Create task breakdown with 5-10 specific tasks
+2. **Identify tests**: List which tests need to be written FIRST (TDD!)
+3. **Consider edge cases**: Document error scenarios, validation, boundaries
+4. **Estimate complexity**: Simple fix, moderate feature, or complex change?
+5. **Get approval**: Wait for explicit user approval before proceeding
+
+**Planning Depth** (use thinking keywords):
+- **Simple bug fix**: Default thinking
+- **New feature**: `"think hard"` - deeper analysis required
+- **Complex feature**: `"think harder"` - comprehensive multi-angle analysis
+- **Architectural change**: `"ultrathink"` - exhaustive analysis with alternatives
+
+**Success Criteria**:
+- ✅ Todo list created with specific, actionable tasks
+- ✅ Tests identified and will be written FIRST (TDD compliance)
+- ✅ Edge cases and error scenarios documented
+- ✅ User explicitly approved the plan
+
+**Example - GOOD Planning**:
+```python
+User: "Implement rate limiting for API endpoints"
+
+Claude (Planning with TodoWrite):
+[Creates comprehensive todo list:]
+1. Write tests for rate limiting (RED phase: test 429 responses, reset headers)
+2. Research existing rate limit middleware in auth/ directory
+3. Implement RateLimitMiddleware with Redis backend
+4. Add OpenTelemetry metrics (rate_limit_exceeded counter, rate_limit_remaining gauge)
+5. Update deployment configs with RATE_LIMIT_* environment variables
+6. Add configuration to core/config.py
+7. Document in ADR-0055 (Rate Limiting Strategy)
+8. Run integration tests
+9. Update CHANGELOG.md
+
+Estimated effort: 4-6 hours
+Risk: Medium (new middleware, requires Redis)
+[Waits for user approval before coding]
+```yaml
+**Example - BAD (No Planning)**:
+```yaml
+User: "Implement rate limiting"
+
+Claude (No plan):
+"I'll add rate limiting using Redis..."
+[Starts coding immediately without structured plan]
+```bash
+### Phase 3: CODE (TDD Cycle) 💻
+
+**Follow Test-Driven Development (TDD)** strictly. This is NON-NEGOTIABLE.
+
+**🔴 RED Phase - Write Failing Tests First**:
+```bash
+# 1. Write test that defines expected behavior
+# tests/test_rate_limit.py
+
+def test_rate_limit_blocks_after_threshold():
+    # GIVEN: User has exceeded rate limit
+    # WHEN: Making additional request
+    response = client.get("/api/endpoint")
+    # THEN: Should return 429 Too Many Requests
+    assert response.status_code == 429
+
+# 2. Run test to confirm it FAILS
+pytest tests/test_rate_limit.py -xvs
+# ❌ FAILED (Expected - proves test is valid!)
+```bash
+**🟢 GREEN Phase - Implement Minimal Code**:
+```bash
+# 3. Write simplest code to make test pass
+# src/mcp_server_langgraph/api/rate_limit.py
+
+class RateLimitMiddleware:
+    async def __call__(self, request):
+        if rate_exceeded(request):
+            return JSONResponse(status_code=429)
+        return await self.app(request)
+
+# 4. Run test to confirm it PASSES
+pytest tests/test_rate_limit.py -xvs
+# ✅ PASSED (GREEN achieved!)
+```bash
+**♻️ REFACTOR Phase - Improve Code Quality**:
+```bash
+# 5. Refactor while keeping tests green
+# - Extract Redis logic to separate class
+# - Add type hints
+# - Improve error messages
+# - Add docstrings
+
+# 6. Run tests after EACH refactoring step
+pytest tests/test_rate_limit.py -xvs
+# ✅ PASSED (still green after refactoring)
+```bash
+**Critical TDD Rules**:
+- ⚠️ **NEVER** write implementation before tests
+- ⚠️ **NEVER** skip the RED phase (proves test works)
+- ⚠️ **ALWAYS** commit tests separately from implementation
+- ⚠️ **ALWAYS** verify tests fail before implementing
+
+**Success Criteria**:
+- ✅ Tests written FIRST (before any implementation)
+- ✅ Tests failed initially (RED phase verified)
+- ✅ Tests pass after implementation (GREEN phase achieved)
+- ✅ Code refactored for quality (REFACTOR phase completed)
+- ✅ All existing tests still pass (no regressions)
+
+### Phase 4: COMMIT (Automated Validation) 🚀
+
+**Two-stage git hook validation** ensures quality before merging.
+
+**Pre-commit Hooks (< 30s - Fast Validation)**:
+```bash
+git commit -m "feat: implement rate limiting middleware"
+
+# Automatically runs:
+# - black (auto-format code)
+# - isort (auto-sort imports)
+# - flake8 (lint code)
+# - bandit (security scan)
+# - shellcheck (bash scripts)
+# Duration: 15-30 seconds
+```bash
+**Pre-push Hooks (8-12 min - Comprehensive Validation)**:
+```bash
+git push
+
+# Automatically runs (4 phases):
+# Phase 1: Lockfile + workflow validation (< 30s)
+# Phase 2: MyPy type checking (1-2 min, warning-only)
+# Phase 3: Test suite - unit, smoke, integration, property (3-5 min)
+# Phase 4: All pre-commit hooks on ALL files (5-8 min)
+# Duration: 8-12 minutes (matches CI exactly!)
+```sql
+**Success Criteria**:
+- ✅ Pre-commit hooks passed (code auto-formatted)
+- ✅ Pre-push hooks passed (all tests green)
+- ✅ Commit message follows conventional commits format
+- ✅ Co-authored-by: Claude tag included (if applicable)
+
+---
+
+## Workflow Compliance Checklist
+
+Before marking ANY task complete, verify ALL phases:
+
+- [ ] **EXPLORE**: Did I read 5-10 related files? Review ADRs? Understand existing patterns?
+- [ ] **PLAN**: Did I create TodoWrite task list? Get user approval? Identify tests to write?
+- [ ] **CODE**: Did I write tests FIRST? Verify RED → GREEN → REFACTOR cycle?
+- [ ] **COMMIT**: Did pre-commit pass? Did pre-push pass? All tests green?
+
+**Enforcement**: This 4-phase workflow prevents 90% of implementation problems. Following it rigorously saves significant debugging time.
+
+---
+
+## Anti-Patterns to AVOID
+
+**❌ Jumping Directly to Code**:
+```python
+User: "Fix the authentication bug"
+Claude: "I'll update auth/middleware.py..." [WRONG - didn't explore first]
+```python
+**Fix**: Always start with exploration phase.
+
+**❌ No Planning/TodoWrite**:
+```text
+Claude: [Starts writing code without creating todo list] [WRONG - no structured plan]
+```rust
+**Fix**: Use TodoWrite to create detailed plan before coding.
+
+```rust
+**Fix**: Use TodoWrite to create detailed plan before coding.
+
+**❌ Implementation Before Tests**:
+```yaml
+Claude: [Writes feature.py, then test_feature.py] [WRONG - not TDD]
+```yaml
+**Fix**: Write tests FIRST, then implement.
+
+**❌ Skipping RED Phase Verification**:
+```yaml
+Claude: [Writes test + implementation together without verifying test fails] [WRONG]
+```bash
+**Fix**: Run test before implementing to prove it fails (RED phase).
+
+**❌ Committing Without Running Hooks**:
+```bash
+Claude: git commit --no-verify [WRONG - bypasses validation]
+```bash
+**Fix**: Let hooks run. They catch issues before CI.
 
 ---
 
@@ -172,8 +410,7 @@ Claude Code can generate comprehensive test suites:
 - Mock-based testing (avoiding external dependencies)
 - Integration scenarios (realistic use cases)
 - Edge cases (error handling, validation)
-```
-
+```bash
 Example from this project:
 - **test_session.py**: 687 lines, 26 tests, full lifecycle coverage
 - **test_role_mapper.py**: 712 lines, 23 tests, enterprise scenarios
@@ -197,8 +434,7 @@ Helper functions
 
 Main execution (if applicable)
 """
-```
-
+```bash
 ### 5. Documentation Standards
 
 Claude Code generates documentation with:
@@ -298,8 +534,7 @@ claude
 3. Email verification workflow
 4. Comprehensive tests
 5. Update ../CHANGELOG.md"
-```
-
+```bash
 ### Reviewing Claude Code's Work
 
 Claude Code provides:
@@ -321,8 +556,7 @@ Please update the tests to properly mock the Redis client."
 3. Implement the fix
 4. Verify with test execution
 5. Report results
-```
-
+```bash
 ## Configuration for Claude Code
 
 ### Python Environment
@@ -385,8 +619,7 @@ Auto-runs on `git commit` for changed files only.
 git commit -m "feat: implement feature"
 # Runs: black, isort, flake8, bandit, shellcheck, etc.
 # Duration: < 30 seconds
-```
-
+```bash
 #### Pre-push Hooks (Comprehensive - 8-12 min)
 Auto-runs on `git push` for all files. Matches CI exactly.
 
@@ -407,8 +640,7 @@ Auto-runs on `git push` for all files. Matches CI exactly.
 git push
 # Runs: Complete 4-phase validation
 # Duration: 8-12 minutes (matches CI)
-```
-
+```bash
 #### Hook Installation
 
 ```bash
@@ -417,8 +649,7 @@ make git-hooks
 
 # Verify hooks are configured
 python scripts/validate_pre_push_hook.py
-```
-
+```python
 #### When Claude Code Should Commit/Push
 
 **Commit frequently** (fast, < 30s):
@@ -438,8 +669,7 @@ python scripts/validate_pre_push_hook.py
 Claude Code can measure hook performance:
 ```bash
 python scripts/measure_hook_performance.py --stage all
-```
-
+```python
 #### Documentation References
 
 - Full guide: `TESTING.md#git-hooks-and-validation`
@@ -463,8 +693,7 @@ target-version = ['py312']
 [tool.isort]
 profile = "black"
 line_length = 120
-```
-
+```bash
 ## Tips for Maximum Productivity
 
 ### 1. Use TodoWrite Tool
@@ -511,7 +740,7 @@ Claude Code maintains:
 
 ### Task: Add JWT Token Rotation
 
-```
+```python
 User: "Implement automatic JWT token rotation with the following:
 1. Detect tokens expiring within 5 minutes
 2. Automatically refresh using refresh token
@@ -534,8 +763,7 @@ Summary:
 - Added 3 new metrics: token_rotation_attempts, token_rotation_success, token_rotation_failures
 - Comprehensive test coverage including edge cases
 - Backward compatible (rotation disabled by default)
-```
-
+```bash
 ## Troubleshooting
 
 ### Common Issues
@@ -579,8 +807,7 @@ make test-contract        # Run contract tests (MCP protocol compliance)
 make test-regression      # Run performance regression tests
 make test-mutation        # Run mutation tests (test effectiveness)
 make test-all-quality     # Run all quality tests
-```
-
+```bash
 ### Infrastructure & Setup
 
 ```bash
@@ -591,8 +818,7 @@ make setup-openfga        # Initialize OpenFGA (authorization)
 make setup-keycloak       # Initialize Keycloak (SSO)
 make dev-setup            # Complete developer setup (install+infra+setup)
 make quick-start          # Quick start with defaults
-```
-
+```bash
 ### Validation Commands
 
 ```bash
@@ -602,8 +828,7 @@ make validate-docker-compose  # Validate Docker Compose
 make validate-helm            # Validate Helm chart
 make validate-kustomize       # Validate Kustomize overlays
 make validate-all             # Run all deployment validations
-```
-
+```bash
 ### Deployment Commands
 
 ```bash
@@ -613,8 +838,7 @@ make deploy-production        # Deploy to production (Helm)
 make deploy-rollback-dev      # Rollback development deployment
 make deploy-rollback-staging  # Rollback staging deployment
 make deploy-rollback-production  # Rollback production deployment
-```
-
+```bash
 ### Code Quality Commands
 
 ```bash
@@ -622,8 +846,7 @@ make lint                 # Run linters (flake8, mypy)
 make format               # Format code (black, isort)
 make security-check       # Run security scans (bandit)
 make pre-commit-setup     # Setup pre-commit hooks
-```
-
+```bash
 ### Running & Monitoring
 
 ```bash
@@ -633,16 +856,14 @@ make health-check         # Check system health
 make monitoring-dashboard # Open Grafana dashboards
 make logs                 # Show infrastructure logs
 make logs-follow          # Follow all logs in real-time
-```
-
+```bash
 ### Documentation
 
 ```bash
 make docs-serve           # Serve Mintlify docs locally
 make docs-build           # Build Mintlify docs
 make docs-deploy          # Deploy docs to Mintlify
-```
-
+```bash
 ### Usage Examples
 
 When working on tasks, Claude Code should use these commands directly:
@@ -659,8 +880,7 @@ When working on tasks, Claude Code should use these commands directly:
 # Example: Setup workflow
 "Set up the complete development environment"
 → make dev-setup
-```
-
+```bash
 **Tip**: Run `make help` to see all available commands with descriptions.
 
 ## Custom Slash Commands
@@ -690,8 +910,7 @@ This project includes custom slash commands in `.claude/commands/` for common wo
 
 # Fix GitHub issue #42
 /fix-issue 42
-```
-
+```bash
 Each command includes:
 - Comprehensive step-by-step instructions
 - Common troubleshooting scenarios
@@ -755,16 +974,11 @@ Claude Code supports extended thinking modes for complex problems. Use these key
 
 ### Example Usage
 
-```bash
-# Simple bug fix
-"Fix the session expiration bug in auth/middleware.py"
+**Simple bug fix**: Fix the session expiration bug in auth/middleware.py
 
-# Complex feature
-"think hard: Implement distributed caching with Redis cluster support"
+**Complex feature**: "think hard: Implement distributed caching with Redis cluster support"
 
-# Architectural change
-"ultrathink: Design and implement a plugin system for custom authentication providers"
-```
+**Architectural change**: "ultrathink: Design and implement a plugin system for custom authentication providers"
 
 ### Planning Output
 
