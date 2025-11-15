@@ -29,7 +29,7 @@ cd terraform/environments/gcp-staging
 terraform init
 terraform plan
 terraform apply
-```sql
+```
 **Manual Creation:**
 ```bash
 gcloud container clusters create-auto staging-mcp-server-langgraph-gke \
@@ -54,7 +54,7 @@ cd terraform/environments/gcp-prod
 terraform init
 terraform plan
 terraform apply
-```bash
+```
 ## CI/CD Workflow Dependencies
 
 ### deploy-staging-gke.yaml
@@ -153,7 +153,7 @@ Verify the service account has the `container.developer` role:
 gcloud projects get-iam-policy vishnu-sandbox-20250310 \
   --flatten="bindings[].members" \
   --filter="bindings.members:github-actions-staging*"
-```bash
+```
 ### Error: Artifact Registry repository not found
 
 **Solution:**

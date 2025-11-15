@@ -149,7 +149,7 @@ class TestPostgresAuditLogStore:
         log_id = await audit_store.log(entry)
         retrieved = await audit_store.get(log_id)
         assert retrieved.user_id == entry.user_id
-```bash
+```
 **Fixtures Created**:
 
 1. **postgres_with_schema** (session-scoped):
@@ -282,7 +282,7 @@ async def postgres_with_schema(postgres_connection_real):
     schema_sql = Path("migrations/001_gdpr_schema.sql").read_text()
     await postgres_connection_real.execute(schema_sql)
     yield postgres_connection_real
-```bash
+```
 **REFACTOR Phase** ✅:
 - Optimized cleanup (TRUNCATE vs DROP)
 - Added graceful error handling

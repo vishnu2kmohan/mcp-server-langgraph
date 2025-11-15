@@ -183,7 +183,7 @@ async def onboard_user(user_id: str, role: str = "user"):
     if role == "admin":
         # Requires admin approval
         await request_admin_approval(user_id)
-```python
+```
 #### Regular Permission Audits
 
 ```python
@@ -265,7 +265,7 @@ async def check_resource_access(
         raise PermissionError(f"Action '{action}' not allowed")
 
     return True
-```python
+```
 ### Data Security Best Practices
 
 #### Encryption
@@ -457,7 +457,7 @@ async def secure_delete_user(user_id: str):
     # 6. Overwrite sensitive data (defense in depth)
     # PostgreSQL VACUUM FULL reclaims space
     await db.execute("VACUUM FULL users")
-```python
+```
 ### Network Security Best Practices
 
 #### Network Policies
@@ -581,7 +581,7 @@ async def login(request: Request):
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message(user: User = Depends(get_current_user)):
     pass
-```yaml
+```
 #### DDoS Protection
 
 ```yaml
@@ -655,7 +655,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 
 ## Run application
 CMD ["python", "-m", "uvicorn", "mcp_server_langgraph.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```python
+```
 #### Security Context
 
 ```yaml
@@ -746,7 +746,7 @@ jobs:
         image-ref: mcp-server-langgraph:${{ github.sha }}
         exit-code: '1'
         severity: 'CRITICAL'
-```bash
+```
 ### Secret Management Best Practices
 
 #### Never Commit Secrets
@@ -782,7 +782,7 @@ API_KEY = os.getenv("API_KEY")
 
 ## GOOD - secret manager
 API_KEY = settings.anthropic_api_key  # Loaded from Infisical
-```python
+```
 #### Rotate Secrets Regularly
 
 ```python
@@ -830,7 +830,7 @@ sum(rate(http_requests_total{status=~"4..|5.."}[5m])) > 100
 
 ## Token validation failures
 rate(jwt_validation_failed_total[1m]) > 5
-```yaml
+```
 #### Security Alerts
 
 ```yaml
@@ -933,7 +933,7 @@ docker run -t owasp/zap2docker-stable zap-baseline.py \
 ## 6. API abuse
 ## 7. Session management
 ## 8. Cryptography issues
-```yaml
+```
 #### Security Code Review
 
 ```yaml

@@ -184,7 +184,7 @@ flowchart TB
     class WI,GCPSA authStyle
     class Data,SQL,Redis dataStyle
     class Observability,Monitor,Logging,Trace,Profiler obsStyle
-```bash
+```
 ---
 
 ### Phase 1: Infrastructure Setup (30 minutes)
@@ -364,7 +364,7 @@ gcloud secrets versions add mcp-production-secrets \
 
 ## Cleanup
 rm -f /tmp/secrets.json
-```bash
+```
 #### Step 2: Install External Secrets Operator
 
 ```bash
@@ -466,7 +466,7 @@ Enable image signing to ensure only trusted container images run in your cluster
 ```bash
 ## Create dashboards and alerts
 ./monitoring/gcp/setup-monitoring.sh PROJECT_ID
-```bash
+```
 This configures:
 - Custom Cloud Monitoring dashboard
 - Alert policies (CPU, memory, errors, latency)

@@ -55,7 +55,7 @@ postgresql:
         enabled: true
         instanceConnectionName: "project:region:instance"
         credentialsSecret: "cloudsql-credentials"
-```bash
+```
 ```hcl
 # Terraform for Azure Database
 module "postgres" {
@@ -122,7 +122,7 @@ affinity:
               values:
                 - mcp-server-langgraph
         topologyKey: topology.kubernetes.io/zone
-```bash
+```
 **Impact**:
 - Ensures 99.99% availability (multi-zone)
 - Prevents cascading failures from zone outages
@@ -187,7 +187,7 @@ spec:
     volumeSnapshotLocations:
       - default
     ttl: 720h  # 30 days retention
-```bash
+```
 3. **Installation**:
 
 ```bash
@@ -237,7 +237,7 @@ serviceMesh:
     injection: enabled
     mtls:
       mode: STRICT
-```bash
+```
 2. Add Istio resources (already exist at `deployments/service-mesh/istio/`):
    - ✅ `istio-config.yaml` (Gateway, VirtualService, DestinationRule)
    - ✅ AuthorizationPolicy for RBAC
@@ -275,7 +275,7 @@ metadata:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
-```bash
+```
 **Validation**: Ensure all pods comply with `restricted` PSS (already compliant based on current pod security contexts).
 
 **Estimated time**: 30 minutes
@@ -363,7 +363,7 @@ grafana:
   sidecar:
     datasources:
       enabled: true
-```bash
+```
 ```bash
 helm install loki-stack grafana/loki-stack \
   --namespace monitoring \
@@ -395,7 +395,7 @@ spec:
     limits.memory: 200Gi
     persistentvolumeclaims: "20"
     services.loadbalancers: "3"
-```bash
+```
 ```yaml
 # deployments/base/limitrange.yaml
 apiVersion: v1
@@ -441,7 +441,7 @@ ingress:
   className: nginx
   hosts:
     - kubecost.example.com
-```bash
+```
 ```bash
 helm install kubecost kubecost/cost-analyzer \
   --namespace kubecost \
@@ -488,7 +488,7 @@ resource "aws_iam_role" "karpenter_controller" {
 
 # Attach policies for Karpenter
 # ... (see full implementation in terraform/modules/karpenter/)
-```bash
+```
 ```yaml
 # Provisioner configuration
 apiVersion: karpenter.sh/v1alpha5
@@ -546,7 +546,7 @@ spec:
         maxAllowed:
           cpu: 4000m
           memory: 8Gi
-```bash
+```
 Similar VPAs for:
 - Redis
 - Keycloak

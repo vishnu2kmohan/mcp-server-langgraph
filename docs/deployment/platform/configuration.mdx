@@ -32,7 +32,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 <ParamField path="dependencies" type="array" required>
   List of dependency sources. Use `["."]` to include current directory, or specify paths to local packages.
 
-  ```json
+  ```
   "dependencies": [".", "../shared-libs"]
   ```
 </ParamField>
@@ -40,7 +40,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 <ParamField path="graphs" type="object" required>
   Map of graph names to their module paths. Format: `"name": "path/to/file.py:variable"`
 
-  ```json
+  ```
   "graphs": {
     "agent": "./langgraph/agent.py:graph",
     "assistant": "./langgraph/assistant.py:assistant_graph"
@@ -52,7 +52,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 <ParamField path="env" type="object">
   Environment variables for your deployment. **Never** put actual API keys here - use LangSmith secrets instead.
 
-  ```json
+  ```
   "env": {
     "MODEL_NAME": "claude-3-5-sonnet-20241022",
     "LANGSMITH_TRACING": "true"
@@ -67,7 +67,7 @@ The `langgraph.json` file in your project root defines your deployment configura
 <ParamField path="dockerfile_lines" type="array">
   Custom Dockerfile commands to run during build.
 
-  ```json
+  ```
   "dockerfile_lines": [
     "RUN apt-get update && apt-get install -y curl",
     "RUN uv pip install custom-package"
@@ -121,7 +121,7 @@ Set environment variables in two ways:
 1. **langgraph.json** - For non-sensitive config
 2. **LangSmith Secrets** - For API keys and sensitive data
 
-```bash
+```
 ## Set secrets (recommended for API keys)
 langsmith secret set ANTHROPIC_API_KEY "your-key"
 langsmith secret set OPENAI_API_KEY "your-key"
@@ -130,7 +130,7 @@ langsmith secret set OPENAI_API_KEY "your-key"
 
 Access environment variables in your code:
 
-```python
+```
 import os
 
 api_key = os.environ["ANTHROPIC_API_KEY"]
@@ -142,7 +142,7 @@ Create separate deployments for each environment:
 
 <Tabs>
   <Tab title="Development">
-    ```bash
+    ```
     # Deploy to dev
     langgraph deploy my-agent-dev --tag development
 
@@ -152,7 +152,7 @@ Create separate deployments for each environment:
   </Tab>
 
   <Tab title="Staging">
-    ```bash
+    ```
     # Deploy to staging
     langgraph deploy my-agent-staging --tag staging
 
@@ -162,7 +162,7 @@ Create separate deployments for each environment:
   </Tab>
 
   <Tab title="Production">
-    ```bash
+    ```
     # Deploy to production
     langgraph deploy my-agent-prod --tag production
 
@@ -178,7 +178,7 @@ Create separate deployments for each environment:
 
 Add custom build commands:
 
-```json
+```
 {
   "dockerfile_lines": [
     "RUN apt-get update && apt-get install -y build-essential",
@@ -191,7 +191,7 @@ Add custom build commands:
 
 Deploy multiple graphs in one deployment:
 
-```json
+```
 {
   "graphs": {
     "chat": "./langgraph/chat.py:chat_graph",
@@ -209,7 +209,7 @@ Access via different endpoints:
 
 Validate your configuration before deploying:
 
-```bash
+```
 ## Test locally
 langgraph dev
 
@@ -238,7 +238,7 @@ python -c "from langgraph.agent import graph; print(graph)"
 
 <AccordionGroup>
   <Accordion title="Example langgraph.json">
-    ```json
+    ```
     {
       "dependencies": ["."],
       "graphs": {
@@ -257,7 +257,7 @@ python -c "from langgraph.agent import graph; print(graph)"
   </Accordion>
 
   <Accordion title="Example graph export">
-    ```python
+    ```
     from langgraph.graph import StateGraph, END
     from langgraph.checkpoint.memory import MemorySaver
     from typing import TypedDict, Annotated

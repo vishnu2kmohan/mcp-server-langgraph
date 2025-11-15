@@ -58,7 +58,7 @@ We will implement a **Visual Workflow Builder** with the following architecture:
   "build": "Vite 5.1",
   "testing": "Vitest 1.3 + React Testing Library"
 }
-```bash
+```
 **Key Components**:
 
 1. **Visual Canvas** (`App.tsx`)
@@ -142,7 +142,7 @@ GET  /api/builder/node-types
 
 GET  /
   → API information
-```python
+```
 ### **Data Models**
 
 **Workflow Definition**:
@@ -223,7 +223,7 @@ def create_{workflow_name}():
     {graph_construction}
     return graph.compile()
 '''
-```bash
+```
 **Output Characteristics**:
 - ✅ Black-formatted Python
 - ✅ Type-safe with Pydantic/TypedDict
@@ -256,7 +256,7 @@ Workflow (JSON) → CodeGenerator → Python code
 **Code → Visual** (Import):
 ```text
 Python code → AST Parser → Graph Extractor → Layout Engine → Workflow (JSON)
-```bash
+```
 **Layout Algorithms**:
 1. **Hierarchical**: Top-to-bottom flow
 2. **Force-directed**: Physics-based spacing
@@ -284,7 +284,7 @@ npm run build
 # Output: dist/
 
 # Serve with nginx or CDN
-```bash
+```
 **Ports**:
 - Backend API: 8001
 - Frontend Dev: 3000

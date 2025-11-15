@@ -37,7 +37,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=8192
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```bash
+```
 **Rationale**:
 - **Fast Iterations**: Gemini Flash has low latency (~1-2s response time)
 - **Low Cost**: ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens
@@ -88,7 +88,7 @@ MODEL_TEMPERATURE=0.7
 MODEL_MAX_TOKENS=4096
 MODEL_TIMEOUT=60
 ENABLE_FALLBACK=true
-```bash
+```
 **Rationale**:
 - **Highest Quality**: Claude 3.5 Sonnet offers superior reasoning
 - **Reliability**: Anthropic's enterprise SLA and uptime
@@ -136,7 +136,7 @@ helm upgrade --install mcp-server-langgraph ./deployments/helm/mcp-server-langgr
   --set config.llmProvider=openai \
   --set config.modelName=gpt-5 \
   --set secrets.openaiApiKey=$OPENAI_API_KEY
-```yaml
+```
 #### Method 3: Kustomize Patch
 
 For Kustomize deployments, create a patch file:
@@ -161,7 +161,7 @@ data:
 LLM_PROVIDER=ollama
 MODEL_NAME=llama3.1:70b
 OLLAMA_BASE_URL=http://localhost:11434
-```toml
+```
 ---
 
 ### Fallback Configuration
@@ -187,7 +187,7 @@ FALLBACK_MODELS='["claude-3-5-sonnet-20241022","gpt-5","gemini-2.5-pro"]'
 
 ```bash
 ENABLE_FALLBACK=false
-```bash
+```
 **Warning**: Disabling fallback means service failures if primary model is unavailable.
 
 ---
@@ -376,7 +376,7 @@ echo $ANTHROPIC_API_KEY | head -c 10
 curl https://api.anthropic.com/v1/messages \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01"
-```bash
+```
 #### Fallback Chain Not Working
 
 **Cause**: Missing API keys for fallback models

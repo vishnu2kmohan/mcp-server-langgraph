@@ -94,7 +94,7 @@ tests/
 │   └── test_injection.py
 │
 └── conftest.py           # Shared fixtures
-```python
+```
 #### Test Markers
 
 ```python
@@ -108,7 +108,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "e2e: End-to-end tests (full system)")
     config.addinivalue_line("markers", "slow: Slow running tests")
     config.addinivalue_line("markers", "security: Security tests")
-```python
+```
 **Usage**:
 ```bash
 ## Run unit tests only
@@ -122,7 +122,7 @@ pytest -m "not slow"
 
 ## Run security tests
 pytest -m security
-```python
+```
 ### Unit Testing
 
 #### Writing Unit Tests
@@ -248,7 +248,7 @@ async def test_agent_with_authorization(mock_openfga_class, mock_llm):
 
     # Verify authorization checked
     mock_openfga.check_permission.assert_called_once()
-```python
+```
 #### Testing Async Code
 
 ```python
@@ -308,7 +308,7 @@ async def test_session_delete(mock_redis):
 
     assert result is True
     mock_redis.delete.assert_called_once_with("session:session_123")
-```python
+```
 ### Integration Testing
 
 #### Setup Test Environment
@@ -354,7 +354,7 @@ async def redis_client(redis_container):
         yield client
     finally:
         await client.close()
-```python
+```
 #### Integration Tests
 
 ```python
@@ -448,7 +448,7 @@ async def test_chat_endpoint(client):
     data = response.json()
     assert "response" in data
     assert isinstance(data["response"], str)
-```python
+```
 ### Property-Based Testing
 
 #### Using Hypothesis
@@ -511,7 +511,7 @@ def test_llm_factory_properties(provider, temperature, max_tokens):
 
     assert llm is not None
     assert hasattr(llm, 'ainvoke')
-```python
+```
 ### Load Testing
 
 #### Using Locust
@@ -578,7 +578,7 @@ locust -f tests/load/locustfile.py \
 
 ## Open web UI
 open http://localhost:8089
-```bash
+```
 #### Using k6
 
 ```javascript
@@ -632,7 +632,7 @@ export default function () {
 
   sleep(1);
 }
-```bash
+```
 **Run k6 test**:
 ```bash
 ## Install k6
@@ -691,7 +691,7 @@ async def test_xss_protection(client, token, xss_input):
     # Response should not contain unescaped script tags
     assert "`<script>`" not in response.text
     assert "onerror=" not in response.text
-```python
+```
 #### Authentication Tests
 
 ```python
@@ -730,7 +730,7 @@ async def test_expired_token_rejected(client):
     )
 
     assert response.status_code == 401
-```bash
+```
 ### Continuous Integration
 
 #### GitHub Actions Workflow
@@ -841,7 +841,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-```python
+```
 ### Test Coverage
 
 #### Measuring Coverage
@@ -1098,7 +1098,7 @@ python scripts/validation/validate_workflow_test_deps.py
   with:
     python-version: '3.12'
     extras: 'dev builder'  # ✅ Must include 'dev' for tests
-```bash
+```
 ```toml Dependency Configuration
 # pyproject.toml
 [project.optional-dependencies]
@@ -1135,7 +1135,7 @@ code-execution = [
     4. Re-run tests locally to verify
 
     **Example**:
-    ```bash
+    ```
     # Test output shows missing package
     Test files import packages not in any dependency group:
       - docker
@@ -1169,7 +1169,7 @@ code-execution = [
 
     **Solution**:
     Update workflow to include `dev` in extras:
-    ```yaml
+    ```
     - uses: ./.github/actions/setup-python-deps
       with:
         extras: 'dev'  # or 'dev builder' for multiple

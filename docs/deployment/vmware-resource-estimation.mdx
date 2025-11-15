@@ -473,7 +473,7 @@ flowchart TD
     class MCP,KC,OFG appStyle
     class PG,Redis dataStyle
     class Prom,Graf,Jaeg obsPoolStyle
-```python
+```
 #### 4. Monitoring and Alerts
 
 ##### vSphere Metrics to Monitor
@@ -540,7 +540,7 @@ for: 5m
 alert: HighDatabaseConnections
 expr: pg_stat_database_numbackends > 80
 for: 5m
-```yaml
+```
 ---
 
 ### Scaling Considerations
@@ -571,7 +571,7 @@ minReplicas: 2
 maxReplicas: 10
 targetCPUUtilization: 70%
 targetMemoryUtilization: 80%
-```python
+```
 **Scaling Triggers:**
 - Scales with observability data volume
 - 1 collector can handle ~1000 req/sec trace data

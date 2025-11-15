@@ -257,7 +257,7 @@ echo "$RESPONSE" | python -m json.tool
 TRACE_ID=$(echo "$RESPONSE" | python -c "import sys, json; print(json.load(sys.stdin)['trace_id'])")
 echo ""
 echo "View trace: http://localhost:16686/trace/$TRACE_ID"
-```rust
+```
 </CodeGroup>
 
 ### Common Use Cases
@@ -284,7 +284,7 @@ conversation = [
 response = httpx.post(url, headers=headers, json={
     "messages": conversation
 })
-```rust
+```
 #### Tool Usage
 
 ```python
@@ -308,7 +308,7 @@ async with httpx.AsyncClient() as client:
     ) as response:
         async for chunk in response.aiter_text():
             print(chunk, end='', flush=True)
-```json
+```
 ### Error Handling
 
 #### Authentication Errors
@@ -331,7 +331,7 @@ async with httpx.AsyncClient() as client:
   "error": "forbidden",
   "message": "User 'bob' is not authorized to execute 'tool:chat'"
 }
-```python
+```
 **Solution**: Check OpenFGA permissions. See [Authorization Guide](/getting-started/authorization).
 
 #### Rate Limiting
@@ -356,7 +356,7 @@ async with httpx.AsyncClient() as client:
   "message": "LLM provider error: quota exceeded",
   "trace_id": "abc123..."
 }
-```python
+```
 **Solution**: Check trace in Jaeger, verify LLM API keys and quotas.
 
 ### Best Practices

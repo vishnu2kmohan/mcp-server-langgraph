@@ -42,7 +42,7 @@ image: gcr.io/project/app:2.4.0
 ## 🔴 NEVER DO THIS
 image: mcp-server-langgraph:latest
 image: mcp-server-langgraph  # defaults to latest
-```python
+```
 #### Staging (Recommended)
 
 Staging environments **SHOULD** use explicit version tags with environment prefix:
@@ -70,7 +70,7 @@ newTag: dev-${GIT_SHA}
 
 ## ✅ BETTER (traceable)
 newTag: dev-2.4.0-${GIT_SHA}
-```bash
+```
 ---
 
 ### Current Version Matrix
@@ -114,7 +114,7 @@ MAJOR.MINOR.PATCH
 │ │ └─ PATCH: Backwards compatible bug fixes
 │ └─── MINOR: Backwards compatible new features
 └───── MAJOR: Breaking changes
-```bash
+```
 #### Version Bumping Rules
 
 **PATCH version** (2.4.0 → 2.4.1):
@@ -150,7 +150,7 @@ version = "2.5.0"  # New version
 ## Commit version bump
 git add pyproject.toml
 git commit -m "chore: bump version to 2.5.0"
-```sql
+```
 #### 2. Update Deployment Configurations
 
 Run the version sync script:
@@ -168,7 +168,7 @@ Run the version sync script:
 ## - deployments/kustomize/overlays/staging/kustomization.yaml
 ## - deployments/kustomize/overlays/production/kustomization.yaml
 ## - deployments/cloudrun/service.yaml
-```bash
+```
 #### 3. Create Git Tag
 
 ```bash
@@ -196,7 +196,7 @@ Our CI/CD pipeline automatically creates:
 
 ## On feature branch:
 - mcp-server-langgraph:${BRANCH}-${GIT_SHA}
-```bash
+```
 **Note**: The `:latest` tag is created automatically for convenience but **MUST NOT** be used in production deployments.
 
 ---
@@ -237,7 +237,7 @@ mcp-server-langgraph:production
 ## ❌ Mutable tags
 mcp-server-langgraph:v2
 mcp-server-langgraph:v2.4
-```yaml
+```
 ---
 
 ### Deployment Environment Strategies
@@ -260,7 +260,7 @@ images:
 images:
   - name: mcp-server-langgraph
     newTag: staging-2.4.0  # Explicit version
-```yaml
+```
 **Rationale**: Testing specific versions before production
 
 #### Production
@@ -288,7 +288,7 @@ imagePullPolicy: IfNotPresent
 ## ⚠️ REQUIRED (with latest tag)
 image: mcp-server-langgraph:latest
 imagePullPolicy: Always
-```bash
+```
 **Rationale**:
 - `IfNotPresent`: Reduces registry pulls, faster deployments
 - `Always`: Required for mutable tags (latest) to get updates
@@ -336,7 +336,7 @@ kubectl apply -k deployments/kustomize/overlays/production
 
 ## Verify rollback
 kubectl rollout status deployment/prod-mcp-server-langgraph
-```bash
+```
 #### Helm Rollback
 
 ```bash
@@ -363,7 +363,7 @@ kubectl rollout undo deployment/mcp-server-langgraph --to-revision=5
 
 ## Check rollout history
 kubectl rollout history deployment/mcp-server-langgraph
-```bash
+```
 ---
 
 ### Version Drift Detection
@@ -390,7 +390,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
   for: 5m
   annotations:
     summary: "Deployment using unexpected image version"
-```bash
+```
 ---
 
 ### CI/CD Integration
@@ -438,7 +438,7 @@ if [ -n "$LATEST_TAGS" ]; then
 fi
 
 echo "✅ No :latest tags found in production configurations"
-```bash
+```
 ---
 
 ### Infrastructure Image Versions
@@ -507,7 +507,7 @@ kubectl rollout restart deployment/mcp-server-langgraph
 ## Or update deployment
 kubectl set image deployment/mcp-server-langgraph \
   mcp-server-langgraph=mcp-server-langgraph:2.4.0
-```bash
+```
 #### Issue: "Version mismatch across environments"
 
 ```bash

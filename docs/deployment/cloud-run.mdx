@@ -23,7 +23,7 @@ Deploy the MCP Server with LangGraph to Google Cloud Run for fully managed, serv
 ```bash
 cd cloudrun
 ./deploy.sh --setup
-```bash
+```
 This automated script will:
 1. Enable required GCP APIs
 2. Create service account
@@ -81,7 +81,7 @@ Store API keys securely:
 ## Run interactive setup
 cd cloudrun
 ./setup-secrets.sh
-```sql
+```
 Or manually:
 
 ```bash
@@ -108,7 +108,7 @@ spec:
           limits:
             cpu: '2'
             memory: 2Gi
-```bash
+```
 ### Deployment
 
 #### Initial Deployment
@@ -135,7 +135,7 @@ cd cloudrun
 
 ## Or
 gcloud run deploy mcp-server-langgraph --source .
-```sql
+```
 #### Rollback
 
 ```bash
@@ -157,7 +157,7 @@ gcloud run services logs tail mcp-server-langgraph --follow
 
 ## View recent logs
 gcloud run services logs read mcp-server-langgraph --limit 100
-```sql
+```
 #### Cloud Console
 
 Access metrics in Cloud Console:
@@ -223,7 +223,7 @@ gcloud run services update mcp-server-langgraph \
 ## Or allow only from load balancer
 gcloud run services update mcp-server-langgraph \
   --ingress internal-and-cloud-load-balancing
-```rust
+```
 #### VPC Access
 
 Connect to private resources:

@@ -69,7 +69,7 @@ flowchart TB
     class L2 l2Style
     class L3 l3Style
     class External externalStyle
-```python
+```
 #### Multi-Layer Caching Flow
 
 ```mermaid
@@ -148,7 +148,7 @@ sequenceDiagram
 
     App-->>Client: Response (5ms) ✓<br/>400x faster
 
-```rust
+```
 #### Layer 1: In-Memory LRU Cache
 
 **Use Case**: Frequently accessed, small data (< 1MB per entry)
@@ -175,7 +175,7 @@ from functools import lru_cache
 @lru_cache(maxsize=1000)
 def check_permission_cached(user: str, resource: str, action: str) -> bool:
     return openfga_client.check(user, resource, action)
-```python
+```
 #### Layer 2: Redis Distributed Cache
 
 **Use Case**: Shared across instances, larger data, longer TTL
@@ -207,7 +207,7 @@ async def get_llm_response_cached(prompt: str) -> str:
     response = await llm_client.generate(prompt)
     cache_set(cache_key, response, ttl=300)
     return response
-```rust
+```
 #### Layer 3: Provider-Native Caching
 
 **Use Case**: Leverage provider-specific caching features
@@ -299,7 +299,7 @@ async def update_user_profile(user_id: str, updates: dict):
     ]
     for key in cache_keys:
         redis_client.delete(key)
-```python
+```
 #### Cache Stampede Prevention
 
 ```python
@@ -353,7 +353,7 @@ class CacheService:
                 return value
 
         return None
-```python
+```
 #### Usage with Decorator
 
 ```python
@@ -379,7 +379,7 @@ CACHE_L2_MAX_SIZE_MB=1000
 ## Provider Caching
 ANTHROPIC_ENABLE_PROMPT_CACHING=true
 GEMINI_ENABLE_CONTEXT_CACHING=true
-```css
+```
 ### Metrics & Observability
 
 #### New Metrics

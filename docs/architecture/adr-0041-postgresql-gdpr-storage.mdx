@@ -118,7 +118,7 @@ try:
     # User's profile is gone but consents remain = GDPR VIOLATION
 except:
     # No clean rollback mechanism across two databases
-```python
+```
 **Why Rejected**: Cannot guarantee atomic GDPR Article 17 deletions across two databases, creating compliance risk.
 
 ### Rationale
@@ -201,7 +201,7 @@ storage = await create_gdpr_storage(
 # Use throughout application
 profile = await storage.user_profiles.get("user:alice")
 await storage.audit_logs.log(audit_entry)
-```bash
+```
 #### Migration Path
 
 - In-memory → PostgreSQL (zero downtime, new data goes to PostgreSQL)
@@ -326,7 +326,7 @@ GDPR_STORAGE_BACKEND=memory  # For local testing
 ```bash
 GDPR_STORAGE_BACKEND=postgres
 GDPR_POSTGRES_URL=postgresql://gdpr_user:secure_pass@db.example.com:5432/gdpr
-```bash
+```
 See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for detailed setup instructions.
 
 #### Operational Procedures

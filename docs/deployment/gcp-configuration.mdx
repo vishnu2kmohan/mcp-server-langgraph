@@ -42,7 +42,7 @@ We provide an automated setup script for convenience:
 # 2. Workload Identity Pool and Provider
 # 3. GKE clusters (staging + production)
 # 4. Required IAM bindings
-```bash
+```
 **Script outputs:** GitHub secrets ready to paste into repository settings.
 
 ---
@@ -69,7 +69,7 @@ gcloud services enable \
   logging.googleapis.com \
   monitoring.googleapis.com \
   --project=$PROJECT_ID
-```bash
+```
 ### Step 3: Create Service Account
 
 ```bash
@@ -117,7 +117,7 @@ gcloud iam service-accounts add-iam-policy-binding \
   --project="$PROJECT_ID" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/attribute.repository/${GITHUB_REPO}"
-```sql
+```
 ### Step 5: Create GKE Clusters
 
 #### Staging Cluster
@@ -153,7 +153,7 @@ gcloud container clusters create production-mcp-server-langgraph-gke \
   --enable-binary-authorization \
   --workload-pool="${PROJECT_ID}.svc.id.goog" \
   --labels=environment=production,managed-by=terraform
-```bash
+```
 ### Step 6: Create Artifact Registry
 
 ```bash
@@ -201,7 +201,7 @@ echo "GCP_SERVICE_ACCOUNT: github-actions-deployer@${PROJECT_ID}.iam.gserviceacc
 # Cluster Names
 echo "GKE_STAGING_CLUSTER: staging-mcp-server-langgraph-gke"
 echo "GKE_PRODUCTION_CLUSTER: production-mcp-server-langgraph-gke"
-```bash
+```
 ---
 
 ## Update Workflow Files
@@ -236,7 +236,7 @@ env:
   with:
     workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
     service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-```bash
+```
 ---
 
 ## Verification
@@ -263,7 +263,7 @@ Trigger a manual workflow run to test:
 
 # Or via gh CLI:
 gh workflow run deploy-staging-gke.yaml
-```bash
+```
 ---
 
 ## Troubleshooting
@@ -296,7 +296,7 @@ gcloud iam workload-identity-pools providers list \
   --workload-identity-pool=github-actions-pool \
   --location=global \
   --project=$PROJECT_ID
-```bash
+```
 #### 3. "Cluster not found"
 
 **Cause:** Cluster name mismatch or wrong region.
@@ -322,7 +322,7 @@ Grant only necessary permissions:
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/monitoring.viewer"
-```bash
+```
 ### 2. Separate Environments
 
 Use different service accounts for staging vs production:
@@ -346,7 +346,7 @@ gcloud logging read \
   'protoPayload.authenticationInfo.principalEmail="github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"' \
   --limit=50 \
   --format=json
-```bash
+```
 ### 4. Conditional Access
 
 Limit Workload Identity to specific branches:
@@ -391,7 +391,7 @@ gcloud container clusters describe staging-mcp-server-langgraph-gke \
 gcloud artifacts repositories set-cleanup-policies mcp-server-langgraph \
   --location=$GCP_REGION \
   --policy=keep-minimum-versions,delete-older-than-90-days
-```bash
+```
 ---
 
 ## Monitoring & Alerts
@@ -415,7 +415,7 @@ gcloud builds list --limit=10 --project=$PROJECT_ID
 
 # View GKE deployment logs
 kubectl logs -l app=mcp-server-langgraph -n default
-```bash
+```
 ---
 
 ## Automated Setup Script

@@ -69,7 +69,7 @@ export GOOGLE_API_KEY="your-key-here"  # Get free key: https://aistudio.google.c
 uv run python quickstart_app.py
 
 # ✅ Server running at http://localhost:8000
-```bash
+```
 ### Test It
 
 ```bash
@@ -145,7 +145,7 @@ uv run alembic upgrade head
 uv run uvicorn src.mcp_server_langgraph.mcp.server_streamable:app --reload
 
 # ✅ Server running at http://localhost:8000 with persistence
-```bash
+```
 ### Test It
 
 ```bash
@@ -187,7 +187,7 @@ docker compose up -d keycloak openfga
 export AUTH_PROVIDER=keycloak
 export OPENFGA_STORE_ID=<created-store-id>
 # See docs/deployment/authentication.md for setup
-```bash
+```
 **Next step**: When you're ready for production deployment, move to Path 3.
 
 ---
@@ -231,7 +231,7 @@ make type-check
 
 # Run fast quality checks before committing
 make quick-check
-```bash
+```
 ### Debugging
 
 ```bash

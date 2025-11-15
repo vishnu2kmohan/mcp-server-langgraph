@@ -56,7 +56,7 @@ gh workflow run dora-metrics.yaml
 
 # Analyze specific time period
 gh workflow run dora-metrics.yaml -f days=60
-```bash
+```
 **Viewing Results**:
 ```bash
 # Check metrics history
@@ -74,7 +74,7 @@ python scripts/ci/dora_metrics.py \
   --repo owner/repo \
   --days 30 \
   --output .dora-metrics/metrics.json
-```bash
+```
 ---
 
 ### 2. Performance Regression Detection
@@ -132,7 +132,7 @@ python scripts/ci/performance_regression.py \
 **View Baseline**:
 ```bash
 cat .perf-baseline/baseline.json
-```bash
+```
 **Manual Update**:
 ```bash
 # Run benchmarks
@@ -166,7 +166,7 @@ Integrate GitHub Actions with enterprise observability platforms for comprehensi
 ```bash
 # Add to repository secrets
 gh secret set SLACK_WEBHOOK_URL --body "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-```bash
+```
 ##### PagerDuty
 - Critical alert escalation
 - On-call engineer notifications
@@ -189,7 +189,7 @@ gh secret set PAGERDUTY_INTEGRATION_KEY --body "your-integration-key"
 ```bash
 # Add to repository secrets
 gh secret set DATADOG_API_KEY --body "your-api-key"
-```bash
+```
 #### Severity Classification
 
 | Severity | Triggers | Notifications |
@@ -327,7 +327,7 @@ gh run view --log
 ```bash
 # View latest metrics
 jq '.[-1]' .dora-metrics/metrics.json
-```json
+```
 **Example Output**:
 ```json
 {
@@ -402,7 +402,7 @@ gh api repos/:owner/:repo/deployments | jq '.[:5]'
 
 # Verify environment is "production"
 gh api repos/:owner/:repo/deployments | jq '.[0].environment'
-```bash
+```
 ### Performance Benchmarks Failing
 
 **Issue**: Server not starting for benchmarks

@@ -50,7 +50,7 @@ class UserProvider(ABC):
 class InMemoryUserProvider(UserProvider):  # Development, testing
 class KeycloakUserProvider(UserProvider):  # Production enterprise
 ## Future: OktaUserProvider, Auth0UserProvider, AzureADUserProvider
-```python
+```
 #### Factory Pattern
 
 ```python
@@ -69,7 +69,7 @@ KEYCLOAK_SERVER_URL=https://keycloak.example.com
 KEYCLOAK_REALM=mcp-server
 KEYCLOAK_CLIENT_ID=langgraph-agent
 KEYCLOAK_CLIENT_SECRET=<secret>
-```python
+```
 ### Consequences
 
 #### Positive Consequences
@@ -170,7 +170,7 @@ class KeycloakUserProvider(UserProvider):
             refresh_token=token_response.refresh_token,
             ...
         )
-```python
+```
 **Features**:
 - OIDC/OAuth2 integration
 - JWT verification with JWKS

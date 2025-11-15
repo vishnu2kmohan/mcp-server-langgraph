@@ -205,7 +205,7 @@ console.log(response.data);
 
 The agent returns a structured response:
 
-```json
+```
 {
   "content": "I can help you with...",
   "role": "assistant",
@@ -263,7 +263,7 @@ The agent returns a structured response:
   <Accordion title="Port already in use">
     If port 8080 or 8000 is already in use:
 
-    ```bash
+    ```
     # Check what's using the port
     lsof -i :8080  # macOS/Linux
     netstat -ano | findstr :8080  # Windows
@@ -279,7 +279,7 @@ The agent returns a structured response:
   <Accordion title="OpenFGA connection refused">
     Ensure OpenFGA is running:
 
-    ```bash
+    ```
     docker compose ps openfga
     docker compose logs openfga
 
@@ -291,7 +291,7 @@ The agent returns a structured response:
   <Accordion title="API key invalid">
     Verify your API key:
 
-    ```bash
+    ```
     # Check .env file
     cat .env | grep API_KEY
 
@@ -304,7 +304,7 @@ The agent returns a structured response:
   <Accordion title="Module not found">
     Ensure dependencies are installed:
 
-    ```bash
+    ```
     # Reinstall dependencies (uv recreates .venv if needed)
     uv sync
 

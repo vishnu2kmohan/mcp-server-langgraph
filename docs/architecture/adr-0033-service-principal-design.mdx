@@ -79,7 +79,7 @@ sequenceDiagram
     Note over SP,User: Audit Trail
     App->>App: Log action<br/>Principal: service:batch-etl-job<br/>Effective User: alice
 
-```rust
+```
 #### Authentication Modes
 
 ##### Mode 1: Client Credentials Flow (Preferred)
@@ -105,7 +105,7 @@ response = await httpx.post(token_endpoint, data={
     "client_id": "batch-etl-job",
     "client_secret": "service-secret"
 })
-```rust
+```
 ##### Mode 2: Service Account User (Alternative)
 **Use Case**: Legacy systems migration, mixed authentication needs
 
@@ -131,7 +131,7 @@ response = await httpx.post(token_endpoint, data={
     # User owns service principal
     {"user": "user:bob", "relation": "owner", "object": "service_principal:batch-etl-job"}
 ]
-```bash
+```
 **Permission Check**: Service inherits user permissions via `acts_as` relationship.
 
 #### Configuration

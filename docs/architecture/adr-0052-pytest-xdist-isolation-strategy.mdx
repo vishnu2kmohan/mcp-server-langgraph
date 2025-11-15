@@ -62,7 +62,7 @@ def test_infrastructure_ports():
         "redis_checkpoints": 9379 + port_offset,
         # ... other ports
     }
-```python
+```
 **Result**:
 - Worker gw0: postgres=9432, redis=9379 (offset 0)
 - Worker gw1: postgres=9532, redis=9479 (offset 100)
@@ -119,7 +119,7 @@ async def redis_client_clean(redis_client_real):
 
     # Cleanup: FLUSHDB (safe, worker-scoped)
     await redis_client_real.flushdb()
-```bash
+```
 **Result**:
 - Worker gw0: Uses Redis DB 1
 - Worker gw1: Uses Redis DB 2

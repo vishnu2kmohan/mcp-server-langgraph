@@ -58,7 +58,7 @@ uv sync  # That's it! Creates venv + installs everything
   run: |
     pip install --upgrade pip
     pip install -r requirements.txt
-```bash
+```
 **After (uv)**:
 ```yaml
 - name: Install uv
@@ -102,7 +102,7 @@ uv --version
 ```bash
 ## Optional: Start fresh
 rm -rf .venv
-```python
+```
 #### Step 3: Install Dependencies with uv
 
 ```bash
@@ -137,7 +137,7 @@ Replace old commands with new ones:
 ```makefile
 install:
     pip install -r requirements.txt
-```yaml
+```
 **After**:
 ```makefile
 install:
@@ -161,7 +161,7 @@ uv run black src/
 
 ## Run your application
 uv run python -m mcp_server_langgraph.mcp.server_streamable
-```bash
+```
 #### Adding New Dependencies
 
 **Before (pip)**:
@@ -177,7 +177,7 @@ uv add new-package
 
 ## Or manually edit pyproject.toml, then:
 uv sync
-```sql
+```
 #### Updating Dependencies
 
 ```bash
@@ -200,7 +200,7 @@ uv sync --extra embeddings
 
 ## Install all optional features
 uv sync --all-extras
-```bash
+```
 ### CI/CD Migration
 
 #### GitHub Actions
@@ -240,7 +240,7 @@ uv sync --all-extras
 
 - name: Install dependencies
   run: uv sync --frozen
-```bash
+```
 #### Docker
 
 **Current approach (still works)**:
@@ -259,7 +259,7 @@ COPY pyproject.toml uv.lock ./
 
 ## Install dependencies
 RUN uv sync --frozen --no-dev
-```bash
+```
 ### Troubleshooting
 
 #### Issue: "uv: command not found"
@@ -282,7 +282,7 @@ uv lock
 
 ## Then sync
 uv sync
-```bash
+```
 #### Issue: Version conflicts
 
 **Solution**:
@@ -306,7 +306,7 @@ uv run python script.py
 ## Or activate venv manually
 source .venv/bin/activate
 python script.py
-```bash
+```
 #### Issue: CI/CD cache issues
 
 **Solution**:
@@ -338,7 +338,7 @@ Check `.python-version` file:
 ```bash
 cat .python-version
 ## Output: 3.12
-```bash
+```
 #### Can I use uv with existing venv?
 
 **Yes**, but starting fresh is recommended:

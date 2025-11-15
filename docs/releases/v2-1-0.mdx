@@ -42,7 +42,7 @@ AUTH_PROVIDER=keycloak
 KEYCLOAK_SERVER_URL=http://keycloak:8080
 KEYCLOAK_REALM=mcp-server
 KEYCLOAK_CLIENT_ID=mcp-server-client
-```python
+```
 **Deployment**: Kubernetes manifest included
 
 #### 💾 Redis Session Management
@@ -92,7 +92,7 @@ conditional_mappings:
     operator: "=="
     value: "engineering"
     role: developer
-```bash
+```
 ### Mintlify Documentation
 
 #### 📖 100% Coverage (43 MDX files, ~33,242 lines)
@@ -240,7 +240,7 @@ make setup-infra  # Starts Keycloak, Redis, etc.
 make deploy-dev  # Dev environment
 ## Or
 make deploy-production  # Production with Helm
-```bash
+```
 #### Testing
 
 ```bash

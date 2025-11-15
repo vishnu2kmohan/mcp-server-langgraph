@@ -46,7 +46,7 @@ SCIM (System for Cross-domain Identity Management) enables:
 SCIM_ENABLED=true
 SCIM_BASE_URL=https://api.example.com/scim/v2
 SCIM_AUTHENTICATION=jwt
-```bash
+```
 #### 2. Create Service Principal for SCIM
 
 ```bash
@@ -99,7 +99,7 @@ curl -X POST https://api.example.com/scim/v2/Users \
     }],
     "active": true
   }'
-```json
+```
 **Response**:
 ```json
 {
@@ -139,7 +139,7 @@ curl -X PATCH https://api.example.com/scim/v2/Users/user-uuid-123 \
       }
     ]
   }'
-```bash
+```
 #### Deactivate User (DELETE)
 
 ```bash
@@ -152,7 +152,7 @@ curl -X DELETE https://api.example.com/scim/v2/Users/user-uuid-123 \
 ```bash
 curl -X GET 'https://api.example.com/scim/v2/Users?filter=userName eq "alice@example.com"' \
   -H "Authorization: Bearer JWT_TOKEN"
-```bash
+```
 #### Create Group
 
 ```bash
@@ -205,7 +205,7 @@ When users are provisioned via SCIM, roles are automatically synced to OpenFGA:
 ```text
 SCIM Create User → Keycloak User Created → Event Listener
   → sync_user_to_openfga() → OpenFGA Tuples
-```bash
+```
 Default roles assigned: `["user"]`
 
 Configure in `.env`:
@@ -227,7 +227,7 @@ rate(scim_operations_errors_total[5m])
 
 ## Provisioning latency
 histogram_quantile(0.95, scim_operation_duration_seconds_bucket)
-```json
+```
 #### Audit Logs
 
 All SCIM operations are logged:

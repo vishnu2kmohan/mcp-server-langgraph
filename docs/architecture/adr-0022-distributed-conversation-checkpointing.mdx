@@ -42,7 +42,7 @@ spec:
   sessionAffinityConfig:
     clientIP:
       timeoutSeconds: 10800  # 3 hours
-```bash
+```
 **Why This Fails**:
 - ❌ Only works for same source IP (mobile clients change IPs)
 - ❌ Doesn't prevent state loss on pod restarts
@@ -95,7 +95,7 @@ REDIS_URL=redis://localhost:6379/0
 
 ## Checkpoint storage (new)
 CHECKPOINT_REDIS_URL=redis://localhost:6379/1
-```bash
+```
 #### Configuration
 
 ```python
@@ -112,7 +112,7 @@ redis:
   image: redis:7-alpine
   command: redis-server --appendonly yes --databases 16
   # db 0: sessions, db 1: checkpoints
-```python
+```
 ### Consequences
 
 #### Positive Consequences
@@ -276,7 +276,7 @@ Pod A terminates (scale-down)
 
 User Request 3 → Pod C (same thread_id)
 └─ Works seamlessly (loads from Redis)
-```python
+```
 ### Performance Characteristics
 
 | Backend | Checkpoint Read | Checkpoint Write | Pod Restart Impact | Scaling Impact |
@@ -325,7 +325,7 @@ async def test_conversation_continuity_across_restarts():
 
     # Conversation history should be preserved
     assert len(result_b["messages"]) > len(new_state["messages"])
-```python
+```
 #### Load Tests
 
 - Verify performance with Redis checkpointer under load
@@ -345,7 +345,7 @@ CHECKPOINT_BACKEND=memory  # Fast, no Redis needed
 ```bash
 CHECKPOINT_BACKEND=redis
 CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
-```python
+```
 #### Existing Deployments
 
 **No Breaking Changes**:
@@ -390,7 +390,7 @@ spec:
   maxReplicas: 10
   # Works correctly with Redis checkpointer
   # All replicas share conversation state
-```dockerfile
+```
 ### Monitoring
 
 #### Metrics

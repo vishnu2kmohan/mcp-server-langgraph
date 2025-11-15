@@ -120,7 +120,7 @@ MCPServerException (base)
 └── InternalServerError (500)
     ├── UnexpectedError
     └── NotImplementedError
-```python
+```
 ### Base Exception Class
 
 #### Features
@@ -151,7 +151,7 @@ class ErrorCategory(str, Enum):
     EXTERNAL_ERROR = "external_error"  # External service
     RATE_LIMIT = "rate_limit"          # 429 errors
     AUTH_ERROR = "auth_error"          # 401/403 errors
-```python
+```
 #### Retry Policy
 
 ```python
@@ -196,7 +196,7 @@ raise InputValidationError(
         "constraint": "email_format"
     }
 )
-```python
+```
 #### Handling Exceptions
 
 ```python
@@ -248,7 +248,7 @@ except AuthenticationError as e:
     }
   }
 }
-```python
+```
 ### FastAPI Integration
 
 #### Exception Handlers
@@ -313,7 +313,7 @@ except MCPServerException as e:
         retry_policy=e.retry_policy.value
     ).inc()
     raise
-```python
+```
 #### Logging
 
 ```python
@@ -347,7 +347,7 @@ except MCPServerException as e:
 **Before**:
 ```python
 raise Exception("JWT verification failed")
-```python
+```
 **After**:
 ```python
 raise TokenInvalidError(
@@ -376,7 +376,7 @@ with pytest.raises(TokenInvalidError) as exc_info:
 assert exc_info.value.error_code == "auth.token_invalid"
 assert exc_info.value.status_code == 401
 assert exc_info.value.retry_policy == RetryPolicy.NEVER
-```bash
+```
 ### Configuration
 
 #### Environment Variables

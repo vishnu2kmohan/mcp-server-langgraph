@@ -69,7 +69,7 @@ LANGSMITH_PROJECT=mcp-server-langgraph
 
 ## Enable dual observability
 OBSERVABILITY_BACKEND=both  # OpenTelemetry + LangSmith
-```python
+```
 #### 3. Start Tracing
 
 That's it! All agent invocations are now automatically traced:
@@ -147,7 +147,7 @@ config = langsmith_config.create_run_config(
 
 ## Use in invocation
 result = agent_graph.invoke(inputs, config=config)
-```python
+```
 Now you can filter traces by:
 - **User tier**: Find all premium user interactions
 - **Department**: Analyze usage by cost center
@@ -361,7 +361,7 @@ config = langsmith_config.create_run_config(
 )
 
 result = agent_graph.invoke(inputs, config=config)
-```python
+```
 ```python Feedback collection
 from langsmith import Client
 

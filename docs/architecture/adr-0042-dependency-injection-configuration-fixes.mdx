@@ -75,7 +75,7 @@ keycloak_config = KeycloakConfig(
     admin_username=settings.keycloak_admin_username,  # ADDED
     admin_password=settings.keycloak_admin_password,  # ADDED
 )
-```bash
+```
 **Impact**:
 - ✅ Admin API operations now authenticate correctly
 - ✅ API key manager can create/delete keys
@@ -151,7 +151,7 @@ def __init__(self, keycloak_client: KeycloakClient, openfga_client: Optional[Ope
     """
     self.keycloak = keycloak_client
     self.openfga = openfga_client
-```bash
+```
 #### 3b. Guard `_sync_to_openfga` Method
 ```python
 # Line 209-211: Check if OpenFGA is available
@@ -172,7 +172,7 @@ async def _sync_to_openfga(...) -> None:
 # Line 262: Add guard when creating acts_as tuple
 if inherit_permissions and self.openfga is not None:
     await self.openfga.write_tuples([...])
-```bash
+```
 #### 3d. Guard `delete_service_principal` Method
 ```python
 # Line 426-427: Guard OpenFGA cleanup
@@ -236,7 +236,7 @@ def __init__(
         socket_connect_timeout=2,
         socket_timeout=2,
     )
-```python
+```
 **Updated**: `get_cache()` function to pass all settings:
 ```python
 def get_cache() -> CacheService:
@@ -338,7 +338,7 @@ Ensure environment variables are set:
 ```bash
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=<secure-password>
-```bash
+```
 #### For OpenFGA Authorization
 Either configure fully or accept degraded mode:
 ```bash

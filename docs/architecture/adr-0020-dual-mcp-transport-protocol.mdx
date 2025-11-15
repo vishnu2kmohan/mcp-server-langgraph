@@ -86,7 +86,7 @@ flowchart TD
     class Agent agentStyle
     class STDIO,HTTP transportStyle
     class Desktop,Cloud clientStyle
-```python
+```
 #### Transport 1: STDIO (Standard Input/Output)
 
 **Protocol**: JSON-RPC over stdin/stdout
@@ -134,7 +134,7 @@ Client receives tool list
 ## pyproject.toml
 [project.scripts]
 mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
-```python
+```
 **Usage**:
 ```bash
 ## Run as MCP server for Claude Desktop
@@ -184,7 +184,7 @@ Server (MCP HTTP)
     data: {"chunk": 2, "content": " there!"}
     ↓
 Client renders streamed response
-```toml
+```
 **Entry Point**:
 ```toml
 ## pyproject.toml
@@ -196,7 +196,7 @@ mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
 ```bash
 ## Run as HTTP server
 mcp-server-langgraph-http --host 0.0.0.0 --port 8000
-```python
+```
 ### Consequences
 
 #### Positive Consequences
@@ -267,7 +267,7 @@ agent_graph = graph.compile()
 ```bash
 ## No environment variables needed (uses stdin/stdout)
 ## Works with default config
-```json
+```
 **Claude Desktop Integration**:
 ```json
 // claude_desktop_config.json
@@ -309,7 +309,7 @@ export MCP_HTTP_HOST=0.0.0.0
 export MCP_HTTP_PORT=8000
 export MCP_ENABLE_CORS=true
 export MCP_AUTH_ENABLED=true
-```python
+```
 **Streaming Example**:
 ```python
 @app.post("/mcp/tools/call")
@@ -332,7 +332,7 @@ eventSource.onmessage = (event) => {
     const data = JSON.parse(event.data);
     console.log('Received:', data);
 };
-```bash
+```
 #### Configuration Matrix
 
 | Feature | STDIO | StreamableHTTP |
@@ -481,7 +481,7 @@ spec:
   ports:
   - port: 80
     targetPort: 8000
-```bash
+```
 #### Docker Compose (StreamableHTTP)
 
 ```yaml
@@ -511,7 +511,7 @@ gcloud run deploy mcp-server \
   --region us-central1 \
   --allow-unauthenticated \
   --set-env-vars="MCP_HTTP_PORT=8080,MCP_ENABLE_CORS=true"
-```python
+```
 ### Performance Characteristics
 
 #### STDIO Transport

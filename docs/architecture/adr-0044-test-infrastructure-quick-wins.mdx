@@ -79,7 +79,7 @@ async def check_authorization():
     return await client.check(...)
 
 result = percentile_benchmark(check_authorization)  # Auto-detects async
-```bash
+```
 **Technical Details**:
 - Added `inspect.iscoroutinefunction()` detection to `PercentileBenchmark.__call__()`
 - Create single event loop before iterations: `loop = asyncio.new_event_loop()`

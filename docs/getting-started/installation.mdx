@@ -249,7 +249,7 @@ Create `.env` from the example:
 
 ```bash
 cp .env.example .env
-```python
+```
 Edit `.env` with your values:
 
 <CodeGroup>
@@ -263,7 +263,7 @@ GOOGLE_API_KEY=your-api-key-here
 LLM_PROVIDER=anthropic
 MODEL_NAME=claude-3-5-sonnet-20241022
 ANTHROPIC_API_KEY=sk-ant-your-key-here
-```bash
+```
 ```bash OpenAI GPT
 LLM_PROVIDER=openai
 MODEL_NAME=gpt-4
@@ -297,7 +297,7 @@ uv run python examples/client_stdio.py
 source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate     # Windows
 python examples/client_stdio.py
-```python
+```
 You should see successful responses from the agent!
 
 ### Verification
@@ -311,7 +311,7 @@ uv run pytest -m unit -v
 
 ```bash All Tests
 uv run pytest -v
-```python
+```
 ```bash With Coverage
 uv run pytest --cov=. --cov-report=term-missing
 ```

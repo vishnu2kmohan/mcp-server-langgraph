@@ -56,7 +56,7 @@ uv run pytest -m unit -v
 
 ## 9. Test the agent
 uv run python examples/client_stdio.py
-```bash
+```
 **You're ready to develop!** 🚀
 
 ---
@@ -122,7 +122,7 @@ uv sync
 
 ## Verify installation
 uv run python -c "import langgraph, anthropic; print('All imports successful')"
-```bash
+```
 **Using Make (recommended):**
 
 ```bash
@@ -207,7 +207,7 @@ vim .env
 nano .env
 ## or
 code .env  # VS Code
-```bash
+```
 **Minimal .env configuration:**
 
 ```bash
@@ -244,7 +244,7 @@ docker compose ps
 ## - jaeger (port 16686)
 ## - prometheus (port 9090)
 ## - grafana (port 3000)
-```bash
+```
 **Check service health:**
 
 ```bash
@@ -328,7 +328,7 @@ git commit -m "feat: add new feature"
 git push origin feat/your-feature
 
 ## 9. Create Pull Request on GitHub
-```bash
+```
 #### Using Make Commands
 
 ```bash
@@ -370,7 +370,7 @@ Create `.vscode/settings.json`:
     }
   }
 }
-```python
+```
 ##### PyCharm
 
 1. File → Settings → Project → Python Interpreter
@@ -427,7 +427,7 @@ async def test_my_integration():
     """Test integration with real service"""
     # Test with actual dependencies
     pass
-```python
+```
 #### Test Markers
 
 - `@pytest.mark.unit` - Unit tests (no external deps)
@@ -457,7 +457,7 @@ import pdb; pdb.set_trace()
 
 ## Or use built-in (Python 3.7+)
 breakpoint()
-```python
+```
 #### Debug Tests
 
 ```bash
@@ -476,7 +476,7 @@ open http://localhost:16686
 
 ## Select service: mcp-server-langgraph
 ## View traces with full context
-```bash
+```
 #### Check Logs
 
 ```bash
@@ -507,7 +507,7 @@ uv sync
 
 ## Or use uv run to avoid activation issues
 uv run python your_script.py
-```bash
+```
 ##### "Port already in use"
 
 ```bash
@@ -533,7 +533,7 @@ docker compose logs openfga
 
 ## Restart service
 docker compose restart openfga
-```bash
+```
 ##### "API key invalid"
 
 ```bash

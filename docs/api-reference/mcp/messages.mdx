@@ -81,7 +81,7 @@ All MCP messages follow this base structure:
     }
   }
 }
-```json
+```
 ## Error Codes
 
 | Code | Message | Description |
@@ -145,7 +145,7 @@ All MCP messages follow this base structure:
     }
   }
 }
-```json
+```
 ### Tools/List
 
 **Request**:
@@ -182,7 +182,7 @@ All MCP messages follow this base structure:
     ]
   }
 }
-```json
+```
 ### Tools/Call
 
 **Request**:
@@ -216,7 +216,7 @@ All MCP messages follow this base structure:
     "isError": false
   }
 }
-```json
+```
 ### Resources/List
 
 **Request**:
@@ -245,7 +245,7 @@ All MCP messages follow this base structure:
     ]
   }
 }
-```json
+```
 ### Resources/Read
 
 **Request**:
@@ -275,7 +275,7 @@ All MCP messages follow this base structure:
     ]
   }
 }
-```json
+```
 ### Prompts/List
 
 **Request**:
@@ -309,7 +309,7 @@ All MCP messages follow this base structure:
     ]
   }
 }
-```python
+```
 ### Prompts/Get
 
 **Request**:
@@ -345,7 +345,7 @@ All MCP messages follow this base structure:
     ]
   }
 }
-```json
+```
 ## Content Types
 
 ### Text Content
@@ -365,7 +365,7 @@ All MCP messages follow this base structure:
   "data": "base64-encoded-image-data",
   "mimeType": "image/png"
 }
-```json
+```
 ### Resource Content
 
 ```json
@@ -390,7 +390,7 @@ Notifications are messages sent without expecting a response (no `id` field):
   "jsonrpc": "2.0",
   "method": "notifications/tools/list_changed"
 }
-```json
+```
 ### Resources/ListChanged
 
 ```json
@@ -410,7 +410,7 @@ Notifications are messages sent without expecting a response (no `id` field):
     "uri": "conversation://conv_123"
   }
 }
-```json
+```
 ## Streaming Messages
 
 For streaming responses, the server sends multiple messages:
@@ -438,7 +438,7 @@ For streaming responses, the server sends multiple messages:
     "delta": "Quantum computing"
   }
 }
-```json
+```
 ### Content End
 
 ```json
@@ -471,7 +471,7 @@ For long-running operations:
     "total": 100
   }
 }
-```python
+```
 ## Example Flows
 
 ### Complete Chat Interaction
@@ -553,7 +553,7 @@ Send multiple requests in a single HTTP call:
     "method": "prompts/list"
   }
 ]
-```json
+```
 **Response**:
 ```json
 [

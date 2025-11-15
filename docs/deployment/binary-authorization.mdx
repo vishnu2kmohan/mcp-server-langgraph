@@ -179,13 +179,13 @@ flowchart TB
         binary_authorization_mode      = "ENFORCING"
         ```
 
-        ```bash
+        ```
         terraform apply
         ```
       </Tab>
 
       <Tab title="gcloud CLI">
-        ```bash
+        ```
         gcloud container clusters update CLUSTER_NAME \
           --enable-binauthz \
           --region=us-central1 \
@@ -196,7 +196,7 @@ flowchart TB
   </Step>
 
   <Step title="Sign First Image">
-    ```bash
+    ```
     ./deployments/security/binary-authorization/sign-image.sh \
       PROJECT_ID production \
       us-central1-docker.pkg.dev/PROJECT_ID/mcp-production/mcp-server-langgraph:v1.0.0
@@ -206,7 +206,7 @@ flowchart TB
   </Step>
 
   <Step title="Verify Policy">
-    ```bash
+    ```
     # Try deploying unsigned image (should fail)
     kubectl run test --image=nginx:latest
 
@@ -227,7 +227,7 @@ flowchart TB
 
 <Tabs>
   <Tab title="Enforcing (Production)">
-    ```yaml
+    ```
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: ENFORCING_MODE
     ```
@@ -240,7 +240,7 @@ flowchart TB
   </Tab>
 
   <Tab title="Audit (Staging)">
-    ```yaml
+    ```
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: DRYRUN_AUDIT_LOG_ONLY
     ```
@@ -253,7 +253,7 @@ flowchart TB
   </Tab>
 
   <Tab title="Disabled (Development)">
-    ```yaml
+    ```
     evaluationMode: ALWAYS_ALLOW
     ```
 

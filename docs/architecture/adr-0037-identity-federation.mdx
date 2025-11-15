@@ -83,7 +83,7 @@ flowchart TB
 
     %% Styling
 
-```python
+```
 **Authentication Flows by Provider Type**:
 ```mermaid
 %% ColorBrewer2 Set3 palette - each component type uniquely colored
@@ -145,7 +145,7 @@ sequenceDiagram
     "vendor": "ad"
   }
 }
-```rust
+```
 **Flow**: User logs in → Keycloak binds to LDAP → LDAP validates → Keycloak issues JWT
 
 ##### 2. SAML 2.0 (Identity Broker)
@@ -183,7 +183,7 @@ sequenceDiagram
     "hostedDomain": "example.com"
   }
 }
-```json
+```
 **Flow**: User → Keycloak → Redirect to Google → OIDC auth → Keycloak → JWT
 
 #### Attribute Mapping
@@ -206,7 +206,7 @@ sequenceDiagram
   {"saml": "http://schemas.xmlsoap.org/claims/Group",
    "keycloak": "groups"}
 ]
-```json
+```
 **OIDC → Keycloak**:
 ```python
 [

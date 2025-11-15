@@ -47,7 +47,7 @@ flowchart TB
     class API serverStyle
     class Store,PG dataStyle
     class Model,Relations,Tuples modelStyle
-```bash
+```
 ### Quick Start
 
 <Steps>
@@ -84,7 +84,7 @@ flowchart TB
       </Tab>
 
       <Tab title="Kubernetes">
-        ```bash
+        ```
         # Using Helm
         helm repo add openfga https://openfga.github.io/helm-charts
         helm install openfga openfga/openfga \
@@ -105,7 +105,7 @@ flowchart TB
         - Or deploy to GKE/EKS/AKS
 
         **Configuration**:
-        ```bash
+        ```
         OPENFGA_API_URL=https://api.openfga.dev
         OPENFGA_STORE_ID=your-store-id
         OPENFGA_MODEL_ID=your-model-id
@@ -116,7 +116,7 @@ flowchart TB
   </Step>
 
   <Step title="Verify Installation">
-    ```bash
+    ```
     # Check OpenFGA health
     curl http://localhost:8080/healthz
 
@@ -131,7 +131,7 @@ flowchart TB
   </Step>
 
   <Step title="Run Setup Script">
-    ```bash
+    ```
     # Initialize store and model
     python scripts/setup/setup_openfga.py
     ```markdown
@@ -178,7 +178,7 @@ flowchart TB
   </Step>
 
   <Step title="Test Authorization">
-    ```python
+    ```
     from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
     client = OpenFGAClient()
@@ -201,7 +201,7 @@ flowchart TB
 
 The setup script creates this authorization model:
 
-```typescript
+```
 model
   schema 1.1
 
@@ -242,7 +242,7 @@ type document
   <Tab title="User">
     **user** - Individual users
 
-    ```typescript
+    ```
     type user
     ```markdown
     No relations defined - users are leaf nodes in the authorization graph.
@@ -251,7 +251,7 @@ type document
   <Tab title="Organization">
     **organization** - Tenants or teams
 
-    ```typescript
+    ```
     type organization
       relations
         define admin: [user]
@@ -266,7 +266,7 @@ type document
   <Tab title="Tool">
     **tool** - Agent tools (chat, search, etc.)
 
-    ```typescript
+    ```
     type tool
       relations
         define owner: [user]
@@ -281,7 +281,7 @@ type document
   <Tab title="Conversation">
     **conversation** - Chat conversations
 
-    ```typescript
+    ```
     type conversation
       relations
         define owner: [user]
@@ -300,7 +300,7 @@ type document
 
 #### Environment Variables
 
-```bash
+```
 ## OpenFGA Connection
 OPENFGA_API_URL=http://localhost:8080  # API endpoint
 OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX # Store ID (from setup)
@@ -316,7 +316,7 @@ OPENFGA_TIMEOUT=30                     # Request timeout (seconds)
 ```python
 #### Client Configuration
 
-```python
+```
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
 ## Basic configuration
@@ -347,7 +347,7 @@ client = OpenFGAClient(
 
 #### Creating Relationships
 
-```python
+```
 ## Grant alice admin access to organization
 await client.write_tuples([{
     "user": "user:alice",
@@ -371,7 +371,7 @@ await client.write_tuples([
 ```python
 #### Checking Permissions
 
-```python
+```
 ## Check if user can execute tool
 allowed = await client.check_permission(
     user="user:alice",
@@ -389,7 +389,7 @@ else:
 
 #### Listing Permissions
 
-```python
+```
 ## What can user access?
 tools = await client.list_objects(
     user="user:alice",
@@ -409,7 +409,7 @@ print(f"Can execute chat: {users}")
 ```markdown
 #### Deleting Relationships
 
-```python
+```
 ## Revoke specific permission
 await client.delete_tuples([{
     "user": "user:bob",
@@ -430,7 +430,7 @@ await client.delete_tuples(user_tuples)
 
 Deploy with multiple replicas:
 
-```yaml
+```
 ## Kubernetes
 apiVersion: apps/v1
 kind: Deployment
@@ -471,7 +471,7 @@ spec:
 
 **Always use PostgreSQL in production** (not in-memory):
 
-```bash
+```
 ## Connection string
 OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=require
 
@@ -482,7 +482,7 @@ OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
 ```markdown
 
 **PostgreSQL Configuration**:
-```sql
+```
 -- Create database
 CREATE DATABASE openfga;
 
@@ -496,7 +496,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 ```bash
 #### Performance Tuning
 
-```bash
+```
 ## Enable caching
 OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
 OPENFGA_CHECK_QUERY_CACHE_LIMIT=10000
@@ -513,7 +513,7 @@ OPENFGA_LOG_FORMAT=json
 
 #### Monitoring
 
-```yaml
+```
 ## ServiceMonitor for Prometheus
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -528,7 +528,7 @@ spec:
     path: /metrics
 ```markdown
 **Key Metrics**:
-```promql
+```
 ## Check rate
 rate(openfga_check_total[5m])
 
@@ -547,7 +547,7 @@ openfga_tuple_count
 
 #### Backup Tuples
 
-```python
+```
 ## Export all relationship tuples
 tuples = await client.read_tuples()
 
@@ -557,7 +557,7 @@ with open('openfga-backup.json', 'w') as f:
 ```python
 #### Restore Tuples
 
-```python
+```
 ## Import tuples
 import json
 with open('openfga-backup.json', 'r') as f:
@@ -568,7 +568,7 @@ await client.write_tuples(tuples)
 
 #### Database Backup
 
-```bash
+```
 ## Backup PostgreSQL
 pg_dump -U openfga openfga > openfga-backup.sql
 
@@ -581,7 +581,7 @@ psql -U openfga openfga < openfga-backup.sql
 
 <AccordionGroup>
   <Accordion title="Connection refused">
-    ```bash
+    ```
     # Check OpenFGA status
     docker compose ps openfga
     kubectl get pods -l app=openfga
@@ -599,7 +599,7 @@ psql -U openfga openfga < openfga-backup.sql
     **Error**: `store not found`
 
     **Solutions**:
-    ```bash
+    ```
     # Re-run setup script
     python scripts/setup/setup_openfga.py
 
@@ -616,7 +616,7 @@ psql -U openfga openfga < openfga-backup.sql
     **Error**: `authorization model not found`
 
     **Solutions**:
-    ```bash
+    ```
     # Re-run setup to create model
     python scripts/setup/setup_openfga.py
 
@@ -633,7 +633,7 @@ psql -U openfga openfga < openfga-backup.sql
     - Simplify authorization model
     - Monitor query patterns
 
-    ```bash
+    ```
     # Enable caching
     OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
     OPENFGA_CHECK_QUERY_CACHE_TTL=10s
@@ -642,7 +642,7 @@ psql -U openfga openfga < openfga-backup.sql
 
   <Accordion title="Permission check returns false unexpectedly">
     **Debug**:
-    ```python
+    ```
     # List all tuples for user
     tuples = await client.read_tuples(user="user:alice")
     for t in tuples:

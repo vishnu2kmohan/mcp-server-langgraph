@@ -20,7 +20,7 @@ MCP (Model Context Protocol) is a standard protocol for connecting AI applicatio
 
 ```yaml
 http://localhost:8000/mcp
-```json
+```
 ### Endpoints
 
 #### Initialize Connection
@@ -68,7 +68,7 @@ http://localhost:8000/mcp
     "version": "2.7.0"
   }
 }
-```python
+```
 **Example**:
 ```python
 import httpx
@@ -99,7 +99,7 @@ async with httpx.AsyncClient() as client:
 {
   "method": "tools/list"
 }
-```json
+```
 **Response**:
 ```json
 {
@@ -153,7 +153,7 @@ async def list_available_tools():
     for tool in tools:
         print(f"Tool: {tool['name']}")
         print(f"  Description: {tool['description']}")
-```python
+```
 #### Call Tool
 
 <ParamField path="POST /mcp/tools/call" type="endpoint">
@@ -185,7 +185,7 @@ async def list_available_tools():
   ],
   "isError": false
 }
-```python
+```
 **Example**:
 ```python
 async def call_chat_tool(query: str):
@@ -219,7 +219,7 @@ async def call_chat_tool(query: str):
 {
   "method": "resources/list"
 }
-```json
+```
 **Response**:
 ```json
 {
@@ -254,7 +254,7 @@ async def call_chat_tool(query: str):
     "uri": "conversation://conv_123"
   }
 }
-```json
+```
 **Response**:
 ```json
 {
@@ -279,7 +279,7 @@ async def call_chat_tool(query: str):
 {
   "method": "prompts/list"
 }
-```json
+```
 **Response**:
 ```json
 {
@@ -322,7 +322,7 @@ async def call_chat_tool(query: str):
     }
   }
 }
-```json
+```
 **Response**:
 ```json
 {
@@ -352,7 +352,7 @@ async def call_chat_tool(query: str):
   "conversation_id": "conv_123",
   "stream": false
 }
-```go
+```
 **Response (Non-Streaming)**:
 ```json
 {
@@ -397,7 +397,7 @@ async def stream_message(query: str):
                     data = json.loads(line[6:])
                     if data["type"] == "content_delta":
                         print(data["delta"], end="", flush=True)
-```json
+```
 #### Logging
 
 <ParamField path="POST /mcp/logging/setLevel" type="endpoint">
@@ -419,7 +419,7 @@ async def stream_message(query: str):
 {
   "success": true
 }
-```yaml
+```
 ### Authentication
 
 All MCP endpoints require authentication. Include a valid JWT token in the `Authorization` header:
@@ -524,7 +524,7 @@ response = await client.call_tool("chat", {
 })
 
 print(response.content[0].text)
-```python
+```
 #### JavaScript/TypeScript
 
 ```typescript
@@ -578,7 +578,7 @@ curl -X POST http://localhost:8000/mcp/tools/call \
       "arguments": {"query": "Hello!"}
     }
   }'
-```yaml
+```
 ### Rate Limiting
 
 MCP endpoints are subject to rate limiting:
@@ -601,7 +601,7 @@ For real-time bidirectional communication, use the WebSocket endpoint:
 
 ```yaml
 ws://localhost:8000/mcp/ws
-```python
+```
 **Example**:
 ```python
 import websockets

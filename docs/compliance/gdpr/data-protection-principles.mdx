@@ -108,7 +108,7 @@ class ConsentManager:
 
         # Stop processing immediately
         await self.stop_processing_for_purpose(user_id, purpose)
-```bash
+```
 ---
 
 ### 2. Purpose Limitation (Article 5(1)(b))
@@ -214,7 +214,7 @@ class DataMinimization:
             "status": data.get("status"),
             # Remove all personally identifiable information
         }
-```bash
+```
 ---
 
 ### 4. Accuracy (Article 5(1)(d))
@@ -304,7 +304,7 @@ retention_policy:
   # Automated cleanup jobs
   cleanup_schedule: "daily"
   cleanup_time: "02:00_UTC"
-```bash
+```
 **Implementation:**
 
 ```python

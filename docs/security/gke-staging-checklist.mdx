@@ -104,7 +104,7 @@ gcloud iam service-accounts get-iam-policy \
 ## Verify no keys exist
 gcloud iam service-accounts keys list \
   --iam-account=mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```bash
+```
 #### Workload Identity
 - [ ] Kubernetes service account is annotated with GCP SA
 - [ ] GCP service account has workloadIdentityUser binding
@@ -174,7 +174,7 @@ kubectl get externalsecret mcp-staging-secrets -n staging-mcp-server-langgraph
 
 ## Verify secrets are synced
 kubectl get secret mcp-staging-secrets -n staging-mcp-server-langgraph
-```bash
+```
 ### Container Security
 
 #### Image Security
@@ -209,7 +209,7 @@ kubectl get pod -n staging-mcp-server-langgraph -o json | \
 ## Check for privileged containers
 kubectl get pods -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.securityContext.privileged == true)'
-```bash
+```
 #### Cloud SQL Proxy Sidecar
 - [ ] Cloud SQL proxy runs as non-root user
 - [ ] Proxy uses private IP connection
@@ -312,7 +312,7 @@ gcloud monitoring metrics-descriptors list \
 
 ## List alert policies
 gcloud alpha monitoring policies list
-```bash
+```
 #### Cloud Trace
 - [ ] Distributed tracing enabled
 - [ ] Traces sent to Cloud Trace
@@ -340,7 +340,7 @@ gcloud container clusters describe staging-mcp-server-langgraph-gke \
 
 ## Check pods have labels
 kubectl get pods -n staging-mcp-server-langgraph --show-labels
-```bash
+```
 #### Resource Limits
 - [ ] All containers have resource requests
 - [ ] All containers have resource limits
@@ -374,7 +374,7 @@ gcloud sql instances describe mcp-staging-postgres \
 
 ## List backups
 gcloud sql backups list --instance=mcp-staging-postgres
-```bash
+```
 ### GitHub Actions Security
 
 #### Workflow Security
@@ -417,7 +417,7 @@ gcloud services enable containeranalysis.googleapis.com
 ## Scan image
 gcloud artifacts docker images scan \
   us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent:staging-latest
-```bash
+```
 #### Security Auditing
 - [ ] Regular security audits scheduled
 - [ ] Audit findings tracked and remediated

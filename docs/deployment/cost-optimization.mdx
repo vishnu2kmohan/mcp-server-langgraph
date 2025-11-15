@@ -189,7 +189,7 @@ gcloud scheduler jobs create http scale-up-dev \
 ## Check usage
 gcloud monitoring time-series list \
   --filter='metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
-```rust
+```
 **If usage < 60%**, downgrade:
 - 5 GB → 3 GB: **Save $88/month** (40%)
 

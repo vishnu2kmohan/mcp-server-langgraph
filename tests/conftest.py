@@ -310,6 +310,93 @@ def reset_dependency_singletons():
 
 
 # ==============================================================================
+# Worker-Safe ID Helpers for pytest-xdist Isolation
+# ==============================================================================
+
+
+def get_user_id(suffix: str = "") -> str:
+    """
+    Generate worker-safe user ID for pytest-xdist parallel execution.
+
+    This helper prevents ID pollution when running tests in parallel with pytest-xdist.
+    Each xdist worker gets a unique ID namespace, preventing state contamination across workers.
+
+    **Why This Exists:**
+    Hardcoded IDs like "user:alice" cause state pollution in pytest-xdist because multiple
+    workers share the same infrastructure (PostgreSQL, Redis, OpenFGA). When worker gw0
+    creates a relationship for "user:alice" and worker gw1 also uses "user:alice", they
+    interfere with each other, causing flaky test failures.
+
+    **Worker Isolation Strategy:**
+    - Worker gw0: user:test_gw0
+    - Worker gw1: user:test_gw1
+    - Worker gw2: user:test_gw2
+    - Non-xdist: user:test_gw0 (default)
+
+    Args:
+        suffix: Optional suffix for test-specific ID differentiation
+                (e.g., get_user_id("admin") → "user:test_gw0_admin")
+
+    Returns:
+        Worker-isolated user ID in OpenFGA format (e.g., "user:test_gw0")
+
+    Usage:
+        def test_authorization(self):
+            user_id = get_user_id()  # ✅ Worker-safe
+            # NOT: user_id = "user:alice"  # ❌ Hardcoded - causes pollution
+
+    References:
+        - tests/meta/test_id_pollution_prevention.py (validates this pattern)
+        - scripts/validate_test_ids.py (pre-commit enforcement)
+        - Pre-commit hook: validate-test-ids
+    """
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    base_id = f"user:test_{worker_id}"
+    return f"{base_id}_{suffix}" if suffix else base_id
+
+
+def get_api_key_id(suffix: str = "") -> str:
+    """
+    Generate worker-safe API key ID for pytest-xdist parallel execution.
+
+    This helper prevents ID pollution when running tests in parallel with pytest-xdist.
+    Each xdist worker gets a unique ID namespace, preventing state contamination across workers.
+
+    **Why This Exists:**
+    Hardcoded API key IDs like "apikey_test123" cause state pollution in pytest-xdist
+    because multiple workers share the same Keycloak instance. When worker gw0 creates
+    an API key "apikey_test123" and worker gw1 also uses "apikey_test123", they interfere
+    with each other, causing flaky test failures.
+
+    **Worker Isolation Strategy:**
+    - Worker gw0: apikey_test_gw0
+    - Worker gw1: apikey_test_gw1
+    - Worker gw2: apikey_test_gw2
+    - Non-xdist: apikey_test_gw0 (default)
+
+    Args:
+        suffix: Optional suffix for test-specific ID differentiation
+                (e.g., get_api_key_id("admin") → "apikey_test_gw0_admin")
+
+    Returns:
+        Worker-isolated API key ID (e.g., "apikey_test_gw0")
+
+    Usage:
+        def test_api_key_creation(self):
+            apikey_id = get_api_key_id()  # ✅ Worker-safe
+            # NOT: apikey_id = "apikey_test123"  # ❌ Hardcoded - causes pollution
+
+    References:
+        - tests/meta/test_id_pollution_prevention.py (validates this pattern)
+        - scripts/validate_test_ids.py (pre-commit enforcement)
+        - Pre-commit hook: validate-test-ids
+    """
+    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
+    base_id = f"apikey_test_{worker_id}"
+    return f"{base_id}_{suffix}" if suffix else base_id
+
+
+# ==============================================================================
 # Docker Infrastructure Fixtures (Automated Lifecycle Management)
 # ==============================================================================
 

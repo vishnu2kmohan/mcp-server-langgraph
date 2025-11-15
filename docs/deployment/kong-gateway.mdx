@@ -55,7 +55,7 @@ flowchart LR
     class LB lbStyle
     class App1,App2,App3 appStyle
     class Metrics,Logs obsStyle
-```bash
+```
 ### Features
 
 <CardGroup cols={2}>
@@ -271,7 +271,7 @@ services:
 EOF
 
 deck sync -s kong.yaml
-```bash
+```
 #### Create Routes
 
 ```bash
@@ -342,7 +342,7 @@ SIGNATURE=$(echo -n "$TOKEN" | openssl dgst -sha256 -hmac "my-secret-key" -binar
 curl http://localhost:8000/message \
   -H "Authorization: Bearer ${TOKEN}.${SIGNATURE}" \
   -d '{"query":"Hello"}'
-```bash
+```
 #### Rate Limiting
 
 ```bash
@@ -406,7 +406,7 @@ cat >> kong.yaml << 'EOF'
       credentials: true
       max_age: 3600
 EOF
-```bash
+```
 #### Response Caching
 
 ```bash
@@ -440,7 +440,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-transformer-advanced \
   --data config.add.body[]=source:kong-gateway
-```bash
+```
 #### Logging
 
 ```bash
@@ -508,7 +508,7 @@ services:
 - name: mcp-server-langgraph
   host: langgraph-upstream
   protocol: http
-```bash
+```
 #### Circuit Breaker
 
 ```bash
@@ -531,7 +531,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-validator \
   --data config.version=draft4 \
   --data config.body_schema='{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":10000}},"required":["query"]}'
-```yaml
+```
 #### Canary Deployment
 
 ```yaml
@@ -577,7 +577,7 @@ curl http://localhost:8001/metrics
 ## kong_http_requests_total{service="mcp-server-langgraph",route="message",code="200"} 1234
 ## kong_latency_ms{type="request",service="mcp-server-langgraph"} 45.2
 ## kong_bandwidth_bytes{type="ingress",service="mcp-server-langgraph"} 1024000
-```yaml
+```
 **Prometheus config**:
 ```yaml
 ## prometheus.yml
@@ -616,7 +616,7 @@ scrape_configs:
     ]
   }
 }
-```bash
+```
 #### Distributed Tracing
 
 ```bash
@@ -649,7 +649,7 @@ curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=ip-restriction \
   --data config.deny[]=1.2.3.4
-```bash
+```
 #### Bot Detection
 
 ```bash
@@ -668,7 +668,7 @@ curl -X POST http://localhost:8001/plugins \
 curl -X POST http://localhost:8001/services/mcp-server-langgraph/plugins \
   --data name=request-size-limiting \
   --data config.allowed_payload_size=10  # MB
-```yaml
+```
 ### Production Deployment
 
 #### High Availability

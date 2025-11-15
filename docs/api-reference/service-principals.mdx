@@ -162,7 +162,7 @@ console.log('Client Secret:', data.client_secret);
 
 **Response**:
 
-```json
+```
 {
   "service_id": "batch-etl-job",
   "name": "Batch ETL Job",
@@ -190,7 +190,7 @@ console.log('Client Secret:', data.client_secret);
 
 <ResponseField name="400" type="Bad Request">
   Invalid authentication mode or missing required fields
-  ```json
+  ```
   {
     "error": "validation_error",
     "message": "Invalid authentication_mode. Must be 'client_credentials' or 'service_account_user'"
@@ -204,7 +204,7 @@ console.log('Client Secret:', data.client_secret);
 
 <ResponseField name="409" type="Conflict">
   Service principal with this ID already exists
-  ```json
+  ```
   {
     "error": "conflict",
     "message": "Service principal with ID 'batch-etl-job' already exists"
@@ -226,7 +226,7 @@ Returns all service principals where the current user is the owner. Does not inc
 ```bash cURL
 curl https://api.yourdomain.com/api/v1/service-principals/ \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```python
+```
 ```python Python
 import httpx
 
@@ -310,7 +310,7 @@ Returns service principal details if the current user is the owner.
 ```bash
 curl https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```json
+```
 **Response**:
 
 ```json
@@ -408,7 +408,7 @@ console.log('New Client Secret:', data.client_secret);
 
 **Response**:
 
-```json
+```
 {
   "service_id": "batch-etl-job",
   "client_secret": "sp_secret_xyz789new...",
@@ -458,7 +458,7 @@ Permanently deletes the service principal from Keycloak and OpenFGA. This action
 ```bash cURL
 curl -X DELETE https://api.yourdomain.com/api/v1/service-principals/batch-etl-job \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```python
+```
 ```python Python
 import httpx
 
@@ -554,7 +554,7 @@ response = httpx.post(
 
 data = response.json()
 print(f"Associated with: {data['associated_user_id']}")
-```javascript
+```
 ```javascript JavaScript
 const params = new URLSearchParams({
   user_id: 'user:alice',
@@ -577,7 +577,7 @@ console.log('Associated with:', data.associated_user_id);
 
 **Response**:
 
-```json
+```
 {
   "service_id": "batch-etl-job",
   "name": "Batch ETL Job",
@@ -614,7 +614,7 @@ console.log('Associated with:', data.associated_user_id);
 
 ### 1. Create Service Principal
 
-```bash
+```
 # Create service principal
 curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
   -H "Authorization: Bearer $USER_TOKEN" \
@@ -629,7 +629,7 @@ curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
 
 ### 2. Authenticate as Service Principal
 
-```bash
+```
 # Exchange credentials for JWT token
 curl -X POST https://api.yourdomain.com/auth/token \
   -d grant_type=client_credentials \
@@ -645,7 +645,7 @@ curl -X POST https://api.yourdomain.com/auth/token \
 ```bash
 ### 3. Make API Requests
 
-```bash
+```
 # Use the access token for API requests
 curl https://api.yourdomain.com/message \
   -H "Authorization: Bearer $ACCESS_TOKEN" \

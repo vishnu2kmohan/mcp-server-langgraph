@@ -26,7 +26,7 @@ type organization
   relations
     define admin: [user]
     define member: [user] or admin
-```go
+```
 #### Key Concepts
 
 <CardGroup cols={3}>
@@ -112,7 +112,7 @@ type task
     define project: [project]
     define assignee: [user]
     define viewer: [user] from project
-```json
+```
 **Usage**:
 ```python
 ## Team lead creates project
@@ -155,7 +155,7 @@ type resource
     define owner: [user]
     define editor: [user, workspace#member]
     define viewer: [user] or editor
-```json
+```
 **Isolation**:
 ```python
 ## Tenant A admin
@@ -194,7 +194,7 @@ type file
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner or viewer from parent
-```python
+```
 **Inheritance**:
 ```python
 ## Set folder permissions
@@ -232,7 +232,7 @@ User is member OR admin.
 
 ```typescript
 define can_delete: admin and owner
-```dockerfile
+```
 User must be admin AND owner.
 
 #### Exclusion (BUT NOT)
@@ -247,7 +247,7 @@ User is member but not suspended.
 
 ```typescript
 define viewer: [user] or viewer from parent
-```python
+```
 User is viewer OR inherits from parent.
 
 ### Conditional Permissions
@@ -282,7 +282,7 @@ allowed = await client.check_permission(
         "expiry": "2025-10-13T10:00:00Z"
     }
 )
-```bash
+```
 ### Testing Models
 
 #### Model Validation
@@ -321,7 +321,7 @@ for test in test_cases:
         object=test["object"]
     )
     assert result == test["expected"], f"Test failed: {test}"
-```json
+```
 ### Deploying Models
 
 #### Via Setup Script
@@ -366,7 +366,7 @@ curl -X POST http://localhost:8080/stores/{store_id}/authorization-models \
     "schema_version": "1.1",
     "type_definitions": [...]
   }'
-```python
+```
 ### Best Practices
 
 <AccordionGroup>

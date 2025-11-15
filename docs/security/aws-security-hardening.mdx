@@ -64,7 +64,7 @@ flowchart LR
     class IRSA,MFA,VPC,KMS,TLS,PSS excellent
     class IAM,SG,SM,RBAC good
     class NP,Scan good
-```bash
+```
 ---
 
 ## 1. Identity & Access Management
@@ -110,7 +110,7 @@ module "application_irsa" {
     }
   }
 }
-```json
+```
 ### 1.2 IAM Policy Least Privilege
 
 <Check>**Minimize IAM permissions to only what's required**</Check>
@@ -153,7 +153,7 @@ kubectl run -it --rm aws-cli --image=amazon/aws-cli --restart=Never \
   -- sts get-caller-identity
 
 # Should show: Arn: arn:aws:sts::ACCOUNT:assumed-role/mcp-langgraph-prod-application/...
-```bash
+```
 ### 1.3 No Long-Lived Credentials
 
 <Warning>
@@ -202,7 +202,7 @@ kubectl get secrets -A -o json | \
     }
   ]
 }
-```bash
+```
 ---
 
 ## 2. Network Security
@@ -236,7 +236,7 @@ resource "aws_subnet" "private" {
 kubectl get pods -A -o wide
 
 # No pod should have IP in public subnet ranges
-```bash
+```
 ### 2.2 Security Groups
 
 <Check>**Minimize security group ingress rules**</Check>
@@ -293,7 +293,7 @@ resource "aws_security_group" "rds" {
 
   # No egress (database doesn't initiate outbound connections)
 }
-```bash
+```
 ### 2.3 Network Policies
 
 <Check>**Enforce pod-to-pod network policies**</Check>
@@ -481,7 +481,7 @@ spec:
   - port: 443
     targetPort: 8080
     protocol: TCP
-```bash
+```
 ### 3.3 Secrets Management
 
 <Check>**Store all secrets in AWS Secrets Manager**</Check>
@@ -572,7 +572,7 @@ aws rds modify-db-instance \
 
 # Restart pods to pick up new secret
 kubectl rollout restart deployment mcp-server-langgraph -n mcp-server-langgraph
-```bash
+```
 ---
 
 ## 4. Workload Security
@@ -652,7 +652,7 @@ aws ecr describe-image-scan-findings \
   --query 'imageScanFindings.findingSeverityCounts'
 
 # Block deployment if critical vulnerabilities found
-```yaml
+```
 ### 4.3 RBAC
 
 <Check>**Implement least-privilege RBAC**</Check>

@@ -74,7 +74,7 @@ flowchart TB
     class RBAC,FGA,Tuples authzStyle
     class API,Middleware,RateLimit appStyle
     class PG,Redis,Secrets dataStyle
-```python
+```
 ### Defense-in-Depth Layers
 
 <Tabs>
@@ -335,7 +335,7 @@ SESSION_COOKIE_SAMESITE = "Strict"  # CSRF protection
 SESSION_TTL = 3600                # 1 hour
 SESSION_SLIDING_WINDOW = True     # Extend on activity
 SESSION_MAX_CONCURRENT = 3        # Limit sessions per user
-```python
+```
 **Session Fixation Protection**:
 ```python
 ## Regenerate session ID on login
@@ -374,7 +374,7 @@ async def check_access(user_id: str, resource: str, action: str):
         raise PermissionError("Access denied")
 
     return True
-```go
+```
 **Role Hierarchies**:
 ```typescript
 // OpenFGA model
@@ -403,7 +403,7 @@ async def check_org_access(user_id: str, resource_id: str):
     # Verify match
     if resource_org not in user_orgs:
         raise PermissionError("Cross-organization access denied")
-```python
+```
 ### Data Security
 
 #### Encryption at Rest
@@ -443,7 +443,7 @@ class EncryptedField:
 ## Usage
 cipher = EncryptedField(settings.encryption_key)
 user.email = cipher.encrypt("alice@example.com")
-```python
+```
 #### Encryption in Transit
 
 **TLS Configuration**:
@@ -485,7 +485,7 @@ metadata:
 spec:
   mtls:
     mode: STRICT
-```python
+```
 #### Secret Management
 
 **Infisical Integration**:
@@ -515,7 +515,7 @@ spec:
   - secretKey: ANTHROPIC_API_KEY
     remoteRef:
       key: ANTHROPIC_API_KEY
-```python
+```
 ### Application Security
 
 #### Input Validation
@@ -551,7 +551,7 @@ query = f"SELECT * FROM users WHERE username = '{username}'"  # VULNERABLE
 ## Always use parameterized queries
 query = "SELECT * FROM users WHERE username = %s"
 cursor.execute(query, (username,))  # SAFE
-```python
+```
 #### XSS Prevention
 
 ```python
@@ -585,7 +585,7 @@ async def verify_csrf(
 
     if token != session.csrf_token:
         raise HTTPException(403, "CSRF token invalid")
-```python
+```
 #### Rate Limiting
 
 ```python
@@ -636,7 +636,7 @@ async def add_security_headers(request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     return response
-```bash
+```
 ### Audit Logging
 
 #### What to Log
@@ -764,7 +764,7 @@ async def delete_user_data(user_id: str):
     await anonymize_logs(user_id)
 
     logger.audit("gdpr_data_deletion", user_id=user_id)
-```python
+```
 #### SOC 2 Controls
 
 - Access controls (AC)
@@ -819,7 +819,7 @@ jobs:
       run: |
         uv tool install safety
         safety check --json
-```bash
+```
 #### Container Scanning
 
 ```bash

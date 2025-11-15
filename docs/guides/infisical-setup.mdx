@@ -142,7 +142,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
   </Tab>
 
   <Tab title="Kubernetes">
-    ```bash
+    ```
     # Using Helm
     helm repo add infisical https://infisical.github.io/helm-charts
     helm install infisical infisical/infisical \
@@ -161,7 +161,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
 
 Secrets are automatically loaded on application startup:
 
-```python
+```
 from mcp_server_langgraph.core.config import settings
 
 ## All secrets loaded from Infisical
@@ -171,7 +171,7 @@ jwt_secret = settings.jwt_secret_key
 ```python
 #### Manual Secret Retrieval
 
-```python
+```
 from infisical import InfisicalClient
 
 client = InfisicalClient(
@@ -199,7 +199,7 @@ for secret in secrets:
 
 #### Environment-Specific Secrets
 
-```python
+```
 ## Load secrets based on environment
 environment = os.getenv("ENVIRONMENT", "development")
 
@@ -212,7 +212,7 @@ secrets = client.get_all_secrets(
 
 #### Infisical Operator
 
-```yaml
+```
 ## Install operator
 kubectl apply -f https://raw.githubusercontent.com/Infisical/infisical/main/k8s-operator/operator.yaml
 
@@ -237,7 +237,7 @@ spec:
 
 #### Service Account Credentials
 
-```yaml
+```
 apiVersion: v1
 kind: Secret
 metadata:
@@ -250,7 +250,7 @@ stringData:
 ```python
 #### Auto-Inject Secrets
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -303,7 +303,7 @@ mcp-server-langgraph/
 
 #### Role-Based Access
 
-```python
+```
 ## Read-only for application
 service_account_read = client.create_service_account(
     name="langgraph-prod-readonly",
@@ -320,7 +320,7 @@ service_account_write = client.create_service_account(
 
 Enable audit logs to track secret access:
 
-```python
+```
 ## View audit logs
 logs = client.get_audit_logs(
     project_id=project_id,
@@ -336,7 +336,7 @@ for log in logs:
 
 #### Manual Rotation
 
-```python
+```
 ## Update secret value
 client.update_secret(
     secret_name="ANTHROPIC_API_KEY",
@@ -349,7 +349,7 @@ client.update_secret(
 ```python
 #### Automatic Rotation
 
-```python
+```
 import schedule
 import time
 
@@ -376,7 +376,7 @@ while True:
 
 #### Zero-Downtime Rotation
 
-```python
+```
 ## 1. Add new secret with version suffix
 client.create_secret(
     secret_name="ANTHROPIC_API_KEY_V2",
@@ -400,7 +400,7 @@ client.delete_secret(
   <Accordion title="Never Commit Secrets" icon="ban">
     **Never** commit secrets to Git:
 
-    ```bash
+    ```
     # Add to .gitignore
     .env
     .env.*
@@ -424,7 +424,7 @@ client.delete_secret(
   <Accordion title="Principle of Least Privilege" icon="lock">
     Grant minimal necessary permissions:
 
-    ```python
+    ```
     # Application: read-only
     app_account = create_service_account(
         name="app",
@@ -451,7 +451,7 @@ client.delete_secret(
   <Accordion title="Monitor Access" icon="eye">
     Enable and review audit logs:
 
-    ```python
+    ```
     # Weekly audit review
     logs = client.get_audit_logs(
         project_id=project_id,
@@ -470,14 +470,14 @@ client.delete_secret(
 
 <Steps>
   <Step title="Export Secrets">
-    ```bash
+    ```
     # Extract from .env
     grep -v '^#' .env | grep -v '^$' > secrets.txt
     ```html
   </Step>
 
   <Step title="Import to Infisical">
-    ```python
+    ```
     # Import script
     with open('secrets.txt') as f:
         for line in f:
@@ -493,7 +493,7 @@ client.delete_secret(
   </Step>
 
   <Step title="Update Application">
-    ```bash
+    ```
     # Remove .env file
     rm .env
 
@@ -505,7 +505,7 @@ client.delete_secret(
   </Step>
 
   <Step title="Verify">
-    ```bash
+    ```
     # Test application loads secrets
     python -c "from mcp_server_langgraph.config import settings; print(settings.anthropic_api_key[:10])"
     ```markdown
@@ -516,7 +516,7 @@ client.delete_secret(
 
 <AccordionGroup>
   <Accordion title="Authentication failed">
-    ```bash
+    ```
     # Verify credentials
     echo $INFISICAL_CLIENT_ID
     echo $INFISICAL_CLIENT_SECRET
@@ -535,7 +535,7 @@ client.delete_secret(
     - Service account has access
     - Project ID correct
 
-    ```python
+    ```
     # List all secrets
     secrets = client.get_all_secrets(
         project_id=project_id,
@@ -551,7 +551,7 @@ client.delete_secret(
     - Use Kubernetes operator for auto-sync
     - Batch secret retrieval
 
-    ```python
+    ```
     # Cache secrets
     from functools import lru_cache
 

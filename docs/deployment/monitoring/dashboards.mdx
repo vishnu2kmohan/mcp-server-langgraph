@@ -22,7 +22,7 @@ helm install grafana grafana/grafana \
   --set persistence.enabled=true \
   --set persistence.size=10Gi \
   --set adminPassword=admin123
-```python
+```
 #### Application Dashboard
 
 **Import this JSON dashboard**:
@@ -117,7 +117,7 @@ helm install grafana grafana/grafana \
     ]
   }
 }
-```bash
+```
 #### Production-Ready Dashboards (v2.1.0)
 
 <Note>
@@ -257,7 +257,7 @@ grafana:
         file: monitoring/grafana/dashboards/keycloak.json
       redis-sessions:
         file: monitoring/grafana/dashboards/redis-sessions.json
-```css
+```
 ##### Dashboard Features
 
 All production dashboards include:
@@ -300,7 +300,7 @@ openfga_tuples_written_total
 openfga_tuples_deleted_total
 openfga_sync_operations_total
 openfga_sync_duration_bucket
-```python
+```
 **LLM Performance (llm-performance.json)**:
 ```promql
 agent_calls_successful_total
@@ -319,7 +319,7 @@ keycloak_login_attempts_total
 redis_memory_used_bytes
 redis_db_keys
 redis_commands_processed_total
-```bash
+```
 ### Service Level Objectives (SLOs)
 
 <Info>

@@ -35,7 +35,7 @@ curl -X POST https://api.example.com/api/v1/api-keys \
     "name": "Production API Key",
     "expires_days": 365
   }'
-```json
+```
 **Response**:
 ```json
 {
@@ -54,7 +54,7 @@ curl -X POST https://api.example.com/api/v1/api-keys \
 
 ```bash
 python scripts/create_api_key.py --name "My API Key" --expires 90
-```bash
+```
 ### Using API Keys
 
 #### Direct API Calls
@@ -81,7 +81,7 @@ async def make_request(query: str):
             json={"query": query}
         )
         return response.json()
-```javascript
+```
 #### JavaScript Client
 
 ```javascript
@@ -132,7 +132,7 @@ API keys are stored in Keycloak user attributes as bcrypt hashes:
     "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
   }
 }
-```bash
+```
 ### Managing API Keys
 
 #### List Keys
@@ -159,7 +159,7 @@ curl -X GET https://api.example.com/api/v1/api-keys \
     "expires_at": "2025-04-15T00:00:00Z"
   }
 ]
-```bash
+```
 #### Rotate Key
 
 ```bash
@@ -174,7 +174,7 @@ curl -X POST https://api.example.com/api/v1/api-keys/abc123/rotate \
   "new_api_key": "sk_live_NEW_KEY_HERE...",
   "message": "API key rotated successfully. Update your configuration."
 }
-```bash
+```
 #### Revoke Key
 
 ```bash
@@ -285,7 +285,7 @@ curl http://kong-admin:8001/consumers
 
 ## Export key-auth credentials
 curl http://kong-admin:8001/consumers/USER/key-auth
-```bash
+```
 #### Step 2: Recreate in Keycloak
 
 ```bash
@@ -326,7 +326,7 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-```python
+```
 #### Webhook Integration
 
 ```python

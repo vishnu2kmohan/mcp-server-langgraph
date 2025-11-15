@@ -224,12 +224,12 @@ Before committing new documentation:
 ### Code Blocks
 
 ````mdx
-```python
+```
 # Python code with syntax highlighting
 def hello_world():
     print("Hello, World!")
 ```
-````
+```
 
 ---
 
@@ -240,7 +240,7 @@ All templates support Mermaid diagrams for visualizations. **Always use ColorBre
 ### Flowchart Example (with ColorBrewer2 Set3 styling)
 
 ````mdx
-```mermaid
+```
 flowchart TB
     A[Start] --> B[Process]
     B --> C[End]
@@ -253,12 +253,12 @@ flowchart TB
     class B processStyle
     class C endStyle
 ```
-````
+```
 
 ### Sequence Diagram Example (with dark-mode compatible theme)
 
 ````mdx
-```mermaid
+```
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
 sequenceDiagram
     participant A as Client
@@ -266,7 +266,7 @@ sequenceDiagram
     A->>B: Request
     B-->>A: Response
 ```
-````
+```
 
 **Tips**:
 - Use `graph TB` for top-to-bottom flowcharts

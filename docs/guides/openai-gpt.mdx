@@ -90,7 +90,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is quantum computing?")
 print(response.content)
-```python
+```
 #### Advanced Configuration
 
 ```python
@@ -154,7 +154,7 @@ llm = LLMFactory(
     provider="openai",
     model_name=select_openai_model(task_type="chat", complexity="medium")
 )
-```python
+```
 ### Features
 
 #### Function Calling (Tools)
@@ -229,7 +229,7 @@ message = HumanMessage(
 
 response = await llm.ainvoke([message])
 print(response.content)
-```python
+```
 #### Structured Output (JSON Mode)
 
 ```python
@@ -278,7 +278,7 @@ async def stream_message(request: MessageRequest):
         stream_response(request.query),
         media_type="text/event-stream"
     )
-```python
+```
 #### System Prompts
 
 ```python
@@ -331,7 +331,7 @@ import json
 data = json.loads(response.content)
 print(data)
 ## Output: {"name": "John Smith", "age": 35, "occupation": "software engineer"}
-```python
+```
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -407,7 +407,7 @@ async def send_message(request: Request):
 @limiter.limit("200/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```python
+```
 #### Error Handling
 
 ```python
@@ -484,7 +484,7 @@ async def process_batch(queries: List[str]):
 results = await process_batch(queries)
 for query, response in zip(queries, results):
     print(f"Q: {query}\nA: {response.content}\n")
-```python
+```
 #### Token Management
 
 ```python
@@ -545,7 +545,7 @@ async def call_with_redis_cache(query: str):
     await redis.setex(cache_key, 3600, json.dumps(response.content))
 
     return response.content
-```python
+```
 ### Cost Optimization
 
 #### Model Selection
@@ -590,7 +590,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```python
+```
 #### Budget Limits
 
 ```python
@@ -638,7 +638,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```python
+```
 #### Custom Metrics
 
 ```python

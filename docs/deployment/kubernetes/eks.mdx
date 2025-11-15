@@ -35,7 +35,7 @@ aws configure
 
 ## Verify credentials
 aws sts get-caller-identity
-```yaml
+```
 ### Create EKS Cluster
 
 #### Using eksctl (Recommended)
@@ -115,7 +115,7 @@ aws eks update-kubeconfig --name langgraph-cluster --region us-east-1
 
 ## Verify
 kubectl get nodes
-```sql
+```
 #### Using AWS CLI
 
 ```bash
@@ -165,7 +165,7 @@ EOF
 aws iam create-policy \
   --policy-name LangGraphSecretsAccess \
   --policy-document file://secrets-policy.json
-```bash
+```
 #### Create Service Account with IRSA
 
 ```bash
@@ -252,7 +252,7 @@ RDS_ENDPOINT=$(aws rds describe-db-instances \
   --query "DBInstances[0].Endpoint.Address" \
   --output text \
   --region us-east-1)
-```python
+```
 #### Create Databases
 
 <Info>
@@ -323,7 +323,7 @@ PGPASSWORD=secure-gdpr-password psql \
   -U gdpr_user \
   -d gdpr \
   -f deployments/base/postgres-gdpr-schema.sql
-```go
+```
 **Schema Details**:
 - **user_profiles**: User profile data (GDPR Article 15, 16, 17)
 - **user_preferences**: User preferences (GDPR Article 16, 17)
@@ -414,7 +414,7 @@ aws secretsmanager create-secret \
   --name langgraph/rds-password \
   --secret-string "your-rds-password" \
   --region us-east-1
-```bash
+```
 #### Use External Secrets Operator
 
 ```bash
@@ -508,7 +508,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set region=us-east-1 \
   --set vpcId=$VPC_ID
-```yaml
+```
 #### Configure Ingress
 
 ```yaml
@@ -567,7 +567,7 @@ docker tag mcp-server-langgraph:latest \
   ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
 
 docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/langgraph/agent:latest
-```rust
+```
 #### Use in Kubernetes
 
 ```yaml
@@ -606,7 +606,7 @@ eksctl create addon \
   --cluster langgraph-cluster \
   --service-account-role-arn arn:aws:iam::ACCOUNT_ID:role/AmazonEKS_EBS_CSI_DriverRole \
   --region us-east-1
-```python
+```
 #### Create Storage Class
 
 ```yaml
@@ -641,7 +641,7 @@ eksctl create iamserviceaccount \
 
 ## Deploy Container Insights
 kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml
-```python
+```
 #### Custom Metrics
 
 ```python
@@ -738,7 +738,7 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```bash
+```
 **Deploy**:
 ```bash
 ## Create namespace
@@ -770,7 +770,7 @@ kubectl -n kube-system set image deployment.apps/cluster-autoscaler \
 
 kubectl -n kube-system edit deployment.apps/cluster-autoscaler
 ## Add: --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/langgraph-cluster
-```bash
+```
 #### Karpenter (Alternative)
 
 ```bash

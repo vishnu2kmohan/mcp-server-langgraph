@@ -61,7 +61,7 @@ class DynamicContextLoader:
     - Progressive discovery patterns
     - Token-aware batch loading
     - LRU caching for performance
-```python
+```
 **Integration**:
 - New `load_context` node in agent graph (before compaction)
 - Flow: START → load_context → compact → router → ...
@@ -117,7 +117,7 @@ async def extract_key_information_llm(messages):
     - 6-category extraction
     - LLM-based analysis
     - Fallback to keyword-based
-```python
+```
 **Categories**:
 1. Decisions: Choices made, agreements
 2. Requirements: Needs, constraints
@@ -181,7 +181,7 @@ CONTEXT_CACHE_SIZE=100
 ```bash
 ENABLE_PARALLEL_EXECUTION=false  # Default off
 MAX_PARALLEL_TOOLS=5
-```bash
+```
 **Enhanced Note-Taking**:
 ```bash
 ENABLE_LLM_EXTRACTION=false  # Default off
@@ -329,7 +329,7 @@ Use threads instead of asyncio for parallel execution.
 - extraction.llm.success_rate
 - extraction.llm.fallback_rate
 - extraction.categories.items_per_category
-```bash
+```
 #### Alerts
 
 1. **Qdrant Health**: Alert if unavailable > 5 minutes
@@ -365,7 +365,7 @@ await loader.index_context(
 ## Enable in .env
 ENABLE_PARALLEL_EXECUTION=true
 MAX_PARALLEL_TOOLS=5
-```bash
+```
 **Enabling LLM Extraction**:
 ```bash
 ## Enable in .env

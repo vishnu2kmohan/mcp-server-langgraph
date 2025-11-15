@@ -138,7 +138,7 @@ flowchart TB
     class A,B,C appPodStyle
     class A1,B1,C1 sidecarStyle
     class M,T monitoringStyle
-```bash
+```
 **Components**:
 - **Istiod**: Control plane (managed by Google, auto-upgraded)
 - **Envoy sidecars**: Injected into each pod, handle traffic
@@ -344,7 +344,7 @@ spec:
       attempts: 3
       perTryTimeout: 2s
       retryOn: 5xx,reset,connect-failure
-```rust
+```
 ---
 
 ## Security
@@ -440,7 +440,7 @@ spec:
 **View in Google Cloud Console**:
 ```text
 Navigation → Anthos → Service Mesh → Topology
-```bash
+```
 Shows:
 - Service dependency graph
 - Traffic flow between services

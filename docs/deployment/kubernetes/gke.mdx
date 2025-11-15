@@ -39,7 +39,7 @@ gcloud services enable \
   secretmanager.googleapis.com \
   cloudkms.googleapis.com \
   servicenetworking.googleapis.com
-```sql
+```
 ### Create GKE Cluster
 
 #### Autopilot Cluster (Recommended)
@@ -88,7 +88,7 @@ gcloud container clusters create langgraph-cluster \
 ## Get credentials
 gcloud container clusters get-credentials langgraph-cluster \
   --region=us-central1
-```bash
+```
 ### Setup Workload Identity
 
 Workload Identity allows pods to authenticate as Google Cloud service accounts:
@@ -342,7 +342,7 @@ gcloud secrets add-iam-policy-binding anthropic-api-key \
 ```bash
 #### Use External Secrets Operator
 
-```bash
+```
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -400,7 +400,7 @@ EOF
 
 #### Build and Push Images
 
-```bash
+```
 ## Configure Docker for GCR
 gcloud auth configure-docker
 
@@ -429,7 +429,7 @@ EOF
 
 #### Artifact Registry (Recommended)
 
-```bash
+```
 ## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
@@ -448,7 +448,7 @@ docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
 
 #### Install NGINX Ingress Controller
 
-```bash
+```
 ## Install NGINX Ingress
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
@@ -461,7 +461,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 
 #### Configure Ingress
 
-```yaml
+```
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -494,7 +494,7 @@ spec:
 
 For GCP-native load balancing:
 
-```yaml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -535,7 +535,7 @@ spec:
 
 #### Enable Google Cloud Monitoring
 
-```bash
+```
 ## Install Google Cloud Ops agent
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
@@ -544,7 +544,7 @@ kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheu
 
 #### Configure Pod Monitoring
 
-```yaml
+```
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
@@ -563,7 +563,7 @@ spec:
 
 Configure structured logging to Cloud Logging:
 
-```python
+```
 ## Install dependencies
 uv add google-cloud-logging
 
@@ -810,7 +810,7 @@ kubectl get ingress -n mcp-server-langgraph
 
   <Accordion title="Workload Identity not working">
     **Verify setup**:
-    ```bash
+    ```
     # Check annotation
     kubectl describe sa mcp-server-langgraph -n mcp-server-langgraph
 

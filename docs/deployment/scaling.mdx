@@ -69,7 +69,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```bash
+```
 **Deploy**:
 ```bash
 kubectl apply -f hpa.yaml
@@ -143,7 +143,7 @@ spec:
         value: 4    # Or add 4 pods
         periodSeconds: 30
       selectPolicy: Max  # Use most aggressive
-```bash
+```
 #### Custom Metrics
 
 **Install Prometheus Adapter**:
@@ -169,7 +169,7 @@ data:
         matches: "^(.*)_total"
         as: "${1}_per_second"
       metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[2m])'
-```bash
+```
 ### Vertical Pod Autoscaling (VPA)
 
 #### Install VPA
@@ -207,7 +207,7 @@ spec:
       controlledResources:
       - cpu
       - memory
-```bash
+```
 **Check recommendations**:
 ```bash
 kubectl describe vpa mcp-server-langgraph-vpa -n mcp-server-langgraph
@@ -223,7 +223,7 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=10 \
   --zone=us-central1-a
-```yaml
+```
 #### EKS
 
 ```yaml
@@ -255,7 +255,7 @@ az aks update \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 10
-```bash
+```
 ### Load Testing
 
 #### Generate Load
@@ -319,7 +319,7 @@ watch kubectl get hpa -n mcp-server-langgraph
 ## View metrics
 kubectl top pods -n mcp-server-langgraph
 kubectl top nodes
-```yaml
+```
 ### Resource Limits
 
 #### Right-Sizing
@@ -437,7 +437,7 @@ checkpoint_completion_target = 0.9
 wal_buffers = 16MB
 default_statistics_target = 100
 random_page_cost = 1.1
-```bash
+```
 ### Cost Optimization
 
 #### Right-Size Instances
@@ -464,7 +464,7 @@ gcloud container node-pools create spot-pool \
   --enable-autoscaling \
   --min-nodes=0 \
   --max-nodes=10
-```yaml
+```
 **EKS**:
 ```yaml
 nodeGroups:
@@ -521,7 +521,7 @@ spec:
             - -c
             - kubectl scale deployment mcp-server-langgraph --replicas=5
           restartPolicy: OnFailure
-```css
+```
 ### Monitoring Scaling
 
 #### Key Metrics

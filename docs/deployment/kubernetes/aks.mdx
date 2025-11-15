@@ -37,7 +37,7 @@ az account set --subscription "your-subscription-id"
 
 ## Install kubectl
 az aks install-cli
-```sql
+```
 ### Create Resource Group
 
 ```bash
@@ -82,7 +82,7 @@ az aks get-credentials \
 
 ## Verify
 kubectl get nodes
-```python
+```
 #### Advanced Configuration
 
 ```bash
@@ -135,7 +135,7 @@ export AKS_OIDC_ISSUER=$(az aks show \
   --resource-group langgraph-rg \
   --query "oidcIssuerProfile.issuerUrl" \
   --output tsv)
-```bash
+```
 #### Create Managed Identity
 
 ```bash
@@ -170,7 +170,7 @@ az identity federated-credential create \
   --issuer $AKS_OIDC_ISSUER \
   --subject system:serviceaccount:mcp-server-langgraph:mcp-server-langgraph \
   --audience api://AzureADTokenExchange
-```yaml
+```
 #### Create Kubernetes Service Account
 
 ```yaml
@@ -296,7 +296,7 @@ az network private-dns link vnet create \
   --name postgres-dns-link \
   --virtual-network langgraph-vnet \
   --registration-enabled false
-```bash
+```
 ### Azure Cache for Redis
 
 #### Create Redis Cache
@@ -434,7 +434,7 @@ spec:
     - objectName: redis-password
       key: REDIS_PASSWORD
 EOF
-```rust
+```
 #### Use Secrets in Deployment
 
 ```yaml
@@ -487,7 +487,7 @@ az aks update \
 
 ## Login to ACR
 az acr login --name langgraphacr
-```bash
+```
 #### Build and Push Images
 
 ```bash
@@ -529,7 +529,7 @@ az aks enable-addons \
     --resource-group langgraph-rg \
     --query id \
     --output tsv)
-```yaml
+```
 #### Configure Ingress
 
 ```yaml
@@ -579,7 +579,7 @@ az aks enable-addons \
     --workspace-name langgraph-logs \
     --query id \
     --output tsv)
-```python
+```
 #### Custom Metrics
 
 ```python
@@ -693,7 +693,7 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```bash
+```
 **Deploy**:
 ```bash
 ## Create namespace
@@ -719,7 +719,7 @@ az aks update \
   --enable-cluster-autoscaler \
   --min-count 3 \
   --max-count 20
-```yaml
+```
 #### Horizontal Pod Autoscaler
 
 ```yaml

@@ -63,7 +63,7 @@ flowchart TB
     class SQL,Redis dataStyle
     class WI authStyle
     class Dev,Staging,Prod envStyle
-```bash
+```
 ---
 
 ### Quick Start
@@ -344,7 +344,7 @@ module "cloudsql" {
   read_replica_count   = 1
   read_replica_regions = ["us-east1"]
 }
-```bash
+```
 **Supports PostgreSQL**: 11, 12, 13, 14, 15, 16
 
 ---
@@ -426,7 +426,7 @@ module "workload_identity" {
     }
   }
 }
-```bash
+```
 **Features**:
 - Replaces service account key files (more secure)
 - Pod-level IAM permissions
@@ -563,7 +563,7 @@ module "workload_identity" {
 
   depends_on = [module.gke]
 }
-```bash
+```
 ---
 
 ### Environment Configurations
@@ -724,7 +724,7 @@ module "vpc" {
 
 ## ❌ Bad - Copying module code
 ## (creates maintenance burden)
-```bash
+```
 #### 2. Pin Module Versions
 
 For stability, consider pinning to specific versions:
@@ -747,7 +747,7 @@ cloudsql_additional_users = {
     password = "generated-password"
   }
 }
-```rust
+```
 #### 4. Remote State for Teams
 
 Use GCS backend for collaboration:
@@ -800,7 +800,7 @@ terraform plan
 
 ## Apply changes
 terraform apply
-```python
+```
 #### Import Existing Resources
 
 ```bash
@@ -821,7 +821,7 @@ terraform import module.gke.google_container_cluster.autopilot \
 
 terraform apply  # Remove protection
 terraform destroy
-```bash
+```
 ---
 
 ### Troubleshooting

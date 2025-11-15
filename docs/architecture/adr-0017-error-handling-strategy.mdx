@@ -78,7 +78,7 @@ All API errors return a consistent JSON structure:
     "request_id": "req_xyz"
   }
 }
-```python
+```
 **Fields**:
 - `code`: Machine-readable error code (uppercase snake_case)
 - `message`: Human-readable error message
@@ -108,7 +108,7 @@ When primary model fails:
 2. Try fallback model #2 (claude-3-5-sonnet)
 3. Try fallback model #3 (gpt-5)
 4. Return error if all fail
-```rust
+```
 ##### Authorization Fallback
 When OpenFGA is unavailable:
 ```python
@@ -159,7 +159,7 @@ logger.error(
     },
     exc_info=True  # Include stack trace
 )
-```python
+```
 #### 7. OpenTelemetry Integration
 
 All errors are captured in distributed traces:
@@ -236,7 +236,7 @@ error_duration = Histogram(
     "Time spent handling errors",
     ["error_code"]
 )
-```python
+```
 #### 10. Security Considerations
 
 **Never expose**:
@@ -359,7 +359,7 @@ async def create_llm_with_fallback(
                     error_code="EXT_LLM_API_ERROR",
                     models_tried=models_to_try
                 )
-```bash
+```
 #### Example 3: Service Layer Error
 
 ```python

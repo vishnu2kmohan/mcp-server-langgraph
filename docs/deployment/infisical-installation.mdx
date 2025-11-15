@@ -57,7 +57,7 @@ docker build -t mcp-server-langgraph -f docker/Dockerfile .
 
 ## Kubernetes
 kubectl apply -k deployments/kustomize/base
-```bash
+```
 **What happens**: Docker automatically:
 1. Installs Rust toolchain
 2. Compiles infisical-python from source
@@ -87,7 +87,7 @@ uv sync --all-extras
 **Verification**:
 ```bash
 python -c "from infisical_client import InfisicalClient; print('✓ Infisical installed')"
-```bash
+```
 ---
 
 #### Option 3: Pre-built Wheels (FAST)
@@ -148,7 +148,7 @@ xcode-select --install
 uv sync --extra secrets
 
 ## Build time: 2-5 minutes
-```bash
+```
 **Verification**:
 ```bash
 cargo --version  # Should show Rust version
@@ -217,7 +217,7 @@ wheels/
 │   └── infisical_python-2.3.5-cp311-cp311-manylinux_2_34_x86_64.whl
 └── py3.12/
     └── infisical_python-2.3.5-cp312-cp312-manylinux_2_34_x86_64.whl
-```bash
+```
 #### Installing from Local Wheels
 
 ```bash
@@ -244,7 +244,7 @@ WARNING: Infisical client not available, using fallback mode
 **To install Infisical**:
 ```bash
 uv sync --extra secrets
-```bash
+```
 ---
 
 #### Build Error: `cargo not found`
@@ -253,7 +253,7 @@ uv sync --extra secrets
 ```text
 
 error: command 'cargo' not found
-```bash
+```
 **Solution**: Either install Rust or use pre-built wheels:
 
 ```bash
@@ -297,7 +297,7 @@ docker compose up -d
 **Symptom**:
 ```text
 error: failed to run custom build command for `pyo3-ffi`
-```bash
+```
 **Solutions**:
 ```bash
 ## Set compatibility flag
@@ -349,7 +349,7 @@ python scripts/setup/setup_infisical.py
 ## Use multi-stage build from docker/Dockerfile
 ## Infisical automatically built with Rust
 docker build -t mcp-server-langgraph -f docker/Dockerfile .
-```bash
+```
 #### Kubernetes
 
 ```yaml
@@ -370,7 +370,7 @@ gcloud builds submit --tag gcr.io/PROJECT_ID/mcp-server-langgraph
 gcloud run deploy mcp-server \
   --image gcr.io/PROJECT_ID/mcp-server-langgraph \
   --set-env-vars INFISICAL_CLIENT_ID=<id>,INFISICAL_CLIENT_SECRET=<secret>
-```bash
+```
 ---
 
 ### Performance Considerations
@@ -411,7 +411,7 @@ echo "*.pem" >> .gitignore
 ## ✅ Audit logs
 ## ✅ Role-based access control
 ## ✅ Secret rotation
-```sql
+```
 #### Rotate secrets regularly
 ```bash
 ## Update secrets in Infisical

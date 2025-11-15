@@ -48,7 +48,7 @@ JWT_SECRET_KEY=$(openssl rand -base64 32)
 ## OpenFGA Configuration (from scripts/setup_openfga.py)
 OPENFGA_STORE_ID=01HXXX...
 OPENFGA_MODEL_ID=01HYYY...
-```bash
+```
 ##### Infrastructure Secrets (Optional)
 
 ```bash
@@ -140,7 +140,7 @@ Create environment: `production`
 **Badge:**
 ```markdown
 [![CI/CD](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml/badge.svg)](https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/workflows/ci.yaml)
-```bash
+```
 #### 2. Pull Request Checks (`pr-checks.yaml`)
 
 **Triggers:**
@@ -202,7 +202,7 @@ git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 
 ## Or create release via GitHub UI
-```python
+```
 #### 5. Quality Tests (`quality-tests.yaml`)
 
 **Triggers:**
@@ -264,7 +264,7 @@ Protection rules:
 ☑ Include administrators
 ☑ Restrict who can push to matching branches
   - @vishnu2kmohan/maintainers
-```sql
+```
 #### Develop Branch Protection
 
 Create rule for `develop`:
@@ -297,7 +297,7 @@ gh secret set KUBECONFIG_PROD < kubeconfig.b64
 
 ## Clean up
 rm kubeconfig.b64
-```bash
+```
 #### Testing Secrets Locally
 
 ```bash
@@ -328,7 +328,7 @@ act -j test -s ANTHROPIC_API_KEY=your-key
 
 ```markdown
 [![codecov](https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph/branch/main/graph/badge.svg)](https://codecov.io/gh/vishnu2kmohan/mcp-server-langgraph)
-```yaml
+```
 #### Codecov Configuration
 
 Create `.codecov.yml`:
@@ -360,7 +360,7 @@ comment:
 **Solution:**
 ```bash
 gh secret set ANTHROPIC_API_KEY -b"sk-ant-..."
-```bash
+```
 ##### 2. Kubeconfig Not Working
 
 **Error:** `Unable to connect to cluster`
@@ -424,7 +424,7 @@ gh run rerun <run-id>
 
 ## Re-run only failed jobs
 gh run rerun <run-id> --failed
-```dockerfile
+```
 ##### Enable Debug Logging
 
 Add secrets:
@@ -471,7 +471,7 @@ All workflows now include concurrency controls to prevent duplicate runs and sav
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-```yaml
+```
 - Cancels duplicate PR builds
 - Allows main/develop builds to complete
 
@@ -504,7 +504,7 @@ gh workflow run pr-checks.yaml --ref feature-branch
 gh workflow run quality-tests.yaml
 gh workflow run security-scan.yaml
 gh workflow run release.yaml
-```python
+```
 **Use cases:**
 - Test workflow changes without creating PRs
 - Run security scans on demand
@@ -535,7 +535,7 @@ Workflows use GitHub Actions cache to improve performance:
       ~/.cache/helm
       ~/.local/share/helm
     key: ${{ runner.os }}-helm-${{ hashFiles('deployments/helm/**/Chart.yaml') }}
-```bash
+```
 #### kubectl Binary
 ```yaml
 - name: Cache kubectl

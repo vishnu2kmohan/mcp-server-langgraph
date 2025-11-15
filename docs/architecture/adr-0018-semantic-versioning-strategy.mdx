@@ -146,7 +146,7 @@ __version__ = "2.2.0"
 ## pyproject.toml
 [project]
 version = "2.2.0"
-```bash
+```
 **Single Source of Truth**: `__init__.py` is authoritative, `pyproject.toml` syncs on release
 
 #### Changelog Format
@@ -183,7 +183,7 @@ git tag -a v2.2.0 -m "Release 2.2.0: Session Management & Role Mapping"
 
 ## Pre-releases
 git tag -a v3.0.0-beta.1 -m "Release 3.0.0-beta.1: OpenAPI v3 Support"
-```bash
+```
 **Tag format**: `v{VERSION}` (lowercase 'v' prefix)
 
 #### Automated Version Bumping
@@ -241,7 +241,7 @@ When making MAJOR version increments:
 v2.8.0: Deprecate InMemoryUserProvider (warning logged)
 v2.9.0: Add migration guide in docs/migrations/v3.md
 v3.0.0: Remove InMemoryUserProvider
-```bash
+```
 ### Alternatives Considered
 
 #### 1. Calendar Versioning (CalVer)
@@ -335,7 +335,7 @@ langgraph deploy --version v2.2.0
     "version": "2.2.0"
   }
 }
-```python
+```
 #### Health Endpoint
 
 ```python

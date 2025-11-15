@@ -73,7 +73,7 @@ flowchart TB
     class Pods,NetPol,ExtSec appStyle
     class CloudSQL,Redis dataStyle
     class SecretMgr,ArtifactReg secretStyle
-```bash
+```
 ### Prerequisites
 
 - **GCP Project**: `vishnu-sandbox-20250310` (or your project ID)
@@ -125,7 +125,7 @@ gcloud compute networks subnets create staging-gke-subnet \
   --secondary-range pods=10.2.0.0/16,services=10.3.0.0/16 \
   --enable-flow-logs \
   --enable-private-ip-google-access
-```sql
+```
 #### 1.2 Create GKE Cluster
 
 ```bash
@@ -195,7 +195,7 @@ helm install external-secrets \
   --namespace external-secrets-system \
   --create-namespace \
   --set installCRDs=true
-```bash
+```
 Verify installation:
 
 ```bash
@@ -227,7 +227,7 @@ gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"
 
 ## Update these lines in the workflow:
 workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
-```bash
+```
 ### Step 5: Deploy Application
 
 #### First-Time Deployment (Manual)
@@ -288,7 +288,7 @@ Passed:       11
 Failed:       0
 
 ✓ All smoke tests passed!
-```bash
+```
 #### Check Health Endpoints
 
 ```bash
@@ -312,7 +312,7 @@ gcloud logging read \
    resource.labels.namespace_name=mcp-staging" \
   --limit=50 \
   --format=json
-```bash
+```
 **Kubectl logs**:
 
 ```bash
@@ -331,7 +331,7 @@ Verify network policies:
 
 ```bash
 kubectl get networkpolicies -n staging-mcp-server-langgraph
-```bash
+```
 #### Workload Identity
 
 Pods authenticate as GCP service accounts without keys:
@@ -357,7 +357,7 @@ Only signed/approved images can be deployed:
 gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
   --format='value(binaryAuthorization)'
-```bash
+```
 #### Secret Management
 
 Secrets are stored in GCP Secret Manager and synced via External Secrets:
@@ -398,7 +398,7 @@ Create alert policies for:
 ## Pod restart count > 5
 ## Deployment replica mismatch
 ## Cloud SQL connection failures
-```bash
+```
 ### Troubleshooting
 
 <AccordionGroup>

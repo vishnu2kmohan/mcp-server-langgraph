@@ -52,7 +52,7 @@ spec:
       - exp
     maximum_expiration: 86400
     key_claim_name: iss
-```bash
+```
 **Configuration:**
 - **uri_param_names**: Accept JWT from `?jwt=...` query parameter
 - **cookie_names**: Accept JWT from `jwt` cookie
@@ -95,7 +95,7 @@ spec:
       - x-api-key
     key_in_body: false
     hide_credentials: true
-```bash
+```
 **Configuration:**
 - **key_names**: Accept keys from `apikey` or `x-api-key` headers
 - **key_in_body**: Don't accept keys in request body
@@ -135,7 +135,7 @@ spec:
     api_key_headers:
       - "apikey"
       - "x-api-key"
-```python
+```
 **Configuration:**
 - **mcp_server_url**: MCP Server endpoint for API key validation
 - **cache_ttl**: JWT cache duration (5 minutes recommended)
@@ -210,7 +210,7 @@ X-RateLimit-Limit-Minute: 60
 X-RateLimit-Remaining-Minute: 45
 X-RateLimit-Limit-Hour: 1000
 X-RateLimit-Remaining-Hour: 955
-```python
+```
 ---
 
 ### Premium Tier Rate Limiting
@@ -269,7 +269,7 @@ spec:
     redis_host: redis
     redis_port: 6379
     redis_database: 0
-```python
+```
 **Limits:**
 - **Per minute**: 1,000 requests
 - **Per hour**: 100,000 requests
@@ -356,7 +356,7 @@ spec:
       tokens:
         minute: 50000
         hour: 1000000
-```rust
+```
 **Limits:**
 - **Tokens per minute**: 50,000
 - **Tokens per hour**: 1,000,000
@@ -415,7 +415,7 @@ spec:
       - X-RateLimit-Reset
     credentials: true
     max_age: 3600
-```yaml
+```
 **Configuration:**
 - **origins**: Allow all origins (`*`). Restrict in production (e.g., `https://app.example.com`)
 - **methods**: Allowed HTTP methods
@@ -459,7 +459,7 @@ spec:
     allowed_payload_size: 10
     size_unit: megabytes
     require_content_length: false
-```json
+```
 **Configuration:**
 - **allowed_payload_size**: 10 MB maximum
 - **size_unit**: megabytes (or kilobytes, bytes)
@@ -498,7 +498,7 @@ spec:
     remove:
       headers:
         - X-Legacy-Header
-```rust
+```
 **Operations:**
 - **Add headers**: Inject request ID and protocol
 - **Remove headers**: Strip legacy headers
@@ -583,7 +583,7 @@ spec:
     deny:
       - scrapy
       - curl
-```json
+```
 **Configuration:**
 - **allow**: Whitelist specific bots (SEO crawlers)
 - **deny**: Block specific user agents
@@ -624,7 +624,7 @@ spec:
     status_code: 503
     message: "Service temporarily unavailable"
   disabled: true  # Enable during maintenance
-```bash
+```
 **Configuration:**
 - **status_code**: HTTP status to return (503 Service Unavailable)
 - **message**: Custom error message
@@ -644,7 +644,7 @@ kubectl patch kongplugin request-termination \
   -n mcp-server-langgraph \
   --type='json' \
   -p='[{"op": "replace", "path": "/disabled", "value": true}]'
-```yaml
+```
 ---
 
 ## Observability Plugins
@@ -695,7 +695,7 @@ scrape_configs:
       - targets:
           - kong:8001
     metrics_path: /metrics
-```yaml
+```
 ---
 
 ### HTTP Log
@@ -759,7 +759,7 @@ spec:
   "client_ip": "203.0.113.42",
   "started_at": 1643370000
 }
-```yaml
+```
 ---
 
 ## Plugin Chaining

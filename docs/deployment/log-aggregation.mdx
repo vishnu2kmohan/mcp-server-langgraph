@@ -75,7 +75,7 @@ Production-grade **structured JSON logging** with **OpenTelemetry trace injectio
     "function": "login"
   }
 }
-```bash
+```
 #### Configuration
 
 ```bash
@@ -125,7 +125,7 @@ Export logs to **CloudWatch Logs**, metrics to **CloudWatch Metrics** (via EMF),
     }
   ]
 }
-```rust
+```
 ##### 2. Configure Environment
 
 ```bash
@@ -144,7 +144,7 @@ ENVIRONMENT=production
 
 ## Start services
 docker compose restart otel-collector
-```bash
+```
 ##### 4. Kubernetes (EKS)
 
 ```bash
@@ -179,7 +179,7 @@ aws logs start-query \
   --start-time $(date -u -d '1 hour ago' +%s) \
   --end-time $(date -u +%s) \
   --query-string 'fields @timestamp, level, message, trace_id | filter level = "ERROR"'
-```bash
+```
 ---
 
 ### GCP Cloud Logging
@@ -228,7 +228,7 @@ gcloud iam service-accounts keys create sa-key.json \
 GCP_PROJECT_ID=your-project-id
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json
 ENVIRONMENT=production
-```bash
+```
 ##### 3. Docker Compose
 
 ```bash
@@ -255,7 +255,7 @@ kubectl annotate serviceaccount otel-collector \
 
 ## Deploy (create GCP overlay first)
 kubectl apply -k deployments/kubernetes/overlays/gcp
-```python
+```
 #### Configuration Details
 
 **Log Name**: `mcp-server-langgraph`
@@ -307,7 +307,7 @@ az monitor app-insights component show \
   --app mcp-server-insights \
   --resource-group mcp-server-rg \
   --query connectionString -o tsv
-```toml
+```
 ##### 2. Configure Environment
 
 ```bash
@@ -324,7 +324,7 @@ ENVIRONMENT=production
 
 ## Start services
 docker compose restart otel-collector
-```bash
+```
 ##### 4. Kubernetes (AKS)
 
 ```bash
@@ -379,7 +379,7 @@ ELASTICSEARCH_API_KEY=your-api-key
 
 ## Or use Elastic Cloud ID
 ELASTICSEARCH_CLOUD_ID=cluster-name:dXMtY2VudHJhbDE...
-```bash
+```
 ##### 2. Docker Compose
 
 ```bash
@@ -419,7 +419,7 @@ curl -u elastic:changeme -X GET "http://localhost:9200/mcp-server-langgraph-logs
     }
   }
 }'
-```python
+```
 Access Kibana: http://localhost:5601
 
 ---
@@ -454,7 +454,7 @@ ENVIRONMENT=production
 
 ## Start services
 docker compose restart otel-collector
-```bash
+```
 ##### 3. Kubernetes
 
 ```bash
@@ -513,7 +513,7 @@ In Splunk Web:
 SPLUNK_HEC_TOKEN=your-hec-token
 SPLUNK_HEC_ENDPOINT=https://splunk:8088
 ENVIRONMENT=production
-```bash
+```
 ##### 3. Docker Compose
 
 ```bash
@@ -531,7 +531,7 @@ docker compose restart otel-collector
 SPLUNK_ACCESS_TOKEN=your-access-token
 SPLUNK_REALM=us0  # or us1, eu0, jp0, au0
 ENVIRONMENT=production
-```bash
+```
 #### Configuration Details
 
 **HEC Endpoint**: `${SPLUNK_HEC_ENDPOINT}/services/collector`
@@ -570,7 +570,7 @@ index=main source="mcp-server-langgraph" | head 100
 ```bash
 docker compose logs otel-collector
 kubectl logs -n mcp-server-langgraph -l app=otel-collector
-```bash
+```
 **Verify configuration**:
 ```bash
 ## Test OTLP endpoint
@@ -581,7 +581,7 @@ curl -v http://localhost:13133/
 ```bash
 ## Verify environment variables are set
 docker compose exec otel-collector env | grep -E '(AWS|GCP|AZURE|DATADOG|ELASTICSEARCH|SPLUNK)'
-```bash
+```
 #### Authentication Failures
 
 **AWS**: Verify IAM permissions
@@ -604,7 +604,7 @@ LOG_LEVEL=WARNING  # Instead of INFO or DEBUG
 processors:
   probabilistic_sampler:
     sampling_percentage: 10  # Sample 10% of logs
-```python
+```
 ---
 
 ### Best Practices

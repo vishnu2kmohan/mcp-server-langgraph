@@ -304,7 +304,7 @@ LLM_PROVIDER=anthropic
 MODEL_NAME=claude-sonnet-4-5
 ENABLE_FALLBACK=true
 FALLBACK_MODELS=gemini-2.5-flash,gpt-5,ollama/llama3.1:8b
-```python
+```
 **Fallback Flow**:
 
 ```mermaid
@@ -355,7 +355,7 @@ llm = LLMFactory(
 
 ## Automatically falls back on error
 response = llm.invoke(messages)
-```python
+```
 **Common Failure Scenarios**:
 - API quota exceeded
 - Rate limiting
@@ -448,7 +448,7 @@ router = Router(
     rpm=1000,  # Requests per minute
     tpm=100000  # Tokens per minute
 )
-```python
+```
 #### Cost Tracking
 
 Monitor LLM costs:
@@ -488,7 +488,7 @@ response = completion(
     messages=messages,
     cache=cache
 )
-```bash
+```
 ---
 
 ### Configuration Reference

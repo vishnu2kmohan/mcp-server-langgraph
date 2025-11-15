@@ -68,7 +68,7 @@ flowchart TD
     class Quality qualityStyle
     class Security securityStyle
     class Release releaseStyle
-```python
+```
 ### Consequences
 
 #### Positive Consequences
@@ -181,7 +181,7 @@ jobs:
 
       - name: Validate Kustomize overlays
         run: kustomize build deployments/kustomize/overlays/production
-```bash
+```
 **Duration**: ~15 minutes
 
 **Artifacts**: Docker image (tagged with git SHA)
@@ -282,7 +282,7 @@ jobs:
           image-ref: test-image
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-```bash
+```
 **Duration**: ~10 minutes
 
 **Frequency**: Daily (2:00 AM UTC)
@@ -351,7 +351,7 @@ jobs:
           stale-issue-message: 'This issue is stale. Please update or it will be closed.'
           days-before-stale: 60
           days-before-close: 14
-```bash
+```
 ### Testing Strategy Matrix
 
 | Test Type | Frequency | Duration | Coverage | Purpose |
@@ -407,7 +407,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
   run: |
     docker run --rm test-image:latest mcp-server-langgraph --version
     docker run --rm test-image:latest mcp-server-langgraph-http --help
-```bash
+```
 ### Alternatives Considered
 
 #### 1. Jenkins
@@ -532,7 +532,7 @@ strategy:
   matrix:
     python-version: ['3.10', '3.11', '3.12']
     os: [ubuntu-latest, macos-latest]
-```bash
+```
 #### 3. Caching
 ```yaml
 ## Cache dependencies to speed up runs
@@ -550,7 +550,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-```rust
+```
 #### 5. Secure Secrets
 ```yaml
 ## Use GitHub Secrets for sensitive data

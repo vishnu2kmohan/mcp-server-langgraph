@@ -60,7 +60,7 @@ app = create_app(settings=settings)
 
 # Using defaults
 app = create_app()
-```bash
+```
 **Features:**
 - CORS middleware configuration
 - Health check endpoint
@@ -97,7 +97,7 @@ from mcp_server_langgraph.infrastructure.transport_adapters import (
 
 stdio = create_stdio_adapter()
 http = create_http_adapter()
-```python
+```
 ## Usage Patterns
 
 ### Pattern 1: Test Application
@@ -129,7 +129,7 @@ app = create_app(container=container)
 # Run with uvicorn
 import uvicorn
 uvicorn.run(app, host="0.0.0.0", port=8000)
-```bash
+```
 ### Pattern 3: Production Server
 
 ```python
@@ -184,7 +184,7 @@ agent = create_agent(container=container)
 # 4. App and agent share configuration but are independent
 assert app is not None
 assert agent is not None
-```bash
+```
 ## Testing
 
 All infrastructure components have comprehensive tests:

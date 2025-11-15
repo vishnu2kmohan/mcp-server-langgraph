@@ -1232,33 +1232,78 @@ repos:
           See: tests/ASYNC_MOCK_GUIDELINES.md for complete guide
           Meta-test: tests/meta/test_async_mock_configuration.py validates this
 
-      - id: validate-code-block-languages
-        name: Validate Code Block Language Tags
-        entry: python scripts/validate_code_block_languages.py
+      - id: validate-test-ids
+        name: Validate Test IDs (prevent pytest-xdist pollution)
+        entry: python scripts/validate_test_ids.py
         language: python
         additional_dependencies: []
-        files: \.(md|mdx)$
+        files: ^tests/.*\.py$
         pass_filenames: true
-        always_run: false  # Only run when markdown files change
+        always_run: false  # Only run when test files change
         description: |
-          Ensures all code blocks in Markdown/MDX files have language identifiers
-          for proper syntax highlighting and accessibility.
+          Prevents hardcoded IDs in test files that cause state pollution in pytest-xdist.
 
-          Prevents commits of untagged code blocks like:
-          ```
-          code here
-          ```
+          CRITICAL: Hardcoded IDs like "user:alice" or "apikey_test123" cause flaky tests
+          when running in parallel with pytest-xdist due to state contamination across workers.
 
-          Requires language tags like:
-          ```python
-          code here
-          ```
+          Why this matters:
+          - Hardcoded IDs cause state pollution in parallel test execution (pytest-xdist)
+          - State pollution leads to intermittent test failures (flaky tests)
+          - Flaky tests waste CI/CD time and reduce confidence
 
-          To auto-fix: python scripts/add_code_block_languages.py <files>
+          Prevention mechanism:
+          - Pre-commit hook validates test files BEFORE commit
+          - Hook detects hardcoded IDs and blocks commit with helpful error message
+          - Developers must use worker-safe helpers (enforced by automation)
 
-          Regression prevention for documentation audit finding (2025-11-10):
-          113 files had code blocks without language tags, reducing readability
-          and accessibility. This hook ensures the issue doesn't recur.
+          Required pattern:
+            from tests.conftest import get_user_id, get_api_key_id
+
+            def test_something():
+                user_id = get_user_id()  # ✅ Worker-safe
+                apikey_id = get_api_key_id()  # ✅ Worker-safe
+
+                # NOT: user_id = "user:alice"  # ❌ Hardcoded - will fail pre-commit
+
+          Worker-safe helper usage examples:
+          - Each xdist worker gets unique IDs (user:test_gw0, user:test_gw1, etc.)
+          - Prevents race conditions and state pollution across workers
+          - Ensures tests pass both in serial and parallel execution
+
+          See: tests/conftest.py for helper function documentation
+          See: tests/meta/test_id_pollution_prevention.py for validation tests
+
+      # TEMPORARILY DISABLED (2025-11-15): Hook uses flawed scripts that cause corruption
+      # See: scripts/fix_closing_fence_tags.py for cleanup of 1,359 issues created
+      # TODO: Re-enable after rewriting add_code_block_languages.py with proper validation
+      #
+      # - id: validate-code-block-languages
+      #   name: Validate Code Block Language Tags
+      #   entry: python scripts/validate_code_block_languages.py
+      #   language: python
+      #   additional_dependencies: []
+      #   files: \.(md|mdx)$
+      #   pass_filenames: true
+      #   always_run: false  # Only run when markdown files change
+      #   description: |
+      #     Ensures all code blocks in Markdown/MDX files have language identifiers
+      #     for proper syntax highlighting and accessibility.
+      #
+      #     Prevents commits of untagged code blocks like:
+      #     ```
+      #     code here
+      #     ```
+      #
+      #     Requires language tags like:
+      #     ```python
+      #     code here
+      #     ```
+      #
+      #     To auto-fix: python scripts/add_code_block_languages.py <files>
+      #
+      #     Regression prevention for documentation audit finding (2025-11-10):
+      #     113 files had code blocks without language tags, reducing readability
+      #     and accessibility. This hook ensures the issue doesn't recur.
 
       - id: validate-test-isolation
         name: Validate Test Isolation for Pytest-xdist

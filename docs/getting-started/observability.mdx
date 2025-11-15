@@ -47,7 +47,7 @@ flowchart TB
     class Exporter,Collector collectorStyle
     class Jaeger,Prometheus,LSCloud backendStyle
     class Grafana,Dashboard1,Dashboard2 dashStyle
-```bash
+```
 ### Quick Start
 
 <Steps>
@@ -186,7 +186,7 @@ def my_function():
         result = do_work()
         span.set_attribute("result.count", len(result))
         return result
-```python
+```
 ### Metrics
 
 #### Available Metrics
@@ -321,7 +321,7 @@ scrape_configs:
     static_configs:
       - targets: ['mcp-server-langgraph:8000']
     metrics_path: '/metrics/prometheus'
-```yaml
+```
 #### Alerting Rules
 
 ```yaml
@@ -370,7 +370,7 @@ kubectl create configmap grafana-dashboards \
 kubectl label configmap grafana-dashboards \
   grafana_dashboard=1 \
   --namespace=observability
-```bash
+```
 #### Key Panels
 
 <Tabs>
@@ -504,7 +504,7 @@ All logs are JSON-formatted with trace context:
   "latency_ms": 1245,
   "status": "success"
 }
-```python
+```
 #### Log Aggregation
 
 <Tabs>

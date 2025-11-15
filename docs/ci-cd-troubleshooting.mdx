@@ -55,7 +55,7 @@ pytest -n auto tests/
 
 # 5. Check for timing issues
 pytest tests/ --timeout=30  # Add timeout
-```bash
+```
 **Prevention:**
 - Use `.env.example` to document required variables
 - Run pre-commit hooks before pushing
@@ -99,7 +99,7 @@ docker build --no-cache -f docker/Dockerfile . --dry-run
 # Test build locally with same base image
 docker pull python:3.12-slim
 docker build --no-cache -t test -f docker/Dockerfile .
-```bash
+```
 **Known Issue:** GitHub-hosted runners have ~14GB free space. Our cleanup step addresses this.
 
 ---
@@ -140,7 +140,7 @@ pip install black==25.9.0 isort==5.13.2
 - name: Run pre-commit hooks
   run: pre-commit run --all-files
   continue-on-error: true  # Temporary only!
-```bash
+```
 ---
 
 ### 4. Deployment Authentication Failures
@@ -203,7 +203,7 @@ def test_slow_function():
 
 # 3. Skip slow tests in CI
 pytest -m "not slow" tests/
-```bash
+```
 #### Issue: Docker Multi-platform Build Fails
 
 **Symptoms:**
@@ -248,7 +248,7 @@ uv lock --upgrade-package PACKAGE_NAME
 # 4. Accept risk (if false positive)
 # Create .trivyignore file:
 CVE-2024-XXXXX  # Reason: False positive, not exploitable in our use case
-```bash
+```
 #### Issue: CodeQL Analysis Fails
 
 **Symptoms:**
@@ -302,7 +302,7 @@ docker compose -f docker-compose.test.yml logs postgres-test
 
 # 4. Verify port availability
 netstat -tuln | grep 9432  # Should not be in use before test
-```bash
+```
 ---
 
 ### Coverage Tracking Workflow (coverage-trend.yaml)
@@ -354,7 +354,7 @@ gh run view RUN_ID --log
 
 # Identify slow jobs
 gh run view RUN_ID --json jobs --jq '.jobs[] | {name, conclusion, startedAt, completedAt}'
-```bash
+```
 **Optimizations:**
 
 1. **Improve Caching:**
@@ -375,7 +375,7 @@ jobs:
     ...
   lint:  # Runs parallel to test
     ...
-```bash
+```
 3. **Conditional Execution:**
 
 ```yaml
@@ -390,7 +390,7 @@ jobs:
 ```bash
 # Only run tests for changed files
 pytest --testmon tests/
-```bash
+```
 ---
 
 ### High GitHub Actions Costs
@@ -419,7 +419,7 @@ gh run view RUN_ID
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true  # Cancel outdated runs
-```bash
+```
 3. **Reduce Scheduled Runs:**
 
 ```yaml
@@ -448,7 +448,7 @@ schedule:
   run: |
     echo "::add-mask::$MY_SECRET"  # Mask in logs
     echo "Using secret..."  # Won't show value
-```bash
+```
 ### Dependency Vulnerabilities
 
 **Symptoms:**
@@ -490,7 +490,7 @@ jobs:
       run: |
         echo "::debug::Debugging information"
         env | sort  # Print all environment variables
-```bash
+```
 **Via GitHub UI:**
 
 1. Go to repository Settings → Secrets
@@ -523,7 +523,7 @@ gh run download RUN_ID
 # View specific artifact
 unzip artifact.zip
 cat report.json | jq
-```bash
+```
 ### Test Workflow Locally with Act
 
 ```bash
@@ -573,14 +573,14 @@ Brief description of the problem
 3. Observe failure in step X
 
 ## Logs
-```ini
+```
 [Paste relevant log excerpt]
 ```markdown
 
 ## Expected vs Actual
 Expected: Tests pass
 Actual: Tests fail with error Y
-```bash
+```
 ### Emergency Contacts
 
 - **CI/CD Issues:** @cicd-team

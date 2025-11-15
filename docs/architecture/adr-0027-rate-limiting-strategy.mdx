@@ -87,7 +87,7 @@ flowchart TB
     class KongCheck,AppCheck decisionStyle
     class Kong429,App429 errorStyle
     class Response resultStyle
-```python
+```
 **Rate Limiting Flow with Token Bucket**:
 ```mermaid
 sequenceDiagram
@@ -163,7 +163,7 @@ X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1697654400
 Retry-After: 30
-```python
+```
 ##### Rate Limit Exceeded Response
 
 ```json
@@ -210,7 +210,7 @@ plugins:
 src/mcp_server_langgraph/
 └── middleware/
     └── rate_limiter.py  # Rate limiting middleware
-```python
+```
 #### FastAPI Integration
 
 ```python
@@ -240,7 +240,7 @@ RATE_LIMITS = {
     "search": "100/minute",   # Search endpoints
     "read": "200/minute",     # Read-only endpoints
 }
-```bash
+```
 ### Configuration
 
 #### Environment Variables
@@ -267,7 +267,7 @@ RATE_LIMIT_FAIL_OPEN=true  # Allow if Redis is down
 ```python
 FF_ENABLE_RATE_LIMITING=true
 FF_RATE_LIMIT_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
-```css
+```
 ### Metrics & Observability
 
 #### New Metrics
@@ -295,7 +295,7 @@ suspicious_activity_total{ip, user_id, reason}
 - alert: PossibleDoSAttack
   expr: rate(rate_limit_exceeded_total{tier="anonymous"}[1m]) > 100
   for: 1m
-```python
+```
 ### Consequences
 
 #### Positive

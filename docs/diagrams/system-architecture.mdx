@@ -119,7 +119,7 @@ flowchart TD
     class Factory,Primary,Fallback llm
     class Secrets,Qdrant,Redis,Postgres services
     class OTEL,Jaeger,Prometheus,Grafana,LangSmith obs
-```python
+```
 ### Authentication Flow
 
 ```mermaid
@@ -207,7 +207,7 @@ flowchart TD
     class GenerateResp,RefineResp llmStyle
     class Verify verifyStyle
     class Route routeStyle
-```python
+```
 ### Deployment Architecture (Kubernetes)
 
 ```mermaid
@@ -382,7 +382,7 @@ sequenceDiagram
     MCP-->>Client: Response with metadata
 
     Note over Context,Verify: Full Agentic Loop<br/>Gather-Action-Verify-Repeat
-```python
+```
 ### Parallel Tool Execution
 
 ```mermaid
@@ -492,7 +492,7 @@ flowchart TD
     class LoadAll,Progressive,LoadContext,StopLoading loadStyle
     class InjectMsg contextStyle
     class Note1,Note2 noteStyle
-```python
+```
 ### Session Management Architecture
 
 ```mermaid
@@ -608,7 +608,7 @@ flowchart LR
     class Log1,Log2,Log3,Error failureStyle
     class Metrics metricsStyle
     class Notify alertStyle
-```python
+```
 ### Observability Data Flow
 
 ```mermaid

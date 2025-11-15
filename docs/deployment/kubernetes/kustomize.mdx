@@ -136,7 +136,7 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: latest
-```yaml
+```
 #### base/deployment.yaml
 
 ```yaml
@@ -207,7 +207,7 @@ spec:
   - name: metrics
     port: 9090
     targetPort: 9090
-```yaml
+```
 #### base/serviceaccount.yaml
 
 ```yaml
@@ -261,7 +261,7 @@ images:
   - name: mcp-server-langgraph
     newName: mcp-server-langgraph
     newTag: dev
-```yaml
+```
 #### overlays/development/deployment-patch.yaml
 
 ```yaml
@@ -328,7 +328,7 @@ images:
   - name: mcp-server-langgraph
     newName: gcr.io/project-id/mcp-server-langgraph
     newTag: staging
-```yaml
+```
 #### overlays/staging/deployment-patch.yaml
 
 ```yaml
@@ -372,7 +372,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-```yaml
+```
 ### Production Overlay
 
 #### overlays/production/kustomization.yaml
@@ -470,7 +470,7 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-```yaml
+```
 #### overlays/production/pdb.yaml
 
 ```yaml
@@ -536,7 +536,7 @@ spec:
       port: 53
     - protocol: UDP
       port: 53
-```yaml
+```
 ### Advanced Techniques
 
 #### JSON Patches
@@ -575,7 +575,7 @@ spec:
           - "--structured-logs"
           - "--port=5432"
           - "project:region:instance"
-```yaml
+```
 #### Transformers
 
 ```yaml
@@ -598,7 +598,7 @@ transformers:
 ## overlays/production/kustomization.yaml
 generators:
   - secret-generator.yaml
-```yaml
+```
 **secret-generator.yaml**:
 ```yaml
 apiVersion: builtin
@@ -624,7 +624,7 @@ kubectl kustomize overlays/staging
 
 ## Production
 kubectl kustomize overlays/production
-```bash
+```
 #### Deploy
 
 ```bash
@@ -643,7 +643,7 @@ kubectl apply -k overlays/production
 ```bash
 ## Delete environment
 kubectl delete -k overlays/staging
-```bash
+```
 ### CI/CD Integration
 
 #### GitHub Actions
@@ -689,7 +689,7 @@ deploy:production:
     - kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
   only:
     - main
-```python
+```
 ### GitOps with ArgoCD
 
 #### Create Application
@@ -739,7 +739,7 @@ kubectl apply -f argocd-application.yaml
 
 ## Sync application
 argocd app sync mcp-server-langgraph-production
-```bash
+```
 ### Best Practices
 
 <AccordionGroup>

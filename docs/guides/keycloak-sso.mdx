@@ -41,7 +41,7 @@ sequenceDiagram
     App->>FGA: Sync roles/groups
     FGA-->>App: Permissions stored
     App-->>User: Authenticated response
-```bash
+```
 ### Quick Start
 
 <Steps>
@@ -70,7 +70,7 @@ sequenceDiagram
       </Tab>
 
       <Tab title="Kubernetes">
-        ```bash
+        ```
         # Using Helm (recommended)
         helm install keycloak bitnami/keycloak \
           --namespace mcp-server-langgraph \
@@ -87,7 +87,7 @@ sequenceDiagram
           deployment/keycloak -n mcp-server-langgraph
         ```text
         Access via ingress or port-forward:
-        ```bash
+        ```
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
         ```python
       </Tab>
@@ -101,7 +101,7 @@ sequenceDiagram
   </Step>
 
   <Step title="Run Setup Script">
-    ```bash
+    ```
     # Wait for Keycloak to be ready (60+ seconds)
     sleep 60
 
@@ -119,7 +119,7 @@ sequenceDiagram
   </Step>
 
   <Step title="Configure Environment">
-    ```bash
+    ```
     # .env or Kubernetes ConfigMap
     AUTH_PROVIDER=keycloak
     AUTH_MODE=session  # or token
@@ -135,7 +135,7 @@ sequenceDiagram
   </Step>
 
   <Step title="Test Authentication">
-    ```python
+    ```
     from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
     client = KeycloakClient()
@@ -225,7 +225,7 @@ If you prefer to configure Keycloak manually via the admin console:
 
 For web applications:
 
-```typescript
+```
 // 1. Redirect user to Keycloak
 const authUrl = `https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/auth?
   client_id=langgraph-client&
@@ -257,7 +257,7 @@ const { access_token, refresh_token, expires_in } = await tokens.json();
 
 For testing or CLI applications:
 
-```python
+```
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
 client = KeycloakClient()
@@ -280,7 +280,7 @@ refresh_token = result['refresh_token']
 
 Refresh tokens have longer lifetime and can be used to get new access tokens:
 
-```python
+```
 ## Refresh access token
 new_tokens = await client.refresh_token(refresh_token)
 
@@ -295,7 +295,7 @@ new_refresh_token = new_tokens['refresh_token']  # Rotated!
 
 Edit `config/role_mappings.yaml`:
 
-```yaml
+```
 ## Simple 1:1 role mappings
 simple_mappings:
   admin: admin
@@ -328,7 +328,7 @@ hierarchies:
 
 When user authenticates, roles are synced to OpenFGA:
 
-```python
+```
 from mcp_server_langgraph.auth.keycloak import sync_user_to_openfga
 
 ## Get user info from token
@@ -348,7 +348,7 @@ await sync_user_to_openfga(
 
 Trigger sync for existing users:
 
-```python
+```
 ## Sync single user
 await sync_user_to_openfga(
     user_id="alice",
@@ -373,7 +373,7 @@ for user in users:
 
 Deploy Keycloak with 2+ replicas:
 
-```yaml
+```
 ## values.yaml for Helm
 replicaCount: 2
 
@@ -402,7 +402,7 @@ postgresql:
 
 **Always use HTTPS in production:**
 
-```yaml
+```
 ingress:
   enabled: true
   className: nginx
@@ -419,14 +419,14 @@ ingress:
         - sso.yourdomain.com
 ```bash
 Configure app:
-```bash
+```
 KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
 KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
 ```markdown
 
 #### Performance Tuning
 
-```yaml
+```
 ## Kubernetes resources
 resources:
   requests:
@@ -454,7 +454,7 @@ postgresql:
 ```bash
 #### Backup & Recovery
 
-```bash
+```
 ## Backup PostgreSQL (Keycloak database)
 kubectl exec -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
@@ -469,7 +469,7 @@ kubectl exec -i -n mcp-server-langgraph \
 
 #### Health Checks
 
-```bash
+```
 ## Keycloak health
 curl https://sso.yourdomain.com/health
 
@@ -483,7 +483,7 @@ curl https://sso.yourdomain.com/health/live
 
 Keycloak exposes Prometheus metrics:
 
-```yaml
+```
 ## ServiceMonitor for Prometheus
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -499,7 +499,7 @@ spec:
 ```text
 
 Key metrics:
-```promql
+```
 ## Login rate
 rate(keycloak_logins_total[5m])
 
@@ -516,7 +516,7 @@ keycloak_sessions_active
 
 Configure structured logging:
 
-```yaml
+```
 extraEnv:
   - name: KC_LOG_LEVEL
     value: "info"
@@ -528,7 +528,7 @@ extraEnv:
 
 <AccordionGroup>
   <Accordion title="Connection refused">
-    ```bash
+    ```
     # Check Keycloak status
     kubectl get pods -l app=keycloak
     kubectl logs -l app=keycloak --tail=100
@@ -539,7 +539,7 @@ extraEnv:
   </Accordion>
 
   <Accordion title="Invalid client secret">
-    ```bash
+    ```
     # Get correct secret from Keycloak
     # Admin console → Clients → langgraph-client → Credentials
 
@@ -556,7 +556,7 @@ extraEnv:
     - Token not expired
     - JWKS endpoint accessible
 
-    ```python
+    ```
     # Debug token
     import jwt
     decoded = jwt.decode(token, options={"verify_signature": False})
@@ -566,7 +566,7 @@ extraEnv:
 
   <Accordion title="SSL verification errors">
     **Development only**:
-    ```bash
+    ```
     KEYCLOAK_VERIFY_SSL=false
     ```
 

@@ -70,7 +70,7 @@ async def postgres_connection_clean(postgres_connection_real):
     tables = await postgres_connection_real.fetch("SELECT ...")
     for table in tables:
         await postgres_connection_real.execute(f"DROP TABLE {table} CASCADE")
-```bash
+```
 **Fixtures Created**:
 1. **postgres_connection_clean**: Drops all `test_*` tables after each test
 2. **redis_client_clean**: Flushes database after each test (O(N) but fast)
@@ -185,7 +185,7 @@ async def postgres_connection_real(integration_test_env):
     )
     yield conn
     await conn.close()
-```python
+```
 **Pattern 2: Per-Test Cleanup Wrapper**
 ```python
 @pytest.fixture
@@ -222,7 +222,7 @@ async def openfga_client_clean(openfga_client_real):
     # Cleanup: Delete all written tuples
     for tuple in written_tuples:
         await openfga_client_real.delete_tuple(tuple)
-```bash
+```
 ### Performance Optimization
 
 **Startup Time**:
@@ -254,7 +254,7 @@ TESTING=true pytest tests/integration/ -v --integration
 
 # Stop infrastructure
 docker-compose -f docker-compose.test.yml down
-```bash
+```
 ### E2E Tests (Full Stack)
 ```bash
 # Start all services
@@ -279,7 +279,7 @@ docker-compose -f docker-compose.test.yml up -d
 
 # Verify services are healthy
 docker-compose -f docker-compose.test.yml ps
-```bash
+```
 ### Step 2: Migrate Tests Incrementally
 ```python
 # BEFORE (Mock):

@@ -164,7 +164,7 @@ llm = LLMFactory(
     location="us-central1",
     temperature=0.7
 )
-```python
+```
 #### Advanced Configuration
 
 ```python
@@ -311,7 +311,7 @@ response = await agent.ainvoke({
     "messages": [("user", "What's the weather in Paris?")]
 })
 print(response["messages"][-1].content)
-```python
+```
 #### Structured Output
 
 ```python
@@ -372,7 +372,7 @@ spec:
       - name: gcp-credentials
         secret:
           secretName: gcp-service-account
-```bash
+```
 **Create secret**:
 ```bash
 kubectl create secret generic gcp-service-account \
@@ -412,7 +412,7 @@ spec:
         env:
         - name: LLM_PROVIDER
           value: "vertex_ai"
-```python
+```
 ### Performance Optimization
 
 #### Caching
@@ -453,7 +453,7 @@ responses = await asyncio.gather(*[
 
 for query, response in zip(queries, responses):
     print(f"Q: {query}\nA: {response.content}\n")
-```python
+```
 #### Streaming
 
 ```python
@@ -495,7 +495,7 @@ llm = LLMFactory(
     provider="google",
     model_name=select_model(analyze_complexity(query))
 )
-```python
+```
 #### Token Usage Tracking
 
 ```python
@@ -531,7 +531,7 @@ gcloud alpha monitoring policies create \
   --condition-display-name="80% quota usage" \
   --condition-threshold-value=0.8 \
   --condition-threshold-duration=300s
-```python
+```
 ### Safety & Content Filtering
 
 ```python
@@ -571,7 +571,7 @@ os.environ["LANGCHAIN_PROJECT"] = "langgraph-gemini"
 ## Calls automatically tracked
 response = await llm.ainvoke(query)
 ## View in https://smith.langchain.com
-```python
+```
 #### Custom Metrics
 
 ```python

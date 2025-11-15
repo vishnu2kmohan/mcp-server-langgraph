@@ -496,11 +496,32 @@ class TestOpenFGACircuitBreakerCriticality:
 
         CRITICAL: Reset circuit breaker BEFORE test starts to prevent state pollution.
         Without this, tests running in parallel can see circuit breaker state from other tests.
+
+        Also applies fast retry config to prevent test timeouts in pytest-xdist parallel execution.
         """
         from mcp_server_langgraph.resilience.circuit_breaker import reset_circuit_breaker
+        from mcp_server_langgraph.resilience.config import ResilienceConfig, RetryConfig, set_resilience_config
 
         # Reset circuit breaker to ensure clean state before test starts
         reset_circuit_breaker("openfga")
+
+        # Apply fast retry config to prevent timeouts (fixes pytest-xdist race condition)
+        # This ensures max_attempts=1 regardless of when fast_retry_config fixture runs
+        current_config = ResilienceConfig()
+        fast_retry = RetryConfig(
+            max_attempts=1,  # No retries - fail immediately
+            exponential_base=1.0,  # No exponential growth
+            exponential_max=0.1,  # 100ms max delay (minimal)
+            jitter=False,  # No jitter for deterministic testing
+        )
+        test_config = ResilienceConfig(
+            enabled=current_config.enabled,
+            circuit_breakers=current_config.circuit_breakers,
+            retry=fast_retry,
+            timeout=current_config.timeout,
+            bulkhead=current_config.bulkhead,
+        )
+        set_resilience_config(test_config)
 
     def teardown_method(self):
         """

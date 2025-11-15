@@ -46,7 +46,7 @@ The default model supports:
 - Tools (agent tools like chat, search)
 - Organizations (multi-tenant support)
 - Documents (context resources)
-```bash
+```
 ### Quick Start
 
 <Steps>
@@ -261,7 +261,7 @@ await client.write_tuples([{
     "relation": "viewer",
     "object": "document:report-q4"
 }])
-```python
+```
 ### Keycloak Integration 🆕
 
 **NEW in v2.1.0**: Automatic role synchronization from Keycloak to OpenFGA.
@@ -310,7 +310,7 @@ conditional_mappings:
       operator: ==
       value: true
     relation: member
-```python
+```
 See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
 ### API Operations
@@ -348,7 +348,7 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```sql
+```
 #### Revoke Permission
 
 ```python
@@ -382,7 +382,7 @@ users = await client.list_users(
     object="tool:chat"
 )
 print(f"Can execute chat: {users}")
-```bash
+```
 ### Monitoring & Debugging
 
 #### Enable Authorization Logging

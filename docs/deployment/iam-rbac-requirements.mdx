@@ -72,7 +72,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SERVICE_ACCOUNT}" \
   --role="roles/cloudsql.client"
-```bash
+```
 #### Workload Identity Federation (GitHub Actions)
 
 **Pool**: `github-actions-pool`
@@ -98,7 +98,7 @@ metadata:
   namespace: staging-mcp-server-langgraph
   annotations:
     iam.gke.io/gcp-service-account: mcp-staging-sa@PROJECT_ID.iam.gserviceaccount.com
-```bash
+```
 #### Verification
 
 ```bash
@@ -159,7 +159,7 @@ gcloud projects get-iam-policy $PROJECT_ID \
     }
   ]
 }
-```json
+```
 #### Custom IAM Policy: EKS Deployment
 
 ```json
@@ -192,7 +192,7 @@ metadata:
   namespace: mcp-server-langgraph
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mcp-eks-pod-role
-```json
+```
 **Trust Policy**:
 ```json
 {
@@ -232,7 +232,7 @@ aws iam put-role-policy \
   --role-name mcp-eks-deployment-role \
   --policy-name ECRAccess \
   --policy-document file://ecr-policy.json
-```bash
+```
 ---
 
 ## Azure (Azure Kubernetes Service)
@@ -304,7 +304,7 @@ spec:
   type: 0  # User-assigned managed identity
   resourceID: /subscriptions/SUBSCRIPTION_ID/resourcegroups/RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mcp-identity
   clientID: CLIENT_ID
-```yaml
+```
 **Pod Identity Binding**:
 ```yaml
 apiVersion: "aadpodidentity.k8s.io/v1"
@@ -331,7 +331,7 @@ kind: ServiceAccount
 metadata:
   name: mcp-server-langgraph
   namespace: mcp-server-langgraph
-```yaml
+```
 #### Role
 
 ```yaml
@@ -378,7 +378,7 @@ roleRef:
   kind: Role
   name: mcp-server-langgraph
   apiGroup: rbac.authorization.k8s.io
-```bash
+```
 ---
 
 ## CI/CD Service Account Permissions
@@ -438,7 +438,7 @@ for role in "${REQUIRED_ROLES[@]}"; do
 done
 
 echo "✓ All required IAM roles present"
-```bash
+```
 ### AWS Validation
 
 ```bash

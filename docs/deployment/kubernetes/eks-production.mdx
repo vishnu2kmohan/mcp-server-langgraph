@@ -75,7 +75,7 @@ flowchart TB
     class API,Pods,CA,EKS compute
     class RDS,Redis,SM storage
     class CW,XRAY observability
-```bash
+```
 ---
 
 ## Prerequisites
@@ -634,7 +634,7 @@ kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 # Node logs
 kubectl logs -n kube-system -l k8s-app=aws-node
-```bash
+```
 ### Scaling
 
 ```bash

@@ -58,7 +58,7 @@ class SessionStore(ABC):
 ## Implementations
 class InMemorySessionStore(SessionStore):  # Development, testing
 class RedisSessionStore(SessionStore):      # Production
-```python
+```
 #### Factory Pattern
 
 ```python
@@ -77,7 +77,7 @@ REDIS_URL=redis://localhost:6379/0
 SESSION_TTL_SECONDS=3600
 SESSION_SLIDING_WINDOW=true
 SESSION_MAX_CONCURRENT=5
-```python
+```
 ### Consequences
 
 #### Positive Consequences
@@ -214,7 +214,7 @@ class RedisSessionStore(SessionStore):
         )
         await self._redis.sadd(f"user_sessions:{user_id}", session.session_id)
         return session
-```python
+```
 **Features**:
 - Automatic expiration with Redis TTL
 - Distributed (multiple instances share state)
@@ -252,7 +252,7 @@ async def get_session(self, session_id: str, sliding_window: bool = True) -> Ses
         await self._redis.expire(f"session:{session_id}", ttl_seconds)
 
     return session
-```python
+```
 ### Performance Characteristics
 
 | Operation | InMemory | Redis (Local) | Redis (Network) |

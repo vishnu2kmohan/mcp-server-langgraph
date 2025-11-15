@@ -100,7 +100,7 @@ def init_test_observability():
         init_observability(settings=test_settings, enable_file_logging=False)
 
     yield
-```bash
+```
 **Removed**: 25 duplicate fixtures from individual test files (-476 lines)
 
 ## Consequences
@@ -169,7 +169,7 @@ def test_no_duplicate_autouse_fixtures():
   name: Validate Pytest Fixture Organization
   entry: python -m pytest tests/test_fixture_organization.py -v
   files: ^tests/.*\.py$
-```bash
+```
 ### 3. Runtime Plugin
 ```python
 # tests/conftest_fixtures_plugin.py

@@ -31,7 +31,7 @@ auth_check = openfga.check(user, resource)           # 50ms
 
 ## Total: 5.07 seconds to handle 1 request
 ## Throughput: ~0.2 requests/second per worker
-```python
+```
 This creates severe bottlenecks:
 - **Low throughput**: Each worker handles only 1 request at a time
 - **Poor scalability**: Need 100 workers to handle 20 concurrent users
@@ -107,7 +107,7 @@ async def enrich_user_data(user_id: str) -> UserData:
     )
     # Total: ~50ms (not 100ms)
     return UserData(session=session, roles=roles, preferences=preferences)
-```python
+```
 ##### Pattern 2: Async Iteration
 ```python
 ## Stream results instead of blocking
@@ -128,7 +128,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
         )
     except asyncio.TimeoutError:
         raise LLMTimeoutError(f"LLM call exceeded {timeout}s timeout")
-```bash
+```
 ### Consequences
 
 #### Positive Consequences
@@ -220,7 +220,7 @@ async def export_user_data(
     roles = await get_user_roles(user_id)
     data = await export_service.export(user_id)
     return data
-```python
+```
 #### Async Context Managers
 
 ```python
@@ -247,7 +247,7 @@ async def run_sync_in_async(sync_func, *args):
 
 ## Usage
 result = await run_sync_in_async(blocking_cpu_work, data)
-```python
+```
 #### Async Testing
 
 ```python
@@ -406,7 +406,7 @@ uvicorn mcp_server_langgraph.mcp.server_streamable:app \
     --workers 4 \
     --host 0.0.0.0 \
     --port 8000
-```python
+```
 **Why Uvicorn**: Native async support, ASGI protocol, high performance
 
 #### LangGraph Async Support
@@ -438,7 +438,7 @@ class RedisSessionStore(SessionStore):
     async def create(self, user_id: str, ...) -> str:
         await self.redis.setex(session_key, ttl, session_data)
         return session_id
-```python
+```
 #### OpenFGA Async Client
 
 ```python
@@ -460,7 +460,7 @@ result = async_function()
 
 ## ✅ GOOD: Properly awaited
 result = await async_function()
-```rust
+```
 #### 2. Use `asyncio.gather()` for Concurrent I/O
 ```python
 ## ❌ BAD: Sequential (slow)
@@ -480,7 +480,7 @@ result1, result2, result3 = await asyncio.gather(
 ```python
 ## Always use timeouts to prevent hanging
 result = await asyncio.wait_for(external_api_call(), timeout=30)
-```python
+```
 #### 4. Use Async Context Managers
 ```python
 async with httpx.AsyncClient() as client:

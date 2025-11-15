@@ -85,7 +85,7 @@ Redis provides production-grade session storage with:
       </Tab>
 
       <Tab title="Kubernetes">
-        ```bash
+        ```
         # Using Helm (recommended)
         helm install redis-session bitnami/redis \
           --namespace mcp-server-langgraph \
@@ -111,7 +111,7 @@ Redis provides production-grade session storage with:
 
       <Tab title="Cloud Managed">
         **Google Cloud Memorystore**:
-        ```bash
+        ```
         gcloud redis instances create sessions \
           --size=5 \
           --region=us-central1 \
@@ -125,7 +125,7 @@ Redis provides production-grade session storage with:
           --format="get(host,port,authString)"
         ```markdown
         **AWS ElastiCache**:
-        ```bash
+        ```
         aws elasticache create-replication-group \
           --replication-group-id sessions \
           --replication-group-description "Session store" \
@@ -135,7 +135,7 @@ Redis provides production-grade session storage with:
           --auth-token "$(openssl rand -base64 32)"
         ```markdown
         **Azure Cache for Redis**:
-        ```bash
+        ```
         az redis create \
           --resource-group mcp-server-langgraph \
           --name sessions \
@@ -149,7 +149,7 @@ Redis provides production-grade session storage with:
   </Step>
 
   <Step title="Configure Application">
-    ```bash
+    ```
     # .env or Kubernetes ConfigMap
     AUTH_MODE=session
     SESSION_BACKEND=redis
@@ -171,7 +171,7 @@ Redis provides production-grade session storage with:
   </Step>
 
   <Step title="Test Session Store">
-    ```python
+    ```
     from mcp_server_langgraph.auth.session import SessionManager
 
     # Initialize session manager
@@ -200,7 +200,7 @@ Redis provides production-grade session storage with:
   </Step>
 
   <Step title="Verify in Redis">
-    ```bash
+    ```
     # Connect to Redis
     docker compose exec redis-session redis-cli -a $REDIS_PASSWORD
 
@@ -218,7 +218,7 @@ Redis provides production-grade session storage with:
 
 ### Session Lifecycle
 
-```mermaid
+```
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant User
@@ -247,7 +247,7 @@ sequenceDiagram
 
 #### Session TTL
 
-```python
+```
 ## Fixed TTL (no extension)
 SESSION_TTL_SECONDS=3600  # 1 hour
 SESSION_SLIDING_WINDOW=false
@@ -264,7 +264,7 @@ SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
 
 #### Concurrent Sessions
 
-```python
+```
 ## Limit concurrent sessions per user
 SESSION_MAX_CONCURRENT=5
 
@@ -281,7 +281,7 @@ Use cases:
 
 Store additional context with sessions:
 
-```python
+```
 session = await session_mgr.create_session(
     user_id="alice",
     metadata={
@@ -295,7 +295,7 @@ session = await session_mgr.create_session(
 ```text
 
 Access metadata:
-```python
+```
 session = await session_mgr.get_session(session_id)
 print(f"Device: {session.metadata['device_id']}")
 print(f"Location: {session.metadata['location']}")
@@ -304,7 +304,7 @@ print(f"Location: {session.metadata['location']}")
 
 #### Create Session
 
-```python
+```
 from mcp_server_langgraph.auth.session import SessionManager
 
 session_mgr = SessionManager()
@@ -327,7 +327,7 @@ session = await session_mgr.create_session(
 
 #### Get Session
 
-```python
+```
 ## Get by session ID
 session = await session_mgr.get_session(session_id)
 
@@ -343,7 +343,7 @@ for s in sessions:
 ```python
 #### Refresh Session
 
-```python
+```
 ## Manual refresh
 session = await session_mgr.refresh_session(session_id)
 print(f"Extended until: {session.expires_at}")
@@ -354,7 +354,7 @@ print(f"Extended until: {session.expires_at}")
 
 #### Revoke Session
 
-```python
+```
 ## Revoke single session
 await session_mgr.revoke_session(session_id)
 
@@ -369,7 +369,7 @@ await session_mgr.revoke_session(
 ```python
 #### Session Analytics
 
-```python
+```
 ## Count active sessions
 total = await session_mgr.count_active_sessions()
 print(f"Active sessions: {total}")
@@ -387,7 +387,7 @@ print(f"Active users: {users}")
 
 #### Keycloak + Redis Sessions
 
-```python
+```
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.session import SessionManager
 
@@ -444,7 +444,7 @@ async def logout(session_id: str):
 
 Deploy Redis with replication:
 
-```yaml
+```
 ## Kubernetes with Helm
 helm install redis-session bitnami/redis \
   --set architecture=replication \
@@ -467,7 +467,7 @@ Benefits:
 
 Configure Redis persistence:
 
-```conf
+```
 ## redis.conf
 save 900 1       # Save after 900s if >= 1 key changed
 save 300 10      # Save after 300s if >= 10 keys changed
@@ -482,14 +482,14 @@ Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cac
 #### Security
 
 **Authentication**:
-```bash
+```
 ## Always use password
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
 ```markdown
 
 **Encryption**:
-```bash
+```
 ## TLS/SSL in production
 REDIS_SSL=true
 REDIS_URL=rediss://redis-session:6380/0
@@ -505,7 +505,7 @@ REDIS_PASSWORD=password
 
 #### Memory Management
 
-```conf
+```
 ## redis.conf
 maxmemory 2gb
 maxmemory-policy allkeys-lru  # Evict least recently used
@@ -515,14 +515,14 @@ maxmemory-policy volatile-lru
 ```text
 
 Monitor memory usage:
-```bash
+```
 redis-cli INFO memory
 ```css
 #### Monitoring
 
 **Key metrics to track**:
 
-```promql
+```
 ## Active sessions
 redis_db_keys{db="db0"}
 
@@ -550,7 +550,7 @@ rate(redis_evicted_keys_total[5m])
 
 <AccordionGroup>
   <Accordion title="Connection refused">
-    ```bash
+    ```
     # Check Redis status
     docker compose ps redis-session
     kubectl get pods -l app.kubernetes.io/name=redis
@@ -581,7 +581,7 @@ rate(redis_evicted_keys_total[5m])
     - Session was revoked
 
     **Debug**:
-    ```python
+    ```
     # Check if session exists in Redis
     import redis
     r = redis.from_url(REDIS_URL, password=REDIS_PASSWORD)
@@ -599,7 +599,7 @@ rate(redis_evicted_keys_total[5m])
     4. **Clean expired**: Redis auto-expires, but run `FLUSHDB` if needed
 
     **Check current usage**:
-    ```bash
+    ```
     redis-cli INFO memory | grep used_memory_human
     redis-cli DBSIZE
     ```markdown
@@ -612,7 +612,7 @@ rate(redis_evicted_keys_total[5m])
     - Use local Redis instance (reduce network latency)
     - Check Redis logs for slow queries
 
-    ```bash
+    ```
     # Enable slow log
     CONFIG SET slowlog-log-slower-than 10000  # 10ms
     SLOWLOG GET 10
@@ -631,7 +631,7 @@ Switching from stateless tokens to Redis sessions:
   </Step>
 
   <Step title="Update Configuration">
-    ```bash
+    ```
     # Change auth mode
     AUTH_MODE=session  # was: token
     SESSION_BACKEND=redis
@@ -645,7 +645,7 @@ Switching from stateless tokens to Redis sessions:
   <Step title="Dual Mode Support (Optional)">
     Support both tokens and sessions during migration:
 
-    ```python
+    ```
     # Check Authorization header
     auth_header = request.headers.get("Authorization")
     cookie = request.cookies.get("session_id")
@@ -668,14 +668,14 @@ Switching from stateless tokens to Redis sessions:
     Migrate clients from token to session:
 
     **Before** (Token):
-    ```javascript
+    ```
     const token = localStorage.getItem('access_token');
     fetch('/api/message', {
       headers: {'Authorization': `Bearer ${token}`}
     });
     ```markdown
     **After** (Session):
-    ```javascript
+    ```
     // Session cookie sent automatically
     fetch('/api/message', {
       credentials: 'include'  // Send cookies
@@ -686,7 +686,7 @@ Switching from stateless tokens to Redis sessions:
   <Step title="Deprecate Token Support">
     After migration period, remove token support:
 
-    ```bash
+    ```
     # Final config
     AUTH_MODE=session
     # Remove: JWT_SECRET_KEY, JWT_EXPIRATION_SECONDS

@@ -22,7 +22,7 @@ Run the complete MCP Server with LangGraph stack locally with Docker Compose for
 
 ```bash
 ./scripts/setup/docker-compose-quickstart.sh
-```bash
+```
 This script will:
 1. Check prerequisites (Docker, Docker Compose)
 2. Create `.env` from template if needed
@@ -153,7 +153,7 @@ vim agent.py
 ## Save file - server automatically reloads!
 ## Check logs to see reload
 docker compose logs -f agent
-```bash
+```
 ### Testing
 
 #### Run Tests
@@ -201,7 +201,7 @@ curl -X POST http://localhost:8000/message \
       "content": "Hello!"
     }]
   }'
-```bash
+```
 ### Configuration
 
 #### Environment Variables
@@ -230,7 +230,7 @@ Services communicate via Docker network:
 ## In docker-compose.yml, agent uses internal URLs:
 OPENFGA_API_URL=http://openfga:8080
 OTLP_ENDPOINT=http://otel-collector:4317
-```bash
+```
 #### Custom Configuration
 
 Override settings with environment variables:
@@ -288,7 +288,7 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 
 ## LLM token usage
 sum(llm_tokens_total) by (model)
-```bash
+```
 #### Grafana Dashboards
 
 Access at [http://localhost:3001](http://localhost:3001) (admin/admin):

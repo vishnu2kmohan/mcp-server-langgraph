@@ -45,7 +45,7 @@ git push origin feature/my-awesome-feature
 
 ## 8. Create pull request
 gh pr create --title "feat: add awesome new feature" --body "Description of changes"
-```bash
+```
 ### Development Setup
 
 #### Prerequisites
@@ -110,7 +110,7 @@ ANTHROPIC_API_KEY=sk-ant-your-dev-key
 
 ENABLE_TRACING=false
 ENABLE_METRICS=false
-```bash
+```
 #### Start Development Services
 
 ```bash
@@ -174,7 +174,7 @@ async def get_user_profile(
     """
     # Implementation
     pass
-```bash
+```
 #### Code Formatting
 
 We use automated formatters:
@@ -312,7 +312,7 @@ async def test_multiple_users(auth_middleware, user_id, expected):
     token = auth_middleware.create_token(user_id)
     verified = await auth_middleware.verify_token(token)
     assert verified == expected
-```bash
+```
 #### Running Tests
 
 ```bash
@@ -352,7 +352,7 @@ open htmlcov/index.html
 
 ## Check coverage threshold
 uv run pytest --cov=src --cov-fail-under=80
-```rust
+```
 ### Commit Messages
 
 #### Conventional Commits
@@ -366,7 +366,7 @@ We use the [Conventional Commits](https://www.conventionalcommits.org/) specific
 [optional body]
 
 [optional footer(s)]
-```bash
+```
 **Types**:
 - `feat`: New feature
 - `fix`: Bug fix
@@ -523,7 +523,7 @@ Fixes #(issue number)
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally
 - [ ] Any dependent changes have been merged and published
-```bash
+```
 #### PR Review Process
 
 **For Contributors**:
@@ -615,7 +615,7 @@ Common issues and solutions...
     Description
   </Card>
 </CardGroup>
-```python
+```
 #### Mermaid Diagrams
 
 <Warning>
@@ -659,7 +659,7 @@ sequenceDiagram
     participant B as Server
     A->>B: Request
     B-->>A: Response
-```rust
+```
 ### Release Process
 
 #### Versioning
@@ -673,7 +673,7 @@ MAJOR.MINOR.PATCH
 1.0.0 → 1.0.1 (patch: bug fix)
 1.0.1 → 1.1.0 (minor: new feature, backward compatible)
 1.1.0 → 2.0.0 (major: breaking change)
-```bash
+```
 #### Creating a Release
 
 ```bash
@@ -724,7 +724,7 @@ All notable changes to this project will be documented in this file.
 ### [1.1.0] - 2023-12-01
 
 ...
-```bash
+```
 ### Community
 
 #### Communication Channels

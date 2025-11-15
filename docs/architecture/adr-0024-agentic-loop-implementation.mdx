@@ -34,7 +34,7 @@ From **"Building Agents with the Claude Agent SDK"**, the recommended agent loop
 2. Take Action → Execute tasks using available tools
 3. Verify Work → Evaluate and improve outputs
 4. Repeat → Iterate until goals are achieved
-```python
+```
 ### Decision
 
 We will implement the **full agentic loop** in our LangGraph agent with the following components:
@@ -96,7 +96,7 @@ class OutputVerifier:
     - Safety: Is it appropriate?
     - Sources: Are sources cited?
     """
-```python
+```
 **Features**:
 - LLM-as-judge evaluation with structured prompts (XML format)
 - Multi-criterion scoring (0.0-1.0 for each criterion)
@@ -176,7 +176,7 @@ class AgentState(TypedDict):
     verification_feedback: str | None
     refinement_attempts: int | None
     user_request: str | None
-```bash
+```
 ### Configuration
 
 Added feature flags and configuration options:
@@ -312,7 +312,7 @@ VERIFICATION_MODE=standard  # strict, standard, lenient
 ```bash
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true  # Test with verification enabled
-```bash
+```
 #### Phase 2: Canary Deployment
 ```bash
 ## Deploy to 10% of users
@@ -326,7 +326,7 @@ VERIFICATION_MODE=lenient  # Lower threshold initially
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
 VERIFICATION_MODE=standard
-```python
+```
 ### Success Metrics
 
 #### Key Performance Indicators
@@ -370,7 +370,7 @@ def test_full_loop_with_refinement()
 def test_compaction_triggers_correctly()
 def test_verification_prevents_bad_responses()
 def test_max_refinement_attempts_respected()
-```python
+```
 #### Property-Based Tests
 
 ```python

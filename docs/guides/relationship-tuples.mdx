@@ -22,7 +22,7 @@ A tuple has three parts:
     "relation": "executor",       # Relation (what)
     "object": "tool:chat"        # Object (which resource)
 }
-```python
+```
 #### User Field
 
 The **subject** of the relationship:
@@ -87,7 +87,7 @@ await client.write_tuples([{
     "relation": "admin",
     "object": "organization:acme"
 }])
-```json
+```
 #### Multiple Tuples (Atomic)
 
 ```python
@@ -112,7 +112,7 @@ await client.write_tuples([
 ])
 
 ## Now alice can execute tool:chat (via org membership)
-```python
+```
 #### Resource Ownership
 
 ```python
@@ -141,7 +141,7 @@ all_tuples = await client.read_tuples()
 
 for tuple in all_tuples:
     print(f"{tuple['user']} → {tuple['relation']} → {tuple['object']}")
-```python
+```
 #### Filter by User
 
 ```python
@@ -161,7 +161,7 @@ chat_tuples = await client.read_tuples(object="tool:chat")
 
 for tuple in chat_tuples:
     print(f"{tuple['user']} can {tuple['relation']} chat")
-```python
+```
 #### Filter by Relation
 
 ```python
@@ -183,7 +183,7 @@ tools = await client.list_objects(
 )
 print(f"Alice can execute: {tools}")
 ## Output: ['tool:chat', 'tool:search']
-```python
+```
 #### List Users with Access
 
 ```python
@@ -215,7 +215,7 @@ await client.write_tuples([{
     "relation": "editor",
     "object": "conversation:thread_123"
 }])
-```python
+```
 #### Transfer Ownership
 
 ```python
@@ -244,7 +244,7 @@ await client.delete_tuples([{
     "relation": "executor",
     "object": "tool:chat"
 }])
-```sql
+```
 #### Delete All User Access to Object
 
 ```python
@@ -262,7 +262,7 @@ await client.delete_tuples(tuples)
 ## Delete conversation and all access
 tuples = await client.read_tuples(object="conversation:thread_123")
 await client.delete_tuples(tuples)
-```sql
+```
 #### Bulk Delete
 
 ```python
@@ -286,7 +286,7 @@ async def onboard_user(user_id: str, organization_id: str, role: str = "member")
             "object": f"organization:{organization_id}"
         }
     ])
-```python
+```
 #### Resource Sharing
 
 ```python
@@ -318,7 +318,7 @@ async def grant_group_access(group_type: str, group_id: str,
 
 ## Grant all acme members access to chat
 await grant_group_access("organization", "acme", "tool", "chat", "executor")
-```python
+```
 #### Permission Inheritance
 
 ```python
@@ -365,7 +365,7 @@ async def import_tuples_from_csv(filename: str):
 ## user,relation,object
 ## user:alice,admin,organization:acme
 ## user:bob,member,organization:acme
-```bash
+```
 #### Export to JSON
 
 ```python
@@ -411,7 +411,7 @@ async def sync_permissions_from_keycloak():
                 })
 
     await client.write_tuples(tuples)
-```python
+```
 ### Validation
 
 #### Check Tuple Exists
@@ -455,7 +455,7 @@ async def safe_write_tuple(tuple: dict):
         return
 
     await client.write_tuples([tuple])
-```python
+```
 ### Debugging
 
 #### Trace Permission Path
@@ -512,7 +512,7 @@ tuples = [{
 } for user_id in range(100)]
 
 await client.write_tuples(tuples)
-```rust
+```
 #### Use Group Relations
 
 ```python

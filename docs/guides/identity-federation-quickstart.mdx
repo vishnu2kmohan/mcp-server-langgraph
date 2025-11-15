@@ -27,7 +27,7 @@ export LDAP_GROUPS_DN='OU=Groups,DC=example,DC=com'
 
 ## Run setup script
 python scripts/setup/setup_ldap_federation.py
-```bash
+```
 See [setup_ldap_federation.py](/reference/setup-scripts#setup_ldap_federation-py) for full documentation.
 
 #### Google Workspace
@@ -52,7 +52,7 @@ export MICROSOFT_CLIENT_SECRET='your-secret'
 export MICROSOFT_TENANT_ID='common'  # or specific tenant
 
 python scripts/setup/setup_oidc_idp.py --provider microsoft
-```bash
+```
 #### GitHub
 
 ```bash
@@ -70,7 +70,7 @@ export OKTA_CLIENT_SECRET='your-secret'
 export OKTA_DOMAIN='example.okta.com'
 
 python scripts/setup/setup_oidc_idp.py --provider okta
-```bash
+```
 #### ADFS (SAML)
 
 ```bash
@@ -114,7 +114,7 @@ All federated users receive standard Keycloak JWTs:
     "roles": ["admin", "premium", "user"]
   }
 }
-```yaml
+```
 ### Configuration Details
 
 #### LDAP Attribute Mapping
@@ -162,7 +162,7 @@ https://keycloak.example.com/realms/langgraph-agent/account
 ## Click "Sign in with Google" (or other provider)
 ## Complete OAuth2 flow
 ## Verify user is created in Keycloak
-```bash
+```
 #### Verify JWT Issuance
 
 ```bash

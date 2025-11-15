@@ -104,7 +104,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
   </Step>
 
   <Step title="Pull Models">
-    ```bash
+    ```
     # Popular models
     ollama pull llama3.2:3b      # Meta's Llama 3.2 (3B params, fast)
     ollama pull mistral:7b       # Mistral 7B (balanced)
@@ -120,7 +120,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
   </Step>
 
   <Step title="Configure MCP Server">
-    ```bash
+    ```
     # .env
     LLM_PROVIDER=ollama
     OLLAMA_BASE_URL=http://localhost:11434
@@ -129,7 +129,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
   </Step>
 
   <Step title="Test">
-    ```python
+    ```
     from mcp_server_langgraph.llm.factory import LLMFactory
 
     llm = LLMFactory(
@@ -146,7 +146,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
 #### Ollama Configuration
 
-```python
+```
 from langchain_community.llms import Ollama
 
 llm = Ollama(
@@ -182,7 +182,7 @@ llm = Ollama(
 
 <Steps>
   <Step title="Install vLLM">
-    ```bash
+    ```
     # Requires CUDA GPU
     uv pip install vllm
 
@@ -192,7 +192,7 @@ llm = Ollama(
   </Step>
 
   <Step title="Start vLLM Server">
-    ```bash
+    ```
     # Start server
     python -m vllm.entrypoints.openai.api_server \
       --model meta-llama/Llama-3.2-3B-Instruct \
@@ -209,7 +209,7 @@ llm = Ollama(
   </Step>
 
   <Step title="Configure MCP Server">
-    ```bash
+    ```
     # .env
     LLM_PROVIDER=openai  # vLLM is OpenAI-compatible
     OPENAI_API_BASE=http://localhost:8000/v1
@@ -219,7 +219,7 @@ llm = Ollama(
   </Step>
 
   <Step title="Test">
-    ```python
+    ```
     from langchain_openai import ChatOpenAI
 
     llm = ChatOpenAI(
@@ -236,7 +236,7 @@ llm = Ollama(
 
 #### vLLM Features
 
-```bash
+```
 ## Enable speculative decoding (faster inference)
 python -m vllm.entrypoints.openai.api_server \
   --model meta-llama/Llama-3.2-3B-Instruct \
@@ -280,7 +280,7 @@ python -m vllm.entrypoints.openai.api_server \
   </Step>
 
   <Step title="Configure MCP Server">
-    ```bash
+    ```
     # .env
     LLM_PROVIDER=openai
     OPENAI_API_BASE=http://localhost:1234/v1
@@ -294,7 +294,7 @@ python -m vllm.entrypoints.openai.api_server \
 
 #### Kubernetes with Ollama
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -371,7 +371,7 @@ spec:
 ```yaml
 #### Load Models via Init Container
 
-```yaml
+```
 spec:
   initContainers:
   - name: pull-models
@@ -392,7 +392,7 @@ spec:
 
 #### MCP Server with Local LLM
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -424,7 +424,7 @@ spec:
 
 #### By Task Type
 
-```python
+```
 def select_local_model(task_type: str) -> str:
     """Select optimal local model for task"""
 
@@ -447,7 +447,7 @@ llm = LLMFactory(
 
 #### By Hardware
 
-```python
+```
 import psutil
 import GPUtil
 
@@ -479,7 +479,7 @@ model = select_model_by_hardware()
 
 #### GPU Acceleration
 
-```bash
+```
 ## Ollama automatically uses GPU if available
 ollama run llama3.2:3b
 
@@ -495,7 +495,7 @@ CUDA_VISIBLE_DEVICES=1 ollama serve
 
 #### Quantization
 
-```bash
+```
 ## Ollama models are pre-quantized
 ## Pull different quantization levels:
 
@@ -508,7 +508,7 @@ ollama pull llama3.2:3b         # Default (usually q4)
 ```python
 #### Concurrent Requests
 
-```python
+```
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -529,7 +529,7 @@ results = await process_batch(queries)
 
 #### Context Caching
 
-```python
+```
 ## Reuse context across requests
 from langchain.memory import ConversationBufferMemory
 
@@ -551,7 +551,7 @@ response2 = await llm.ainvoke(
 
 #### Create Modelfile
 
-```dockerfile
+```
 ## Modelfile
 FROM llama3.2:3b
 
@@ -568,7 +568,7 @@ PARAMETER stop "Assistant:"
 
 #### Build Custom Model
 
-```bash
+```
 ## Create model
 ollama create my-custom-model -f Modelfile
 
@@ -581,7 +581,7 @@ LLM_MODEL_NAME=my-custom-model
 ```bash
 #### Fine-Tune with LoRA
 
-```bash
+```
 ## Use libraries like axolotl or unsloth
 uv pip install unsloth
 
@@ -599,7 +599,7 @@ ollama create my-fine-tuned -f Modelfile.finetune
 
 #### Resource Usage
 
-```python
+```
 import psutil
 import GPUtil
 
@@ -639,7 +639,7 @@ logger.info("Resource usage", **metrics)
 ```python
 #### Performance Metrics
 
-```python
+```
 from prometheus_client import Histogram, Counter
 
 ## Define metrics
@@ -679,7 +679,7 @@ async def call_local_llm(query: str):
     **Error**: `CUDA out of memory` or system freeze
 
     **Solutions**:
-    ```bash
+    ```
     # Use smaller model
     ollama pull llama3.2:1b  # 1B instead of 3B
 
@@ -699,7 +699,7 @@ async def call_local_llm(query: str):
     **Causes**: CPU-only, large model, no optimization
 
     **Solutions**:
-    ```bash
+    ```
     # Check GPU usage
     nvidia-smi
 
@@ -718,7 +718,7 @@ async def call_local_llm(query: str):
     **Error**: `Error: model 'llama3.2:3b' not found`
 
     **Solutions**:
-    ```bash
+    ```
     # Pull model
     ollama pull llama3.2:3b
 
@@ -734,7 +734,7 @@ async def call_local_llm(query: str):
     **Error**: `Connection refused to localhost:11434`
 
     **Solutions**:
-    ```bash
+    ```
     # Check Ollama is running
     ps aux | grep ollama
 

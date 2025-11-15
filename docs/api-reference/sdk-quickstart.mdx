@@ -19,7 +19,7 @@ uvicorn mcp_server_langgraph.mcp.server_streamable:app --reload
 open http://localhost:8000/docs      # Swagger UI
 open http://localhost:8000/redoc     # ReDoc
 open http://localhost:8000/openapi.json  # Raw OpenAPI spec
-```bash
+```
 ---
 
 ## 📦 Using the Python SDK
@@ -54,7 +54,7 @@ with ApiClient(config) as client:
     keys = api_keys.list_api_keys_api_v1_api_keys_get()
 
     print(f"You have {len(keys)} API keys")
-```bash
+```
 ---
 
 ## 🌐 Using the TypeScript SDK
@@ -88,7 +88,7 @@ config.accessToken = login.data.access_token;
 // Call APIs
 const keys = await apiKeysApi.listApiKeysApiV1ApiKeysGet();
 console.log(`You have ${keys.data.length} API keys`);
-```bash
+```
 ---
 
 ## 🔐 Authentication Examples
@@ -109,7 +109,7 @@ export TOKEN="your-jwt-token-here"
 
 curl http://localhost:8000/api/v1/api-keys/ \
   -H "Authorization: Bearer $TOKEN"
-```bash
+```
 ### API Key Authentication
 ```bash
 # Create API key (requires JWT)
@@ -136,7 +136,7 @@ response = api_keys.create_api_key_api_v1_api_keys_post({
     "expires_days": 365
 })
 print(f"API Key: {response.api_key}")  # Save this securely!
-```bash
+```
 ### Export GDPR Data
 ```python
 # Python
@@ -164,7 +164,7 @@ user = scim.create_user_scim_v2_users_post({
 })
 
 print(f"Created user: {user.id}")
-```bash
+```
 ---
 
 ## 📖 API Endpoints Reference
@@ -233,7 +233,7 @@ curl http://localhost:8000/api/v1/api-keys/ \
 curl http://localhost:8000/api/v1/users/me/data \
   -H "Authorization: Bearer $TOKEN" \
   | jq .
-```bash
+```
 ---
 
 ## 🔧 Development Workflow
@@ -260,7 +260,7 @@ async def list_items():
 # In server_streamable.py
 from mcp_server_langgraph.api.your_router import router as items_router
 app.include_router(items_router)
-```python
+```
 ### 3. Regenerate OpenAPI
 ```bash
 python -c "
@@ -323,7 +323,7 @@ async def list_items(
         page=pagination.page,
         page_size=pagination.page_size
     )
-```json
+```
 **Response:**
 ```json
 {
@@ -368,7 +368,7 @@ async def list_items(
 # Click "Authorize" button
 # Login at /auth/login first
 # Copy access_token and paste in authorization dialog
-```bash
+```
 ### SDK Import Errors
 ```bash
 # Python

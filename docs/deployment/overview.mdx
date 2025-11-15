@@ -127,7 +127,7 @@ flowchart TB
     class Jaeger tracingStyle
     class Prom metricsStyle
     class Grafana dashStyle
-```bash
+```
 ### Supported Platforms
 
 <Tabs>
@@ -278,7 +278,7 @@ helm upgrade --install mcp-server-langgraph ./helm/mcp-server-langgraph \
 
 ## 4. Verify deployment
 kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
-```bash
+```
 ### Environment Configuration
 
 <Tabs>
@@ -380,7 +380,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
-```bash
+```
 #### Vertical Pod Autoscaling
 
 ```bash

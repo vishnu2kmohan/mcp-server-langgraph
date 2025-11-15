@@ -89,7 +89,7 @@ llm = LLMFactory(
 ## Invoke
 response = await llm.ainvoke("What is machine learning?")
 print(response.content)
-```python
+```
 #### Advanced Configuration
 
 ```python
@@ -145,7 +145,7 @@ llm = LLMFactory(
     provider="anthropic",
     model_name=select_claude_model(task_type="code", complexity="high")
 )
-```python
+```
 ### Features
 
 #### Extended Context (200K tokens)
@@ -210,7 +210,7 @@ result = await agent.ainvoke({
 })
 
 print(result["messages"][-1].content)
-```python
+```
 #### Vision (Claude 3.5 Sonnet)
 
 ```python
@@ -276,7 +276,7 @@ print(response.model_dump_json(indent=2))
 ## "suggestions": ["Add type hints", "Add documentation"],
 ## "rating": 6
 ## }
-```python
+```
 #### Streaming
 
 ```python
@@ -339,7 +339,7 @@ response = await chain.ainvoke({
 })
 
 print(response.content)
-```python
+```
 ### Production Deployment
 
 #### Kubernetes Configuration
@@ -411,7 +411,7 @@ async def send_message(request: Request):
 @limiter.limit("100/minute", key_func=lambda: get_current_user().id)
 async def send_message_authenticated(user: User = Depends(get_current_user)):
     pass
-```python
+```
 #### Error Handling
 
 ```python
@@ -499,7 +499,7 @@ response = client.messages.create(
 
 ## Subsequent requests reuse cached content
 ## (only charged for cache read, not full input tokens)
-```python
+```
 #### Batching
 
 ```python
@@ -550,7 +550,7 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
 ## Use before sending
 query = truncate_to_tokens(long_query, max_tokens=190000)  # Leave room for response
 response = await llm.ainvoke(query)
-```python
+```
 ### Cost Optimization
 
 #### Model Selection
@@ -593,7 +593,7 @@ await store_usage_metrics({
     "user_id": user.id,
     "timestamp": datetime.utcnow()
 })
-```python
+```
 #### Budget Limits
 
 ```python
@@ -641,7 +641,7 @@ os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
 response = await llm.ainvoke(query)
 
 ## View traces at https://smith.langchain.com
-```python
+```
 #### Custom Metrics
 
 ```python

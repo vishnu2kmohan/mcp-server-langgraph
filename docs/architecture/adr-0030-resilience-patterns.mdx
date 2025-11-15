@@ -58,7 +58,7 @@ Implement a **comprehensive resilience layer** using four core patterns:
 ```python
 CIRCUIT_BREAKER_FAIL_MAX = 5          # Open after 5 failures
 CIRCUIT_BREAKER_TIMEOUT_DURATION = 60  # Stay open for 60s
-```python
+```
 **Services Protected**:
 - LLM API calls
 - OpenFGA authorization
@@ -167,7 +167,7 @@ sequenceDiagram
         CB-->>App: Response
     end
 
-```python
+```
 #### 2. Retry Logic with Exponential Backoff
 
 **Implementation**: Use `tenacity` library for declarative retry policies.
@@ -198,7 +198,7 @@ LLM_TIMEOUT = 60      # LLM generation
 AUTH_TIMEOUT = 5      # Auth operations
 DB_TIMEOUT = 10       # Database queries
 HTTP_TIMEOUT = 15     # External HTTP
-```rust
+```
 #### 4. Bulkhead Isolation
 
 **Implementation**: Use `asyncio.Semaphore` for resource pool limits.
@@ -260,7 +260,7 @@ async def check_permission(user: str, resource: str) -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.post(...)
         return response.json()["allowed"]
-```css
+```
 ### Metrics & Observability
 
 #### New Metrics (30+)

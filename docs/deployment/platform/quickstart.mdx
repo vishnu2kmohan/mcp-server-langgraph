@@ -53,7 +53,7 @@ When you run `langgraph deploy`, the CLI:
 ```bash
 langgraph deployment invoke my-agent \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
-```bash
+```
 #### Via HTTP
 
 ```bash
@@ -80,7 +80,7 @@ response = client.runs.stream(
 
 for chunk in response:
     print(chunk)
-```bash
+```
 ### View Traces in LangSmith
 
 All invocations are automatically traced in LangSmith:

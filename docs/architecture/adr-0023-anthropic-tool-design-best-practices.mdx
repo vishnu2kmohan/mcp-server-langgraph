@@ -59,7 +59,7 @@ We will adopt **Anthropic's best practices for writing tools for agents** as out
 class SearchConversationsInput(BaseModel):
     query: str = Field(description="Search query to filter conversations")
     limit: int = Field(default=10, ge=1, le=50)
-```python
+```
 **Benefits**:
 - Prevents context overflow with large conversation lists
 - Forces agents to be specific in requests
@@ -106,7 +106,7 @@ formatted_response = format_response(
     response_text,
     format_type=response_format_type
 )
-```python
+```
 **Benefits**:
 - Prevents context overflow
 - Predictable response sizes
@@ -131,7 +131,7 @@ description=(
     "For specialized tasks like code execution or web search, use dedicated tools instead. "
     "Rate limit: 60 requests/minute per user."
 )
-```bash
+```
 **Benefits**:
 - Clear expectations on performance
 - Guidance on tool selection
@@ -184,7 +184,7 @@ src/mcp_server_langgraph/
 ├── mcp/
 │   ├── server_stdio.py             # Updated: All tool improvements
 │   └── server_streamable.py        # Updated: All tool improvements
-```python
+```
 #### Key Components
 
 ##### ResponseOptimizer Class
@@ -337,7 +337,7 @@ Old code continues to work:
 ```python
 ## Still works (backward compatible)
 result = await client.call_tool("chat", {"message": "Hello"})
-```rust
+```
 New features available:
 ```python
 ## Recommended: Use new names and features

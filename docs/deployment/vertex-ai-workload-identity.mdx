@@ -36,7 +36,7 @@ flowchart TB
     class K8sSA k8sStyle
     class GCPSA gcpStyle
     class VertexAI apiStyle
-```python
+```
 ### Prerequisites
 
 Before starting, ensure you have:
@@ -75,7 +75,7 @@ If you prefer manual setup or need to understand each step:
 ```bash
 gcloud services enable aiplatform.googleapis.com \
   --project=vishnu-sandbox-20250310
-```sql
+```
 #### Step 2: Create Service Account
 
 ```bash
@@ -128,7 +128,7 @@ kubectl annotate serviceaccount mcp-server-langgraph \
   -n staging-mcp-server-langgraph \
   iam.gke.io/gcp-service-account=vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
   --overwrite
-```python
+```
 </Accordion>
 
 ### Configuration
@@ -166,7 +166,7 @@ metadata:
   name: mcp-server-langgraph
   annotations:
     iam.gke.io/gcp-service-account: vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```bash
+```
 ### Deployment
 
 #### Deploy to Staging
@@ -195,7 +195,7 @@ gcloud iam service-accounts get-iam-policy \
 
 ## Should include binding for:
 ## serviceAccount:vishnu-sandbox-20250310.svc.id.goog[mcp-staging/mcp-server-langgraph]
-```bash
+```
 #### 2. Verify Kubernetes Annotation
 
 ```bash
@@ -219,7 +219,7 @@ kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
 ## Expected output:
 ## ACTIVE  ACCOUNT
 ## *       vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
-```bash
+```
 #### 4. Test Vertex AI Access
 
 ```bash
@@ -255,7 +255,7 @@ response = completion(
 print(f"✓ LiteLLM integration working!")
 print(f"Response: {response.choices[0].message.content}")
 EOF
-```bash
+```
 ### Troubleshooting
 
 <AccordionGroup>

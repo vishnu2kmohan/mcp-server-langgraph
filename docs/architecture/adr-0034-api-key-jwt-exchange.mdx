@@ -83,7 +83,7 @@ sequenceDiagram
 
     Note over Client: Client only sees standard HTTP response
 
-```python
+```
 **Subsequent Requests (Cached)**:
 ```mermaid
 sequenceDiagram
@@ -127,7 +127,7 @@ sequenceDiagram
     "apiKey_abc123_expiresAt": "2026-01-28T00:00:00Z"
   }
 }
-```python
+```
 #### Exchange Flow
 
 1. Client → Kong: `Authorization: ApiKey sk_live_abc123xyz`
@@ -180,7 +180,7 @@ class APIKeyManager:
         api_key = self.generate_api_key()  # sk_live_...
         key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt())
         # Store in Keycloak user attributes
-```python
+```
 **Kong Plugin** (`deployments/kong/custom-plugins/kong-apikey-jwt-exchange.lua`):
 ```lua
 -- Extract API key, validate with Keycloak, cache JWT, replace header

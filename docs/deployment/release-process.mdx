@@ -85,7 +85,7 @@ git push origin v2.5.0
 ## Then create the release on GitHub UI
 ## Or use GitHub CLI
 gh release create v2.5.0 --generate-notes
-```python
+```
 ##### Option 3: GitHub CLI
 
 ```bash
@@ -133,7 +133,7 @@ Pre-release versions (alpha, beta, rc) are handled specially:
 ## GitHub UI: Check "Set as a pre-release"
 ## GitHub CLI:
 gh release create v2.5.0-beta.1 --prerelease --notes "Beta release for testing"
-```bash
+```
 ### Manual Version Bumping
 
 If you need to update versions manually (outside of a release):
@@ -181,7 +181,7 @@ docker compose up -d
 
 ## Verify version
 docker compose exec agent python -c "from mcp_server_langgraph import __version__; print(__version__)"
-```bash
+```
 #### Kubernetes (kubectl)
 
 ```bash
@@ -211,7 +211,7 @@ helm upgrade --install mcp-server-langgraph \
   oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts/mcp-server-langgraph \
   --version 2.5.0 \
   --namespace mcp-server-langgraph
-```bash
+```
 #### Kustomize
 
 ```bash
@@ -279,7 +279,7 @@ bash scripts/deployment/bump-versions.sh 2.5.0
 git add -A
 git commit -m "chore: bump deployment versions to 2.5.0"
 git push origin main
-```bash
+```
 #### Docker Image Build Failed
 
 1. Check build logs in GitHub Actions
@@ -312,7 +312,7 @@ helm package deployments/helm/mcp-server-langgraph --version 2.5.0
 ## Push to OCI registry
 helm push mcp-server-langgraph-2.5.0.tgz \
   oci://ghcr.io/vishnu2kmohan/mcp-server-langgraph/charts
-```bash
+```
 #### Version Mismatch
 
 If deployment versions don't match the release:
@@ -349,7 +349,7 @@ helm rollback mcp-server-langgraph -n mcp-server-langgraph
 ## Docker Compose
 docker compose pull  # Pull previous version
 docker compose up -d
-```bash
+```
 #### Delete Release
 
 ```bash
@@ -370,7 +370,7 @@ git log --oneline | grep "bump deployment versions"
 ## Revert the commit
 git revert <commit-hash>
 git push origin main
-```bash
+```
 ### Continuous Deployment
 
 For automated deployments to staging/production:

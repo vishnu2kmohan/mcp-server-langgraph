@@ -132,7 +132,7 @@ cp benchmark-results.json .perf-baseline/baseline.json
 git add .perf-baseline/baseline.json
 git commit -m "chore: establish performance baseline"
 git push
-```bash
+```
 #### DORA Metrics Baseline
 
 ```bash
@@ -257,7 +257,7 @@ jq 'map({date: .timestamp[:10], class: .classification})' .dora-metrics/metrics.
 
 # Check for regression issues
 gh issue list --label "dora-metrics"
-```bash
+```
 ### Investigating Performance Regressions
 
 ```bash
@@ -292,7 +292,7 @@ kubectl get pods -n production-mcp-server-langgraph -l app=mcp-server-langgraph
 
 # View deployment events
 kubectl describe deployment production-mcp-server-langgraph -n production-mcp-server-langgraph
-```bash
+```
 **Tests Failed**:
 ```bash
 # Run tests locally
@@ -309,7 +309,7 @@ gh api /repos/:owner/:repo/code-scanning/alerts
 
 # Run local security scan
 docker run --rm -v $(pwd):/src aquasecurity/trivy fs --severity HIGH,CRITICAL /src
-```bash
+```
 ### Performance Issues
 
 **Baseline Missing**:

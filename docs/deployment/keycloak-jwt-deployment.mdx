@@ -264,7 +264,7 @@ OPENFGA_MODEL_ID=<model-id>
 REDIS_URL=redis://redis:6379/0
 SESSION_BACKEND=redis
 SESSION_TTL_SECONDS=86400
-```bash
+```
 #### Kubernetes Resources
 
 ```bash
@@ -307,7 +307,7 @@ rate(scim_operations_total{operation="create"}[5m])
 
 ## OpenFGA permission checks
 rate(openfga_check_requests_total[5m])
-```bash
+```
 #### Health Checks
 
 ```bash
@@ -338,7 +338,7 @@ kubectl logs -n mcp-server-langgraph deployment/mcp-server-langgraph --tail=100
 
 ## View JWKS updater logs
 kubectl logs -n mcp-server-langgraph job/kong-jwks-updater-<timestamp>
-```bash
+```
 ### Security Considerations
 
 #### Secrets Management
@@ -475,7 +475,7 @@ kubectl edit configmap mcp-server-config
 
 ## Restart pods
 kubectl rollout restart deployment/mcp-server-langgraph
-```bash
+```
 #### 2. Revert Kong Configuration
 
 ```bash
@@ -490,7 +490,7 @@ kubectl apply -f deployments/kubernetes/kong/kong-plugins-backup.yaml
 ENABLE_SERVICE_PRINCIPALS=false
 API_KEY_ENABLED=false
 SCIM_ENABLED=false
-```yaml
+```
 ### Performance Tuning
 
 #### Keycloak
@@ -548,7 +548,7 @@ if token.startswith("old_"):
     # Validate with old system
 else:
     # Validate with Keycloak
-```sql
+```
 #### Step 2: Client Migration (Week 2-3)
 
 Gradually migrate clients:

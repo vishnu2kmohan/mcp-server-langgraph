@@ -48,7 +48,7 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
 - name: Validate manifests
   run: |
     kubectl apply --dry-run=client -f /tmp/manifests.yaml
-```bash
+```
 ✅ **CORRECT** (Server-side - validates against actual cluster):
 ```yaml
 - name: Validate manifests
@@ -71,7 +71,7 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
 ```yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
-```bash
+```
 ✅ **CORRECT** (Verify installed version first):
 ```bash
 # Check what version is installed
@@ -99,7 +99,7 @@ kind: ExternalSecret
 env:
 - name: LLM_PROVIDER
   value: "google"  # ❌ Conflicts if base uses valueFrom
-```bash
+```
 ✅ **CORRECT** (Override ConfigMap data):
 ```yaml
 # configmap-patch.yaml
@@ -131,7 +131,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 # ...
-```bash
+```
 **Problem**: If application doesn't use Kubernetes API, these resources:
 - Require elevated IAM permissions to deploy (container.admin, EKS Cluster Admin, AKS RBAC Admin)
 - Violate least privilege principle
@@ -178,7 +178,7 @@ metadata:
   run: |
     kubectl create namespace staging-mcp-server-langgraph
     kubectl apply -k deployments/overlays/staging
-```bash
+```
 ✅ **CORRECT** (Namespace created before validation):
 ```yaml
 - name: Create namespace
@@ -229,7 +229,7 @@ resources:
   limits:
     cpu: 1000m
     memory: 1Gi
-```bash
+```
 **Applies to**: ✅ EKS (Fargate), ✅ AKS, ✅ All managed Kubernetes
 
 ---
@@ -540,7 +540,7 @@ jobs:
           kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
             --timeout=10m
-```python
+```
 **Key Differences from GKE**:
 - Authentication: `azure/login@v2` instead of Google auth
 - Kubeconfig: `az aks get-credentials` instead of `get-gke-credentials`
@@ -571,7 +571,7 @@ configMapGenerator:
 configMapGenerator:
   - name: otel-collector-config
     behavior: create  # ✅ Creates new ConfigMap in overlay
-```bash
+```
 **Applies to**: ✅ EKS, ✅ AKS, ✅ All Kustomize deployments
 
 ---
@@ -613,7 +613,7 @@ configMapGenerator:
     - id: black
       args: [--line-length=127]
       language_version: python3.12  # Match runner Python version
-```bash
+```
 **Applies to**: ✅ Universal (all platforms use same runners)
 
 ---
@@ -640,7 +640,7 @@ patches:
     target:
       kind: Namespace
       name: mcp-server-langgraph  # Replaces base namespace
-```bash
+```
 **Applies to**: ✅ EKS, ✅ AKS, ✅ All Kustomize deployments
 
 ---

@@ -271,7 +271,7 @@ resource "google_storage_bucket" "terraform_logs" {
     }
   }
 }
-```bash
+```
 **Purpose**: Audit trail for all state bucket operations (reads, writes, deletes).
 
 ---
@@ -329,7 +329,7 @@ After backend setup, configure each environment to use the state bucket:
   <Tab title="Recommended (Prefix-based)">
     **One bucket, multiple prefixes**:
 
-    ```text
+    ```
     mcp-langgraph-terraform-state/
     ├── environments/
     │   ├── development/
@@ -355,7 +355,7 @@ After backend setup, configure each environment to use the state bucket:
   <Tab title="Alternative (Bucket-per-Environment)">
     **Separate buckets**:
 
-    ```text
+    ```
     mcp-langgraph-dev-terraform-state/
     └── default.tfstate
 
@@ -390,7 +390,7 @@ After backend setup, configure each environment to use the state bucket:
   <Tab title="Minimal (Recommended)">
     Grant only required permissions:
 
-    ```bash
+    ```
     gcloud storage buckets add-iam-policy-binding \
       gs://mcp-langgraph-terraform-state \
       --member="serviceAccount:terraform@PROJECT.iam.gserviceaccount.com" \
@@ -406,7 +406,7 @@ After backend setup, configure each environment to use the state bucket:
   <Tab title="Admin (Development)">
     For development/testing:
 
-    ```bash
+    ```
     gcloud storage buckets add-iam-policy-binding \
       gs://mcp-langgraph-terraform-state \
       --member="user:YOUR_EMAIL@example.com" \
@@ -461,7 +461,7 @@ After backend setup, configure each environment to use the state bucket:
 
 ### View State
 
-```bash
+```
 # Download current state
 gsutil cp gs://mcp-langgraph-terraform-state/environments/production/default.tfstate .
 
@@ -476,7 +476,7 @@ terraform state list
 
 <Steps>
   <Step title="List Versions">
-    ```bash
+    ```
     gsutil ls -a gs://mcp-langgraph-terraform-state/environments/production/
     ```
 
@@ -484,13 +484,13 @@ terraform state list
   </Step>
 
   <Step title="Download Specific Version">
-    ```bash
+    ```
     gsutil cp gs://mcp-langgraph-terraform-state/environments/production/default.tfstate#GENERATION .
     ```
   </Step>
 
   <Step title="Restore Version">
-    ```bash
+    ```
     # Backup current state first!
     gsutil cp \
       gs://mcp-langgraph-terraform-state/environments/production/default.tfstate \
@@ -532,7 +532,7 @@ terraform state list
     **Cause**: GCS bucket names are globally unique across all GCP.
 
     **Solution**: Change `bucket_prefix` in `terraform.tfvars`:
-    ```hcl
+    ```
     bucket_prefix = "mcp-langgraph-unique-12345"
     ```
   </Accordion>
@@ -541,7 +541,7 @@ terraform state list
     **Cause**: Insufficient IAM permissions.
 
     **Solution**: Grant required role:
-    ```bash
+    ```
     gcloud projects add-iam-policy-binding PROJECT_ID \
       --member="user:YOUR_EMAIL" \
       --role="roles/storage.admin"
@@ -552,7 +552,7 @@ terraform state list
     **Symptom**: `Error 403: Storage API has not been used`
 
     **Solution**:
-    ```bash
+    ```
     gcloud services enable storage-api.googleapis.com
     ```
   </Accordion>
@@ -563,7 +563,7 @@ terraform state list
     **Cause**: Previous Terraform run didn't release lock (crash/Ctrl+C).
 
     **Solution**: GCS automatically releases locks after 1 minute. Wait or:
-    ```bash
+    ```
     # Find lock file
     gsutil ls gs://mcp-langgraph-terraform-state/environments/production/
 
@@ -576,7 +576,7 @@ terraform state list
     **Symptom**: `Error: bucket is not empty`
 
     **Solution**:
-    ```bash
+    ```
     # Option 1: Empty bucket first
     gsutil rm -r gs://mcp-langgraph-terraform-state/**
 
@@ -595,7 +595,7 @@ terraform state list
 
 <Steps>
   <Step title="Backup Local State">
-    ```bash
+    ```
     cp terraform.tfstate terraform.tfstate.backup
     ```
   </Step>
@@ -707,7 +707,7 @@ For CI/CD pipelines, use a dedicated service account:
   </Step>
 
   <Step title="Deploy Infrastructure">
-    ```bash
+    ```
     cd terraform/environments/gcp-prod
     terraform init
     terraform apply

@@ -67,7 +67,7 @@ Include the token in the `Authorization` header:
 
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```json
+```
 ### Rate Limiting
 
 <Info>
@@ -107,7 +107,7 @@ All successful responses follow this structure:
   "trace_id": "abc123-def456-ghi789",
   "authorized": true
 }
-```json
+```
 ### Error Handling
 
 Error responses include detailed information:
@@ -227,7 +227,7 @@ The API uses URL versioning:
 /v1/message
 /v1/tools
 /v1/health
-```python
+```
 Current version: **v1**
 
 <Note>
@@ -254,7 +254,7 @@ messages = [
 ]
 
 responses = await client.batch_send(messages)
-```sql
+```
 #### Context Management
 
 ```python
