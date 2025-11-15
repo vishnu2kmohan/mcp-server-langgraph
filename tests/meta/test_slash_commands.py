@@ -289,8 +289,15 @@ class TestSlashCommands:
         )
 
 
+@pytest.mark.xdist_group(name="meta_slash_commands")
 class TestCommandDocumentation:
     """Validate command documentation quality."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

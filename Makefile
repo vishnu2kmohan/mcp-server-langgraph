@@ -1072,52 +1072,62 @@ docs-deploy:
 		echo "Deployment cancelled"; \
 	fi
 
-# Documentation validation targets
-docs-validate: docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify
-	@echo "✅ All documentation validation passed!"
+# Documentation validation targets (Simplified 2025-11-15)
+# PRIMARY validator: Mintlify CLI (comprehensive, fast, official)
+# SUPPLEMENTARY: Specialized validators for unique checks
+# See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 
+docs-validate: docs-validate-mintlify docs-validate-specialized
+	@echo ""
+	@echo "✅ All documentation validation passed!"
+	@echo ""
+	@echo "PRIMARY validator (Mintlify CLI): ✅"
+	@echo "Specialized validators: ✅"
+	@echo ""
+
+docs-validate-mintlify:  ## PRIMARY: Validate Mintlify docs with official CLI (broken links, navigation, images, frontmatter, MDX syntax)
+	@echo "🎯 PRIMARY VALIDATOR: Mintlify CLI"
+	@echo "Checks: links, navigation, images, frontmatter, MDX syntax, anchor links, orphaned pages"
+	@if command -v npx >/dev/null 2>&1; then \
+		cd docs && npx mintlify broken-links || \
+			(echo "❌ Mintlify validation failed. Fix broken links, navigation, or MDX syntax issues." && \
+			 echo "Run locally: cd docs && npx mintlify broken-links" && exit 1); \
+		echo "✅ Mintlify validation passed"; \
+	else \
+		echo "⚠️  Mintlify CLI not found. Install with: npm install -g mintlify"; \
+		exit 1; \
+	fi
+
+docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (code blocks, ADR sync, MDX extensions)
+	@echo "🔧 SUPPLEMENTARY: Specialized validators"
+	@echo "🔍 Validating code block language tags..."
+	@python scripts/validators/codeblock_validator.py --docs-dir docs || \
+		(echo "❌ Code block validation failed." && exit 1)
+	@echo "🔍 Validating ADR synchronization..."
+	@python scripts/validators/adr_sync_validator.py || \
+		(echo "❌ ADR synchronization failed." && exit 1)
+	@echo "🔍 Validating MDX file extensions..."
+	@python scripts/validators/mdx_extension_validator.py --docs-dir docs || \
+		(echo "❌ MDX extension validation failed." && exit 1)
+	@echo "✅ Specialized validators passed"
+
+# Legacy validators (deprecated 2025-11-15, kept for backward compatibility)
+# These are replaced by docs-validate-mintlify (PRIMARY validator)
 docs-validate-mdx:
+	@echo "⚠️  DEPRECATED: Use 'make docs-validate-mintlify' (PRIMARY validator) instead"
 	@echo "🔍 Validating MDX syntax..."
 	@python3 scripts/fix_mdx_syntax.py --all --dry-run || \
 		(echo "❌ MDX syntax errors found. Run 'make docs-fix-mdx' to auto-fix." && exit 1)
 
 docs-validate-links:
-	@echo "🔗 Checking internal links..."
-	@python3 scripts/check_internal_links.py --all || \
-		(echo "❌ Broken internal links found." && exit 1)
+	@echo "⚠️  DEPRECATED: Use 'make docs-validate-mintlify' (PRIMARY validator) instead"
+	@echo "🔗 This validator has been replaced by Mintlify CLI broken-links check"
+	@echo "Run: make docs-validate-mintlify"
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."
 	@python3 scripts/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
-
-docs-validate-mintlify:  ## Validate Mintlify docs with broken links check and build validation
-	@echo "📋 Validating Mintlify configuration..."
-	@if command -v npx >/dev/null 2>&1; then \
-		echo "🔗 Checking for broken links..."; \
-		cd docs && npx mintlify broken-links || \
-			(echo "❌ Mintlify broken links check failed." && exit 1); \
-		echo "✅ Broken links check passed"; \
-		echo ""; \
-		echo "🏗️  Validating Mintlify build..."; \
-		echo "   Note: This will start the dev server briefly to validate the build."; \
-		echo "   The server will auto-stop after validation."; \
-		cd docs && timeout 30s mintlify dev > /tmp/mintlify-build.log 2>&1 & \
-		MINTLIFY_PID=$$!; \
-		sleep 8; \
-		if grep -qi "error\|failed\|exception" /tmp/mintlify-build.log 2>/dev/null; then \
-			echo "❌ Mintlify build validation failed. Check /tmp/mintlify-build.log for details."; \
-			cat /tmp/mintlify-build.log; \
-			kill $$MINTLIFY_PID 2>/dev/null || true; \
-			exit 1; \
-		else \
-			echo "✅ Mintlify build validation passed"; \
-			kill $$MINTLIFY_PID 2>/dev/null || true; \
-		fi; \
-	else \
-		echo "⚠️  npx not found. Skipping Mintlify validation."; \
-		echo "   Install Node.js and npm to enable Mintlify validation."; \
-	fi
 
 docs-fix-mdx:
 	@echo "🔧 Auto-fixing MDX syntax errors..."

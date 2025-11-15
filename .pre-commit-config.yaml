@@ -50,25 +50,26 @@ repos:
     hooks:
       - id: gitleaks
 
-  # Mypy type checking - DISABLED due to 145+ pre-existing errors in unrelated files
-  # TODO: Re-enable after codebase-wide mypy cleanup
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.18.2
-  #   hooks:
-  #     - id: mypy
-  #       args: [
-  #         --ignore-missing-imports,
-  #         --warn-unused-configs,
-  #         --show-error-codes,
-  #         --pretty,
-  #         --no-error-summary
-  #       ]
-  #       exclude: ^(deployments/langgraph-platform/|tests/|scripts/|examples/)
-  #       additional_dependencies: [
-  #         types-PyYAML,
-  #         types-redis,
-  #         types-requests
-  #       ]
+  # Mypy type checking - ENABLED (0 errors baseline as of 2025-01-15)
+  # Runs on pre-push stage (comprehensive type checking)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        stages: [pre-push]
+        files: ^src/mcp_server_langgraph/
+        args: [
+          --ignore-missing-imports,
+          --warn-unused-configs,
+          --show-error-codes,
+          --pretty,
+          --no-error-summary
+        ]
+        additional_dependencies: [
+          types-PyYAML,
+          types-redis,
+          types-requests
+        ]
 
   # UV lockfile synchronization validation
   - repo: local
@@ -263,69 +264,23 @@ repos:
           Solution: Convert .md to .mdx or move outside docs/
           See: tests/unit/documentation/test_mdx_extension_validator.py
 
-      - id: validate-mdx-frontmatter
-        name: Validate MDX Frontmatter (title, description)
-        entry: uv run python scripts/validators/frontmatter_validator.py
-        language: python
-        additional_dependencies: ['pyyaml>=6.0.0']
-        files: ^docs/.*\.mdx$
-        pass_filenames: false
-        always_run: false
-        description: |
-          Validates MDX files have proper YAML frontmatter (TDD):
-          - Required fields: title, description
-          - Valid YAML syntax
-          - Non-empty field values
-          - Excludes template files
+      # REMOVED: validate-mdx-frontmatter
+      # Reason: Duplicate of validate-mintlify-docs (which includes frontmatter validation)
+      # Also covered by: Mintlify CLI broken-links check (now PRIMARY validator in CI)
+      # Migration: 2025-11-15 - Documentation validation simplification
+      # See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 
-          Required frontmatter format:
-          ---
-          title: "Page Title"
-          description: "Page description"
-          ---
+      # Reason: Duplicate of check-doc-links validator (below)
+      # Also covered by: Mintlify CLI broken-links check (now PRIMARY validator in CI)
+      # Migration: 2025-11-15 - Documentation validation simplification
+      # See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 
-          Ensures Mintlify can properly index and display documentation.
-          See: tests/unit/documentation/test_frontmatter_validator.py
-
-      - id: validate-documentation-links
-        name: Validate Documentation Internal Links
-        entry: uv run python scripts/validators/link_validator.py
-        language: python
-        additional_dependencies: []
-        files: ^docs/.*\.mdx$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive link validation, moved to pre-push
-        description: |
-          Validates links in MDX files (TDD):
-          - Checks broken internal links (relative paths)
-          - Detects malformed URLs
-          - Validates anchor targets exist
-          - Skips external link validation (expensive)
-
-          Note: External link validation should be run separately.
-          Run: python3 scripts/validators/link_validator.py --docs-dir docs
-          See: tests/unit/documentation/test_link_validator.py (when created)
-
-      - id: validate-documentation-images
-        name: Validate Image References in Documentation
-        entry: uv run python scripts/validators/image_validator.py
-        language: python
-        additional_dependencies: []
-        files: ^docs/.*\.mdx$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive image validation, moved to pre-push
-        description: |
-          Validates image references in MDX files (TDD):
-          - All local images exist
-          - Relative paths resolve correctly
-          - Supported formats (png, jpg, jpeg, svg, gif, webp)
-          - External images (http/https) ignored
-
-          Prevents broken images in documentation.
-          Run: python3 scripts/validators/image_validator.py --docs-dir docs
-          Tests: tests/unit/documentation/test_image_validator.py (10 tests ✅)
+      # REMOVED: validate-documentation-images
+      # Reason: Now covered by Mintlify CLI broken-links check (PRIMARY validator in CI)
+      # Mintlify validates all image references as part of its comprehensive documentation check
+      # Migration: 2025-11-15 - Documentation validation simplification
+      # See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
+      # Tests preserved: tests/unit/documentation/test_image_validator.py (10 tests ✅)
 
       - id: check-frontmatter-quotes
         name: Check Frontmatter Quote Style
@@ -388,25 +343,17 @@ repos:
           Validates internal documentation links to prevent broken references.
           Checks ADR cross-references, GitHub links, and active documentation.
 
-      - id: validate-documentation-quality
-        name: Validate Documentation Quality (MDX Parsing, Links, ADRs)
-        entry: uv run pytest tests/meta/test_documentation_validation.py -v --tb=short
-        language: system
-        files: \.(md|mdx|json)$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
-        description: |
-          Comprehensive documentation validation tests (TDD):
-          - Prevents MDX parsing errors (unescaped < followed by digits)
-          - Validates frontmatter in all MDX files
-          - Checks ADR numbering consistency
-          - Verifies docs.json navigation references
-          - Detects orphaned documentation files
-          Regression prevention for issues fixed in documentation audit (2025-11-06).
+      # REMOVED: validate-documentation-quality
+      # Reason: Functionality now covered by combination of:
+      #   1. Mintlify CLI broken-links (PRIMARY - navigation, links, frontmatter, MDX parsing)
+      #   2. validate-documentation-structure (pytest - orphaned files, ADR numbering)
+      #   3. validate-documentation-integrity (pytest - ADR sync, Mermaid validation)
+      # Migration: 2025-11-15 - Documentation validation simplification
+      # See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
+      # Tests moved to: test_documentation_structure.py and test_documentation_integrity.py
 
       - id: mintlify-broken-links-check
-        name: Mintlify Broken Links Validation (Manual)
+        name: Mintlify Broken Links Validation (PRIMARY - Manual Stage)
         entry: bash -c 'cd docs && npx mintlify broken-links'
         language: system
         files: ^docs/.*\.mdx$
@@ -414,27 +361,39 @@ repos:
         always_run: false
         stages: [manual]  # Manual: Run with SKIP= pre-commit run mintlify-broken-links-check
         description: |
-          Validates documentation using Mintlify CLI broken links checker.
-          This is the FINAL validation before committing/pushing docs changes.
+          🎯 PRIMARY VALIDATOR for Mintlify documentation (docs/)
 
-          Checks:
-          - All internal links resolve correctly
-          - Anchor links are valid
-          - Navigation references work
-          - Page cross-references are accurate
+          This is now the AUTHORITATIVE validator for docs/ - runs automatically in CI.
+          Replaces 5 previous Python validators (link_validator, navigation_validator,
+          image_validator, frontmatter_validator, check_internal_links).
+
+          Comprehensive Checks (2025-11-15 - Simplified Validation):
+          ✅ All internal links resolve correctly
+          ✅ Anchor links are valid (#section references)
+          ✅ Navigation references work (docs.json ↔ MDX files)
+          ✅ Page cross-references are accurate
+          ✅ Image references are valid
+          ✅ Frontmatter is complete (title, description)
+          ✅ MDX syntax is valid
+          ✅ No orphaned pages
 
           Why manual stage?
-          - Mintlify CLI is slow (~8-12 seconds)
-          - Already runs in CI/CD pipeline
-          - Best run via /docs-audit slash command
+          - Mintlify CLI is slower (~8-12s) than pre-commit target (< 30s)
+          - Already runs automatically in CI/CD (docs-validation.yaml workflow)
+          - Comprehensive validation best suited for CI rather than every commit
+          - Local pre-push has specialized validators for unique checks
 
-          Run manually:
+          Run manually for comprehensive local validation:
           $ SKIP= pre-commit run mintlify-broken-links-check --all-files
           OR
           $ make docs-validate-mintlify
+          OR
+          $ cd docs && npx mintlify broken-links
 
-          Alternative: Use Python validators (faster):
-          $ python scripts/validators/validate_docs.py
+          Migration (2025-11-15):
+          - Mintlify CLI is now PRIMARY validator in CI (docs-validation.yaml)
+          - Removed redundant Python validators from pre-push
+          - See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 
       - id: validate-documentation-integrity
         name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)

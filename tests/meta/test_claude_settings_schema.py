@@ -270,8 +270,15 @@ class TestClaudeSettingsSchema:
         assert len(duplicates) == 0, f"Duplicate domains found in allowed_domains: {duplicates}"
 
 
+@pytest.mark.xdist_group(name="meta_settings_schema")
 class TestSettingsLocalExclusion:
     """Validate that settings.local.json is properly excluded from git."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

@@ -1,7 +1,7 @@
 # Pytest-xdist State Pollution Vulnerability Scan Report
 
 **Generated:** 2025-11-13
-**Scanner:** `/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/analyze_state_pollution.py`
+**Scanner:** `scripts/check_test_memory_safety.py` (current enforcement tool, replaces obsolete diagnostic scripts)
 **Test Files Analyzed:** 275
 **Files with Issues:** 147
 

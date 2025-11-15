@@ -358,8 +358,8 @@ python scripts/check_test_memory_safety.py tests/test_auth.py
 # Check all test files
 python scripts/check_test_memory_safety.py tests/
 
-# Generate full report
-python analyze_state_pollution.py > state_pollution_report.txt
+# Generate full report (comprehensive validation)
+python scripts/check_test_memory_safety.py tests/ > memory_safety_report.txt
 ```
 
 ---

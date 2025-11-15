@@ -44,6 +44,14 @@ CRITICAL_GUARD_RAIL_TESTS: Set[str] = {
     "tests/test_validate_mintlify_docs.py",
 }
 
+# Meta test classes that must have xdist_group markers (OpenAI Codex Finding #5)
+# These classes perform repository-wide operations and need isolation
+META_TEST_CLASSES_REQUIRING_XDIST_GROUP: Set[tuple[str, str]] = {
+    ("tests/meta/test_slash_commands.py", "TestCommandDocumentation"),
+    ("tests/meta/test_claude_settings_schema.py", "TestSettingsLocalExclusion"),
+    ("tests/meta/test_migration_checklists.py", "TestTypeSafetyChecklist"),
+}
+
 
 @pytest.mark.unit
 @pytest.mark.meta
@@ -197,6 +205,78 @@ class TestMarkerEnforcement:
             "Files with missing markers:\n" + "\n".join("  - {}".format(f) for f in missing_meta) + "\n\n"
             "Add markers using:\n"
             "  pytestmark = [pytest.mark.unit, pytest.mark.meta]\n"
+        )
+
+    def test_meta_test_classes_have_xdist_group_markers(self):
+        """
+        Validates meta test classes have xdist_group markers for isolation.
+
+        Related: OpenAI Codex Finding #5
+
+        Meta test classes that perform repository-wide operations (reading/writing
+        configuration files, checking documentation, etc.) should have xdist_group
+        markers to ensure they run in the same worker and don't cause state pollution.
+
+        Even if they don't use AsyncMock, grouping is still required for:
+        1. Coding standard compliance
+        2. Predictable worker assignment
+        3. Future-proofing if mocks are added later
+        """
+        violations = []
+
+        for test_file_path, class_name in META_TEST_CLASSES_REQUIRING_XDIST_GROUP:
+            test_file = Path(test_file_path)
+
+            if not test_file.exists():
+                violations.append(f"{test_file_path} (FILE NOT FOUND)")
+                continue
+
+            # Parse file and find the class
+            try:
+                with open(test_file, "r", encoding="utf-8") as f:
+                    tree = ast.parse(f.read(), filename=str(test_file))
+            except SyntaxError:
+                violations.append(f"{test_file_path}::{class_name} (SYNTAX ERROR)")
+                continue
+
+            # Find the class definition
+            class_node = None
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name == class_name:
+                    class_node = node
+                    break
+
+            if class_node is None:
+                violations.append(f"{test_file_path}::{class_name} (CLASS NOT FOUND)")
+                continue
+
+            # Check for xdist_group marker in decorators
+            has_xdist_group = False
+            for decorator in class_node.decorator_list:
+                # @pytest.mark.xdist_group(name="...")
+                if isinstance(decorator, ast.Call):
+                    if isinstance(decorator.func, ast.Attribute):
+                        if (
+                            isinstance(decorator.func.value, ast.Attribute)
+                            and decorator.func.value.attr == "mark"
+                            and decorator.func.attr == "xdist_group"
+                        ):
+                            has_xdist_group = True
+                            break
+
+            if not has_xdist_group:
+                violations.append(f"{test_file_path}::{class_name}")
+
+        assert not violations, (
+            "Meta test classes must have @pytest.mark.xdist_group marker.\n\n"
+            "Classes missing xdist_group:\n" + "\n".join("  - {}".format(v) for v in violations) + "\n\n"
+            "Add marker using:\n"
+            "  @pytest.mark.xdist_group(name='meta_<descriptive_name>')\n"
+            "  class TestClassName:\n"
+            "      def teardown_method(self):\n"
+            "          gc.collect()\n\n"
+            "This ensures test isolation and prevents state pollution in parallel execution.\n"
+            "See: tests/MEMORY_SAFETY_GUIDELINES.md for details."
         )
 
     def test_marker_enforcement_statistics(self):

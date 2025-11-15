@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **OpenAI Codex Integration Test Findings** - Resolved 3/4 validated findings from comprehensive Codex review:
+  - **Mypy Enforcement** (`.pre-commit-config.yaml:53-72`) - Re-enabled mypy hook for pre-push validation (0 errors baseline confirmed)
+  - **xdist Group Markers** (`tests/meta/test_slash_commands.py:292`, `test_claude_settings_schema.py:273`, `test_migration_checklists.py:175`) - Added @pytest.mark.xdist_group to 3 meta test classes for parallel execution isolation
+  - **Documentation References** (`PYTEST_XDIST_STATE_POLLUTION_SCAN_REPORT.md:4`, `tests/PYTEST_XDIST_PREVENTION.md:362`) - Updated obsolete script references to current tooling (`scripts/check_test_memory_safety.py`)
+  - **Subprocess Timeouts** - Infrastructure created (test + helper), mass implementation requires gradual manual fixes (119 calls identified)
+
 - **GitHub Actions Workflows** - Fixed 10 critical workflow bugs identified by OpenAI Codex review:
   - `release.yaml:275,286` - Strip 'v' prefix from Helm package versions (Helm rejects semver with leading 'v')
   - `release.yaml:349-367` - Fix PyPI build tools installation (`uv pip install --system` instead of `uv tool install`)
@@ -16,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Gated scheduled jobs (`gcp-drift-detection.yaml`, `cost-tracking.yaml`) behind secret checks to prevent fork failures
 
 ### Added
+- **Codex Findings Validation Test Suite** - TDD-compliant validation tests preventing regression:
+  - `tests/meta/test_mypy_enforcement.py` (7 tests) - Validates mypy hook configuration and enforcement
+  - `tests/meta/test_subprocess_safety.py` (5 tests) - Enforces timeout parameters on subprocess calls (detects 119 violations for gradual fixing)
+  - `tests/meta/test_marker_enforcement.py` (extended) - Validates xdist_group markers on meta test classes
+  - `tests/meta/test_documentation_references.py` (4 tests) - Prevents stale script references in documentation
+  - `tests/helpers/subprocess_helpers.py` - Safe subprocess wrappers with timeout defaults (run_cli_tool, run_helm_command, run_kustomize_command, run_kubectl_command, run_git_command)
+
 - **Workflow Validation Test Suite** (`tests/workflows/test_github_actions_validation.py`) - 11 comprehensive tests following TDD principles:
   - Helm version handling validation
   - PyPI build tool installation validation

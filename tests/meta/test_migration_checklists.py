@@ -172,8 +172,15 @@ class TestMigrationChecklists:
         )
 
 
+@pytest.mark.xdist_group(name="meta_migration_checklists")
 class TestTypeSafetyChecklist:
     """Specific validation for TYPE_SAFETY_MIGRATION.md."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:
