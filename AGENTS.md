@@ -2,6 +2,8 @@
 
 This document describes the agent architecture used in MCP Server LangGraph and provides guidance for working with LangGraph agents and Pydantic AI integration.
 
+**Related Documentation**: This guide covers agent architecture. For Claude Code workflow guidance, see [CLAUDE.md](CLAUDE.md).
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -15,6 +17,8 @@ This document describes the agent architecture used in MCP Server LangGraph and 
 ## Overview
 
 MCP Server LangGraph implements a **functional agent architecture** using LangGraph for stateful conversation management and Pydantic AI for structured outputs and tool calling.
+
+**Note**: This guide is placed at the repository root for maximum discoverability. For project-specific Claude Code workflow patterns, see [CLAUDE.md](CLAUDE.md).
 
 ### Architecture Diagram
 
