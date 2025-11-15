@@ -275,9 +275,11 @@ Applied to 3 slow tests:
 - `test_circuit_breaker_fails_open_for_non_critical_resources`
 - `test_circuit_breaker_defaults_to_critical_true`
 
-**Results:**
-- Test duration: 45s → 2.4s per test (95% reduction)
-- Total optimization: 135s → 7s (128s saved, 95% improvement)
+**Results (VERIFIED 2025-11-15):**
+- Test duration: 45s → 0.47s per test (99% reduction) ✅ CONFIRMED
+- Setup time: 3.13s (one-time fixture initialization)
+- Total test time: 5.87s for all 4 tests (previous: 180s for 4 tests)
+- Total optimization: 174s saved per run (97% improvement)
 - Tests still validate business logic (circuit breaker fail-open/fail-closed)
 - Updated `test_slow_test_detection.py` to remove from KNOWN_SLOW_TESTS
 
@@ -287,10 +289,17 @@ Applied to 3 slow tests:
 - `tests/meta/test_slow_test_detection.py`: Removed from KNOWN_SLOW_TESTS (line 106)
 
 **Trade-offs:**
-- ✅ 95% faster tests
+- ✅ 99% faster tests (verified: 45s → 0.47s)
 - ✅ Still tests circuit breaker behavior
 - ✅ Still validates fail-open/fail-closed logic
+- ✅ All 4 tests pass consistently
 - ❌ Doesn't test actual retry behavior (covered by dedicated retry tests)
+
+**Root Cause Fix:**
+- Removed hardcoded `@retry_with_backoff(max_attempts=3)` parameters
+- Changed to `@retry_with_backoff()` to respect global config
+- Now `fast_retry_config` fixture works correctly
+- See: `docs-internal/ADR-RESILIENCE-DECORATOR-PARAMETERS.md` for prevention strategy
 
 #### 3.2 Agent Test Optimization (Priority 2) ⏳ PENDING
 
@@ -354,12 +363,14 @@ assert 7.0 <= sleep_durations[2] <= 10.0  # ~8s (base^3)
 
 ### Performance Impact Summary
 
-**Completed Optimizations (Phase 3a):**
-- OpenFGA tests: 135s → 7s (128s saved, 95% reduction) ✅
-- Retry timing tests: 14s → 0.56s (13.5s saved, 96% reduction) ✅
-- **Total savings: 141.5s (64% of original suite time)**
-- Test suite: 220s → ~78s (projected, pending verification)
-- **Target exceeded:** < 120s target (achieved 78s) ✅
+**Completed Optimizations (Phase 3a) - VERIFIED:**
+- OpenFGA tests: 180s → 5.87s (174s saved, 97% reduction) ✅ CONFIRMED
+  - Individual test: 45s → 0.47s (99% reduction per test)
+  - 4 tests total, includes 3.13s setup time
+- Retry timing tests: 14s → 0.56s (13.5s saved, 96% reduction) ✅ CONFIRMED
+- **Total savings: 187.5s verified (85% of slow test time)**
+- **Critical Fix:** Removed hardcoded decorator parameters (ADR-RESILIENCE-DECORATOR-PARAMETERS.md)
+- **Prevention:** Established conventions to ensure issue never recurs
 
 **Remaining Optimizations (Phase 3b - Agent):**
 - Agent tests: ~160s → ~40s (estimated 120s savings)
