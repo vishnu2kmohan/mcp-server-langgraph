@@ -421,10 +421,17 @@ class TestInputValidation:
         """Test that required fields are properly documented in schemas."""
         tools = await mcp_server.list_tools_public()
 
+        # Tools that don't require authentication (public tools)
+        public_tools = {"search_tools"}
+
         for tool in tools:
             schema = tool.inputSchema
 
-            # All tools should require token and user_id for security
+            # Public tools may not require token and user_id
+            if tool.name in public_tools:
+                continue
+
+            # All other tools should require token and user_id for security
             required_fields = schema.get("required", [])
             assert "token" in required_fields, f"Tool {tool.name} should require token"
             assert "user_id" in required_fields, f"Tool {tool.name} should require user_id"
