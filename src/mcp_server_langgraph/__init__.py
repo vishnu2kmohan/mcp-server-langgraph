@@ -101,6 +101,17 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         from mcp_server_langgraph.observability.telemetry import metrics
 
         return metrics
+    elif name == "auth":
+        # Allow access to auth submodule for importlib.reload() scenarios
+        # Used in tests/regression/test_bearer_scheme_isolation.py
+        # Prevent recursion: if auth module is already being imported, return it from sys.modules
+        module_name = f"{__name__}.auth"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.auth as auth_module
+
+        return auth_module
     elif name == "api":
         # Allow access to api submodule for importlib.reload() scenarios
         # Used in tests/regression/test_bearer_scheme_isolation.py
