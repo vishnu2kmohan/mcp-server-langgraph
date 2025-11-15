@@ -74,6 +74,7 @@ Redis provides production-grade session storage with:
           redis-session-data:
         ```
 
+        ```bash
         # Start Redis
         export REDIS_PASSWORD=$(openssl rand -base64 32)
         docker compose up -d redis-session
@@ -111,7 +112,7 @@ Redis provides production-grade session storage with:
 
       <Tab title="Cloud Managed">
         **Google Cloud Memorystore**:
-        ```
+        ```bash
         gcloud redis instances create sessions \
           --size=5 \
           --region=us-central1 \
@@ -123,9 +124,9 @@ Redis provides production-grade session storage with:
         gcloud redis instances describe sessions \
           --region=us-central1 \
           --format="get(host,port,authString)"
-        ```markdown
-        **AWS ElastiCache**:
         ```
+        **AWS ElastiCache**:
+        ```bash
         aws elasticache create-replication-group \
           --replication-group-id sessions \
           --replication-group-description "Session store" \
@@ -133,9 +134,9 @@ Redis provides production-grade session storage with:
           --cache-node-type cache.t3.medium \
           --num-cache-clusters 2 \
           --auth-token "$(openssl rand -base64 32)"
-        ```markdown
-        **Azure Cache for Redis**:
         ```
+        **Azure Cache for Redis**:
+        ```bash
         az redis create \
           --resource-group mcp-server-langgraph \
           --name sessions \
@@ -143,13 +144,13 @@ Redis provides production-grade session storage with:
           --sku Standard \
           --vm-size c1 \
           --enable-non-ssl-port false
-        ```html
+        ```
       </Tab>
     </Tabs>
   </Step>
 
   <Step title="Configure Application">
-    ```
+    ```bash
     # .env or Kubernetes ConfigMap
     AUTH_MODE=session
     SESSION_BACKEND=redis
@@ -164,7 +165,7 @@ Redis provides production-grade session storage with:
     SESSION_SLIDING_WINDOW=true  # Extend on activity
     SESSION_MAX_CONCURRENT=5  # Per user
     SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
-    ```markdown
+    ```
     <Warning>
     **Always use SSL/TLS in production**: Set `REDIS_SSL=true` and use `rediss://` URL scheme.
     </Warning>
@@ -200,7 +201,7 @@ Redis provides production-grade session storage with:
   </Step>
 
   <Step title="Verify in Redis">
-    ```
+    ```bash
     # Connect to Redis
     docker compose exec redis-session redis-cli -a $REDIS_PASSWORD
 
@@ -212,7 +213,7 @@ Redis provides production-grade session storage with:
 
     # Check session TTL
     TTL session:abc123...
-    ```markdown
+    ```
   </Step>
 </Steps>
 
@@ -247,7 +248,7 @@ sequenceDiagram
 
 #### Session TTL
 
-```
+```bash
 ## Fixed TTL (no extension)
 SESSION_TTL_SECONDS=3600  # 1 hour
 SESSION_SLIDING_WINDOW=false
@@ -256,7 +257,7 @@ SESSION_SLIDING_WINDOW=false
 SESSION_TTL_SECONDS=86400  # 24 hours
 SESSION_SLIDING_WINDOW=true
 SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
-```markdown
+```
 
 **Fixed TTL**: Session expires exactly after TTL, regardless of activity.
 
@@ -264,14 +265,14 @@ SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
 
 #### Concurrent Sessions
 
-```
+```bash
 ## Limit concurrent sessions per user
 SESSION_MAX_CONCURRENT=5
 
 ## Behavior when limit exceeded:
 ## - Oldest session is automatically revoked
 ## - User notified of revoked session
-```python
+```
 Use cases:
 - **1 session**: Single device login (revokes other devices)
 - **3-5 sessions**: Normal multi-device usage
@@ -281,7 +282,7 @@ Use cases:
 
 Store additional context with sessions:
 
-```
+```python
 session = await session_mgr.create_session(
     user_id="alice",
     metadata={
@@ -292,10 +293,10 @@ session = await session_mgr.create_session(
         "created_at": "2025-10-12T10:00:00Z"
     }
 )
-```text
+```
 
 Access metadata:
-```
+```python
 session = await session_mgr.get_session(session_id)
 print(f"Device: {session.metadata['device_id']}")
 print(f"Location: {session.metadata['location']}")
@@ -304,7 +305,7 @@ print(f"Location: {session.metadata['location']}")
 
 #### Create Session
 
-```
+```python
 from mcp_server_langgraph.auth.session import SessionManager
 
 session_mgr = SessionManager()
@@ -323,11 +324,11 @@ session = await session_mgr.create_session(
     user_id="alice",
     ttl_seconds=7200  # 2 hours (overrides default)
 )
-```markdown
+```
 
 #### Get Session
 
-```
+```python
 ## Get by session ID
 session = await session_mgr.get_session(session_id)
 
@@ -343,18 +344,18 @@ for s in sessions:
 ```
 #### Refresh Session
 
-```
+```python
 ## Manual refresh
 session = await session_mgr.refresh_session(session_id)
 print(f"Extended until: {session.expires_at}")
 
 ## Automatic refresh (if sliding window enabled)
 ## Happens automatically on get_session() calls
-```markdown
+```
 
 #### Revoke Session
 
-```
+```python
 ## Revoke single session
 await session_mgr.revoke_session(session_id)
 
@@ -369,7 +370,7 @@ await session_mgr.revoke_session(
 ```
 #### Session Analytics
 
-```
+```python
 ## Count active sessions
 total = await session_mgr.count_active_sessions()
 print(f"Active sessions: {total}")
@@ -381,13 +382,13 @@ print(f"Alice has {user_count} active sessions")
 ## List all active users
 users = await session_mgr.list_active_users()
 print(f"Active users: {users}")
-```markdown
+```
 
 ### Integration with Authentication
 
 #### Keycloak + Redis Sessions
 
-```
+```python
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.session import SessionManager
 
@@ -467,7 +468,7 @@ Benefits:
 
 Configure Redis persistence:
 
-```
+```bash
 ## redis.conf
 save 900 1       # Save after 900s if >= 1 key changed
 save 300 10      # Save after 300s if >= 10 keys changed
@@ -476,20 +477,20 @@ save 60 10000    # Save after 60s if >= 10000 keys changed
 ## AOF (append-only file) for durability
 appendonly yes
 appendfsync everysec
-```python
+```
 Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cache).
 
 #### Security
 
 **Authentication**:
-```
+```bash
 ## Always use password
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
-```markdown
+```
 
 **Encryption**:
-```
+```bash
 ## TLS/SSL in production
 REDIS_SSL=true
 REDIS_URL=rediss://redis-session:6380/0
@@ -505,24 +506,24 @@ REDIS_PASSWORD=password
 
 #### Memory Management
 
-```
+```bash
 ## redis.conf
 maxmemory 2gb
 maxmemory-policy allkeys-lru  # Evict least recently used
 
 ## Or volatile-lru (evict only keys with TTL)
 maxmemory-policy volatile-lru
-```text
+```
 
 Monitor memory usage:
-```
+```bash
 redis-cli INFO memory
-```css
+```
 #### Monitoring
 
 **Key metrics to track**:
 
-```
+```text
 ## Active sessions
 redis_db_keys{db="db0"}
 
@@ -538,7 +539,7 @@ rate(redis_keyspace_hits_total[5m]) /
 
 ## Evicted keys (should be low)
 rate(redis_evicted_keys_total[5m])
-```markdown
+```
 
 **Alerts**:
 - Memory usage > 80%
@@ -550,7 +551,7 @@ rate(redis_evicted_keys_total[5m])
 
 <AccordionGroup>
   <Accordion title="Connection refused">
-    ```
+    ```bash
     # Check Redis status
     docker compose ps redis-session
     kubectl get pods -l app.kubernetes.io/name=redis
@@ -561,7 +562,7 @@ rate(redis_evicted_keys_total[5m])
     # Check logs
     docker compose logs redis-session
     kubectl logs -l app.kubernetes.io/name=redis
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Authentication failed">
@@ -581,14 +582,14 @@ rate(redis_evicted_keys_total[5m])
     - Session was revoked
 
     **Debug**:
-    ```
+    ```python
     # Check if session exists in Redis
     import redis
     r = redis.from_url(REDIS_URL, password=REDIS_PASSWORD)
     exists = r.exists(f"session:{session_id}")
     ttl = r.ttl(f"session:{session_id}")
     print(f"Exists: {exists}, TTL: {ttl}")
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="High memory usage">
@@ -599,10 +600,10 @@ rate(redis_evicted_keys_total[5m])
     4. **Clean expired**: Redis auto-expires, but run `FLUSHDB` if needed
 
     **Check current usage**:
-    ```
+    ```bash
     redis-cli INFO memory | grep used_memory_human
     redis-cli DBSIZE
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Slow session operations">
@@ -612,11 +613,11 @@ rate(redis_evicted_keys_total[5m])
     - Use local Redis instance (reduce network latency)
     - Check Redis logs for slow queries
 
-    ```
+    ```bash
     # Enable slow log
     CONFIG SET slowlog-log-slower-than 10000  # 10ms
     SLOWLOG GET 10
-    ```python
+    ```
 
   </Accordion>
 </AccordionGroup>
@@ -631,7 +632,7 @@ Switching from stateless tokens to Redis sessions:
   </Step>
 
   <Step title="Update Configuration">
-    ```
+    ```bash
     # Change auth mode
     AUTH_MODE=session  # was: token
     SESSION_BACKEND=redis
@@ -639,13 +640,13 @@ Switching from stateless tokens to Redis sessions:
     # Add Redis config
     REDIS_URL=redis://redis-session:6379/0
     REDIS_PASSWORD=...
-    ```html
+    ```
   </Step>
 
   <Step title="Dual Mode Support (Optional)">
     Support both tokens and sessions during migration:
 
-    ```
+    ```python
     # Check Authorization header
     auth_header = request.headers.get("Authorization")
     cookie = request.cookies.get("session_id")
@@ -660,7 +661,7 @@ Switching from stateless tokens to Redis sessions:
         user = session.user_id
     else:
         raise Unauthorized()
-    ```python
+    ```
 
   </Step>
 
@@ -668,29 +669,28 @@ Switching from stateless tokens to Redis sessions:
     Migrate clients from token to session:
 
     **Before** (Token):
-    ```
+    ```javascript
     const token = localStorage.getItem('access_token');
     fetch('/api/message', {
       headers: {'Authorization': `Bearer ${token}`}
     });
-    ```markdown
-    **After** (Session):
     ```
+    **After** (Session):
+    ```javascript
     // Session cookie sent automatically
     fetch('/api/message', {
       credentials: 'include'  // Send cookies
     });
-    ```html
+    ```
   </Step>
 
   <Step title="Deprecate Token Support">
     After migration period, remove token support:
 
-    ```
+    ```bash
     # Final config
     AUTH_MODE=session
     # Remove: JWT_SECRET_KEY, JWT_EXPIRATION_SECONDS
-    ```
     ```
   </Step>
 </Steps>

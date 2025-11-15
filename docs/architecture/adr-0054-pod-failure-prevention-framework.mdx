@@ -141,16 +141,16 @@ chmod +x .githooks/pre-commit
 ### 3. Documentation
 
 <CardGroup cols={3}>
-  <Card title="Troubleshooting Runbook" icon="book" href="/operations/POD_FAILURE_TROUBLESHOOTING_RUNBOOK">
+  <Card title="Troubleshooting Runbook" icon="book" href="/deployment/operations/gke-runbooks">
     Common failures, diagnosis, solutions
   </Card>
 
-  <Card title="Deployment Checklist" icon="list-check" href="/operations/DEPLOYMENT_CHECKLIST">
-    Pre/post deployment validation steps
+  <Card title="Deployment Prevention" icon="list-check" href="/deployment/operations/issue-prevention">
+    Deployment issues catalog and prevention
   </Card>
 
-  <Card title="Remediation Report" icon="file-medical" href="/operations/STAGING_POD_CRASH_REMEDIATION">
-    Detailed root cause analysis
+  <Card title="GKE Operations" icon="file-medical" href="/deployment/operations/gke-runbooks">
+    Day-2 operations and incident response
   </Card>
 </CardGroup>
 
@@ -311,19 +311,19 @@ graph TD
 ## Related Documentation
 
 <CardGroup cols={2}>
-  <Card title="Troubleshooting Runbook" icon="book-medical" href="../operations/POD_FAILURE_TROUBLESHOOTING_RUNBOOK">
+  <Card title="GKE Operational Runbooks" icon="book-medical" href="/deployment/operations/gke-runbooks">
     Diagnose and resolve pod failures
   </Card>
 
-  <Card title="Deployment Checklist" icon="clipboard-check" href="../operations/DEPLOYMENT_CHECKLIST">
-    Step-by-step deployment guide
+  <Card title="Deployment Prevention" icon="clipboard-check" href="/deployment/operations/issue-prevention">
+    Comprehensive deployment issues catalog
   </Card>
 
-  <Card title="Remediation Report" icon="file-shield" href="../operations/STAGING_POD_CRASH_REMEDIATION">
-    Root cause analysis and lessons learned
+  <Card title="EKS Operational Runbooks" icon="file-shield" href="/deployment/operations/eks-runbooks">
+    AWS EKS troubleshooting and operations
   </Card>
 
-  <Card title="CI/CD Prevention" icon="shield-halved" href="./adr-0053-ci-cd-failure-prevention-framework">
+  <Card title="CI/CD Prevention" icon="shield-halved" href="/architecture/adr-0053-ci-cd-failure-prevention-framework">
     Related ADR on CI/CD prevention
   </Card>
 </CardGroup>

@@ -85,7 +85,7 @@ flowchart TB
       </Tab>
 
       <Tab title="Kubernetes">
-        ```
+        ```bash
         # Using Helm
         helm repo add openfga https://openfga.github.io/helm-charts
         helm install openfga openfga/openfga \
@@ -97,7 +97,7 @@ flowchart TB
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/openfga -n mcp-server-langgraph
-        ```markdown
+        ```
       </Tab>
 
       <Tab title="Cloud Services">
@@ -106,18 +106,18 @@ flowchart TB
         - Or deploy to GKE/EKS/AKS
 
         **Configuration**:
-        ```
+        ```bash
         OPENFGA_API_URL=https://api.openfga.dev
         OPENFGA_STORE_ID=your-store-id
         OPENFGA_MODEL_ID=your-model-id
         OPENFGA_API_TOKEN=your-api-token  # If using cloud
-        ```html
+        ```
       </Tab>
     </Tabs>
   </Step>
 
   <Step title="Verify Installation">
-```bash
+    ```bash
     # Check OpenFGA health
     curl http://localhost:8080/healthz
 
@@ -128,16 +128,16 @@ flowchart TB
     curl http://localhost:8080/
 
     # Expected: OpenFGA version info
-    ```html
+    ```
   </Step>
 
   <Step title="Run Setup Script">
-    ```
+    ```bash
     # Initialize store and model
     python scripts/setup/setup_openfga.py
-    ```markdown
-    **Output**:
     ```
+    **Output**:
+    ```text
     ============================================================
     OpenFGA Setup
     ============================================================
@@ -165,21 +165,20 @@ flowchart TB
     ============================================================
     ✓ OpenFGA setup completed successfully!
     ============================================================
-    ```sql
+    ```
   </Step>
 
   <Step title="Update Configuration">
-    ```
-
+    ```bash
     # .env
     OPENFGA_API_URL=http://localhost:8080
     OPENFGA_STORE_ID=01HXXXXXXXXXXXXXXXXXX
     OPENFGA_MODEL_ID=01HYYYYYYYYYYYYYYYYYY
-    ```html
+    ```
   </Step>
 
   <Step title="Test Authorization">
-    ```
+    ```python
     from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
     client = OpenFGAClient()
@@ -192,7 +191,7 @@ flowchart TB
     )
     print(f"Alice can execute chat: {allowed}")
     # Output: True
-    ```markdown
+    ```
   </Step>
 </Steps>
 
@@ -235,7 +234,7 @@ type document
     define owner: [user]
     define editor: [user]
     define viewer: [user] or editor or owner
-```markdown
+```
 
 #### Type Definitions
 
@@ -243,22 +242,22 @@ type document
   <Tab title="User">
     **user** - Individual users
 
-    ```
+    ```text
     type user
-    ```markdown
+    ```
     No relations defined - users are leaf nodes in the authorization graph.
   </Tab>
 
   <Tab title="Organization">
     **organization** - Tenants or teams
 
-    ```
+    ```text
     type organization
       relations
         define admin: [user]
         define member: [user] or admin
         define viewer: [user] or member
-    ```bash
+    ```
     **Hierarchy**: admin → member → viewer
 
     Admin users automatically have member and viewer permissions.
@@ -267,13 +266,13 @@ type document
   <Tab title="Tool">
     **tool** - Agent tools (chat, search, etc.)
 
-    ```
+    ```text
     type tool
       relations
         define owner: [user]
         define executor: [user, organization#member]
         define viewer: [user, organization#member]
-    ```markdown
+    ```
     **executor**: Can execute the tool
     **viewer**: Can see tool metadata
     **organization#member**: All org members can execute
@@ -282,13 +281,13 @@ type document
   <Tab title="Conversation">
     **conversation** - Chat conversations
 
-    ```
+    ```text
     type conversation
       relations
         define owner: [user]
         define editor: [user]
         define viewer: [user] or editor or owner
-    ```markdown
+    ```
     **Hierarchy**: owner → editor → viewer
 
     Owners can edit, editors can view and modify.
@@ -387,11 +386,11 @@ if allowed:
     result = await execute_tool("chat", query)
 else:
     raise PermissionError("Access denied")
-```markdown
+```
 
 #### Listing Permissions
 
-```
+```python
 ## What can user access?
 tools = await client.list_objects(
     user="user:alice",
@@ -482,10 +481,11 @@ OPENFGA_DATASTORE_URI=postgres://openfga:password@postgres:5432/openfga?sslmode=
 OPENFGA_DATASTORE_MAX_OPEN_CONNS=25
 OPENFGA_DATASTORE_MAX_IDLE_CONNS=10
 OPENFGA_DATASTORE_CONN_MAX_IDLE_TIME=60s
-```markdown
+```
 
 **PostgreSQL Configuration**:
-```
+
+```sql
 -- Create database
 CREATE DATABASE openfga;
 
@@ -496,10 +496,11 @@ GRANT ALL PRIVILEGES ON DATABASE openfga TO openfga;
 -- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-```bash
+```
+
 #### Performance Tuning
 
-```
+```bash
 ## Enable caching
 OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
 OPENFGA_CHECK_QUERY_CACHE_LIMIT=10000
@@ -512,11 +513,11 @@ OPENFGA_MAX_AUTHORIZATION_MODEL_SIZE_IN_BYTES=262144
 ## Logging
 OPENFGA_LOG_LEVEL=info  # debug, info, warn, error
 OPENFGA_LOG_FORMAT=json
-```markdown
+```
 
 #### Monitoring
 
-```
+```yaml
 ## ServiceMonitor for Prometheus
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -529,9 +530,11 @@ spec:
   endpoints:
   - port: http
     path: /metrics
-```markdown
-**Key Metrics**:
 ```
+
+**Key Metrics**:
+
+```text
 ## Check rate
 rate(openfga_check_total[5m])
 
@@ -543,7 +546,7 @@ rate(openfga_check_total{allowed="error"}[5m])
 
 ## Tuple count
 openfga_tuple_count
-```markdown
+```
 ---
 
 ### Backup & Recovery
@@ -572,13 +575,13 @@ await client.write_tuples(tuples)
 
 #### Database Backup
 
-```
+```bash
 ## Backup PostgreSQL
 pg_dump -U openfga openfga > openfga-backup.sql
 
 ## Restore
 psql -U openfga openfga < openfga-backup.sql
-```markdown
+```
 ---
 
 ### Troubleshooting
