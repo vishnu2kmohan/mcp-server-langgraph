@@ -1746,6 +1746,51 @@ def test_circuit_breaker_config():
     # Cleanup handled by reset_resilience_state autouse fixture
 
 
+@pytest.fixture
+def fast_resilience_config():
+    """
+    Configure all circuit breakers with minimal timeouts for fast testing.
+
+    Use this fixture in tests that need fast circuit breaker recovery across all services.
+    This is especially important for tests that intentionally trigger circuit breaker opens
+    and need to verify fail-open/fail-closed behavior quickly.
+
+    Reduces test time from 45s → <2s by using:
+    - fail_max=3 (need only 3 failures to open, down from 5-10)
+    - timeout_duration=1 (circuit recovers in 1 second, down from 30-60s)
+
+    Usage:
+        def test_circuit_breaker_behavior(fast_resilience_config):
+            # All circuit breakers now have 1s timeout and fail_max=3
+            pass
+    """
+    from mcp_server_langgraph.resilience.circuit_breaker import _circuit_breakers
+    from mcp_server_langgraph.resilience.config import CircuitBreakerConfig, ResilienceConfig, set_resilience_config
+
+    # Set up test-friendly resilience config with very short timeouts for all services
+    test_config = ResilienceConfig(
+        enabled=True,
+        circuit_breakers={
+            "llm": CircuitBreakerConfig(name="llm", fail_max=3, timeout_duration=1),
+            "openfga": CircuitBreakerConfig(name="openfga", fail_max=3, timeout_duration=1),
+            "redis": CircuitBreakerConfig(name="redis", fail_max=3, timeout_duration=1),
+            "keycloak": CircuitBreakerConfig(name="keycloak", fail_max=3, timeout_duration=1),
+            "prometheus": CircuitBreakerConfig(name="prometheus", fail_max=3, timeout_duration=1),
+        },
+    )
+    set_resilience_config(test_config)
+
+    # Clear any existing circuit breaker instances to force recreation with new config
+    # This is critical for CI where state can pollute between sequential tests
+    for service in ["llm", "openfga", "redis", "keycloak", "prometheus"]:
+        if service in _circuit_breakers:
+            del _circuit_breakers[service]
+
+    yield
+
+    # Cleanup handled by reset_resilience_state autouse fixture
+
+
 @pytest.fixture(autouse=True)
 def reset_resilience_state(request):
     """
