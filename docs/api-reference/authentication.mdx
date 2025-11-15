@@ -111,7 +111,7 @@ console.log('Access Token:', data.access_token);
 
 **Response (Token Mode)**:
 
-```
+```json
 {
   "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "refresh_token": "def50200abc123...",
@@ -128,7 +128,7 @@ console.log('Access Token:', data.access_token);
 
 **Response (Session Mode)**:
 
-```
+```json
 {
   "session_id": "abc123def456...",
   "user": {
@@ -149,7 +149,7 @@ console.log('Access Token:', data.access_token);
 
 <ResponseField name="401" type="Unauthorized">
   Invalid credentials
-  ```
+```json
   {
     "error": "unauthorized",
     "message": "Invalid username or password"
@@ -159,7 +159,7 @@ console.log('Access Token:', data.access_token);
 
 <ResponseField name="429" type="Too Many Requests">
   Rate limit exceeded
-  ```
+```json
   {
     "error": "rate_limit_exceeded",
     "message": "Too many login attempts. Try again in 60 seconds.",
@@ -180,7 +180,7 @@ Refresh access token using refresh token.
 
 **Request Example**:
 
-```
+```bash
 curl -X POST https://api.yourdomain.com/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{
@@ -190,7 +190,7 @@ curl -X POST https://api.yourdomain.com/auth/refresh \
 
 **Response**:
 
-```
+```json
 {
   "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "refresh_token": "def50200xyz789...",
@@ -211,7 +211,7 @@ Refresh tokens are rotated on each refresh for security. The old refresh token i
 
 <ResponseField name="401" type="Unauthorized">
   Invalid or expired refresh token
-  ```
+```json
   {
     "error": "unauthorized",
     "message": "Invalid or expired refresh token"
@@ -245,7 +245,7 @@ curl -X POST https://api.yourdomain.com/auth/logout \
 
 **Response**:
 
-```
+```json
 {
   "message": "Logged out successfully"
 }
@@ -273,14 +273,14 @@ Get current authenticated user information.
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/auth/me \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
 
 **Response**:
 
-```
+```json
 {
   "id": "alice",
   "username": "alice",
@@ -315,14 +315,14 @@ List active sessions for current user (session mode only).
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/auth/sessions \
   -H "Cookie: session_id=abc123def456..."
 ```
 
 **Response**:
 
-```
+```json
 {
   "sessions": [
     {
@@ -370,13 +370,13 @@ Revoke a specific session (session mode only).
 
 **Request Example**:
 
-```
+```bash
 curl -X DELETE https://api.yourdomain.com/auth/sessions/xyz789... \
   -H "Cookie: session_id=abc123def456..."
 ```
 **Response**:
 
-```
+```json
 {
   "message": "Session revoked successfully"
 }
@@ -407,14 +407,14 @@ Verify token validity and get user information.
 
 **Request Example**:
 
-```
+```bash
 curl -X POST https://api.yourdomain.com/auth/verify \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
 
 **Response**:
 
-```
+```json
 {
   "valid": true,
   "user_id": "alice",
@@ -432,7 +432,7 @@ curl -X POST https://api.yourdomain.com/auth/verify \
 
 <ResponseField name="401" type="Unauthorized">
   Token is invalid or expired
-  ```
+```json
   {
     "valid": false,
     "error": "Token expired",
@@ -456,13 +456,13 @@ Redirect to Keycloak login page (browser flow).
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/auth/keycloak/login?redirect_uri=https://app.yourdomain.com/dashboard
 ```
 
 **Response**:
 
-```
+```http
 302 Found
 Location: https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/auth?client_id=...
 ```
@@ -487,14 +487,14 @@ Logout from Keycloak and revoke tokens.
 
 **Request Example**:
 
-```
+```bash
 curl https://api.yourdomain.com/auth/keycloak/logout \
   -H "Cookie: session_id=abc123def456..."
 ```
 
 **Response**:
 
-```
+```http
 302 Found
 Location: https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/logout
 ```
@@ -507,7 +507,7 @@ All authentication endpoints may return the following errors:
 
 #### 401 Unauthorized
 
-```
+```json
 {
   "error": "unauthorized",
   "message": "Invalid credentials or expired token",
@@ -517,7 +517,7 @@ All authentication endpoints may return the following errors:
 
 #### 403 Forbidden
 
-```
+```json
 {
   "error": "forbidden",
   "message": "Access denied",
@@ -527,7 +527,7 @@ All authentication endpoints may return the following errors:
 
 #### 429 Too Many Requests
 
-```
+```json
 {
   "error": "rate_limit_exceeded",
   "message": "Too many requests. Please try again later.",
@@ -538,7 +538,7 @@ All authentication endpoints may return the following errors:
 
 #### 500 Internal Server Error
 
-```
+```json
 {
   "error": "internal_error",
   "message": "Authentication service unavailable",
@@ -553,7 +553,7 @@ All authentication endpoints may return the following errors:
 
 #### Python
 
-```
+```python
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 
 ## Initialize auth
@@ -574,7 +574,7 @@ response = httpx.post(
 
 #### JavaScript/TypeScript
 
-```
+```javascript
 class AuthClient {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;

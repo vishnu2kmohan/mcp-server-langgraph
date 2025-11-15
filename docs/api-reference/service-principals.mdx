@@ -614,7 +614,7 @@ console.log('Associated with:', data.associated_user_id);
 
 ### 1. Create Service Principal
 
-```
+```bash
 # Create service principal
 curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
   -H "Authorization: Bearer $USER_TOKEN" \
@@ -629,7 +629,7 @@ curl -X POST https://api.yourdomain.com/api/v1/service-principals/ \
 
 ### 2. Authenticate as Service Principal
 
-```
+```bash
 # Exchange credentials for JWT token
 curl -X POST https://api.yourdomain.com/auth/token \
   -d grant_type=client_credentials \
@@ -646,7 +646,7 @@ curl -X POST https://api.yourdomain.com/auth/token \
 
 ### 3. Make API Requests
 
-```
+```bash
 # Use the access token for API requests
 curl https://api.yourdomain.com/message \
   -H "Authorization: Bearer $ACCESS_TOKEN" \

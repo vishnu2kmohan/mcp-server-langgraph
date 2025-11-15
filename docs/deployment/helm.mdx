@@ -273,7 +273,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   </Tab>
 
   <Tab title="AWS (EKS)">
-    ```
+```yaml
     # values-eks.yaml
     image:
       repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/mcp-server-langgraph
@@ -400,7 +400,7 @@ config:
 **Never commit secrets to Git!** Use `--set` flags, external secret managers, or Kubernetes secrets.
 </Warning>
 
-```
+```yaml
 ## In values.yaml (DO NOT commit actual values!)
 secrets:
   # LLM API Keys
@@ -428,7 +428,7 @@ secrets:
   infisicalProjectId: ""
 ```
 Set secrets via command line:
-```
+```bash
 helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   --set secrets.anthropicApiKey="${ANTHROPIC_API_KEY}" \
   --set secrets.googleApiKey="${GOOGLE_API_KEY}" \
@@ -441,7 +441,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 <Tabs>
   <Tab title="Keycloak">
-    ```
+```yaml
     keycloak:
       enabled: true
       replicaCount: 2
@@ -474,7 +474,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   </Tab>
 
   <Tab title="Redis">
-    ```
+```yaml
     redis:
       enabled: true
       architecture: replication  # standalone, replication
@@ -505,7 +505,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   </Tab>
 
   <Tab title="OpenFGA">
-    ```
+```yaml
     openfga:
       enabled: true
       replicaCount: 2
@@ -525,7 +525,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
   </Tab>
 
   <Tab title="PostgreSQL">
-    ```
+```yaml
     postgresql:
       enabled: true
 
@@ -559,7 +559,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 #### Minor Version Upgrade
 
-```
+```bash
 ## Update values if needed
 vim values-production.yaml
 
@@ -574,7 +574,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 #### Major Version Upgrade
 
-```
+```bash
 ## Check for breaking changes
 helm show notes ./deployments/helm/mcp-server-langgraph
 
@@ -595,7 +595,7 @@ kubectl get pods -n mcp-server-langgraph
 
 #### Rollback
 
-```
+```bash
 ## List release history
 helm history mcp-server-langgraph -n mcp-server-langgraph
 
@@ -607,7 +607,7 @@ helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
 ```
 ### Uninstallation
 
-```
+```bash
 ## Uninstall release
 helm uninstall mcp-server-langgraph -n mcp-server-langgraph
 
@@ -626,7 +626,7 @@ kubectl delete pvc --all -n mcp-server-langgraph
 
 #### Custom Init Containers
 
-```
+```yaml
 ## values.yaml
 initContainers:
   - name: wait-for-database
@@ -641,7 +641,7 @@ initContainers:
 ```
 #### Custom Sidecars
 
-```
+```yaml
 ## values.yaml
 sidecars:
   - name: cloud-sql-proxy
@@ -660,7 +660,7 @@ sidecars:
 
 #### Custom Volumes
 
-```
+```yaml
 ## values.yaml
 extraVolumes:
   - name: model-cache
@@ -673,7 +673,7 @@ extraVolumeMounts:
 ```
 #### Environment Variables
 
-```
+```yaml
 ## values.yaml
 extraEnv:
   - name: CUSTOM_VAR
@@ -689,7 +689,7 @@ extraEnv:
 
 #### Prometheus Integration
 
-```
+```yaml
 ## values.yaml
 metrics:
   enabled: true
@@ -706,7 +706,7 @@ podAnnotations:
 ```
 #### Grafana Dashboards
 
-```
+```bash
 ## Import dashboards from configmap
 kubectl create configmap langgraph-dashboards \
   --from-file=dashboards/ \
@@ -722,7 +722,7 @@ kubectl label configmap langgraph-dashboards \
 
 <AccordionGroup>
   <Accordion title="Helm install fails">
-    ```
+```bash
     # Check for syntax errors
     helm lint ./deployments/helm/mcp-server-langgraph
 
@@ -737,7 +737,7 @@ kubectl label configmap langgraph-dashboards \
   </Accordion>
 
   <Accordion title="Dependencies not deploying">
-    ```
+```bash
     # Update dependencies
     cd deployments/helm/mcp-server-langgraph
     helm dependency update
@@ -754,7 +754,7 @@ kubectl label configmap langgraph-dashboards \
   </Accordion>
 
   <Accordion title="Values not applying">
-    ```
+```bash
     # Check current values
     helm get values mcp-server-langgraph -n mcp-server-langgraph
 
@@ -769,7 +769,7 @@ kubectl label configmap langgraph-dashboards \
   </Accordion>
 
   <Accordion title="Upgrade fails">
-    ```
+```bash
     # Check what will change
     helm diff upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
       --values values-production.yaml

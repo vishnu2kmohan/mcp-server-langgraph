@@ -670,7 +670,7 @@ variable "enable_binary_authorization" {
 
 <Check>**Auto-shutdown** dev cluster after hours</Check>
 
-```
+```bash
 # Cloud Scheduler: Scale to 0 at 6 PM
 gcloud scheduler jobs create http scale-down-dev \
   --schedule="0 18 * * 1-5" \

@@ -305,7 +305,7 @@ Replaces entire user resource. All fields must be provided.
 
 **Request Example**:
 
-```
+```bash
 curl -X PUT https://api.yourdomain.com/scim/v2/Users/f81d4fae-7dec-11d0-a765-00a0c91e6bf6 \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
   -H "Content-Type: application/scim+json" \
@@ -599,7 +599,7 @@ Create a new group (SCIM 2.0).
 
 **Request Example**:
 
-```
+```bash
 curl -X POST https://api.yourdomain.com/scim/v2/Groups \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
   -H "Content-Type: application/scim+json" \
@@ -621,7 +621,7 @@ curl -X POST https://api.yourdomain.com/scim/v2/Groups \
 
 **Response**:
 
-```
+```json
 {
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
   "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
@@ -713,7 +713,7 @@ Attribute Mappings:
 
 ### Azure AD SCIM Integration
 
-```
+```powershell
 # Azure AD Enterprise Application
 $AppId = "<your-app-id>"
 $TenantDomain = "https://api.yourdomain.com/scim/v2"
@@ -728,7 +728,7 @@ Set-AzureADApplication -ObjectId $AppId `
 
 ### OneLogin SCIM Integration
 
-```
+```json
 {
   "scim_base_url": "https://api.yourdomain.com/scim/v2",
   "authentication": "Bearer Token",

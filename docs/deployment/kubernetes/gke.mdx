@@ -425,7 +425,7 @@ spec:
         image: gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
         imagePullPolicy: Always
 EOF
-```markdown
+```
 
 #### Artifact Registry (Recommended)
 
@@ -442,7 +442,7 @@ gcloud auth configure-docker us-central1-docker.pkg.dev
 ## Build and push
 docker build -t us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest .
 docker push us-central1-docker.pkg.dev/$PROJECT_ID/langgraph/agent:latest
-```markdown
+```
 
 ### Load Balancer and Ingress
 
@@ -457,7 +457,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
   --set controller.service.type=LoadBalancer
-```markdown
+```
 
 #### Configure Ingress
 
@@ -696,7 +696,8 @@ kubectl get ingress -n mcp-server-langgraph
       --preemptible \
       --num-nodes=3 \
       --machine-type=n2-standard-4
-    ```text
+    ```
+
     Use node affinity to schedule on preemptible nodes:
     ```
     affinity:
