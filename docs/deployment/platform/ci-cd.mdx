@@ -92,7 +92,7 @@ jobs:
 
       - name: Deploy to Staging
         env:
-          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGCHAIN_API_KEY: $&#123;&#123; secrets.LANGCHAIN_API_KEY &#125;&#125;
         run: |
           langgraph deploy staging-mcp-server-langgraph --tag staging
 
@@ -119,7 +119,7 @@ jobs:
 
       - name: Deploy to Production
         env:
-          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          LANGCHAIN_API_KEY: $&#123;&#123; secrets.LANGCHAIN_API_KEY &#125;&#125;
         run: |
           langgraph deploy mcp-server-langgraph-prod \
             --tag production \
@@ -344,10 +344,10 @@ workflows:
       with:
         payload: |
           {
-            "text": "✅ Deployed to production: ${{ github.sha }}"
+            "text": "✅ Deployed to production: $&#123;&#123; github.sha &#125;&#125;"
           }
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_URL: $&#123;&#123; secrets.SLACK_WEBHOOK &#125;&#125;
     ```
   </Accordion>
 </AccordionGroup>
@@ -422,7 +422,7 @@ langgraph deployment rollback my-agent-prod
     deploy-production:
       if: startsWith(github.ref, 'refs/tags/v')
       environment: production
-      run: langgraph deploy my-agent-prod --tag ${{ github.ref_name }}
+      run: langgraph deploy my-agent-prod --tag $&#123;&#123; github.ref_name &#125;&#125;
     ```
   </Tab>
 </Tabs>

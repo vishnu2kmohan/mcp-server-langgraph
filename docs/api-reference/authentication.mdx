@@ -273,14 +273,14 @@ Get current authenticated user information.
 
 **Request Example**:
 
-```bash
+```
 curl https://api.yourdomain.com/auth/me \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
 
 **Response**:
 
-```json
+```
 {
   "id": "alice",
   "username": "alice",
@@ -318,7 +318,8 @@ List active sessions for current user (session mode only).
 ```
 curl https://api.yourdomain.com/auth/sessions \
   -H "Cookie: session_id=abc123def456..."
-```json
+```
+
 **Response**:
 
 ```
@@ -372,7 +373,7 @@ Revoke a specific session (session mode only).
 ```
 curl -X DELETE https://api.yourdomain.com/auth/sessions/xyz789... \
   -H "Cookie: session_id=abc123def456..."
-```json
+```
 **Response**:
 
 ```
@@ -409,7 +410,8 @@ Verify token validity and get user information.
 ```
 curl -X POST https://api.yourdomain.com/auth/verify \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```json
+```
+
 **Response**:
 
 ```
@@ -463,7 +465,8 @@ curl https://api.yourdomain.com/auth/keycloak/login?redirect_uri=https://app.you
 ```
 302 Found
 Location: https://sso.yourdomain.com/realms/mcp-server-langgraph/protocol/openid-connect/auth?client_id=...
-```bash
+```
+
 ---
 
 #### GET /auth/keycloak/callback
@@ -510,7 +513,8 @@ All authentication endpoints may return the following errors:
   "message": "Invalid credentials or expired token",
   "code": "AUTH_INVALID_CREDENTIALS"
 }
-```json
+```
+
 #### 403 Forbidden
 
 ```
@@ -530,7 +534,8 @@ All authentication endpoints may return the following errors:
   "retry_after": 60,
   "code": "AUTH_RATE_LIMIT"
 }
-```json
+```
+
 #### 500 Internal Server Error
 
 ```
@@ -565,7 +570,8 @@ response = httpx.post(
     headers={"Authorization": f"Bearer {token}"},
     json={"query": "Hello!"}
 )
-```python
+```
+
 #### JavaScript/TypeScript
 
 ```

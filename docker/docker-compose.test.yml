@@ -38,6 +38,8 @@ services:
 
       # Service URLs (use service names from docker-compose)
       - OPENFGA_API_URL=http://openfga-test:8080
+      - OPENFGA_STORE_ID=  # Set by pytest session fixture at runtime
+      - OPENFGA_MODEL_ID=  # Set by pytest session fixture at runtime
       - KEYCLOAK_URL=http://keycloak-test:8080
       - POSTGRES_HOST=postgres-test
       - POSTGRES_PORT=5432
@@ -82,6 +84,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test
       POSTGRES_DB: testdb
+      LANG: C.UTF-8  # Suppress locale warnings in Alpine
     # Use tmpfs for speed (data in memory, not disk)
     tmpfs:
       - /var/lib/postgresql/data
@@ -123,6 +126,10 @@ services:
       timeout: 3s
       retries: 10
       start_period: 2s
+    sysctls:
+      # Suppress Redis warning about vm.overcommit_memory
+      # Set to 1 to allow memory overcommit (safe for test environment)
+      net.core.somaxconn: 1024
     networks:
       - test-network
     # No ports exposed (tests access via Docker network)
@@ -134,8 +141,8 @@ services:
     container_name: mcp-keycloak-test
     command: start-dev
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://postgres-test:5432/testdb
       - KC_DB_USERNAME=postgres

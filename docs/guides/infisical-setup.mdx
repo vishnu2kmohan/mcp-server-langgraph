@@ -346,7 +346,8 @@ client.update_secret(
 )
 
 ## Application automatically picks up new value on next fetch
-```python
+```
+
 #### Automatic Rotation
 
 ```
@@ -525,7 +526,7 @@ client.delete_secret(
     curl -X POST https://app.infisical.com/api/v1/auth/universal-auth/login \
       -H "Content-Type: application/json" \
       -d "{\"clientId\":\"$INFISICAL_CLIENT_ID\",\"clientSecret\":\"$INFISICAL_CLIENT_SECRET\"}"
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Secret not found">
@@ -561,6 +562,7 @@ client.delete_secret(
             project_id=project_id,
             environment="production"
         )
+    ```
     ```
   </Accordion>
 </AccordionGroup>

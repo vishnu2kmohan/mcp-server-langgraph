@@ -81,7 +81,7 @@ Redis provides production-grade session storage with:
         # Test connection
         docker compose exec redis-session redis-cli -a $REDIS_PASSWORD ping
         # Expected: PONG
-        ```html
+        ```
       </Tab>
 
       <Tab title="Kubernetes">
@@ -106,7 +106,7 @@ Redis provides production-grade session storage with:
         kubectl get secret redis-session \
           -n mcp-server-langgraph \
           -o jsonpath='{.data.redis-password}' | base64 -d
-        ```markdown
+        ```
       </Tab>
 
       <Tab title="Cloud Managed">
@@ -690,6 +690,7 @@ Switching from stateless tokens to Redis sessions:
     # Final config
     AUTH_MODE=session
     # Remove: JWT_SECRET_KEY, JWT_EXPIRATION_SECONDS
+    ```
     ```
   </Step>
 </Steps>

@@ -269,6 +269,91 @@ class MCPAgentServer:
 
         return tools
 
+    async def call_tool_public(self, name: str, arguments: dict[str, Any]) -> list[TextContent]:
+        """
+        Public method to call tools (used for testing and external access).
+
+        This method contains the core tool invocation logic including authentication,
+        authorization, and routing. The MCP protocol handler delegates to this method.
+
+        Args:
+            name: Name of the tool to call
+            arguments: Tool arguments including 'token' for authentication
+
+        Returns:
+            List of TextContent responses from the tool
+
+        Raises:
+            PermissionError: If authentication or authorization fails
+            ValueError: If the tool name is unknown
+        """
+        with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
+            from mcp_server_langgraph.core.security import sanitize_for_logging
+
+            logger.info(f"Tool called: {name}", extra={"tool": name, "args": sanitize_for_logging(arguments)})
+            metrics.tool_calls.add(1, {"tool": name})
+
+            # SECURITY: Require JWT token for all tool calls
+            token = arguments.get("token")
+
+            if not token:
+                logger.warning("No authentication token provided")
+                metrics.auth_failures.add(1)
+                raise PermissionError(
+                    "Authentication token required. Provide 'token' parameter with a valid JWT. "
+                    "Obtain token via /auth/login endpoint or external authentication service."
+                )
+
+            # Verify JWT token
+            token_verification = await self.auth.verify_token(token)
+
+            if not token_verification.valid:
+                logger.warning("Token verification failed", extra={"error": token_verification.error})
+                metrics.auth_failures.add(1)
+                raise PermissionError(
+                    f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
+                )
+
+            # Extract user_id from validated token payload
+            if not token_verification.payload or "sub" not in token_verification.payload:
+                logger.error("Token payload missing 'sub' claim")
+                metrics.auth_failures.add(1)
+                raise PermissionError("Invalid token: missing user identifier")
+
+            user_id = token_verification.payload["sub"]
+            span.set_attribute("user.id", user_id)
+
+            logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})
+
+            # Check OpenFGA authorization
+            resource = f"tool:{name}"
+
+            authorized = await self.auth.authorize(user_id=user_id, relation="executor", resource=resource)
+
+            if not authorized:
+                logger.warning(
+                    "Authorization failed (OpenFGA)",
+                    extra={"user_id": user_id, "resource": resource, "relation": "executor"},
+                )
+                metrics.authz_failures.add(1, {"resource": resource})
+                raise PermissionError(f"Not authorized to execute {resource}")
+
+            logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
+
+            # Route to appropriate handler (with backward compatibility)
+            if name == "agent_chat" or name == "chat":  # Support old name for compatibility
+                return await self._handle_chat(arguments, span, user_id)
+            elif name == "conversation_get" or name == "get_conversation":
+                return await self._handle_get_conversation(arguments, span, user_id)
+            elif name == "conversation_search" or name == "list_conversations":
+                return await self._handle_search_conversations(arguments, span, user_id)
+            elif name == "search_tools":
+                return await self._handle_search_tools(arguments, span)
+            elif name == "execute_python":
+                return await self._handle_execute_python(arguments, span, user_id)
+            else:
+                raise ValueError(f"Unknown tool: {name}")
+
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
 
@@ -290,73 +375,7 @@ class MCPAgentServer:
         @self.server.call_tool()  # type: ignore[misc]
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
-
-            with tracer.start_as_current_span("mcp.call_tool", attributes={"tool.name": name}) as span:
-                from mcp_server_langgraph.core.security import sanitize_for_logging
-
-                logger.info(f"Tool called: {name}", extra={"tool": name, "args": sanitize_for_logging(arguments)})
-                metrics.tool_calls.add(1, {"tool": name})
-
-                # SECURITY: Require JWT token for all tool calls
-                token = arguments.get("token")
-
-                if not token:
-                    logger.warning("No authentication token provided")
-                    metrics.auth_failures.add(1)
-                    raise PermissionError(
-                        "Authentication token required. Provide 'token' parameter with a valid JWT. "
-                        "Obtain token via /auth/login endpoint or external authentication service."
-                    )
-
-                # Verify JWT token
-                token_verification = await self.auth.verify_token(token)
-
-                if not token_verification.valid:
-                    logger.warning("Token verification failed", extra={"error": token_verification.error})
-                    metrics.auth_failures.add(1)
-                    raise PermissionError(
-                        f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
-                    )
-
-                # Extract user_id from validated token payload
-                if not token_verification.payload or "sub" not in token_verification.payload:
-                    logger.error("Token payload missing 'sub' claim")
-                    metrics.auth_failures.add(1)
-                    raise PermissionError("Invalid token: missing user identifier")
-
-                user_id = token_verification.payload["sub"]
-                span.set_attribute("user.id", user_id)
-
-                logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})
-
-                # Check OpenFGA authorization
-                resource = f"tool:{name}"
-
-                authorized = await self.auth.authorize(user_id=user_id, relation="executor", resource=resource)
-
-                if not authorized:
-                    logger.warning(
-                        "Authorization failed (OpenFGA)",
-                        extra={"user_id": user_id, "resource": resource, "relation": "executor"},
-                    )
-                    metrics.authz_failures.add(1, {"resource": resource})
-                    raise PermissionError(f"Not authorized to execute {resource}")
-
-                logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
-
-                # Route to appropriate handler (with backward compatibility)
-                if name == "agent_chat" or name == "chat":  # Support old name for compatibility
-                    return await self._handle_chat(arguments, span, user_id)
-                elif name == "conversation_get" or name == "get_conversation":
-                    return await self._handle_get_conversation(arguments, span, user_id)
-                elif name == "conversation_search" or name == "list_conversations":
-                    return await self._handle_search_conversations(arguments, span, user_id)
-                elif name == "search_tools":
-                    return await self._handle_search_tools(arguments, span)
-                elif name == "execute_python":
-                    return await self._handle_execute_python(arguments, span, user_id)
-                else:
-                    raise ValueError(f"Unknown tool: {name}")
+            return await self.call_tool_public(name, arguments)
 
         @self.server.list_resources()  # type: ignore[misc,no-untyped-call]  # MCP library decorator lacks type stubs
         async def list_resources() -> list[Resource]:

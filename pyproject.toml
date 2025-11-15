@@ -30,7 +30,7 @@ dependencies = [
     "langgraph-checkpoint-redis>=0.1.2",  # Redis checkpointer for distributed conversation state
     "langchain-core>=1.0.4",
     "langsmith>=0.4.37",
-    "litellm>=1.78.5",
+    "litellm>=1.79.3",
     "mcp>=1.18.0",
     "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
@@ -395,9 +395,18 @@ filterwarnings = [
     # External library warnings (cannot fix directly)
     "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning:aiohttp",
     "ignore:Using.*@model_validator.*classmethod.*:DeprecationWarning:google.genai",
+    # Litellm async cleanup warning (OpenAI Codex Finding 2025-11-15)
+    # Root cause: litellm's atexit handler calls loop.create_task() without awaiting
+    # Our pytest_sessionfinish hook already handles cleanup properly
+    "ignore::RuntimeWarning:litellm.llms.custom_httpx.async_client_cleanup",
     # Internal warnings
     "ignore:coroutine.*was never awaited.*:RuntimeWarning:mcp_server_langgraph.resilience.circuit_breaker",
     "ignore:Pydantic serializer warnings.*:UserWarning:pydantic.main",
+    # Test environment expected warnings (OpenAI Codex Finding 2025-11-15)
+    # InMemory auth provider is intentionally used in tests for isolation
+    "ignore:InMemoryUserProvider is being used in 'test' environment.*:UserWarning:mcp_server_langgraph.auth.factory",
+    # OpenFGA fallback mode is expected when OPENFGA_STORE_ID/MODEL_ID not set
+    "ignore:OpenFGA not configured, authorization will use fallback mode.*:UserWarning:mcp_server_langgraph.mcp.server_stdio",
 ]
 markers = [
     "unit: Unit tests (fast, no external dependencies)",

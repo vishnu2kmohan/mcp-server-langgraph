@@ -88,10 +88,9 @@ class TestMCPCodeExecutionEndpoint:
                 mock_sandbox_factory.return_value = mock_sandbox
 
                 # Call tool via MCP
-                result = await mcp_server.call_tool(
+                result = await mcp_server.call_tool_public(
                     name="execute_python",
-                    arguments={"code": "print('Hello from MCP!')"},
-                    token=mock_jwt_token,
+                    arguments={"code": "print('Hello from MCP!')", "token": mock_jwt_token},
                 )
 
                 assert "Hello from MCP!" in str(result)
@@ -104,15 +103,14 @@ class TestMCPCodeExecutionEndpoint:
             mock_settings.enable_code_execution = True
 
             # Mock OpenFGA to deny authorization
-            with patch("mcp_server_langgraph.mcp.server_stdio.check_authorization", new_callable=AsyncMock) as mock_authz:
+            with patch.object(mcp_server.auth, "authorize", new_callable=AsyncMock) as mock_authz:
                 mock_authz.return_value = False
 
                 # Should be denied
-                with pytest.raises(Exception, match="[Aa]uthorization|[Pp]ermission"):
-                    await mcp_server.call_tool(
+                with pytest.raises(PermissionError, match="Not authorized to execute"):
+                    await mcp_server.call_tool_public(
                         name="execute_python",
-                        arguments={"code": "print('test')"},
-                        token=mock_jwt_token,
+                        arguments={"code": "print('test')", "token": mock_jwt_token},
                     )
 
 
@@ -147,10 +145,9 @@ class TestMCPToolDiscoveryEndpoint:
     async def test_search_tools_via_mcp(self, mcp_server, mock_jwt_token):
         """Test searching tools via MCP"""
         # Call search_tools
-        result = await mcp_server.call_tool(
+        result = await mcp_server.call_tool_public(
             name="search_tools",
-            arguments={"category": "calculator", "detail_level": "minimal"},
-            token=mock_jwt_token,
+            arguments={"category": "calculator", "detail_level": "minimal", "token": mock_jwt_token},
         )
 
         # Should return calculator tools
@@ -162,10 +159,9 @@ class TestMCPToolDiscoveryEndpoint:
     async def test_search_tools_by_query(self, mcp_server, mock_jwt_token):
         """Test searching tools by keyword query"""
         # Search for execution tools
-        result = await mcp_server.call_tool(
+        result = await mcp_server.call_tool_public(
             name="search_tools",
-            arguments={"query": "execute", "detail_level": "standard"},
-            token=mock_jwt_token,
+            arguments={"query": "execute", "detail_level": "standard", "token": mock_jwt_token},
         )
 
         result_str = str(result)

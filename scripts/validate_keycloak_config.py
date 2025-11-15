@@ -95,18 +95,16 @@ def validate_start_period(keycloak_service: Dict) -> Optional[str]:
 
 
 def validate_environment_variables(keycloak_service: Dict) -> Optional[str]:
-    """Validate Keycloak has required environment variables."""
+    """
+    Validate Keycloak has required environment variables.
+
+    Accepts both old (KEYCLOAK_ADMIN*) and new (KC_BOOTSTRAP_ADMIN*) variable names
+    for Keycloak 26.4+ compatibility.
+    """
     if "environment" not in keycloak_service:
         return "keycloak-test service must have environment variables"
 
     env_vars = keycloak_service["environment"]
-    required_vars = [
-        "KEYCLOAK_ADMIN",
-        "KEYCLOAK_ADMIN_PASSWORD",
-        "KC_DB",
-        "KC_DB_URL",
-        "KC_HEALTH_ENABLED",
-    ]
 
     # Convert list of KEY=VALUE or dict to set of keys
     if isinstance(env_vars, list):
@@ -114,7 +112,19 @@ def validate_environment_variables(keycloak_service: Dict) -> Optional[str]:
     else:
         env_keys = set(env_vars.keys())
 
-    missing_vars = [var for var in required_vars if var not in env_keys]
+    # Check for admin credentials (old or new format)
+    has_admin_user = "KEYCLOAK_ADMIN" in env_keys or "KC_BOOTSTRAP_ADMIN_USERNAME" in env_keys
+    has_admin_pass = "KEYCLOAK_ADMIN_PASSWORD" in env_keys or "KC_BOOTSTRAP_ADMIN_PASSWORD" in env_keys
+
+    if not has_admin_user:
+        return "keycloak-test service missing admin username (KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME)"
+
+    if not has_admin_pass:
+        return "keycloak-test service missing admin password (KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD)"
+
+    # Check for other required variables
+    other_required_vars = ["KC_DB", "KC_DB_URL", "KC_HEALTH_ENABLED"]
+    missing_vars = [var for var in other_required_vars if var not in env_keys]
 
     if missing_vars:
         return f"keycloak-test service missing required environment variables: {', '.join(missing_vars)}"

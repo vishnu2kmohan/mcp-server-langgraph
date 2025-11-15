@@ -261,6 +261,7 @@ COPY pyproject.toml ./
 # Copy additional directories required by tests
 COPY deployments/ ./deployments/
 COPY scripts/ ./scripts/
+COPY adr/ ./adr/
 
 # Set PATH to use virtual environment
 ENV PATH="/opt/venv/bin:$PATH"

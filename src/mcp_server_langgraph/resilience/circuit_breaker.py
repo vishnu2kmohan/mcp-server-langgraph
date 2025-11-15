@@ -62,7 +62,11 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
         old_state = self._map_state(old)
         new_state = self._map_state(new)
 
-        logger.warning(
+        # Log state changes at appropriate level:
+        # - WARNING when transitioning to OPEN (service failure detected)
+        # - INFO for normal transitions (HALF_OPEN, CLOSED - recovery/normal operation)
+        log_level = logger.warning if new_state == CircuitBreakerState.OPEN else logger.info
+        log_level(
             f"Circuit breaker state changed: {self.name}",
             extra={
                 "service": self.name,

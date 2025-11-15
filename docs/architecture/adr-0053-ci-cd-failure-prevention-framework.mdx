@@ -260,11 +260,10 @@ def example():
 ```
 def example():
     pass
-```text
 ```
 
 **Rule 2**: Use auto-fix for bulk changes
-```bash
+```
 python scripts/add_code_block_languages.py docs/**/*.mdx
 ```
 
@@ -275,7 +274,7 @@ python scripts/add_code_block_languages.py docs/**/*.mdx
 
 ### 3. Continuous Validation Pipeline
 
-```python
+```
 Local Development
 ├── Pre-commit hooks (fast checks)
 │   ├── Code block language tags
@@ -307,12 +306,12 @@ Push to GitHub
 When a CI failure occurs:
 
 **Step 1**: Capture the exact error
-```bash
-gh run view <run-id> --log-failed > failure.log
+```
+gh run view \<run-id\> --log-failed > failure.log
 ```
 
 **Step 2**: Write failing regression test FIRST
-```python
+```
 def test_prevent_issue_from_2025_11_12():
     """
     RED: Reproduce the exact failure
@@ -340,7 +339,7 @@ def test_prevent_issue_from_2025_11_12():
 ## Implementation Details
 
 ### File Structure
-```text
+```
 mcp-server-langgraph/
 ├── tests/regression/
 │   ├── test_documentation_code_blocks.py        # New
@@ -378,7 +377,7 @@ mcp-server-langgraph/
 
 ### CI Health Check Capabilities
 
-```bash
+```
 # Quick check (< 5 seconds)
 python scripts/ci_health_check.py --quick
 

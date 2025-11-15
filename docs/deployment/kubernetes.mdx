@@ -457,8 +457,9 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                   number: 8000
     ```
 
+    ```bash
     kubectl apply -f ingress.yaml
-    ```html
+    ```
   </Tab>
 
   <Tab title="GKE Ingress">
@@ -493,7 +494,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
     spec:
       domains:
       - api.yourdomain.com
-    ```html
+    ```
   </Tab>
 
   <Tab title="AWS ALB">
@@ -521,7 +522,7 @@ kubectl get pods -n mcp-server-langgraph -l app=mcp-server-langgraph
                 name: mcp-server-langgraph
                 port:
                   number: 8000
-    ```markdown
+    ```
   </Tab>
 </Tabs>
 
@@ -569,7 +570,7 @@ spec:
       - type: Percent
         value: 100
         periodSeconds: 60
-```markdown
+```
 
 #### Pod Disruption Budget
 
@@ -585,7 +586,7 @@ spec:
   selector:
     matchLabels:
       app: mcp-server-langgraph
-```yaml
+```
 #### Pod Anti-Affinity
 
 Spread pods across availability zones:
@@ -603,7 +604,7 @@ affinity:
             values:
             - mcp-server-langgraph
         topologyKey: topology.kubernetes.io/zone
-```markdown
+```
 
 ### Security
 
@@ -658,7 +659,7 @@ spec:
     ports:
     - protocol: TCP
       port: 443  # HTTPS for LLM APIs
-```typescript
+```
 #### Pod Security Standards
 
 ```
@@ -670,7 +671,7 @@ metadata:
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted
-```markdown
+```
 
 #### Security Context
 
@@ -686,7 +687,7 @@ securityContext:
     - ALL
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
-```yaml
+```
 ### Observability
 
 #### Prometheus Metrics
@@ -697,13 +698,13 @@ annotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8000"
   prometheus.io/path: "/metrics/prometheus"
-```text
+```
 
 Deploy Prometheus:
 ```
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace observability --create-namespace
-```bash
+```
 #### OpenTelemetry
 
 Deploy OpenTelemetry Collector:
@@ -713,7 +714,7 @@ helm install opentelemetry-collector open-telemetry/opentelemetry-collector \
   --namespace observability \
   --set mode=deployment \
   --set config.exporters.otlp.endpoint=jaeger:4317
-```markdown
+```
 
 #### Jaeger Tracing
 
@@ -723,12 +724,12 @@ helm install jaeger jaegertracing/jaeger \
   --set provisionDataStore.cassandra=false \
   --set allInOne.enabled=true \
   --set storage.type=memory
-```bash
+```
 Access Jaeger UI:
 ```
 kubectl port-forward svc/jaeger-query 16686:16686 -n observability
 ## Open: http://localhost:16686
-```markdown
+```
 
 ### Health Checks
 
@@ -756,12 +757,14 @@ readinessProbe:
     port: 8000
   periodSeconds: 5
   failureThreshold: 3
-```bash
-Check health:
+```
+
+**Check health:**
+
 ```
 kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
   curl http://localhost:8000/health
-```markdown
+```
 
 ### Troubleshooting
 
@@ -772,29 +775,29 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
     kubectl get pods -n mcp-server-langgraph
 
     # Describe pod
-    kubectl describe pod <pod-name> -n mcp-server-langgraph
+    kubectl describe pod POD_NAME -n mcp-server-langgraph
 
     # Check logs
-    kubectl logs <pod-name> -n mcp-server-langgraph
+    kubectl logs POD_NAME -n mcp-server-langgraph
 
     # Check events
     kubectl get events -n mcp-server-langgraph --sort-by='.lastTimestamp'
-    ```html
+    ```
   </Accordion>
 
   <Accordion title="Init containers failing">
     ```
     # Check init container logs
-    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-keycloak
-    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-redis
-    kubectl logs <pod-name> -n mcp-server-langgraph -c wait-for-openfga
+    kubectl logs POD_NAME -n mcp-server-langgraph -c wait-for-keycloak
+    kubectl logs POD_NAME -n mcp-server-langgraph -c wait-for-redis
+    kubectl logs POD_NAME -n mcp-server-langgraph -c wait-for-openfga
 
     # Test connectivity manually
     kubectl run test --rm -it --image=busybox -- sh
     nc -zv keycloak 8080
     nc -zv redis-session 6379
     nc -zv openfga 8080
-    ```html
+    ```
   </Accordion>
 
   <Accordion title="Health checks failing">
@@ -808,7 +811,7 @@ kubectl exec -it deploy/mcp-server-langgraph -n mcp-server-langgraph -- \
 
     # Check dependencies
     kubectl logs deploy/mcp-server-langgraph -n mcp-server-langgraph | grep -i error
-    ```html
+    ```
   </Accordion>
 
   <Accordion title="High memory usage">

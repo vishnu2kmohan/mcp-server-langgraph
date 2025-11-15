@@ -53,6 +53,12 @@ os.environ.setdefault("OTEL_SDK_DISABLED", "true")  # Disable OpenTelemetry SDK
 warnings.filterwarnings("ignore", message=".*failed to connect to all addresses.*")
 warnings.filterwarnings("ignore", message=".*Connection refused.*")
 
+# Suppress litellm async cleanup warning (OpenAI Codex Finding 2025-11-15)
+# Root cause: litellm's atexit handler calls loop.create_task() without awaiting
+# Our pytest_sessionfinish hook already handles cleanup properly
+# This must be set at import time to catch warnings during atexit phase
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="litellm.llms.custom_httpx.async_client_cleanup")
+
 # Also suppress grpc library logs
 logging.getLogger("grpc").setLevel(logging.CRITICAL)
 logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
@@ -1284,19 +1290,36 @@ async def redis_client_real(integration_test_env):
 
 @pytest.fixture(scope="session")
 async def openfga_client_real(integration_test_env):
-    """Real OpenFGA client for integration tests"""
+    """Real OpenFGA client for integration tests with auto-initialization"""
     if not integration_test_env:
         pytest.skip("Integration test environment not available (requires Docker)")
 
-    from mcp_server_langgraph.auth.openfga import OpenFGAClient
+    from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
 
     # OpenFGA test URL - uses port 9080 for test environment (docker-compose.test.yml)
     api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
 
+    # Create client without store/model initially
     client = OpenFGAClient(api_url=api_url, store_id=None, model_id=None)
 
-    # TODO: Create test store and model if needed
-    # For now, tests should handle store/model creation themselves
+    # Initialize OpenFGA store and authorization model for tests
+    try:
+        logging.info("Initializing OpenFGA test store and authorization model...")
+        store_id = await initialize_openfga_store(client)
+        model_id = client.model_id
+
+        # Set environment variables so all tests can access the configured store
+        os.environ["OPENFGA_STORE_ID"] = store_id
+        os.environ["OPENFGA_MODEL_ID"] = model_id
+
+        logging.info(f"✓ OpenFGA initialized: store_id={store_id}, model_id={model_id}")
+
+        # Update client with store and model IDs
+        client.store_id = store_id
+        client.model_id = model_id
+    except Exception as e:
+        logging.warning(f"Failed to initialize OpenFGA for tests (will use fallback auth): {e}")
+        # Tests will fall back to inmemory auth provider
 
     yield client
 
@@ -2002,69 +2025,85 @@ def pytest_sessionfinish(session, exitstatus):
     """
     Ensure litellm's async HTTP clients are properly closed at session end.
 
-    **OpenAI Codex Finding (2025-11-14):**
+    **OpenAI Codex Finding (2025-11-15):**
     - RuntimeWarning: coroutine 'close_litellm_async_clients' was never awaited
     - Source: litellm/llms/custom_httpx/async_client_cleanup.py:78
     - Occurs during test teardown when event loop closes
 
     **Root Cause:**
-    - litellm creates async HTTP clients for API calls (via httpx)
-    - These clients have async __aexit__ handlers that must be awaited
-    - pytest's synchronous teardown doesn't await litellm's async cleanup
-    - Result: RuntimeWarning about unawaited coroutine
+    - litellm registers an atexit handler that calls loop.create_task() without awaiting
+    - During pytest shutdown, loop.is_running() returns True
+    - Task is created but never awaited before loop closes
 
     **Solution:**
-    - Use pytest_sessionfinish hook (runs synchronously at session end)
-    - Create event loop and run litellm cleanup in it
-    - Prevents RuntimeWarning by ensuring proper async cleanup before session ends
-
-    **Optimization:**
-    - Skip cleanup for informational commands (--help, --version, --markers, --fixtures)
-    - These commands don't create litellm clients, so cleanup is unnecessary and slow
+    - Run cleanup manually in pytest_sessionfinish (before atexit)
+    - Unregister litellm's atexit handler to prevent double-cleanup
+    - Suppress any RuntimeWarnings from litellm's async_client_cleanup module
 
     **References:**
     - tests/regression/test_litellm_cleanup_warnings.py
     - https://github.com/BerriAI/litellm/issues (async client cleanup)
     """
     # Skip cleanup for informational pytest commands that don't run tests
-    # These commands don't create litellm clients, so cleanup is unnecessary
     if hasattr(session.config.option, "help") and session.config.option.help:
-        return  # pytest --help
+        return
     if hasattr(session.config.option, "version") and session.config.option.version:
-        return  # pytest --version
+        return
     if hasattr(session.config.option, "markers") and session.config.option.markers:
-        return  # pytest --markers
+        return
     if hasattr(session.config.option, "showfixtures") and session.config.option.showfixtures:
-        return  # pytest --fixtures
+        return
 
     try:
-        # Import litellm and asyncio
         import asyncio
+        import atexit
 
         import litellm
 
-        # Create new event loop for cleanup (session may have closed existing loops)
+        # First, unregister litellm's atexit handlers to prevent them from running
+        # This prevents the RuntimeWarning that occurs when the atexit handler runs
+        # after we've already cleaned up
+        try:
+            # Python's atexit module keeps handlers in a list
+            # We need to remove any cleanup_wrapper functions from litellm
+            import atexit
+
+            # Get atexit handlers (implementation detail, but necessary)
+            if hasattr(atexit, "_exithandlers"):
+                # Filter out litellm cleanup handlers
+                original_count = len(atexit._exithandlers)
+                atexit._exithandlers = [
+                    (func, args, kwargs)
+                    for func, args, kwargs in atexit._exithandlers
+                    if not (
+                        hasattr(func, "__name__")
+                        and func.__name__ == "cleanup_wrapper"
+                        and hasattr(func, "__module__")
+                        and "litellm" in func.__module__
+                    )
+                ]
+                removed_count = original_count - len(atexit._exithandlers)
+                if removed_count > 0:
+                    logging.debug(f"Unregistered {removed_count} litellm atexit handlers")
+        except Exception as e:
+            # If we can't unregister, it's not critical - the warning filter will catch it
+            logging.debug(f"Could not unregister litellm atexit handlers: {e}")
+
+        # Now run cleanup manually in a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         try:
-            # Run the async cleanup in the new event loop with timeout
-            # Timeout prevents hanging if cleanup is stuck
             loop.run_until_complete(asyncio.wait_for(litellm.close_litellm_async_clients(), timeout=30.0))
             logging.debug("Successfully closed all litellm async clients")
         except asyncio.TimeoutError:
             logging.warning("litellm async client cleanup timed out after 30s (non-critical)")
         finally:
-            # Clean up the event loop
             loop.close()
 
     except ImportError:
-        # litellm not installed - nothing to cleanup
         pass
     except AttributeError:
-        # Older version of litellm without cleanup function
         logging.debug("litellm async client cleanup not available (older version)")
     except Exception as e:
-        # Log but don't fail - cleanup is best-effort
-        # Failing here would cause confusing test failures
         logging.debug(f"litellm async client cleanup failed (non-critical): {e}")

@@ -339,7 +339,7 @@ client = OpenFGAClient(
     cache_ttl=300,  # 5 minutes
     cache_backend="redis"
 )
-```markdown
+```
 
 ---
 
@@ -368,7 +368,8 @@ await client.write_tuples([
     {"user": "user:bob", "relation": "member", "object": "organization:acme"},
     {"user": "organization:acme#member", "relation": "executor", "object": "tool:chat"},
 ])
-```python
+```
+
 #### Checking Permissions
 
 ```
@@ -661,6 +662,7 @@ psql -U openfga openfga < openfga-backup.sql
                 if t['user'] == 'user:alice'
                 and t['object'] == 'tool:chat']
     print(f"Matching tuples: {matching}")
+    ```
     ```
   </Accordion>
 </AccordionGroup>

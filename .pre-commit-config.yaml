@@ -1273,37 +1273,38 @@ repos:
           See: tests/conftest.py for helper function documentation
           See: tests/meta/test_id_pollution_prevention.py for validation tests
 
-      # TEMPORARILY DISABLED (2025-11-15): Hook uses flawed scripts that cause corruption
-      # See: scripts/fix_closing_fence_tags.py for cleanup of 1,359 issues created
-      # TODO: Re-enable after rewriting add_code_block_languages.py with proper validation
-      #
-      # - id: validate-code-block-languages
-      #   name: Validate Code Block Language Tags
-      #   entry: python scripts/validate_code_block_languages.py
-      #   language: python
-      #   additional_dependencies: []
-      #   files: \.(md|mdx)$
-      #   pass_filenames: true
-      #   always_run: false  # Only run when markdown files change
-      #   description: |
-      #     Ensures all code blocks in Markdown/MDX files have language identifiers
-      #     for proper syntax highlighting and accessibility.
-      #
-      #     Prevents commits of untagged code blocks like:
-      #     ```
-      #     code here
-      #     ```
-      #
-      #     Requires language tags like:
-      #     ```python
-      #     code here
-      #     ```
-      #
-      #     To auto-fix: python scripts/add_code_block_languages.py <files>
-      #
-      #     Regression prevention for documentation audit finding (2025-11-10):
-      #     113 files had code blocks without language tags, reducing readability
-      #     and accessibility. This hook ensures the issue doesn't recur.
+      # Code Block Language Tag Validation (Re-enabled 2025-11-15)
+      # Uses improved validator with:
+      # - Heredoc detection
+      # - Inline comment handling
+      # - Better CodeGroup parsing
+      - id: validate-code-block-languages
+        name: Validate Code Block Language Tags
+        entry: python scripts/validators/codeblock_validator_v2.py
+        language: python
+        additional_dependencies: []
+        files: \.(md|mdx)$
+        pass_filenames: true
+        always_run: false  # Only run when markdown files change
+        description: |
+          Ensures code blocks in Markdown/MDX files have appropriate language tags.
+
+          Detects missing tags on:
+          - Python, JavaScript, Bash code
+          - JSON, YAML, XML data
+          - SQL queries
+          - And many other languages
+
+          Improved validator features (v2):
+          - Heredoc detection (prevents false positives on bash with embedded code)
+          - Inline comment handling (accepts YAML with `key: value  # comment`)
+          - Better mixed content detection
+
+          Note: Validator produces some false positives on very short blocks and
+          mixed content. Use manual review for flagged issues.
+
+          Regression prevention for documentation audit finding (2025-11-10):
+          113 files had code blocks without language tags, reducing readability.
 
       - id: validate-test-isolation
         name: Validate Test Isolation for Pytest-xdist
