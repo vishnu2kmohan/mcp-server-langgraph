@@ -14,6 +14,7 @@ Regression prevention for Anthropic Claude Code settings configuration.
 See: https://www.anthropic.com/engineering/claude-code-best-practices
 """
 
+import gc
 import json
 import re
 from pathlib import Path
@@ -25,8 +26,13 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.xdist_group(name="claude_settings_schema")
 class TestClaudeSettingsSchema:
     """Validate .claude/settings.json schema and content."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

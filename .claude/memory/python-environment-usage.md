@@ -399,7 +399,7 @@ executable = /usr/bin/python3.12
 
 **Key Points**:
 - Does NOT include system site packages (`include-system-site-packages = false`)
-- Python 3.12.12 (project requires `>=3.10,<3.13` per pyproject.toml - ✅ within range)
+- Python 3.12.12 (project requires `>=3.10` and below `3.13` per pyproject.toml - ✅ within range)
 - All dependencies installed via uv/pip into `.venv/lib/python3.12/site-packages/`
 
 ---
@@ -456,6 +456,6 @@ Before running any Python command, verify:
 **Last Updated**: 2025-10-21
 **Virtual Environment Python Version**: 3.12.12
 **Package Manager**: uv (latest)
-**pyproject.toml Python Requirement**: >=3.10, <3.13
+**pyproject.toml Python Requirement**: >=3.10, below 3.13
 
 _This is active configuration. All Python commands must follow these guidelines._

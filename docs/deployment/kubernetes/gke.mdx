@@ -199,12 +199,11 @@ kill $PROXY_PID
 
 See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for retention policies and backup procedures.
 
-```markdown
 #### Configure Cloud SQL Proxy
 
 **Option 1: Cloud SQL Auth Proxy Sidecar**
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -249,7 +248,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-```markdown
 **Option 2: Private IP (Recommended for Production)**
 
 ```
@@ -264,7 +262,7 @@ CLOUDSQL_PRIVATE_IP=$(gcloud sql instances describe langgraph-postgres \
 
 ## Use private IP directly
 KC_DB_URL=jdbc:postgresql://$CLOUDSQL_PRIVATE_IP:5432/keycloak
-```sql
+```
 ### Memorystore for Redis
 
 #### Create Redis Instance
@@ -294,10 +292,9 @@ kubectl create secret generic redis-credentials \
   --namespace=mcp-server-langgraph \
   --from-literal=host=$REDIS_HOST \
   --from-literal=password=$REDIS_AUTH
-```markdown
 #### Configure Application
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -320,7 +317,6 @@ spec:
             secretKeyRef:
               name: redis-credentials
               key: password
-```markdown
 ### Secret Manager Integration
 
 #### Store Secrets in Secret Manager
@@ -339,10 +335,11 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
 gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
-```bash
+```
+
 #### Use External Secrets Operator
 
-```
+```bash
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -353,7 +350,7 @@ helm install external-secrets \
   --create-namespace
 
 ## Create SecretStore
-cat << 'EOF' | kubectl apply -f -
+cat <<'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
@@ -372,7 +369,7 @@ spec:
 EOF
 
 ## Create ExternalSecret
-cat << 'EOF' | kubectl apply -f -
+cat <<'EOF' | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
@@ -394,7 +391,7 @@ spec:
     remoteRef:
       key: jwt-secret
 EOF
-```markdown
+```
 
 ### Google Container Registry (GCR)
 
@@ -488,7 +485,7 @@ spec:
             name: mcp-server-langgraph
             port:
               number: 8000
-```markdown
+```
 
 #### Google Cloud Load Balancer
 
@@ -529,7 +526,7 @@ spec:
     drainingTimeoutSec: 60
   cdn:
     enabled: false
-```markdown
+```
 
 ### Monitoring with Cloud Operations
 
@@ -540,7 +537,7 @@ spec:
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/setup.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/prometheus-engine/v0.8.0/manifests/operator.yaml
-```markdown
+```
 
 #### Configure Pod Monitoring
 
@@ -557,13 +554,13 @@ spec:
   endpoints:
   - port: metrics
     interval: 30s
-```markdown
+```
 
 #### Cloud Logging
 
 Configure structured logging to Cloud Logging:
 
-```
+```python
 ## Install dependencies
 uv add google-cloud-logging
 
@@ -584,12 +581,13 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     logger_factory=structlog.stdlib.LoggerFactory(),
 )
-```markdown
+```
+
 ### Auto-Scaling
 
 #### Horizontal Pod Autoscaler
 
-```
+```yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -632,7 +630,6 @@ spec:
         value: 5
         periodSeconds: 60
       selectPolicy: Max
-```markdown
 #### Cluster Autoscaler
 
 GKE Autopilot handles node scaling automatically. For Standard clusters:
@@ -644,7 +641,6 @@ gcloud container clusters update langgraph-cluster \
   --min-nodes=3 \
   --max-nodes=20 \
   --region=us-central1
-```markdown
 ### Complete Deployment
 
 ```
@@ -673,7 +669,6 @@ helm install mcp-server-langgraph ./helm/mcp-server-langgraph \
 kubectl get pods -n mcp-server-langgraph
 kubectl get svc -n mcp-server-langgraph
 kubectl get ingress -n mcp-server-langgraph
-```markdown
 ### Cost Optimization
 
 <AccordionGroup>

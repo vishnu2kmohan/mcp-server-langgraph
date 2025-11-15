@@ -97,14 +97,15 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
           ollama-data:
         ```
 
+        ```bash
         docker compose up -d ollama
-        ```html
+        ```
       </Tab>
     </Tabs>
   </Step>
 
   <Step title="Pull Models">
-    ```
+    ```bash
     # Popular models
     ollama pull llama3.2:3b      # Meta's Llama 3.2 (3B params, fast)
     ollama pull mistral:7b       # Mistral 7B (balanced)
@@ -116,20 +117,20 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
     # Model info
     ollama show llama3.2:3b
-    ```html
+    ```
   </Step>
 
   <Step title="Configure MCP Server">
-    ```
+    ```bash
     # .env
     LLM_PROVIDER=ollama
     OLLAMA_BASE_URL=http://localhost:11434
     LLM_MODEL_NAME=llama3.2:3b
-    ```html
+    ```
   </Step>
 
   <Step title="Test">
-    ```
+    ```python
     from mcp_server_langgraph.llm.factory import LLMFactory
 
     llm = LLMFactory(
@@ -140,7 +141,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
     response = await llm.ainvoke("What is machine learning?")
     print(response.content)
-    ```markdown
+    ```
   </Step>
 </Steps>
 
@@ -419,12 +420,13 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "4000m"
-```python
+```
+
 ### Model Selection
 
 #### By Task Type
 
-```
+```python
 def select_local_model(task_type: str) -> str:
     """Select optimal local model for task"""
 
@@ -443,7 +445,7 @@ llm = LLMFactory(
     provider="ollama",
     model_name=select_local_model("code")
 )
-```markdown
+```
 
 #### By Hardware
 
@@ -505,10 +507,11 @@ ollama pull llama3.2:3b-q8_0    # 8-bit (larger, better quality)
 ollama pull llama3.2:3b         # Default (usually q4)
 
 ## Trade-off: smaller = faster but lower quality
-```python
+```
+
 #### Concurrent Requests
 
-```
+```python
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -525,7 +528,7 @@ async def process_batch(queries: list):
     return results
 
 results = await process_batch(queries)
-```markdown
+```
 
 #### Context Caching
 
@@ -551,7 +554,7 @@ response2 = await llm.ainvoke(
 
 #### Create Modelfile
 
-```
+```text
 ## Modelfile
 FROM llama3.2:3b
 
@@ -564,11 +567,11 @@ PARAMETER temperature 0.7
 PARAMETER num_ctx 4096
 PARAMETER stop "Human:"
 PARAMETER stop "Assistant:"
-```markdown
+```
 
 #### Build Custom Model
 
-```
+```bash
 ## Create model
 ollama create my-custom-model -f Modelfile
 
@@ -578,10 +581,11 @@ ollama run my-custom-model "Write a Python function"
 ## Use in MCP Server
 ## .env
 LLM_MODEL_NAME=my-custom-model
-```bash
+```
+
 #### Fine-Tune with LoRA
 
-```
+```bash
 ## Use libraries like axolotl or unsloth
 uv pip install unsloth
 
@@ -593,13 +597,13 @@ python fine_tune.py \
 
 ## Import to Ollama
 ollama create my-fine-tuned -f Modelfile.finetune
-```markdown
+```
 
 ### Monitoring
 
 #### Resource Usage
 
-```
+```python
 import psutil
 import GPUtil
 
@@ -636,10 +640,11 @@ def monitor_resources():
 ## Log metrics
 metrics = monitor_resources()
 logger.info("Resource usage", **metrics)
-```python
+```
+
 #### Performance Metrics
 
-```
+```python
 from prometheus_client import Histogram, Counter
 
 ## Define metrics
@@ -670,7 +675,7 @@ async def call_local_llm(query: str):
     local_llm_tokens.labels(model="llama3.2:3b", type="output").inc(output_tokens)
 
     return response
-```markdown
+```
 
 ### Troubleshooting
 

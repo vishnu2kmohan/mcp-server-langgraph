@@ -79,8 +79,9 @@ flowchart TB
             - openfga-data:/var/lib/postgresql/data
         ```
 
+        ```bash
         docker compose up -d openfga postgres
-        ```html
+        ```
       </Tab>
 
       <Tab title="Kubernetes">
@@ -347,7 +348,7 @@ client = OpenFGAClient(
 
 #### Creating Relationships
 
-```
+```python
 ## Grant alice admin access to organization
 await client.write_tuples([{
     "user": "user:alice",
@@ -407,10 +408,11 @@ users = await client.list_users(
 )
 print(f"Can execute chat: {users}")
 ## Output: ['user:alice', 'user:bob']
-```markdown
+```
+
 #### Deleting Relationships
 
-```
+```python
 ## Revoke specific permission
 await client.delete_tuples([{
     "user": "user:bob",
@@ -422,7 +424,7 @@ await client.delete_tuples([{
 tuples = await client.read_tuples(object="tool:chat")
 user_tuples = [t for t in tuples if t['user'] == 'user:bob']
 await client.delete_tuples(user_tuples)
-```markdown
+```
 ---
 
 ### Production Deployment
@@ -548,24 +550,25 @@ openfga_tuple_count
 
 #### Backup Tuples
 
-```
+```python
 ## Export all relationship tuples
 tuples = await client.read_tuples()
 
 import json
 with open('openfga-backup.json', 'w') as f:
     json.dump(tuples, f, indent=2)
-```python
+```
+
 #### Restore Tuples
 
-```
+```python
 ## Import tuples
 import json
 with open('openfga-backup.json', 'r') as f:
     tuples = json.load(f)
 
 await client.write_tuples(tuples)
-```markdown
+```
 
 #### Database Backup
 
@@ -600,7 +603,7 @@ psql -U openfga openfga < openfga-backup.sql
     **Error**: `store not found`
 
     **Solutions**:
-    ```
+    ```bash
     # Re-run setup script
     python scripts/setup/setup_openfga.py
 
@@ -610,7 +613,7 @@ psql -U openfga openfga < openfga-backup.sql
       -d '{"name": "mcp-server-langgraph"}'
 
     # Update OPENFGA_STORE_ID in .env
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Model not found">

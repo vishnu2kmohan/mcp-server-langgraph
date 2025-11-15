@@ -98,17 +98,17 @@ Prioritize coverage gaps based on:
    - 80-100%: Low
 
 3. **Lines of Code** (weighted 20%):
-   - >500 lines: High impact
+   - Greater than 500 lines: High impact
    - 200-500 lines: Medium impact
-   - <200 lines: Low impact
+   - Less than 200 lines: Low impact
 
 **Risk Score Formula**:
-```
+```text
 Risk Score = (Criticality × 0.5) + ((100 - Coverage) × 0.3) + (LOC/1000 × 0.2)
 ```
 
 **Prioritized Gap List**:
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   PRIORITY COVERAGE GAPS (by Risk Score)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

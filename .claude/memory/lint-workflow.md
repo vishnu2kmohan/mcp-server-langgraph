@@ -561,7 +561,7 @@ make lint-pre-push
 ### Planned Improvements
 
 1. **Mypy enforcement**:
-   - Phase 1: Reduce type errors from 500+ to <100 through gradual fixes
+   - Phase 1: Reduce type errors from 500+ to fewer than 100 through gradual fixes
    - Phase 2: Re-enable mypy in pre-commit hook (blocking)
    - Phase 3: Make pre-push mypy blocking
    - Phase 4: Remove `continue-on-error: true` in CI/CD

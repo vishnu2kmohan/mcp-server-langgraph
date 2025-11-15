@@ -15,6 +15,7 @@ Regression prevention for Anthropic Claude Code slash commands best practices.
 See: https://www.anthropic.com/engineering/claude-code-best-practices
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List, Set
@@ -25,8 +26,13 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.xdist_group(name="slash_commands")
 class TestSlashCommands:
     """Validate slash commands are properly structured."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

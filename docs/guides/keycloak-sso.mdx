@@ -64,13 +64,15 @@ sequenceDiagram
           command: start-dev
         ```
 
+        ```bash
         docker compose up -d keycloak
-        ```text
+        ```
+
         Access: http://localhost:8080/admin (admin/admin)
       </Tab>
 
       <Tab title="Kubernetes">
-        ```
+        ```bash
         # Using Helm (recommended)
         helm install keycloak bitnami/keycloak \
           --namespace mcp-server-langgraph \
@@ -85,11 +87,13 @@ sequenceDiagram
         # Wait for deployment
         kubectl wait --for=condition=available --timeout=300s \
           deployment/keycloak -n mcp-server-langgraph
-        ```text
-        Access via ingress or port-forward:
         ```
+
+        Access via ingress or port-forward:
+
+        ```bash
         kubectl port-forward svc/keycloak 8080:80 -n mcp-server-langgraph
-        ```python
+        ```
       </Tab>
 
       <Tab title="Cloud Run">
@@ -101,7 +105,7 @@ sequenceDiagram
   </Step>
 
   <Step title="Run Setup Script">
-    ```
+    ```bash
     # Wait for Keycloak to be ready (60+ seconds)
     sleep 60
 
@@ -110,7 +114,8 @@ sequenceDiagram
 
     # Save the client secret from output
     KEYCLOAK_CLIENT_SECRET=abc123...
-    ```markdown
+    ```
+
     This script creates:
     - **Realm**: `mcp-server-langgraph`
     - **Client**: `langgraph-client` (confidential, OIDC)
@@ -119,7 +124,7 @@ sequenceDiagram
   </Step>
 
   <Step title="Configure Environment">
-    ```
+    ```bash
     # .env or Kubernetes ConfigMap
     AUTH_PROVIDER=keycloak
     AUTH_MODE=session  # or token
@@ -131,11 +136,11 @@ sequenceDiagram
     KEYCLOAK_VERIFY_SSL=true
     KEYCLOAK_TIMEOUT=30
     KEYCLOAK_HOSTNAME=mcp-server-langgraph.yourdomain.com
-    ```html
+    ```
   </Step>
 
   <Step title="Test Authentication">
-    ```
+    ```python
     from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
     client = KeycloakClient()
@@ -149,7 +154,7 @@ sequenceDiagram
     print(f"Access Token: {result['access_token']}")
     print(f"Refresh Token: {result['refresh_token']}")
     print(f"Expires In: {result['expires_in']} seconds")
-    ```sql
+    ```
   </Step>
 </Steps>
 
@@ -270,7 +275,7 @@ result = await client.authenticate(
 
 access_token = result['access_token']
 refresh_token = result['refresh_token']
-```markdown
+```
 
 <Warning>
 **Never use Direct Grant in production!** Use Authorization Code flow with PKCE for web/mobile apps.
@@ -342,13 +347,13 @@ await sync_user_to_openfga(
     groups=user_info.get('groups', []),
     email_verified=user_info.get('email_verified', False)
 )
-```markdown
+```
 
 #### Manual Sync
 
 Trigger sync for existing users:
 
-```
+```python
 ## Sync single user
 await sync_user_to_openfga(
     user_id="alice",
@@ -397,12 +402,13 @@ postgresql:
     persistence:
       enabled: true
       size: 10Gi
-```rust
+```
+
 #### SSL/TLS
 
 **Always use HTTPS in production:**
 
-```
+```yaml
 ingress:
   enabled: true
   className: nginx
@@ -417,16 +423,18 @@ ingress:
     - secretName: keycloak-tls
       hosts:
         - sso.yourdomain.com
-```bash
-Configure app:
 ```
+
+Configure app:
+
+```bash
 KEYCLOAK_SERVER_URL=https://sso.yourdomain.com
 KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
-```markdown
+```
 
 #### Performance Tuning
 
-```
+```yaml
 ## Kubernetes resources
 resources:
   requests:
@@ -454,7 +462,7 @@ postgresql:
 ```
 #### Backup & Recovery
 
-```
+```bash
 ## Backup PostgreSQL (Keycloak database)
 kubectl exec -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \
@@ -516,37 +524,37 @@ keycloak_sessions_active
 
 Configure structured logging:
 
-```
+```yaml
 extraEnv:
   - name: KC_LOG_LEVEL
     value: "info"
   - name: KC_LOG_CONSOLE_FORMAT
     value: "json"
-```markdown
+```
 
 ### Troubleshooting
 
 <AccordionGroup>
   <Accordion title="Connection refused">
-    ```
+    ```bash
     # Check Keycloak status
     kubectl get pods -l app=keycloak
     kubectl logs -l app=keycloak --tail=100
 
     # Test connectivity
     curl http://keycloak:8080/health
-    ```html
+    ```
   </Accordion>
 
   <Accordion title="Invalid client secret">
-    ```
+    ```bash
     # Get correct secret from Keycloak
     # Admin console → Clients → langgraph-client → Credentials
 
     # Or via CLI
     kubectl get secret keycloak-client-secret \
       -o jsonpath='{.data.client-secret}' | base64 -d
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Token verification failed">

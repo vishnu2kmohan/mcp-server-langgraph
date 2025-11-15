@@ -33,6 +33,7 @@ Related:
 - .pre-commit-config.yaml: Hook configuration
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -42,8 +43,13 @@ import pytest
 @pytest.mark.meta
 @pytest.mark.unit
 @pytest.mark.precommit
+@pytest.mark.xdist_group(name="id_pollution_prevention")
 class TestIDPollutionPreventionHook:
     """Test pre-commit hook prevents hardcoded IDs in test files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

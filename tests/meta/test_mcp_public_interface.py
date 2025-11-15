@@ -8,14 +8,20 @@ Related: OpenAI Codex Finding 2025-11-15 - Integration test failures due to
 missing call_tool_public() method.
 """
 
+import gc
 import inspect
 
 import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="mcp_public_interface")
 class TestMCPPublicInterface:
     """Validate MCPAgentServer public interface"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_mcp_server_has_call_tool_public(self):
         """

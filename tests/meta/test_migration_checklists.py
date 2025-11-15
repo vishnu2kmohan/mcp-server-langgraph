@@ -15,6 +15,7 @@ Regression prevention for Anthropic Claude Code best practices (large task check
 See: https://www.anthropic.com/engineering/claude-code-best-practices
 """
 
+import gc
 from pathlib import Path
 from typing import List
 
@@ -24,8 +25,13 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.xdist_group(name="migration_checklists")
 class TestMigrationChecklists:
     """Validate migration checklists exist and have proper structure."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:

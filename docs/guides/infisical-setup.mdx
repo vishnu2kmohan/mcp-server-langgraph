@@ -132,17 +132,18 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
         - redis-data:/data
     ```
 
+    ```bash
     # Generate secrets
     export ENCRYPTION_KEY=$(openssl rand -hex 32)
     export JWT_SECRET=$(openssl rand -hex 32)
 
     # Start Infisical
     docker compose up -d infisical
-    ```html
+    ```
   </Tab>
 
   <Tab title="Kubernetes">
-    ```
+    ```bash
     # Using Helm
     helm repo add infisical https://infisical.github.io/helm-charts
     helm install infisical infisical/infisical \
@@ -151,7 +152,7 @@ Infisical is an open-source alternative to HashiCorp Vault with a focus on devel
       --set redis.enabled=true \
       --set ingress.enabled=true \
       --set ingress.hostname=secrets.yourdomain.com
-    ```markdown
+    ```
   </Tab>
 </Tabs>
 
@@ -195,11 +196,11 @@ secrets = client.get_all_secrets(
 
 for secret in secrets:
     print(f"{secret.secret_name}: {secret.secret_value}")
-```markdown
+```
 
 #### Environment-Specific Secrets
 
-```
+```python
 ## Load secrets based on environment
 environment = os.getenv("ENVIRONMENT", "development")
 
@@ -207,7 +208,7 @@ secrets = client.get_all_secrets(
     project_id=project_id,
     environment=environment  # dev, staging, production
 )
-```bash
+```
 ### Kubernetes Integration
 
 #### Infisical Operator
@@ -233,11 +234,11 @@ spec:
   managedSecretReference:
     secretName: mcp-server-langgraph-secrets
     secretNamespace: mcp-server-langgraph
-```markdown
+```
 
 #### Service Account Credentials
 
-```
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -247,10 +248,11 @@ type: Opaque
 stringData:
   clientId: your-client-id
   clientSecret: your-client-secret
-```python
+```
+
 #### Auto-Inject Secrets
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -263,13 +265,13 @@ spec:
         envFrom:
         - secretRef:
             name: mcp-server-langgraph-secrets  # Auto-synced from Infisical
-```markdown
+```
 
 ### Secret Organization
 
 #### Folder Structure
 
-```
+```text
 mcp-server-langgraph/
 ├── production/
 │   ├── api-keys/
@@ -286,7 +288,7 @@ mcp-server-langgraph/
 │   └── ...
 └── development/
     └── ...
-```markdown
+```
 #### Naming Conventions
 
 **Good**:
@@ -315,12 +317,13 @@ service_account_write = client.create_service_account(
     name="cicd-deploy",
     permissions=["read", "write"]
 )
-```python
+```
+
 #### Audit Logging
 
 Enable audit logs to track secret access:
 
-```
+```python
 ## View audit logs
 logs = client.get_audit_logs(
     project_id=project_id,
@@ -330,7 +333,7 @@ logs = client.get_audit_logs(
 
 for log in logs:
     print(f"{log.timestamp}: {log.user} {log.action} {log.secret_name}")
-```markdown
+```
 
 ### Secret Rotation
 
@@ -373,11 +376,11 @@ schedule.every().sunday.at("02:00").do(rotate_jwt_secret)
 while True:
     schedule.run_pending()
     time.sleep(3600)
-```markdown
+```
 
 #### Zero-Downtime Rotation
 
-```
+```python
 ## 1. Add new secret with version suffix
 client.create_secret(
     secret_name="ANTHROPIC_API_KEY_V2",
@@ -394,14 +397,15 @@ client.delete_secret(
     project_id=project_id,
     environment="production"
 )
-```markdown
+```
+
 ### Best Practices
 
 <AccordionGroup>
   <Accordion title="Never Commit Secrets" icon="ban">
     **Never** commit secrets to Git:
 
-    ```
+    ```bash
     # Add to .gitignore
     .env
     .env.*
@@ -410,7 +414,7 @@ client.delete_secret(
 
     # Scan for leaked secrets
     git secrets --scan
-    ```html
+    ```
   </Accordion>
 
   <Accordion title="Use Service Accounts" icon="robot">
@@ -425,7 +429,7 @@ client.delete_secret(
   <Accordion title="Principle of Least Privilege" icon="lock">
     Grant minimal necessary permissions:
 
-    ```
+    ```python
     # Application: read-only
     app_account = create_service_account(
         name="app",
@@ -437,7 +441,7 @@ client.delete_secret(
         name="ops",
         permissions=["read", "write"]
     )
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Rotate Regularly" icon="rotate">
@@ -452,7 +456,7 @@ client.delete_secret(
   <Accordion title="Monitor Access" icon="eye">
     Enable and review audit logs:
 
-    ```
+    ```python
     # Weekly audit review
     logs = client.get_audit_logs(
         project_id=project_id,
@@ -463,7 +467,7 @@ client.delete_secret(
     for log in logs:
         if log.action == "delete" or log.failed_attempts > 3:
             send_alert(log)
-    ```python
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -494,7 +498,7 @@ client.delete_secret(
   </Step>
 
   <Step title="Update Application">
-    ```
+    ```bash
     # Remove .env file
     rm .env
 
@@ -502,14 +506,14 @@ client.delete_secret(
     echo "INFISICAL_CLIENT_ID=..." > .env
     echo "INFISICAL_CLIENT_SECRET=..." >> .env
     echo "INFISICAL_PROJECT_ID=..." >> .env
-    ```html
+    ```
   </Step>
 
   <Step title="Verify">
-    ```
+    ```bash
     # Test application loads secrets
     python -c "from mcp_server_langgraph.config import settings; print(settings.anthropic_api_key[:10])"
-    ```markdown
+    ```
   </Step>
 </Steps>
 
@@ -517,7 +521,7 @@ client.delete_secret(
 
 <AccordionGroup>
   <Accordion title="Authentication failed">
-    ```
+    ```bash
     # Verify credentials
     echo $INFISICAL_CLIENT_ID
     echo $INFISICAL_CLIENT_SECRET
@@ -536,14 +540,14 @@ client.delete_secret(
     - Service account has access
     - Project ID correct
 
-    ```
+    ```python
     # List all secrets
     secrets = client.get_all_secrets(
         project_id=project_id,
         environment="production"
     )
     print([s.secret_name for s in secrets])
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="Slow secret loading">
@@ -552,7 +556,7 @@ client.delete_secret(
     - Use Kubernetes operator for auto-sync
     - Batch secret retrieval
 
-    ```
+    ```python
     # Cache secrets
     from functools import lru_cache
 
@@ -562,7 +566,6 @@ client.delete_secret(
             project_id=project_id,
             environment="production"
         )
-    ```
     ```
   </Accordion>
 </AccordionGroup>

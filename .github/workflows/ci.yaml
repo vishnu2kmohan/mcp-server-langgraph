@@ -170,6 +170,39 @@ jobs:
           make -n validate-pre-push
           echo "✅ Makefile validate-pre-push target is valid"
 
+  xdist-enforcement:
+    name: Validate Pytest-xdist Isolation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'xdist-enforcement'
+
+      - name: Run xdist enforcement meta-tests
+        run: |
+          echo "🧪 Running pytest-xdist isolation enforcement tests..."
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "unit and not llm"
+          echo "✅ Pytest-xdist isolation patterns validated"
+
+      - name: Run xfail strict enforcement test
+        run: |
+          echo "🧪 Running xfail strict enforcement test..."
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "unit and not llm"
+          echo "✅ All xfail markers use strict=True"
+
+      - name: Run marker enforcement test
+        run: |
+          echo "🧪 Running marker enforcement test..."
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "unit and not llm"
+          echo "✅ All test files have required markers"
+
   # ============================================================================
   # TESTING (Parallelized by Python version)
   # ============================================================================

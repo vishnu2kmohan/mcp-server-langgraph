@@ -15,7 +15,7 @@ contentType: "reference"
 
 ## Version Comparison Matrix
 
-| Feature | v2.1 | v2.2 | v2.3 | v2.4 | v2.5 | v2.6 | v2.7 | v2.8 |
+| Feature | v2.8 | v2.7 | v2.6 | v2.5 | v2.4 | v2.3 | v2.2 | v2.1 |
 |---------|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
 | **Authentication & Sessions** | | | | | | | | |
 | Keycloak SSO Integration | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -23,43 +23,43 @@ contentType: "reference"
 | Session Store Architecture | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Provider Pattern | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Compliance & Security** | | | | | | | | |
-| GDPR Data Subject Rights | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SOC 2 Automation | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| HIPAA Technical Safeguards | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SLA Monitoring (99.9%) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Data Retention Policies | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Compliance Storage Backend | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GDPR Data Subject Rights | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| SOC 2 Automation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| HIPAA Technical Safeguards | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| SLA Monitoring (99.9%) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Data Retention Policies | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Compliance Storage Backend | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
 | **Testing & Quality** | | | | | | | | |
 | Unit Tests (498+) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Integration Tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Docker Integration Tests | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 100% Test Pass Rate | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Docker Integration Tests | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 100% Test Pass Rate | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Property-Based Testing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Contract Testing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Test Coverage | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% | **85%+** |
+| Test Coverage | **85%+** | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% | ~75% |
 | **Documentation** | | | | | | | | |
 | Mintlify Docs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Architecture Decision Records | 5 ADRs | 5 ADRs | 21 ADRs | 21 ADRs | 21 ADRs | 26 ADRs | 30 ADRs | 30 ADRs |
+| Architecture Decision Records | 30 ADRs | 30 ADRs | 26 ADRs | 21 ADRs | 21 ADRs | 21 ADRs | 5 ADRs | 5 ADRs |
 | **Core Features** | | | | | | | | |
-| LangGraph Version | 0.2.28 | 0.2.28 | 0.2.28 | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 |
+| LangGraph Version | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 | 0.6.10 | 0.2.28 | 0.2.28 | 0.2.28 |
 | Multi-LLM Support (LiteLLM) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | OpenFGA Authorization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Pydantic Version | V1 | V1 | V2 | V2 | V2 | V2 | V2 | V2 |
-| Type Safety Coverage | 27% | 27% | 64% | 64% | 64% | 64% | 64% | 64% |
-| Agentic Loop (GAVR) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Anthropic Best Practices | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 9.8/10 | 9.8/10 |
+| Pydantic Version | V2 | V2 | V2 | V2 | V2 | V2 | V1 | V1 |
+| Type Safety Coverage | 64% | 64% | 64% | 64% | 64% | 64% | 27% | 27% |
+| Agentic Loop (GAVR) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Anthropic Best Practices | 9.8/10 | 9.8/10 | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Secrets Management** | | | | | | | | |
 | Infisical Integration | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Infisical Docker Builds | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| 5 Installation Options | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Infisical Docker Builds | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 5 Installation Options | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Deployment** | | | | | | | | |
 | Kubernetes/Helm/Kustomize | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Multi-Cloud (GKE/EKS/AKS) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Docker Compose | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Observability** | | | | | | | | |
 | OpenTelemetry + LangSmith | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Grafana Dashboards | 7 | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
-| Prometheus Alerts | Basic | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA |
+| Grafana Dashboards | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 7 |
+| Prometheus Alerts | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | 20+ SLA | Basic |
 
 ## Release Highlights
 

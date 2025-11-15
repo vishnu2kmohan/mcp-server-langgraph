@@ -171,7 +171,7 @@ Redis provides production-grade session storage with:
   </Step>
 
   <Step title="Test Session Store">
-    ```
+    ```python
     from mcp_server_langgraph.auth.session import SessionManager
 
     # Initialize session manager
@@ -196,7 +196,7 @@ Redis provides production-grade session storage with:
 
     # Revoke session
     await session_mgr.revoke_session(session.session_id)
-    ```html
+    ```
   </Step>
 
   <Step title="Verify in Redis">
@@ -218,7 +218,7 @@ Redis provides production-grade session storage with:
 
 ### Session Lifecycle
 
-```
+```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#333','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#333','labelBoxBkgColor':'#ffffb3','labelBoxBorderColor':'#f1c40f','labelTextColor':'#333','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#333','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#fff'}}}%%
 sequenceDiagram
     participant User
@@ -242,7 +242,7 @@ sequenceDiagram
     User->>App: Logout
     App->>Redis: Delete session
     App-->>User: Clear cookie
-```bash
+```
 ### Session Configuration
 
 #### Session TTL
@@ -299,7 +299,7 @@ Access metadata:
 session = await session_mgr.get_session(session_id)
 print(f"Device: {session.metadata['device_id']}")
 print(f"Location: {session.metadata['location']}")
-```python
+```
 ### API Operations
 
 #### Create Session
@@ -340,7 +340,7 @@ else:
 sessions = await session_mgr.get_user_sessions(user_id="alice")
 for s in sessions:
     print(f"{s.session_id}: {s.created_at}")
-```python
+```
 #### Refresh Session
 
 ```
@@ -366,7 +366,7 @@ await session_mgr.revoke_session(
     session_id,
     reason="Password changed"
 )
-```python
+```
 #### Session Analytics
 
 ```
@@ -437,7 +437,7 @@ async def logout(session_id: str):
 
     # Delete session
     await session_mgr.revoke_session(session_id)
-```bash
+```
 ### Production Deployment
 
 #### High Availability
@@ -497,7 +497,7 @@ REDIS_URL=rediss://redis-session:6380/0
 ## Redis 6+ with ACL
 REDIS_USERNAME=sessions
 REDIS_PASSWORD=password
-```python
+```
 **Network isolation**:
 - Private VPC/subnet
 - Firewall rules (allow only app servers)

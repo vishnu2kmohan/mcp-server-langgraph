@@ -8,14 +8,20 @@ Related: OpenAI Codex Finding 2025-11-15 - ADR documentation test failed because
 adr/ directory was not copied to the Docker test image.
 """
 
+import gc
 from pathlib import Path
 
 import pytest
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="docker_image_contents")
 class TestDockerImageContents:
     """Validate Docker image contains required files and directories"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_adr_directory_exists(self):
         """

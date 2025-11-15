@@ -278,7 +278,8 @@ workflows:
       - deploy-production:
           requires:
             - hold-production
-```bash
+```
+
 ### Best Practices
 
 <AccordionGroup>
@@ -328,7 +329,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Run Smoke Tests">
-    ```
+    ```bash
     # After deployment, verify it works
     langgraph deployment invoke my-agent-prod \
       --input '{"messages": [{"role": "user", "content": "health check"}]}' \
@@ -337,7 +338,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Notify on Deployment">
-    ```
+    ```yaml
     - name: Notify Slack
       if: success()
       uses: slackapi/slack-github-action@v1
@@ -348,7 +349,7 @@ workflows:
           }
       env:
         SLACK_WEBHOOK_URL: $&#123;&#123; secrets.SLACK_WEBHOOK &#125;&#125;
-```bash
+    ```
   </Accordion>
 </AccordionGroup>
 
@@ -356,7 +357,7 @@ workflows:
 
 #### Automatic Rollback on Failure
 
-```
+```yaml
 - name: Deploy to Production
   id: deploy
   run: langgraph deploy my-agent-prod --tag production
@@ -378,7 +379,7 @@ workflows:
 
 #### Manual Rollback
 
-```
+```bash
 ## List revisions
 langgraph deployment list my-agent-prod
 
@@ -387,7 +388,7 @@ langgraph deployment rollback my-agent-prod --revision 42
 
 ## Or rollback to previous
 langgraph deployment rollback my-agent-prod
-```bash
+```
 ### Multi-Environment Strategy
 
 <Tabs>

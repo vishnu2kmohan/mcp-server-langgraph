@@ -15,6 +15,7 @@ Regression prevention for Anthropic Claude Code best practices compliance.
 See: https://www.anthropic.com/engineering/claude-code-best-practices
 """
 
+import gc
 import json
 import os
 from pathlib import Path
@@ -26,8 +27,13 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.xdist_group(name="claude_code_configuration")
 class TestClaudeCodeConfiguration:
     """Validate Claude Code configuration files exist and are properly structured."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:
@@ -254,8 +260,13 @@ class TestClaudeCodeConfiguration:
         )
 
 
+@pytest.mark.xdist_group(name="slash_command_quality")
 class TestSlashCommandQuality:
     """Validate slash commands have proper structure and content."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:
