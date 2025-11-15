@@ -104,7 +104,7 @@ class ClosingFenceFixer:
         for i, line in enumerate(lines, start=1):
             # Check if this line starts with ```
             if line.lstrip().startswith("```"):
-                fence_match = re.match(r'^(\s*)```(\S+)?\s*$', line)
+                fence_match = re.match(r"^(\s*)```(\S+)?\s*$", line)
 
                 if fence_match:
                     indent = fence_match.group(1)
@@ -150,7 +150,7 @@ class ClosingFenceFixer:
             print("\n⚠️  DRY RUN - No files were modified")
             print("Run without --dry-run to apply changes")
         else:
-            if self.stats['fences_fixed'] > 0:
+            if self.stats["fences_fixed"] > 0:
                 print(f"\n✅ Successfully fixed {self.stats['fences_fixed']} closing fence tags")
             else:
                 print("\n✅ No issues found - all closing fences are correct")
@@ -223,7 +223,8 @@ Why this matters:
         help="Show what would be changed without modifying files",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Verbose output",
     )

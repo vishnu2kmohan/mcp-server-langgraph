@@ -111,27 +111,37 @@ class SmartLanguageDetector:
         if SmartLanguageDetector._is_tree_structure(content):
             return BlockType.TREE_STRUCTURE
 
-        # Rule 3: Comment-only blocks
-        if SmartLanguageDetector._is_comment_only(lines):
-            return BlockType.COMMENT_ONLY
+        # Rule 3: Heredocs (bash scripts with embedded code)
+        # CHECK THIS BEFORE PROGRAMMING LANGUAGES to avoid false positives
+        # when bash scripts contain embedded Python, SQL, etc.
+        if SmartLanguageDetector._has_heredoc(content):
+            return BlockType.BASH_SCRIPT
 
-        # Rule 4: Environment variables only
-        if SmartLanguageDetector._is_env_vars_only(lines):
-            return BlockType.ENV_VARS
-
-        # Rule 5: Command output (looks like terminal output)
-        if SmartLanguageDetector._is_command_output(content):
-            return BlockType.COMMAND_OUTPUT
-
-        # Rule 6: Programming languages (high confidence only)
+        # Rule 4: Programming languages (high confidence only)
+        # CHECK THIS BEFORE COMMAND OUTPUT because code may contain error handling
+        # CHECK THIS BEFORE COMMENT-ONLY to avoid false positives on code with comments
         detected = SmartLanguageDetector._detect_programming_language(content)
         if detected:
             return detected
 
-        # Rule 7: Data formats
+        # Rule 5: Command output (after programming languages)
+        # This catches actual errors/logs, not code that handles errors
+        if SmartLanguageDetector._is_command_output(content):
+            return BlockType.COMMAND_OUTPUT
+
+        # Rule 6: Data formats (JSON, YAML, etc.)
         detected = SmartLanguageDetector._detect_data_format(content)
         if detected:
             return detected
+
+        # Rule 7: Environment variables only
+        if SmartLanguageDetector._is_env_vars_only(lines):
+            return BlockType.ENV_VARS
+
+        # Rule 8: Comment-only blocks
+        # CHECK THIS AFTER PROGRAMMING LANGUAGES to avoid misclassifying code with comments
+        if SmartLanguageDetector._is_comment_only(lines, content):
+            return BlockType.COMMENT_ONLY
 
         # Default: Plain text for mixed or uncertain content
         return BlockType.PLAIN_TEXT
@@ -143,18 +153,72 @@ class SmartLanguageDetector:
         return any(char in content for char in tree_chars)
 
     @staticmethod
-    def _is_comment_only(lines: List[str]) -> bool:
-        """Check if all lines are comments (no actual code)."""
+    def _has_heredoc(content: str) -> bool:
+        """
+        Check if content contains shell heredoc pattern.
+
+        Heredocs indicate bash/shell scripts even if they contain embedded
+        code in other languages (Python, SQL, etc.).
+
+        Examples:
+            python3 <<EOF
+            cat <<EOF
+            mysql <<-EOF
+        """
+        heredoc_patterns = [
+            r"<<\s*EOF",  # Standard heredoc
+            r"<<\s*'EOF'",  # Quoted heredoc
+            r"<<\s*\"EOF\"",  # Double-quoted heredoc
+            r"<<-\s*EOF",  # Heredoc with tab suppression
+            r"python3?\s+<<",  # Python heredoc
+            r"cat\s+<<",  # cat heredoc
+            r"mysql\s+<<",  # mysql heredoc
+            r"psql\s+<<",  # PostgreSQL heredoc
+        ]
+        return any(re.search(pattern, content) for pattern in heredoc_patterns)
+
+    @staticmethod
+    def _is_comment_only(lines: List[str], content: str) -> bool:
+        """
+        Check if all lines are comments (no actual code).
+
+        This method now handles inline comments correctly:
+        - "key: value  # comment" → NOT comment-only (has code)
+        - "# just a comment" → IS comment-only
+
+        Args:
+            lines: List of non-empty lines
+            content: Full content (used for inline comment detection)
+
+        Returns:
+            True if all lines are pure comments, False otherwise
+        """
         if not lines:
             return False
 
-        comment_patterns = [
+        # Check for inline comments pattern: non-whitespace followed by comment
+        # Examples: "key: value  # comment", "name = 'foo'  # description"
+        inline_comment_patterns = [
+            r"\S+\s+#",  # Code followed by # comment (Python/YAML/bash)
+            r"\S+\s+//",  # Code followed by // comment (JS/C++)
+            r"\S+\s+%%",  # Code followed by %% comment (Mermaid/Matlab)
+        ]
+
+        # If we find inline comments, it's NOT comment-only
+        for pattern in inline_comment_patterns:
+            if re.search(pattern, content):
+                return False
+
+        # Check if lines start with comment characters
+        comment_start_patterns = [
             r"^\s*#",  # Shell/Python comment
             r"^\s*//",  # C-style comment
             r"^\s*<!--",  # HTML comment
             r"^\s*\*",  # Block comment continuation
-            r"^\s*-\s+",  # Markdown list item (often in comment blocks)
-            r"^\s*##",  # Markdown headers (often in comment examples)
+            r"^\s*-\s+",  # Markdown list item
+            r"^\s*##",  # Markdown headers
+            r"^\s*%%",  # Mermaid/Matlab comment
+            r"^\s*---\s*$",  # YAML document separator (treat as structure, not code)
         ]
 
         for line in lines:
@@ -162,8 +226,12 @@ class SmartLanguageDetector:
             if not line.strip():
                 continue
 
+            # Skip YAML document separators
+            if line.strip() in ["---", "..."]:
+                continue
+
             # Check if line matches any comment pattern
-            is_comment = any(re.match(pattern, line) for pattern in comment_patterns)
+            is_comment = any(re.match(pattern, line) for pattern in comment_start_patterns)
 
             # If we find a non-comment line, it's not comment-only
             if not is_comment:
@@ -178,6 +246,7 @@ class SmartLanguageDetector:
             return False
 
         env_var_pattern = r"^[A-Z_][A-Z0-9_]*\s*="
+        found_env_var = False
 
         for line in lines:
             # Skip empty lines and comments
@@ -188,7 +257,10 @@ class SmartLanguageDetector:
             if not re.match(env_var_pattern, line.strip()):
                 return False
 
-        return True
+            found_env_var = True
+
+        # Only return True if we actually found at least one env var
+        return found_env_var
 
     @staticmethod
     def _is_command_output(content: str) -> bool:
@@ -226,8 +298,8 @@ class SmartLanguageDetector:
             r"\bdef\s+\w+\s*\(",
             r"\bclass\s+\w+\s*[\(:]",
             r"\basync\s+def\s+\w+",
-            r"^from\s+\w+\s+import\s+",
-            r"^import\s+\w+",
+            r"^from\s+[\w.]+\s+import\s+",  # Fixed: allow dots in module names
+            r"^import\s+[\w.]+",  # Fixed: allow dots in module names
             r"@pytest\.",
             r"@dataclass\b",
         ]
@@ -241,6 +313,7 @@ class SmartLanguageDetector:
             r"^\s*(?:if|then|else|elif|fi|for|while|do|done|case|esac)\s",
             r"^\s*function\s+\w+",
             r"(?:^|\n)\s*(?:export|source)\s+\w+",
+            r"^\.?/[\w/.-]+\.sh\s",  # Script execution: ./script.sh or /path/to/script.sh
         ]
 
         # Only tag as bash if we see actual shell constructs (not just commands)
@@ -249,20 +322,65 @@ class SmartLanguageDetector:
 
         # Check for common shell commands (but not if they're only in comments)
         shell_commands = [
-            "curl", "wget", "apt-get", "apt", "yum", "brew", "docker", "kubectl",
-            "helm", "git", "npm", "yarn", "pnpm", "pip", "uv", "cargo", "go",
-            "make", "cmake", "cd", "ls", "pwd", "mkdir", "rm", "cp", "mv",
-            "chmod", "chown", "cat", "grep", "sed", "awk", "find", "ssh",
-            "scp", "rsync", "tar", "gzip", "gunzip", "unzip", "systemctl",
-            "service", "ps", "kill", "top", "htop", "python", "node", "java",
+            "curl",
+            "wget",
+            "apt-get",
+            "apt",
+            "yum",
+            "brew",
+            "docker",
+            "kubectl",
+            "helm",
+            "git",
+            "npm",
+            "yarn",
+            "pnpm",
+            "pip",
+            "uv",
+            "cargo",
+            "go",
+            "make",
+            "cmake",
+            "cd",
+            "ls",
+            "pwd",
+            "mkdir",
+            "rm",
+            "cp",
+            "mv",
+            "chmod",
+            "chown",
+            "cat",
+            "grep",
+            "sed",
+            "awk",
+            "find",
+            "ssh",
+            "scp",
+            "rsync",
+            "tar",
+            "gzip",
+            "gunzip",
+            "unzip",
+            "systemctl",
+            "service",
+            "ps",
+            "kill",
+            "top",
+            "htop",
+            "python",
+            "node",
+            "java",
+            "echo",  # Added: echo is a very common shell command
+            "printf",  # Added: printf is also common
+            "test",  # Added: test command
+            "bash",  # Added: bash invocation
+            "sh",  # Added: sh invocation
         ]
 
         # Must have actual command execution (not just mentioned in comments)
         # Check if lines start with these commands (after optional whitespace)
-        has_shell_commands = any(
-            re.search(rf"^\s*{re.escape(cmd)}\s", content, re.MULTILINE)
-            for cmd in shell_commands
-        )
+        has_shell_commands = any(re.search(rf"^\s*{re.escape(cmd)}\s", content, re.MULTILINE) for cmd in shell_commands)
 
         # Check for shell operators (&&, ||, |, ;, etc.)
         has_shell_operators = bool(re.search(r"(?:&&|\|\||;|\|)\s*\w", content))
@@ -276,16 +394,13 @@ class SmartLanguageDetector:
 
         # Even without operators, if it has multiple shell commands on separate lines, it's bash
         if has_shell_commands:
-            command_lines = [
-                line for line in content.split("\n")
-                if line.strip() and not line.strip().startswith("#")
-            ]
+            command_lines = [line for line in content.split("\n") if line.strip() and not line.strip().startswith("#")]
 
             # Count how many lines start with shell commands
             shell_command_lines = sum(
-                1 for line in command_lines
-                if any(line.strip().startswith(f"{cmd} ") or line.strip() == cmd
-                       for cmd in shell_commands)
+                1
+                for line in command_lines
+                if any(line.strip().startswith(f"{cmd} ") or line.strip() == cmd for cmd in shell_commands)
             )
 
             # If most non-comment lines are shell commands, tag as bash
@@ -361,7 +476,7 @@ class SmartLanguageDetector:
         hcl_indicators = [
             r'^\s*resource\s+"[\w-]+"',
             r'^\s*variable\s+"[\w-]+"',
-            r'^\s*terraform\s*\{',
+            r"^\s*terraform\s*\{",
         ]
 
         if any(re.search(p, content, re.MULTILINE) for p in hcl_indicators):
@@ -375,9 +490,8 @@ class SmartLanguageDetector:
         content_stripped = content.strip()
 
         # JSON (strict detection)
-        if (
-            (content_stripped.startswith("{") and content_stripped.endswith("}"))
-            or (content_stripped.startswith("[") and content_stripped.endswith("]"))
+        if (content_stripped.startswith("{") and content_stripped.endswith("}")) or (
+            content_stripped.startswith("[") and content_stripped.endswith("]")
         ):
             # Additional check: must have JSON-like structure
             if re.search(r'"\s*:\s*["\{\[]', content):
@@ -459,7 +573,6 @@ class CodeBlockValidator:
         self.stats["blocks_found"] += len(blocks)
 
         issues_found = []
-        fixes_applied = []
 
         for block in blocks:
             issue = self._validate_block(block)
@@ -476,14 +589,16 @@ class CodeBlockValidator:
                 fixed_content, fixes = self._fix_blocks(content, blocks, issues_found)
 
                 if fixes:
-                    self.stats["files_modified"] += 1
-                    self.stats["blocks_fixed"] += len(fixes)
-
                     if self.dry_run:
+                        # Dry run: don't modify file or stats, just report
                         print(f"🔍 Would fix {file_path}:")
                         for line_num, old_tag, new_tag in fixes:
                             print(f"   Line {line_num}: '{old_tag}' → '{new_tag}'")
                     else:
+                        # Actually fix: modify file and increment stats
+                        self.stats["files_modified"] += 1
+                        self.stats["blocks_fixed"] += len(fixes)
+
                         file_path.write_text(fixed_content, encoding="utf-8")
                         print(f"✅ Fixed {file_path}:")
                         for line_num, old_tag, new_tag in fixes:
@@ -517,7 +632,7 @@ class CodeBlockValidator:
 
         for i, line in enumerate(lines, start=1):
             if line.lstrip().startswith("```"):
-                fence_match = re.match(r'^(\s*)```(\S+)?\s*$', line)
+                fence_match = re.match(r"^(\s*)```(\S+)?\s*$", line)
 
                 if fence_match:
                     if not in_block:
@@ -529,7 +644,7 @@ class CodeBlockValidator:
                     else:
                         # Closing fence
                         # Parse language tag from opening fence
-                        opening_match = re.match(r'^(\s*)```(\S+)?\s*$', current_opening_fence)
+                        opening_match = re.match(r"^(\s*)```(\S+)?\s*$", current_opening_fence)
                         opening_lang_tag = opening_match.group(2) if opening_match else None
 
                         block = CodeBlock(
@@ -570,8 +685,25 @@ class CodeBlockValidator:
                 return f"Empty block has unnecessary tag '{block.language_tag}'"
             return None
 
-        # Comment-only, tree structure, and command output should be 'text' or untagged
-        if block.detected_type in [BlockType.COMMENT_ONLY, BlockType.TREE_STRUCTURE, BlockType.COMMAND_OUTPUT]:
+        # Comment-only blocks can be tagged with text OR the language they're commenting on
+        # (e.g., bash comments can be in a ```bash block)
+        if block.detected_type == BlockType.COMMENT_ONLY:
+            # Accept text, plaintext, or common programming languages for comments
+            # This allows bash comments in bash blocks, python comments in python blocks, etc.
+            if block.language_tag and block.language_tag not in [
+                "text",
+                "plaintext",
+                "bash",
+                "python",
+                "javascript",
+                "sh",
+                "shell",
+            ]:
+                return f"Comment-only block tagged as '{block.language_tag}' (consider 'text' or language it's commenting on)"
+            return None
+
+        # Tree structure and command output should be 'text' or untagged
+        if block.detected_type in [BlockType.TREE_STRUCTURE, BlockType.COMMAND_OUTPUT]:
             if block.language_tag and block.language_tag not in ["text", "plaintext"]:
                 return f"Non-code content tagged as '{block.language_tag}', should be 'text'"
             return None
@@ -649,7 +781,7 @@ class CodeBlockValidator:
             old_fence = lines[line_idx]
 
             # Extract indentation
-            indent_match = re.match(r'^(\s*)```', old_fence)
+            indent_match = re.match(r"^(\s*)```", old_fence)
             indent = indent_match.group(1) if indent_match else ""
 
             # Create new fence
@@ -685,12 +817,12 @@ class CodeBlockValidator:
             print("\n⚠️  DRY RUN - No files were modified")
             print("Run without --dry-run to apply changes")
         elif self.fix:
-            if self.stats['blocks_fixed'] > 0:
+            if self.stats["blocks_fixed"] > 0:
                 print(f"\n✅ Successfully fixed {self.stats['blocks_fixed']} code blocks")
             else:
                 print("\n✅ No fixes needed")
         else:
-            if self.stats['blocks_untagged'] > 0:
+            if self.stats["blocks_untagged"] > 0:
                 print(f"\n⚠️  Found {self.stats['blocks_untagged']} issues")
                 print("Run with --fix to apply fixes")
             else:
@@ -751,7 +883,8 @@ def main():
         help="Preview fixes without modifying files (requires --fix)",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Verbose output",
     )
