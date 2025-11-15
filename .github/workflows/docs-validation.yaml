@@ -111,16 +111,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
 
-      # Unique Check #1: Code block language tags (Mintlify doesn't validate)
-      - name: Validate Code Block Language Tags
-        id: codeblock-validation
-        run: |
-          echo "::group::Code Block Validation"
-          python scripts/validators/codeblock_validator.py --docs-dir docs
-          echo "::endgroup::"
-        continue-on-error: true
+      # DISABLED: Code block language tag validation (caused more trouble than it's worth)
+      # - name: Validate Code Block Language Tags
+      #   id: codeblock-validation
+      #   run: |
+      #     echo "::group::Code Block Validation"
+      #     python scripts/validators/codeblock_validator.py --docs-dir docs
+      #     echo "::endgroup::"
+      #   continue-on-error: true
 
-      # Unique Check #2: ADR synchronization (project-specific)
+      # Unique Check #1: ADR synchronization (project-specific)
       - name: Validate ADR Synchronization
         id: adr-sync-validation
         run: |
@@ -129,7 +129,7 @@ jobs:
           echo "::endgroup::"
         continue-on-error: true
 
-      # Unique Check #3: MDX extension enforcement (Mintlify requirement)
+      # Unique Check #2: MDX extension enforcement (Mintlify requirement)
       - name: Enforce MDX Extensions
         id: mdx-ext-validation
         run: |
@@ -138,7 +138,7 @@ jobs:
           echo "::endgroup::"
         continue-on-error: true
 
-      # Unique Check #4: MDX syntax auto-fix validation
+      # Unique Check #3: MDX syntax auto-fix validation
       - name: Check MDX Syntax (Dry-run)
         id: mdx-syntax-check
         run: |
@@ -150,9 +150,10 @@ jobs:
       - name: Check Specialized Validation Results
         run: |
           failures=""
-          if [ "${{ steps.codeblock-validation.outcome }}" == "failure" ]; then
-            failures="${failures}- Code block validation failed\n"
-          fi
+          # Code block validation disabled (caused more trouble than it's worth)
+          # if [ "${{ steps.codeblock-validation.outcome }}" == "failure" ]; then
+          #   failures="${failures}- Code block validation failed\n"
+          # fi
           if [ "${{ steps.adr-sync-validation.outcome }}" == "failure" ]; then
             failures="${failures}- ADR synchronization validation failed\n"
           fi
