@@ -11,6 +11,9 @@ from pydantic import ValidationError
 
 from mcp_server_langgraph.mcp.server_streamable import ChatInput, SearchConversationsInput
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testthreadidvalidation")
 class TestThreadIdValidation:

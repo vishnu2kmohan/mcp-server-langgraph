@@ -17,6 +17,9 @@ from typing import List
 
 import pytest
 
+# Mark this as both unit and meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 

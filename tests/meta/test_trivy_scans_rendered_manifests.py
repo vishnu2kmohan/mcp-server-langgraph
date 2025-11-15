@@ -20,6 +20,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     """

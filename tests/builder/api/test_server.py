@@ -23,6 +23,9 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.builder.api.server import app
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def client():
@@ -490,6 +493,8 @@ def test_import_workflow_with_valid_code_returns_workflow(client):
     valid_code = """
 from langgraph.graph import StateGraph
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
 def my_node(state):
     return state
 

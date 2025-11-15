@@ -29,6 +29,9 @@ from typing import List, Tuple
 import pytest
 import yaml
 
+# Mark as unit+meta test to ensure it runs in CI (regression prevention)
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def find_mdx_files() -> List[Path]:
     """

@@ -19,6 +19,8 @@ from typing import Any, Dict
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (deployment validation)
+pytestmark = pytest.mark.unit
 # Test data
 OVERLAYS_DIR = Path(__file__).parent.parent.parent / "deployments" / "overlays"
 STAGING_GKE_DIR = OVERLAYS_DIR / "staging-gke"

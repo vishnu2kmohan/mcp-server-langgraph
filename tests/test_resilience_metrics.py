@@ -16,6 +16,9 @@ import pytest
 
 from mcp_server_langgraph.resilience import metrics
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testcircuitbreakermetrics")
 class TestCircuitBreakerMetrics:

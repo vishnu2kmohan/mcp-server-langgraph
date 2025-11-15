@@ -24,6 +24,8 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (deployment validation)
+pytestmark = pytest.mark.unit
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 DEPLOYMENTS_OVERLAYS = PROJECT_ROOT / "deployments" / "overlays"

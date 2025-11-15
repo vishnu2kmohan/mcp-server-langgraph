@@ -13,6 +13,9 @@ from typing import Callable
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="polling_helpers")
 class TestPollUntil:

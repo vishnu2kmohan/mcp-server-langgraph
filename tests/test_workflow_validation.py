@@ -14,6 +14,9 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testworkflowvalidation")
 class TestWorkflowValidation:

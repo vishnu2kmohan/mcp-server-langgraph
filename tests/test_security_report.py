@@ -10,6 +10,11 @@ import json
 import tempfile
 from pathlib import Path
 
+import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = [pytest.mark.unit]
+
 
 def test_generate_report_creates_markdown_file():
     """Test that generate_report creates a markdown report file."""

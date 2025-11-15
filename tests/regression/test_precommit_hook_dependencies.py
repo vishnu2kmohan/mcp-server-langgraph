@@ -32,6 +32,10 @@ from typing import Dict, List, Set
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
+
 try:
     import yaml
 except ImportError:

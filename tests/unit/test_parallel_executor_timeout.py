@@ -14,6 +14,9 @@ import pytest
 
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="testparallelexecutortimeouts")

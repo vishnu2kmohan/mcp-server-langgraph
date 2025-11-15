@@ -16,6 +16,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 def get_workflow_files():
     """Get all workflow YAML files."""

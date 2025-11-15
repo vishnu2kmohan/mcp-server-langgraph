@@ -9,6 +9,9 @@ import os
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.xdist_group(name="meta_tests")
 class TestSleepDurationLinter:
@@ -113,6 +116,9 @@ async def test_something():
 
         test_content = """
 import time
+
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 def test_one():
     time.sleep(1.0)  # ❌ Violation 1

@@ -18,6 +18,8 @@ from mcp.types import TextContent
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+# Mark as integration test to ensure it runs in CI (Integration test)
+pytestmark = pytest.mark.integration
 # Test authentication token (valid JWT format for testing)
 TEST_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImV4cCI6OTk5OTk5OTk5OX0.test"
 

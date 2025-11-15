@@ -22,6 +22,9 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 # Root directory of the project
 PROJECT_ROOT = Path(__file__).parent.parent
 

@@ -20,6 +20,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.fix_closing_fence_tags import ClosingFenceFixer, find_markdown_files
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="scripts_validation")
 class TestClosingFenceFixer:

@@ -40,6 +40,9 @@ import os
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.regression
 def test_ports_are_intentionally_fixed(test_infrastructure_ports):

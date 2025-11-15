@@ -18,6 +18,9 @@ import pytest
 # Import will be created
 from scripts.validators.navigation_validator import MissingFileError, NavigationError, NavigationValidator, OrphanedFileError
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testnavigationvalidator")
 class TestNavigationValidator:

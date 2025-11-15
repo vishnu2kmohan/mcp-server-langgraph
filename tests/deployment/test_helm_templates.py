@@ -22,6 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (deployment validation)
+pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 

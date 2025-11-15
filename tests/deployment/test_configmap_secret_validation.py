@@ -25,6 +25,8 @@ from typing import Dict, List, Set
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (deployment validation)
+pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 

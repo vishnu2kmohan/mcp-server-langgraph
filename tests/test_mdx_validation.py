@@ -13,6 +13,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark this as both unit and meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 # Add scripts directory to path - use absolute path resolution
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 

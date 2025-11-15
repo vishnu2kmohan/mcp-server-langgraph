@@ -11,6 +11,11 @@ Expected to FAIL until core/config.py:216 is fixed to default to "none".
 
 import gc
 
+import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 def test_default_network_mode_is_secure_none(monkeypatch):
     """

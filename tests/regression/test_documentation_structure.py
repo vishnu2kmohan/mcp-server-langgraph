@@ -20,6 +20,10 @@ from typing import Dict, List, Set
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
+
 # Project root is 3 levels up from this file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DOCS_DIR = PROJECT_ROOT / "docs"

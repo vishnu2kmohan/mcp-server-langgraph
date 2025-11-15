@@ -14,6 +14,9 @@ import pytest
 
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testredisurlencoding")
 class TestRedisURLEncoding:

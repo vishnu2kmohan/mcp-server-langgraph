@@ -15,6 +15,9 @@ import pytest
 
 from scripts.validators.mdx_extension_validator import ExtensionError, InvalidExtensionError, MDXExtensionValidator
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testmdxextensionvalidator")
 class TestMDXExtensionValidator:

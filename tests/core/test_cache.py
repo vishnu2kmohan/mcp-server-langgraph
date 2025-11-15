@@ -17,6 +17,9 @@ import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from mcp_server_langgraph.core.cache import (

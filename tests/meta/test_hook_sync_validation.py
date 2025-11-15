@@ -25,6 +25,9 @@ from typing import List
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.xdist_group(name="testprepushhooksync")
 class TestPrePushHookSync:

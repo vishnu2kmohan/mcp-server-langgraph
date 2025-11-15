@@ -23,6 +23,9 @@ import pytest
 
 from mcp_server_langgraph.builder.codegen.generator import CodeGenerator, EdgeDefinition, NodeDefinition, WorkflowDefinition
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def generator():

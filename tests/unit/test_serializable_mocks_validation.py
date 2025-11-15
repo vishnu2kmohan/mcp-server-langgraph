@@ -25,6 +25,9 @@ from pydantic import BaseModel
 
 from tests.fixtures.serializable_mocks import SerializableLLMMock, SerializableToolMock
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testserializablellmmockvalidation")
 class TestSerializableLLMMockValidation:

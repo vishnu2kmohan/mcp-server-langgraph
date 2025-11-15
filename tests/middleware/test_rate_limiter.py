@@ -37,6 +37,9 @@ from mcp_server_langgraph.middleware.rate_limiter import (
     setup_rate_limiting,
 )
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_request_no_auth():

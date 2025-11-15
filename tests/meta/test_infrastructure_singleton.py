@@ -31,6 +31,9 @@ from unittest.mock import patch
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="testinfrastructuresingleton")

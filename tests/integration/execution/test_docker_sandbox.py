@@ -608,7 +608,9 @@ except Exception as e:
         assert "TMP_WRITABLE" in result.stdout, "/tmp should be writable via tmpfs"  # nosec B108
         assert "TMP_FAILED" not in result.stdout
 
-    @pytest.mark.xfail(reason="Network allowlist mode not implemented - TDD RED phase (TODO: docker_sandbox.py line 271)")
+    @pytest.mark.xfail(
+        strict=True, reason="Network allowlist mode not implemented - TDD RED phase (TODO: docker_sandbox.py line 271)"
+    )
     def test_network_allowlist_mode_blocks_unlisted_domains(self, docker_available):
         """
         Test that network allowlist mode blocks access to unlisted domains.

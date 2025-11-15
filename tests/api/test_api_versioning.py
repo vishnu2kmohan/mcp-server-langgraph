@@ -16,22 +16,60 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def test_client(monkeypatch):
     """
-    FastAPI TestClient using the actual production app with mocked Keycloak.
+    FastAPI TestClient using the actual production app with mocked authentication.
 
-    This tests the real router registration while preventing Keycloak connection
-    attempts that would fail in CI environments.
+    This tests the real router registration while preventing authentication failures
+    in test environments.
 
     TDD Context:
-    - RED (Before): Tests fail with "httpx.ConnectError: All connection attempts failed"
-    - GREEN (After): Keycloak client mocked, tests check API versioning only
-    - REFACTOR: Proper dependency mocking pattern for contract tests
-    """
-    # Set environment variable to skip authentication
+    - RED (Before): Tests fail with 401/403 authentication errors
+    - GREEN (After): Authentication properly overridden, tests validate versioning
+    - REFACTOR: Use dependency_overrides for pytest-xdist compatibility
 
-    # Import app after setting environment variables
+    PYTEST-XDIST FIX (2025-11-15):
+    - Use app.dependency_overrides instead of environment variables
+    - Follows same pattern as test_api_keys_endpoints.py and test_service_principals_endpoints.py
+    - Proper cleanup to prevent xdist worker pollution
+    """
+    import importlib
+
+    # Re-import middleware fresh (prevents singleton pollution in pytest-xdist)
+    from mcp_server_langgraph import auth
+
+    # Import app
     from mcp_server_langgraph.mcp.server_streamable import app
 
-    return TestClient(app)
+    importlib.reload(auth.middleware)
+    middleware = auth.middleware
+
+    from fastapi.security import HTTPAuthorizationCredentials
+
+    # Mock user for versioning tests
+    mock_user = {
+        "user_id": "test-user",
+        "keycloak_id": "test-keycloak-id",
+        "username": "test",
+        "email": "test@example.com",
+    }
+
+    # Override authentication dependencies
+    # Must happen BEFORE creating TestClient
+    app.dependency_overrides[middleware.bearer_scheme] = lambda: HTTPAuthorizationCredentials(
+        scheme="Bearer", credentials="mock_token_for_testing"
+    )
+
+    async def override_get_current_user():
+        return mock_user
+
+    app.dependency_overrides[middleware.get_current_user] = override_get_current_user
+
+    # Create TestClient
+    client = TestClient(app, raise_server_exceptions=False)
+
+    yield client
+
+    # Cleanup - prevent pollution across pytest-xdist workers
+    app.dependency_overrides.clear()
 
 
 @pytest.mark.unit
@@ -48,41 +86,42 @@ class TestAPIVersionMetadata:
         """API should expose version metadata at /api/version"""
         response = test_client.get("/api/version")
 
-        # Should exist (not 404)
-        assert response.status_code in [
-            200,
-            401,
-            403,
-        ], f"Version endpoint not found or unexpected status: {response.status_code}"
+        # Should return 200 (authentication properly overridden in fixture)
+        assert response.status_code == 200, (
+            f"Version endpoint should return 200, got {response.status_code}. " f"Response: {response.text}"
+        )
 
     def test_version_metadata_structure(self, test_client):
         """Version metadata should follow standard structure"""
         response = test_client.get("/api/version")
 
-        if response.status_code == 200:
-            data = response.json()
+        # Should return 200 (authentication properly overridden)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
 
-            # Should contain semantic version
-            assert "version" in data, "Missing 'version' field"
-            assert "api_version" in data, "Missing 'api_version' field"
+        data = response.json()
 
-            # Version should be semantic (MAJOR.MINOR.PATCH)
-            version = data["version"]
-            parts = version.split(".")
-            assert len(parts) >= 3, f"Version should be semantic (X.Y.Z), got: {version}"
+        # Should contain semantic version
+        assert "version" in data, "Missing 'version' field"
+        assert "api_version" in data, "Missing 'api_version' field"
+
+        # Version should be semantic (MAJOR.MINOR.PATCH)
+        version = data["version"]
+        parts = version.split(".")
+        assert len(parts) >= 3, f"Version should be semantic (X.Y.Z), got: {version}"
 
     def test_openapi_version_consistency(self, test_client):
         """OpenAPI schema version should match /api/version"""
         openapi_response = test_client.get("/openapi.json")
-        assert openapi_response.status_code == 200
+        assert openapi_response.status_code == 200, f"OpenAPI should return 200, got {openapi_response.status_code}"
 
         openapi = openapi_response.json()
         openapi_version = openapi.get("info", {}).get("version")
 
         version_response = test_client.get("/api/version")
-        if version_response.status_code == 200:
-            version_data = version_response.json()
-            assert openapi_version == version_data.get("version"), "OpenAPI version must match /api/version"
+        assert version_response.status_code == 200, f"Version endpoint should return 200, got {version_response.status_code}"
+
+        version_data = version_response.json()
+        assert openapi_version == version_data.get("version"), "OpenAPI version must match /api/version"
 
 
 @pytest.mark.unit
@@ -154,25 +193,24 @@ class TestVersionNegotiation:
 
     def test_version_header_accepted(self, test_client):
         """API should accept X-API-Version header"""
-        # Make request with version header to a versioned endpoint
-        response = test_client.get("/api/v1/api-keys/", headers={"X-API-Version": "1.0"})
+        # Make request with version header to /api/version (doesn't require additional deps)
+        response = test_client.get("/api/version", headers={"X-API-Version": "1.0"})
 
-        # Should not return 400 (bad request) due to header
-        assert response.status_code != 400, "X-API-Version header should be accepted"
+        # Should return 200 (version endpoint accessible, header doesn't break it)
+        assert response.status_code == 200, "X-API-Version header should be accepted"
 
     def test_unsupported_version_returns_error(self, test_client):
-        """Requesting unsupported version should return clear error"""
-        # Request future version that doesn't exist
-        response = test_client.get("/api/v1/api-keys/", headers={"X-API-Version": "99.0"})
+        """Requesting unsupported version should return clear error or be ignored"""
+        # Request future version that doesn't exist on /api/version
+        response = test_client.get("/api/version", headers={"X-API-Version": "99.0"})
 
-        # Should either ignore (default to current) or return 400/406
-        # For now, we accept that it might be ignored
+        # Most APIs ignore unsupported version headers and use current version
+        # Some return 400 (bad request) or 406 (not acceptable)
+        # Using /api/version ensures we don't get 401/403 from missing dependencies
         assert response.status_code in [
-            200,
-            400,
-            401,
-            403,
-            406,
+            200,  # Ignores unsupported version, uses current (most common)
+            400,  # Bad request for unsupported version
+            406,  # Not acceptable for unsupported version
         ], f"Unexpected status for unsupported version: {response.status_code}"
 
 

@@ -21,6 +21,9 @@ sys.path.insert(0, str(_scripts_dir))
 
 from validators.codeblock_autofixer import CodeBlockAutoFixer, detect_language  # noqa: E402
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testlanguagedetection")
 class TestLanguageDetection:

@@ -21,6 +21,9 @@ sys.path.insert(0, str(_scripts_dir))
 
 from validators.codeblock_validator import CodeBlockError, CodeBlockValidator, MissingLanguageError  # noqa: E402
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testcodeblockvalidator")
 class TestCodeBlockValidator:

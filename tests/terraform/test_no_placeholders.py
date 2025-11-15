@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI (infrastructure validation)
+pytestmark = pytest.mark.unit
 # Define project root relative to test file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 TERRAFORM_DIR = PROJECT_ROOT / "terraform"

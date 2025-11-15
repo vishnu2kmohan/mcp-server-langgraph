@@ -12,6 +12,11 @@ import gc
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = [pytest.mark.unit]
+
 
 def find_autouse_fixtures(test_dir: Path) -> Dict[str, List[Tuple[str, int]]]:
     """

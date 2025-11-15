@@ -357,7 +357,7 @@ class TestGDPRProductionGuard:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.xfail(reason="Production guard not yet implemented - TDD test written before implementation")
+    @pytest.mark.xfail(strict=True, reason="Production guard not yet implemented - TDD test written before implementation")
     def test_production_guard_triggers(self, monkeypatch):
         """
         Test that production guard raises error when ENVIRONMENT=production.

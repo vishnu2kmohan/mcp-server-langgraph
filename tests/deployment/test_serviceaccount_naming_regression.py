@@ -25,6 +25,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
 STAGING_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "staging-gke"

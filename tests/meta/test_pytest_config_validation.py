@@ -20,6 +20,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def test_pytest_addopts_flags_have_required_plugins():
     """

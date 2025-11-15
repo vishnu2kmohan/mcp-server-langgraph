@@ -27,6 +27,9 @@ from validators.frontmatter_validator import (  # noqa: E402
     MissingRequiredFieldError,
 )
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testfrontmattervalidator")
 class TestFrontmatterValidator:

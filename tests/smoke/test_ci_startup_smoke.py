@@ -20,6 +20,9 @@ import sys
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.smoke
 @pytest.mark.xdist_group(name="ci_startup_smoke_tests")

@@ -17,6 +17,8 @@ from typing import List, Set
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (deployment validation)
+pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 PRODUCTION_OVERLAYS = [
     REPO_ROOT / "deployments" / "overlays" / "production-gke",

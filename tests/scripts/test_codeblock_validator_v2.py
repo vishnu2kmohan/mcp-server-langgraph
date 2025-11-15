@@ -25,6 +25,9 @@ import scripts.validators.codeblock_validator_v2
 importlib.reload(scripts.validators.codeblock_validator_v2)  # Force reload to get latest changes
 from scripts.validators.codeblock_validator_v2 import BlockType, CodeBlock, CodeBlockValidator, SmartLanguageDetector
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="scripts_validation")
 class TestSmartLanguageDetectorBash:
@@ -1012,6 +1015,8 @@ class TestSmartLanguageDetectorEdgeCases:
             # Check token expiration
             python3 <<EOF
             import jwt
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
             token = "YOUR_JWT_TOKEN"
             decoded = jwt.decode(token, options={"verify_signature": False})
             print(f"Expires: {decoded.get('exp')}")

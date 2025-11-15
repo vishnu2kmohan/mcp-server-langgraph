@@ -21,6 +21,9 @@ from typing import Dict, List, Optional
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (infrastructure validation)
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testciworkflowterraformsetup")
 class TestCIWorkflowTerraformSetup:

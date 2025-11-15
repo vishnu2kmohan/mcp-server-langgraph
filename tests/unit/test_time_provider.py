@@ -15,6 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 # Test the Protocol definition
 def test_time_provider_protocol_defines_required_methods():

@@ -13,6 +13,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationCriterion, VerificationResult, verify_output
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def output_verifier():

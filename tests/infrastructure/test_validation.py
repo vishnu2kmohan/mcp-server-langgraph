@@ -11,6 +11,9 @@ import os
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI (infrastructure validation)
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testphase1validation")
 class TestPhase1Validation:

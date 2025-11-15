@@ -16,6 +16,9 @@ import pytest
 
 from scripts.validators.todo_audit import AuditResult, TodoAuditor, TodoMarker
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testtodoauditor")
 class TestTodoAuditor:

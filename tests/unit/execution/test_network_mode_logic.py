@@ -8,6 +8,11 @@ These tests don't require Docker to be installed.
 import gc
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 def test_allowlist_mode_fails_closed_with_domains():
     """

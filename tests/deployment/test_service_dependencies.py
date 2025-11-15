@@ -19,6 +19,9 @@ from typing import Any, Dict, List, Set
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 STAGING_GKE_DIR = OVERLAYS_DIR / "staging-gke"

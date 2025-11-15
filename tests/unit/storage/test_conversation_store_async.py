@@ -37,6 +37,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 def test_conversation_store_uses_async_redis_client():
     """

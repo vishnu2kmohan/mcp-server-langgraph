@@ -22,6 +22,9 @@ import yaml
 
 from tests.conftest import requires_tool
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Kustomize Configuration Tests
 # ==============================================================================

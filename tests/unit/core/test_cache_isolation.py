@@ -16,6 +16,11 @@ import gc
 import os
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 def test_api_key_cache_uses_separate_database(monkeypatch):
     """

@@ -13,6 +13,9 @@ import pytest
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="unit_provider_credentials_tests")
 class TestProviderCredentialSetup:

@@ -15,6 +15,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testsecuritycontexts")
 class TestSecurityContexts:

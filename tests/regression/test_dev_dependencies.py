@@ -19,6 +19,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI (regression prevention)
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def get_all_dependencies() -> set[str]:
     """

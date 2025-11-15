@@ -12,6 +12,9 @@ import pytest
 
 from mcp_server_langgraph.core.security import sanitize_for_logging
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testlogsanitization")
 class TestLogSanitization:

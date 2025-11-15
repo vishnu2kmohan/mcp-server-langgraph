@@ -13,6 +13,9 @@ from typing import List, Set
 
 import pytest
 
+# Mark this as both unit and meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.xdist_group(name="testgitignorevalidation")
 class TestGitignoreValidation:

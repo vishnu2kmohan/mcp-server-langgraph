@@ -19,6 +19,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def test_keycloak_realm_import_file_exists():
     """

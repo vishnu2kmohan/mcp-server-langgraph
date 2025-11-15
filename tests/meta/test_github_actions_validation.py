@@ -16,6 +16,9 @@ from typing import Dict, List
 import pytest
 import yaml
 
+# Mark as unit+meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.mark.xdist_group(name="testgithubactionsversions")
 class TestGitHubActionsVersions:

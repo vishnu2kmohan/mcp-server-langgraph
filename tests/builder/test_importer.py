@@ -22,6 +22,9 @@ import pytest
 from mcp_server_langgraph.builder.importer import import_from_code, import_from_file, validate_import
 from mcp_server_langgraph.builder.workflow import WorkflowBuilder
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def sample_langgraph_code():
@@ -632,6 +635,8 @@ def test_import_handles_different_layout_algorithms():
     # Arrange
     code = """
 from langgraph.graph import StateGraph
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
 def n(s): return s
 def c():
     g = StateGraph(dict)

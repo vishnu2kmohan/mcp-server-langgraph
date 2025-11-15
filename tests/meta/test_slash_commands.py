@@ -21,6 +21,9 @@ from typing import Dict, List, Set
 
 import pytest
 
+# Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 class TestSlashCommands:
     """Validate slash commands are properly structured."""

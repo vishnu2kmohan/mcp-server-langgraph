@@ -15,6 +15,9 @@ import pytest
 
 from scripts.validators.image_validator import ImageError, ImageValidator, InvalidImageFormatError, MissingImageError
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testimagevalidator")
 class TestImageValidator:

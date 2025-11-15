@@ -14,6 +14,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testgitleaksconfig")
 class TestGitleaksConfig:
