@@ -104,6 +104,11 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
     elif name == "api":
         # Allow access to api submodule for importlib.reload() scenarios
         # Used in tests/regression/test_bearer_scheme_isolation.py
+        # Prevent recursion: if api module is already being imported, return it from sys.modules
+        module_name = f"{__name__}.api"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
         import mcp_server_langgraph.api as api_module
 
         return api_module
