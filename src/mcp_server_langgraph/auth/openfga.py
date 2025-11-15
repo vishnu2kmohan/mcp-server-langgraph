@@ -127,7 +127,7 @@ class OpenFGAClient:
         timeout=30,
         fallback=lambda self, *args, **kwargs: self._circuit_breaker_fallback(*args, **kwargs),
     )
-    @retry_with_backoff(max_attempts=3, exponential_base=1.5)
+    @retry_with_backoff()  # Uses global config (prod: 3 attempts, test: 1 attempt for fast tests)
     @with_timeout(operation_type="auth")
     @with_bulkhead(resource_type="openfga")
     async def check_permission(
@@ -138,7 +138,7 @@ class OpenFGAClient:
 
         Protected by:
         - Circuit breaker: Fail-closed (deny) by default when OpenFGA is down (10 failures → open, 30s timeout)
-        - Retry logic: Up to 3 attempts with 1.5x exponential backoff (1s, 1.5s, 2.25s)
+        - Retry logic: Configurable via global resilience config (default: 3 attempts with exponential backoff)
         - Timeout: 5s timeout for auth operations
         - Bulkhead: Limit to 50 concurrent auth checks
 
@@ -216,7 +216,7 @@ class OpenFGAClient:
                     )
 
     @circuit_breaker(name="openfga")
-    @retry_with_backoff(max_attempts=3)
+    @retry_with_backoff()  # Uses global config (prod: 3 attempts, test: 1 attempt for fast tests)
     @with_timeout(operation_type="auth")
     async def write_tuples(self, tuples: List[Dict[str, str]]) -> None:
         """
@@ -224,7 +224,7 @@ class OpenFGAClient:
 
         Protected by:
         - Circuit breaker: Fail fast if OpenFGA is down
-        - Retry logic: Up to 3 attempts (writes are idempotent)
+        - Retry logic: Configurable via global resilience config (default: 3 attempts, writes are idempotent)
         - Timeout: 5s timeout for auth operations
 
         Args:
