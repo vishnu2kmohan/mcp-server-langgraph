@@ -5,6 +5,7 @@ Following TDD principles - these tests define the expected behavior
 before implementation.
 """
 
+import gc
 import json
 import tempfile
 from pathlib import Path

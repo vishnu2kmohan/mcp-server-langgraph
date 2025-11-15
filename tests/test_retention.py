@@ -4,6 +4,7 @@ Tests for Data Retention Service (GDPR Article 5(1)(e) Storage Limitation)
 Covers automated data retention policies and cleanup schedules.
 """
 
+import gc
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
@@ -54,8 +55,13 @@ def sample_config():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testretentionpolicy")
 class TestRetentionPolicy:
     """Test RetentionPolicy model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_retention_policy_creation(self):
         """Test creating retention policy"""
@@ -81,8 +87,13 @@ class TestRetentionPolicy:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testretentionresult")
 class TestRetentionResult:
     """Test RetentionResult model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_retention_result_creation(self):
         """Test creating retention result"""
@@ -112,8 +123,13 @@ class TestRetentionResult:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testdataretentionserviceinit")
 class TestDataRetentionServiceInit:
     """Test DataRetentionService initialization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_init_with_defaults(self):
         """Test initialization with default parameters"""
@@ -176,8 +192,13 @@ class TestDataRetentionServiceInit:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsessioncleanup")
 class TestSessionCleanup:
     """Test session cleanup functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cleanup_sessions_no_session_store(self):
@@ -250,8 +271,13 @@ class TestSessionCleanup:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconversationcleanup")
 class TestConversationCleanup:
     """Test conversation cleanup functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cleanup_conversations(self, sample_config):
@@ -289,8 +315,13 @@ class TestConversationCleanup:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testauditlogcleanup")
 class TestAuditLogCleanup:
     """Test audit log cleanup functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cleanup_audit_logs(self, sample_config):
@@ -322,8 +353,13 @@ class TestAuditLogCleanup:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrunallcleanups")
 class TestRunAllCleanups:
     """Test running all cleanup policies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_run_all_cleanups(self, mock_session_store, sample_config):
@@ -367,8 +403,13 @@ class TestRunAllCleanups:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testretentionmetrics")
 class TestRetentionMetrics:
     """Test retention metrics tracking"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_metrics_tracked_on_cleanup(self, mock_session_store, sample_config):
@@ -408,8 +449,13 @@ class TestRetentionMetrics:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testretentionlogging")
 class TestRetentionLogging:
     """Test retention logging and audit trail"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cleanup_logged(self, mock_session_store, sample_config):
@@ -449,8 +495,13 @@ class TestRetentionLogging:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testretentioncompliance")
 class TestRetentionCompliance:
     """Test GDPR and SOC 2 compliance aspects"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gdpr_storage_limitation(self, sample_config):
         """Test compliance with GDPR Article 5(1)(e) storage limitation"""
@@ -480,8 +531,13 @@ class TestRetentionCompliance:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testconversationstorageintegration")
 class TestConversationStorageIntegration:
     """Test conversation storage backend integration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_init_with_conversation_store(self, mock_conversation_store):
         """Test initialization with conversation store"""
@@ -530,8 +586,13 @@ class TestConversationStorageIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testauditlogstorageintegration")
 class TestAuditLogStorageIntegration:
     """Test audit log storage backend integration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_init_with_audit_log_store(self, mock_audit_log_store):
         """Test initialization with audit log store"""
@@ -604,8 +665,13 @@ class TestAuditLogStorageIntegration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testfullstoragebackendintegration")
 class TestFullStorageBackendIntegration:
     """Test complete storage backend integration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_init_with_all_stores(self, mock_session_store, mock_conversation_store, mock_audit_log_store):
         """Test initialization with all storage backends"""

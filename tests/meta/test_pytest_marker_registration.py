@@ -11,6 +11,7 @@ See: https://docs.pytest.org/en/stable/how-to/mark.html
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 from typing import Set

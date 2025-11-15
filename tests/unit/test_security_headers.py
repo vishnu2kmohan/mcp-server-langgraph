@@ -4,11 +4,20 @@ This module tests the sanitization of user-controlled data in HTTP headers,
 specifically preventing CWE-113 (HTTP Response Splitting) vulnerabilities.
 """
 
+import gc
+
+import pytest
+
 from mcp_server_langgraph.core.security import sanitize_header_value
 
 
+@pytest.mark.xdist_group(name="testheadersanitization")
 class TestHeaderSanitization:
     """Test suite for HTTP header sanitization to prevent CWE-113"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sanitize_header_value_removes_cr_characters(self):
         """Test that carriage return (CR) characters are removed"""
@@ -137,8 +146,13 @@ class TestHeaderSanitization:
         assert "\n" not in sanitized
 
 
+@pytest.mark.xdist_group(name="testheadersanitizationforfilenames")
 class TestHeaderSanitizationForFilenames:
     """Test header sanitization specifically for Content-Disposition filenames"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sanitize_for_content_disposition_filename(self):
         """Test sanitization for Content-Disposition filename parameter"""
@@ -190,8 +204,13 @@ class TestHeaderSanitizationForFilenames:
         assert len(safe_username) > 0
 
 
+@pytest.mark.xdist_group(name="testintegrationwithgdprendpoint")
 class TestIntegrationWithGDPREndpoint:
     """Integration tests for header security in GDPR data export endpoint"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gdpr_export_filename_is_safe(self):
         """Test that GDPR export endpoint uses sanitized filenames"""

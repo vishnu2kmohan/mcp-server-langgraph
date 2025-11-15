@@ -9,6 +9,7 @@ References:
 - pytest best practices: Plugins should not block informational commands
 """
 
+import gc
 import subprocess
 import sys
 from pathlib import Path
@@ -16,8 +17,13 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.xdist_group(name="testpluginclimodeguards")
 class TestPluginCLIModeGuards:
     """Validate that pytest plugins don't interfere with CLI informational modes"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_plugin_allows_help_command(self):

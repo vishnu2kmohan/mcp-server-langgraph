@@ -88,7 +88,6 @@ class TestServicePrincipalTestIsolation:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
-        import gc
 
         gc.collect()
 
@@ -238,12 +237,17 @@ class TestServicePrincipalTestIsolation:
 
 @pytest.mark.regression
 @pytest.mark.xdist_isolation
+@pytest.mark.xdist_group(name="testserviceprincipalfixtureconfiguration")
 class TestServicePrincipalFixtureConfiguration:
     """
     Tests for service principal fixture configuration best practices.
 
     Validates fixtures follow the patterns that prevent pytest-xdist issues.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sp_test_client_fixture_exists_in_test_file(self):
         """

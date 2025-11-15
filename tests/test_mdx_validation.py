@@ -6,6 +6,7 @@ This test suite follows TDD principles to ensure MDX syntax errors
 are caught and fixed correctly, preventing regressions.
 """
 
+import gc
 import sys
 import tempfile
 from pathlib import Path
@@ -15,11 +16,17 @@ import pytest
 # Add scripts directory to path - use absolute path resolution
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+
 from fix_mdx_syntax import fix_code_block_closings  # noqa: E402
 
 
+@pytest.mark.xdist_group(name="testcodeblockclosingfixes")
 class TestCodeBlockClosingFixes:
     """Test fixes for malformed code block closings."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_fixes_duplicate_lang_after_closing(self):
         """Test Pattern 1: ``` followed by ```bash on next line."""
@@ -137,8 +144,13 @@ test content
             assert f"```{lang}\n<Note>" not in fixed
 
 
+@pytest.mark.xdist_group(name="testrealworldexamples")
 class TestRealWorldExamples:
     """Test cases based on actual errors found in the documentation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_api_keys_pattern(self):
         """Test the pattern found in api-keys.mdx."""
@@ -202,8 +214,13 @@ import httpx
         assert "```bash\n    <Note>" not in fixed
 
 
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Test edge cases and potential issues."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_code_block_with_title(self):
         """Test that labeled code blocks are preserved."""
@@ -255,8 +272,13 @@ def temp_mdx_file():
     Path(f.name).unlink(missing_ok=True)
 
 
+@pytest.mark.xdist_group(name="testfileoperations")
 class TestFileOperations:
     """Test file reading and writing operations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_can_read_and_write_file(self, temp_mdx_file):
         """Test basic file I/O."""

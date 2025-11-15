@@ -300,6 +300,10 @@ class TestRateLimitKeyGeneration:
 class TestRateLimitForTier:
     """Test tier-based rate limit determination"""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_get_rate_limit_for_each_tier(self):
         """Test getting rate limit for each tier"""
         assert get_rate_limit_for_tier("anonymous") == "10/minute"

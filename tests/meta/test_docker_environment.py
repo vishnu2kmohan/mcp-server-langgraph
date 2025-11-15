@@ -16,6 +16,7 @@ Related Issues:
 - ModuleNotFoundError: No module named 'fix_mdx_syntax' (2025-11-14)
 """
 
+import gc
 import os
 from pathlib import Path
 
@@ -36,8 +37,13 @@ def project_root():
     raise RuntimeError("Cannot find project root")
 
 
+@pytest.mark.xdist_group(name="testdockerenvironmentsetup")
 class TestDockerEnvironmentSetup:
     """Test that Docker environment has required directories."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_scripts_directory_exists(self, project_root):
         """
@@ -101,8 +107,13 @@ class TestDockerEnvironmentSetup:
             assert True, "Running in Docker test environment"
 
 
+@pytest.mark.xdist_group(name="testdockerfiletestconfiguration")
 class TestDockerfileTestConfiguration:
     """Test that Dockerfile.test is properly configured."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dockerfile_test_exists(self, project_root):
         """Test that docker/Dockerfile.test exists."""
@@ -166,8 +177,13 @@ class TestDockerfileTestConfiguration:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockerimageassets")
 class TestDockerImageAssets:
     """Integration tests for built Docker images."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(os.getenv("SKIP_DOCKER_BUILD_TESTS") == "true", reason="Docker build tests disabled")
     def test_docker_test_image_has_scripts(self):

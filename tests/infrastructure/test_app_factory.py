@@ -10,12 +10,19 @@ Following TDD:
 3. Verify no regressions - REFACTOR
 """
 
+import gc
+
 import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testappfactory")
 class TestAppFactory:
     """Test the FastAPI app factory function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_app_basic(self):
         """Test creating basic FastAPI app"""
@@ -67,8 +74,13 @@ class TestAppFactory:
         assert hasattr(app, "middleware_stack") or hasattr(app, "user_middleware")
 
 
+@pytest.mark.xdist_group(name="testmiddlewarefactory")
 class TestMiddlewareFactory:
     """Test middleware creation functions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_cors_middleware(self):
         """Test creating CORS middleware"""
@@ -105,8 +117,13 @@ class TestMiddlewareFactory:
         # (not implemented yet - future work)
 
 
+@pytest.mark.xdist_group(name="testlifespanmanager")
 class TestLifespanManager:
     """Test application lifespan management"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_lifespan_context_manager(self):
@@ -130,8 +147,13 @@ class TestLifespanManager:
         assert lifespan is not None
 
 
+@pytest.mark.xdist_group(name="testopenapicustomization")
 class TestOpenAPICustomization:
     """Test OpenAPI schema customization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_customize_openapi_schema(self):
         """Test OpenAPI schema customization"""
@@ -157,8 +179,13 @@ class TestOpenAPICustomization:
         assert schema is not None
 
 
+@pytest.mark.xdist_group(name="testappconfiguration")
 class TestAppConfiguration:
     """Test app configuration utilities"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_configure_app_for_test(self):
         """Test configuring app for test environment"""
@@ -185,8 +212,13 @@ class TestAppConfiguration:
         assert app is not None
 
 
+@pytest.mark.xdist_group(name="testtransportadapters")
 class TestTransportAdapters:
     """Test transport adapter utilities"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_stdio_adapter(self):
         """Test creating STDIO transport adapter"""
@@ -205,8 +237,13 @@ class TestTransportAdapters:
         assert adapter is not None
 
 
+@pytest.mark.xdist_group(name="testappfactoryintegration")
 class TestAppFactoryIntegration:
     """Test integration between app factory and existing code"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_app_factory_compatible_with_server_streamable(self):
         """Test that factory is compatible with existing server"""
@@ -227,8 +264,13 @@ class TestAppFactoryIntegration:
         assert hasattr(app, "__call__")
 
 
+@pytest.mark.xdist_group(name="testappfactorydocumentation")
 class TestAppFactoryDocumentation:
     """Test that infrastructure functions have good documentation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_app_has_docstring(self):
         """Test that create_app has comprehensive docstring"""

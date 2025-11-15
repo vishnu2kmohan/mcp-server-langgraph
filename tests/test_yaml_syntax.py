@@ -8,14 +8,20 @@ Following TDD principles:
 3. REFACTOR: Add pre-commit hooks to prevent regressions
 """
 
+import gc
 from pathlib import Path
 
 import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testprecommitconfigsyntax")
 class TestPreCommitConfigSyntax:
     """Test pre-commit configuration files have valid YAML syntax."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_pre_commit_requirements_check_valid_yaml(self):
         """
@@ -112,8 +118,13 @@ class TestPreCommitConfigSyntax:
                         assert "\n" in entry, "Multiline entry should contain newline characters"
 
 
+@pytest.mark.xdist_group(name="testkubernetesyamlsyntax")
 class TestKubernetesYAMLSyntax:
     """Test Kubernetes manifest YAML files have valid syntax."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_templates_directory_exists(self):
         """Verify Helm templates directory exists."""
@@ -150,8 +161,13 @@ class TestKubernetesYAMLSyntax:
                 pytest.fail(f"YAML parsing error in {kust_file}: {e}")
 
 
+@pytest.mark.xdist_group(name="testyamlfileencoding")
 class TestYAMLFileEncoding:
     """Test YAML files use correct encoding and no BOM."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_yaml_files_utf8_no_bom(self):
         """Test that YAML files are UTF-8 without BOM."""
@@ -172,8 +188,13 @@ class TestYAMLFileEncoding:
                     assert first_bytes != b"\xef\xbb\xbf", f"{yaml_file} should not have UTF-8 BOM"
 
 
+@pytest.mark.xdist_group(name="testyamlindentation")
 class TestYAMLIndentation:
     """Test YAML files follow consistent indentation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_yaml_uses_2_space_indentation(self):
         """Test that YAML files use 2-space indentation (not tabs)."""

@@ -4,14 +4,21 @@ Unit tests for conversation metadata store
 Tests in-memory backend for conversation tracking.
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.core.storage.conversation_store import ConversationMetadata, ConversationStore
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconversationstore")
 class TestConversationStore:
     """Test suite for ConversationStore"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def store(self):
@@ -160,8 +167,13 @@ class TestConversationStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconversationmetadata")
 class TestConversationMetadata:
     """Test ConversationMetadata dataclass"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_metadata_creation(self):
         """Test creating metadata"""

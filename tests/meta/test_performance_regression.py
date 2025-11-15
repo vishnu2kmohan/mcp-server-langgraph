@@ -10,6 +10,7 @@ TDD Approach:
 3. Verify this test passes
 """
 
+import gc
 import subprocess
 import time
 from pathlib import Path
@@ -17,8 +18,13 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.xdist_group(name="testtimeouttestperformance")
 class TestTimeoutTestPerformance:
     """Validate that timeout tests execute quickly (CODEX Finding #2)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_timeout_tests_complete_within_2_seconds(self):
@@ -112,8 +118,13 @@ class TestTimeoutTestPerformance:
         )
 
 
+@pytest.mark.xdist_group(name="testtimebudgets")
 class TestTimeBudgets:
     """Enforce per-test time budgets to prevent performance regressions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_unit_tests_complete_within_budget(self):
@@ -137,8 +148,13 @@ class TestTimeBudgets:
         pytest.skip("Time budget enforcement is handled by pytest markers and CI config")
 
 
+@pytest.mark.xdist_group(name="testpropertytestbudgets")
 class TestPropertyTestBudgets:
     """Validate property test deadlines are reasonable."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_property_tests_have_reasonable_deadlines(self):
@@ -172,8 +188,13 @@ class TestPropertyTestBudgets:
                 )
 
 
+@pytest.mark.xdist_group(name="testbulkheadperformance")
 class TestBulkheadPerformance:
     """Validate bulkhead tests don't burn unnecessary time."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_bulkhead_tests_use_short_sleeps(self):
@@ -205,8 +226,13 @@ class TestBulkheadPerformance:
         )
 
 
+@pytest.mark.xdist_group(name="testpollingoptimizations")
 class TestPollingOptimizations:
     """Validate polling helpers are used instead of fixed sleeps."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_kubernetes_sandbox_uses_polling(self):
@@ -267,8 +293,13 @@ class TestPollingOptimizations:
         ), "Docker sandbox tests should use poll_until() for cleanup waits"
 
 
+@pytest.mark.xdist_group(name="testvirtualclockavailability")
 class TestVirtualClockAvailability:
     """Validate VirtualClock is available for future optimizations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_virtual_clock_exists_and_works(self):

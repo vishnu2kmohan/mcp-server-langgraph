@@ -9,13 +9,21 @@ Tests OpenTelemetry metrics recording for all resilience patterns:
 - Fallback metrics
 """
 
+import gc
 from unittest.mock import patch
+
+import pytest
 
 from mcp_server_langgraph.resilience import metrics
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakermetrics")
 class TestCircuitBreakerMetrics:
     """Tests for circuit breaker metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_success_event(self):
         """Test recording circuit breaker success event"""
@@ -72,8 +80,13 @@ class TestCircuitBreakerMetrics:
             assert call_args[0][1]["service"] == "llm"
 
 
+@pytest.mark.xdist_group(name="testretrymetrics")
 class TestRetryMetrics:
     """Tests for retry metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_retry_attempt(self):
         """Test recording retry attempt"""
@@ -137,8 +150,13 @@ class TestRetryMetrics:
             assert "exception_type" not in call_args[0][1]
 
 
+@pytest.mark.xdist_group(name="testtimeoutmetrics")
 class TestTimeoutMetrics:
     """Tests for timeout metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_timeout_violation(self):
         """Test recording timeout exceeded event"""
@@ -182,8 +200,13 @@ class TestTimeoutMetrics:
                 assert call_args[0][1]["operation_type"] == op_type
 
 
+@pytest.mark.xdist_group(name="testbulkheadmetrics")
 class TestBulkheadMetrics:
     """Tests for bulkhead metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_bulkhead_rejection(self):
         """Test recording bulkhead rejection"""
@@ -247,8 +270,13 @@ class TestBulkheadMetrics:
             mock_set.assert_not_called()
 
 
+@pytest.mark.xdist_group(name="testfallbackmetrics")
 class TestFallbackMetrics:
     """Tests for fallback metric recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_default_fallback(self):
         """Test recording default fallback usage"""
@@ -314,8 +342,13 @@ class TestFallbackMetrics:
             mock_add_cache.assert_not_called()
 
 
+@pytest.mark.xdist_group(name="testmetricssummary")
 class TestMetricsSummary:
     """Tests for metrics summary and export functions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_resilience_metrics_summary(self):
         """Test getting metrics summary"""
@@ -376,8 +409,13 @@ class TestMetricsSummary:
         assert "gauge" in prometheus_output
 
 
+@pytest.mark.xdist_group(name="testmetricsintegration")
 class TestMetricsIntegration:
     """Integration tests for metrics recording"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_multiple_circuit_breaker_events(self):
         """Test recording multiple circuit breaker events"""
@@ -444,8 +482,13 @@ class TestMetricsIntegration:
             mock_reject.assert_called_once()
 
 
+@pytest.mark.xdist_group(name="testmetricsopentelemetryintegration")
 class TestMetricsOpenTelemetryIntegration:
     """Tests for OpenTelemetry metrics integration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_metrics_have_correct_names(self):
         """Verify all metrics have correct OpenTelemetry names"""
@@ -478,8 +521,13 @@ class TestMetricsOpenTelemetryIntegration:
         assert metrics.meter is not None
 
 
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_event_with_empty_strings(self):
         """Test recording events with empty string values"""

@@ -4,6 +4,7 @@ Integration tests for PostgreSQL AuditLogStore implementation
 Tests HIPAA §164.312(b) and SOC2 CC6.6 - 7-year audit log retention
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
 

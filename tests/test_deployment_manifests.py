@@ -13,6 +13,7 @@ Test Coverage:
 - Istio integration conditional checks
 """
 
+import gc
 import shutil
 import subprocess
 from pathlib import Path
@@ -65,8 +66,13 @@ def load_yaml_documents(file_path: Path) -> List[Dict[str, Any]]:
 # Critical Issue Tests
 
 
+@pytest.mark.xdist_group(name="testrbacconfiguration")
 class TestRBACConfiguration:
     """Test RBAC role configurations for invalid patterns."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rbac_roles_no_list_with_resource_names(self, deployments_base_dir: Path) -> None:
         """
@@ -118,8 +124,13 @@ class TestRBACConfiguration:
         )
 
 
+@pytest.mark.xdist_group(name="testnetworkpolicy")
 class TestNetworkPolicy:
     """Test NetworkPolicy configurations for completeness."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_network_policy_has_required_egress_rules(self, deployments_base_dir: Path) -> None:
         """
@@ -166,12 +177,17 @@ class TestNetworkPolicy:
 
 
 @pytest.mark.requires_kustomize
+@pytest.mark.xdist_group(name="testkustomizeoverlays")
 class TestKustomizeOverlays:
     """Test that Kustomize overlays can build successfully.
 
     CODEX FINDING #1: These tests require kustomize CLI tool.
     Tests will skip gracefully if kustomize is not installed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay", ["dev", "staging", "production"])
     def test_kustomize_overlay_builds(self, project_root: Path, overlay: str) -> None:
@@ -243,8 +259,13 @@ class TestKustomizeOverlays:
         )
 
 
+@pytest.mark.xdist_group(name="testbasekustomization")
 class TestBaseKustomization:
     """Test base kustomization includes all required resources."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_base_kustomization_includes_all_manifests(self, deployments_base_dir: Path) -> None:
         """
@@ -280,12 +301,17 @@ class TestBaseKustomization:
 
 
 @pytest.mark.requires_helm
+@pytest.mark.xdist_group(name="testhelmchart")
 class TestHelmChart:
     """Test Helm chart configurations.
 
     CODEX FINDING #1: These tests require helm CLI tool.
     Tests will skip gracefully if helm is not installed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(
         strict=True,
@@ -466,8 +492,13 @@ class TestHelmChart:
         )
 
 
+@pytest.mark.xdist_group(name="testcloudrunmanifest")
 class TestCloudRunManifest:
     """Test Cloud Run service manifest configurations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cloudrun_no_bash_variable_substitutions(self, project_root: Path) -> None:
         """
@@ -500,8 +531,13 @@ class TestCloudRunManifest:
         )
 
 
+@pytest.mark.xdist_group(name="testargocdapplication")
 class TestArgoCDApplication:
     """Test ArgoCD application configurations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_argocd_helm_values_use_valid_schema(self, project_root: Path) -> None:
         """
@@ -545,8 +581,13 @@ class TestArgoCDApplication:
 # Medium Priority Tests
 
 
+@pytest.mark.xdist_group(name="testhealthprobeconsistency")
 class TestHealthProbeConsistency:
     """Test health probe path consistency across deployments."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_optimized_deployment_health_probes(self, project_root: Path, deployments_base_dir: Path) -> None:
         """
@@ -591,8 +632,13 @@ class TestHealthProbeConsistency:
         )
 
 
+@pytest.mark.xdist_group(name="testdocumentation")
 class TestDocumentation:
     """Test documentation accuracy."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_readme_uses_modern_kustomize_syntax(self, deployments_base_dir: Path) -> None:
         """

@@ -5,6 +5,7 @@ Tests full resilience stack with all patterns composed together.
 """
 
 import asyncio
+import gc
 
 import pytest
 
@@ -49,8 +50,13 @@ def reset_all_resilience():
         logging.getLogger(__name__).warning(f"Could not clean up resilience state: {e}")
 
 
+@pytest.mark.xdist_group(name="testfullresiliencestack")
 class TestFullResilienceStack:
     """Test all resilience patterns composed together"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -144,8 +150,13 @@ class TestFullResilienceStack:
         assert max_active <= 3
 
 
+@pytest.mark.xdist_group(name="testrealworldscenarios")
 class TestRealWorldScenarios:
     """Test real-world scenarios with resilience patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -209,8 +220,13 @@ class TestRealWorldScenarios:
         assert result is True  # Fallback returns True (fail-open)
 
 
+@pytest.mark.xdist_group(name="testmetricsintegration")
 class TestMetricsIntegration:
     """Test metrics are emitted correctly with all patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -237,8 +253,13 @@ class TestMetricsIntegration:
         assert result == "success"
 
 
+@pytest.mark.xdist_group(name="testerrorpropagation")
 class TestErrorPropagation:
     """Test error propagation through resilience layers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -282,8 +303,13 @@ class TestErrorPropagation:
             await func()
 
 
+@pytest.mark.xdist_group(name="testconcurrentoperations")
 class TestConcurrentOperations:
     """Test concurrent operations with resilience"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     @pytest.mark.asyncio

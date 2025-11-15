@@ -9,6 +9,7 @@ TDD Cycle: RED → GREEN → REFACTOR
 Reference: ADR-0053 Future Work - Pre-commit hook: validate-docker-image-contents
 """
 
+import gc
 import subprocess
 import tempfile
 from pathlib import Path
@@ -16,8 +17,13 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.xdist_group(name="testdockerimagevalidationhook")
 class TestDockerImageValidationHook:
     """Test suite for validate_docker_image_contents.py pre-commit hook"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_hook_script_exists(self):
         """

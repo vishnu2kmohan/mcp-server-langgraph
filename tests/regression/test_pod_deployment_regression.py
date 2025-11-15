@@ -16,6 +16,7 @@ Test Execution:
     pytest tests/regression/test_pod_deployment_regression.py -v
 """
 
+import gc
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
@@ -110,8 +111,13 @@ def get_containers_from_deployment(deployment: Dict[str, Any]) -> List[Dict[str,
     return deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
 
 
+@pytest.mark.xdist_group(name="testgkeautopilotcompliance")
 class TestGKEAutopilotCompliance:
     """Tests for GKE Autopilot LimitRange compliance"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
     def test_cpu_limit_request_ratio(self, overlay: Path):
@@ -188,8 +194,13 @@ class TestGKEAutopilotCompliance:
                 )
 
 
+@pytest.mark.xdist_group(name="testenvironmentvariableconfiguration")
 class TestEnvironmentVariableConfiguration:
     """Tests for environment variable configuration validity"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
     def test_no_conflicting_env_sources(self, overlay: Path):
@@ -253,8 +264,13 @@ class TestEnvironmentVariableConfiguration:
                     )
 
 
+@pytest.mark.xdist_group(name="testreadonlyrootfilesystem")
 class TestReadOnlyRootFilesystem:
     """Tests for readOnlyRootFilesystem configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
     def test_readonly_fs_has_tmp_mount(self, overlay: Path):
@@ -292,8 +308,13 @@ class TestReadOnlyRootFilesystem:
                 )
 
 
+@pytest.mark.xdist_group(name="testotelcollectorconfiguration")
 class TestOTELCollectorConfiguration:
     """Tests for OTEL Collector configuration validity"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_otel_collector_config_syntax(self):
         """
@@ -330,8 +351,13 @@ class TestOTELCollectorConfiguration:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testkustomizebuildvalidity")
 class TestKustomizeBuildValidity:
     """Tests that kustomize builds are valid"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
     def test_kustomize_builds_successfully(self, overlay: Path):
@@ -377,6 +403,7 @@ class TestKustomizeBuildValidity:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testpodstartupintegration")
 class TestPodStartupIntegration:
     """
     Integration tests for pod startup (requires cluster access)
@@ -384,6 +411,10 @@ class TestPodStartupIntegration:
     These tests are marked with @pytest.mark.integration and should be run
     in a test environment before deploying to staging/production.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_pods_start_without_crash(self):
         """

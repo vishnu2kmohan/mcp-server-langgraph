@@ -7,6 +7,8 @@ Covers HIPAA Security Rule technical safeguards:
 - 164.312(c)(1): Integrity Controls
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.auth.hipaa import (
@@ -20,8 +22,13 @@ from mcp_server_langgraph.auth.hipaa import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testemergencyaccess")
 class TestEmergencyAccess:
     """Test emergency access functionality (HIPAA 164.312(a)(2)(i))"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_grant_emergency_access_success(self):
@@ -166,8 +173,13 @@ class TestEmergencyAccess:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testphiauditlogging")
 class TestPHIAuditLogging:
     """Test PHI audit logging (HIPAA 164.312(b))"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_log_phi_access_success(self):
@@ -223,8 +235,13 @@ class TestPHIAuditLogging:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testdataintegrity")
 class TestDataIntegrity:
     """Test data integrity controls (HIPAA 164.312(c)(1))"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_checksum(self):
         """Test generating HMAC checksum"""
@@ -294,8 +311,13 @@ class TestDataIntegrity:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testhipaacontrolsglobal")
 class TestHIPAAControlsGlobal:
     """Test global HIPAA controls instance management"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_hipaa_controls_singleton(self):
         """Test that get_hipaa_controls returns singleton"""
@@ -322,8 +344,13 @@ class TestHIPAAControlsGlobal:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpydanticmodels")
 class TestPydanticModels:
     """Test Pydantic model validation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_emergency_access_request_validation(self):
         """Test EmergencyAccessRequest validation"""
@@ -414,8 +441,13 @@ class TestPydanticModels:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testhipaaintegration")
 class TestHIPAAIntegration:
     """Integration tests for HIPAA controls"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_full_emergency_access_workflow(self):

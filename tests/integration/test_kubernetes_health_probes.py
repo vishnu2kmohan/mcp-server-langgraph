@@ -10,6 +10,7 @@ These tests can run against:
 3. CI/CD pipeline (for deployment verification)
 """
 
+import gc
 import os
 import time
 

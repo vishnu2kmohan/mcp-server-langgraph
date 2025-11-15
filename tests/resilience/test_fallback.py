@@ -5,6 +5,7 @@ Tests fallback behavior, strategies, and metrics.
 """
 
 import asyncio
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -21,8 +22,13 @@ from mcp_server_langgraph.resilience.fallback import (
 )
 
 
+@pytest.mark.xdist_group(name="testbasicfallback")
 class TestBasicFallback:
     """Test basic fallback functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -72,8 +78,13 @@ class TestBasicFallback:
         assert fallback_called is False
 
 
+@pytest.mark.xdist_group(name="testfallbackstrategies")
 class TestFallbackStrategies:
     """Test different fallback strategies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_default_value_fallback(self):
@@ -136,8 +147,13 @@ class TestFallbackStrategies:
         assert result is None
 
 
+@pytest.mark.xdist_group(name="testconveniencedecorators")
 class TestConvenienceDecorators:
     """Test convenience fallback decorators"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -188,8 +204,13 @@ class TestConvenienceDecorators:
         assert result == {}
 
 
+@pytest.mark.xdist_group(name="testfallbackwithspecificexceptions")
 class TestFallbackWithSpecificExceptions:
     """Test fallback with specific exception types"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -212,8 +233,13 @@ class TestFallbackWithSpecificExceptions:
             await func("runtime")
 
 
+@pytest.mark.xdist_group(name="testfallbackmetrics")
 class TestFallbackMetrics:
     """Test fallback metrics emission"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -229,8 +255,13 @@ class TestFallbackMetrics:
             assert result == "fallback_value"
 
 
+@pytest.mark.xdist_group(name="testfallbackedgecases")
 class TestFallbackEdgeCases:
     """Test fallback edge cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -279,8 +310,13 @@ class TestFallbackEdgeCases:
         assert result == "async_fallback"
 
 
+@pytest.mark.xdist_group(name="testfallbackcomposition")
 class TestFallbackComposition:
     """Test fallback with other resilience patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio

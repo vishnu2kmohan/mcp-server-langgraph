@@ -409,6 +409,10 @@ class TestComplianceExceptions:
 class TestStorageExceptions:
     """Test storage exception types"""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     @pytest.mark.unit
     def test_data_not_found_error(self):
         """Test DataNotFoundError"""

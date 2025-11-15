@@ -25,6 +25,7 @@ Prevents recurrence of pre-commit hook dependency failures from 2025-11-12:
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List, Set
@@ -94,12 +95,17 @@ IMPORT_TO_PACKAGE = {
 
 @pytest.mark.regression
 @pytest.mark.precommit
+@pytest.mark.xdist_group(name="testprecommithookdependencies")
 class TestPreCommitHookDependencies:
     """
     Regression tests for pre-commit hook dependency configuration.
 
     Prevents recurrence of hook dependency failures.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_python_hooks_use_language_python_not_system(self):
         """
@@ -369,10 +375,15 @@ class TestPreCommitHookDependencies:
 
 @pytest.mark.regression
 @pytest.mark.precommit
+@pytest.mark.xdist_group(name="testprecommithookconfiguration")
 class TestPreCommitHookConfiguration:
     """
     General pre-commit hook configuration best practices.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_hooks_have_descriptions(self):
         """

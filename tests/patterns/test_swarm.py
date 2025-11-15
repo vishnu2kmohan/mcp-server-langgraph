@@ -4,6 +4,8 @@ Tests for Swarm Pattern
 Comprehensive test coverage following TDD best practices.
 """
 
+import gc
+
 import pytest
 
 from src.mcp_server_langgraph.patterns.swarm import Swarm, SwarmState

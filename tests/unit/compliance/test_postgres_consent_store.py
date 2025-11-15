@@ -4,6 +4,7 @@ Integration tests for PostgreSQL ConsentStore implementation
 Tests GDPR Article 7 (Consent) - 7-year retention requirement
 """
 
+import gc
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 

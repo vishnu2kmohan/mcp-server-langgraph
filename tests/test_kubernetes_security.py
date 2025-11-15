@@ -8,6 +8,7 @@ Following TDD principles:
 3. REFACTOR: Extract common patterns to Helm values
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -15,8 +16,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testsecuritycontexts")
 class TestSecurityContexts:
     """Test Kubernetes pod security contexts."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def deployment_patch_files(self):
@@ -147,8 +153,13 @@ class TestSecurityContexts:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testimagepullpolicy")
 class TestImagePullPolicy:
     """Test imagePullPolicy configuration for security compliance."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def staging_overlay_dir(self):
@@ -226,8 +237,13 @@ class TestImagePullPolicy:
         )
 
 
+@pytest.mark.xdist_group(name="testredisexternalnameservice")
 class TestRedisExternalNameService:
     """Test Redis ExternalName service configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_service_configuration(self):
         """
@@ -268,8 +284,13 @@ class TestRedisExternalNameService:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testkubernetesvalidation")
 class TestKubernetesValidation:
     """Test Kubernetes manifest validation with security tools."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kubeconform_validates_manifests(self):
         """Test that manifests pass kubeconform validation."""

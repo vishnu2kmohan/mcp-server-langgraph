@@ -9,6 +9,7 @@ TDD Cycle: RED → GREEN → REFACTOR
 Reference: ADR-0053 Future Work - Pre-commit hook: validate-keycloak-config
 """
 
+import gc
 import subprocess
 import tempfile
 from pathlib import Path
@@ -17,8 +18,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testkeycloakconfigvalidationhook")
 class TestKeycloakConfigValidationHook:
     """Test suite for validate_keycloak_config.py pre-commit hook"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_hook_script_exists(self):
         """

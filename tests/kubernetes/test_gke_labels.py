@@ -10,6 +10,7 @@ Following TDD Red-Green-Refactor:
 - REFACTOR: Improve validation logic as needed
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -20,8 +21,13 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
 
 
+@pytest.mark.xdist_group(name="testgkeautopilotlabels")
 class TestGKEAutopilotLabels:
     """Test that GKE Autopilot overlays don't use deprecated labels."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     # Labels that are deprecated or incompatible with GKE Autopilot
     DEPRECATED_LABELS = {

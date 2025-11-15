@@ -8,6 +8,8 @@ Following TDD: These tests will fail initially (RED), then pass after router
 registration (GREEN), ensuring all APIs are production-ready.
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -39,8 +41,13 @@ def test_client(monkeypatch):
 
 @pytest.mark.integration
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testrouterregistration")
 class TestRouterRegistration:
     """Test that all API routers are registered in the main application"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gdpr_router_registered(self, test_client):
         """GDPR router should be accessible at /api/v1/users"""
@@ -77,8 +84,13 @@ class TestRouterRegistration:
 
 @pytest.mark.integration
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testendpointaccessibility")
 class TestEndpointAccessibility:
     """Test that specific endpoints from each router are accessible"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_api_keys_create_endpoint_exists(self, test_client):
         """POST /api/v1/api-keys/ endpoint should exist (even if auth fails)"""
@@ -147,8 +159,13 @@ class TestEndpointAccessibility:
 
 @pytest.mark.integration
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testopenapiinclusion")
 class TestOpenAPIInclusion:
     """Test that all registered routers appear in the OpenAPI schema"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_routers_in_openapi_schema(self, test_client):
         """All routers should contribute to the OpenAPI schema"""
@@ -212,8 +229,13 @@ class TestOpenAPIInclusion:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testrouterdependencies")
 class TestRouterDependencies:
     """Test that routers can be imported without errors"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gdpr_router_importable(self):
         """GDPR router should be importable"""

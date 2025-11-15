@@ -8,6 +8,7 @@ Following TDD best practices - tests prove security properties of the implementa
 Tests cover OWASP A03:2021 - Injection attacks on database queries.
 """
 
+import gc
 from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
 
@@ -115,6 +116,7 @@ async def test_conversation(
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.security
+@pytest.mark.xdist_group(name="testconversationstoresqlinjection")
 class TestConversationStoreSQLInjection:
     """
     Test SQL injection defenses in PostgresConversationStore.update()
@@ -125,6 +127,10 @@ class TestConversationStoreSQLInjection:
     These tests verify that field names are validated via allowlist and
     values are safely parameterized to prevent SQL injection.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_reject_malicious_field_names_with_sql_injection(
         self,
@@ -296,6 +302,7 @@ class TestConversationStoreSQLInjection:
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.security
+@pytest.mark.xdist_group(name="testauditlogstoresqlinjection")
 class TestAuditLogStoreSQLInjection:
     """
     Test SQL injection defenses in PostgresAuditLogStore.list_user_logs()
@@ -305,6 +312,10 @@ class TestAuditLogStoreSQLInjection:
     The list_user_logs() method uses f-strings to construct dynamic WHERE clauses.
     These tests verify that user_id and date parameters are safely parameterized.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_parameterized_user_id_prevents_sql_injection(
         self,

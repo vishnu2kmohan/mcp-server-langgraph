@@ -13,6 +13,7 @@ RED Phase: These tests will fail due to:
 GREEN Phase: Tests should pass after imports are added.
 """
 
+import gc
 import inspect
 
 import pytest

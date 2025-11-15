@@ -5,6 +5,7 @@ This test ensures the workflow can perform calculations using awk
 instead of bc, which is not available in Ubuntu 24.04 GitHub Actions runners.
 """
 
+import gc
 import subprocess
 from pathlib import Path
 

@@ -15,6 +15,7 @@ Compliance:
 - SOC2 CC6.6: Audit logging and monitoring
 """
 
+import gc
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -25,12 +26,17 @@ from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, ConsentR
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testpostgresauditlogstore")
 class TestPostgresAuditLogStore:
     """
     Test PostgresAuditLogStore with real PostgreSQL
 
     TDD: RED phase - These tests should fail without proper schema
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     async def audit_store(self, postgres_with_schema, postgres_connection_clean):
@@ -273,12 +279,17 @@ class TestPostgresAuditLogStore:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testpostgresconsentstore")
 class TestPostgresConsentStore:
     """
     Test PostgresConsentStore with real PostgreSQL
 
     TDD: RED phase - These tests should fail without proper schema
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     async def consent_store(self, postgres_with_schema, postgres_connection_clean):
@@ -470,8 +481,13 @@ class TestPostgresConsentStore:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testpostgresstorageedgecases")
 class TestPostgresStorageEdgeCases:
     """Test edge cases and error handling for PostgreSQL storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     async def audit_store(self, postgres_connection_clean):

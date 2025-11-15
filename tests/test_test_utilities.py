@@ -193,6 +193,10 @@ class TestCLIAvailabilityFixtures:
 class TestFixtureScoping:
     """Test that fixtures use appropriate scopes for performance."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_cli_fixtures_are_session_scoped(self, request):
         """Verify CLI availability fixtures are session-scoped for performance."""
         # Get fixture definitions and check their scope

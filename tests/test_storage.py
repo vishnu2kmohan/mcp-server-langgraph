@@ -4,6 +4,7 @@ Tests for Storage Backend Interfaces for Compliance Data
 Covers abstract interfaces and data models for compliance data storage.
 """
 
+import gc
 from datetime import datetime
 
 import pytest
@@ -23,8 +24,13 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testuserprofile")
 class TestUserProfile:
     """Test UserProfile data model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_user_profile_creation(self):
         """Test creating user profile"""
@@ -72,8 +78,13 @@ class TestUserProfile:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconversation")
 class TestConversation:
     """Test Conversation data model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_conversation_creation(self):
         """Test creating conversation"""
@@ -122,8 +133,13 @@ class TestConversation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testuserpreferences")
 class TestUserPreferences:
     """Test UserPreferences data model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_user_preferences_creation(self):
         """Test creating user preferences"""
@@ -149,8 +165,13 @@ class TestUserPreferences:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testauditlogentry")
 class TestAuditLogEntry:
     """Test AuditLogEntry data model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_audit_log_creation(self):
         """Test creating audit log"""
@@ -184,8 +205,13 @@ class TestAuditLogEntry:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconsentrecord")
 class TestConsentRecord:
     """Test ConsentRecord data model"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_consent_record_creation(self):
         """Test creating consent record"""
@@ -217,8 +243,13 @@ class TestConsentRecord:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinmemoryuserprofilestore")
 class TestInMemoryUserProfileStore:
     """Test in-memory user profile storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_and_retrieve_user_profile(self):
@@ -332,8 +363,13 @@ class TestInMemoryUserProfileStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinmemoryconversationstore")
 class TestInMemoryConversationStore:
     """Test in-memory conversation storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_and_retrieve_conversation(self):
@@ -476,8 +512,13 @@ class TestInMemoryConversationStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinmemorypreferencesstore")
 class TestInMemoryPreferencesStore:
     """Test in-memory preferences storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_set_and_retrieve_preferences(self):
@@ -543,8 +584,13 @@ class TestInMemoryPreferencesStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinmemoryauditlogstore")
 class TestInMemoryAuditLogStore:
     """Test in-memory audit log storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_log_and_retrieve_audit_entry(self):
@@ -654,8 +700,13 @@ class TestInMemoryAuditLogStore:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinmemoryconsentstore")
 class TestInMemoryConsentStore:
     """Test in-memory consent storage"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_create_and_retrieve_consent(self):

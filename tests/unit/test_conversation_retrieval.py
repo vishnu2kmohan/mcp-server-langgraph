@@ -5,6 +5,7 @@ Ensures that _handle_get_conversation properly retrieves conversation
 history from the LangGraph checkpointer.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

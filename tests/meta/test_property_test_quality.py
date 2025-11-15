@@ -8,6 +8,7 @@ Purpose: Prevent regression of Codex Finding #9 (property tests with missing ass
 """
 
 import ast
+import gc
 import os
 from pathlib import Path
 
@@ -17,6 +18,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testpropertytestquality")
 class TestPropertyTestQuality:
     """
     Meta-tests that validate property tests have proper assertions.
@@ -24,6 +26,10 @@ class TestPropertyTestQuality:
     RED: These tests will fail if property tests lack assertions.
     GREEN: Property tests properly assert results.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_property_tests_have_assertions(self):
         """
@@ -174,8 +180,13 @@ class TestPropertyTestQuality:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testpropertytestnaming")
 class TestPropertyTestNaming:
     """Validate property test naming conventions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_property_test_names_describe_property(self):
         """

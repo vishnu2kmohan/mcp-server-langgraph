@@ -14,6 +14,7 @@ Following TDD principles:
 Related Codex Finding: docker-compose.test.yml:214-233 uses wget for Qdrant health check
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Any, Dict, List
@@ -80,8 +81,13 @@ def extract_health_check_command(health_check: Dict[str, Any]) -> List[str]:
     return []
 
 
+@pytest.mark.xdist_group(name="testdockercomposeyamlsyntax")
 class TestDockerComposeYAMLSyntax:
     """Test Docker Compose files have valid YAML syntax."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
     def test_compose_file_is_valid_yaml(self, compose_file: Path):
@@ -99,8 +105,13 @@ class TestDockerComposeYAMLSyntax:
         assert "services" in config, f"{compose_file} missing 'services' section"
 
 
+@pytest.mark.xdist_group(name="testdockercomposehealthchecks")
 class TestDockerComposeHealthChecks:
     """Test Docker Compose health check configurations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     # Commands known to be missing from minimal/security-hardened images
     PROBLEMATIC_COMMANDS = {
@@ -262,8 +273,13 @@ class TestDockerComposeHealthChecks:
                 assert isinstance(health_check["retries"], int), f"Service '{service_name}' health check 'retries' must be int"
 
 
+@pytest.mark.xdist_group(name="testdockercomposeqdrantspecific")
 class TestDockerComposeQdrantSpecific:
     """Specific tests for Qdrant service configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
     def test_qdrant_uses_grpc_health_probe(self, compose_file: Path):

@@ -5,6 +5,7 @@ Tests concurrency limiting, wait/fail-fast modes, and metrics.
 """
 
 import asyncio
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -28,8 +29,13 @@ def reset_bulkheads():
     reset_all_bulkheads()
 
 
+@pytest.mark.xdist_group(name="testbulkheadbasics")
 class TestBulkheadBasics:
     """Test basic bulkhead functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -73,8 +79,13 @@ class TestBulkheadBasics:
             assert result == "success"
 
 
+@pytest.mark.xdist_group(name="testbulkheadfailfast")
 class TestBulkheadFailFast:
     """Test bulkhead fail-fast mode"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -125,8 +136,13 @@ class TestBulkheadFailFast:
         # Should have executed (max 2 concurrent)
 
 
+@pytest.mark.xdist_group(name="testbulkheadcontextmanager")
 class TestBulkheadContextManager:
     """Test bulkhead context manager"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -161,8 +177,13 @@ class TestBulkheadContextManager:
         await task1
 
 
+@pytest.mark.xdist_group(name="testbulkheadstatistics")
 class TestBulkheadStatistics:
     """Test bulkhead statistics"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -194,8 +215,13 @@ class TestBulkheadStatistics:
         assert stats == {}
 
 
+@pytest.mark.xdist_group(name="testbulkheadconfiguration")
 class TestBulkheadConfiguration:
     """Test bulkhead configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_get_bulkhead_with_default_limit(self, reset_bulkheads):
@@ -221,8 +247,13 @@ class TestBulkheadConfiguration:
         assert bulkhead1 is not bulkhead2
 
 
+@pytest.mark.xdist_group(name="testbulkheadmetrics")
 class TestBulkheadMetrics:
     """Test bulkhead metrics emission"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -258,8 +289,13 @@ class TestBulkheadMetrics:
             await func()
 
 
+@pytest.mark.xdist_group(name="testbulkheadedgecases")
 class TestBulkheadEdgeCases:
     """Test bulkhead edge cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio

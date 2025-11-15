@@ -5,6 +5,7 @@ Tests dependency resolution, parallel execution, and error handling.
 """
 
 import asyncio
+import gc
 
 import pytest
 
@@ -29,8 +30,13 @@ def mock_tool_executor():
     return execute_tool
 
 
+@pytest.mark.xdist_group(name="testparalleltoolexecutor")
 class TestParallelToolExecutor:
     """Test suite for ParallelToolExecutor"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization(self, executor):
         """Test executor initialization"""
@@ -419,8 +425,13 @@ class TestParallelToolExecutor:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testparallelexecutorintegration")
 class TestParallelExecutorIntegration:
     """Integration tests for ParallelToolExecutor"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_complex_workflow(self):

@@ -4,6 +4,7 @@ Comprehensive validation tests for all Kubernetes best practices implementations
 Tests all 11 items to ensure configurations are valid and complete.
 """
 
+import gc
 import glob
 import os
 
@@ -11,8 +12,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testphase1validation")
 class TestPhase1Validation:
     """Validate Phase 1: High Availability & Data Protection."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_azure_database_terraform_module_valid(self):
         """Test Azure Database Terraform module is valid."""
@@ -86,8 +92,13 @@ class TestPhase1Validation:
         assert len(schedules) >= 2
 
 
+@pytest.mark.xdist_group(name="testphase2validation")
 class TestPhase2Validation:
     """Validate Phase 2: Security Hardening."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_istio_enabled_in_helm_values(self):
         """Test Istio service mesh is enabled in Helm values."""
@@ -152,8 +163,13 @@ class TestPhase2Validation:
             assert "egress" in policy["spec"]
 
 
+@pytest.mark.xdist_group(name="testphase3validation")
 class TestPhase3Validation:
     """Validate Phase 3: Observability & Cost Management."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_loki_stack_configuration_exists(self):
         """Test Loki stack configuration exists."""
@@ -227,8 +243,13 @@ class TestPhase3Validation:
         assert values.get("azureCloudCost", {}).get("enabled") is True
 
 
+@pytest.mark.xdist_group(name="testphase4validation")
 class TestPhase4Validation:
     """Validate Phase 4: Infrastructure Optimization."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_karpenter_terraform_module_exists(self):
         """Test Karpenter Terraform module exists."""
@@ -299,8 +320,13 @@ class TestPhase4Validation:
         assert "memory" in policy["minAllowed"]
 
 
+@pytest.mark.xdist_group(name="testdocumentation")
 class TestDocumentation:
     """Validate documentation is complete."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_implementation_guide_exists(self):
         """Test implementation guide exists."""
@@ -317,8 +343,13 @@ class TestDocumentation:
         assert os.path.exists("deployments/backup/RESTORE_PROCEDURE.md")
 
 
+@pytest.mark.xdist_group(name="testyamlsyntax")
 class TestYAMLSyntax:
     """Validate all YAML files have correct syntax."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_yaml_files_valid(self):
         """Test all YAML files can be parsed."""

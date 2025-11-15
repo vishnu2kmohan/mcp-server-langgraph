@@ -9,6 +9,7 @@ TDD Context:
 Following TDD: Tests ensure validator prevents marker registration issues.
 """
 
+import gc
 import sys
 import tempfile
 from pathlib import Path
@@ -18,11 +19,17 @@ import pytest
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
-from validate_pytest_markers import get_registered_markers, get_used_markers
+
+from validate_pytest_markers import get_registered_markers, get_used_markers  # noqa: E402
 
 
+@pytest.mark.xdist_group(name="testmarkerregistration")
 class TestMarkerRegistration:
     """Test that marker registration detection works correctly"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_used_markers_are_registered(self):
         """
@@ -103,12 +110,17 @@ class TestMarkerRegistration:
             assert marker in registered, f"{marker} marker should be registered"
 
 
+@pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """
     Regression tests for the specific failure we encountered.
 
     Ensures the 'staging' marker incident cannot recur.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_prevent_staging_marker_regression(self):
         """
@@ -133,8 +145,13 @@ class TestRegressionPrevention:
         assert "deployment" in registered, "deployment marker should exist as it's related to staging tests"
 
 
+@pytest.mark.xdist_group(name="testmarkervalidatorbehavior")
 class TestMarkerValidatorBehavior:
     """Test the behavior of the marker validator script"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_registered_markers_not_empty(self):
         """Validator should find registered markers in pyproject.toml"""
@@ -160,8 +177,13 @@ class TestMarkerValidatorBehavior:
             assert marker not in used, f"Built-in marker {marker} should be excluded"
 
 
+@pytest.mark.xdist_group(name="testspecificmarkercategories")
 class TestSpecificMarkerCategories:
     """Test that specific categories of markers are properly registered"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_test_type_markers(self):
         """Test type classification markers"""
@@ -211,8 +233,13 @@ class TestSpecificMarkerCategories:
             assert marker in registered, f"Environment marker '{marker}' should be registered"
 
 
+@pytest.mark.xdist_group(name="testmarkercount")
 class TestMarkerCount:
     """Test that we have the expected number of markers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_minimum_marker_count(self):
         """Ensure we have at least the expected number of registered markers"""

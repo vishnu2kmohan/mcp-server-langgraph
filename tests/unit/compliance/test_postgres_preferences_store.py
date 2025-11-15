@@ -4,6 +4,7 @@ Integration tests for PostgreSQL PreferencesStore implementation
 Tests GDPR compliance for user preferences storage
 """
 
+import gc
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 

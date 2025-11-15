@@ -15,6 +15,7 @@ Root Causes Prevented:
 - Issue #2: Secret name mismatch (mcp-server-langgraph-secrets vs staging-mcp-server-langgraph-secrets)
 """
 
+import gc
 import re
 import shutil
 import subprocess
@@ -27,8 +28,13 @@ import yaml
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
+@pytest.mark.xdist_group(name="testconfigmapvalidation")
 class TestConfigMapValidation:
     """Test that all ConfigMap key references are valid."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
         """Build kustomize and return parsed YAML documents."""
@@ -209,8 +215,13 @@ class TestConfigMapValidation:
         )
 
 
+@pytest.mark.xdist_group(name="testsecretvalidation")
 class TestSecretValidation:
     """Test that Secret names and references are consistent."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
         """Build kustomize and return parsed YAML documents."""
@@ -408,8 +419,13 @@ class TestSecretValidation:
         )
 
 
+@pytest.mark.xdist_group(name="testkustomizeprefixconsistency")
 class TestKustomizePrefixConsistency:
     """Test that Kustomize namePrefix is correctly applied."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def read_kustomization(self, overlay_path: str) -> Dict:
         """Read and parse kustomization.yaml."""

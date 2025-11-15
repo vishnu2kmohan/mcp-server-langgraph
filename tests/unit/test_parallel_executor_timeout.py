@@ -8,6 +8,7 @@ for fast test execution while maintaining timeout behavior validation.
 """
 
 import asyncio
+import gc
 
 import pytest
 
@@ -15,8 +16,13 @@ from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, To
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testparallelexecutortimeouts")
 class TestParallelExecutorTimeouts:
     """Test suite for parallel executor timeout handling (TDD RED → GREEN)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_executor_respects_per_task_timeout(self):
         """

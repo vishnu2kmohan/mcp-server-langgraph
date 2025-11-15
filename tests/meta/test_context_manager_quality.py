@@ -7,6 +7,7 @@ Purpose: Prevent regression of Codex Finding #3 (Redis checkpointer tests lack _
 """
 
 import ast
+import gc
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testcontextmanagertestquality")
 class TestContextManagerTestQuality:
     """
     Meta-tests that validate context manager tests have proper cleanup assertions.
@@ -22,6 +24,10 @@ class TestContextManagerTestQuality:
     RED: These tests will fail if context manager tests lack __exit__ assertions.
     GREEN: Context manager tests properly validate cleanup.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_context_manager_tests_assert_exit(self):
         """
@@ -188,8 +194,13 @@ class TestContextManagerTestQuality:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testcontextmanagernaming")
 class TestContextManagerNaming:
     """Validate context manager test naming conventions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_context_manager_tests_have_descriptive_names(self):
         """

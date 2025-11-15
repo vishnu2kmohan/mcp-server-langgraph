@@ -5,6 +5,7 @@ Test suite for documentation link checker.
 Following TDD principles - tests define expected behavior.
 """
 
+import gc
 import sys
 import tempfile
 from pathlib import Path
@@ -15,8 +16,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 
+@pytest.mark.xdist_group(name="testinternallinkparsing")
 class TestInternalLinkParsing:
     """Test parsing of internal links from MDX files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_finds_relative_links(self):
         """Test that relative links are correctly extracted."""
@@ -73,8 +79,13 @@ class TestInternalLinkParsing:
         assert any("installation" in link for link in links)
 
 
+@pytest.mark.xdist_group(name="testlinkresolution")
 class TestLinkResolution:
     """Test resolution of internal links to actual files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def temp_docs_structure(self):
@@ -127,8 +138,13 @@ class TestLinkResolution:
         assert resolved == temp_docs_structure / "guide.mdx"
 
 
+@pytest.mark.xdist_group(name="testlinkvalidation")
 class TestLinkValidation:
     """Test complete link validation workflow."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validates_all_links_in_file(self):
         """Test that all links in a file are validated."""
@@ -161,8 +177,13 @@ class TestLinkValidation:
             guide_file.unlink(missing_ok=True)
 
 
+@pytest.mark.xdist_group(name="testrealworldexamples")
 class TestRealWorldExamples:
     """Test cases based on actual documentation structure."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_adr_cross_references(self):
         """Test that ADR cross-references are valid."""

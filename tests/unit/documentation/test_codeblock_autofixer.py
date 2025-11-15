@@ -8,6 +8,7 @@ Tests validate that:
 4. Backup is created before modification
 """
 
+import gc
 import sys
 from pathlib import Path
 
@@ -17,11 +18,17 @@ import pytest
 _scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
 sys.path.insert(0, str(_scripts_dir))
 
+
 from validators.codeblock_autofixer import CodeBlockAutoFixer, detect_language  # noqa: E402
 
 
+@pytest.mark.xdist_group(name="testlanguagedetection")
 class TestLanguageDetection:
     """Test language detection logic."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_detect_python(self):
         """Test Python code detection."""
@@ -94,8 +101,13 @@ any known pattern
         assert detect_language(code) == "text"
 
 
+@pytest.mark.xdist_group(name="testcodeblockautofixer")
 class TestCodeBlockAutoFixer:
     """Test suite for CodeBlockAutoFixer."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def fixer(self, tmp_path):

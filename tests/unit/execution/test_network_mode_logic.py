@@ -5,6 +5,7 @@ Tests the _get_network_mode method to ensure it fails closed when allowlist is n
 These tests don't require Docker to be installed.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 

@@ -220,6 +220,10 @@ class TestRouterRegistration:
 class TestAppEndpoints:
     """Test app endpoints"""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_app_has_routes(self):
         """Test app has routes registered"""
         app = create_app()

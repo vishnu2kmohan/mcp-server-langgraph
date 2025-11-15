@@ -12,6 +12,7 @@ Following TDD RED-GREEN-REFACTOR cycle to fix E2E test failures caused by:
 Reference: E2E Tests workflow failures with 401 authentication errors
 """
 
+import gc
 import json
 from pathlib import Path
 

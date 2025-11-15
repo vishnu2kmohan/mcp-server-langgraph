@@ -17,6 +17,7 @@ Related:
 - .github/workflows/ci.yaml - CI workflow configuration
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -25,8 +26,13 @@ from typing import List
 import pytest
 
 
+@pytest.mark.xdist_group(name="testprepushhooksync")
 class TestPrePushHookSync:
     """Validate pre-push hook configuration matches CI expectations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -158,8 +164,13 @@ class TestPrePushHookSync:
             )
 
 
+@pytest.mark.xdist_group(name="testpostcommithooksync")
 class TestPostCommitHookSync:
     """Validate post-commit hook uses project-managed Python runtime."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -222,8 +233,13 @@ class TestPostCommitHookSync:
                 )
 
 
+@pytest.mark.xdist_group(name="testhooktemplatesync")
 class TestHookTemplateSync:
     """Validate hook templates stay in sync or are properly removed."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:

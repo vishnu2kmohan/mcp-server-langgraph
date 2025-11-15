@@ -12,6 +12,8 @@ Tests cover:
 - Edge cases (special characters, empty inputs)
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.cli.add_tool import TOOL_TEMPLATE, generate_tool
@@ -22,8 +24,13 @@ from mcp_server_langgraph.cli.add_tool import TOOL_TEMPLATE, generate_tool
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testgeneratetool")
 class TestGenerateTool:
     """Test tool file generation functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_tool_creates_tool_file(self, tmp_path, monkeypatch):
         """Test generate_tool creates tool file in correct location."""
@@ -255,8 +262,13 @@ class TestGenerateTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testtooltemplate")
 class TestToolTemplate:
     """Test the tool template structure."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_tool_template_contains_required_placeholders(self):
         """Test TOOL_TEMPLATE contains all required placeholder variables."""
@@ -316,8 +328,13 @@ class TestToolTemplate:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testgeneratetooledgecases")
 class TestGenerateToolEdgeCases:
     """Test edge cases and error scenarios for generate_tool."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_tool_with_numbers_in_name(self, tmp_path, monkeypatch):
         """Test tool generation with numbers in name."""

@@ -18,6 +18,7 @@ References:
 """
 
 import ast
+import gc
 import os
 import subprocess
 from pathlib import Path
@@ -33,6 +34,10 @@ class TestEnforcementMechanisms:
 
     These meta-tests ensure our guardrails work correctly.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validation_scripts_exist(self):
         """
@@ -211,6 +216,10 @@ class TestEnforcementGaps:
     These tests document what is NOT currently enforced automatically.
     """
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     def test_gap_no_check_for_hardcoded_ports(self):
         """
         🔴 GAP: No automated check for hardcoded ports in test_infrastructure_ports.
@@ -346,6 +355,7 @@ class TestEnforcementGaps:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testenforcementstrategy")
 class TestEnforcementStrategy:
     """
     Document the complete enforcement strategy.
@@ -353,6 +363,10 @@ class TestEnforcementStrategy:
     This test serves as living documentation of how we prevent
     pytest-xdist isolation issues.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_enforcement_strategy_documentation(self):
         """
@@ -543,10 +557,15 @@ class TestEnforcementStrategy:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testenforcementrecommendations")
 class TestEnforcementRecommendations:
     """
     Recommend additional enforcement mechanisms if needed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_recommendation_create_enforcement_meta_test(self):
         """

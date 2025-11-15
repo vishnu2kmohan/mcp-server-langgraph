@@ -9,6 +9,8 @@ rather than "allowlist" or "unrestricted". Users must explicitly opt-in to netwo
 Expected to FAIL until core/config.py:216 is fixed to default to "none".
 """
 
+import gc
+
 
 def test_default_network_mode_is_secure_none(monkeypatch):
     """

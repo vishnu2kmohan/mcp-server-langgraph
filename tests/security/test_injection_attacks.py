@@ -5,6 +5,8 @@ Tests defense against OWASP Top 10 and code execution exploits.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
+import gc
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -18,8 +20,13 @@ except ImportError:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcommandinjection")
 class TestCommandInjection:
     """Test defenses against command injection attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -64,8 +71,13 @@ class TestCommandInjection:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeinjection")
 class TestCodeInjection:
     """Test defenses against code injection attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -121,8 +133,13 @@ class TestCodeInjection:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testdeserializationattacks")
 class TestDeserializationAttacks:
     """Test defenses against deserialization attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -169,8 +186,13 @@ class TestDeserializationAttacks:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpathtraversal")
 class TestPathTraversal:
     """Test defenses against path traversal attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -203,8 +225,13 @@ class TestPathTraversal:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testprivilegeescalation")
 class TestPrivilegeEscalation:
     """Test defenses against privilege escalation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -236,8 +263,13 @@ class TestPrivilegeEscalation:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testreflectionandintrospection")
 class TestReflectionAndIntrospection:
     """Test defenses against reflection/introspection attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -328,8 +360,13 @@ class TestReflectionAndIntrospection:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testnetworkattacks")
 class TestNetworkAttacks:
     """Test defenses against network-based attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -371,8 +408,13 @@ class TestNetworkAttacks:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresourceexhaustion")
 class TestResourceExhaustion:
     """Test detection of resource exhaustion patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -420,8 +462,13 @@ recursive_func(0)
 
 @pytest.mark.security
 @pytest.mark.property
+@pytest.mark.xdist_group(name="testfuzzingattacks")
 class TestFuzzingAttacks:
     """Property-based fuzzing tests for security"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         st.sampled_from(
@@ -491,8 +538,13 @@ class TestFuzzingAttacks:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testowasptop10")
 class TestOWASPTop10:
     """Test defenses against OWASP Top 10 vulnerabilities"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):

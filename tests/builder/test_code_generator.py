@@ -14,6 +14,7 @@ Tests cover:
 - Edge cases and error handling
 """
 
+import gc
 import tempfile
 from pathlib import Path
 from unittest.mock import patch

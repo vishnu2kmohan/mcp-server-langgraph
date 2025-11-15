@@ -5,6 +5,8 @@ Tests Settings class code execution configuration following TDD best practices.
 These tests should FAIL until config.py is updated with execution settings.
 """
 
+import gc
+
 import pytest
 
 # This import will work but settings won't have execution fields yet
@@ -12,8 +14,13 @@ from mcp_server_langgraph.core.config import Settings
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeexecutionsettings")
 class TestCodeExecutionSettings:
     """Test code execution configuration settings"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_code_execution_disabled_by_default(self):
         """Test that code execution is disabled by default (security)"""
@@ -112,8 +119,13 @@ class TestCodeExecutionSettings:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeexecutionsettingsfromenv")
 class TestCodeExecutionSettingsFromEnv:
     """Test code execution settings from environment variables"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_enable_code_execution_from_env(self, monkeypatch):
         """Test enabling code execution via environment"""
@@ -157,8 +169,13 @@ class TestCodeExecutionSettingsFromEnv:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeexecutionsettingsvalidation")
 class TestCodeExecutionSettingsValidation:
     """Test code execution settings validation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_network_mode_validation(self):
         """Test network mode must be valid value"""
@@ -188,8 +205,13 @@ class TestCodeExecutionSettingsValidation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeexecutionsettingsintegration")
 class TestCodeExecutionSettingsIntegration:
     """Test code execution settings integration with ResourceLimits"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_settings_compatible_with_resource_limits(self):
         """Test that settings can be used to create ResourceLimits"""
@@ -231,8 +253,13 @@ class TestCodeExecutionSettingsIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodeexecutionsettingsdefaults")
 class TestCodeExecutionSettingsDefaults:
     """Test code execution default settings for different environments"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_development_defaults(self, monkeypatch):
         """Test development environment defaults"""

@@ -5,6 +5,8 @@ Tests AST-based validation, import whitelisting, and security controls.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
+import gc
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -18,8 +20,13 @@ except ImportError:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodevalidator")
 class TestCodeValidator:
     """Test suite for CodeValidator"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -322,8 +329,13 @@ class MyContext:
 
 @pytest.mark.unit
 @pytest.mark.security
+@pytest.mark.xdist_group(name="testsecurityinjectionpatterns")
 class TestSecurityInjectionPatterns:
     """Security-focused tests for injection attack patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self):
@@ -380,8 +392,13 @@ exec(f"{cmd}")
 
 @pytest.mark.unit
 @pytest.mark.property
+@pytest.mark.xdist_group(name="testcodevalidatorproperties")
 class TestCodeValidatorProperties:
     """Property-based tests using Hypothesis for fuzzing"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(st.text())
     def test_validator_never_crashes(self, code):
@@ -443,8 +460,13 @@ class TestCodeValidatorProperties:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testvalidationresult")
 class TestValidationResult:
     """Test ValidationResult data class"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validation_result_creation(self):
         """Test creating ValidationResult"""
@@ -471,8 +493,13 @@ class TestValidationResult:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodevalidationerror")
 class TestCodeValidationError:
     """Test CodeValidationError exception"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_code_validation_error_creation(self):
         """Test creating CodeValidationError"""

@@ -115,7 +115,6 @@ def api_keys_test_client(mock_api_key_manager, mock_keycloak_client, mock_curren
     - Router module already has stale references from previous tests
     - Reloading forces fresh import chain: middleware → router → endpoint functions
     """
-    import gc
     import importlib
 
     from fastapi import FastAPI

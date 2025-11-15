@@ -5,6 +5,8 @@ Tests verify that health endpoints follow FastAPI sub-app best practices
 and are accessible at the correct paths when mounted.
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 

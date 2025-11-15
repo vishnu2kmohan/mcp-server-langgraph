@@ -1,5 +1,7 @@
 """Integration tests for MCP StreamableHTTP transport"""
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -67,8 +69,13 @@ def auth_token(client):
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="testmcpstreamablehttp")
 class TestMCPStreamableHTTP:
     """Test StreamableHTTP MCP server"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_server_info_endpoint(self, client):
         """Test GET / returns server info"""
@@ -552,8 +559,13 @@ class TestMCPStreamableHTTP:
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="testtokenrefresh")
 class TestTokenRefresh:
     """Test token refresh endpoint"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_refresh_token_success(self, client, auth_token):
         """Test successful token refresh"""
@@ -688,8 +700,13 @@ class TestTokenRefresh:
 
 @pytest.mark.integration
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="testtokenvalidation")
 class TestTokenValidation:
     """Test token-based authentication for tool calls"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_tool_call_authorization_flow(self, client, auth_token):
         """Test complete authorization flow for tool calls"""
@@ -788,8 +805,13 @@ class TestTokenValidation:
 
 @pytest.mark.e2e
 @pytest.mark.mcp
+@pytest.mark.xdist_group(name="testmcpendtoend")
 class TestMCPEndToEnd:
     """End-to-end tests for complete MCP flow"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_complete_mcp_workflow_with_test_client(self, client, auth_token):
         """Test complete MCP workflow using test client"""

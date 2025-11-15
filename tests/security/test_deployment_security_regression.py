@@ -11,6 +11,7 @@ Test Coverage:
 3. Qdrant health checks use grpc_health_probe (not wget/curl)
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -19,8 +20,13 @@ import yaml
 
 @pytest.mark.security
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testqdrantsecuritycontext")
 class TestQdrantSecurityContext:
     """Regression tests for Qdrant security context configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_qdrant_has_readonly_root_filesystem(self):
         """
@@ -119,8 +125,13 @@ class TestQdrantSecurityContext:
 
 @pytest.mark.security
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testopenfgaworkloadidentity")
 class TestOpenFGAWorkloadIdentity:
     """Regression tests for OpenFGA Workload Identity configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_openfga_has_workload_identity_annotation(self):
         """
@@ -179,8 +190,13 @@ class TestOpenFGAWorkloadIdentity:
 
 @pytest.mark.security
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testqdranthealthchecksecurity")
 class TestQdrantHealthCheckSecurity:
     """Regression tests for Qdrant health check security"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_qdrant_uses_grpc_health_probe(self):
         """
@@ -254,8 +270,13 @@ class TestQdrantHealthCheckSecurity:
 
 @pytest.mark.security
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testhelmplaceholdersecurity")
 class TestHelmPlaceholderSecurity:
     """Regression tests for Helm value placeholder security"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_unresolved_project_id_placeholders_in_production(self):
         """

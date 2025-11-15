@@ -13,6 +13,7 @@ High-priority improvements tested:
 4. Container images should use fully-qualified references with digests
 """
 
+import gc
 from pathlib import Path
 from typing import Any, Dict
 
@@ -23,8 +24,13 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 
 
+@pytest.mark.xdist_group(name="testpostgresqlhighavailability")
 class TestPostgreSQLHighAvailability:
     """Test PostgreSQL deployment supports HA and has backup strategy."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content.
@@ -112,8 +118,13 @@ class TestPostgreSQLHighAvailability:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testredisstatefulsetwithpersistence")
 class TestRedisStatefulSetWithPersistence:
     """Test Redis uses StatefulSet with persistent storage instead of Deployment."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content.
@@ -262,8 +273,13 @@ class TestRedisStatefulSetWithPersistence:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testrbacleastprivilege")
 class TestRBACLeastPrivilege:
     """Test service accounts have explicit RBAC with least-privilege."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content.
@@ -368,8 +384,13 @@ class TestRBACLeastPrivilege:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testcontainerimagebestpractices")
 class TestContainerImageBestPractices:
     """Test container images use fully-qualified references with digests."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content.

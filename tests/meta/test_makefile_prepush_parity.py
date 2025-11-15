@@ -14,6 +14,7 @@ Issue: Makefile has drifted from pre-push hook, making it less strict and creati
 false confidence when developers run `make validate-pre-push` before pushing.
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -22,8 +23,13 @@ from typing import Dict, List
 import pytest
 
 
+@pytest.mark.xdist_group(name="testmakefileprepushparity")
 class TestMakefilePrePushParity:
     """Validate Makefile validate-pre-push target matches pre-push hook."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -296,8 +302,13 @@ class TestMakefilePrePushParity:
             pass  # Title correctly reflects warning-only behavior
 
 
+@pytest.mark.xdist_group(name="testmakefilevalidationconsistency")
 class TestMakefileValidationConsistency:
     """Test that Makefile validation handles failures consistently."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:

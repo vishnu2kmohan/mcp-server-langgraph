@@ -4,6 +4,7 @@ Unit tests for JSON logger with OpenTelemetry trace injection
 Tests the CustomJSONFormatter class and structured logging functionality.
 """
 
+import gc
 import json
 import logging
 from datetime import datetime
@@ -78,8 +79,13 @@ def log_record():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcustomjsonformatter")
 class TestCustomJSONFormatter:
     """Tests for CustomJSONFormatter class"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_basic_formatting(self, json_formatter, log_record):
         """Test basic JSON formatting without trace context"""
@@ -259,8 +265,13 @@ class TestCustomJSONFormatter:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsetupjsonlogging")
 class TestSetupJSONLogging:
     """Tests for setup_json_logging helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_setup_json_logging(self):
         """Test logger setup with JSON formatting"""
@@ -297,8 +308,13 @@ class TestSetupJSONLogging:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testlogwithcontext")
 class TestLogWithContext:
     """Tests for log_with_context helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_log_with_context(self):
         """Test logging with custom context fields"""
@@ -327,8 +343,13 @@ class TestLogWithContext:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Tests for edge cases and error handling"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_empty_message(self, json_formatter):
         """Test handling of empty log message"""
@@ -389,8 +410,13 @@ class TestEdgeCases:
 
 @pytest.mark.benchmark
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testperformance")
 class TestPerformance:
     """Performance tests for JSON logging"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_formatting_performance(self, json_formatter, log_record, benchmark):
         """Benchmark JSON formatting performance"""

@@ -14,6 +14,7 @@ They are marked with @pytest.mark.integration for selective running.
 Related Codex Finding: docker-compose.test.yml:214-233 Qdrant health check issue
 """
 
+import gc
 import os
 import subprocess
 import time
@@ -148,8 +149,13 @@ def wait_for_health(
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testdockercomposehealthchecksintegration")
 class TestDockerComposeHealthChecksIntegration:
     """Integration tests for Docker Compose health checks."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def cleanup_containers(self):

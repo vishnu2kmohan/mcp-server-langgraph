@@ -9,6 +9,7 @@ Following TDD principles:
 3. REFACTOR: Add documentation and prevent regressions
 """
 
+import gc
 import re
 import sys
 from pathlib import Path
@@ -47,6 +48,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.xdist_group(name="testmermaidarrowregex")
 class TestMermaidArrowRegex:
     """Test suite for Mermaid arrow syntax validation regex.
 
@@ -58,6 +60,10 @@ class TestMermaidArrowRegex:
        - Valid arrows: "A-->B", "A--B"
        - HTML entities or other valid contexts
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_arrow_regex_compiles_without_error(self):
         r"""
@@ -142,8 +148,13 @@ graph TD
             file_path.unlink()
 
 
+@pytest.mark.xdist_group(name="testfrontmatterparsing")
 class TestFrontmatterParsing:
     """Test frontmatter parsing functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_parse_valid_frontmatter(self):
         """Test parsing valid YAML frontmatter."""
@@ -202,8 +213,13 @@ Content
             file_path.unlink()
 
 
+@pytest.mark.xdist_group(name="testfilenamconvention")
 class TestFilenamConvention:
     """Test filename convention validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_valid_kebab_case_filenames(self):
         """Test that valid kebab-case filenames pass validation."""
@@ -241,8 +257,13 @@ class TestFilenamConvention:
             assert len(issues) > 0, f"Invalid filename '{filename}' should trigger {expected_severity}"
 
 
+@pytest.mark.xdist_group(name="testinternallinks")
 class TestInternalLinks:
     """Test internal link validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_skip_external_links(self):
         """Test that external HTTP(S) links are not validated."""
@@ -301,8 +322,13 @@ Check [config](/config/settings.yaml).
             file_path.unlink()
 
 
+@pytest.mark.xdist_group(name="testvalidationreport")
 class TestValidationReport:
     """Test ValidationReport functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_add_and_count_issues(self):
         """Test adding issues and counting by severity."""

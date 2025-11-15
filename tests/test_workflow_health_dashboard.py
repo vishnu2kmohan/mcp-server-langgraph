@@ -6,6 +6,7 @@ handles edge cases correctly, particularly division by zero when
 workflows have no runs.
 """
 
+import gc
 import json
 import subprocess
 from pathlib import Path

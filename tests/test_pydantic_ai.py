@@ -4,6 +4,7 @@ Tests for Pydantic AI integration
 Covers type-safe agent responses, validation, and streaming.
 """
 
+import gc
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

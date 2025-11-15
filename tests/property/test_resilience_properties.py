@@ -10,6 +10,7 @@ Tests resilience invariants:
 """
 
 import asyncio
+import gc
 
 import pytest
 from hypothesis import given, settings
@@ -24,8 +25,13 @@ from mcp_server_langgraph.resilience.timeout import with_timeout
 pytestmark = [pytest.mark.unit, pytest.mark.property]
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerproperties")
 class TestCircuitBreakerProperties:
     """Property-based tests for circuit breaker"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         fail_count=st.integers(min_value=1, max_value=10),
@@ -108,8 +114,13 @@ class TestCircuitBreakerProperties:
         assert isinstance(result, str)
 
 
+@pytest.mark.xdist_group(name="testretryproperties")
 class TestRetryProperties:
     """Property-based tests for retry logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         num_retries=st.integers(min_value=1, max_value=5),
@@ -160,8 +171,13 @@ class TestRetryProperties:
         assert attempt_count[0] in [max_retries, max_retries + 1]
 
 
+@pytest.mark.xdist_group(name="testtimeoutproperties")
 class TestTimeoutProperties:
     """Property-based tests for timeout enforcement"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         sleep_duration=st.floats(min_value=0.05, max_value=0.5),
@@ -210,8 +226,13 @@ class TestTimeoutProperties:
         assert result == value * 2
 
 
+@pytest.mark.xdist_group(name="testbulkheadproperties")
 class TestBulkheadProperties:
     """Property-based tests for bulkhead pattern"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(max_concurrent=st.integers(min_value=1, max_value=5))
     @settings(max_examples=10, deadline=3000)
@@ -272,8 +293,13 @@ class TestBulkheadProperties:
             assert rejected_count[0] > 0
 
 
+@pytest.mark.xdist_group(name="testfallbackproperties")
 class TestFallbackProperties:
     """Property-based tests for fallback strategies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(default_value=st.integers())
     @settings(max_examples=15, deadline=2000)
@@ -350,8 +376,13 @@ class TestFallbackProperties:
             assert result is False
 
 
+@pytest.mark.xdist_group(name="testcacheproperties")
 class TestCacheProperties:
     """Property-based tests for caching"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         key=st.text(min_size=1, max_size=50, alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"))),
@@ -406,8 +437,13 @@ class TestCacheProperties:
         assert result is None
 
 
+@pytest.mark.xdist_group(name="testretryexceptionhandling")
 class TestRetryExceptionHandling:
     """Property-based tests for retry exception classification"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(
         error_code=st.sampled_from(["INVALID_CREDENTIALS", "PERMISSION_DENIED", "INVALID_INPUT", "SCHEMA_VALIDATION_ERROR"])
@@ -470,8 +506,13 @@ class TestRetryExceptionHandling:
         assert should_retry is True
 
 
+@pytest.mark.xdist_group(name="testcachekeygenerationproperties")
 class TestCacheKeyGenerationProperties:
     """Property-based tests for cache key generation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(parts=st.lists(st.text(min_size=1, max_size=20), min_size=1, max_size=5))
     @settings(max_examples=20, deadline=2000)
@@ -505,8 +546,13 @@ class TestCacheKeyGenerationProperties:
         assert key1 != key2
 
 
+@pytest.mark.xdist_group(name="testfallbackstrategyproperties")
 class TestFallbackStrategyProperties:
     """Property-based tests for fallback strategies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(default=st.integers())
     @settings(max_examples=15, deadline=2000)
@@ -529,8 +575,13 @@ class TestFallbackStrategyProperties:
         assert result == default or result == default + 1
 
 
+@pytest.mark.xdist_group(name="testresiliencecomposition")
 class TestResilienceComposition:
     """Property-based tests for composing resilience patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(value=st.integers())
     @settings(max_examples=10, deadline=3000)
@@ -574,8 +625,13 @@ class TestResilienceComposition:
         assert result == f"fallback_{value}"
 
 
+@pytest.mark.xdist_group(name="testresilienceinvariants")
 class TestResilienceInvariants:
     """Test resilience pattern invariants"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(attempts=st.integers(min_value=1, max_value=5))
     @settings(max_examples=10, deadline=3000)

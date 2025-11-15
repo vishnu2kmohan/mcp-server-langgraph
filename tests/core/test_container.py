@@ -10,24 +10,32 @@ Following TDD principles:
 These tests define the behavior we want from the container pattern.
 """
 
+import gc
 from unittest.mock import patch
 
 import pytest
 
 # Import the container module (doesn't exist yet - TDD Red phase)
 # We'll create this module after writing the tests
+from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.container import (
     ApplicationContainer,
     AuthProvider,
     ContainerConfig,
     StorageProvider,
     TelemetryProvider,
+    create_test_container,
 )
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcontainerconfiguration")
 class TestContainerConfiguration:
     """Test container configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_container_config_defaults(self):
         """Test that container config has sensible defaults"""
@@ -56,8 +64,13 @@ class TestContainerConfiguration:
         assert config.enable_telemetry is True
 
 
+@pytest.mark.xdist_group(name="testapplicationcontainer")
 class TestApplicationContainer:
     """Test the main application container"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_container_initialization_test_mode(self):
         """Test container initializes with no-op providers in test mode"""
@@ -157,8 +170,13 @@ class TestApplicationContainer:
             mock_init.assert_not_called()
 
 
+@pytest.mark.xdist_group(name="testtelemetryprovider")
 class TestTelemetryProvider:
     """Test the telemetry provider abstraction"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_noop_telemetry_provider(self):
         """Test that no-op telemetry provider doesn't throw errors"""
@@ -198,8 +216,13 @@ class TestTelemetryProvider:
         assert provider.tracer is not None
 
 
+@pytest.mark.xdist_group(name="testauthprovider")
 class TestAuthProvider:
     """Test the auth provider abstraction"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
@@ -243,8 +266,13 @@ class TestAuthProvider:
         assert user["username"] == "testuser"
 
 
+@pytest.mark.xdist_group(name="teststorageprovider")
 class TestStorageProvider:
     """Test the storage provider abstraction"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_memory_storage_provider(self):
         """Test in-memory storage provider for tests"""
@@ -271,8 +299,13 @@ class TestStorageProvider:
         assert provider is not None
 
 
+@pytest.mark.xdist_group(name="testcontainertesthelpers")
 class TestContainerTestHelpers:
     """Test helper functions for creating test containers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_container_helper(self):
         """Test that create_test_container helper works"""
@@ -306,8 +339,13 @@ class TestContainerTestHelpers:
         assert container.settings.log_level == "DEBUG"
 
 
+@pytest.mark.xdist_group(name="testproductionauthvalidation")
 class TestProductionAuthValidation:
     """Test that production environments require proper external auth"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
@@ -433,8 +471,13 @@ class TestProductionAuthValidation:
         assert "GDPR_STORAGE_BACKEND=memory is not allowed in production" in error_message
 
 
+@pytest.mark.xdist_group(name="testcontainerintegrationwithexistingcode")
 class TestContainerIntegrationWithExistingCode:
     """Test that container integrates with existing codebase"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_container_compatible_with_current_settings(self):
         """Test that container works with existing Settings class"""

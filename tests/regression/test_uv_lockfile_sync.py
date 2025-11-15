@@ -59,6 +59,7 @@ This test validates that:
 - CI Run: https://github.com/vishnu2kmohan/mcp-server-langgraph/actions/runs/19306810940
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -68,6 +69,7 @@ import yaml
 
 @pytest.mark.regression
 @pytest.mark.documentation
+@pytest.mark.xdist_group(name="testuvlockfilesynchronization")
 class TestUVLockfileSynchronization:
     """
     Regression tests for UV lockfile synchronization issues.
@@ -75,6 +77,10 @@ class TestUVLockfileSynchronization:
     Prevents recurrence of the 2025-11-12 incident where out-of-sync
     lockfile blocked all CI/CD workflows.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_uv_lock_file_exists(self):
         """Verify uv.lock exists in project root"""
@@ -184,6 +190,7 @@ class TestUVLockfileSynchronization:
 
 @pytest.mark.regression
 @pytest.mark.ci
+@pytest.mark.xdist_group(name="testcipythonversionmatrix")
 class TestCIPythonVersionMatrix:
     """
     Regression tests for CI Python version matrix configuration.
@@ -191,6 +198,10 @@ class TestCIPythonVersionMatrix:
     Prevents recurrence of the issue where all matrix jobs ran Python 3.12
     instead of their configured versions (3.10, 3.11, 3.12).
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_ci_workflow_uses_uv_sync_with_python_flag(self):
         """
@@ -237,6 +248,7 @@ class TestCIPythonVersionMatrix:
 
 @pytest.mark.regression
 @pytest.mark.documentation
+@pytest.mark.xdist_group(name="testfastapidependencyoverridespattern")
 class TestFastAPIDependencyOverridesPattern:
     """
     Regression tests for FastAPI dependency mocking pattern.
@@ -244,6 +256,10 @@ class TestFastAPIDependencyOverridesPattern:
     Documents the correct way to mock dependencies in FastAPI tests
     to avoid parameter name collisions and pytest-xdist issues.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_service_principals_fixture_uses_dependency_overrides(self):
         """

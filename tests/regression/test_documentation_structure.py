@@ -13,6 +13,7 @@ Date: 2025-11-12
 Related: GitHub Issues #75-80
 """
 
+import gc
 import json
 from pathlib import Path
 from typing import Dict, List, Set
@@ -27,8 +28,13 @@ ADR_DIR = PROJECT_ROOT / "adr"
 PYPROJECT_TOML = PROJECT_ROOT / "pyproject.toml"
 
 
+@pytest.mark.xdist_group(name="testdocumentationnavigation")
 class TestDocumentationNavigation:
     """Prevent orphaned files and broken navigation references."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_mdx_files_in_navigation(self):
         """
@@ -155,8 +161,13 @@ class TestDocumentationNavigation:
             return set(pages)
 
 
+@pytest.mark.xdist_group(name="testadrnumbering")
 class TestADRNumbering:
     """Prevent duplicate ADR numbering."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_duplicate_adr_numbers(self):
         """
@@ -284,8 +295,13 @@ class TestADRNumbering:
             )
 
 
+@pytest.mark.xdist_group(name="testversionconsistency")
 class TestVersionConsistency:
     """Ensure version numbers are consistent across project."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_version_consistency_in_deployment_files(self):
         """
@@ -378,8 +394,13 @@ class TestVersionConsistency:
         return None
 
 
+@pytest.mark.xdist_group(name="testdocumentationquality")
 class TestDocumentationQuality:
     """Additional quality checks for documentation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_todos_in_public_docs(self):
         """
@@ -598,8 +619,13 @@ class TestDocumentationQuality:
             # pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testrootdocumentationfiles")
 class TestRootDocumentationFiles:
     """Validate root-level documentation files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_essential_root_docs_exist(self):
         """

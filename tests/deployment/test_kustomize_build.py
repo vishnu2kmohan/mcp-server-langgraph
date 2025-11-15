@@ -6,6 +6,7 @@ Ensures that all Kustomize overlays build successfully and produce
 valid Kubernetes manifests without errors or warnings.
 """
 
+import gc
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List

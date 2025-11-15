@@ -21,6 +21,7 @@ This test ensures all code blocks in documentation have proper language tags.
 Run with: pytest tests/regression/test_documentation_code_blocks.py -v
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import List, Tuple
@@ -76,12 +77,17 @@ def extract_code_blocks(file_path: Path) -> List[Tuple[int, str]]:
 
 @pytest.mark.regression
 @pytest.mark.documentation
+@pytest.mark.xdist_group(name="testdocumentationcodeblocks")
 class TestDocumentationCodeBlocks:
     """
     Regression tests for documentation code block validation.
 
     Prevents recurrence of issue from 2025-11-12.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_code_blocks_have_language_tags(self):
         """

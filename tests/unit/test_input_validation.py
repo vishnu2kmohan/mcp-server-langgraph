@@ -4,14 +4,21 @@ This module tests validation of user-controlled identifiers that flow into
 critical systems like OpenFGA, Redis, and application logs.
 """
 
+import gc
+
 import pytest
 from pydantic import ValidationError
 
 from mcp_server_langgraph.mcp.server_streamable import ChatInput, SearchConversationsInput
 
 
+@pytest.mark.xdist_group(name="testthreadidvalidation")
 class TestThreadIdValidation:
     """Test suite for thread_id validation to prevent CWE-20"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_thread_id_accepts_valid_alphanumeric(self):
         """Test that valid alphanumeric thread_id is accepted"""
@@ -210,8 +217,13 @@ class TestThreadIdValidation:
         assert search_input.query == "test search"
 
 
+@pytest.mark.xdist_group(name="testconversationidusageincode")
 class TestConversationIdUsageInCode:
     """Integration tests verifying thread_id doesn't corrupt downstream systems"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_thread_id_in_openfga_resource(self):
         """Test that valid thread_id creates safe OpenFGA resource string"""

@@ -8,11 +8,20 @@ Related Issue: Staging deployment revision 758b8f744 crash
 Root Cause: Password with / and + characters not percent-encoded in Redis URL
 """
 
+import gc
+
+import pytest
+
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 
 
+@pytest.mark.xdist_group(name="testredisurlencoding")
 class TestRedisURLEncoding:
     """Test URL encoding for Redis connection strings per RFC 3986."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_password_with_forward_slash_encoded(self):
         """Test password containing '/' is percent-encoded to %2F.

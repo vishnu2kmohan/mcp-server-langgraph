@@ -6,6 +6,7 @@ that parallel execution provides performance improvements.
 """
 
 import asyncio
+import gc
 import time
 
 import pytest
@@ -14,8 +15,13 @@ from mcp_server_langgraph.core.config import Settings
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testparalleltoolexecution")
 class TestParallelToolExecution:
     """Test suite for parallel tool execution"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def settings_serial(self):
@@ -187,8 +193,13 @@ class TestParallelToolExecution:
 
 @pytest.mark.integration
 @pytest.mark.benchmark
+@pytest.mark.xdist_group(name="testparallelexecutionperformance")
 class TestParallelExecutionPerformance:
     """Performance benchmarks for parallel execution"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_latency_improvement_independent_tools(self):

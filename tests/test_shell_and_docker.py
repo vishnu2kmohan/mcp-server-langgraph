@@ -8,6 +8,7 @@ Following TDD principles:
 3. REFACTOR: Document safety patterns
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -16,8 +17,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testshellscriptsafety")
 class TestShellScriptSafety:
     """Test shell scripts for safety and proper quoting."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_check_pr_status_quotes_variables(self):
         """
@@ -83,8 +89,13 @@ class TestShellScriptSafety:
         )
 
 
+@pytest.mark.xdist_group(name="testdockercomposehealthchecks")
 class TestDockerComposeHealthChecks:
     """Test Docker Compose health check configurations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_health_check_uses_native_command(self):
         """

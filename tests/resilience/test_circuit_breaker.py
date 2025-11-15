@@ -5,6 +5,7 @@ Tests circuit breaker behavior, state transitions, fallback, and metrics.
 """
 
 import asyncio
+import gc
 from unittest.mock import patch
 
 import pybreaker
@@ -30,8 +31,13 @@ def reset_breakers():
     reset_all_circuit_breakers()
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerbasics")
 class TestCircuitBreakerBasics:
     """Test basic circuit breaker functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_get_circuit_breaker_creates_new(self, reset_breakers):
@@ -72,8 +78,13 @@ class TestCircuitBreakerBasics:
         assert states["service1"] == CircuitBreakerState.CLOSED
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerstatetransitions")
 class TestCircuitBreakerStateTransitions:
     """Test circuit breaker state transitions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -135,8 +146,13 @@ class TestCircuitBreakerStateTransitions:
         # Note: Can't directly test HALF_OPEN state without triggering a call
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerwithfallback")
 class TestCircuitBreakerWithFallback:
     """Test circuit breaker with fallback functions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -183,8 +199,13 @@ class TestCircuitBreakerWithFallback:
         assert result == "default"
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakermetrics")
 class TestCircuitBreakerMetrics:
     """Test circuit breaker metrics emission"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -217,8 +238,13 @@ class TestCircuitBreakerMetrics:
             mock_metric.add.assert_called()
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerreset")
 class TestCircuitBreakerReset:
     """Test circuit breaker manual reset"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -246,8 +272,13 @@ class TestCircuitBreakerReset:
         assert state == CircuitBreakerState.CLOSED
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakerconfiguration")
 class TestCircuitBreakerConfiguration:
     """Test circuit breaker configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_custom_fail_max(self, reset_breakers):
@@ -262,8 +293,13 @@ class TestCircuitBreakerConfiguration:
         # Default from config should be applied
 
 
+@pytest.mark.xdist_group(name="testcircuitbreakeredgecases")
 class TestCircuitBreakerEdgeCases:
     """Test circuit breaker edge cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio

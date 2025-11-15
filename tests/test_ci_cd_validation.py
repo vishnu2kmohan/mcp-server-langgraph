@@ -11,6 +11,7 @@ Created in response to comprehensive CI/CD audit (2025-11-07) that identified:
 These tests ensure such issues cannot recur.
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -27,12 +28,17 @@ from tests.conftest import requires_tool
 
 
 @pytest.mark.requires_kustomize
+@pytest.mark.xdist_group(name="testkustomizeconfigurations")
 class TestKustomizeConfigurations:
     """Test Kustomize configurations for common issues
 
     CODEX FINDING #1: These tests require kustomize CLI tool.
     Tests will skip gracefully if kustomize is not installed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def kustomize_overlays(self) -> List[Path]:
@@ -185,8 +191,13 @@ class TestKustomizeConfigurations:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testgithubactionsworkflows")
 class TestGitHubActionsWorkflows:
     """Test GitHub Actions workflows for best practices and error handling"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def workflow_files(self) -> List[Path]:
@@ -455,8 +466,13 @@ class TestGitHubActionsWorkflows:
 # ==============================================================================
 
 
+@pytest.mark.xdist_group(name="testdockercomposetestinfra")
 class TestDockerComposeTestInfra:
     """Test Docker Compose test infrastructure configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def docker_compose_test_file(self) -> Path:

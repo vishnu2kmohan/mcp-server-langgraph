@@ -15,6 +15,7 @@ References:
 """
 
 import ast
+import gc
 import re
 
 import pytest
@@ -24,8 +25,13 @@ from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testnohardcodedcredentials")
 class TestNoHardcodedCredentials:
     """Test suite ensuring no hard-coded credentials exist"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_inmemory_provider_starts_with_empty_database(self):
         """
@@ -142,8 +148,13 @@ class TestNoHardcodedCredentials:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testnohardcodedcredentialsinsourcecode")
 class TestNoHardcodedCredentialsInSourceCode:
     """Static analysis tests to ensure no hard-coded credentials in source files"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_hardcoded_passwords_in_user_provider(self):
         """
@@ -216,8 +227,13 @@ class TestNoHardcodedCredentialsInSourceCode:
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcredentialcreationdocumentation")
 class TestCredentialCreationDocumentation:
     """Tests to ensure proper documentation for creating test users"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_readme_contains_user_creation_example(self):
         """

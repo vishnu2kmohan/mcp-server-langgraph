@@ -7,6 +7,7 @@ to ensure proper HA setup, failover capabilities, and backup configurations.
 Following TDD principles: Write tests first, then ensure infrastructure meets requirements.
 """
 
+import gc
 from typing import Any, Dict
 
 import pytest
@@ -15,8 +16,13 @@ import yaml
 
 @pytest.mark.unit
 @pytest.mark.infrastructure
+@pytest.mark.xdist_group(name="testdatabaseha")
 class TestDatabaseHA:
     """Test database HA configurations across cloud providers."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def gcp_cloudsql_config(self) -> Dict[str, Any]:
@@ -192,8 +198,13 @@ class TestDatabaseHA:
         assert "dependencies" in chart
 
 
+@pytest.mark.xdist_group(name="testdatabasefailover")
 class TestDatabaseFailover:
     """Test database failover capabilities."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_application_has_connection_retry_logic(self):
         """Test application code has database connection retry logic."""
@@ -231,8 +242,13 @@ class TestDatabaseFailover:
         assert len(env_files) >= 0  # Placeholder - will implement properly
 
 
+@pytest.mark.xdist_group(name="testdatabasebackuprestore")
 class TestDatabaseBackupRestore:
     """Test database backup and restore procedures."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_terraform_modules_have_backup_configuration(self):
         """Test all database Terraform modules have backup configs."""
@@ -275,8 +291,13 @@ class TestDatabaseBackupRestore:
             assert "backup_retention" in config.lower() or "retained_backups" in config.lower()
 
 
+@pytest.mark.xdist_group(name="testdatabasemonitoring")
 class TestDatabaseMonitoring:
     """Test database monitoring and alerting."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cloudsql_has_monitoring_alerts(self):
         """Test CloudSQL module configures monitoring alerts."""

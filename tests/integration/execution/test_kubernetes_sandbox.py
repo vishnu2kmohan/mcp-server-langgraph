@@ -7,6 +7,8 @@ Following TDD best practices - these tests should FAIL until implementation is c
 NOTE: These tests require Kubernetes cluster access (kubeconfig).
 """
 
+import gc
+
 import pytest
 
 # These imports will fail initially - that's expected in TDD!
@@ -34,8 +36,13 @@ def kubernetes_available():
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testkubernetessandbox")
 class TestKubernetesSandbox:
     """Test Kubernetes sandbox basic functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def sandbox(self, kubernetes_available):
@@ -84,6 +91,7 @@ print(f'Result: {result}')
 
 @pytest.mark.integration
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testkubernetessandboxstderrseparation")
 class TestKubernetesSandboxStderrSeparation:
     """
     Regression tests for stdout/stderr separation in Kubernetes sandbox
@@ -95,6 +103,10 @@ class TestKubernetesSandboxStderrSeparation:
 
     These tests ensure stderr/stdout are properly separated, preventing regression.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def sandbox(self, kubernetes_available):
@@ -192,8 +204,13 @@ failing_function()
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testkubernetessandboxresourcelimits")
 class TestKubernetesSandboxResourceLimits:
     """Test resource limit enforcement in Kubernetes"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_timeout_enforcement(self, kubernetes_available):
         """Test that timeout is enforced"""
@@ -242,8 +259,13 @@ print('CPU quota test passed')
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testkubernetessandboxcleanup")
 class TestKubernetesSandboxCleanup:
     """Test resource cleanup in Kubernetes"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_job_cleanup_on_success(self, kubernetes_available):
         """Test that Jobs are cleaned up after successful execution"""
@@ -305,8 +327,13 @@ class TestKubernetesSandboxCleanup:
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testkubernetessandboxconfiguration")
 class TestKubernetesSandboxConfiguration:
     """Test Kubernetes sandbox configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_custom_namespace(self, kubernetes_available):
         """Test using custom namespace"""
@@ -339,8 +366,13 @@ class TestKubernetesSandboxConfiguration:
 
 @pytest.mark.integration
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="testkubernetessandboxerrorhandling")
 class TestKubernetesSandboxErrorHandling:
     """Test error handling in Kubernetes sandbox"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_invalid_namespace(self):
         """Test handling of invalid namespace"""

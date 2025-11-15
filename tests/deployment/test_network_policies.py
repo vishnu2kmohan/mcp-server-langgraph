@@ -10,6 +10,7 @@ This test suite validates that:
 Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -25,8 +26,13 @@ REDIS_PORT = 6379
 MYSQL_PORT = 3306  # Should NOT be used for PostgreSQL
 
 
+@pytest.mark.xdist_group(name="testnetworkpolicyports")
 class TestNetworkPolicyPorts:
     """Test that NetworkPolicies use correct database ports."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def staging_network_policies(self):
@@ -174,8 +180,13 @@ class TestNetworkPolicyPorts:
                         )
 
 
+@pytest.mark.xdist_group(name="testnetworkpolicyselectors")
 class TestNetworkPolicySelectors:
     """Test that NetworkPolicy selectors are properly scoped."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def production_network_policies(self):
@@ -228,8 +239,13 @@ class TestNetworkPolicySelectors:
             warn_module.warn("Potentially overly permissive NetworkPolicy selectors:\n" + "\n".join(warnings))
 
 
+@pytest.mark.xdist_group(name="testnetworkpolicycomments")
 class TestNetworkPolicyComments:
     """Test that NetworkPolicy configurations have clear documentation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_database_egress_rules_have_comments(self):
         """

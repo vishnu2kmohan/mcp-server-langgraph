@@ -27,6 +27,8 @@ See Also:
 - tests/test_auth.py (tests that use set_global_auth_middleware)
 """
 
+import gc
+
 import pytest
 
 import mcp_server_langgraph.auth.middleware as middleware
@@ -36,6 +38,10 @@ from mcp_server_langgraph.auth.middleware import set_global_auth_middleware
 @pytest.mark.xdist_group(name="auth_middleware_isolation")
 class TestAuthMiddlewareIsolation:
     """Test auth middleware global state isolation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def teardown_method(self):
         """Clean up auth middleware after each test."""

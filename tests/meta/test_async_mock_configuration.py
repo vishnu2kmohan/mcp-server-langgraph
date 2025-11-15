@@ -8,6 +8,7 @@ pytest-xdist state pollution.
 Run with: pytest tests/meta/test_async_mock_configuration.py -v
 """
 
+import gc
 import subprocess
 import sys
 from pathlib import Path

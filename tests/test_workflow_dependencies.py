@@ -10,6 +10,7 @@ TDD Approach (RED → GREEN → REFACTOR):
 3. REFACTOR: Improve dependency structure while keeping tests green
 """
 
+import gc
 from pathlib import Path
 
 import pytest

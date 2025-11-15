@@ -8,6 +8,8 @@ and provide proper help text.
 Following TDD principles - these tests verify CLI commands are properly wired.
 """
 
+import gc
+
 import pytest
 from click.testing import CliRunner
 
@@ -15,8 +17,13 @@ from mcp_server_langgraph.cli import cli
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testclismoke")
 class TestCLISmoke:
     """Smoke tests for CLI commands."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def runner(self):
@@ -78,8 +85,13 @@ class TestCLISmoke:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testclitemplateoptions")
 class TestCLITemplateOptions:
     """Test that CLI commands accept valid template options."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def runner(self):

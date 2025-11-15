@@ -8,6 +8,7 @@ Tests validate that:
 4. Navigation structure is valid JSON
 """
 
+import gc
 import json
 from pathlib import Path
 from typing import Dict, List, Set
@@ -18,8 +19,13 @@ import pytest
 from scripts.validators.navigation_validator import MissingFileError, NavigationError, NavigationValidator, OrphanedFileError
 
 
+@pytest.mark.xdist_group(name="testnavigationvalidator")
 class TestNavigationValidator:
     """Test suite for NavigationValidator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self, tmp_path):

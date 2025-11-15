@@ -35,6 +35,7 @@ References:
 - ADR: Single shared test infrastructure with logical isolation
 """
 
+import gc
 import os
 
 import pytest

@@ -31,6 +31,7 @@ References:
 - CONTRIBUTING.md: Documents 'make git-hooks' requirement
 """
 
+import gc
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -39,8 +40,13 @@ import pytest
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testhookfixtureresilience")
 class TestHookFixtureResilience:
     """Validate that hook fixtures handle missing hooks gracefully."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_missing_hook_should_skip_not_fail(self):
         """
@@ -148,8 +154,13 @@ class TestHookFixtureResilience:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testprepushhookfixture")
 class TestPrePushHookFixture:
     """Validate the pre_push_hook_path fixture from test_local_ci_parity.py."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_current_fixture_requires_update(self):
         """
@@ -185,12 +196,17 @@ class TestPrePushHookFixture:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testfixturebehaviorafterfix")
 class TestFixtureBehaviorAfterFix:
     """
     Validate expected fixture behavior after implementing the fix.
 
     These tests define what the FIXED fixture should do.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_fixture_skips_when_hook_missing(self):
         """

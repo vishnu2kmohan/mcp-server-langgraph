@@ -10,6 +10,7 @@ Tests cover:
 - Validation
 """
 
+import gc
 import tempfile
 from pathlib import Path
 
@@ -24,8 +25,13 @@ from mcp_server_langgraph.auth.role_mapper import ConditionalMapping, GroupMappi
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsimplerolemapping")
 class TestSimpleRoleMapping:
     """Tests for SimpleRoleMapping"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_realm_role_mapping(self):
         """Test mapping realm role to OpenFGA tuple"""
@@ -101,8 +107,13 @@ class TestSimpleRoleMapping:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testgroupmapping")
 class TestGroupMapping:
     """Tests for GroupMapping"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_top_level_group_mapping(self):
         """Test mapping top-level group to organization"""
@@ -180,8 +191,13 @@ class TestGroupMapping:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testconditionalmapping")
 class TestConditionalMapping:
     """Tests for ConditionalMapping"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_equality_condition(self):
         """Test conditional mapping with equality operator"""
@@ -314,8 +330,13 @@ class TestConditionalMapping:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrolemapper")
 class TestRoleMapper:
     """Tests for RoleMapper"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_default_config(self):
@@ -609,8 +630,13 @@ group_mappings:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrolemapperintegration")
 class TestRoleMapperIntegration:
     """Integration tests for role mapper"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_realistic_enterprise_scenario(self):

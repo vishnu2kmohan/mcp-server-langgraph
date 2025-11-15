@@ -18,6 +18,8 @@ References:
 - CWE-703: Improper Check or Handling of Exceptional Conditions
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.utils.response_optimizer import ResponseOptimizer
@@ -25,8 +27,13 @@ from mcp_server_langgraph.utils.response_optimizer import ResponseOptimizer
 
 @pytest.mark.security
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testaccuratetokencounting")
 class TestAccurateTokenCounting:
     """Test suite for accurate provider-specific token counting"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gemini_token_counting_uses_google_tokenizer(self):
         """
@@ -154,8 +161,13 @@ class TestAccurateTokenCounting:
 
 @pytest.mark.security
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testtokencounterregistry")
 class TestTokenCounterRegistry:
     """Test suite for token counter registry pattern"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gemini_models_use_google_counter(self):
         """
@@ -246,8 +258,13 @@ class TestTokenCounterRegistry:
 
 @pytest.mark.security
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testtokencountingaccuracy")
 class TestTokenCountingAccuracy:
     """Regression tests for token counting accuracy"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gemini_flash_specific_text_sample(self):
         """

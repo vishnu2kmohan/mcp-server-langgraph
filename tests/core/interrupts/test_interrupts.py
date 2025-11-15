@@ -15,6 +15,7 @@ Tests cover:
 - Edge cases
 """
 
+import gc
 from typing import Any, Dict
 
 import pytest
@@ -24,6 +25,7 @@ try:
     from freezegun import freeze_time
 except ImportError:
     pytest.skip("freezegun not installed (optional test dependency)", allow_module_level=True)
+
 
 from mcp_server_langgraph.core.interrupts.interrupts import (
     InterruptConfig,
@@ -40,8 +42,13 @@ from mcp_server_langgraph.core.interrupts.interrupts import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinterrupttype")
 class TestInterruptType:
     """Test interrupt type enumeration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_interrupt_type_values(self):
         """Test all interrupt type values exist."""
@@ -69,8 +76,13 @@ class TestInterruptType:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinterruptconfig")
 class TestInterruptConfig:
     """Test InterruptConfig model validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_interrupt_config_minimal_fields(self):
         """Test creation with minimal fields."""
@@ -136,8 +148,13 @@ class TestInterruptConfig:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinterrupthandler")
 class TestInterruptHandler:
     """Test InterruptHandler class functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_interrupt_handler_init(self):
         """Test InterruptHandler initialization."""
@@ -370,8 +387,13 @@ class TestInterruptHandler:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcreateinterrupthandler")
 class TestCreateInterruptHandler:
     """Test create_interrupt_handler factory function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_interrupt_handler_returns_instance(self):
         """Test create_interrupt_handler returns InterruptHandler instance."""
@@ -394,8 +416,13 @@ class TestCreateInterruptHandler:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcreateconditionalinterrupt")
 class TestCreateConditionalInterrupt:
     """Test create_conditional_interrupt helper function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_conditional_interrupt_returns_config(self):
         """Test create_conditional_interrupt returns InterruptConfig."""
@@ -463,8 +490,13 @@ class TestCreateConditionalInterrupt:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcreatetimeoutinterrupt")
 class TestCreateTimeoutInterrupt:
     """Test create_timeout_interrupt helper function."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_timeout_interrupt_returns_config(self):
         """Test create_timeout_interrupt returns InterruptConfig."""
@@ -507,8 +539,13 @@ class TestCreateTimeoutInterrupt:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinterruptworkflowintegration")
 class TestInterruptWorkflowIntegration:
     """Integration tests for complete interrupt workflows."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @freeze_time("2024-01-15 21:00:00")
     def test_full_interrupt_workflow(self):
@@ -600,8 +637,13 @@ class TestInterruptWorkflowIntegration:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testinterruptedgecases")
 class TestInterruptEdgeCases:
     """Test edge cases and error scenarios."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_should_interrupt_empty_state(self):
         """Test should_interrupt with empty state."""

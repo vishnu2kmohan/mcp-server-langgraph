@@ -10,11 +10,18 @@ Following TDD:
 3. Verify no regressions - REFACTOR
 """
 
+import gc
+
 import pytest
 
 
+@pytest.mark.xdist_group(name="testagentfactory")
 class TestAgentFactory:
     """Test the new agent factory function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_agent_with_container(self):
         """Test creating agent using container"""
@@ -65,8 +72,13 @@ class TestAgentFactory:
         assert agent is not None
 
 
+@pytest.mark.xdist_group(name="testagentgraphfactory")
 class TestAgentGraphFactory:
     """Test the graph creation function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_agent_graph_with_settings(self):
         """Test creating agent graph with settings"""
@@ -98,8 +110,13 @@ class TestAgentGraphFactory:
         assert hasattr(graph, "invoke")
 
 
+@pytest.mark.xdist_group(name="testbackwardcompatibility")
 class TestBackwardCompatibility:
     """Test that old singleton pattern still works during migration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_agent_graph_still_works(self):
         """Test that old get_agent_graph() function still works"""
@@ -120,8 +137,13 @@ class TestBackwardCompatibility:
         assert agent1 is agent2
 
 
+@pytest.mark.xdist_group(name="testagentstatemanagement")
 class TestAgentStateManagement:
     """Test that agent state works with container pattern"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_with_memory_checkpointer(self):
         """Test agent uses MemorySaver in test mode"""
@@ -150,8 +172,13 @@ class TestAgentStateManagement:
         assert agent is not None
 
 
+@pytest.mark.xdist_group(name="testagentconfiguration")
 class TestAgentConfiguration:
     """Test that agent respects configuration from container"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_uses_container_settings(self):
         """Test that agent uses settings from container"""
@@ -168,8 +195,13 @@ class TestAgentConfiguration:
         # Agent should be created with custom settings
 
 
+@pytest.mark.xdist_group(name="testagentisolation")
 class TestAgentIsolation:
     """Test that agents are properly isolated"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_multiple_agents_are_independent(self):
         """Test that multiple agent instances don't share state"""
@@ -195,8 +227,13 @@ class TestAgentIsolation:
         assert agent1 is not agent2
 
 
+@pytest.mark.xdist_group(name="testagenttesthelperintegration")
 class TestAgentTestHelperIntegration:
     """Test that agent works with test helpers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_agent_uses_new_factory(self):
         """Test that test helper uses the new factory"""
@@ -215,8 +252,13 @@ class TestAgentTestHelperIntegration:
         assert agent is not None
 
 
+@pytest.mark.xdist_group(name="testagentdocumentation")
 class TestAgentDocumentation:
     """Test that refactored functions have good documentation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_agent_has_docstring(self):
         """Test that create_agent has comprehensive docstring"""
@@ -235,6 +277,7 @@ class TestAgentDocumentation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsettingsinjectionregression")
 class TestSettingsInjectionRegression:
     """
     Regression tests for settings injection bug fix.
@@ -245,6 +288,10 @@ class TestSettingsInjectionRegression:
     - Multi-tenant deployments
     - Feature flags and A/B testing
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_agent_graph_respects_checkpoint_backend_override(self):
         """

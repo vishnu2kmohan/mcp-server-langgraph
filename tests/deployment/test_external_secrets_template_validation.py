@@ -10,6 +10,7 @@ Tests validate:
 3. Regression prevention for accidental filter removal
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -17,8 +18,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testexternalsecretsredisurlencoding")
 class TestExternalSecretsRedisURLEncoding:
     """Validate External Secrets templates have proper URL encoding."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def staging_external_secrets_path(self) -> Path:
@@ -163,8 +169,13 @@ class TestExternalSecretsRedisURLEncoding:
         )
 
 
+@pytest.mark.xdist_group(name="testexternalsecretsregressionprevention")
 class TestExternalSecretsRegressionPrevention:
     """Regression tests to prevent accidental removal of URL encoding filters."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def template_content(self) -> str:
@@ -244,8 +255,13 @@ class TestExternalSecretsRegressionPrevention:
         )
 
 
+@pytest.mark.xdist_group(name="testexternalsecretsmultienvironmentconsistency")
 class TestExternalSecretsMultiEnvironmentConsistency:
     """Test that URL encoding is consistent across all deployment environments."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize(
         "overlay_path",

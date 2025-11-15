@@ -11,6 +11,7 @@ The fix ensures addopts is overridden to exclude xdist-specific flags when runni
 Reference: Performance Regression Detection workflow failures (runs 19250359776, 19250511465, etc.)
 """
 
+import gc
 from pathlib import Path
 
 import pytest

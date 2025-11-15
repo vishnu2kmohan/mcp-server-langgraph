@@ -4,6 +4,8 @@ Unit tests for tools catalog and registry
 Tests tool organization and access patterns.
 """
 
+import gc
+
 import pytest
 from langchain_core.tools import BaseTool
 
@@ -11,8 +13,13 @@ from mcp_server_langgraph.tools import ALL_TOOLS, CALCULATOR_TOOLS, FILESYSTEM_T
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testtoolscatalog")
 class TestToolsCatalog:
     """Test suite for tools catalog"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_tools_count(self):
         """Test that ALL_TOOLS contains expected number of tools"""
@@ -115,8 +122,13 @@ class TestToolsCatalog:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testtoolinvocation")
 class TestToolInvocation:
     """Test tool invocation patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_tools_are_invocable(self):
         """Test that all tools can be invoked"""

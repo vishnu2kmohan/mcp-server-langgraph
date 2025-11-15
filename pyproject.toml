@@ -466,6 +466,8 @@ omit = [
     "*/scripts/*",
     "*/hooks/*",
     "*/langgraph_platform/*",
+    "*/presets/*",  # Developer tools - quickstart presets not production code
+    "*/playground/*",  # Developer tools - web playground not production code
     "setup.py",
     # Note: MCP server entry points are now included in coverage
     # They are tested via integration tests with coverage collection enabled

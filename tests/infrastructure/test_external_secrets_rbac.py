@@ -15,6 +15,7 @@ These are integration tests that require:
 Run with: pytest tests/infrastructure/test_external_secrets_rbac.py -v --integration
 """
 
+import gc
 import json
 import os
 import subprocess
@@ -148,8 +149,13 @@ def skip_if_not_gke(kubectl_available: bool, gcloud_available: bool):
 
 # Test Classes
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testgcpserviceaccountiam")
 class TestGCPServiceAccountIAM:
     """Test GCP service account has proper IAM roles for ESO installation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     def test_service_account_exists(self, skip_if_not_gke, gcp_project_id: str, gcp_service_account_email: str):
@@ -318,8 +324,13 @@ class TestGCPServiceAccountIAM:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testesocrds")
 class TestESOCRDs:
     """Test External Secrets Operator CRDs are installed."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     def test_externalsecret_crd_exists(self, skip_if_not_gke):
@@ -353,8 +364,13 @@ class TestESOCRDs:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testesorbacresources")
 class TestESORBACResources:
     """Test External Secrets Operator RBAC resources exist (ClusterRoles, ClusterRoleBindings)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     def test_eso_controller_clusterrole_exists(self, skip_if_not_gke):
@@ -451,8 +467,13 @@ class TestESORBACResources:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testclustersecretstoreconnectivity")
 class TestClusterSecretStoreConnectivity:
     """Test ClusterSecretStore can connect to GCP Secret Manager."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     def test_clustersecretstore_gcp_exists(self, skip_if_not_gke):
@@ -491,8 +512,13 @@ class TestClusterSecretStoreConnectivity:
 
 
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testexternalsecretsync")
 class TestExternalSecretSync:
     """Test ExternalSecret resources can sync secrets from GCP Secret Manager."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.integration
     def test_externalsecret_resources_exist(self, skip_if_not_gke):

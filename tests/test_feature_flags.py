@@ -1,5 +1,6 @@
 """Unit tests for feature flags system"""
 
+import gc
 import os
 from unittest.mock import patch
 
@@ -7,8 +8,13 @@ import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testfeatureflags")
 class TestFeatureFlags:
     """Test Feature Flag system"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_default_feature_flags(self):
         """Test default feature flag values"""
@@ -198,8 +204,13 @@ class TestFeatureFlags:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testfeatureflagedgecases")
 class TestFeatureFlagEdgeCases:
     """Test edge cases and error handling"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_invalid_confidence_threshold(self):
         """Test confidence threshold validation"""

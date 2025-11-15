@@ -7,6 +7,7 @@ Following TDD best practices - these tests should FAIL until implementation is c
 NOTE: These tests require Docker to be running.
 """
 
+import gc
 import os
 
 import pytest
@@ -34,8 +35,13 @@ def docker_available():
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandbox")
 class TestDockerSandbox:
     """Test Docker sandbox basic functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def sandbox(self, docker_available):
@@ -117,8 +123,13 @@ print(data)
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxresourcelimits")
 class TestDockerSandboxResourceLimits:
     """Test resource limit enforcement"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_timeout_enforcement(self, docker_available):
         """Test that timeout is enforced"""
@@ -180,8 +191,13 @@ print(f'Duration: {duration:.2f}s')
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxnetworkisolation")
 class TestDockerSandboxNetworkIsolation:
     """Test network isolation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_default_network_mode_is_secure(self, docker_available):
         """
@@ -274,8 +290,13 @@ except Exception as e:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxsecurity")
 class TestDockerSandboxSecurity:
     """Test security isolation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_filesystem_isolation(self, docker_available):
         """Test that filesystem is isolated"""
@@ -335,8 +356,13 @@ except PermissionError:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxcleanup")
 class TestDockerSandboxCleanup:
     """Test resource cleanup"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_container_cleanup_on_success(self, docker_available):
         """Test that containers are cleaned up after successful execution"""
@@ -416,8 +442,13 @@ class TestDockerSandboxCleanup:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxconfiguration")
 class TestDockerSandboxConfiguration:
     """Test sandbox configuration options"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_custom_docker_image(self, docker_available):
         """Test using custom Docker image"""
@@ -454,8 +485,13 @@ print(f'Working dir: {os.getcwd()}')
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxerrorhandling")
 class TestDockerSandboxErrorHandling:
     """Test error handling"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docker_not_available(self):
         """Test handling when Docker is not available"""
@@ -491,6 +527,7 @@ class TestDockerSandboxErrorHandling:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdockersandboxsecurity")
 class TestDockerSandboxSecurity:
     """
     TDD RED phase tests for Docker sandbox security hardening (OpenAI Codex Finding #4).
@@ -503,6 +540,10 @@ class TestDockerSandboxSecurity:
 
     EXPECTED: These tests will FAIL until security hardening is implemented.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def sandbox(self, docker_available):

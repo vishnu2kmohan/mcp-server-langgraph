@@ -10,9 +10,18 @@ These helper functions make it easy to create test instances of:
 Following TDD: Write tests first, then implement.
 """
 
+import gc
 
+import pytest
+
+
+@pytest.mark.xdist_group(name="testagenthelpers")
 class TestAgentHelpers:
     """Test helper functions for creating test agents"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_agent_basic(self):
         """Test creating a basic test agent"""
@@ -65,8 +74,13 @@ class TestAgentHelpers:
         assert agent1 is not agent2
 
 
+@pytest.mark.xdist_group(name="testserverhelpers")
 class TestServerHelpers:
     """Test helper functions for creating test MCP servers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_server_basic(self):
         """Test creating a basic test server"""
@@ -98,8 +112,13 @@ class TestServerHelpers:
         assert server is not None
 
 
+@pytest.mark.xdist_group(name="testsettingshelpers")
 class TestSettingsHelpers:
     """Test helper functions for creating test settings"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_settings_basic(self):
         """Test creating basic test settings"""
@@ -134,8 +153,13 @@ class TestSettingsHelpers:
         assert settings.openfga_model_id == "" or settings.openfga_model_id is None
 
 
+@pytest.mark.xdist_group(name="testcontainerhelpers")
 class TestContainerHelpers:
     """Test helper functions for container creation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_test_container_helper_exists(self):
         """Test that create_test_container helper is accessible"""
@@ -147,8 +171,13 @@ class TestContainerHelpers:
         assert container.settings.environment == "test"
 
 
+@pytest.mark.xdist_group(name="testmockhelpers")
 class TestMockHelpers:
     """Test helper functions for creating mocks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_mock_llm_response(self):
         """Test creating mock LLM response"""
@@ -191,8 +220,13 @@ class TestMockHelpers:
         assert len(token) > 0
 
 
+@pytest.mark.xdist_group(name="testpytestfixturehelpers")
 class TestPytestFixtureHelpers:
     """Test that helpers work well as pytest fixtures"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_helper_as_fixture(self, test_container):
         """Test using agent helper in a pytest fixture context"""
@@ -211,8 +245,13 @@ class TestPytestFixtureHelpers:
         assert server is not None
 
 
+@pytest.mark.xdist_group(name="testhelperdocumentation")
 class TestHelperDocumentation:
     """Test that helpers have good documentation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helpers_have_docstrings(self):
         """Test that all helper functions have docstrings"""

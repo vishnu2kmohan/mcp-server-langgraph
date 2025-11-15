@@ -4,14 +4,21 @@ Unit tests for calculator tools
 Tests arithmetic operations and expression evaluation.
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.tools.calculator_tools import add, calculator, divide, multiply, subtract
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcalculatortool")
 class TestCalculatorTool:
     """Test suite for calculator tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_calculator_simple_addition(self):
         """Test simple addition expression"""
@@ -65,8 +72,13 @@ class TestCalculatorTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testaddtool")
 class TestAddTool:
     """Test suite for add tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_add_positive_numbers(self):
         """Test adding two positive numbers"""
@@ -95,8 +107,13 @@ class TestAddTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsubtracttool")
 class TestSubtractTool:
     """Test suite for subtract tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_subtract_positive_numbers(self):
         """Test subtracting positive numbers"""
@@ -115,8 +132,13 @@ class TestSubtractTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testmultiplytool")
 class TestMultiplyTool:
     """Test suite for multiply tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_multiply_positive_numbers(self):
         """Test multiplying positive numbers"""
@@ -140,8 +162,13 @@ class TestMultiplyTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testdividetool")
 class TestDivideTool:
     """Test suite for divide tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_divide_positive_numbers(self):
         """Test dividing positive numbers"""
@@ -170,8 +197,13 @@ class TestDivideTool:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testtoolschemas")
 class TestToolSchemas:
     """Test tool schema generation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_calculator_has_schema(self):
         """Test that calculator tool has proper schema"""

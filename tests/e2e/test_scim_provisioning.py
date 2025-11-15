@@ -13,6 +13,7 @@ Run with:
     pytest tests/e2e/test_scim_provisioning.py -v
 """
 
+import gc
 import os
 from typing import AsyncGenerator, Dict
 from uuid import uuid4
@@ -20,6 +21,7 @@ from uuid import uuid4
 import pytest
 
 httpx = pytest.importorskip("httpx", reason="httpx required for SCIM E2E tests")
+
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -135,8 +137,13 @@ def unique_scim_group() -> Dict[str, any]:
 
 @pytest.mark.asyncio
 @pytest.mark.e2e
+@pytest.mark.xdist_group(name="testscimuserprovisioning")
 class TestSCIMUserProvisioning:
     """E2E tests for SCIM 2.0 User endpoints (TDD RED phase)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_create_user_scim_endpoint(
         self,
@@ -378,8 +385,13 @@ class TestSCIMUserProvisioning:
 
 @pytest.mark.asyncio
 @pytest.mark.e2e
+@pytest.mark.xdist_group(name="testscimgroupprovisioning")
 class TestSCIMGroupProvisioning:
     """E2E tests for SCIM 2.0 Group endpoints (TDD RED phase)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_create_group_scim_endpoint(
         self,
@@ -482,8 +494,13 @@ class TestSCIMGroupProvisioning:
 
 @pytest.mark.asyncio
 @pytest.mark.e2e
+@pytest.mark.xdist_group(name="testscimcompleteworkflows")
 class TestSCIMCompleteWorkflows:
     """E2E tests for complete SCIM provisioning workflows"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_okta_style_user_provisioning_workflow(
         self,
@@ -599,8 +616,13 @@ class TestSCIMCompleteWorkflows:
 
 @pytest.mark.asyncio
 @pytest.mark.e2e
+@pytest.mark.xdist_group(name="testscimerrorhandling")
 class TestSCIMErrorHandling:
     """E2E tests for SCIM error handling and edge cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_scim_error_format(
         self,

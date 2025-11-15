@@ -4,6 +4,7 @@ Integration tests for PostgreSQL ConversationStore implementation
 Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 """
 
+import gc
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 

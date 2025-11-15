@@ -8,14 +8,20 @@ Following TDD principles:
 3. REFACTOR: Update workflows to use the config
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="testgitleaksconfig")
 class TestGitleaksConfig:
     """Test gitleaks configuration and allowlist."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gitleaks_config_exists(self):
         """
@@ -158,8 +164,13 @@ DATABASE_PASSWORD=SuperSecretPassword123!
                 test_file.unlink()
 
 
+@pytest.mark.xdist_group(name="testgitleaksworkflowintegration")
 class TestGitleaksWorkflowIntegration:
     """Test that GitHub workflows use gitleaks config correctly."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_kubernetes_workflow_uses_gitleaks_config(self):
         """Test that validate-kubernetes.yaml workflow uses .gitleaks.toml."""

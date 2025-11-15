@@ -11,6 +11,7 @@ TDD Context:
 Following TDD: Tests written FIRST to catch deployment issues, preventing production incidents.
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -19,8 +20,13 @@ import yaml
 
 @pytest.mark.deployment
 @pytest.mark.staging
+@pytest.mark.xdist_group(name="teststagingdeploymentrequirements")
 class TestStagingDeploymentRequirements:
     """Test staging deployment meets all requirements."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_has_cloud_sql_proxy_sidecar(self):
         """

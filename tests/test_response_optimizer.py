@@ -5,6 +5,8 @@ Tests token counting, response truncation, format control,
 and high-signal information extraction.
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.utils.response_optimizer import (
@@ -20,8 +22,13 @@ from mcp_server_langgraph.utils.response_optimizer import (
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresponseoptimizer")
 class TestResponseOptimizer:
     """Test ResponseOptimizer class."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_initialization(self):
         """Test ResponseOptimizer initialization."""
@@ -163,8 +170,13 @@ class TestResponseOptimizer:
         assert filtered == {}
 
 
+@pytest.mark.xdist_group(name="testglobalfunctions")
 class TestGlobalFunctions:
     """Test global convenience functions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_count_tokens_global(self):
         """Test global count_tokens function."""
@@ -197,8 +209,13 @@ class TestGlobalFunctions:
         assert "uuid" not in filtered
 
 
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Test edge cases and error conditions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_very_long_text(self):
         """Test with text much longer than max tokens."""
@@ -242,8 +259,13 @@ class TestEdgeCases:
         assert "END" not in truncated
 
 
+@pytest.mark.xdist_group(name="testperformance")
 class TestPerformance:
     """Test performance characteristics."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_token_counting_performance(self):
         """Test that token counting is reasonably fast."""
@@ -329,6 +351,7 @@ def test_extract_high_signal_parametrized(data, should_contain, should_not_conta
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testlitellmtokencounting")
 class TestLiteLLMTokenCounting:
     """
     Test LiteLLM-based token counting for model-aware accuracy.
@@ -336,6 +359,10 @@ class TestLiteLLMTokenCounting:
     TDD RED phase: Tests written FIRST to define expected behavior for LiteLLM integration.
     Will fail until tiktoken is replaced with litellm.token_counter().
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_count_tokens_openai_model(self):
         """Test token counting for OpenAI models (GPT-4)"""

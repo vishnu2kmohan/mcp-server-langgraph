@@ -10,12 +10,20 @@ Tests the four key DORA metrics:
 Following TDD practices - tests written before implementation.
 """
 
+import gc
 import json
 from unittest.mock import patch
 
+import pytest
 
+
+@pytest.mark.xdist_group(name="testdorametricscalculation")
 class TestDORAMetricsCalculation:
     """Test DORA metrics calculation logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_calculate_deployment_frequency_daily(self):
         """Test deployment frequency calculation for daily deployments"""
@@ -166,8 +174,13 @@ class TestDORAMetricsCalculation:
         assert classification == "Medium"
 
 
+@pytest.mark.xdist_group(name="testdorametricscollection")
 class TestDORAMetricsCollection:
     """Test DORA metrics data collection from GitHub API"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("scripts.ci.dora_metrics.GitHubClient")
     def test_collect_deployment_data_from_github(self, mock_github):
@@ -213,8 +226,13 @@ class TestDORAMetricsCollection:
         assert commits[0]["sha"] == "abc123"
 
 
+@pytest.mark.xdist_group(name="testdorametricsstorage")
 class TestDORAMetricsStorage:
     """Test DORA metrics storage and retrieval"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_save_metrics_to_json_file(self, tmp_path):
         """Test saving DORA metrics to JSON file"""
@@ -260,8 +278,13 @@ class TestDORAMetricsStorage:
         assert history[1]["classification"] == "Elite"
 
 
+@pytest.mark.xdist_group(name="testdorametricsreporting")
 class TestDORAMetricsReporting:
     """Test DORA metrics reporting and visualization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_markdown_report(self):
         """Test generating markdown report for metrics"""

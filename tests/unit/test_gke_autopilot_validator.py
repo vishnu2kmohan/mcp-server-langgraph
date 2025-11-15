@@ -9,6 +9,7 @@ TDD Context:
 Following TDD: Tests ensure validator correctly identifies non-compliant resources.
 """
 
+import gc
 import sys
 from pathlib import Path
 
@@ -17,11 +18,17 @@ import pytest
 # Add scripts directory to path for importing validator
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
 
-from validate_gke_autopilot_compliance import GKEAutopilotValidator
+
+from validate_gke_autopilot_compliance import GKEAutopilotValidator  # noqa: E402
 
 
+@pytest.mark.xdist_group(name="testcpuparsing")
 class TestCPUParsing:
     """Test CPU string parsing to millicores"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_parse_cpu_millicores(self):
         """Test parsing CPU values in millicores format"""
@@ -46,8 +53,13 @@ class TestCPUParsing:
         assert validator.parse_cpu(None) == 0.0
 
 
+@pytest.mark.xdist_group(name="testmemoryparsing")
 class TestMemoryParsing:
     """Test memory string parsing to MiB"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_parse_memory_mebibytes(self):
         """Test parsing memory in MiB format"""
@@ -77,8 +89,13 @@ class TestMemoryParsing:
         assert validator.parse_memory(None) == 0.0
 
 
+@pytest.mark.xdist_group(name="testcpuratiovalidation")
 class TestCPURatioValidation:
     """Test CPU limit/request ratio validation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cpu_ratio_compliant(self):
         """Test that compliant CPU ratios pass validation"""
@@ -139,8 +156,13 @@ class TestCPURatioValidation:
         assert len(validator.errors) == 0, "All fixed ratios should pass validation"
 
 
+@pytest.mark.xdist_group(name="testgkeautopilotconstants")
 class TestGKEAutopilotConstants:
     """Test that GKE Autopilot constants are correctly defined"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_max_cpu_ratio(self):
         """Ensure MAX_CPU_RATIO is set to 4.0"""
@@ -161,12 +183,17 @@ class TestGKEAutopilotConstants:
         assert GKEAutopilotValidator.MAX_MEMORY_LIMIT == "8Gi"
 
 
+@pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """
     Regression tests to prevent the specific failures we encountered.
 
     These tests encode the exact violations that occurred in the CI/CD runs.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_prevent_otel_collector_regression(self):
         """Prevent regression of otel-collector CPU ratio (was 5.0, now 4.0)"""

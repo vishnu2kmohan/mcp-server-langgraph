@@ -10,6 +10,7 @@ TDD Approach (RED → GREEN → REFACTOR):
 3. REFACTOR: Improve security patterns while keeping tests green
 """
 
+import gc
 import re
 from pathlib import Path
 

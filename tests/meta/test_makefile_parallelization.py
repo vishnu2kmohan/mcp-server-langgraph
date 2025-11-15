@@ -9,14 +9,20 @@ TDD Approach:
 This ensures we never accidentally remove parallelization from test targets.
 """
 
+import gc
 import re
 from pathlib import Path
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="testmakefileparallelization")
 class TestMakefileParallelization:
     """Validate that test targets in Makefile use pytest-xdist for parallelization."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_test_ci_uses_parallel_execution(self):
@@ -168,8 +174,13 @@ class TestMakefileParallelization:
             )
 
 
+@pytest.mark.xdist_group(name="testmakefileparallelizationbestpractices")
 class TestMakefileParallelizationBestPractices:
     """Validate best practices for parallelized test targets."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_all_unit_test_targets_are_parallelized(self):

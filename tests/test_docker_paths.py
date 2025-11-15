@@ -10,6 +10,7 @@ TDD Approach (RED → GREEN → REFACTOR):
 3. REFACTOR: Improve Docker build process while keeping tests green
 """
 
+import gc
 from pathlib import Path
 
 import pytest

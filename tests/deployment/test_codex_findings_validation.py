@@ -15,6 +15,7 @@ Following TDD principles:
 Reference: OpenAI Codex Deployment Configuration Review (2025-01-09)
 """
 
+import gc
 import re
 import shutil
 import subprocess
@@ -27,12 +28,17 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 
 @pytest.mark.requires_kustomize
+@pytest.mark.xdist_group(name="testcriticalissues")
 class TestCriticalIssues:
     """P0 Critical Issues - Production Blockers
 
     CODEX FINDING #1: These tests require kustomize CLI tool.
     Tests will skip gracefully if kustomize is not installed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_ssl_configuration_matches_url_scheme(self):
         """
@@ -345,8 +351,13 @@ class TestCriticalIssues:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testmediumpriorityissues")
 class TestMediumPriorityIssues:
     """P1 Medium Priority Issues - Security & Reliability"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_hardcoded_gcp_project_in_serviceaccount(self):
         """
@@ -449,11 +460,16 @@ class TestMediumPriorityIssues:
 
 
 @pytest.mark.requires_kustomize
+@pytest.mark.xdist_group(name="testlowpriorityissues")
 class TestLowPriorityIssues:
     """P2-P3 Low Priority Issues - Technical Debt
 
     CODEX FINDING #1: Tests in this class may require kustomize CLI tool.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_unused_secret_generators(self):
         """
@@ -593,8 +609,13 @@ class TestLowPriorityIssues:
                 )
 
 
+@pytest.mark.xdist_group(name="testdocumentationconsistency")
 class TestDocumentationConsistency:
     """Documentation validation tests"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_deployment_readme_structure_matches_actual(self):
         """
@@ -630,8 +651,13 @@ class TestDocumentationConsistency:
                 )
 
 
+@pytest.mark.xdist_group(name="testredissslconsistency")
 class TestRedisSSLConsistency:
     """Cross-environment configuration consistency"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_ssl_consistent_across_environments(self):
         """

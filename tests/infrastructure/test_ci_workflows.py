@@ -13,6 +13,7 @@ TDD Approach:
 - REFACTOR: Improve workflow efficiency while maintaining test coverage
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -21,6 +22,7 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testciworkflowterraformsetup")
 class TestCIWorkflowTerraformSetup:
     """
     Test that CI workflow properly sets up Terraform for pre-commit hooks.
@@ -28,6 +30,10 @@ class TestCIWorkflowTerraformSetup:
     Issue: Pre-commit hooks require Terraform but CI doesn't install it.
     Fix: Add hashicorp/setup-terraform@v3 step before pre-commit run.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def ci_workflow_path(self) -> Path:
@@ -162,6 +168,7 @@ class TestCIWorkflowTerraformSetup:
                     )
 
 
+@pytest.mark.xdist_group(name="testdeploymentvalidationworkflow")
 class TestDeploymentValidationWorkflow:
     """
     Test deployment validation workflow configuration.
@@ -171,6 +178,10 @@ class TestDeploymentValidationWorkflow:
     - kubeconform verbosity
     - Proper error handling
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def deployment_validation_workflow_path(self) -> Path:
@@ -294,6 +305,7 @@ class TestDeploymentValidationWorkflow:
                     )
 
 
+@pytest.mark.xdist_group(name="testworkflowperformanceoptimizations")
 class TestWorkflowPerformanceOptimizations:
     """
     Test workflow performance optimizations.
@@ -303,6 +315,10 @@ class TestWorkflowPerformanceOptimizations:
     - Conditional artifact downloads
     - Efficient dependency installation
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def coverage_trend_workflow_path(self) -> Path:
@@ -372,6 +388,7 @@ class TestWorkflowPerformanceOptimizations:
             )
 
 
+@pytest.mark.xdist_group(name="teststagingdeployworkflow")
 class TestStagingDeployWorkflow:
     """
     Test staging deployment workflow configuration.
@@ -380,6 +397,10 @@ class TestStagingDeployWorkflow:
     - Trivy scan configuration
     - .trivyignore usage
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def staging_deploy_workflow_path(self) -> Path:

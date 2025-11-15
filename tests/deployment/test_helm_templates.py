@@ -15,6 +15,7 @@ Regression Prevention:
 - Checksum template pattern issues with include (print $.Template.BasePath)
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -26,8 +27,13 @@ CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
 
 
 @pytest.mark.requires_helm
+@pytest.mark.xdist_group(name="testhelmtemplaterendering")
 class TestHelmTemplateRendering:
     """Test Helm chart template rendering."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_template_renders_without_errors(self):
         """Test that helm template command succeeds."""
@@ -105,8 +111,13 @@ class TestHelmTemplateRendering:
 
 
 @pytest.mark.requires_helm
+@pytest.mark.xdist_group(name="testhelmlint")
 class TestHelmLint:
     """Test Helm chart lint passes."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_lint_passes(self):
         """Test that helm lint passes without warnings or errors."""
@@ -137,8 +148,13 @@ class TestHelmLint:
         ), f"Helm lint output doesn't indicate success:\n{output}"
 
 
+@pytest.mark.xdist_group(name="testhelmdependencies")
 class TestHelmDependencies:
     """Test Helm chart dependencies are available."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_command_available(self):
         """Test that helm command is available in PATH."""
@@ -175,8 +191,13 @@ class TestHelmDependencies:
 
 
 @pytest.mark.requires_helm
+@pytest.mark.xdist_group(name="testhelmtemplatewithvalues")
 class TestHelmTemplateWithValues:
     """Test Helm template rendering with different values."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_template_with_custom_values(self):
         """Test rendering with custom values doesn't fail."""

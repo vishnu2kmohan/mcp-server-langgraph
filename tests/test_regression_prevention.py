@@ -11,6 +11,7 @@ Following TDD principles, these tests will FAIL if regressions are introduced.
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 from typing import List, Tuple
@@ -19,8 +20,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testpytestfixturevalidation")
 class TestPytestFixtureValidation:
     """Validate that all pytest fixtures are properly decorated"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_python_test_files(self) -> List[Path]:
         """Get all Python test files in the tests directory"""
@@ -135,8 +141,13 @@ class TestPytestFixtureValidation:
         )
 
 
+@pytest.mark.xdist_group(name="testmonkeypatchreloadpattern")
 class TestMonkeypatchReloadPattern:
     """Validate that tests using monkeypatch properly reload Settings"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_monkeypatch_tests_reload_config_module(self):
         """
@@ -183,8 +194,13 @@ class TestMonkeypatchReloadPattern:
             pytest.skip(f"Found {len(issues)} tests that may need config reload:\n" + "\n".join(issues))
 
 
+@pytest.mark.xdist_group(name="testworkflowtoolmaintenance")
 class TestWorkflowToolMaintenance:
     """Validate that GitHub Actions workflows use maintained tools"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_workflow_files(self) -> List[Path]:
         """Get all GitHub Actions workflow files"""
@@ -273,8 +289,13 @@ class TestWorkflowToolMaintenance:
         )
 
 
+@pytest.mark.xdist_group(name="testworkflowactionversions")
 class TestWorkflowActionVersions:
     """Validate that GitHub Actions use pinned, non-deprecated versions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_workflow_files(self) -> List[Path]:
         """Get all GitHub Actions workflow files"""
@@ -317,8 +338,13 @@ class TestWorkflowActionVersions:
         )
 
 
+@pytest.mark.xdist_group(name="testworkflowsyntaxvalidation")
 class TestWorkflowSyntaxValidation:
     """Validate GitHub Actions workflow syntax"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def get_workflow_files(self) -> List[Path]:
         """Get all GitHub Actions workflow files"""

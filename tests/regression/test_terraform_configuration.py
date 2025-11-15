@@ -38,6 +38,7 @@ These tests validate Terraform configurations are properly structured
 and compatible across all modules and environments.
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List, Set
@@ -74,12 +75,17 @@ def parse_terraform_file(file_path: Path) -> Dict:
 
 @pytest.mark.regression
 @pytest.mark.terraform
+@pytest.mark.xdist_group(name="testterraformduplicateblocks")
 class TestTerraformDuplicateBlocks:
     """
     Regression tests for duplicate Terraform configuration blocks.
 
     Prevents recurrence of duplicate required_providers issue.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_duplicate_terraform_blocks_in_same_file(self):
         """
@@ -190,12 +196,17 @@ class TestTerraformDuplicateBlocks:
 
 @pytest.mark.regression
 @pytest.mark.terraform
+@pytest.mark.xdist_group(name="testterraformvariablevalidations")
 class TestTerraformVariableValidations:
     """
     Regression tests for Terraform variable validations.
 
     Prevents cross-variable references in validation conditions.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_variable_validations_only_reference_self(self):
         """
@@ -276,12 +287,17 @@ class TestTerraformVariableValidations:
 
 @pytest.mark.regression
 @pytest.mark.terraform
+@pytest.mark.xdist_group(name="testterraformproviderversions")
 class TestTerraformProviderVersions:
     """
     Regression tests for provider version constraints.
 
     Ensures compatible provider versions across modules and environments.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_conflicting_google_provider_versions(self):
         """

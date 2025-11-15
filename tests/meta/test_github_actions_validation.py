@@ -8,6 +8,7 @@ caused by referencing non-existent action tags or missing required permissions.
 Following TDD principles - these tests define the expected valid state before fixes.
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List
@@ -16,8 +17,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testgithubactionsversions")
 class TestGitHubActionsVersions:
     """Validate that all GitHub Actions use published, valid version tags."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def workflow_files(self) -> List[Path]:
@@ -158,8 +164,13 @@ class TestGitHubActionsVersions:
         )
 
 
+@pytest.mark.xdist_group(name="testgithubactionspermissions")
 class TestGitHubActionsPermissions:
     """Validate that workflows have appropriate permissions configured."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def workflow_files(self) -> List[Path]:
@@ -327,8 +338,13 @@ class TestGitHubActionsPermissions:
             pytest.skip(warning_msg)  # Skip instead of fail for warnings
 
 
+@pytest.mark.xdist_group(name="testgithubactionsworkflowdependencies")
 class TestGitHubActionsWorkflowDependencies:
     """Validate that workflow jobs have correct dependencies installed."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validate_workflows_job_has_required_dependencies(self):
         """
@@ -388,8 +404,13 @@ class TestGitHubActionsWorkflowDependencies:
         )
 
 
+@pytest.mark.xdist_group(name="testgithubactionsstructure")
 class TestGitHubActionsStructure:
     """Validate overall workflow structure and best practices."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_workflows_are_valid_yaml(self):
         """Ensure all workflow files are valid YAML."""

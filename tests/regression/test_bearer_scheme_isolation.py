@@ -218,12 +218,17 @@ class TestBearerSchemeIsolation:
 
 @pytest.mark.unit
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testnesteddependencyoverrides")
 class TestNestedDependencyOverrides:
     """
     Tests for FastAPI nested dependency override patterns.
 
     Documents that ALL nested dependencies must be overridden, not just top-level ones.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_nested_dependency_override_pattern(self):
         """

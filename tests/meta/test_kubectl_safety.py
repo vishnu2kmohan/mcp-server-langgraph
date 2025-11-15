@@ -8,6 +8,7 @@ Purpose: Prevent regression of Codex Finding #4 (DNS failover tests against real
 """
 
 import ast
+import gc
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testkubectlsafetyenforcement")
 class TestKubectlSafetyEnforcement:
     """
     Meta-tests that validate kubectl operations use --dry-run.
@@ -23,6 +25,10 @@ class TestKubectlSafetyEnforcement:
     RED: These tests will fail if kubectl apply/create/delete used without safety guards.
     GREEN: All kubectl operations are safe (dry-run or explicitly guarded).
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kubectl_operations_use_dry_run_or_guards(self):
         """
@@ -235,8 +241,13 @@ class TestKubectlSafetyEnforcement:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testkubectltestnaming")
 class TestKubectlTestNaming:
     """Validate kubectl test naming conventions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kubectl_tests_describe_operation(self):
         """

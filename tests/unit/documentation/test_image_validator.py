@@ -8,6 +8,7 @@ Tests validate that:
 4. Broken image references are detected
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -15,8 +16,13 @@ import pytest
 from scripts.validators.image_validator import ImageError, ImageValidator, InvalidImageFormatError, MissingImageError
 
 
+@pytest.mark.xdist_group(name="testimagevalidator")
 class TestImageValidator:
     """Test suite for ImageValidator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self, tmp_path):

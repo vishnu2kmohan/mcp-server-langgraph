@@ -10,6 +10,7 @@ This test suite validates that:
 Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
+import gc
 import subprocess
 from collections import defaultdict
 from pathlib import Path
@@ -20,8 +21,13 @@ import yaml
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
+@pytest.mark.xdist_group(name="testserviceaccountseparation")
 class TestServiceAccountSeparation:
     """Test that different components use separate Service Accounts."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def base_resources(self):
@@ -146,8 +152,13 @@ class TestServiceAccountSeparation:
         )
 
 
+@pytest.mark.xdist_group(name="testworkloadidentitybindings")
 class TestWorkloadIdentityBindings:
     """Test Workload Identity configuration for GKE."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def staging_service_accounts(self):
@@ -250,8 +261,13 @@ class TestWorkloadIdentityBindings:
                 )
 
 
+@pytest.mark.xdist_group(name="testrbacconfiguration")
 class TestRBACConfiguration:
     """Test RBAC (Roles and RoleBindings) configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def base_resources(self):

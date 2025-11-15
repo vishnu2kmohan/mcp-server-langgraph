@@ -17,6 +17,7 @@ Validates:
 - Service/NetworkPolicy selectors
 """
 
+import gc
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -28,8 +29,13 @@ DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 DEPLOYMENTS_OVERLAYS = PROJECT_ROOT / "deployments" / "overlays"
 
 
+@pytest.mark.xdist_group(name="testimagepullpolicy")
 class TestImagePullPolicy:
     """Test that all containers have imagePullPolicy: Always."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load all YAML documents from a file."""
@@ -96,8 +102,13 @@ class TestImagePullPolicy:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testresourcelimits")
 class TestResourceLimits:
     """Test that all containers have proper resource limits and requests."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load all YAML documents from a file."""
@@ -207,8 +218,13 @@ class TestResourceLimits:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testsecuritycontext")
 class TestSecurityContext:
     """Test security context configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load all YAML documents from a file."""
@@ -317,8 +333,13 @@ class TestSecurityContext:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testprobeconfiguration")
 class TestProbeConfiguration:
     """Test that readiness and liveness probes are different."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load all YAML documents from a file."""

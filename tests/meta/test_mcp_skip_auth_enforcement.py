@@ -14,6 +14,7 @@ need authentication enabled.
 TDD Principle: This meta-test enforces the fix MUST exist and prevents regression.
 """
 
+import gc
 import os
 import re
 from pathlib import Path
@@ -23,8 +24,13 @@ import pytest
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testmcpskipauthfixtureenforcement")
 class TestMCPSkipAuthFixtureEnforcement:
     """Validate that API test fixtures explicitly set MCP_SKIP_AUTH="false"."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution."""

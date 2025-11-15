@@ -5,6 +5,8 @@ Tests timeout, memory, CPU quota validation and enforcement.
 Following TDD best practices - these tests should FAIL until implementation is complete.
 """
 
+import gc
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -17,8 +19,13 @@ except ImportError:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresourcelimits")
 class TestResourceLimits:
     """Test suite for ResourceLimits configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_default_resource_limits(self):
         """Test default resource limit values"""
@@ -208,8 +215,13 @@ class TestResourceLimits:
 
 @pytest.mark.unit
 @pytest.mark.property
+@pytest.mark.xdist_group(name="testresourcelimitsproperties")
 class TestResourceLimitsProperties:
     """Property-based tests for resource limits"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @given(st.integers(min_value=1, max_value=600))
     def test_valid_timeout_range_accepted(self, timeout):
@@ -243,8 +255,13 @@ class TestResourceLimitsProperties:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresourcelimiterror")
 class TestResourceLimitError:
     """Test ResourceLimitError exception"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_resource_limit_error_creation(self):
         """Test creating ResourceLimitError"""
@@ -258,8 +275,13 @@ class TestResourceLimitError:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpresetresourceprofiles")
 class TestPresetResourceProfiles:
     """Test preset resource profiles for common use cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_development_profile(self):
         """Test development profile (relaxed limits)"""
@@ -292,8 +314,13 @@ class TestPresetResourceProfiles:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresourcelimitscomparison")
 class TestResourceLimitsComparison:
     """Test resource limits comparison and validation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_limits_equality(self):
         """Test that identical limits are equal"""
@@ -320,6 +347,7 @@ class TestResourceLimitsComparison:
 
 @pytest.mark.unit
 @pytest.mark.regression
+@pytest.mark.xdist_group(name="testresourcelimitsparameternamevalidation")
 class TestResourceLimitsParameterNameValidation:
     """
     Regression tests for ResourceLimits parameter naming
@@ -331,6 +359,10 @@ class TestResourceLimitsParameterNameValidation:
     These tests ensure that incorrect parameter names are rejected,
     preventing this issue from recurring.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_rejects_max_memory_mb_parameter(self):
         """

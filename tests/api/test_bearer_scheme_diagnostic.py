@@ -7,6 +7,8 @@ service principal tests during pytest-xdist execution.
 Run with: pytest tests/api/test_bearer_scheme_diagnostic.py -v -s
 """
 
+import gc
+
 import pytest
 from fastapi import Depends, FastAPI
 from fastapi.security import HTTPBearer
@@ -27,7 +29,6 @@ class TestBearerSchemeOverrideDiagnostic:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
-        import gc
 
         gc.collect()
 

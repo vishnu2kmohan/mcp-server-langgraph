@@ -13,6 +13,8 @@ Tests cover:
 - Edge cases
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agent
@@ -23,8 +25,13 @@ from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agen
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testgenerateagent")
 class TestGenerateAgent:
     """Test agent file generation functionality."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_agent_creates_agent_file(self, tmp_path, monkeypatch):
         """Test generate_agent creates agent file in correct location."""
@@ -247,8 +254,13 @@ class TestGenerateAgent:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testagenttemplates")
 class TestAgentTemplates:
     """Test agent template structures."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_templates_dict_exists(self):
         """Test AGENT_TEMPLATES dictionary exists and has templates."""
@@ -336,8 +348,13 @@ class TestAgentTemplates:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testgenerateagentedgecases")
 class TestGenerateAgentEdgeCases:
     """Test edge cases and error scenarios for generate_agent."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_agent_with_numbers_in_name(self, tmp_path, monkeypatch):
         """Test agent generation with numbers in name."""

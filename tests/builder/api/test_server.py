@@ -14,6 +14,7 @@ Tests cover:
 - GET / - API information
 """
 
+import gc
 from unittest.mock import mock_open, patch
 
 import pytest

@@ -5,14 +5,20 @@ Following TDD approach - tests written before implementation.
 Tests the cost analysis functionality for workflow runs.
 """
 
+import gc
 import json
 from pathlib import Path
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="testloadruns")
 class TestLoadRuns:
     """Test the load_runs() function that loads workflow runs from JSON files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_load_runs_from_single_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test loading workflow runs from a single JSON file."""
@@ -122,8 +128,13 @@ class TestLoadRuns:
         assert runs == []
 
 
+@pytest.mark.xdist_group(name="testanalyzeusage")
 class TestAnalyzeUsage:
     """Test the analyze_usage() function that analyzes workflow costs."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_analyze_usage_basic_calculation(self) -> None:
         """Test basic cost calculation for workflow runs."""
@@ -382,8 +393,13 @@ class TestAnalyzeUsage:
         assert "Total Minutes:** 10.0 min" in report
 
 
+@pytest.mark.xdist_group(name="testcostconstants")
 class TestCostConstants:
     """Test cost constants are correct."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cost_per_minute_constant(self) -> None:
         """Test COST_PER_MIN_LINUX constant is correct."""
@@ -404,8 +420,13 @@ class TestCostConstants:
         assert MONTHLY_BUDGET_MINS == 6000
 
 
+@pytest.mark.xdist_group(name="testmainexecution")
 class TestMainExecution:
     """Test the main execution flow of the script."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_main_uses_environment_variable_for_period(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test main() reads PERIOD_DAYS from environment."""
@@ -456,8 +477,13 @@ class TestMainExecution:
         assert "Weekly Budget Status" in content
 
 
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Test edge cases and error conditions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_zero_duration_workflow(self) -> None:
         """Test workflow with 0 duration."""

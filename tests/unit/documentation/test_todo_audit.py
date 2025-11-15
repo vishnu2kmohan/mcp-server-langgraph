@@ -9,6 +9,7 @@ Following TDD principles:
 4. Test exclusion patterns
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,7 @@ import pytest
 from scripts.validators.todo_audit import AuditResult, TodoAuditor, TodoMarker
 
 
+@pytest.mark.xdist_group(name="testtodoauditor")
 class TestTodoAuditor:
     """Test suite for TodoAuditor."""
 
@@ -207,11 +209,11 @@ FIXME: Task 2
     @pytest.mark.xdist_group(name="validators")
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
-        import gc
 
         gc.collect()
 
 
+@pytest.mark.xdist_group(name="testtodomarker")
 class TestTodoMarker:
     """Test suite for TodoMarker dataclass."""
 
@@ -232,11 +234,11 @@ class TestTodoMarker:
     @pytest.mark.xdist_group(name="validators")
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
-        import gc
 
         gc.collect()
 
 
+@pytest.mark.xdist_group(name="testauditresult")
 class TestAuditResult:
     """Test suite for AuditResult dataclass."""
 
@@ -263,6 +265,5 @@ class TestAuditResult:
     @pytest.mark.xdist_group(name="validators")
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers."""
-        import gc
 
         gc.collect()

@@ -9,6 +9,7 @@ Following TDD principles - written to prevent regression of fixes.
 """
 
 import ast
+import gc
 import subprocess
 from pathlib import Path
 from typing import List, Set, Tuple
@@ -20,8 +21,13 @@ TESTS_DIR = REPO_ROOT / "tests"
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testunconditionalskipdetection")
 class TestUnconditionalSkipDetection:
     """Detect unconditional pytest.skip() calls that should be xfail"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_unconditional_skips_in_e2e_tests(self):
         """
@@ -106,8 +112,13 @@ class TestUnconditionalSkipDetection:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="teststateisolationpatterns")
 class TestStateIsolationPatterns:
     """Detect state mutations without proper isolation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_manual_try_finally_for_settings_mutations(self):
         """
@@ -159,8 +170,13 @@ class TestStateIsolationPatterns:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testclitoolguards")
 class TestCLIToolGuards:
     """Detect subprocess calls to CLI tools without availability guards"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_cli_subprocess_calls_have_guards(self):
         """
@@ -261,8 +277,13 @@ class TestCLIToolGuards:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testprivateapiusage")
 class TestPrivateAPIUsage:
     """Detect tests calling private methods (leading underscore)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_llm_property_tests_use_public_apis(self):
         """
@@ -328,8 +349,13 @@ class TestPrivateAPIUsage:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testxfailstrictusage")
 class TestXFailStrictUsage:
     """Verify xfail(strict=True) is used for unimplemented tests"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_e2e_placeholder_tests_use_xfail_strict(self):
         """
@@ -365,8 +391,13 @@ class TestXFailStrictUsage:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testmonkeypatchusage")
 class TestMonkeypatchUsage:
     """Verify monkeypatch is used for settings isolation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_distributed_checkpointing_uses_monkeypatch(self):
         """
@@ -404,8 +435,13 @@ class TestMonkeypatchUsage:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testrequirestooldecorator")
 class TestRequiresToolDecorator:
     """Verify @requires_tool decorator is used consistently"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kustomize_tests_use_requires_tool_decorator(self):
         """
@@ -436,8 +472,13 @@ class TestRequiresToolDecorator:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testdeadcodeinfixtures")
 class TestDeadCodeInFixtures:
     """Detect dead code after return statements in test fixtures"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_dead_code_after_fixture_returns(self):
         """
@@ -520,8 +561,13 @@ class TestDeadCodeInFixtures:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testcodexfindingcompliance")
 class TestCodexFindingCompliance:
     """High-level validation that all Codex findings are addressed"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_codex_validation_commit_exists(self):
         """Verify Codex findings validation commits exist in git history"""
@@ -568,6 +614,7 @@ class TestCodexFindingCompliance:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testinfrastructureportisolation")
 class TestInfrastructurePortIsolation:
     """
     Detect hard-coded infrastructure ports that break pytest-xdist worker isolation.
@@ -581,6 +628,10 @@ class TestInfrastructurePortIsolation:
 
     Prevention: Ensure all health check URLs use dynamic ports from test_infrastructure_ports fixture.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     # Known infrastructure services with their default test ports
     INFRASTRUCTURE_SERVICES = {

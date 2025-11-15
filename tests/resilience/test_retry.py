@@ -4,6 +4,7 @@ Unit tests for retry logic with exponential backoff.
 Tests retry behavior, backoff calculation, and exception handling.
 """
 
+import gc
 import time
 from unittest.mock import patch
 
@@ -13,8 +14,13 @@ from mcp_server_langgraph.core.exceptions import AuthorizationError, ExternalSer
 from mcp_server_langgraph.resilience.retry import RetryStrategy, retry_with_backoff, should_retry_exception
 
 
+@pytest.mark.xdist_group(name="testretrybasics")
 class TestRetryBasics:
     """Test basic retry functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -65,8 +71,13 @@ class TestRetryBasics:
         assert call_count == 1  # Only called once
 
 
+@pytest.mark.xdist_group(name="testexponentialbackoff")
 class TestExponentialBackoff:
     """Test exponential backoff timing"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -117,8 +128,13 @@ class TestExponentialBackoff:
             assert gap <= 3.0  # Max 2s + 1s variance
 
 
+@pytest.mark.xdist_group(name="testretrywithspecificexceptions")
 class TestRetryWithSpecificExceptions:
     """Test retry with specific exception types"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -173,8 +189,13 @@ class TestRetryWithSpecificExceptions:
             await multi_exception_func("type")
 
 
+@pytest.mark.xdist_group(name="testshouldretryexception")
 class TestShouldRetryException:
     """Test should_retry_exception logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_should_not_retry_validation_errors(self):
@@ -203,8 +224,13 @@ class TestShouldRetryException:
         assert should_retry_exception(exc) is True
 
 
+@pytest.mark.xdist_group(name="testretrystrategies")
 class TestRetryStrategies:
     """Test different retry strategies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -225,8 +251,13 @@ class TestRetryStrategies:
         assert call_count == 3
 
 
+@pytest.mark.xdist_group(name="testretrymetrics")
 class TestRetryMetrics:
     """Test retry metrics emission"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -260,8 +291,13 @@ class TestRetryMetrics:
                 await func()
 
 
+@pytest.mark.xdist_group(name="testretrywithotherpatterns")
 class TestRetryWithOtherPatterns:
     """Test retry composition with other resilience patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -304,8 +340,13 @@ class TestRetryWithOtherPatterns:
         assert result == "success"
 
 
+@pytest.mark.xdist_group(name="testredisoptionaldependency")
 class TestRedisOptionalDependency:
     """Test that redis is an optional dependency for retry logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_should_retry_exception_works_without_redis(self):

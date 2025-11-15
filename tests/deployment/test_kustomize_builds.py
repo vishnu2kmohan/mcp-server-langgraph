@@ -10,6 +10,7 @@ This test suite validates that:
 Following TDD principles - these tests should FAIL before fixes are applied.
 """
 
+import gc
 import shutil
 import subprocess
 from pathlib import Path
@@ -28,12 +29,17 @@ OVERLAYS = [
 
 
 @pytest.mark.requires_kustomize
+@pytest.mark.xdist_group(name="testkustomizebuilds")
 class TestKustomizeBuilds:
     """Test that all Kustomize overlays build successfully.
 
     CODEX FINDING #1: These tests require kustomize CLI tool.
     Tests will skip gracefully if kustomize is not installed.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.parametrize("overlay_path", OVERLAYS)
     def test_overlay_builds_without_errors(self, overlay_path):
@@ -109,8 +115,13 @@ class TestKustomizeBuilds:
             pytest.fail(f"Invalid YAML in {overlay_path}: {e}")
 
 
+@pytest.mark.xdist_group(name="teststaginggkeoverlay")
 class TestStagingGKEOverlay:
     """Specific tests for staging-gke overlay configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _build_overlay(self):
         """Helper to build staging overlay."""
@@ -204,8 +215,13 @@ class TestStagingGKEOverlay:
                             )
 
 
+@pytest.mark.xdist_group(name="testproductiongkeoverlay")
 class TestProductionGKEOverlay:
     """Specific tests for production-gke overlay configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _build_overlay(self):
         """Helper to build production overlay."""
@@ -319,8 +335,13 @@ class TestProductionGKEOverlay:
                         )
 
 
+@pytest.mark.xdist_group(name="testbaseresources")
 class TestBaseResources:
     """Tests for base Kustomize resources."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _build_base(self):
         """Helper to build base."""
@@ -372,8 +393,13 @@ class TestBaseResources:
                     )
 
 
+@pytest.mark.xdist_group(name="testservicemeshconfig")
 class TestServiceMeshConfig:
     """Tests for Istio/service mesh configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_istio_config_no_inline_comments_in_strings(self):
         """

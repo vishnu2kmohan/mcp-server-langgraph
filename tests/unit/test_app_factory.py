@@ -15,8 +15,13 @@ from mcp_server_langgraph.core.config import Settings
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testappfactorypattern")
 class TestAppFactoryPattern:
     """Test app factory pattern for test configurability"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_app_with_default_settings(self):
         """
@@ -129,8 +134,13 @@ class TestAppFactoryPattern:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testappfactorybackwardcompatibility")
 class TestAppFactoryBackwardCompatibility:
     """Test backward compatibility with existing deployment patterns"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_module_level_app_variable_exists(self):
         """

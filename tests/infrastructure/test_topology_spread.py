@@ -6,12 +6,19 @@ Tests that pods are distributed across availability zones for high availability.
 Following TDD principles: Write tests first.
 """
 
+import gc
+
 import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testtopologyspreadconstraints")
 class TestTopologySpreadConstraints:
     """Test topology spread constraints configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_base_deployment_has_topology_spread_constraints(self):
         """Test base deployment has topologySpreadConstraints defined."""
@@ -81,8 +88,13 @@ class TestTopologySpreadConstraints:
         ), "Helm values missing topology spread configuration"
 
 
+@pytest.mark.xdist_group(name="testpodantiaffinity")
 class TestPodAntiAffinity:
     """Test pod anti-affinity for HA."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_base_deployment_has_required_anti_affinity(self):
         """Test deployment uses required anti-affinity for production."""
@@ -121,8 +133,13 @@ class TestPodAntiAffinity:
         assert has_zone_topology, "Anti-affinity not using zone topology"
 
 
+@pytest.mark.xdist_group(name="testmultizonesupport")
 class TestMultiZoneSupport:
     """Test multi-zone configuration."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_terraform_gke_uses_multiple_zones(self):
         """Test GKE Terraform module uses multiple zones."""

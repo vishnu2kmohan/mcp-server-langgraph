@@ -6,6 +6,7 @@ accidentally committed to version control, following security and collaboration
 best practices.
 """
 
+import gc
 import subprocess
 from pathlib import Path
 from typing import List, Set
@@ -13,8 +14,13 @@ from typing import List, Set
 import pytest
 
 
+@pytest.mark.xdist_group(name="testgitignorevalidation")
 class TestGitignoreValidation:
     """Validate .gitignore patterns and tracked files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @staticmethod
     def get_tracked_files() -> Set[str]:
@@ -149,8 +155,13 @@ class TestGitignoreValidation:
         assert not backup_files, "Found backup/temp files tracked in git:\n" + "\n".join(f"  - {f}" for f in backup_files)
 
 
+@pytest.mark.xdist_group(name="testgitignorecomprehensiveness")
 class TestGitignoreComprehensiveness:
     """Test that .gitignore covers all necessary patterns."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_has_python_patterns(self):
         """Verify .gitignore has Python-specific patterns."""

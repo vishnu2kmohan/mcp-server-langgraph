@@ -13,6 +13,7 @@ Test Journeys:
 4. API Key Flow: Create → Use → Rotate → Revoke
 """
 
+import gc
 import os
 from typing import Any, Dict
 
@@ -119,6 +120,7 @@ async def authenticated_session(test_infrastructure_check, test_user_credentials
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="teststandarduserjourney")
 class TestStandardUserJourney:
     """
     Test the complete standard user flow:
@@ -129,6 +131,10 @@ class TestStandardUserJourney:
     5. Retrieve conversation history
     6. Refresh token
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_01_login(self, test_user_credentials, test_infrastructure_check):
         """Step 1: User logs in and receives JWT token"""
@@ -322,6 +328,7 @@ class TestStandardUserJourney:
 
 @pytest.mark.asyncio
 @pytest.mark.gdpr
+@pytest.mark.xdist_group(name="testgdprcompliancejourney")
 class TestGDPRComplianceJourney:
     """
     Test GDPR compliance operations:
@@ -331,6 +338,10 @@ class TestGDPRComplianceJourney:
     4. Right to Erasure (Article 17)
     5. Consent Management (Article 21)
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(strict=True, reason="Implement when GDPR endpoints are integrated")
     async def test_01_access_user_data(self, authenticated_session):
@@ -427,6 +438,7 @@ class TestGDPRComplianceJourney:
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testserviceprincipaljourney")
 class TestServicePrincipalJourney:
     """
     Test service principal lifecycle:
@@ -437,6 +449,10 @@ class TestServicePrincipalJourney:
     5. Rotate client secret
     6. Delete service principal
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_01_create_service_principal(self, authenticated_session):
         """
@@ -600,6 +616,7 @@ class TestServicePrincipalJourney:
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testapikeyjourney")
 class TestAPIKeyJourney:
     """
     Test API key lifecycle:
@@ -609,6 +626,10 @@ class TestAPIKeyJourney:
     4. Rotate API key
     5. Revoke API key
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_01_create_api_key(self, authenticated_session):
         """
@@ -780,6 +801,7 @@ class TestAPIKeyJourney:
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testerrorrecoveryjourney")
 class TestErrorRecoveryJourney:
     """
     Test error handling and recovery:
@@ -789,6 +811,10 @@ class TestErrorRecoveryJourney:
     4. Network errors / retries
     5. Rate limiting
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_01_expired_token_refresh(self, test_user_credentials, test_infrastructure_check):
         """
@@ -869,6 +895,7 @@ class TestErrorRecoveryJourney:
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testmultiusercollaboration")
 class TestMultiUserCollaboration:
     """
     Test multi-user scenarios:
@@ -877,6 +904,10 @@ class TestMultiUserCollaboration:
     3. Permission inheritance
     4. Conversation transfer
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.xfail(strict=True, reason="Implement when conversation sharing is ready")
     async def test_01_share_conversation(self, authenticated_session):
@@ -917,6 +948,7 @@ class TestMultiUserCollaboration:
 
 @pytest.mark.asyncio
 @pytest.mark.performance
+@pytest.mark.xdist_group(name="testperformancee2e")
 class TestPerformanceE2E:
     """
     Test system performance under realistic load:
@@ -924,6 +956,10 @@ class TestPerformanceE2E:
     2. Large conversation history
     3. Bulk operations
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(
         os.getenv("PYTEST_XDIST_WORKER") is not None,

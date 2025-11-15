@@ -6,11 +6,20 @@ This module tests the sanitization of sensitive data in logs, specifically:
 - Hash/truncation of large text fields
 """
 
+import gc
+
+import pytest
+
 from mcp_server_langgraph.core.security import sanitize_for_logging
 
 
+@pytest.mark.xdist_group(name="testlogsanitization")
 class TestLogSanitization:
     """Test suite for log sanitization to prevent CWE-200/CWE-532 vulnerabilities"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sanitize_for_logging_redacts_token_field(self):
         """Test that JWT token is redacted from log payload"""
@@ -245,8 +254,13 @@ class TestLogSanitization:
         assert sanitized["message"] == "Hello, world!"
 
 
+@pytest.mark.xdist_group(name="testlogsanitizationwithrealworldpayloads")
 class TestLogSanitizationWithRealWorldPayloads:
     """Test log sanitization with realistic MCP tool call payloads"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sanitize_chat_tool_payload(self):
         """Test sanitization of actual chat tool call arguments"""

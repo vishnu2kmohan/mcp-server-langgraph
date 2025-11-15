@@ -8,12 +8,19 @@ TDD: These tests should fail initially (RED phase), then pass after
 implementing per-test cleanup fixtures (GREEN phase).
 """
 
+import gc
+
 import pytest
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testpostgresqlcleanup")
 class TestPostgreSQLCleanup:
     """Test PostgreSQL cleanup between tests"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_first_insert_postgres(self, postgres_connection_clean):
@@ -40,8 +47,13 @@ class TestPostgreSQLCleanup:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testrediscleanup")
 class TestRedisCleanup:
     """Test Redis cleanup between tests"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_first_set_redis(self, redis_client_clean):
@@ -59,8 +71,13 @@ class TestRedisCleanup:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testopenfgacleanup")
 class TestOpenFGACleanup:
     """Test OpenFGA cleanup between tests"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_first_write_tuples(self, openfga_client_clean):
@@ -86,8 +103,13 @@ class TestOpenFGACleanup:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testcleanupfixtureperformance")
 class TestCleanupFixturePerformance:
     """Verify cleanup fixtures don't add excessive overhead"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_cleanup_is_fast_postgres(self, postgres_connection_clean):

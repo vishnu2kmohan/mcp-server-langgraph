@@ -10,6 +10,7 @@ Following TDD Red-Green-Refactor:
 - REFACTOR: Improve validation logic as needed
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -21,8 +22,13 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
 
 
+@pytest.mark.xdist_group(name="testserviceaccountannotations")
 class TestServiceAccountAnnotations:
     """Test that ServiceAccount annotations contain no placeholder values."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     PLACEHOLDER_PATTERNS = {
         "aws": [
@@ -224,8 +230,13 @@ class TestServiceAccountAnnotations:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testkustomizevariablesubstitution")
 class TestKustomizeVariableSubstitution:
     """Test that Kustomize configurations support variable substitution."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_kustomization_has_vars_or_replacements(self):
         """

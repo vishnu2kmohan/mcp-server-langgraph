@@ -10,6 +10,7 @@ Tests for:
 These tests validate authentication and path traversal protections.
 """
 
+import gc
 import os
 import tempfile
 from unittest.mock import patch
@@ -23,8 +24,13 @@ from mcp_server_langgraph.builder.codegen.generator import CodeGenerator, Workfl
 
 @pytest.mark.unit
 @pytest.mark.security
+@pytest.mark.xdist_group(name="testbuilderauthentication")
 class TestBuilderAuthentication:
     """Test that builder endpoints require authentication"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def setup_method(self):
         """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
@@ -101,8 +107,13 @@ class TestBuilderAuthentication:
         assert response.status_code == 401
 
 
+@pytest.mark.xdist_group(name="testpathtraversalprotection")
 class TestPathTraversalProtection:
     """Test protection against path traversal attacks"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_prevent_path_traversal_absolute_path(self):
         """
@@ -213,8 +224,13 @@ class TestPathTraversalProtection:
             os.remove(safe_path)
 
 
+@pytest.mark.xdist_group(name="testcodegenerationsecurity")
 class TestCodeGenerationSecurity:
     """Test code generation security"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_sanitize_generated_code(self):
         """
@@ -261,8 +277,13 @@ class TestCodeGenerationSecurity:
         assert code is not None
 
 
+@pytest.mark.xdist_group(name="testbuilderproductionsafety")
 class TestBuilderProductionSafety:
     """Test that builder is disabled or secured in production"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_builder_disabled_in_production(self):
         """

@@ -9,6 +9,7 @@ This test suite validates:
 5. All navigation links point to existing files
 """
 
+import gc
 import json
 import re
 from pathlib import Path
@@ -20,8 +21,13 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
+@pytest.mark.xdist_group(name="testadrsynchronization")
 class TestADRSynchronization:
     """Verify ADRs are synced between source (adr/) and Mintlify docs (docs/architecture/)."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_adr_count_matches(self):
         """Test that the number of ADRs in adr/ matches docs/architecture/."""
@@ -55,8 +61,13 @@ class TestADRSynchronization:
         assert not orphaned_in_docs, f"Orphaned ADR .mdx files in docs/architecture/: {sorted(orphaned_in_docs)}"
 
 
+@pytest.mark.xdist_group(name="testdocsjsonintegrity")
 class TestDocsJsonIntegrity:
     """Verify docs.json is valid and all referenced files exist."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docs_json_is_valid_json(self):
         """Test that docs.json is valid JSON."""
@@ -122,8 +133,13 @@ class TestDocsJsonIntegrity:
         return pages
 
 
+@pytest.mark.xdist_group(name="testmdxsyntax")
 class TestMDXSyntax:
     """Verify MDX files use correct syntax and don't have common errors."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_html_comments_in_mdx_files(self):
         """Test that MDX files don't use HTML comments (use JSX comments instead)."""
@@ -210,8 +226,13 @@ class TestMDXSyntax:
             )
 
 
+@pytest.mark.xdist_group(name="testarchitectureoverview")
 class TestArchitectureOverview:
     """Verify architecture overview is up to date with actual ADR count."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_architecture_overview_adr_count_is_current(self):
         """Test that architecture/overview.mdx has the correct ADR count."""
@@ -235,8 +256,13 @@ class TestArchitectureOverview:
         )
 
 
+@pytest.mark.xdist_group(name="testmermaiddiagrams")
 class TestMermaidDiagrams:
     """Verify Mermaid diagrams are properly formatted."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_mermaid_diagrams_have_closing_markers(self):
         """Test that all Mermaid diagram code blocks are properly closed."""
@@ -262,8 +288,13 @@ class TestMermaidDiagrams:
         )
 
 
+@pytest.mark.xdist_group(name="testdocumentationcompleteness")
 class TestDocumentationCompleteness:
     """Verify documentation is complete and up to date."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_suspiciously_small_documentation_files(self):
         """Test that there are no suspiciously small (<15 lines) MDX files."""

@@ -14,6 +14,7 @@ Usage:
     pytest tests/deployment/test_dns_failover_verification.py -v
 """
 
+import gc
 import subprocess
 import time
 from pathlib import Path
@@ -26,8 +27,13 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 
 @pytest.mark.deployment
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testdnsconfiguration")
 class TestDNSConfiguration:
     """Verify Cloud DNS is properly configured"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dns_zone_exists(self):
         """
@@ -130,6 +136,7 @@ class TestDNSConfiguration:
 
 @pytest.mark.deployment
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testdnsresolution")
 class TestDNSResolution:
     """
     Verify DNS test pod manifests are valid (DRY-RUN mode).
@@ -143,6 +150,10 @@ class TestDNSResolution:
     For actual DNS resolution testing, use a dedicated test cluster or
     run manually with: kubectl apply -f <manifest>
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _validate_dns_test_pod_manifest(self, dns_name: str) -> tuple[bool, str]:
         """
@@ -271,8 +282,13 @@ spec:
 
 @pytest.mark.deployment
 @pytest.mark.requires_kubectl
+@pytest.mark.xdist_group(name="testserviceconfiguration")
 class TestServiceConfiguration:
     """Verify Kubernetes services use DNS names"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_session_service_uses_external_name(self):
         """
@@ -349,8 +365,13 @@ class TestServiceConfiguration:
 @pytest.mark.deployment
 @pytest.mark.requires_kubectl
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testdnsfailoversimulation")
 class TestDNSFailoverSimulation:
     """Simulate DNS failover scenarios"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dns_record_update_propagates(self):
         """

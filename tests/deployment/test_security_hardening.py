@@ -12,6 +12,7 @@ TDD Context:
 Following TDD: Tests written FIRST to catch security violations, then fixes applied.
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -21,8 +22,13 @@ import yaml
 @pytest.mark.regression
 @pytest.mark.security
 @pytest.mark.deployment
+@pytest.mark.xdist_group(name="testkubernetessecurityhardening")
 class TestKubernetesSecurityHardening:
     """Test Kubernetes deployments follow security best practices."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _check_readonly_exception_documented(self, raw_content: str, container_name: str) -> bool:
         """

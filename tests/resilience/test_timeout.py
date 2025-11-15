@@ -5,6 +5,7 @@ Tests timeout behavior, context managers, and metrics.
 """
 
 import asyncio
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -13,8 +14,13 @@ from mcp_server_langgraph.core.exceptions import TimeoutError as MCPTimeoutError
 from mcp_server_langgraph.resilience.timeout import TimeoutContext, get_timeout_for_operation, with_timeout
 
 
+@pytest.mark.xdist_group(name="testtimeoutbasics")
 class TestTimeoutBasics:
     """Test basic timeout functionality"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -57,8 +63,13 @@ class TestTimeoutBasics:
         assert result == "success"
 
 
+@pytest.mark.xdist_group(name="testtimeoutbyoperationtype")
 class TestTimeoutByOperationType:
     """Test timeout by operation type"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -109,8 +120,13 @@ class TestTimeoutByOperationType:
         assert get_timeout_for_operation("default") == 30
 
 
+@pytest.mark.xdist_group(name="testtimeoutcontextmanager")
 class TestTimeoutContextManager:
     """Test timeout context manager"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -142,8 +158,13 @@ class TestTimeoutContextManager:
         assert result == "success"
 
 
+@pytest.mark.xdist_group(name="testtimeoutmetrics")
 class TestTimeoutMetrics:
     """Test timeout metrics emission"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -160,8 +181,13 @@ class TestTimeoutMetrics:
                 await slow_func()
 
 
+@pytest.mark.xdist_group(name="testtimeoutedgecases")
 class TestTimeoutEdgeCases:
     """Test timeout edge cases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_timeout_only_for_async_functions(self):

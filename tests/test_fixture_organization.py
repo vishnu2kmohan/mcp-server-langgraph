@@ -8,6 +8,7 @@ This test module validates that test fixtures follow best practices:
 """
 
 import ast
+import gc
 from pathlib import Path
 from typing import Dict, List, Tuple
 

@@ -10,6 +10,7 @@ Placeholders like PROJECT_ID, YOUR_STAGING_PROJECT_ID should either:
 3. Have clear documentation on how to replace them
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -58,8 +59,13 @@ def find_placeholders_in_file(file_path: Path) -> dict:
 
 @pytest.mark.deployment
 @pytest.mark.security
+@pytest.mark.xdist_group(name="testhelmplaceholdervalidation")
 class TestHelmPlaceholderValidation:
     """Validate Helm values files for dangerous placeholders"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helm_values_staging_has_no_dangerous_placeholders(self):
         """
@@ -238,8 +244,13 @@ class TestHelmPlaceholderValidation:
 
 
 @pytest.mark.deployment
+@pytest.mark.xdist_group(name="testplaceholderdetectionprecommit")
 class TestPlaceholderDetectionPreCommit:
     """Test that pre-commit hooks detect placeholders"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_precommit_config_has_placeholder_check(self):
         """

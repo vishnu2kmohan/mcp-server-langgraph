@@ -10,6 +10,7 @@ Following TDD Red-Green-Refactor:
 - REFACTOR: Improve validation logic as needed
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -20,8 +21,13 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 TERRAFORM_DIR = PROJECT_ROOT / "terraform"
 
 
+@pytest.mark.xdist_group(name="testterraformplaceholders")
 class TestTerraformPlaceholders:
     """Test that Terraform files contain no placeholder values."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     PLACEHOLDER_PATTERNS = [
         r"\bACCOUNT_ID\b",
@@ -161,8 +167,13 @@ class TestTerraformPlaceholders:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testeksendpointsecurity")
 class TestEKSEndpointSecurity:
     """Test that EKS API endpoints are not publicly accessible from 0.0.0.0/0."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_eks_endpoint_not_open_to_internet(self):
         """
@@ -245,8 +256,13 @@ class TestEKSEndpointSecurity:
         )
 
 
+@pytest.mark.xdist_group(name="testgkenetworksecurity")
 class TestGKENetworkSecurity:
     """Test that GKE control plane has proper network security."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gke_prod_private_endpoint_enabled(self):
         """

@@ -10,6 +10,7 @@ Following TDD Red-Green-Refactor:
 - REFACTOR: Improve validation logic as needed
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -23,8 +24,13 @@ DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
 
 @pytest.mark.unit
 @pytest.mark.kubernetes
+@pytest.mark.xdist_group(name="testexternalsecretsvalidation")
 class TestExternalSecretsValidation:
     """Test that ExternalSecret and SecretStore resources have no placeholders."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     PLACEHOLDER_PATTERNS = {
         "aws": [
@@ -210,8 +216,13 @@ class TestExternalSecretsValidation:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testexternalsecretsserviceaccounts")
 class TestExternalSecretsServiceAccounts:
     """Test that External Secrets Operator ServiceAccounts are properly configured."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_external_secrets_sa_has_cloud_identity(self):
         """

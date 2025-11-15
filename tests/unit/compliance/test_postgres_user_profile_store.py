@@ -12,6 +12,7 @@ Following TDD principles:
 3. REFACTOR: Improve code quality
 """
 
+import gc
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 

@@ -4,14 +4,21 @@ Unit tests for filesystem tools
 Tests read-only file operations with security controls.
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testreadfile")
 class TestReadFile:
     """Test suite for read_file tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_read_existing_file(self, tmp_path):
         """Test reading an existing text file"""
@@ -68,8 +75,13 @@ class TestReadFile:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testlistdirectory")
 class TestListDirectory:
     """Test suite for list_directory tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_list_directory_contents(self, tmp_path):
         """Test listing directory contents"""
@@ -130,8 +142,13 @@ class TestListDirectory:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsearchfiles")
 class TestSearchFiles:
     """Test suite for search_files tool"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_search_files_by_pattern(self, tmp_path):
         """Test searching files by pattern"""
@@ -185,8 +202,13 @@ class TestSearchFiles:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testfilesystemtoolschemas")
 class TestFilesystemToolSchemas:
     """Test filesystem tool schemas"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_read_file_schema(self):
         """Test read_file has proper schema"""

@@ -10,14 +10,20 @@ Tests automatic detection of performance regressions in:
 Following TDD practices.
 """
 
+import gc
 import json
 from unittest.mock import patch
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="testperformancebaseline")
 class TestPerformanceBaseline:
     """Test performance baseline establishment"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_establish_baseline_from_benchmarks(self):
         """Test establishing performance baseline from benchmark results"""
@@ -58,8 +64,13 @@ class TestPerformanceBaseline:
         assert baseline["response_time_ms"] == 50.0
 
 
+@pytest.mark.xdist_group(name="testregressiondetection")
 class TestRegressionDetection:
     """Test regression detection logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_detect_response_time_regression(self):
         """Test detecting response time regression"""
@@ -125,8 +136,13 @@ class TestRegressionDetection:
         assert any(r["metric"] == "memory_mb" for r in regressions)
 
 
+@pytest.mark.xdist_group(name="testperformancebenchmarking")
 class TestPerformanceBenchmarking:
     """Test performance benchmarking execution"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @patch("scripts.ci.performance_regression.run_benchmark")
     def test_run_api_benchmarks(self, mock_benchmark):
@@ -163,8 +179,13 @@ class TestPerformanceBenchmarking:
         assert percentiles["p99"] == pytest.approx(99.0, abs=5)
 
 
+@pytest.mark.xdist_group(name="testregressionreporting")
 class TestRegressionReporting:
     """Test regression reporting and notifications"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_generate_regression_report(self):
         """Test generating regression report"""
@@ -212,8 +233,13 @@ class TestRegressionReporting:
         assert "70" in issue_body
 
 
+@pytest.mark.xdist_group(name="testbaselineupdate")
 class TestBaselineUpdate:
     """Test baseline update logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_update_baseline_after_improvement(self):
         """Test updating baseline after performance improvement"""

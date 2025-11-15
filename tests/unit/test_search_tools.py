@@ -4,6 +4,7 @@ Unit tests for search tools
 Tests knowledge base and web search functionality.
 """
 
+import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,7 +24,6 @@ class TestSearchKnowledgeBase:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
-        import gc
 
         gc.collect()
 
@@ -128,7 +128,6 @@ class TestWebSearch:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
-        import gc
 
         gc.collect()
 
@@ -352,7 +351,6 @@ class TestSearchToolSchemas:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
-        import gc
 
         gc.collect()
 

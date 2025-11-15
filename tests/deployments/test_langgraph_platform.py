@@ -5,11 +5,18 @@ These tests ensure the deployment package can be imported and instantiated
 without errors, preventing deployment-time failures.
 """
 
+import gc
+
 import pytest
 
 
+@pytest.mark.xdist_group(name="testlanggraphplatformdeployment")
 class TestLangGraphPlatformDeployment:
     """Test suite for LangGraph Platform deployment package"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_can_import_agent_module(self):
         """Verify the agent module can be imported without errors"""

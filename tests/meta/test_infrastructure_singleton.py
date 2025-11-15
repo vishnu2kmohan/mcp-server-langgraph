@@ -23,6 +23,7 @@ Related:
 - tests/regression/test_pytest_xdist_port_conflicts.py (validates port behavior)
 """
 
+import gc
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -32,8 +33,13 @@ import pytest
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testinfrastructuresingleton")
 class TestInfrastructureSingleton:
     """Validate single shared infrastructure architecture."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_infrastructure_ports_are_fixed_regardless_of_worker(self, test_infrastructure_ports):
         """
@@ -150,8 +156,13 @@ class TestInfrastructureSingleton:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testworkerisolationmechanisms")
 class TestWorkerIsolationMechanisms:
     """Validate that logical isolation mechanisms work correctly."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_postgres_schema_isolation_exists(self):
         """
@@ -196,8 +207,13 @@ class TestWorkerIsolationMechanisms:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testregressiontestcorrectness")
 class TestRegressionTestCorrectness:
     """Validate that port conflict regression tests expect correct behavior."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_regression_tests_expect_fixed_ports(self):
         """

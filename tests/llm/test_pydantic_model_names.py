@@ -23,6 +23,7 @@ References:
 - Related issue: https://github.com/pydantic/pydantic-ai/issues/XXX
 """
 
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -39,8 +40,13 @@ def mock_pydantic_agent_class():
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpydanticmodelnameformatting")
 class TestPydanticModelNameFormatting:
     """Test proper model name formatting for pydantic-ai"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_google_gemini_model_has_google_gla_prefix(self, mock_pydantic_agent_class):
         """Gemini models must have 'google-gla:' prefix for pydantic-ai"""
@@ -144,8 +150,13 @@ class TestPydanticModelNameFormatting:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpydanticwrapperintegration")
 class TestPydanticWrapperIntegration:
     """Integration tests for PydanticAIAgentWrapper with real-world scenarios"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_wrapper_initialization_with_gemini_model(self, mock_pydantic_agent_class):
         """Wrapper should initialize correctly with Gemini model"""

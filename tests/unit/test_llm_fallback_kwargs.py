@@ -5,6 +5,7 @@ Ensures that provider-specific kwargs (api_base, aws_secret_access_key, etc.)
 are properly forwarded to fallback models.
 """
 
+import gc
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 

@@ -12,6 +12,7 @@ attempt to connect to port 9801 but the proxy doesn't expose it,
 causing continuous container restarts.
 """
 
+import gc
 from pathlib import Path
 from typing import Any, Dict
 

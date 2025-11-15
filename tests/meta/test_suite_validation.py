@@ -17,6 +17,7 @@ References:
 """
 
 import ast
+import gc
 import os
 from pathlib import Path
 from typing import List, Set, Tuple
@@ -24,8 +25,13 @@ from typing import List, Set, Tuple
 import pytest
 
 
+@pytest.mark.xdist_group(name="testmarkerconsistency")
 class TestMarkerConsistency:
     """Meta-tests to validate pytest marker consistency across test suite"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_no_conflicting_unit_and_integration_markers(self):
@@ -467,8 +473,13 @@ class TestMarkerConsistency:
         return ""
 
 
+@pytest.mark.xdist_group(name="testimportguards")
 class TestImportGuards:
     """Meta-tests to validate import guards for optional dependencies"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_optional_imports_use_guards(self):
@@ -541,8 +552,13 @@ class TestImportGuards:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testinfrastructurefixtures")
 class TestInfrastructureFixtures:
     """Meta-tests to validate infrastructure fixture behavior"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_infrastructure_fixtures_use_skip_not_fail(self):
@@ -580,8 +596,13 @@ class TestInfrastructureFixtures:
             pytest.fail("conftest.py should use pytest.skip() for infrastructure unavailability")
 
 
+@pytest.mark.xdist_group(name="testclitoolguards")
 class TestCLIToolGuards:
     """Meta-tests to validate CLI tool availability guards (OpenAI Codex Finding #1)"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_cli_tool_tests_have_skipif_guards(self):

@@ -8,6 +8,7 @@ Tests validate that:
 4. Optional fields are validated when present
 """
 
+import gc
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 # Add scripts directory to path - environment-agnostic
 _scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
 sys.path.insert(0, str(_scripts_dir))
+
 
 from validators.frontmatter_validator import (  # noqa: E402
     FrontmatterError,
@@ -26,8 +28,13 @@ from validators.frontmatter_validator import (  # noqa: E402
 )
 
 
+@pytest.mark.xdist_group(name="testfrontmattervalidator")
 class TestFrontmatterValidator:
     """Test suite for FrontmatterValidator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self, tmp_path):

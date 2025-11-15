@@ -15,6 +15,7 @@ Test-Driven Development (TDD) Approach:
 - REFACTOR: Validates best practices for mock object design
 """
 
+import gc
 import inspect
 from dataclasses import is_dataclass
 from typing import get_type_hints
@@ -25,10 +26,15 @@ from pydantic import BaseModel
 from tests.fixtures.serializable_mocks import SerializableLLMMock, SerializableToolMock
 
 
+@pytest.mark.xdist_group(name="testserializablellmmockvalidation")
 class TestSerializableLLMMockValidation:
     """
     Validation tests for SerializableLLMMock to prevent Pydantic conflicts.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_serializable_llm_mock_not_using_dataclass(self):
         """
@@ -181,10 +187,15 @@ class TestSerializableLLMMockValidation:
         assert mock._current_index == 0
 
 
+@pytest.mark.xdist_group(name="testserializabletoolmockvalidation")
 class TestSerializableToolMockValidation:
     """
     Validation tests for SerializableToolMock.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_serializable_tool_mock_is_plain_class(self):
         """
@@ -228,10 +239,15 @@ class TestSerializableToolMockValidation:
         assert tool.call_count == 1
 
 
+@pytest.mark.xdist_group(name="testmockcompatibilityguards")
 class TestMockCompatibilityGuards:
     """
     Guard tests to prevent incompatible patterns in mock objects.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_dataclass_on_pydantic_subclasses(self):
         """

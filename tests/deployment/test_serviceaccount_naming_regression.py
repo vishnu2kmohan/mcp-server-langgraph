@@ -18,6 +18,7 @@ Regression Prevention:
   Root cause: Naming inconsistencies between base and overlays
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -30,8 +31,13 @@ STAGING_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "staging-gke"
 PRODUCTION_OVERLAY = REPO_ROOT / "deployments" / "overlays" / "production-gke"
 
 
+@pytest.mark.xdist_group(name="testbaseserviceaccountnaming")
 class TestBaseServiceAccountNaming:
     """Test base ServiceAccount naming conventions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_base_serviceaccounts_have_sa_suffix(self):
         """All base ServiceAccounts must end with -sa suffix."""
@@ -64,8 +70,13 @@ class TestBaseServiceAccountNaming:
             assert component in sa_names, f"Required ServiceAccount '{component}' not found in base"
 
 
+@pytest.mark.xdist_group(name="testoverlayserviceaccountnaming")
 class TestOverlayServiceAccountNaming:
     """Test overlay ServiceAccount naming matches base."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_staging_openfga_serviceaccount_has_sa_suffix(self):
         """
@@ -153,8 +164,13 @@ class TestOverlayServiceAccountNaming:
                         ), f"ServiceAccount '{sa_name}' (clean: '{clean_name}') in {sa_file.name} doesn't match base. Available: {base_names}"
 
 
+@pytest.mark.xdist_group(name="testworkloadidentityannotations")
 class TestWorkloadIdentityAnnotations:
     """Test that critical ServiceAccounts have Workload Identity annotations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_staging_openfga_has_workload_identity(self):
         """OpenFGA ServiceAccount must have Workload Identity annotation."""
@@ -187,8 +203,13 @@ class TestWorkloadIdentityAnnotations:
         assert "@" in wi_annotation, "Workload Identity annotation must be a GCP service account email"
 
 
+@pytest.mark.xdist_group(name="testvalidationscript")
 class TestValidationScript:
     """Test that the validation script works correctly."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validation_script_passes_on_correct_naming(self):
         """Validation script should pass when all ServiceAccounts are correctly named."""
@@ -220,8 +241,13 @@ class TestValidationScript:
         assert is_executable, "Validation script is not executable (missing +x permission)"
 
 
+@pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """Tests that prevent specific regression scenarios."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_cannot_create_serviceaccount_without_sa_suffix_in_overlays(self):
         """

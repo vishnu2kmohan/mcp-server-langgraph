@@ -8,6 +8,7 @@ that would cause runtime failures.
 Codex Finding #3 (P0 Blocker): production-gke overlay emits placeholders after build
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path

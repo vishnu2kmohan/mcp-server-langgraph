@@ -11,6 +11,7 @@ This test suite ensures that:
 TDD Principle: These tests MUST pass to ensure developers never experience CI surprises.
 """
 
+import gc
 import os
 import re
 import subprocess
@@ -94,8 +95,13 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
 # ══════════════════════════════════════════════════════════════════════════════
 
 
+@pytest.mark.xdist_group(name="testprepushhookconfiguration")
 class TestPrePushHookConfiguration:
     """Validate pre-push hook is configured correctly."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self, shared_repo_root: Path) -> Path:
@@ -218,8 +224,13 @@ class TestPrePushHookConfiguration:
         assert "To fix" in content or "Fix:" in content, "Pre-push hook should provide troubleshooting instructions"
 
 
+@pytest.mark.xdist_group(name="testmakefilevalidationtarget")
 class TestMakefileValidationTarget:
     """Validate Makefile validate-pre-push target."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def makefile_path(self) -> Path:
@@ -339,8 +350,13 @@ class TestMakefileValidationTarget:
         assert "validate-pre-push" in help_content, "validate-pre-push should be documented in make help output"
 
 
+@pytest.mark.xdist_group(name="testlocalciparity")
 class TestLocalCIParity:
     """Validate that local validation matches CI validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def ci_workflow_path(self) -> Path:
@@ -427,8 +443,13 @@ class TestLocalCIParity:
             assert "test_workflow" in pre_push_content, "Local pre-push should validate workflows like CI does"
 
 
+@pytest.mark.xdist_group(name="testcigapprevention")
 class TestCIGapPrevention:
     """Tests to prevent CI validation gaps from being introduced."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -486,12 +507,17 @@ class TestCIGapPrevention:
                 pytest.skip("README doesn't mention validation (optional)")
 
 
+@pytest.mark.xdist_group(name="testpytestxdistparity")
 class TestPytestXdistParity:
     """Validate that local tests use pytest-xdist (-n auto) like CI does.
 
     CRITICAL: These tests enforce Codex finding #7 - ensure local pre-push runs
     tests in parallel with -n auto to catch pytest-xdist isolation bugs before CI.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -635,12 +661,17 @@ class TestPytestXdistParity:
         )
 
 
+@pytest.mark.xdist_group(name="testotelsdkdisabledparity")
 class TestOtelSdkDisabledParity:
     """Validate that local tests set OTEL_SDK_DISABLED=true like CI does.
 
     CRITICAL: These tests enforce Codex finding #2B - ensure local pre-push sets
     OTEL_SDK_DISABLED=true to match CI environment exactly.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -758,12 +789,17 @@ class TestOtelSdkDisabledParity:
         )
 
 
+@pytest.mark.xdist_group(name="testapimcptestsuiteparity")
 class TestApiMcpTestSuiteParity:
     """Validate that local pre-push runs API/MCP test suites like CI does.
 
     CRITICAL: These tests enforce Codex finding #2D - ensure API and MCP tests
     run locally before push to prevent CI-only failures.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -865,12 +901,17 @@ class TestApiMcpTestSuiteParity:
         )
 
 
+@pytest.mark.xdist_group(name="testmakefileprepushparity")
 class TestMakefilePrePushParity:
     """Validate that Makefile validate-pre-push target matches pre-push hook exactly.
 
     CRITICAL: These tests enforce Codex finding #3 - ensure developers running
     'make validate-pre-push' get the same validation as the git pre-push hook.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1037,6 +1078,7 @@ class TestMakefilePrePushParity:
             )
 
 
+@pytest.mark.xdist_group(name="testactionlinthookstrictness")
 class TestActionlintHookStrictness:
     """Validate that actionlint hook fails on errors (no || true bypass).
 
@@ -1044,6 +1086,10 @@ class TestActionlintHookStrictness:
     causes it to NEVER fail even when workflows are invalid. This creates a
     local/CI divergence where CI fails but local validation passes.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1124,6 +1170,7 @@ class TestActionlintHookStrictness:
         ), "Actionlint hook should be configured to run during pre-push stage"
 
 
+@pytest.mark.xdist_group(name="testmypyblockingparity")
 class TestMyPyBlockingParity:
     """Validate that MyPy blocking behavior matches between local and CI.
 
@@ -1131,6 +1178,10 @@ class TestMyPyBlockingParity:
     but blocking in CI. This creates local/CI divergence where type errors pass
     locally but fail in CI.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1263,6 +1314,7 @@ class TestMyPyBlockingParity:
         )
 
 
+@pytest.mark.xdist_group(name="testisolationvalidationstrictness")
 class TestIsolationValidationStrictness:
     """Validate that test isolation validation script promotes warnings to errors.
 
@@ -1270,6 +1322,10 @@ class TestIsolationValidationStrictness:
     currently returns 0 (success) when tests are missing xdist_group or gc.collect,
     allowing regressions to slip through.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1358,6 +1414,7 @@ class TestIsolationValidationStrictness:
         )
 
 
+@pytest.mark.xdist_group(name="testmakefiledependencyextras")
 class TestMakefileDependencyExtras:
     """Validate that Makefile install-dev includes all required dependency extras.
 
@@ -1365,6 +1422,10 @@ class TestMakefileDependencyExtras:
     while CI uses --extra dev --extra builder. This causes missing import errors
     when running pre-push validation locally.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1480,6 +1541,7 @@ class TestMakefileDependencyExtras:
         )
 
 
+@pytest.mark.xdist_group(name="testprepushdependencyvalidation")
 class TestPrePushDependencyValidation:
     """Validate that pre-push hook includes dependency validation (uv pip check).
 
@@ -1487,6 +1549,10 @@ class TestPrePushDependencyValidation:
     (ci.yaml:220-235) but pre-push hook doesn't, allowing dependency conflicts
     to slip through to CI.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1573,6 +1639,7 @@ class TestPrePushDependencyValidation:
         )
 
 
+@pytest.mark.xdist_group(name="testprecommithookstageflag")
 class TestPreCommitHookStageFlag:
     """Validate that Makefile validate-pre-push uses --hook-stage push.
 
@@ -1580,6 +1647,10 @@ class TestPreCommitHookStageFlag:
     'pre-commit run --all-files' without --hook-stage push, so none of the
     push-only hooks execute when developers follow documented command.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1658,6 +1729,7 @@ class TestPreCommitHookStageFlag:
         )
 
 
+@pytest.mark.xdist_group(name="testcontracttestmarkerparity")
 class TestContractTestMarkerParity:
     """Validate that contract test markers are consistent between local and CI.
 
@@ -1666,6 +1738,10 @@ class TestContractTestMarkerParity:
     which excludes them, but CI uses '-m unit and not llm' which includes them.
     This creates a CI surprise where tests pass locally but fail in CI.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1871,6 +1947,7 @@ class TestContractTestMarkerParity:
         )
 
 
+@pytest.mark.xdist_group(name="testcipushstagevalidatorsjob")
 class TestCIPushStageValidatorsJob:
     """Validate that CI has a dedicated job for push-stage validators.
 
@@ -1880,6 +1957,10 @@ class TestCIPushStageValidatorsJob:
 
     Local pre-push runs these with --hook-stage push, creating a validation gap.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -1987,6 +2068,7 @@ class TestCIPushStageValidatorsJob:
         )
 
 
+@pytest.mark.xdist_group(name="testpostcommithooktemplate")
 class TestPostCommitHookTemplate:
     """Validate that post-commit hook template uses 'uv run python'.
 
@@ -1994,6 +2076,10 @@ class TestPostCommitHookTemplate:
     generates hooks with bare 'python' command, but the project requires 'uv run python'
     to use the project-managed environment.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -2081,6 +2167,7 @@ class TestPostCommitHookTemplate:
         )
 
 
+@pytest.mark.xdist_group(name="testhypothesisprofileparity")
 class TestHypothesisProfileParity:
     """Validate that pre-push hook sets HYPOTHESIS_PROFILE=ci for unit tests.
 
@@ -2090,6 +2177,10 @@ class TestHypothesisProfileParity:
     1. Once in unit tests phase (with dev profile)
     2. Again in property tests phase (with ci profile)
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -2205,6 +2296,7 @@ class TestHypothesisProfileParity:
             )
 
 
+@pytest.mark.xdist_group(name="testprepushenvironmentsanitychecks")
 class TestPrePushEnvironmentSanityChecks:
     """Validate that pre-push hook has environment sanity checks.
 
@@ -2212,6 +2304,10 @@ class TestPrePushEnvironmentSanityChecks:
     script to assert that uv and .venv exist, printing a friendly setup hint
     instead of failing deep in the workflow."
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -2352,8 +2448,13 @@ class TestPrePushEnvironmentSanityChecks:
             )
 
 
+@pytest.mark.xdist_group(name="testregressionprevention")
 class TestRegressionPrevention:
     """Tests to ensure validation doesn't regress over time."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:

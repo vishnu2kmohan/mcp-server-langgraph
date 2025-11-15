@@ -14,6 +14,7 @@ TDD Approach:
 - REFACTOR: Improve code quality while maintaining test coverage
 """
 
+import gc
 import json
 import os
 import re
@@ -23,6 +24,7 @@ from typing import Any, Dict, List
 import pytest
 
 
+@pytest.mark.xdist_group(name="testazurekeyvaultsecuritydefaults")
 class TestAzureKeyVaultSecurityDefaults:
     """
     Test Azure Key Vault module security defaults.
@@ -31,6 +33,10 @@ class TestAzureKeyVaultSecurityDefaults:
     - CKV_AZURE_42: Purge protection enabled
     - CKV_AZURE_189: Network ACLs configured with deny-by-default
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def azure_secrets_module_path(self) -> Path:
@@ -119,6 +125,7 @@ class TestAzureKeyVaultSecurityDefaults:
         assert re.search(pattern, azure_main_tf, re.DOTALL), "network_acls.ip_rules must use var.allowed_ip_ranges"
 
 
+@pytest.mark.xdist_group(name="testawssecretsmanagersecurity")
 class TestAWSSecretsManagerSecurity:
     """
     Test AWS Secrets Manager module security configuration.
@@ -127,6 +134,10 @@ class TestAWSSecretsManagerSecurity:
     - CKV_AWS_149: CMK encryption in production
     - Recovery window configuration
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def aws_secrets_module_path(self) -> Path:
@@ -199,6 +210,7 @@ class TestAWSSecretsManagerSecurity:
         ), "aws_secretsmanager_secret must use recovery_window_in_days = var.recovery_window_in_days"
 
 
+@pytest.mark.xdist_group(name="testdynamodbbackendsecurity")
 class TestDynamoDBBackendSecurity:
     """
     Test DynamoDB backend security configuration.
@@ -207,6 +219,10 @@ class TestDynamoDBBackendSecurity:
     - Deletion protection enabled
     - KMS encryption in production
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def backend_setup_path(self) -> Path:
@@ -290,6 +306,7 @@ class TestDynamoDBBackendSecurity:
         assert re.search(pattern, backend_main_tf, re.DOTALL), "server_side_encryption must use kms_key_arn = var.kms_key_arn"
 
 
+@pytest.mark.xdist_group(name="tests3backendsecurity")
 class TestS3BackendSecurity:
     """
     Test S3 backend bucket security configuration.
@@ -298,6 +315,10 @@ class TestS3BackendSecurity:
     - Logging configuration
     - Versioning with MFA delete (documented)
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def backend_setup_path(self) -> Path:
@@ -352,12 +373,17 @@ class TestS3BackendSecurity:
         )
 
 
+@pytest.mark.xdist_group(name="testcheckovcompliance")
 class TestCheckovCompliance:
     """
     Integration test: Run Checkov on Terraform modules to validate compliance.
 
     This test runs actual Checkov scans to ensure all security controls pass.
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.skipif(os.system("which checkov > /dev/null 2>&1") != 0, reason="Checkov not installed (pip install checkov)")
     def test_checkov_azure_secrets_compliance(self):

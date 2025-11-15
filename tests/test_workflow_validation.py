@@ -7,6 +7,7 @@ including proper error handling, artifact management, and secret validation.
 Created as part of OpenAI Codex findings validation (TDD approach).
 """
 
+import gc
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -14,8 +15,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testworkflowvalidation")
 class TestWorkflowValidation:
     """Validate GitHub Actions workflows for common issues."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def workflows_dir(self) -> Path:
@@ -421,8 +427,13 @@ class TestWorkflowValidation:
             print(f"INFO: {info_msg}")
 
 
+@pytest.mark.xdist_group(name="testcoverageartifactscenarios")
 class TestCoverageArtifactScenarios:
     """Test scenarios for coverage artifact handling."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_missing_coverage_artifact_handling(self, tmp_path: Path):
         """

@@ -12,6 +12,7 @@ This test follows TDD principles:
 """
 
 import ast
+import gc
 import sys
 import tomllib
 from pathlib import Path

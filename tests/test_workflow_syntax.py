@@ -10,6 +10,7 @@ TDD Approach (RED → GREEN → REFACTOR):
 3. REFACTOR: Improve workflow quality while keeping tests green
 """
 
+import gc
 import subprocess
 from pathlib import Path
 

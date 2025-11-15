@@ -8,6 +8,7 @@ Tests validate that:
 4. Proper error reporting
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -15,8 +16,13 @@ import pytest
 from scripts.validators.mdx_extension_validator import ExtensionError, InvalidExtensionError, MDXExtensionValidator
 
 
+@pytest.mark.xdist_group(name="testmdxextensionvalidator")
 class TestMDXExtensionValidator:
     """Test suite for MDXExtensionValidator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def validator(self, tmp_path):

@@ -16,14 +16,20 @@ References:
 """
 
 import ast
+import gc
 from pathlib import Path
 from typing import List, Set, Tuple
 
 import pytest
 
 
+@pytest.mark.xdist_group(name="testfixturedecorators")
 class TestFixtureDecorators:
     """Meta-tests to validate pytest fixture decorators"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.unit
     def test_no_placeholder_tests_with_only_pass(self):

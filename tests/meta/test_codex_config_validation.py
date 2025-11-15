@@ -7,6 +7,7 @@ findings from 2025-11-14:
 - 80% coverage threshold enforcement
 """
 
+import gc
 import tomllib
 from pathlib import Path
 
@@ -15,8 +16,13 @@ import pytest
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testcodexconfigurationrecommendations")
 class TestCodexConfigurationRecommendations:
     """Validate Codex-recommended configuration changes."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture(scope="class")
     def pyproject_config(self):

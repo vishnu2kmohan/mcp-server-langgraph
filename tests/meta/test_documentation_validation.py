@@ -11,6 +11,7 @@ These tests ensure documentation quality and prevent common documentation errors
 Following TDD principles to prevent regression of documentation issues.
 """
 
+import gc
 import json
 import re
 from pathlib import Path
@@ -23,8 +24,13 @@ DOCS_DIR = REPO_ROOT / "docs"
 ADR_DIR = REPO_ROOT / "adr"
 
 
+@pytest.mark.xdist_group(name="testmdxparsing")
 class TestMDXParsing:
     """Test MDX files for parsing errors"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_unescaped_less_than_digits(self):
         """
@@ -106,8 +112,13 @@ class TestMDXParsing:
         assert not errors, "Found unescaped email addresses that will cause MDX parsing errors:\n" + "\n".join(errors)
 
 
+@pytest.mark.xdist_group(name="testmintlifynavigation")
 class TestMintlifyNavigation:
     """Test Mintlify navigation configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docs_json_valid(self):
         """Validate docs.json is valid JSON"""
@@ -207,8 +218,13 @@ class TestMintlifyNavigation:
                 print(f"  - {f}")
 
 
+@pytest.mark.xdist_group(name="testadrconsistency")
 class TestADRConsistency:
     """Test Architecture Decision Records consistency"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_adr_numbering_sequential(self):
         """Verify ADR numbers are sequential and unique"""
@@ -253,8 +269,13 @@ class TestADRConsistency:
                 print(f"  - {adr}")
 
 
+@pytest.mark.xdist_group(name="testfrontmatter")
 class TestFrontmatter:
     """Test MDX frontmatter consistency"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_mdx_files_have_frontmatter(self):
         """Verify all MDX files (except templates and operational docs) have valid frontmatter"""
@@ -313,8 +334,13 @@ class TestFrontmatter:
         assert not errors, "Frontmatter validation errors:\n" + "\n".join(f"  - {e}" for e in errors)
 
 
+@pytest.mark.xdist_group(name="testlinkintegrity")
 class TestLinkIntegrity:
     """Test internal link integrity"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_broken_internal_links_to_docs(self):
         """

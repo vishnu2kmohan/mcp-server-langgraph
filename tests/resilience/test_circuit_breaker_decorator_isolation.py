@@ -29,6 +29,8 @@ See Also:
 - docs-internal/adr/ADR-0053-circuit-breaker-decorator-closure-isolation.md
 """
 
+import gc
+
 import pytest
 
 from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
@@ -43,6 +45,10 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
 @pytest.mark.xdist_group(name="circuit_breaker_isolation")
 class TestCircuitBreakerDecoratorIsolation:
     """Test circuit breaker decorator closure isolation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def teardown_method(self):
         """Clean up circuit breakers after each test."""

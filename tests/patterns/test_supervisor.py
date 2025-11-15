@@ -4,6 +4,7 @@ Tests for Supervisor Pattern
 Following TDD best practices with comprehensive coverage.
 """
 
+import gc
 from unittest.mock import Mock
 
 import pytest

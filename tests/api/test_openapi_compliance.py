@@ -4,6 +4,7 @@ OpenAPI Compliance Tests
 Validates that API endpoints match OpenAPI specification.
 """
 
+import gc
 import json
 from pathlib import Path
 
@@ -24,8 +25,13 @@ def openapi_schema():
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testopenapistructure")
 class TestOpenAPIStructure:
     """Test OpenAPI schema structure"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_schema_has_required_fields(self, openapi_schema):
         """OpenAPI schema must have required top-level fields"""
@@ -64,8 +70,13 @@ class TestOpenAPIStructure:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testendpointdocumentation")
 class TestEndpointDocumentation:
     """Test that all endpoints are properly documented"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_endpoints_have_summary(self, openapi_schema):
         """All endpoints should have summary or description"""
@@ -110,8 +121,13 @@ class TestEndpointDocumentation:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testschemadefinitions")
 class TestSchemaDefinitions:
     """Test request/response schema definitions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_schemas_have_type(self, openapi_schema):
         """All schema definitions must specify a type"""
@@ -156,8 +172,13 @@ class TestSchemaDefinitions:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testresponseschemas")
 class TestResponseSchemas:
     """Test response schema compliance"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_success_responses_have_schema(self, openapi_schema):
         """2xx responses should have schema definitions"""
@@ -204,8 +225,13 @@ class TestResponseSchemas:
 
 @pytest.mark.contract
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testapicontractintegration")
 class TestAPIContractIntegration:
     """Integration tests with actual API endpoints using schemathesis"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_health_endpoint_matches_schema(self, openapi_schema):
@@ -289,8 +315,13 @@ class TestAPIContractIntegration:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testbreakingchanges")
 class TestBreakingChanges:
     """Test for API breaking changes"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_breaking_changes_from_baseline(self):
         """Detect breaking changes compared to baseline schema"""
@@ -338,8 +369,13 @@ class TestBreakingChanges:
 
 @pytest.mark.contract
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testsecurityschemes")
 class TestSecuritySchemes:
     """Test API security documentation"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_security_schemes_defined(self, openapi_schema):
         """Security schemes should be defined if API is protected"""

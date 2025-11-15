@@ -11,6 +11,7 @@ These tests follow TDD: they FAIL initially (RED), pass after fixes (GREEN).
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 from typing import List, Tuple
@@ -18,6 +19,7 @@ from typing import List, Tuple
 import pytest
 
 
+@pytest.mark.xdist_group(name="testcodexfindingsremediation")
 class TestCodexFindingsRemediation:
     """
     Meta-tests validating OpenAI Codex findings have been addressed.
@@ -26,6 +28,10 @@ class TestCodexFindingsRemediation:
     WHEN: Fixes are implemented following TDD principles
     THEN: These meta-tests validate the fixes are complete
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def project_root(self) -> Path:
@@ -376,8 +382,13 @@ class TestCodexFindingsRemediation:
         return False
 
 
+@pytest.mark.xdist_group(name="testcodexvalidationmetatest")
 class TestCodexValidationMetaTest:
     """Meta-test the meta-tests themselves."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_codex_validation_file_exists(self):
         """

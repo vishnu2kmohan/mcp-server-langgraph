@@ -7,6 +7,8 @@ version negotiation capabilities to prevent breaking changes.
 Following TDD: These tests define the expected versioning behavior (RED phase).
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -34,8 +36,13 @@ def test_client(monkeypatch):
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testapiversionmetadata")
 class TestAPIVersionMetadata:
     """Test API version information endpoints"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_version_endpoint_exists(self, test_client):
         """API should expose version metadata at /api/version"""
@@ -80,8 +87,13 @@ class TestAPIVersionMetadata:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testapiversionprefixes")
 class TestAPIVersionPrefixes:
     """Test that all REST API endpoints use consistent /api/v1 prefix"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_gdpr_endpoints_have_v1_prefix(self, test_client):
         """GDPR endpoints should be under /api/v1"""
@@ -132,8 +144,13 @@ class TestAPIVersionPrefixes:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testversionnegotiation")
 class TestVersionNegotiation:
     """Test API version negotiation via headers"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_version_header_accepted(self, test_client):
         """API should accept X-API-Version header"""
@@ -161,8 +178,13 @@ class TestVersionNegotiation:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testdeprecationsupport")
 class TestDeprecationSupport:
     """Test that deprecated endpoints are properly marked"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_deprecated_endpoints_marked_in_openapi(self, test_client):
         """Deprecated endpoints should have 'deprecated: true' in OpenAPI"""
@@ -197,8 +219,13 @@ class TestDeprecationSupport:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testbackwardcompatibility")
 class TestBackwardCompatibility:
     """Test backward compatibility guarantees"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_v1_endpoints_stable(self, test_client):
         """All /api/v1 endpoints are considered stable (no breaking changes)"""
@@ -243,8 +270,13 @@ class TestBackwardCompatibility:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testversiondocumentation")
 class TestVersionDocumentation:
     """Test that versioning strategy is documented in OpenAPI"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_openapi_version_field_present(self, test_client):
         """OpenAPI schema should have version in info section"""

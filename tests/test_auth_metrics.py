@@ -5,6 +5,7 @@ Verifies that all authentication metrics are properly defined
 and helper functions work correctly.
 """
 
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -13,8 +14,13 @@ from mcp_server_langgraph.auth import metrics
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testmetricdefinitions")
 class TestMetricDefinitions:
     """Test that all metrics are properly defined"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_login_metrics_defined(self):
         """Test login-related metrics are defined"""
@@ -79,8 +85,13 @@ class TestMetricDefinitions:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordloginattempt")
 class TestRecordLoginAttempt:
     """Test record_login_attempt helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_login_attempt_success(self):
         """Test recording successful login attempt"""
@@ -104,8 +115,13 @@ class TestRecordLoginAttempt:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordtokenverification")
 class TestRecordTokenVerification:
     """Test record_token_verification helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_token_verification_success(self):
         """Test recording successful token verification"""
@@ -136,8 +152,13 @@ class TestRecordTokenVerification:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordsessionoperation")
 class TestRecordSessionOperation:
     """Test record_session_operation helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_session_create_success(self):
         """Test recording successful session creation"""
@@ -194,8 +215,13 @@ class TestRecordSessionOperation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordjwksoperation")
 class TestRecordJWKSOperation:
     """Test record_jwks_operation helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_jwks_cache_hit(self):
         """Test recording JWKS cache hit"""
@@ -232,8 +258,13 @@ class TestRecordJWKSOperation:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordopenfgasync")
 class TestRecordOpenFGASync:
     """Test record_openfga_sync helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_openfga_sync_success(self):
         """Test recording successful OpenFGA sync"""
@@ -262,8 +293,13 @@ class TestRecordOpenFGASync:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testrecordrolemapping")
 class TestRecordRoleMapping:
     """Test record_role_mapping helper function"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_record_role_mapping(self):
         """Test recording role mapping operation"""
@@ -293,8 +329,13 @@ class TestRecordRoleMapping:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testmetricattributes")
 class TestMetricAttributes:
     """Test that metrics can be called with proper attributes"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_login_metrics_accept_attributes(self):
         """Test that login metrics accept proper attributes"""

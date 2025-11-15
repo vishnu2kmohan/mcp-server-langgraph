@@ -30,6 +30,7 @@ References:
 - tests/conftest.py: Centralized environment isolation fixtures
 """
 
+import gc
 from pathlib import Path
 from typing import List, Set
 
@@ -37,8 +38,13 @@ import pytest
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testenvironmentisolationenforcement")
 class TestEnvironmentIsolationEnforcement:
     """Enforce environment isolation patterns across test suite."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_centralized_fixtures_exist(self):
         """
@@ -87,8 +93,13 @@ class TestEnvironmentIsolationEnforcement:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testenvironmentpollutiondetection")
 class TestEnvironmentPollutionDetection:
     """Detect environment pollution patterns in test files."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_monkeypatch_is_preferred_pattern(self):
         """
@@ -155,8 +166,13 @@ class TestEnvironmentPollutionDetection:
 
 
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testfixturebasedisolation")
 class TestFixtureBasedIsolation:
     """Validate fixture-based isolation approach."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_disable_auth_skip_fixture_behavior(self):
         """

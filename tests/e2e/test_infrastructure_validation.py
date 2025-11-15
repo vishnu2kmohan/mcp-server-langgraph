@@ -10,6 +10,8 @@ Tests:
 3. Settings are correctly configured for test environment
 """
 
+import gc
+
 import pytest
 
 
@@ -30,6 +32,10 @@ class TestE2EInfrastructure:
     - OpenAI Codex Finding: Mark infra-heavy tests
     - ADR-0052: Pytest-xdist Isolation Strategy
     """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_infrastructure_is_ready(self, test_infrastructure):
         """Test that infrastructure fixture provides ready services"""

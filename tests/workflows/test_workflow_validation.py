@@ -21,6 +21,7 @@ Author: Claude Code (TDD implementation)
 Created: 2025-11-07
 """
 
+import gc
 import re
 from pathlib import Path
 from typing import Dict

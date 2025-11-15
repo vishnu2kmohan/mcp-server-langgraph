@@ -6,14 +6,20 @@ This prevents RuntimeError when calling create_user_provider(), create_session_s
 etc. from test fixtures or standalone scripts.
 """
 
+import gc
 import logging
 
 import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testobservabilitysafefallback")
 class TestObservabilitySafeFallback:
     """Test safe fallback behavior before observability initialization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_logger_usable_before_init(self):
         """
@@ -131,8 +137,13 @@ class TestObservabilitySafeFallback:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testobservabilityintegration")
 class TestObservabilityIntegration:
     """Test observability integration with auth components"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_multiple_auth_calls_before_init(self):
         """

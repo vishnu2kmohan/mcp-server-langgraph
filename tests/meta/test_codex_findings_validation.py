@@ -12,6 +12,7 @@ ADR: docs-internal/ADR-0053-codex-findings-validation.md
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 from typing import Dict, List, Set
@@ -20,8 +21,13 @@ import pytest
 import yaml
 
 
+@pytest.mark.xdist_group(name="testfixturescopevalidation")
 class TestFixtureScopeValidation:
     """Validate that integration fixtures have correct scopes to prevent ScopeMismatch errors."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_integration_test_env_fixture_is_session_scoped(self):
         """
@@ -144,8 +150,13 @@ class TestFixtureScopeValidation:
             )
 
 
+@pytest.mark.xdist_group(name="testkeycloakserviceconfiguration")
 class TestKeycloakServiceConfiguration:
     """Validate Keycloak service is enabled and properly configured in docker-compose."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_service_enabled_in_docker_compose(self):
         """
@@ -223,8 +234,13 @@ class TestKeycloakServiceConfiguration:
             assert var in env_keys, f"keycloak-test service missing required environment variable: {var}"
 
 
+@pytest.mark.xdist_group(name="testgracefulserviceskipping")
 class TestGracefulServiceSkipping:
     """Validate tests skip gracefully when optional services are unavailable."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_keycloak_tests_skip_when_service_unavailable(self):
         """
@@ -250,8 +266,13 @@ class TestGracefulServiceSkipping:
         )
 
 
+@pytest.mark.xdist_group(name="testplaceholdertestmarkers")
 class TestPlaceholderTestMarkers:
     """Validate placeholder tests don't have strict xfail markers that cause XPASS errors."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_service_principal_lifecycle_no_strict_xfail(self):
         """
@@ -296,8 +317,13 @@ class TestPlaceholderTestMarkers:
         )
 
 
+@pytest.mark.xdist_group(name="testdockerimagecontents")
 class TestDockerImageContents:
     """Validate Docker test image includes necessary directories."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_dockerfile_copies_required_directories_for_integration_tests(self):
         """
@@ -405,8 +431,13 @@ class TestDockerImageContents:
 
 # Summary marker to ensure all tests ran
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="testcodexfindingsvalidationsummary")
 class TestCodexFindingsValidationSummary:
     """Summary test confirming all Codex findings have validation coverage."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_codex_findings_have_validation_tests(self):
         """

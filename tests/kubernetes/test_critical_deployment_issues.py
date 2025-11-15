@@ -14,6 +14,7 @@ Critical issues tested:
 5. GKE production overlay namespace mismatch
 """
 
+import gc
 from pathlib import Path
 from typing import Any, Dict
 
@@ -26,8 +27,13 @@ DEPLOYMENTS_BASE = PROJECT_ROOT / "deployments" / "base"
 DEPLOYMENTS_PROD_GKE = PROJECT_ROOT / "deployments" / "overlays" / "production-gke"
 
 
+@pytest.mark.xdist_group(name="testcriticalnetworkpolicyissues")
 class TestCriticalNetworkPolicyIssues:
     """Test NetworkPolicy uses standard labels and permits required egress."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content."""
@@ -173,8 +179,13 @@ class TestCriticalNetworkPolicyIssues:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testcriticaltopologyspreadissues")
 class TestCriticalTopologySpreadIssues:
     """Test that topology spread constraints don't break single-zone clusters."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content."""
@@ -253,8 +264,13 @@ class TestCriticalTopologySpreadIssues:
             pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testcriticalsecretissues")
 class TestCriticalSecretIssues:
     """Test that secrets with placeholders are not in base kustomization."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Any:
         """Load YAML file and return parsed content."""
@@ -357,8 +373,13 @@ class TestCriticalSecretIssues:
                     pytest.fail(error_msg)
 
 
+@pytest.mark.xdist_group(name="testcriticalnamespaceissues")
 class TestCriticalNamespaceIssues:
     """Test that production GKE overlay has consistent namespace references."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Load YAML file and return parsed content."""

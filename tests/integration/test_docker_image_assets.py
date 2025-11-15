@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.xdist_group(name="testdockertestimageassets")
 class TestDockerTestImageAssets:
     """Test that Docker test image contains all required assets."""
 

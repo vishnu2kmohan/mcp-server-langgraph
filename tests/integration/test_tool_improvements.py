@@ -9,6 +9,8 @@ Tests:
 - Enhanced error messages
 """
 
+import gc
+
 import pytest
 from langchain_core.messages import AIMessage
 from mcp.types import TextContent
@@ -35,8 +37,13 @@ def mcp_server(mock_openfga_client):
     return MCPAgentServer(openfga_client=mock_openfga_client)
 
 
+@pytest.mark.xdist_group(name="testresponseformatcontrol")
 class TestResponseFormatControl:
     """Test response_format parameter in agent_chat tool."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_chat_with_concise_format(self, mcp_server, mocker):
@@ -129,8 +136,13 @@ class TestResponseFormatControl:
         assert isinstance(result, list)
 
 
+@pytest.mark.xdist_group(name="testsearchfocusedtools")
 class TestSearchFocusedTools:
     """Test conversation_search replacing list_conversations."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_search_conversations_with_query(self, mcp_server, mocker):
@@ -230,8 +242,13 @@ class TestSearchFocusedTools:
         assert "recent conversation" in response_text.lower()
 
 
+@pytest.mark.xdist_group(name="testtoolnamingandbackwardcompatibility")
 class TestToolNamingAndBackwardCompatibility:
     """Test tool namespacing and backward compatibility."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_list_tools_returns_new_names(self, mcp_server):
@@ -266,8 +283,13 @@ class TestToolNamingAndBackwardCompatibility:
         assert any(name.startswith("conversation_") for name in tool_names)
 
 
+@pytest.mark.xdist_group(name="testenhancederrormessages")
 class TestEnhancedErrorMessages:
     """Test enhanced, actionable error messages."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_permission_error_includes_actionable_guidance(self, mcp_server, mocker):
@@ -295,8 +317,13 @@ class TestEnhancedErrorMessages:
         assert "Request access" in error_message or "use a different thread_id" in error_message
 
 
+@pytest.mark.xdist_group(name="testtooldescriptions")
 class TestToolDescriptions:
     """Test enhanced tool descriptions."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_tool_descriptions_include_usage_guidance(self, mcp_server):
@@ -339,8 +366,13 @@ class TestToolDescriptions:
         assert "example" in description.lower() or "search" in description.lower()
 
 
+@pytest.mark.xdist_group(name="testinputvalidation")
 class TestInputValidation:
     """Test input validation for new parameters."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_response_format_validation(self, mcp_server):
@@ -398,8 +430,13 @@ class TestInputValidation:
             assert "user_id" in required_fields, f"Tool {tool.name} should require user_id"
 
 
+@pytest.mark.xdist_group(name="testendtoendtoolimprovements")
 class TestEndToEndToolImprovements:
     """End-to-end integration tests for tool improvements."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_complete_agent_chat_flow(self, mcp_server, mocker):

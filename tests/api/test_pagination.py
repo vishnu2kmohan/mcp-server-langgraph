@@ -7,6 +7,8 @@ production-grade API behavior.
 Following TDD: These tests define the expected pagination behavior (RED phase).
 """
 
+import gc
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -21,8 +23,13 @@ def test_client():
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testpaginationmodels")
 class TestPaginationModels:
     """Test that pagination models are properly defined"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_pagination_params_model_exists(self):
         """PaginationParams model should exist for request parsing"""
@@ -62,8 +69,13 @@ class TestPaginationModels:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testpaginationdefaults")
 class TestPaginationDefaults:
     """Test default pagination values"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_pagination_params_defaults(self):
         """PaginationParams should have sensible defaults"""
@@ -97,8 +109,13 @@ class TestPaginationDefaults:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testpaginationopenapischema")
 class TestPaginationOpenAPISchema:
     """Test that pagination is documented in OpenAPI schema"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_pagination_params_in_openapi(self, test_client):
         """Pagination parameters should be documented in OpenAPI schema"""
@@ -123,8 +140,13 @@ class TestPaginationOpenAPISchema:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testpaginationresponse")
 class TestPaginationResponse:
     """Test pagination response structure"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_paginated_response_structure(self):
         """PaginatedResponse should have standard structure"""
@@ -174,8 +196,13 @@ class TestPaginationResponse:
 
 @pytest.mark.unit
 @pytest.mark.contract
+@pytest.mark.xdist_group(name="testpaginationlinks")
 class TestPaginationLinks:
     """Test that pagination includes navigation links"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_pagination_metadata_has_link_fields(self):
         """PaginationMetadata should include next/prev page indicators"""
@@ -190,8 +217,13 @@ class TestPaginationLinks:
 
 
 @pytest.mark.integration
+@pytest.mark.xdist_group(name="testpaginationhelpers")
 class TestPaginationHelpers:
     """Test pagination helper functions"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_create_paginated_response_helper_exists(self):
         """Helper function to create paginated responses should exist"""
