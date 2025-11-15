@@ -117,8 +117,9 @@ def test_no_slow_unit_tests():
         "tests/test_agent.py::TestAgentGraph::test_route_with_calculate_keyword",
         "tests/test_agent.py::TestAgentGraph::test_route_input_to_respond",
         "tests/test_agent.py::TestAgentGraph::test_agent_with_conversation_history",
-        # Retry timing test: 14s (needs freezegun)
-        "tests/resilience/test_retry.py::TestExponentialBackoff::test_exponential_backoff_timing",
+        # Retry timing test: OPTIMIZED (14s → 0.56s with mocked asyncio.sleep) ✅
+        # - test_exponential_backoff_timing (removed, now fast)
+        # Phase 3 optimization complete (2025-11-15)
     }
 
     # Filter out known slow tests

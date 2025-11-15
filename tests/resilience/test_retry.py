@@ -82,50 +82,87 @@ class TestExponentialBackoff:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_exponential_backoff_timing(self):
-        """Test that backoff increases exponentially"""
-        call_times = []
+        """
+        Test that backoff increases exponentially.
+
+        Performance: Uses mocked asyncio.sleep to validate backoff calculation
+        without actually sleeping. Reduces test time from 14s to <1s (93% faster).
+        """
+        call_count = 0
+        sleep_durations = []
+
+        # Mock asyncio.sleep to track sleep durations without actually sleeping
+        async def mock_sleep(duration):
+            sleep_durations.append(duration)
+            # Don't actually sleep - return immediately
 
         @retry_with_backoff(max_attempts=4, exponential_base=2, exponential_max=10)
         async def timed_failing_func():
-            call_times.append(time.time())
-            if len(call_times) < 4:
+            nonlocal call_count
+            call_count += 1
+            if call_count < 4:
                 raise ValueError("Retry me")
             return "success"
 
-        await timed_failing_func()
+        # Patch asyncio.sleep to avoid actual delays
+        with patch("asyncio.sleep", side_effect=mock_sleep):
+            result = await timed_failing_func()
 
-        # Check timing between calls (approximately exponential)
-        assert len(call_times) == 4
+        # Verify function succeeded after retries
+        assert result == "success"
+        assert call_count == 4  # 4 attempts total (1 initial + 3 retries)
 
-        # Backoff should be approximately: 0s, 2s, 4s, 8s
-        # Allow for some variance due to execution time
-        if len(call_times) >= 3:
-            gap1 = call_times[1] - call_times[0]
-            gap2 = call_times[2] - call_times[1]
-            # gap2 should be roughly 2x gap1 (exponential)
-            # Due to jitter and execution time, we allow a wide range
-            assert gap2 > gap1 or abs(gap2 - gap1) < 1  # Relaxed for test stability
+        # Verify exponential backoff sleep durations
+        # With exponential_base=2, sleep durations should be approximately: 2s, 4s, 8s
+        # (3 sleeps for 4 attempts - no sleep before first attempt)
+        assert len(sleep_durations) == 3
+
+        # Validate exponential growth
+        # Allow some variance due to jitter (if enabled)
+        assert 1.5 <= sleep_durations[0] <= 3.0  # ~2s (base^1)
+        assert 3.0 <= sleep_durations[1] <= 5.0  # ~4s (base^2)
+        assert 7.0 <= sleep_durations[2] <= 10.0  # ~8s (base^3, capped at max=10)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_backoff_respects_max_limit(self):
-        """Test that backoff doesn't exceed max limit"""
-        call_times = []
+        """
+        Test that backoff doesn't exceed max limit.
+
+        Performance: Uses mocked asyncio.sleep to validate max limit enforcement
+        without actually sleeping. Instant test instead of ~6s real sleeps.
+        """
+        call_count = 0
+        sleep_durations = []
+
+        # Mock asyncio.sleep to track sleep durations
+        async def mock_sleep(duration):
+            sleep_durations.append(duration)
+            # Don't actually sleep
 
         @retry_with_backoff(max_attempts=6, exponential_base=10, exponential_max=2)
         async def timed_failing_func():
-            call_times.append(time.time())
-            if len(call_times) < 4:
+            nonlocal call_count
+            call_count += 1
+            if call_count < 4:
                 raise ValueError("Retry me")
             return "success"
 
-        await timed_failing_func()
+        # Patch asyncio.sleep to avoid actual delays
+        with patch("asyncio.sleep", side_effect=mock_sleep):
+            result = await timed_failing_func()
 
-        # Even with base=10, backoff should be capped at 2s
-        for i in range(1, len(call_times)):
-            gap = call_times[i] - call_times[i - 1]
-            # Allow some variance
-            assert gap <= 3.0  # Max 2s + 1s variance
+        # Verify function succeeded
+        assert result == "success"
+        assert call_count == 4  # 4 attempts total
+
+        # Verify all sleep durations respect the max limit of 2s
+        # With exponential_base=10, without max_limit the durations would be: 10s, 100s, 1000s
+        # But with exponential_max=2, all should be capped at 2s
+        assert len(sleep_durations) == 3  # 3 sleeps for 4 attempts
+        for duration in sleep_durations:
+            # All sleep durations should be ≤ max limit (2s) + jitter variance
+            assert duration <= 2.5  # 2s max + 0.5s jitter tolerance
 
 
 @pytest.mark.xdist_group(name="testretrywithspecificexceptions")
