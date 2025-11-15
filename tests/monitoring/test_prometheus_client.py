@@ -651,10 +651,10 @@ async def test_get_prometheus_client_returns_singleton():
     """Test get_prometheus_client() returns global singleton instance."""
     # Arrange
     # Reset global instance
-    import mcp_server_langgraph.monitoring.prometheus_client
-    from mcp_server_langgraph.monitoring.prometheus_client import _prometheus_client, get_prometheus_client
+    import mcp_server_langgraph.monitoring.prometheus_client as prom_module
+    from mcp_server_langgraph.monitoring.prometheus_client import get_prometheus_client
 
-    mcp_server_langgraph.monitoring.prometheus_client._prometheus_client = None
+    prom_module._prometheus_client = None
 
     # Act
     client1 = await get_prometheus_client()
