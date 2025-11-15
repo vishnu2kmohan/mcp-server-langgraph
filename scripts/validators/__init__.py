@@ -1,23 +1,24 @@
-"""Documentation validators package."""
+"""Documentation validators package.
+
+DEPRECATION NOTICE (2025-11-15):
+Most validators have been archived to scripts/validators/archive/ as we've
+simplified documentation validation. Only active validators remain here.
+
+Archived validators (now using Mintlify's built-in validation):
+- frontmatter_validator → Replaced by Mintlify validation
+- image_validator → Replaced by Mintlify validation
+- link_validator → Replaced by Mintlify validation
+- navigation_validator → Replaced by Mintlify validation
+
+See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
+"""
 
 from .codeblock_validator import CodeBlockError, CodeBlockValidator
-from .frontmatter_validator import FrontmatterError, FrontmatterValidator
-from .image_validator import ImageError, ImageValidator
-from .link_validator import LinkError, LinkValidator
 from .mdx_extension_validator import ExtensionError, MDXExtensionValidator
-from .navigation_validator import NavigationError, NavigationValidator
 
 __all__ = [
-    "NavigationValidator",
-    "NavigationError",
     "MDXExtensionValidator",
     "ExtensionError",
-    "FrontmatterValidator",
-    "FrontmatterError",
-    "LinkValidator",
-    "LinkError",
-    "ImageValidator",
-    "ImageError",
     "CodeBlockValidator",
     "CodeBlockError",
 ]

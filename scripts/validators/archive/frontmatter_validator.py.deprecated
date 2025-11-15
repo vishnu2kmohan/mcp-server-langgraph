@@ -192,11 +192,13 @@ class FrontmatterValidator:
             return errors
 
         # Validate required fields
-        for field in self.REQUIRED_FIELDS:
-            if field not in frontmatter:
-                errors.append(MissingRequiredFieldError(relative_path, field))
-            elif not frontmatter[field] or (isinstance(frontmatter[field], str) and not frontmatter[field].strip()):
-                errors.append(MissingRequiredFieldError(relative_path, field))
+        for field_name in self.REQUIRED_FIELDS:
+            if field_name not in frontmatter:
+                errors.append(MissingRequiredFieldError(relative_path, field_name))
+            elif not frontmatter[field_name] or (
+                isinstance(frontmatter[field_name], str) and not frontmatter[field_name].strip()
+            ):
+                errors.append(MissingRequiredFieldError(relative_path, field_name))
 
         return errors
 

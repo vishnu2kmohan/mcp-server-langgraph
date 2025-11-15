@@ -89,7 +89,6 @@ def fix_subprocess_timeouts_in_file(file_path: Path) -> int:
     except (UnicodeDecodeError, IOError):
         return 0
 
-    original_content = content
     modifications = 0
 
     # Find all subprocess.run() blocks
