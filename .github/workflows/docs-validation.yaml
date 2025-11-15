@@ -150,10 +150,7 @@ jobs:
       - name: Check Specialized Validation Results
         run: |
           failures=""
-          # Code block validation disabled (caused more trouble than it's worth)
-          # if [ "${{ steps.codeblock-validation.outcome }}" == "failure" ]; then
-          #   failures="${failures}- Code block validation failed\n"
-          # fi
+          # Note: Code block validation is disabled (see line 114)
           if [ "${{ steps.adr-sync-validation.outcome }}" == "failure" ]; then
             failures="${failures}- ADR synchronization validation failed\n"
           fi
