@@ -73,9 +73,7 @@ class AdrSyncValidator:
         missing_in_docs = source_adrs - docs_adrs
         missing_in_source = docs_adrs - source_adrs
 
-        is_synced = (
-            len(missing_in_docs) == 0 and len(missing_in_source) == 0 and len(uppercase_filenames) == 0
-        )
+        is_synced = len(missing_in_docs) == 0 and len(missing_in_source) == 0 and len(uppercase_filenames) == 0
 
         stats = {
             "source_count": len(source_adrs),
@@ -186,7 +184,7 @@ class AdrSyncValidator:
                 rec_num += 1
             if result.missing_in_source:
                 print(f"  {rec_num}. Review orphaned ADRs in /docs/architecture")
-                print(f"  {rec_num+1}. Consider adding them to /adr or removing if outdated")
+                print(f"  {rec_num + 1}. Consider adding them to /adr or removing if outdated")
                 rec_num += 2
 
             print(f"\n  {rec_num}. Pre-commit hook is configured to prevent future desync")
