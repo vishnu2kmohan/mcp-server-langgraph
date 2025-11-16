@@ -8,9 +8,10 @@
 # - Mintlify broken-links is now PRIMARY validator (replaces 5 Python validators)
 # - Removed duplicate validators: link_validator.py, navigation_validator.py,
 #   image_validator.py, frontmatter_validator.py
-# - Kept specialized validators: codeblock_validator.py, adr_sync_validator.py,
-#   mdx_extension_validator.py
-# - 69% reduction in validators (13 → 4)
+# - Removed code-block validators (2025-11-16): High false positive rate (~90%),
+#   caused more trouble than worth, Mintlify handles validation better
+# - Kept specialized validators: adr_sync_validator.py, mdx_extension_validator.py
+# - 77% reduction in validators (13 → 3)
 # - 91-93% faster validation (105-155s → 8-12s)
 #
 # See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md for full details
@@ -110,15 +111,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyyaml
-
-      # DISABLED: Code block language tag validation (caused more trouble than it's worth)
-      # - name: Validate Code Block Language Tags
-      #   id: codeblock-validation
-      #   run: |
-      #     echo "::group::Code Block Validation"
-      #     python scripts/validators/codeblock_validator.py --docs-dir docs
-      #     echo "::endgroup::"
-      #   continue-on-error: true
 
       # Unique Check #1: ADR synchronization (project-specific)
       - name: Validate ADR Synchronization
@@ -350,7 +342,6 @@ jobs:
 
             # Or run specific validators
             cd docs && npx mintlify broken-links  # PRIMARY validator
-            python scripts/validators/codeblock_validator.py --docs-dir docs
             python scripts/validators/adr_sync_validator.py
             python scripts/validators/mdx_extension_validator.py --docs-dir docs
             \`\`\`
@@ -412,7 +403,8 @@ jobs:
             **What changed:**
             - **Mintlify CLI is now PRIMARY validator** (replaces 5 Python validators)
             - Removed duplicate validators (link_validator.py, navigation_validator.py, image_validator.py, frontmatter_validator.py)
-            - Kept specialized validators (codeblock_validator.py, adr_sync_validator.py, mdx_extension_validator.py)
+            - Removed code-block validators (2025-11-16): High false positive rate, low value
+            - Kept specialized validators (adr_sync_validator.py, mdx_extension_validator.py)
             - **91-93% faster** validation (8-12s vs 105-155s previously)
 
             **What Mintlify checks:**
@@ -429,7 +421,6 @@ jobs:
             cd docs && npx mintlify broken-links
 
             # Run specialized validators
-            python scripts/validators/codeblock_validator.py --docs-dir docs
             python scripts/validators/adr_sync_validator.py
             python scripts/validators/mdx_extension_validator.py --docs-dir docs
             \`\`\`
