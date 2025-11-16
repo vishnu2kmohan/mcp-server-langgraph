@@ -194,38 +194,69 @@ if [ "$NO_CACHE" = true ]; then
     docker compose -f "$COMPOSE_FILE" build "${BUILD_NO_CACHE_ARGS[@]}"
 fi
 
-# Start services and run tests
-log_info "Starting services and running integration tests..."
+# Start infrastructure services
+log_info "Starting infrastructure services..."
 echo ""
 
-START_TIME=$(date +%s)
-
-# Run docker compose with appropriate options
-if docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up \
+# Start services in background
+docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d \
     "${BUILD_ARGS[@]}" \
-    --abort-on-container-exit \
-    --exit-code-from test-runner; then
+    postgres-test \
+    openfga-migrate-test \
+    openfga-test \
+    keycloak-test \
+    redis-test \
+    redis-sessions-test \
+    qdrant-test
 
-    END_TIME=$(date +%s)
-    DURATION=$((END_TIME - START_TIME))
+log_success "Services started"
 
-    echo ""
-    log_success "All integration tests passed!"
-    log_info "Test duration: ${DURATION}s"
-    TEST_EXIT_CODE=0
-else
-    END_TIME=$(date +%s)
-    DURATION=$((END_TIME - START_TIME))
+# Wait for services to be healthy
+log_info "Waiting for services to be healthy..."
+# shellcheck disable=SC2034
+for _ in {1..30}; do
+    if docker compose -f "$COMPOSE_FILE" ps | grep -q "unhealthy"; then
+        echo -n "."
+        sleep 2
+    else
+        break
+    fi
+done
+echo ""
 
-    echo ""
-    log_error "Integration tests failed!"
-    log_info "Test duration: ${DURATION}s"
-
-    # Show test runner logs
-    log_info "Test runner logs:"
-    docker compose -f "$COMPOSE_FILE" logs test-runner
-
+# Check if services are healthy
+if docker compose -f "$COMPOSE_FILE" ps | grep -q "unhealthy"; then
+    log_error "Some services failed to become healthy"
+    docker compose -f "$COMPOSE_FILE" ps
     TEST_EXIT_CODE=1
+else
+    log_success "All services healthy"
+    echo ""
+
+    # Run integration tests on host (CI parity - OpenAI Codex Finding #1)
+    log_info "Running integration tests on host..."
+    echo ""
+
+    START_TIME=$(date +%s)
+
+    # Run pytest directly on host (same as CI)
+    if pytest -m integration -v --tb=short; then
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+
+        echo ""
+        log_success "All integration tests passed!"
+        log_info "Test duration: ${DURATION}s"
+        TEST_EXIT_CODE=0
+    else
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+
+        echo ""
+        log_error "Integration tests failed!"
+        log_info "Test duration: ${DURATION}s"
+        TEST_EXIT_CODE=1
+    fi
 fi
 
 echo ""
