@@ -185,7 +185,7 @@ After running lint checks, provide:
 During gradual rollout, mypy type checking is **non-blocking**:
 - Shows warnings but doesn't prevent commits/pushes
 - Fixing mypy errors is **optional** but recommended
-- Future versions will make mypy blocking once error count is reduced
+- Future versions will make `mypy` blocking once error count is reduced
 - See `.claude/memory/lint-workflow.md` for full mypy enforcement roadmap
 
 ### What Will Block You

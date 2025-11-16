@@ -192,9 +192,11 @@ class TestPrePushHookConfiguration:
             "#!/usr/bin/env bash",
         ], f"Pre-push hook must be a bash script, got shebang: {first_line}"
 
-    def test_pre_push_hook_validates_lockfile(self, pre_push_hook_path: Path):
+    def test_pre_push_hook_validates_lockfile(self, repo_root: Path):
         """Test that pre-push hook validates lockfile."""
-        with open(pre_push_hook_path, "r") as f:
+        # Pre-commit hooks are defined in .pre-commit-config.yaml, not the generated script
+        config_path = repo_root / ".pre-commit-config.yaml"
+        with open(config_path, "r") as f:
             content = f.read()
 
         assert "uv lock --check" in content, (
