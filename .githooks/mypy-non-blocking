@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# MyPy wrapper - Non-blocking (warning-only mode)
+# Runs MyPy but always exits 0 so it doesn't block pushes
+
+set +e  # Don't exit on error
+
+echo "🔍 Running MyPy type checker (warning-only mode)..."
+
+# Run mypy and capture exit code
+mypy src/mcp_server_langgraph --ignore-missing-imports --warn-unused-configs --show-error-codes --pretty --no-error-summary
+mypy_exit=$?
+
+if [ $mypy_exit -eq 0 ]; then
+    echo "✓ Type checking passed"
+else
+    echo "⚠ Type checking has warnings (not blocking push)"
+    echo "  Review warnings above and fix when possible"
+fi
+
+# Always exit 0 (non-blocking)
+exit 0

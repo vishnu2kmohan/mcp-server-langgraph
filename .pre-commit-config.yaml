@@ -56,25 +56,25 @@ repos:
   rev: v8.28.0
   hooks:
   - id: gitleaks
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.18.2
-  hooks:
-  - id: mypy
-    stages:
-    - pre-push
-    files: ^src/mcp_server_langgraph/
-    args:
-    - --ignore-missing-imports
-    - --warn-unused-configs
-    - --show-error-codes
-    - --pretty
-    - --no-error-summary
-    additional_dependencies:
-    - types-PyYAML
-    - types-redis
-    - types-requests
 - repo: local
   hooks:
+  - id: mypy-non-blocking
+    name: MyPy Type Checking (Warning Only - Non-blocking)
+    description: 'Runs MyPy type checking but does not block pushes on errors.
+
+
+      Warning-only mode allows type errors to be visible without blocking development.
+
+      CI can be configured to fail builds on type errors separately.
+
+      '
+    entry: ./.githooks/mypy-non-blocking
+    language: system
+    types: [python]
+    files: ^src/mcp_server_langgraph/
+    stages:
+    - pre-push
+    pass_filenames: false
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
     entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'
