@@ -35,6 +35,7 @@ import pytest
 XFAIL_STRICT_EXEMPT_FILES: set[str] = {
     # Add exempt files here with justification comments
     # Example: "tests/examples/demo.py",  # Educational demo, strict not required
+    "tests/regression/test_fastapi_auth_override_sanity.py",  # Non-deterministic xdist pollution test (strict=False required)
 }
 
 
