@@ -73,7 +73,7 @@ def keycloak_user():
     """Sample Keycloak user"""
     return KeycloakUser(
         id="550e8400-e29b-41d4-a716-446655440000",
-        username="alice",
+        username=get_user_id("alice").split(":")[-1],  # Worker-safe: "test_gw0_alice"
         email="alice@acme.com",
         first_name="Alice",
         last_name="Smith",
