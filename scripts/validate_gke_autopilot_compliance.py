@@ -169,7 +169,7 @@ class GKEAutopilotValidator:
             mount_paths = {vm["mountPath"] for vm in volume_mounts}
 
             # Common writable paths that should be mounted
-            recommended_mounts = ["/tmp", "/var/tmp"]
+            recommended_mounts = ["/tmp", "/var/tmp"]  # nosec B108: Checking K8s mount paths, not using temp files
             missing_mounts = [path for path in recommended_mounts if path not in mount_paths]
 
             if missing_mounts:
@@ -198,13 +198,13 @@ class GKEAutopilotValidator:
             limits = resources.get("limits", {})
 
             # Validate CPU ratio
-            cpu_request = requests.get("cpu")
+            cpu_request = requests.get("cpu")  # nosec B113: dict.get(), not HTTP requests library
             cpu_limit = limits.get("cpu")
             if cpu_request and cpu_limit:
                 self.validate_cpu_ratio(name, container_name, cpu_request, cpu_limit)
 
             # Validate Memory ratio
-            mem_request = requests.get("memory")
+            mem_request = requests.get("memory")  # nosec B113: dict.get(), not HTTP requests library
             mem_limit = limits.get("memory")
             if mem_request and mem_limit:
                 self.validate_memory_ratio(name, container_name, mem_request, mem_limit)

@@ -42,9 +42,9 @@ class Color:
 
 def print_header(message: str) -> None:
     """Print a colored header"""
-    print(f"\n{Color.BOLD}{Color.CYAN}{'='*80}{Color.END}")
+    print(f"\n{Color.BOLD}{Color.CYAN}{'=' * 80}{Color.END}")
     print(f"{Color.BOLD}{Color.CYAN}{message}{Color.END}")
-    print(f"{Color.BOLD}{Color.CYAN}{'='*80}{Color.END}\n")
+    print(f"{Color.BOLD}{Color.CYAN}{'=' * 80}{Color.END}\n")
 
 
 def print_success(message: str) -> None:
@@ -340,7 +340,7 @@ class CICDValidator:
                 if self.auto_fix and result.fix_command:
                     print_info(f"  Attempting auto-fix...")
                     try:
-                        subprocess.run(result.fix_command, shell=True, cwd=self.project_root, check=True)
+                        subprocess.run(result.fix_command, shell=True, cwd=self.project_root, check=True)  # nosec B602
                         print_success("  Auto-fix completed")
                     except subprocess.CalledProcessError:
                         print_error("  Auto-fix failed - manual intervention required")

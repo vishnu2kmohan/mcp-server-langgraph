@@ -228,6 +228,7 @@ _site/
 # Session-specific context should not be tracked
 .claude/context/
 .claude/handoff/
+.claude-worktree-session
 # CRITICAL: Never commit local settings (per Claude Code documentation)
 .claude/settings.local.json
 **/. claude/settings.local.json
