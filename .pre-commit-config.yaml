@@ -83,7 +83,7 @@ repos:
     pass_filenames: false
   - id: run-unit-tests
     name: Run Unit Tests (comprehensive suite)
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m "unit and not llm" tests/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
