@@ -86,7 +86,7 @@ def test_minimum_coverage_threshold():
         cwd=project_root,
         capture_output=True,
         text=True,
-        timeout=300,  # 5 minute timeout
+        timeout=360,  # 6 minute timeout (matches @pytest.mark.timeout decorator)
     )
 
     output = result.stdout + result.stderr
