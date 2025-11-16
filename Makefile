@@ -557,6 +557,81 @@ validate-workflows:
 	done
 	@echo "✓ Workflow syntax validation complete"
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Tiered Validation System (2025-11-16 - CI/CD Optimization)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Three-tier validation strategy for balancing speed and quality
+# See: docs/development/VALIDATION_STRATEGY.md for complete documentation
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+validate-commit:  ## Tier 1: Fast validation (<30s) - formatters, linters, basic checks
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "⚡ TIER 1 VALIDATION - Quick Checks (<30s)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Running pre-commit hooks (default stage only)..."
+	@echo "Hooks: trailing-whitespace, end-of-file-fixer, black, isort,"
+	@echo "       flake8, bandit, gitleaks, check-yaml/json/toml, etc."
+	@echo ""
+	@pre-commit run --all-files
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ Tier 1 validation complete!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+validate-push:  ## Tier 2: Critical validation (3-5 min) - type checking, fast tests, deployment
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 TIER 2 VALIDATION - Critical Checks (3-5 min)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This runs Tier 1 + Tier 2 validators"
+	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
+	@echo ""
+	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@pre-commit run --all-files
+	@echo ""
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running: mypy, helm-lint, kustomize, pytest, deployment validation..."
+	@echo ""
+	@pre-commit run --hook-stage pre-push --all-files
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ Tier 1 + Tier 2 validation complete!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, security, manual validators
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🎯 TIER 3 VALIDATION - Comprehensive (12-15 min)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This runs Tier 1 + Tier 2 + Tier 3 validators (matches CI)"
+	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
+	@echo ""
+	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@pre-commit run --all-files
+	@echo ""
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@pre-commit run --hook-stage pre-push --all-files
+	@echo ""
+	@echo "▶ STEP 3: Tier 3 Validation (manual hooks + comprehensive tests)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running manual stage validators..."
+	@SKIP= pre-commit run --hook-stage manual --all-files
+	@echo ""
+	@echo "Running comprehensive test suite..."
+	@$(MAKE) test-ci
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ All tiers complete! (Tier 1 + Tier 2 + Tier 3)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Legacy comprehensive pre-push validation target
+# NOTE: validate-push (Tier 2) is now the recommended target for pre-push validation
+# This target is kept for CI/CD parity and backward compatibility
 validate-pre-push:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "🔍 Running comprehensive pre-push validation (CI-equivalent)"
@@ -623,25 +698,12 @@ act-dry-run:
 	@act push --list
 
 # Code quality
-lint:
-	@echo "⚠️  DEPRECATED: Use 'make lint-check' for comprehensive linting"
-	@echo ""
-	@echo "Running flake8 on src/..."
-	flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
-	@echo "Running mypy on src/..."
-	-mypy src/ --ignore-missing-imports
-	@echo ""
-	@echo "💡 For better lint checking, use: make lint-check"
-
-format:
-	@echo "⚠️  DEPRECATED: Use 'make lint-fix' for auto-fixing"
-	@echo ""
-	@echo "Formatting src/ with black..."
-	black src/ --line-length=127
-	@echo "Sorting imports in src/ with isort..."
-	isort src/ --profile=black --line-length=127
-	@echo ""
-	@echo "💡 For better lint fixing, use: make lint-fix"
+# REMOVED 2025-11-16: Deprecated targets removed as part of CI/CD optimization
+# Old targets: lint, format
+# Replacements:
+#   - make lint     → make lint-check (comprehensive linting with all tools)
+#   - make format   → make lint-fix (auto-fix formatting issues)
+# See: VALIDATION_STRATEGY.md for modern validation approach
 
 security-check:
 	@echo "Running bandit security scan..."
@@ -1109,18 +1171,11 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 		(echo "❌ MDX extension validation failed." && exit 1)
 	@echo "✅ Specialized validators passed"
 
-# Legacy validators (deprecated 2025-11-15, kept for backward compatibility)
-# These are replaced by docs-validate-mintlify (PRIMARY validator)
-docs-validate-mdx:
-	@echo "⚠️  DEPRECATED: Use 'make docs-validate-mintlify' (PRIMARY validator) instead"
-	@echo "🔍 Validating MDX syntax..."
-	@python3 scripts/fix_mdx_syntax.py --all --dry-run || \
-		(echo "❌ MDX syntax errors found. Run 'make docs-fix-mdx' to auto-fix." && exit 1)
-
-docs-validate-links:
-	@echo "⚠️  DEPRECATED: Use 'make docs-validate-mintlify' (PRIMARY validator) instead"
-	@echo "🔗 This validator has been replaced by Mintlify CLI broken-links check"
-	@echo "Run: make docs-validate-mintlify"
+# REMOVED 2025-11-16: Deprecated doc validators removed (CI/CD optimization)
+# Old targets: docs-validate-mdx, docs-validate-links
+# Replacement: make docs-validate-mintlify (PRIMARY validator using Mintlify CLI)
+# The Mintlify CLI broken-links check is comprehensive and authoritative
+# See: VALIDATION_STRATEGY.md for documentation validation approach
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."

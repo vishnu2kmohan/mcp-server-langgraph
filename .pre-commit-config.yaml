@@ -213,39 +213,18 @@ repos:
       #     Regression prevention for 2025-11-12 documentation audit findings.
       #     See: docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md
 
-      - id: validate-mintlify-docs
-        name: Validate Mintlify Documentation
-        entry: uv run python scripts/validate_mintlify_docs.py docs
-        language: python
-        additional_dependencies: ['pyyaml>=6.0.0', 'rich>=13.0.0']
-        files: \.mdx$
-        pass_filenames: false
-        always_run: false  # Only run when .mdx files change
-        stages: [pre-push]  # Slow: comprehensive Mintlify validation, moved to pre-push
+      # REMOVED 2025-11-16: validate-mintlify-docs
+      # Reason: Redundant with mintlify-broken-links-check (PRIMARY validator)
+      # The Mintlify CLI broken-links check is more comprehensive and authoritative
+      # Migration: CI/CD optimization - Phase 1 documentation consolidation
+      # See: VALIDATION_STRATEGY.md (to be created)
 
       # TDD-based Documentation Validators (Comprehensive)
-      - id: validate-docs-navigation
-        name: Validate Documentation Navigation Consistency
-        entry: uv run python scripts/validators/navigation_validator.py
-        language: python
-        additional_dependencies: []
-        files: ^(docs/.*\.mdx|docs/docs\.json)$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive doc validation, moved to pre-push
-        description: |
-          Validates documentation navigation consistency (TDD):
-          - All files referenced in docs.json exist
-          - All production MDX files are in navigation (no orphans)
-          - No duplicate page references
-          - Navigation JSON structure is valid
-
-          Prevents regression of issues fixed in 2025-11-12 audit:
-          - Orphaned migration-guide.mdx (not in navigation)
-          - Orphaned troubleshooting/overview.mdx (not in navigation)
-
-          Exit codes: 0=pass, 1=errors found, 2=critical error
-          See: tests/unit/documentation/test_navigation_validator.py
+      # REMOVED 2025-11-16: validate-docs-navigation
+      # Reason: Redundant with mintlify-broken-links-check (PRIMARY validator)
+      # Mintlify CLI validates navigation consistency, orphaned files, and docs.json
+      # Migration: CI/CD optimization - Phase 1 documentation consolidation
+      # Tests preserved: tests/unit/documentation/test_navigation_validator.py
 
       - id: validate-mdx-extensions
         name: Validate MDX File Extensions in docs/
@@ -335,18 +314,11 @@ repos:
           Run: python scripts/validators/adr_sync_validator.py
           Exit code 1 if out of sync, 0 if synchronized
 
-      - id: check-doc-links
-        name: Check Documentation Internal Links
-        entry: uv run python scripts/ci/check-links.py
-        language: python
-        additional_dependencies: []
-        files: \.(md|mdx)$
-        pass_filenames: false
-        always_run: false
-        stages: [pre-push]  # Slow: comprehensive link checking, moved to pre-push
-        description: |
-          Validates internal documentation links to prevent broken references.
-          Checks ADR cross-references, GitHub links, and active documentation.
+      # REMOVED 2025-11-16: check-doc-links
+      # Reason: Redundant with mintlify-broken-links-check (PRIMARY validator)
+      # Mintlify CLI validates all internal links, ADR cross-references, and navigation
+      # Migration: CI/CD optimization - Phase 1 documentation consolidation
+      # Script preserved: scripts/ci/check-links.py (for manual use if needed)
 
       # REMOVED: validate-documentation-quality
       # Reason: Functionality now covered by combination of:
@@ -537,7 +509,11 @@ repos:
         files: ^docs/.*\.mdx$
         pass_filenames: true
         always_run: false
-        stages: [pre-push]  # Slow: comprehensive diagram validation, moved to pre-push
+        stages: [manual]  # Manual: Diagram styling is informational, not critical for pre-push
+        description: |
+          Validates Mermaid diagram styling consistency (optional quality check).
+          Run manually: SKIP= pre-commit run check-mermaid-styling --all-files
+          Moved to manual stage 2025-11-16 (CI/CD optimization - Phase 1)
 
       - id: prevent-local-config-commits
         name: Prevent Local Config Files from Being Committed

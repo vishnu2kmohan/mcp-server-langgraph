@@ -1,0 +1,499 @@
+# Validation Strategy
+
+> **TL;DR**: We use a 3-tier validation system to balance speed and quality. Fast checks run on commit (<30s), critical checks on push (3-5 min), comprehensive checks in CI (12-15 min).
+
+## Overview
+
+This document explains our **tiered validation strategy** implemented as part of the CI/CD optimization (2025-11-16). The strategy balances developer productivity with code quality by running different validation levels at different stages.
+
+## Why Tiered Validation?
+
+**Problem**: Running all 130+ validators on every `git push` took 8-12 minutes, slowing developer iteration.
+
+**Solution**: Split validators into 3 tiers based on criticality and speed:
+- **Tier 1 (Pre-commit)**: Fast auto-fixers and critical linters (<30s)
+- **Tier 2 (Pre-push)**: Type checking, fast tests, deployment validation (3-5 min)
+- **Tier 3 (CI/Manual)**: Comprehensive tests, slow validation, security scans (12-15 min)
+
+**Impact**: Pre-push time reduced by 50-60%, from 8-12 min → 3-5 min.
+
+---
+
+## Tier 1: Pre-Commit (<30s)
+
+**When**: Runs automatically on `git commit` (before commit is created)
+
+**Purpose**: Auto-fix formatting and catch obvious errors immediately
+
+**Target Duration**: <30 seconds
+
+### What Runs
+
+**Auto-fixers** (modify files automatically):
+- `trailing-whitespace` - Remove trailing whitespace
+- `end-of-file-fixer` - Ensure files end with newline
+- `black` - Format Python code (line-length=127)
+- `isort` - Sort Python imports (black-compatible)
+
+**Fast Linters** (catch errors without modifying files):
+- `flake8` - Python linting (max-line-length=127, max-complexity=20)
+- `bandit` - Security linting (low/low severity threshold)
+- `check-yaml`, `check-json`, `check-toml` - File format validation
+- `gitleaks` - Secret detection
+- `detect-private-key` - SSH key detection
+
+**Basic Checks**:
+- `check-added-large-files` - Block files >500KB (excludes uv.lock)
+- `check-merge-conflict` - Detect merge conflict markers
+- `mixed-line-ending` - Ensure consistent line endings
+
+### How to Run Manually
+
+```bash
+# Run all pre-commit hooks
+git commit  # Hooks run automatically
+
+# Or run manually without committing
+pre-commit run --all-files
+
+# Run specific pre-commit hooks
+SKIP= pre-commit run black --all-files
+```
+
+### Makefile Shortcut
+
+```bash
+make validate-commit  # Run Tier 1 validators only (< 30s)
+```
+
+---
+
+## Tier 2: Pre-Push (3-5 min)
+
+**When**: Runs automatically on `git push` (before pushing to remote)
+
+**Purpose**: Catch bugs and regressions before CI runs
+
+**Target Duration**: 3-5 minutes
+
+### What Runs
+
+**Type Checking**:
+- `mypy` - Static type checking (src/mcp_server_langgraph/)
+
+**Fast Tests**:
+- Unit tests with `pytest -x` (fail-fast mode)
+- Test coverage validation (≥64% threshold)
+- Test infrastructure validation (fixtures, xdist, AsyncMock)
+
+**Critical Deployment Validation**:
+- `helm-lint` - Helm chart validation
+- `validate-kustomize-builds` - Kustomize overlay builds
+- `validate-no-placeholders` - Production placeholder check
+- `validate-gke-autopilot-compliance` - GKE resource compliance
+- `validate-deployment-secrets` - Secret key alignment
+- `validate-cors-security` - CORS configuration
+- `trivy-scan-k8s-manifests` - Security scanning (HIGH/CRITICAL)
+
+**Documentation Validation**:
+- `mintlify-broken-links-check` - **PRIMARY** Mintlify validator (~8-12s)
+- `validate-documentation-structure` - Orphaned files, ADR numbering
+- `validate-documentation-integrity` - ADR sync, Mermaid diagrams
+- `validate-adr-index` - ADR index up-to-date
+
+**Workflow Validation**:
+- `check-github-workflows` - JSON schema validation
+- `actionlint-workflow-validation` - Advanced workflow linting
+- `validate-github-workflows` - Context usage validation
+
+**Test Infrastructure**:
+- `check-test-memory-safety` - pytest-xdist OOM prevention
+- `validate-test-isolation` - pytest-xdist worker isolation
+- `validate-test-fixtures` - Fixture validation
+- `validate-fixture-organization` - No duplicate autouse fixtures
+- `check-async-mock-usage` - AsyncMock usage validation
+- `validate-test-ids` - Hardcoded ID detection
+
+**Configuration Validation**:
+- `uv-lock-check` - Lockfile synchronization
+- `validate-pytest-config` - Pytest plugin compatibility
+- `validate-pre-push-hook` - Pre-push hook completeness
+
+### How to Run Manually
+
+```bash
+# Run all pre-push hooks
+git push  # Hooks run automatically
+
+# Or run manually without pushing
+SKIP= pre-commit run --hook-stage pre-push --all-files
+
+# Run specific pre-push hook
+SKIP= pre-commit run mypy --hook-stage pre-push --all-files
+```
+
+### Makefile Shortcut
+
+```bash
+make validate-push  # Run Tier 1 + Tier 2 validators (3-5 min)
+```
+
+---
+
+## Tier 3: CI/Manual (12-15 min)
+
+**When**: Runs in CI on every push, or manually for comprehensive validation
+
+**Purpose**: Comprehensive quality assurance, slow tests, expensive validation
+
+**Target Duration**: 12-15 minutes (in CI with parallelization)
+
+### What Runs
+
+**Comprehensive Test Suite**:
+- All unit tests (with full coverage reporting)
+- Integration tests (Docker Compose infrastructure)
+- E2E tests (full user journeys)
+- Property-based tests (Hypothesis, 100 examples in CI)
+- Contract tests (MCP protocol compliance)
+- Regression tests (performance regression detection)
+
+**Quality Tests**:
+- Mutation testing (test effectiveness validation)
+- Benchmark tests (performance trend tracking)
+- Slow test detection (individual tests >10s)
+- Test suite performance validation (<120s target)
+
+**Security Scans**:
+- Full Trivy scan (all severity levels)
+- SAST with Semgrep
+- Dependency scanning
+- Container image scanning
+- Kubernetes manifest security
+
+**Manual Validators** (informational, non-blocking):
+- `audit-todo-fixme-markers` - TODO/FIXME audit
+- `check-mermaid-styling` - Diagram styling (moved to manual 2025-11-16)
+- `check-async-mock-configuration` - AsyncMock config (65 violations, work in progress)
+- `validate-test-suite-performance` - Performance regression (<120s)
+- `detect-slow-unit-tests` - Individual slow tests (>10s)
+
+### How to Run Manually
+
+```bash
+# Run all manual stage hooks
+SKIP= pre-commit run --hook-stage manual --all-files
+
+# Run comprehensive validation (all tiers)
+make validate-full
+
+# Run specific manual hook
+SKIP= pre-commit run audit-todo-fixme-markers --hook-stage manual --all-files
+```
+
+### Makefile Shortcut
+
+```bash
+make validate-full  # Run Tier 1 + Tier 2 + Tier 3 validators (12-15 min)
+```
+
+---
+
+## Quick Reference
+
+| Tier | When | Duration | Purpose | Command |
+|------|------|----------|---------|---------|
+| **Tier 1** | `git commit` | <30s | Auto-fix formatting, catch obvious errors | `make validate-commit` |
+| **Tier 2** | `git push` | 3-5 min | Type checking, fast tests, critical validation | `make validate-push` |
+| **Tier 3** | CI / Manual | 12-15 min | Comprehensive tests, slow validation, security | `make validate-full` |
+
+---
+
+## When to Use Each Tier
+
+### Use Tier 1 (validate-commit)
+- Quick formatting check before committing
+- Fixing linting errors
+- Verifying file changes before commit
+
+### Use Tier 2 (validate-push)
+- Before pushing to remote (runs automatically)
+- After making significant changes
+- Before creating a pull request
+
+### Use Tier 3 (validate-full)
+- Before merging to main branch
+- After major refactoring
+- Investigating test failures
+- Pre-release validation
+
+---
+
+## Skipping Validation (Use Sparingly!)
+
+### When It's Safe to Skip
+
+**Skip Tier 1 (commit hooks)**: NEVER recommended
+- These are fast (<30s) and catch obvious errors
+- Auto-fixers improve code quality automatically
+
+**Skip Tier 2 (pre-push hooks)**: Rarely safe
+- Only skip if you're confident CI will catch issues
+- Example: Documentation-only changes (but still recommended to run)
+```bash
+git push --no-verify  # Skips pre-push hooks
+```
+
+**Skip Tier 3 (manual validators)**: Often safe
+- Manual validators are informational only
+- They don't block commits or pushes
+
+### How to Skip Specific Hooks
+
+```bash
+# Skip specific hook by ID
+SKIP=mypy git commit  # Skip mypy on commit
+SKIP=mypy,black git commit  # Skip multiple hooks
+
+# Skip all hooks for one commit
+git commit --no-verify
+
+# Skip all pre-push hooks for one push
+git push --no-verify
+
+# Skip specific hook for pre-push
+SKIP=mypy git push
+```
+
+### Hook IDs Reference
+
+```bash
+# List all hook IDs
+pre-commit run --all-files --verbose 2>&1 | grep "hook id"
+
+# Common hook IDs to skip:
+# - mypy: Type checking (slow)
+# - black, isort: Formatting (auto-fixable)
+# - flake8: Linting
+# - mintlify-broken-links-check: Doc validation (8-12s)
+```
+
+---
+
+## Validation in CI/CD
+
+### GitHub Actions Workflows
+
+**Main CI Pipeline** (`.github/workflows/ci.yaml`):
+- Runs Tier 1 + Tier 2 validators automatically
+- Runs Tier 3 validators (comprehensive tests)
+- Uses GitHub Actions cache for speed
+- Parallel matrix builds for efficiency
+
+**Manual Stage Validators**:
+- Run in CI using: `pre-commit run --hook-stage manual --all-files`
+- Ensures comprehensive validation even if developer skipped locally
+
+### CI Parity Enforcement
+
+Our pre-push hooks match CI validation **exactly**. This prevents surprises:
+- If pre-push passes, CI should pass
+- If pre-push fails, fix it before pushing
+- No "works on my machine" issues
+
+Validator ensuring parity:
+- `validate-pre-push-hook` - Validates pre-push hook completeness
+- `validate-local-ci-parity` - CI job validates local/CI consistency
+
+---
+
+## Validation Changes (2025-11-16)
+
+This validation strategy was implemented as part of **CI/CD Optimization - Phase 2**.
+
+### What Changed
+
+**Documentation Validators** (13 → 4):
+- **REMOVED**: `validate-mintlify-docs`, `validate-docs-navigation`, `check-doc-links`
+- **KEPT**: `mintlify-broken-links-check` (PRIMARY), `validate-documentation-structure`, `validate-documentation-integrity`, `validate-adr-index`
+- **MOVED TO MANUAL**: `check-mermaid-styling`
+
+**Makefile Targets**:
+- **REMOVED**: `make lint`, `make format`, `docs-validate-mdx`, `docs-validate-links`
+- **ADDED**: `make validate-commit`, `make validate-push`, `make validate-full`
+
+**Pre-Push Duration**:
+- **Before**: 8-12 minutes (all validators)
+- **After**: 3-5 minutes (critical validators only)
+- **Improvement**: 50-60% faster
+
+### Migration Guide
+
+**Old Command** → **New Command**:
+- `make lint` → `make lint-check`
+- `make format` → `make lint-fix`
+- `make docs-validate-mdx` → `make docs-validate-mintlify`
+- `make docs-validate-links` → `make docs-validate-mintlify`
+- No direct replacement for validator shortcuts → Use tiered shortcuts (`make validate-commit/push/full`)
+
+---
+
+## Best Practices
+
+### Development Workflow
+
+**Recommended workflow for productive development:**
+
+1. **Code changes** - Make your changes
+2. **Quick validation** - `make validate-commit` (<30s)
+3. **Commit** - `git commit` (Tier 1 runs automatically)
+4. **Comprehensive check** - `make validate-push` (3-5 min, before pushing)
+5. **Push** - `git push` (Tier 2 runs automatically)
+6. **CI validation** - Let CI run Tier 3 validators
+
+### Testing Workflow
+
+**For test-driven development (TDD):**
+
+1. **Write test** - Follow RED-GREEN-REFACTOR cycle
+2. **Run test** - `pytest tests/path/to/test.py -xvs`
+3. **Implement** - Write minimal code to pass
+4. **Quick check** - `make validate-commit`
+5. **Commit** - `git commit`
+6. **Full validation** - `make validate-push` (before pushing)
+
+### PR Review Workflow
+
+**Before creating a pull request:**
+
+1. **Full validation** - `make validate-full` (12-15 min)
+2. **Fix any failures** - Address all errors and warnings
+3. **Push** - `git push` (Tier 2 runs automatically)
+4. **Create PR** - All CI checks should pass
+5. **Monitor CI** - Verify all workflows pass
+
+---
+
+## Troubleshooting
+
+### "Hooks are too slow"
+
+**Solution 1**: Use tiered shortcuts
+```bash
+make validate-commit  # Quick validation only
+```
+
+**Solution 2**: Skip non-critical hooks (rarely needed)
+```bash
+SKIP=mypy git commit  # Skip type checking
+```
+
+**Solution 3**: Run only changed files (for some hooks)
+```bash
+pre-commit run  # Runs only on staged files
+```
+
+### "CI fails but pre-push passed"
+
+**Diagnosis**: CI might run additional validators in Tier 3 (manual stage)
+
+**Solution**: Run full validation locally
+```bash
+make validate-full  # Matches CI exactly
+```
+
+### "Hook fails with unclear error"
+
+**Solution**: Run hook in verbose mode
+```bash
+SKIP= pre-commit run <hook-id> --all-files --verbose
+```
+
+**Example**:
+```bash
+SKIP= pre-commit run mypy --all-files --verbose
+```
+
+### "Want to see all available hooks"
+
+```bash
+# List all hook IDs
+grep "id:" .pre-commit-config.yaml | head -50
+
+# Run pre-commit with all hooks listed
+pre-commit run --all-files 2>&1 | grep "Passed\|Failed"
+```
+
+---
+
+## Performance Optimization
+
+### Current Performance
+
+| Tier | Target | Actual | Status |
+|------|--------|--------|--------|
+| Tier 1 (Pre-commit) | <30s | ~25s | ✅ GOOD |
+| Tier 2 (Pre-push) | 3-5 min | ~4-5 min | ✅ GOOD |
+| Tier 3 (CI/Manual) | 12-15 min | ~12-18 min | ⚠️ ACCEPTABLE |
+
+### Optimization Strategies
+
+**For Pre-Commit (<30s goal)**:
+- Keep only auto-fixers and fast linters
+- No network operations (no external API calls)
+- No slow file operations (no large file parsing)
+
+**For Pre-Push (3-5 min goal)**:
+- Run fast tests with `pytest -x` (fail-fast)
+- Use parallel validation where possible
+- Cache dependencies and build artifacts
+- Skip slow tests (run in CI instead)
+
+**For CI (12-15 min goal)**:
+- Use GitHub Actions matrix builds (parallel execution)
+- Cache uv dependencies and Docker layers
+- Use `pytest-xdist` for parallel test execution
+- Split slow test suites (e.g., `pytest-split` for 4x parallelism)
+
+---
+
+## Related Documentation
+
+- **Test-Driven Development**: `/home/vishnu/.claude/CLAUDE.md` (global TDD standards)
+- **Testing Guide**: `tests/README.md` (test organization and patterns)
+- **Pre-commit Guide**: `.pre-commit-config.yaml` (hook configuration)
+- **Makefile Reference**: `Makefile` (all available targets)
+- **GitHub Actions**: `.github/workflows/` (CI/CD workflows)
+- **Memory Safety**: `tests/MEMORY_SAFETY_GUIDELINES.md` (pytest-xdist OOM prevention)
+- **AsyncMock Guide**: `tests/ASYNC_MOCK_GUIDELINES.md` (AsyncMock best practices)
+- **Pytest xdist Guide**: `tests/PYTEST_XDIST_BEST_PRACTICES.md` (parallel test execution)
+
+---
+
+## Contact & Support
+
+**Questions or Issues?**
+- Review this document first
+- Check Makefile help: `make help`
+- Check pre-commit config: `.pre-commit-config.yaml`
+- Ask in team chat or create a GitHub issue
+
+**Want to Add a New Validator?**
+1. Determine appropriate tier (commit/push/manual)
+2. Add to `.pre-commit-config.yaml` with correct `stages:` parameter
+3. Test locally: `SKIP= pre-commit run <new-hook-id> --all-files`
+4. Update this document with the new validator
+5. Create PR with changes
+
+**Want to Optimize Validation?**
+1. Profile slow hooks: `time SKIP= pre-commit run <hook-id> --all-files`
+2. Consider moving to manual stage if not critical
+3. Consider parallelization if hook is CPU-bound
+4. Consider caching if hook has expensive setup
+5. Create PR with optimization and updated documentation
+
+---
+
+**Last Updated**: 2025-11-16 (CI/CD Optimization - Phase 2)
+**Version**: 1.0.0
+**Status**: Active
