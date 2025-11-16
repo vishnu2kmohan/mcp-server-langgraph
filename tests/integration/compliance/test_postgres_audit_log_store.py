@@ -13,6 +13,7 @@ import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresAuditLogStore
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
+from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_audit_log_tests")]
@@ -66,12 +67,13 @@ async def store(db_pool: asyncpg.Pool) -> PostgresAuditLogStore:
 async def test_log_audit_entry(store: PostgresAuditLogStore):
     """Test logging an audit entry"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    user_id = get_user_id("alice")
     entry = AuditLogEntry(
         log_id="test_log_123",
-        user_id="user:alice",
+        user_id=user_id,
         action="profile.update",
         resource_type="user_profile",
-        resource_id="user:alice",
+        resource_id=user_id,
         timestamp=now,
         ip_address="192.168.1.1",
         user_agent="Mozilla/5.0",
@@ -112,9 +114,10 @@ async def test_log_system_event_without_user(store: PostgresAuditLogStore):
 async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     """Test retrieving audit log entry by ID"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    user_id = get_user_id("bob")
     entry = AuditLogEntry(
         log_id="test_get_log",
-        user_id="user:bob",
+        user_id=user_id,
         action="data.access",
         resource_type="medical_record",
         resource_id="record_123",
@@ -126,7 +129,7 @@ async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     retrieved = await store.get("test_get_log")
     assert retrieved is not None
     assert retrieved.log_id == "test_get_log"
-    assert retrieved.user_id == "user:bob"
+    assert retrieved.user_id == user_id
     assert retrieved.action == "data.access"
 
 
@@ -150,7 +153,7 @@ async def test_get_nonexistent_audit_log(store: PostgresAuditLogStore):
 async def test_list_user_logs_basic(store: PostgresAuditLogStore):
     """Test listing all logs for a user"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    user_id = "user:charlie"
+    user_id = get_user_id("charlie")
 
     # Create multiple logs
     for i in range(3):
@@ -173,7 +176,7 @@ async def test_list_user_logs_basic(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
     """Test listing user logs with date range filter (HIPAA compliance query)"""
-    user_id = "user:david"
+    user_id = get_user_id("david")
 
     # Create logs at different times
     base_time = datetime.now(timezone.utc)
@@ -214,7 +217,7 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
     """Test listing user logs with limit"""
-    user_id = "user:eve"
+    user_id = get_user_id("eve")
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # Create many logs
@@ -238,7 +241,7 @@ async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore):
     """Test that logs are returned in descending timestamp order"""
-    user_id = "user:frank"
+    user_id = get_user_id("frank")
     base_time = datetime.now(timezone.utc)
 
     # Create logs in reverse chronological order
@@ -272,7 +275,7 @@ async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore)
 @pytest.mark.gdpr
 async def test_anonymize_user_logs(store: PostgresAuditLogStore):
     """Test anonymizing audit logs for deleted user (GDPR Article 17)"""
-    user_id = "user:grace"
+    user_id = get_user_id("grace")
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # Create logs
@@ -304,7 +307,7 @@ async def test_anonymize_user_logs(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
     """Test that anonymization preserves audit trail (compliance requirement)"""
-    user_id = "user:henry"
+    user_id = get_user_id("henry")
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     # Create log with detailed information
@@ -348,9 +351,10 @@ async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
 async def test_audit_log_immutability(store: PostgresAuditLogStore):
     """Test that audit logs are immutable (cannot be updated)"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    user_id = get_user_id("ivan")
     entry = AuditLogEntry(
         log_id="test_immutable",
-        user_id="user:ivan",
+        user_id=user_id,
         action="original.action",
         resource_type="resource",
         timestamp=now,
@@ -368,6 +372,9 @@ async def test_audit_log_immutability(store: PostgresAuditLogStore):
 async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
     """Test storing complex metadata in audit logs"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    user_id = get_user_id("jane")
+    admin1 = get_user_id("admin1")
+    admin2 = get_user_id("admin2")
 
     complex_metadata = {
         "request_id": "req_123",
@@ -377,12 +384,12 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
             "before": {"status": "pending"},
             "after": {"status": "approved"},
         },
-        "approvers": ["user:admin1", "user:admin2"],
+        "approvers": [admin1, admin2],
     }
 
     entry = AuditLogEntry(
         log_id="test_complex_meta",
-        user_id="user:jane",
+        user_id=user_id,
         action="approval.granted",
         resource_type="request",
         resource_id="req_123",
@@ -411,13 +418,13 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
 async def test_list_logs_performance_with_many_users(store: PostgresAuditLogStore):
     """Test query performance with many users (index verification)"""
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    target_user = "user:perf_test"
+    target_user = get_user_id("perf_test")
 
     # Create logs for many different users
     for i in range(100):
         entry = AuditLogEntry(
             log_id=f"test_perf_{i}",
-            user_id=f"user:perf_{i}",
+            user_id=get_user_id(f"perf_{i}"),
             action="action",
             resource_type="resource",
             timestamp=now,
