@@ -856,20 +856,34 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             verification = await auth.verify_token(credentials.credentials)
 
             if verification.valid and verification.payload:
-                # Extract username: prefer preferred_username (Keycloak) over sub
+                # Extract username: prefer preferred_username (Keycloak) over username over sub
                 # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
                 # Extract Keycloak UUID from sub claim (required for Admin API calls)
                 keycloak_id = verification.payload.get("sub")
 
-                username = verification.payload.get("preferred_username")
+                # Priority: preferred_username (Keycloak) > username (InMemory) > extract from sub (fallback)
+                username = verification.payload.get("preferred_username") or verification.payload.get("username")
                 if not username:
-                    # Fallback to sub (for non-Keycloak IdPs)
+                    # Fallback to extracting username from sub (for non-Keycloak IdPs without username field)
                     sub = keycloak_id or "unknown"
                     # If sub is in "user:username" format, extract username
-                    username = sub.replace("user:", "") if sub.startswith("user:") else sub
+                    if sub.startswith("user:"):
+                        id_part = sub.replace("user:", "")
+                        # Handle worker-safe IDs (e.g., "user:test_gw0_charlie" → "charlie")
+                        import re
 
-                # Normalize user_id to "user:username" format for OpenFGA compatibility
-                user_id = f"user:{username}" if not username.startswith("user:") else username
+                        match = re.match(r"test_gw\d+_(.*)", id_part)
+                        username = match.group(1) if match else id_part
+                    else:
+                        username = sub
+
+                # For user_id, use sub directly if it's already in "user:*" format, otherwise normalize from username
+                # This preserves worker-safe IDs like "user:test_gw0_alice" from InMemoryUserProvider tokens
+                if keycloak_id and keycloak_id.startswith("user:"):
+                    user_id = keycloak_id  # Use sub directly (preserves worker-safe IDs)
+                else:
+                    # Normalize to "user:username" format for OpenFGA compatibility
+                    user_id = f"user:{username}" if not username.startswith("user:") else username
 
                 user_data = {
                     "user_id": user_id,

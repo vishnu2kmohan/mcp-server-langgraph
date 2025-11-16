@@ -678,7 +678,9 @@ class TestGetCurrentUser:
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=keycloak_token)
         user = await get_current_user(request, credentials)
         assert user["username"] == "alice"
-        assert user["user_id"] == get_user_id("alice")
+        # Keycloak JWTs normalize to clean user:username format (no worker-safe IDs)
+        expected_user_id = f"user:{user['username']}"
+        assert user["user_id"] == expected_user_id
         assert "uuid" not in user["user_id"].lower()
         assert "f47ac10b" not in user["user_id"]
 
@@ -735,7 +737,9 @@ class TestGetCurrentUser:
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         user = await get_current_user(request, credentials)
         assert user["username"] == "dave"
-        assert user["user_id"] == get_user_id("dave")
+        # Manually created JWTs normalize to clean user:username format (no worker-safe IDs)
+        expected_user_id = f"user:{user['username']}"
+        assert user["user_id"] == expected_user_id
         assert user["user_id"].startswith("user:")
 
 
