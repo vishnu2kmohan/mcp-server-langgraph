@@ -27,6 +27,7 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testmarkerregistration")
+@pytest.mark.requires_kubectl
 class TestMarkerRegistration:
     """Test that marker registration detection works correctly"""
 

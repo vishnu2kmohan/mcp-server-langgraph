@@ -571,8 +571,9 @@ def test_import_workflow_with_import_error_returns_500(client):
     code_with_error = "from langgraph.graph import StateGraph"
 
     # Mock import to raise generic exception
+    # Patch at the __init__.py re-export level where server imports from
     with patch(
-        "mcp_server_langgraph.builder.importer.importer.import_from_code",
+        "mcp_server_langgraph.builder.importer.import_from_code",
         side_effect=Exception("Import failed"),
     ):
         # Act

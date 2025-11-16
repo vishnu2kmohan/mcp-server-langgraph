@@ -11,25 +11,32 @@ Tests the improved code block validator to ensure it:
 
 import gc
 import importlib
-
-# Import the module under test
 import sys
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
 
+# Add project root to path for imports (must be before module imports)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-import scripts.validators.codeblock_validator_v2
+
+# Import the module under test
+import scripts.validators.codeblock_validator_v2  # noqa: E402
 
 importlib.reload(scripts.validators.codeblock_validator_v2)  # Force reload to get latest changes
-from scripts.validators.codeblock_validator_v2 import BlockType, CodeBlock, CodeBlockValidator, SmartLanguageDetector
+from scripts.validators.codeblock_validator_v2 import (  # noqa: E402
+    BlockType,
+    CodeBlock,
+    CodeBlockValidator,
+    SmartLanguageDetector,
+)
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="scripts_validation")
+@pytest.mark.requires_kubectl
 class TestSmartLanguageDetectorBash:
     """Test suite for SmartLanguageDetector bash detection."""
 
@@ -913,6 +920,7 @@ class TestCodeBlockValidatorIntegration:
 
 
 @pytest.mark.xdist_group(name="scripts_validation")
+@pytest.mark.requires_kubectl
 class TestCodeBlockValidatorRegressions:
     """Regression tests for known issues and false positives."""
 
@@ -981,8 +989,8 @@ class TestCodeBlockValidatorRegressions:
         """Regression: Multiple shell commands should be bash."""
         content = dedent(
             """
-            kubectl label namespace production istio-injection=enabled
-            kubectl rollout restart deployment -n production
+            kubectl label namespace staging istio-injection=enabled
+            kubectl rollout restart deployment -n staging
         """
         ).strip()
 

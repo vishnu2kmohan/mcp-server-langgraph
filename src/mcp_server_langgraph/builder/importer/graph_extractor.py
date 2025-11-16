@@ -93,7 +93,7 @@ class GraphExtractor:
         Extract workflow name from code.
 
         Tries multiple strategies:
-        1. Function name (create_xxx_agent)
+        1. Function name (create_xxx_agent or create_xxx)
         2. Variable name (xxx_agent =)
         3. File name
         4. Default to "imported_workflow"
@@ -108,10 +108,14 @@ class GraphExtractor:
         # Strategy 1: Find create_xxx functions
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                if node.name.startswith("create_") and node.name.endswith(("_agent", "_workflow")):
-                    # Extract name between create_ and _agent
-                    name = node.name.replace("create_", "").replace("_agent", "").replace("_workflow", "")
-                    return name
+                if node.name.startswith("create_"):
+                    # Extract name after create_ prefix
+                    name = node.name.replace("create_", "")
+                    # Remove _agent or _workflow suffix if present
+                    name = name.replace("_agent", "").replace("_workflow", "")
+                    # Skip generic names like "create_graph"
+                    if name and name not in ["graph", "agent", "workflow"]:
+                        return name
 
         # Strategy 2: Find xxx_agent variables
         assignments = self.parser.find_variable_assignments(tree)
