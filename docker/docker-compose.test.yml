@@ -33,8 +33,10 @@ services:
       keycloak-test:
         condition: service_healthy
     environment:
-      # Test mode flag
+      # Test mode flags
       - TESTING=true
+      - ENVIRONMENT=test
+      - ALLOW_AUTH_FALLBACK=true
 
       # Service URLs (use service names from docker-compose)
       - OPENFGA_API_URL=http://openfga-test:8080
