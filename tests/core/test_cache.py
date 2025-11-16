@@ -17,9 +17,6 @@ import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
-# Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from mcp_server_langgraph.core.cache import (
@@ -32,6 +29,9 @@ from mcp_server_langgraph.core.cache import (
     generate_cache_key,
     get_cache,
 )
+
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def cache_service_no_redis():
 @pytest.fixture
 def cache_service_with_mock_redis():
     """Cache service with mocked Redis"""
-    with patch("mcp_server_langgraph.core.cache.redis.Redis") as mock_redis_class:
+    with patch("mcp_server_langgraph.core.cache.redis.from_url") as mock_from_url:
         mock_redis = Mock()
         mock_redis.ping.return_value = True
         mock_redis.get.return_value = None
@@ -54,7 +54,7 @@ def cache_service_with_mock_redis():
         mock_redis.delete.return_value = 1
         mock_redis.flushdb.return_value = True
         mock_redis.keys.return_value = []
-        mock_redis_class.return_value = mock_redis
+        mock_from_url.return_value = mock_redis
 
         cache = CacheService(l1_maxsize=100, l1_ttl=60, redis_db=2)
         cache.mock_redis = mock_redis  # Store for assertions
@@ -270,11 +270,16 @@ class TestCacheClear:
         cache_service_with_mock_redis.mock_redis.delete.assert_called()
 
     def test_clear_all_l2(self, cache_service_with_mock_redis):
-        """Test clearing all L2 cache"""
+        """Test clearing all L2 cache using pattern-based deletion (security fix)"""
+        # Mock keys() to return some keys
+        cache_service_with_mock_redis.mock_redis.keys.return_value = [b"key1", b"key2", b"key3"]
+
         cache_service_with_mock_redis.clear()
 
-        # Should have flushed entire Redis DB
-        cache_service_with_mock_redis.mock_redis.flushdb.assert_called_once()
+        # Should use pattern-based deletion instead of flushdb() for security
+        # (avoids clearing other data structures sharing the same Redis DB)
+        cache_service_with_mock_redis.mock_redis.keys.assert_called_with("*")
+        cache_service_with_mock_redis.mock_redis.delete.assert_called_with(b"key1", b"key2", b"key3")
 
 
 @pytest.mark.xdist_group(name="cache_tests")
@@ -545,7 +550,9 @@ class TestCacheInvalidate:
 
     def test_cache_invalidate_pattern(self, cache_service_with_mock_redis):
         """Test cache_invalidate with pattern"""
-        with patch("mcp_server_langgraph.core.cache.get_cache", return_value=cache_service_with_mock_redis):
+        with patch(
+            "mcp_server_langgraph.core.cache.get_cache", new_callable=AsyncMock, return_value=cache_service_with_mock_redis
+        ):
             cache_service_with_mock_redis.mock_redis.keys.return_value = [b"user:123:key1"]
 
             cache_invalidate("user:123:*")

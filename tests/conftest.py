@@ -1149,16 +1149,16 @@ def mock_current_user():
     Shared mock current user fixture for API endpoint tests.
 
     Provides a consistent user identity with both OpenFGA and Keycloak formats:
-    - user_id: OpenFGA format (user:{username})
+    - user_id: OpenFGA format with worker-safe ID for pytest-xdist isolation
     - keycloak_id: Keycloak UUID format
     - username: Plain username
     - email: User email
 
-    This fixture ensures consistency across all API tests and matches the
-    actual identity model used in production.
+    Worker-safe IDs prevent test data pollution across pytest-xdist workers.
+    Each worker (gw0, gw1, etc.) gets isolated user IDs.
     """
     return {
-        "user_id": "user:alice",  # OpenFGA format
+        "user_id": get_user_id("alice"),  # Worker-safe OpenFGA format
         "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
         "username": "alice",
         "email": "alice@example.com",
