@@ -17,11 +17,19 @@ import time
 import pytest
 import requests
 
-# Skip if not in Kubernetes environment
-pytestmark = pytest.mark.skipif(
-    os.getenv("KUBERNETES_SERVICE_HOST") is None and os.getenv("TEST_KUBERNETES_PROBES") != "true",
-    reason="Requires Kubernetes environment or TEST_KUBERNETES_PROBES=true",
-)
+# Skip if not in Kubernetes environment + xdist_group for worker isolation
+pytestmark = [
+    pytest.mark.skipif(
+        os.getenv("KUBERNETES_SERVICE_HOST") is None and os.getenv("TEST_KUBERNETES_PROBES") != "true",
+        reason="Requires Kubernetes environment or TEST_KUBERNETES_PROBES=true",
+    ),
+    pytest.mark.xdist_group(name="integration_kubernetes_health_probes_tests"),
+]
+
+
+def teardown_module():
+    """Force GC to prevent mock accumulation in xdist workers"""
+    gc.collect()
 
 
 @pytest.mark.integration

@@ -10,6 +10,14 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
+# xdist_group for integration test worker isolation
+pytestmark = pytest.mark.xdist_group(name="integration_pydantic_ai_tests")
+
+
+def teardown_module():
+    """Force GC to prevent mock accumulation in xdist workers"""
+    gc.collect()
+
 
 # Test fixtures
 @pytest.fixture

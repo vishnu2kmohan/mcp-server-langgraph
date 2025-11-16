@@ -11,6 +11,14 @@ from pathlib import Path
 
 import pytest
 
+# Mark as integration test with xdist_group for worker isolation
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_workflow_health_dashboard_bc_fix_tests")]
+
+
+def teardown_module():
+    """Force GC to prevent mock accumulation in xdist workers"""
+    gc.collect()
+
 
 def test_awk_percentage_calculation():
     """
