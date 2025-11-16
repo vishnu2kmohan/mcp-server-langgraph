@@ -5,13 +5,28 @@ Provides secure isolated Python code execution using Docker containers.
 Supports resource limits, network isolation, and automatic cleanup.
 """
 
+from __future__ import annotations
+
 import logging
 import time
+from typing import TYPE_CHECKING
 
-from docker.errors import ImageNotFound, NotFound
-from docker.models.containers import Container
+# Docker is an optional dependency - gracefully handle missing docker package
+try:
+    from docker.errors import ImageNotFound, NotFound
+    from docker.models.containers import Container
 
-import docker
+    import docker
+
+    DOCKER_AVAILABLE = True
+except ImportError:
+    DOCKER_AVAILABLE = False
+    if TYPE_CHECKING:
+        from docker.errors import ImageNotFound, NotFound
+        from docker.models.containers import Container
+
+        import docker
+
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
 
@@ -56,6 +71,11 @@ class DockerSandbox(Sandbox):
             SandboxError: If Docker is not available
         """
         super().__init__(limits)
+
+        # Check if docker package is available
+        if not DOCKER_AVAILABLE:
+            raise SandboxError("Docker package not installed. " "Install it with: pip install docker or uv add docker")
+
         self.image = image
         self.socket_path = socket_path
 
