@@ -19,17 +19,16 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 try:
-    import toml
+    import tomllib  # Python 3.11+
 except ImportError:
-    print("Error: toml package not installed. Run: pip install toml")
-    sys.exit(1)
+    import tomli as tomllib  # Backport for <3.11
 
 
 def get_current_version() -> str:
     """Get current version from pyproject.toml."""
     try:
-        with open("pyproject.toml", "r") as f:
-            data = toml.load(f)
+        with open("pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
             return data["project"]["version"]
     except Exception as e:
         print(f"Error reading version from pyproject.toml: {e}")
