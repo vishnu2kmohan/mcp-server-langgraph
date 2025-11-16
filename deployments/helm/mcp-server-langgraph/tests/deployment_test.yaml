@@ -13,6 +13,7 @@ tests:
   - it: should have correct number of replicas
     set:
       replicaCount: 3
+      autoscaling.enabled: false
     asserts:
       - equal:
           path: spec.replicas
