@@ -67,6 +67,111 @@ This project includes comprehensive Claude Code workflow automation delivering *
 
 ---
 
+## Git Worktree Sessions (Isolated Work)
+
+**NEW**: This project now supports automated git worktree creation for isolated Claude Code sessions.
+
+### Why Use Worktrees?
+
+Git worktrees allow you to have multiple working directories from the same repository, providing:
+- **Session isolation**: Each Claude Code session works in its own directory
+- **Branch safety**: No conflicts between concurrent work
+- **Clean state**: Each session starts fresh from a base branch
+- **Easy cleanup**: Auto-delete when no uncommitted changes
+
+### Quick Start
+
+**Starting a New Session**:
+```bash
+# Launch Claude Code in a new isolated worktree
+./scripts/start-worktree-session.sh
+
+# Or specify a different base branch
+./scripts/start-worktree-session.sh feature-branch
+```
+
+This automatically:
+1. Creates worktree in `../worktrees/mcp-server-langgraph-session-YYYYMMDD-HHMMSS/`
+2. Based on your current branch (or specified branch)
+3. Launches Claude Code in the new worktree
+4. Sets up session tracking metadata
+
+**During Session**:
+- Claude Code detects worktree and shows session info at startup
+- Work normally - all changes are isolated to the worktree
+- Commit and push as usual
+
+**Ending Session**:
+- Exit Claude Code normally
+- If worktree is clean (no uncommitted changes), prompted to delete
+- Otherwise, worktree is preserved for later
+
+**Manual Cleanup**:
+```bash
+# List all worktrees and cleanup options
+./scripts/cleanup-worktrees.sh
+
+# Auto-delete all clean worktrees
+./scripts/cleanup-worktrees.sh --auto
+
+# Preview without deleting
+./scripts/cleanup-worktrees.sh --dry-run
+
+# From within Claude Code
+/cleanup-worktrees
+```
+
+### Worktree Detection
+
+When running in a worktree, Claude Code automatically displays:
+```
+🌳 Git Worktree Session Active
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SESSION_ID=mcp-server-langgraph-session-20250115-143022
+  BASE_BRANCH=main
+  CREATED_AT=20250115-143022
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Best Practices
+
+**Use worktrees for**:
+- ✅ Experimental features
+- ✅ Bug investigation
+- ✅ Major refactoring
+- ✅ Testing different approaches
+- ✅ Working on multiple issues simultaneously
+
+**Don't use worktrees for**:
+- ❌ Quick single-file edits (overhead not worth it)
+- ❌ Documentation-only changes
+- ❌ When you need to switch branches frequently (just use git switch)
+
+### Troubleshooting
+
+**Issue**: Worktree creation fails
+- **Cause**: Branch doesn't exist or uncommitted changes in main repo
+- **Solution**: Commit or stash changes first, verify branch exists
+
+**Issue**: Can't delete worktree
+- **Cause**: Worktree is locked or has uncommitted changes
+- **Solution**:
+  ```bash
+  # Unlock and try again
+  git worktree unlock /path/to/worktree
+  ./scripts/cleanup-worktrees.sh --auto
+  ```
+
+**Issue**: Too many worktrees accumulating
+- **Cause**: Not cleaning up after sessions
+- **Solution**: Run cleanup regularly
+  ```bash
+  # Weekly cleanup of all clean worktrees
+  ./scripts/cleanup-worktrees.sh --auto
+  ```
+
+---
+
 ## Recommended Workflow: Explore → Plan → Code → Commit
 
 **CRITICAL**: Always follow this 4-phase workflow. Skipping phases leads to suboptimal results and introduces bugs.

@@ -1,6 +1,6 @@
 # Claude Code Slash Commands
 
-This directory contains 38 specialized slash commands for streamlined development workflows.
+This directory contains 39 specialized slash commands for streamlined development workflows.
 
 **Quick Access**: See `.claude/QUICK_REFERENCE.md` for the most-used commands.
 
@@ -113,7 +113,7 @@ Documentation creation and maintenance:
 
 ---
 
-### 🔧 Environment (3 commands)
+### 🔧 Environment (4 commands)
 
 Environment setup and infrastructure:
 
@@ -121,6 +121,7 @@ Environment setup and infrastructure:
 |---------|---------|-------------|
 | `/setup-env` | Environment setup checklist | First-time setup, onboarding |
 | `/db-operations` | Database operations guide | Database migrations, debugging |
+| `/cleanup-worktrees` | Manage and cleanup git worktrees | After sessions, weekly cleanup |
 
 ---
 
