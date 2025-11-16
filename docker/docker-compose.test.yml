@@ -43,7 +43,7 @@ services:
       - KEYCLOAK_URL=http://keycloak-test:8080
       - POSTGRES_HOST=postgres-test
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=testdb
+      - POSTGRES_DB=mcp_test
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=test
       - REDIS_HOST=redis-test
@@ -85,7 +85,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test
-      POSTGRES_DB: testdb
+      POSTGRES_DB: mcp_test
       LANG: C.UTF-8  # Suppress locale warnings in Alpine
     # Use tmpfs for speed (data in memory, not disk)
     tmpfs:
@@ -146,7 +146,7 @@ services:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
       - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres-test:5432/testdb
+      - KC_DB_URL=jdbc:postgresql://postgres-test:5432/mcp_test
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=test
       - KC_HEALTH_ENABLED=true
