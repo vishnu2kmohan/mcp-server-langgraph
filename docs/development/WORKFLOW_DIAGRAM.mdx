@@ -1,0 +1,544 @@
+# GitHub Actions Workflow Dependency Diagram
+
+> **TL;DR**: Visual representation of all 31 GitHub Actions workflows, their dependencies, and execution triggers.
+
+## Overview
+
+This diagram shows the relationships between GitHub Actions workflows in this project. Workflows are organized by trigger type and show dependencies where applicable.
+
+---
+
+## Main CI/CD Pipeline
+
+```mermaid
+graph TD
+    %% Main CI Pipeline
+    Push[Push to main/develop] --> CI[ci.yaml<br/>Main CI Pipeline]
+    PR[Pull Request] --> CI
+
+    CI --> VW[validate-workflows]
+    CI --> VP[validate-local-ci-parity]
+    CI --> XE[xdist-enforcement]
+    CI --> Test[test matrix<br/>Python 3.10/3.11/3.12]
+    CI --> PC[pre-commit]
+    CI --> PSV[push-stage-validators]
+
+    Test --> CM[coverage-merge]
+    Test --> DB[docker-build<br/>base/full/test]
+
+    DB --> DCS[docker-compose-smoke-test<br/>main/dev/test]
+    DB --> DM[docker-multiplatform<br/>amd64/arm64]
+
+    DM --> DMAN[docker-manifest]
+
+    DMAN --> Deploy[deploy-dev<br/>conditional: main branch only]
+
+    Deploy --> DV[deployment-verification]
+
+    %% Styling
+    classDef mainFlow fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef testFlow fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
+    classDef deployFlow fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    classDef validationFlow fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+
+    class CI mainFlow
+    class Test,CM,DB,DCS,DM,DMAN testFlow
+    class Deploy,DV deployFlow
+    class VW,VP,XE,PC,PSV validationFlow
+```
+
+---
+
+## Quality Testing Workflows
+
+```mermaid
+graph TD
+    %% Quality Tests
+    Trigger[Push/PR/Weekly] --> QT[quality-tests.yaml]
+
+    QT --> PCV[pre-commit-validation]
+    QT --> PT[property-tests<br/>Hypothesis 100 examples]
+    QT --> CT[contract-tests<br/>MCP protocol]
+    QT --> RT[regression-tests<br/>4x parallel splits]
+    QT --> MT[mutation-tests<br/>weekly only]
+    QT --> BT[benchmark-tests]
+
+    PCV --> QS[quality-summary]
+    PT --> QS
+    CT --> QS
+    RT --> QS
+    MT --> QS
+    BT --> QS
+
+    %% E2E Tests
+    Trigger2[Push/PR/Weekly Mon] --> E2E[e2e-tests.yaml]
+    E2E --> Infra[Start test infrastructure<br/>Postgres/Redis/OpenFGA/Keycloak/Qdrant]
+    Infra --> E2ETests[Run E2E test suite]
+    E2ETests --> Cleanup[Cleanup infrastructure]
+
+    %% Optional Deps
+    Trigger3[Push to main/PR pyproject.toml] --> OD[optional-deps-test.yaml]
+    OD --> Minimal[Test with minimal deps]
+    OD --> Full[Test with full deps]
+
+    %% Styling
+    classDef qualityFlow fill:#673AB7,stroke:#4527A0,stroke-width:2px,color:#fff
+    classDef e2eFlow fill:#00BCD4,stroke:#00838F,stroke-width:2px,color:#fff
+
+    class QT,PCV,PT,CT,RT,MT,BT,QS qualityFlow
+    class E2E,Infra,E2ETests,Cleanup e2eFlow
+```
+
+---
+
+## Security & Compliance Workflows
+
+```mermaid
+graph TD
+    %% Security Scanning
+    Daily[Daily 3 AM UTC] --> SS[security-scan.yaml]
+    PushPR[Push/PR] --> SS
+
+    SS --> Trivy[Trivy scan]
+    SS --> Semgrep[Semgrep SAST]
+    SS --> DepScan[Dependency scan]
+    SS --> Gitleaks[Gitleaks secrets]
+
+    %% Security Validation
+    PRSec[PR security configs] --> SV[security-validation.yml]
+    SV --> CORS[Validate CORS]
+    SV --> Auth[Validate auth config]
+    SV --> AuthZ[Validate authorization]
+
+    %% GCP Compliance
+    Weekly[Weekly] --> GCS[gcp-compliance-scan.yaml]
+    PushGCP[Push GCP configs] --> GCS
+    GCS --> BP[Best practices check]
+    GCS --> Compliance[Compliance validation]
+
+    %% GCP Drift
+    Daily2[Daily] --> GDD[gcp-drift-detection.yaml]
+    GDD --> Drift[Detect config drift]
+    Drift --> Alert[Alert if drift found]
+
+    %% Styling
+    classDef securityFlow fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
+    classDef complianceFlow fill:#FF5722,stroke:#D84315,stroke-width:2px,color:#fff
+
+    class SS,Trivy,Semgrep,DepScan,Gitleaks,SV,CORS,Auth,AuthZ securityFlow
+    class GCS,BP,Compliance,GDD,Drift,Alert complianceFlow
+```
+
+---
+
+## Deployment Workflows
+
+```mermaid
+graph TD
+    %% Deployment Validation
+    PRDeploy[PR deployment files] --> DV[deployment-validation.yml]
+    PushDeploy[Push main deployment files] --> DV
+
+    DV --> VH[validate-helm]
+    DV --> VK[validate-kustomize]
+    DV --> VNP[validate-network-policies]
+    DV --> VSA[validate-service-accounts]
+
+    %% Staging Deployment
+    PushDev[Push to develop] --> DSG[deploy-staging-gke.yaml]
+    ManualS[Manual trigger] --> DSG
+
+    DSG --> AuthS[GKE auth]
+    AuthS --> HelmS[Helm deploy staging]
+    HelmS --> SmokeS[Smoke tests]
+
+    %% Production Deployment
+    Release[Release published] --> DPG[deploy-production-gke.yaml]
+    ManualP[Manual trigger + Approval] --> DPG
+
+    DPG --> Approve[Manual approval]
+    Approve --> AuthP[GKE auth]
+    AuthP --> HelmP[Helm deploy production]
+    HelmP --> SmokeP[Comprehensive smoke tests]
+    SmokeP --> Rollback{Success?}
+    Rollback -->|No| RB[Rollback]
+    Rollback -->|Yes| Done[Deployment complete]
+
+    %% Other Validators
+    PRK8s[PR K8s files] --> VK8s[validate-kubernetes.yaml]
+    PRK8sC[PR K8s configs] --> VK8sC[validate-k8s-configs.yml]
+    PRAll[PR deployments] --> VD[validate-deployments.yaml]
+
+    %% Styling
+    classDef deployFlow fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
+    classDef validationFlow fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+
+    class DSG,DPG,AuthS,HelmS,SmokeS,AuthP,HelmP,SmokeP,Approve,RB,Done deployFlow
+    class DV,VH,VK,VNP,VSA,VK8s,VK8sC,VD validationFlow
+```
+
+---
+
+## Documentation Workflows
+
+```mermaid
+graph TD
+    %% Doc Validation
+    PRDocs[PR docs/] --> DocsV[docs-validation.yaml]
+    PushDocs[Push main docs/] --> DocsV
+
+    DocsV --> MDX[Validate MDX syntax]
+    DocsV --> Front[Check frontmatter]
+    DocsV --> Links[Internal links]
+    DocsV --> Nav[Navigation consistency]
+    DocsV --> Images[Image references]
+
+    %% Link Checker
+    WeeklyDocs[Weekly Sunday] --> LC[link-checker.yaml]
+    ManualDocs[Manual trigger] --> LC
+
+    LC --> CheckMD[Check all .md files]
+    LC --> CheckMDX[Check all .mdx files]
+    LC --> Report[Generate report]
+
+    %% Note about consolidation
+    DocsV -.Consolidate.-> Combined[docs.yaml<br/>PROPOSED]
+    LC -.Consolidate.-> Combined
+
+    %% Styling
+    classDef docsFlow fill:#3F51B5,stroke:#283593,stroke-width:2px,color:#fff
+    classDef proposedFlow fill:#9E9E9E,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+
+    class DocsV,MDX,Front,Links,Nav,Images,LC,CheckMD,CheckMDX,Report docsFlow
+    class Combined proposedFlow
+```
+
+---
+
+## Monitoring & Observability Workflows
+
+```mermaid
+graph TD
+    %% Observability Alerts
+    Hourly[Hourly] --> OA[observability-alerts.yaml]
+    OA --> Metrics[Check metrics]
+    Metrics --> Alert{Threshold exceeded?}
+    Alert -->|Yes| Notify[Send alerts]
+    Alert -->|No| OK[OK]
+
+    %% DORA Metrics
+    PushMain[Push to main] --> DM[dora-metrics.yaml]
+    PRMerge[PR merged] --> DM
+    DeployComplete[Deployment completed] --> DM
+
+    DM --> DF[Deployment frequency]
+    DM --> LT[Lead time for changes]
+    DM --> MTTR[Mean time to recovery]
+    DM --> CFR[Change failure rate]
+
+    %% Workflow Health
+    DailyWH[Daily] --> WH[workflow-health-dashboard.yaml]
+    WH --> Success[Success rates]
+    WH --> Duration[Workflow durations]
+    WH --> Dashboard[Update dashboard]
+
+    %% Styling
+    classDef monitoringFlow fill:#009688,stroke:#00695C,stroke-width:2px,color:#fff
+    classDef metricsFlow fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#fff
+
+    class OA,Metrics,Alert,Notify,OK monitoringFlow
+    class DM,DF,LT,MTTR,CFR,WH,Success,Duration,Dashboard metricsFlow
+```
+
+---
+
+## Maintenance & Automation Workflows
+
+```mermaid
+graph TD
+    %% Dependabot Auto-merge
+    DepPR[Dependabot PR] --> DA[dependabot-automerge.yaml]
+    DA --> CICheck{CI passed?}
+    CICheck -->|Yes + Minor/Patch| Merge[Auto-merge]
+    CICheck -->|No or Major| Manual[Manual review required]
+
+    %% Stale Issues
+    DailyStale[Daily] --> Stale[stale.yaml]
+    Stale --> Find[Find stale issues/PRs<br/>60 days inactive]
+    Find --> Mark[Mark as stale]
+    Mark --> Wait[Wait 7 days]
+    Wait --> Close{Activity?}
+    Close -->|No| CloseDone[Close issue/PR]
+    Close -->|Yes| Remove[Remove stale label]
+
+    %% Track Skipped Tests
+    PushMain2[Push to main] --> TST[track-skipped-tests.yaml]
+    WeeklyTS[Weekly] --> TST
+    TST --> FindSkip[Find skipped/xfail tests]
+    FindSkip --> ReportTS[Generate report]
+
+    %% Coverage Trend
+    PushCov[Push to main] --> CovT[coverage-trend.yaml]
+    PRCov[Pull request] --> CovT
+    CovT --> Measure[Measure coverage]
+    Measure --> Store[Store trend data]
+    Store --> Analyze[Analyze trends]
+
+    %% Performance Regression
+    PushPerf[Push to main] --> PerfR[performance-regression.yaml]
+    PRPerf[Pull request] --> PerfR
+    PerfR --> Bench[Run benchmarks]
+    Bench --> Compare[Compare to baseline]
+    Compare --> Regress{Regression?}
+    Regress -->|Yes| FailPR[Fail PR]
+    Regress -->|No| Pass[Pass]
+
+    %% Version Bump
+    Rel[Release published] --> BV[bump-deployment-versions.yaml]
+    ManualBV[Manual trigger] --> BV
+    BV --> Update[Update version numbers]
+    Update --> Commit[Commit changes]
+
+    %% Weekly Reports
+    WeeklyRep[Weekly Sunday 9 AM] --> WR[weekly-reports.yaml]
+    WR --> CovReport[Coverage trends]
+    WR --> DeployFreq[Deployment frequency]
+    WR --> IssueVel[Issue/PR velocity]
+    WR --> SecReport[Security scan results]
+    WR --> SendReport[Send report]
+
+    %% Release
+    Tag[Push tag v*] --> Release[release.yaml]
+    ManualRel[Manual trigger] --> Release
+    Release --> Changelog[Generate changelog]
+    Changelog --> GHRelease[Create GitHub release]
+    GHRelease --> PublishImg[Publish Docker images]
+    PublishImg --> DeployProd{Deploy to prod?}
+    DeployProd -->|Yes| Deploy[Trigger production deployment]
+
+    %% Cost Tracking
+    DailyCost[Daily] --> Cost[cost-tracking.yaml]
+    Cost --> GCPCost[Track GCP costs]
+    Cost --> AWSCost[Track AWS costs]
+    GCPCost --> CostReport[Generate cost report]
+    AWSCost --> CostReport
+
+    %% Styling
+    classDef autoFlow fill:#795548,stroke:#5D4037,stroke-width:2px,color:#fff
+    classDef reportFlow fill:#607D8B,stroke:#455A64,stroke-width:2px,color:#fff
+
+    class DA,CICheck,Merge,Manual,Stale,Find,Mark,Wait,Close,CloseDone,Remove autoFlow
+    class TST,FindSkip,ReportTS,CovT,Measure,Store,Analyze,WR,CovReport,DeployFreq,IssueVel,SecReport,SendReport reportFlow
+```
+
+---
+
+## Infrastructure Workflows
+
+```mermaid
+graph TD
+    %% Terraform Validation
+    PRTF[PR *.tf files] --> TFV[terraform-validate.yaml]
+    PushTF[Push main *.tf] --> TFV
+
+    TFV --> TFmt[terraform fmt check]
+    TFV --> TVal[terraform validate]
+    TFV --> TFLint[tflint]
+
+    %% K8s Config Validation
+    PRK8sConf[PR K8s files] --> K8sCV[validate-k8s-configs.yml]
+    K8sCV --> Kubeconf[kubeconform schema validation]
+    K8sCV --> Resources[Resource limits check]
+    K8sCV --> SecCtx[Security context validation]
+
+    %% Shell Tests
+    PRShell[PR *.sh files] --> ShellT[shell-tests.yml]
+    PushShell[Push main *.sh] --> ShellT
+    ShellT --> Bats[bats tests]
+    ShellT --> ShellCheck[shellcheck linting]
+
+    %% Styling
+    classDef infraFlow fill:#8BC34A,stroke:#689F38,stroke-width:2px,color:#fff
+
+    class TFV,TFmt,TVal,TFLint,K8sCV,Kubeconf,Resources,SecCtx,ShellT,Bats,ShellCheck infraFlow
+```
+
+---
+
+## Build & Hygiene Workflows
+
+```mermaid
+graph TD
+    %% Build Hygiene
+    PushBH[Push] --> BH[build-hygiene.yaml]
+    PRBH[Pull request] --> BH
+
+    BH --> TODO[Check TODO/FIXME<br/>warnings only]
+    BH --> Console[Check console.log<br/>production code]
+    BH --> Commented[Check commented code]
+    BH --> Format[Consistent formatting]
+
+    %% Smoking Tests
+    PRSmoke[PR] --> Smoke[smoke-tests.yml]
+    PushSmoke[Push] --> Smoke
+    Smoke --> QuickTests[Quick smoke tests]
+
+    %% Styling
+    classDef hygieneFlow fill:#CDDC39,stroke:#9E9D24,stroke-width:2px,color:#fff
+
+    class BH,TODO,Console,Commented,Format,Smoke,QuickTests hygieneFlow
+```
+
+---
+
+## Workflow Execution Frequency
+
+### Continuous (On Every Push/PR)
+- ci.yaml
+- quality-tests.yaml
+- deployment-validation.yml (if deployment files changed)
+- security-scan.yaml
+- docs-validation.yaml (if docs changed)
+- build-hygiene.yaml
+
+### Daily
+- security-scan.yaml (3 AM UTC)
+- gcp-drift-detection.yaml
+- workflow-health-dashboard.yaml
+- cost-tracking.yaml
+- stale.yaml
+
+### Weekly
+- quality-tests.yaml (Sunday 12 AM UTC)
+- e2e-tests.yaml (Monday 2 AM UTC)
+- gcp-compliance-scan.yaml
+- track-skipped-tests.yaml
+- weekly-reports.yaml (Sunday 9 AM UTC)
+- link-checker.yaml (Sunday)
+
+### Hourly
+- observability-alerts.yaml
+
+### On-Demand (Manual/Conditional)
+- deploy-staging-gke.yaml (push to develop OR manual)
+- deploy-production-gke.yaml (release OR manual with approval)
+- release.yaml (tag push OR manual)
+- bump-deployment-versions.yaml (release OR manual)
+- dependabot-automerge.yaml (Dependabot PR only)
+
+---
+
+## Workflow Dependencies & Blocking
+
+### Blocking Workflows (Must Pass for Merge)
+- ci.yaml
+- quality-tests.yaml
+- deployment-validation.yml (if deployment files changed)
+- security-scan.yaml
+- build-hygiene.yaml
+
+### Informational Workflows (Don't Block)
+- weekly-reports.yaml
+- cost-tracking.yaml
+- dora-metrics.yaml
+- observability-alerts.yaml
+- stale.yaml
+
+### Required for Deployment
+- ci.yaml (test job must pass)
+- deployment-validation.yml (if deployment files changed)
+- security-scan.yaml (HIGH/CRITICAL findings must be addressed)
+
+---
+
+## Consolidation Roadmap
+
+### Phase 1: Documentation Workflows
+```mermaid
+graph LR
+    DV[docs-validation.yaml] --> Combined[docs.yaml]
+    LC[link-checker.yaml] --> Combined
+    Combined --> Complete[✅ Consolidated]
+
+    classDef current fill:#3F51B5,stroke:#283593,stroke-width:2px,color:#fff
+    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+
+    class DV,LC current
+    class Combined,Complete proposed
+```
+
+### Phase 2: Security Workflows
+```mermaid
+graph LR
+    SS[security-scan.yaml] --> Combined[security.yaml]
+    SV[security-validation.yml] --> Combined
+    Combined --> Complete[✅ Consolidated]
+
+    classDef current fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
+    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+
+    class SS,SV current
+    class Combined,Complete proposed
+```
+
+### Phase 3: Deployment Validation Workflows
+```mermaid
+graph LR
+    VD[validate-deployments.yaml] --> Combined[deployment-validation.yaml]
+    VK8s[validate-kubernetes.yaml] --> Combined
+    VK8sC[validate-k8s-configs.yml] --> Combined
+    Combined --> Complete[✅ Keep existing DV<br/>Remove 2 redundant]
+
+    classDef current fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+
+    class VD,VK8s,VK8sC current
+    class Combined,Complete proposed
+```
+
+---
+
+## Performance Optimization Opportunities
+
+### Parallel Execution
+Currently parallelized:
+- test job (3 Python versions)
+- docker-build (3 image variants)
+- docker-compose-smoke-test (3 configs)
+- docker-multiplatform (2 architectures)
+- regression-tests (4 splits via pytest-split)
+
+### Caching Improvements
+Current caching:
+- Python dependencies (uv cache)
+- Docker layer caching
+- Workflow-level caching
+
+Potential improvements:
+- Cache test results for unchanged files
+- Cache build artifacts between jobs
+- Shared cache across workflows
+
+### Workflow Reusability
+Extract to reusable workflows:
+- setup-python-deps (already a composite action)
+- docker-build-and-push pattern
+- deploy-to-gke pattern
+- run-tests-with-coverage pattern
+
+---
+
+## Related Documentation
+
+- **Workflows Reference**: [WORKFLOWS.mdx](./WORKFLOWS.mdx) - Detailed workflow documentation
+- **Commands Reference**: [COMMANDS.mdx](./COMMANDS.mdx) - All Makefile targets
+- **Validation Strategy**: [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) - Tiered validation approach
+- **CI Configuration**: `.github/workflows/` - Workflow source files
+- **Composite Actions**: `.github/actions/` - Reusable action components
+
+---
+
+**Last Updated**: 2025-11-16 (CI/CD Optimization - Phase 5)
+**Total Workflows**: 31 workflows
+**Version**: 1.0.0
+**Status**: Active

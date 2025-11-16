@@ -1,0 +1,635 @@
+# Makefile Commands Reference
+
+> **TL;DR**: This project has **124 Makefile targets**. Start with `make help-common` for the most frequently used commands.
+
+## Overview
+
+This document provides a comprehensive reference for all Makefile commands available in this project. Commands are organized by category for easy navigation.
+
+## Quick Start
+
+```bash
+# View common commands (recommended for new developers)
+make help-common
+
+# View all available commands with descriptions
+make help
+
+# Get started with development
+make dev-setup
+```
+
+---
+
+## Command Categories
+
+- [Testing](#testing-52-commands) - Run tests, generate coverage, debug
+- [Validation](#validation-12-commands) - Validate code, configs, deployments
+- [Documentation](#documentation-10-commands) - Build, serve, validate docs
+- [Setup & Infrastructure](#setup--infrastructure-7-commands) - Install deps, start services
+- [Deployment](#deployment-6-commands) - Deploy to environments, rollback
+- [Linting & Code Quality](#linting--code-quality-5-commands) - Format, lint, security scan
+- [Monitoring & Logs](#monitoring--logs-5-commands) - View logs, open dashboards
+- [Database](#database-3-commands) - Backup, restore, shell
+- [Running](#running-2-commands) - Start MCP server
+- [Health Checks](#health-checks-2-commands) - Verify system health
+- [Utilities](#utilities-10-commands) - Clean, reset, benchmarks
+
+---
+
+## Testing (52 commands)
+
+### Recommended Commands (Start Here)
+
+| Command | Duration | Purpose |
+|---------|----------|---------|
+| `make test-dev` | 1-2 min | **RECOMMENDED** - Fast parallel tests with fail-fast |
+| `make test` | 3-5 min | All tests with coverage (parallel) |
+| `make test-unit` | 2-3 min | Unit tests only (fast, no external deps) |
+| `make test-integration` | 5-8 min | Integration tests (requires infrastructure) |
+| `make test-ci` | 8-12 min | CI-equivalent tests (matches GitHub Actions) |
+
+### Core Testing
+
+```bash
+make test                    # All tests with coverage (parallel)
+make test-dev                # RECOMMENDED: Fast parallel tests, fail-fast, no coverage
+make test-unit               # Unit tests only (parallel, with coverage)
+make test-integration        # Integration tests (requires Docker services)
+make test-e2e                # End-to-end tests (full user journeys)
+make test-ci                 # CI-equivalent (parallel, XML coverage for reports)
+```
+
+### Coverage Reports
+
+```bash
+make test-coverage           # Comprehensive coverage report (HTML + terminal)
+make test-coverage-html      # HTML coverage report only
+make test-coverage-terminal  # Terminal coverage report only
+make test-coverage-xml       # XML coverage report (for CI)
+make test-coverage-fast      # Unit tests only, 70-80% faster
+make test-coverage-changed   # Incremental coverage (changed files only, 80-90% faster)
+make test-coverage-combined  # Unit + integration coverage
+```
+
+**Recommendation**: Use `make test-coverage` for comprehensive reports. Use `make test-coverage-fast` during rapid iteration.
+
+### Fast Testing Shortcuts
+
+```bash
+make test-fast               # All tests without coverage (parallel)
+make test-fast-core          # Core tests only (< 5s duration)
+make test-fast-unit          # Unit tests without coverage (parallel)
+make test-parallel           # All tests in parallel (no coverage)
+make test-parallel-unit      # Unit tests in parallel (no coverage)
+```
+
+**Recommendation**: Use `make test-dev` (recommended) for rapid iteration. Use `make test-fast-core` for ultra-fast smoke checks.
+
+### Quality Tests
+
+```bash
+make test-all-quality        # All quality tests (property, contract, regression)
+make test-all-quality-ci     # All quality tests with coverage (CI mode)
+make test-property           # Property-based tests (Hypothesis)
+make test-property-ci        # Property tests with coverage (100 examples)
+make test-contract           # Contract tests (MCP protocol compliance)
+make test-contract-ci        # Contract tests with coverage
+make test-regression         # Performance regression tests
+make test-regression-ci      # Regression tests with coverage
+make test-mutation           # Mutation tests (test effectiveness, slow)
+make test-precommit-validation  # Pre-commit hook validation
+```
+
+**Recommendation**: Run `make test-all-quality` before creating PRs.
+
+### Specialized Testing
+
+```bash
+make test-api                # API endpoint tests
+make test-auth               # Authentication/authorization tests
+make test-mcp                # MCP server tests
+make test-mcp-server         # MCP stdio server tests
+make test-compliance         # GDPR, HIPAA, SOC2, SLA compliance tests
+make test-rate-limit         # Rate limiting tests
+make test-slow               # Slow tests only (> 10s each)
+make test-failed             # Re-run only failed tests
+make test-debug              # Debug mode with pdb breakpoints
+make test-watch              # Watch mode (re-run on changes)
+```
+
+### Infrastructure Testing
+
+```bash
+make test-integration-local  # Integration tests with local config
+make test-integration-debug  # Integration tests in debug mode
+make test-integration-build  # Build test infrastructure
+make test-integration-services  # Start integration test services
+make test-integration-cleanup   # Clean up integration test resources
+make test-infra-up           # Start test infrastructure (Docker Compose)
+make test-infra-down         # Stop test infrastructure
+make test-infra-logs         # View test infrastructure logs
+```
+
+### Deployment Testing
+
+```bash
+make test-helm-deployment    # Test Helm deployment
+make test-k8s-deployment     # Test Kubernetes deployment
+make test-workflows          # Test GitHub Actions workflows (via act)
+```
+
+### Incremental Testing
+
+```bash
+make test-new                # Run newly added tests only
+make test-quick-new          # Quick check of new tests
+```
+
+**Tip**: Coverage targets are computed using `.coverage` file. Run `make clean` to reset coverage data.
+
+---
+
+## Validation (12 commands)
+
+### Tiered Validation (Recommended)
+
+| Command | Duration | Tier | Purpose |
+|---------|----------|------|---------|
+| `make validate-commit` | <30s | Tier 1 | Fast pre-commit validation |
+| `make validate-push` | 3-5 min | Tier 2 | Critical pre-push validation |
+| `make validate-full` | 12-15 min | Tier 3 | Comprehensive validation (CI-equivalent) |
+
+See [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) for complete details on tiered validation.
+
+### Specific Validators
+
+```bash
+make validate-all            # All deployment validations
+make validate-deployments    # All deployment configs (Helm, Kustomize, etc.)
+make validate-openapi        # OpenAPI schema validation
+make validate-helm           # Helm chart validation (lint + templates)
+make validate-kustomize      # Kustomize overlay validation (all overlays build)
+make validate-docker-compose # Docker Compose file validation
+make validate-docker-image   # Docker test image freshness check
+make validate-workflows      # GitHub Actions workflow YAML syntax
+make validate-pre-push       # Legacy comprehensive pre-push validation
+```
+
+**Recommendation**: Use tiered validation shortcuts (`validate-commit`, `validate-push`, `validate-full`) for better developer experience.
+
+---
+
+## Documentation (10 commands)
+
+### Primary Commands
+
+```bash
+make docs-serve              # Serve Mintlify docs locally (http://localhost:3000)
+make docs-build              # Build Mintlify docs
+make docs-deploy             # Deploy docs to Mintlify CDN
+make docs-validate           # Comprehensive documentation validation
+make docs-validate-mintlify  # PRIMARY: Mintlify CLI broken-links validation
+```
+
+### Specialized Validators
+
+```bash
+make docs-validate-specialized  # Supplementary validators (ADR, navigation, images)
+make docs-validate-version      # Version consistency across deployment files
+make docs-test               # Run documentation validation tests
+make docs-audit              # Comprehensive documentation audit
+make docs-fix-mdx            # Auto-fix MDX syntax errors
+```
+
+**Recommendation**: Use `make docs-validate-mintlify` as the primary validator. It's comprehensive and authoritative.
+
+---
+
+## Setup & Infrastructure (7 commands)
+
+### Complete Setup
+
+```bash
+make dev-setup               # Complete developer setup (deps + infra + config)
+make quick-start             # Quick start with defaults
+```
+
+### Dependencies
+
+```bash
+make install                 # Install production dependencies (uv sync --frozen --no-dev)
+make install-dev             # Install development dependencies (uv sync --extra dev --extra builder)
+```
+
+### Infrastructure Services
+
+```bash
+make setup-infra             # Start all Docker services (PostgreSQL, Redis, OpenFGA, etc.)
+make setup-openfga           # Initialize OpenFGA (authorization)
+make setup-keycloak          # Initialize Keycloak (SSO, ~60s startup)
+make setup-kong              # Initialize Kong API Gateway
+make setup-infisical         # Initialize Infisical (secrets management)
+```
+
+**Tip**: Run `make dev-setup` once for complete environment setup. Then use `make setup-infra` to restart services as needed.
+
+---
+
+## Deployment (6 commands)
+
+### Deploy to Environments
+
+```bash
+make deploy-dev              # Deploy to development (Kustomize)
+make deploy-staging          # Deploy to staging (Kustomize)
+make deploy-production       # Deploy to production (Helm)
+```
+
+### Rollback Deployments
+
+```bash
+make deploy-rollback-dev     # Rollback development deployment
+make deploy-rollback-staging # Rollback staging deployment
+make deploy-rollback-production  # Rollback production deployment
+```
+
+**Tip**: All deployments validate configs before applying. Use `make validate-deployments` to check without deploying.
+
+---
+
+## Linting & Code Quality (5 commands)
+
+```bash
+make lint-check              # Comprehensive parallel linting (flake8, mypy, bandit, etc.)
+make lint-fix                # Auto-fix formatting issues (black, isort, parallel)
+make lint-install            # Install/reinstall pre-commit hooks
+make lint-pre-commit         # Simulate pre-commit hook execution
+make lint-pre-push           # Simulate pre-push hook execution
+make security-check          # Bandit security scan (low/low severity)
+make security-scan-full      # Comprehensive security scan (bandit, trivy, semgrep)
+```
+
+**Tip**: Use `make lint-fix` before committing to auto-fix most issues. Use `make lint-check` to verify without modifying files.
+
+---
+
+## Monitoring & Logs (5 commands)
+
+### View Logs
+
+```bash
+make logs                    # View all infrastructure logs
+make logs-follow             # Follow all logs in real-time
+make logs-agent              # Agent-specific logs
+make logs-prometheus         # Prometheus logs
+make logs-grafana            # Grafana logs
+```
+
+### Open Dashboards
+
+```bash
+make monitoring-dashboard    # Open Grafana dashboards (http://localhost:3001)
+make prometheus-ui           # Open Prometheus UI (http://localhost:9090)
+make jaeger-ui               # Open Jaeger tracing UI (http://localhost:16686)
+```
+
+**Tip**: Use `make logs-follow` to monitor all services during development.
+
+---
+
+## Database (3 commands)
+
+```bash
+make db-shell                # Open PostgreSQL shell
+make db-backup               # Create database backup
+make db-migrate              # Run database migrations (placeholder)
+```
+
+**Note**: `db-restore` target exists for restoring from backups.
+
+---
+
+## Running (2 commands)
+
+```bash
+make run                     # Run stdio MCP server
+make run-streamable          # Run StreamableHTTP MCP server
+```
+
+**Tip**: Use `make run` for standard MCP server. Use `make run-streamable` for HTTP-based streaming.
+
+---
+
+## Health Checks (2 commands)
+
+```bash
+make health-check            # Full system health check (services, ports, venv)
+make health-check-fast       # FAST: Parallel port scan only (70% faster)
+```
+
+**Recommendation**: Use `make health-check-fast` for quick verification during development.
+
+---
+
+## Utilities (10 commands)
+
+### Cleanup
+
+```bash
+make clean                   # Stop containers, clean caches (parallel)
+make clean-all               # Deep clean including venv
+make reset                   # Complete system reset
+```
+
+### Performance & Load Testing
+
+```bash
+make benchmark               # Build performance comparison
+make load-test               # Load tests (Locust/k6)
+make stress-test             # Stress tests
+```
+
+### Git & CI Utilities
+
+```bash
+make git-hooks               # Install git hooks (calls pre-commit-setup)
+make pre-commit-setup        # Setup pre-commit hooks
+make act-dry-run             # Show what would execute in CI workflows
+```
+
+### Reporting
+
+```bash
+make generate-reports        # Regenerate test infrastructure reports
+```
+
+### Help
+
+```bash
+make help                    # Full command reference (all 124 targets)
+make help-common             # Common commands (recommended for Day-1 developers)
+```
+
+---
+
+## Command Naming Conventions
+
+Commands follow consistent naming patterns for easy discovery:
+
+| Pattern | Meaning | Examples |
+|---------|---------|----------|
+| `test-*` | Testing commands | `test-unit`, `test-integration` |
+| `test-*-ci` | CI-mode tests (with coverage) | `test-property-ci`, `test-contract-ci` |
+| `validate-*` | Validation commands | `validate-helm`, `validate-openapi` |
+| `docs-*` | Documentation commands | `docs-serve`, `docs-validate` |
+| `setup-*` | Infrastructure setup | `setup-openfga`, `setup-keycloak` |
+| `deploy-*` | Deployment commands | `deploy-dev`, `deploy-production` |
+| `deploy-rollback-*` | Rollback commands | `deploy-rollback-dev` |
+| `lint-*` | Linting & formatting | `lint-check`, `lint-fix` |
+| `logs-*` | Log viewing | `logs-agent`, `logs-follow` |
+| `db-*` | Database operations | `db-shell`, `db-backup` |
+| `health-check-*` | Health checks | `health-check-fast` |
+
+---
+
+## Frequently Asked Questions
+
+### Which test command should I use?
+
+**For rapid iteration**: `make test-dev` (1-2 min, fail-fast, parallel)
+**For comprehensive testing**: `make test` (3-5 min, coverage, parallel)
+**Before creating PR**: `make test-all-quality` (quality gates)
+**Matching CI exactly**: `make test-ci` (8-12 min, XML coverage)
+
+### Which validation command should I use?
+
+**Before commit**: `make validate-commit` (<30s, Tier 1)
+**Before push**: `make validate-push` (3-5 min, Tier 2) - *auto-runs on git push*
+**Before PR**: `make validate-full` (12-15 min, Tier 3)
+
+See [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) for complete details.
+
+### How do I run just one test file?
+
+```bash
+# Use pytest directly
+uv run pytest tests/path/to/test_file.py -xvs
+
+# Or use Makefile with specific markers
+make test-unit PYTEST_ARGS="tests/path/to/test_file.py"
+```
+
+### How do I skip slow tests?
+
+```bash
+# Skip tests marked as slow
+uv run pytest -m "not slow" tests/
+
+# Use fast shortcuts
+make test-fast-core  # Only fast tests (<5s each)
+```
+
+### How do I run tests in parallel?
+
+```bash
+# Most test targets run in parallel by default using pytest-xdist
+make test           # Parallel by default
+make test-dev       # Parallel with fail-fast
+make test-parallel  # Explicit parallel mode
+
+# Control parallelism
+uv run pytest -n 4 tests/  # Use 4 workers
+uv run pytest -n auto tests/  # Auto-detect CPU count
+```
+
+### How do I generate coverage reports?
+
+```bash
+# HTML report (most useful for local development)
+make test-coverage
+
+# Terminal report (quick overview)
+make test-coverage-terminal
+
+# XML report (for CI/CD tools)
+make test-coverage-xml
+
+# Open HTML report in browser
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+### How do I debug failing tests?
+
+```bash
+# Run with pdb breakpoints
+make test-debug
+
+# Or use pytest directly
+uv run pytest tests/path/to/test.py -xvs --pdb
+
+# Run only failed tests
+make test-failed
+
+# Run in watch mode (re-run on changes)
+make test-watch
+```
+
+### How do I validate documentation?
+
+```bash
+# Primary validator (comprehensive, recommended)
+make docs-validate-mintlify
+
+# All validators
+make docs-validate
+
+# Serve locally to preview
+make docs-serve
+# Then open http://localhost:3000
+```
+
+### How do I clean up after tests?
+
+```bash
+# Stop all services and clean caches
+make clean
+
+# Deep clean including virtual environment
+make clean-all
+
+# Clean test infrastructure only
+make test-infra-down
+```
+
+---
+
+## Performance Tips
+
+### Fast Iteration Workflow
+
+```bash
+# 1. Make code changes
+# 2. Run fast tests
+make test-dev  # 1-2 min
+
+# 3. If tests pass, run comprehensive validation
+make validate-push  # 3-5 min
+
+# 4. Commit and push
+git commit -m "feat: your change"
+git push  # Pre-push hooks auto-run (3-5 min)
+```
+
+### Incremental Testing
+
+```bash
+# Run only changed tests
+make test-coverage-changed  # 80-90% faster
+
+# Run only new tests
+make test-new  # Only tests added recently
+```
+
+### Parallel Execution
+
+```bash
+# Most targets support parallel execution
+make test -j4              # Run with 4 jobs
+make lint-check -j4        # Parallel linting
+make clean -j4             # Parallel cleanup
+```
+
+---
+
+## Troubleshooting
+
+### "Command not found: make"
+
+Install `make` for your system:
+```bash
+# Ubuntu/Debian
+sudo apt-get install build-essential
+
+# macOS (via Homebrew)
+brew install make
+
+# Fedora/RHEL
+sudo dnf install make
+```
+
+### "uv: command not found"
+
+Install `uv` (the package manager):
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### "Pre-commit hooks failed"
+
+Run hooks manually to see details:
+```bash
+pre-commit run --all-files --verbose
+```
+
+### "Tests hanging or timing out"
+
+Check for async mock issues:
+```bash
+# Run with timeout
+uv run pytest tests/ --timeout=30
+
+# Check for AsyncMock configuration issues
+python scripts/check_async_mock_configuration.py
+```
+
+### "Coverage report not generated"
+
+Ensure coverage data exists:
+```bash
+# Check for .coverage file
+ls -la .coverage
+
+# Run tests with coverage
+make test-coverage
+
+# Generate report from existing data
+uv run coverage html
+```
+
+---
+
+## Related Documentation
+
+- **Validation Strategy**: [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) - Complete guide to tiered validation
+- **Testing Guide**: `tests/README.md` - Test organization and patterns
+- **Pre-commit Guide**: `.pre-commit-config.yaml` - Hook configuration
+- **GitHub Actions**: `.github/workflows/` - CI/CD workflows
+- **TDD Standards**: `/home/vishnu/.claude/CLAUDE.md` - Global TDD requirements
+
+---
+
+## Contributing
+
+When adding new Makefile targets:
+
+1. **Follow naming conventions** - Use consistent prefixes (`test-`, `validate-`, `docs-`, etc.)
+2. **Add help text** - Use `##` comment after target name for `make help`
+3. **Test thoroughly** - Ensure target works in clean environment
+4. **Update this document** - Add new target to appropriate category
+5. **Consider deprecation** - Use deprecation warnings for replaced targets
+
+Example:
+```makefile
+my-new-target:  ## Brief description of what this target does
+	@echo "Running my new target..."
+	# Implementation here
+```
+
+---
+
+**Last Updated**: 2025-11-16 (CI/CD Optimization - Phase 4 & 5)
+**Total Commands**: 124 targets
+**Version**: 2.0.0
+**Status**: Active

@@ -1,0 +1,801 @@
+# GitHub Actions Workflows Reference
+
+> **TL;DR**: This project has **31 GitHub Actions workflows** organized into 9 categories. The main CI pipeline is `ci.yaml` which orchestrates testing, building, and deployment.
+
+## Overview
+
+This document provides a comprehensive reference for all GitHub Actions workflows in this project. Workflows are organized by category and include trigger conditions, dependencies, and purposes.
+
+## Quick Reference
+
+| Workflow | Trigger | Duration | Purpose |
+|----------|---------|----------|---------|
+| **ci.yaml** | push, PR | 12-35 min | **MAIN** - Tests, builds, deploys |
+| **quality-tests.yaml** | push, PR, weekly | 15-25 min | Property, contract, regression tests |
+| **e2e-tests.yaml** | push, PR, weekly | 20-30 min | End-to-end user journey tests |
+| **deployment-validation.yml** | PR (deploy files) | 5-8 min | Helm, Kustomize, NetworkPolicy validation |
+
+---
+
+## Workflow Categories
+
+1. [Core CI/CD](#core-cicd-1-workflow) - Main build and deployment pipeline
+2. [Quality & Testing](#quality--testing-3-workflows) - Advanced testing workflows
+3. [Security & Compliance](#security--compliance-4-workflows) - Security scanning and compliance
+4. [Deployment](#deployment-5-workflows) - Deployment and validation
+5. [Documentation](#documentation-2-workflows) - Doc validation and link checking
+6. [Monitoring & Observability](#monitoring--observability-3-workflows) - Metrics, alerts, health
+7. [Maintenance & Automation](#maintenance--automation-9-workflows) - Automated maintenance tasks
+8. [Infrastructure](#infrastructure-3-workflows) - Terraform, K8s validation
+9. [Build & Hygiene](#build--hygiene-1-workflow) - Build quality checks
+
+---
+
+## Core CI/CD (1 workflow)
+
+### ci.yaml - Main CI/CD Pipeline
+
+**Location**: `.github/workflows/ci.yaml`
+
+**Purpose**: Main orchestrator for testing, building, and deploying the application
+
+**Triggers**:
+- `push` to main, develop branches
+- `pull_request` to any branch
+- `release` published
+- `workflow_dispatch` (manual)
+
+**Jobs** (12 jobs):
+1. **validate-workflows** - Workflow YAML validation with actionlint
+2. **validate-local-ci-parity** - Local/CI parity validation
+3. **xdist-enforcement** - pytest-xdist isolation enforcement
+4. **test** - Unit tests (matrix: Python 3.10, 3.11, 3.12)
+5. **coverage-merge** - Merge coverage reports from matrix
+6. **pre-commit** - Pre-commit hooks enforcement
+7. **push-stage-validators** - Comprehensive pre-push validators
+8. **docker-build** - Build Docker images (matrix: base, full, test)
+9. **docker-compose-smoke-test** - Docker Compose validation (matrix: main, dev, test)
+10. **docker-multiplatform** - Multi-platform builds (matrix: amd64, arm64)
+11. **docker-manifest** - Multi-arch manifest creation
+12. **deploy-dev** - Development deployment (conditional on push to main)
+
+**Duration**: 12-35 minutes (optimized from 35+ min)
+
+**Dependencies**:
+- test → docker-build → deploy-dev
+- coverage-merge depends on test
+- docker-manifest depends on docker-multiplatform
+
+**Caching**:
+- GitHub Actions cache for uv dependencies
+- Docker layer caching for images
+
+**Optimizations**:
+- Parallel matrix builds (3 Python versions)
+- Parallel Docker image builds (3 variants)
+- Parallel Docker Compose tests (3 configs)
+- pytest-xdist for parallel test execution
+
+**Key Features**:
+- Matches pre-push hooks exactly (CI parity enforcement)
+- Comprehensive validation before deployment
+- Multi-platform Docker support (amd64, arm64)
+- Automated development deployment on main branch
+
+---
+
+## Quality & Testing (3 workflows)
+
+### quality-tests.yaml - Advanced Testing
+
+**Location**: `.github/workflows/quality-tests.yaml`
+
+**Purpose**: Run property-based, contract, regression, and mutation tests
+
+**Triggers**:
+- `push` to main, develop
+- `pull_request`
+- `schedule` - Weekly on Sundays at midnight UTC
+- `workflow_dispatch` (manual)
+
+**Jobs** (6 jobs):
+1. **pre-commit-validation** - Pre-commit hook config validation
+2. **property-tests** - Hypothesis property-based tests (100 examples in CI)
+3. **contract-tests** - MCP protocol compliance tests
+4. **regression-tests** - Performance regression (matrix: 4 splits for parallelism)
+5. **mutation-tests** - Test effectiveness validation (weekly schedule only, too slow for PRs)
+6. **benchmark-tests** - Performance benchmarking with trend tracking
+7. **quality-summary** - Summary of all quality test results
+
+**Duration**: 15-25 minutes
+
+**Optimization**: Uses pytest-split for 4x parallelism on regression tests
+
+---
+
+### e2e-tests.yaml - End-to-End Testing
+
+**Location**: `.github/workflows/e2e-tests.yaml`
+
+**Purpose**: Full user journey testing with isolated test infrastructure
+
+**Triggers**:
+- `push` to main, develop
+- `pull_request`
+- `schedule` - Weekly on Mondays at 2 AM UTC
+- `workflow_dispatch` (manual)
+
+**Jobs** (1 job):
+1. **e2e-tests** - End-to-end tests with Docker Compose test environment
+
+**Infrastructure**: docker-compose.test.yml (offset ports 9000+)
+- PostgreSQL: 9432
+- Redis: 9379/9380
+- OpenFGA: 9080
+- Keycloak: 9082
+- Qdrant: 9333
+
+**Health Check**: Waits up to 10 minutes for all services
+
+**Duration**: 20-30 minutes
+
+**Timeout**: 30 minutes
+
+---
+
+### optional-deps-test.yaml - Optional Dependency Testing
+
+**Location**: `.github/workflows/optional-deps-test.yaml`
+
+**Purpose**: Test with minimal vs full dependency sets
+
+**Triggers**:
+- `push` to main
+- `pull_request` affecting pyproject.toml
+- `workflow_dispatch` (manual)
+
+**Jobs**: Test core functionality with different dependency configurations
+
+---
+
+## Security & Compliance (4 workflows)
+
+### security-scan.yaml - Security Scanning
+
+**Location**: `.github/workflows/security-scan.yaml`
+
+**Purpose**: Comprehensive security scanning with multiple tools
+
+**Triggers**:
+- `push` to main, develop
+- `pull_request`
+- `schedule` - Daily at 3 AM UTC
+- `workflow_dispatch` (manual)
+
+**Scanners**:
+- **Trivy** - Vulnerability scanning (containers, code, configs)
+- **Semgrep** - Static application security testing (SAST)
+- **Dependency scanning** - Check for vulnerable dependencies
+- **Gitleaks** - Secret detection
+
+**Severity**: Reports HIGH and CRITICAL vulnerabilities
+
+---
+
+### security-validation.yml - Security Configuration Validation
+
+**Location**: `.github/workflows/security-validation.yml`
+
+**Purpose**: Validate security configurations
+
+**Triggers**:
+- `pull_request` affecting security configs
+
+**Validations**:
+- CORS configuration
+- Authentication settings
+- Authorization policies
+
+---
+
+### gcp-compliance-scan.yaml - GCP Compliance
+
+**Location**: `.github/workflows/gcp-compliance-scan.yaml`
+
+**Purpose**: GCP best practices and compliance checking
+
+**Triggers**:
+- `push` affecting GCP/K8s configs
+- `schedule` - Weekly
+
+---
+
+### gcp-drift-detection.yaml - GCP Drift Detection
+
+**Location**: `.github/workflows/gcp-drift-detection.yaml`
+
+**Purpose**: Detect configuration drift in GCP resources
+
+**Triggers**:
+- `schedule` - Daily
+- `workflow_dispatch` (manual)
+
+---
+
+## Deployment (5 workflows)
+
+### deployment-validation.yml - Deployment Config Validation
+
+**Location**: `.github/workflows/deployment-validation.yml`
+
+**Purpose**: Validate Helm, Kustomize, and Kubernetes configurations
+
+**Triggers**:
+- `pull_request` affecting deployment files
+- `push` to main affecting deployment files
+
+**Jobs** (4 jobs):
+1. **validate-helm** - Helm chart validation (lint, templates, unit tests)
+2. **validate-kustomize** - Kustomize build validation (all overlays)
+3. **validate-network-policies** - NetworkPolicy port validation
+4. **validate-service-accounts** - ServiceAccount RBAC validation
+
+**Duration**: 5-8 minutes
+
+**Codex Findings Integration**: Prevents P0 blockers (#1 Helm lint, #2 Kustomize, #3 Placeholders)
+
+---
+
+### deploy-staging-gke.yaml - Staging Deployment
+
+**Location**: `.github/workflows/deploy-staging-gke.yaml`
+
+**Purpose**: Deploy to GKE staging environment
+
+**Triggers**:
+- `push` to develop branch
+- `workflow_dispatch` (manual)
+
+**Steps**:
+1. GKE authentication with Workload Identity
+2. Helm deployment with staging values
+3. Smoke tests post-deployment
+
+---
+
+### deploy-production-gke.yaml - Production Deployment
+
+**Location**: `.github/workflows/deploy-production-gke.yaml`
+
+**Purpose**: Deploy to GKE production environment
+
+**Triggers**:
+- `release` published
+- `workflow_dispatch` (manual, with approval)
+
+**Steps**:
+1. Manual approval required
+2. GKE authentication
+3. Helm deployment with production values
+4. Comprehensive smoke tests
+5. Rollback on failure
+
+---
+
+### validate-deployments.yaml - Deployment Validation
+
+**Location**: `.github/workflows/validate-deployments.yaml`
+
+**Purpose**: Validate all deployment configurations
+
+**Triggers**:
+- `pull_request` affecting deployments/
+- `push` to main
+
+---
+
+### validate-kubernetes.yaml - Kubernetes Validation
+
+**Location**: `.github/workflows/validate-kubernetes.yaml`
+
+**Purpose**: Validate Kubernetes manifests
+
+**Triggers**:
+- `pull_request` affecting K8s files
+- `push` to main
+
+---
+
+## Documentation (2 workflows)
+
+### docs-validation.yaml - Documentation Validation
+
+**Location**: `.github/workflows/docs-validation.yaml`
+
+**Purpose**: Validate Mintlify documentation
+
+**Triggers**:
+- `pull_request` affecting docs/
+- `push` to main affecting docs/
+
+**Validations**:
+- MDX syntax validation
+- Frontmatter completeness
+- Internal link checking
+- Navigation consistency
+- Image reference validation
+
+**Recommendation**: Consider consolidating with link-checker.yaml
+
+---
+
+### link-checker.yaml - Link Validation
+
+**Location**: `.github/workflows/link-checker.yaml`
+
+**Purpose**: Check for broken links in documentation
+
+**Triggers**:
+- `schedule` - Weekly on Sundays
+- `workflow_dispatch` (manual)
+
+**Scope**: Checks all .md and .mdx files
+
+**Recommendation**: Consider consolidating with docs-validation.yaml
+
+---
+
+## Monitoring & Observability (3 workflows)
+
+### observability-alerts.yaml - Observability Alerting
+
+**Location**: `.github/workflows/observability-alerts.yaml`
+
+**Purpose**: Monitor and alert on observability metrics
+
+**Triggers**:
+- `schedule` - Hourly
+- `workflow_dispatch` (manual)
+
+---
+
+### dora-metrics.yaml - DORA Metrics Tracking
+
+**Location**: `.github/workflows/dora-metrics.yaml`
+
+**Purpose**: Track DevOps Research and Assessment (DORA) metrics
+
+**Triggers**:
+- `push` to main
+- `pull_request` merged
+- `deployment` completed
+
+**Metrics**:
+- Deployment frequency
+- Lead time for changes
+- Mean time to recovery (MTTR)
+- Change failure rate
+
+---
+
+### workflow-health-dashboard.yaml - Workflow Health
+
+**Location**: `.github/workflows/workflow-health-dashboard.yaml`
+
+**Purpose**: Monitor workflow success rates and durations
+
+**Triggers**:
+- `schedule` - Daily
+- `workflow_dispatch` (manual)
+
+---
+
+## Maintenance & Automation (9 workflows)
+
+### dependabot-automerge.yaml - Auto-merge Dependabot PRs
+
+**Location**: `.github/workflows/dependabot-automerge.yaml`
+
+**Purpose**: Automatically merge Dependabot PRs after CI passes
+
+**Triggers**:
+- `pull_request` from Dependabot
+
+**Conditions**:
+- All CI checks pass
+- Only patch and minor version bumps
+- Not major version bumps (requires manual review)
+
+---
+
+### stale.yaml - Stale Issue Management
+
+**Location**: `.github/workflows/stale.yaml`
+
+**Purpose**: Mark and close stale issues and PRs
+
+**Triggers**:
+- `schedule` - Daily
+
+**Configuration**:
+- Stale after: 60 days of inactivity
+- Close after: 7 days of being marked stale
+
+---
+
+### track-skipped-tests.yaml - Skipped Test Tracking
+
+**Location**: `.github/workflows/track-skipped-tests.yaml`
+
+**Purpose**: Track and report skipped/xfail tests
+
+**Triggers**:
+- `push` to main
+- `schedule` - Weekly
+
+**Purpose**: Ensure skipped tests don't get forgotten
+
+---
+
+### coverage-trend.yaml - Coverage Trend Analysis
+
+**Location**: `.github/workflows/coverage-trend.yaml`
+
+**Purpose**: Track test coverage trends over time
+
+**Triggers**:
+- `push` to main
+- `pull_request`
+
+**Storage**: Stores coverage data for trend analysis
+
+---
+
+### performance-regression.yaml - Performance Regression Detection
+
+**Location**: `.github/workflows/performance-regression.yaml`
+
+**Purpose**: Detect performance regressions
+
+**Triggers**:
+- `push` to main
+- `pull_request`
+
+**Benchmarks**:
+- API response times
+- Database query performance
+- Build times
+
+---
+
+### bump-deployment-versions.yaml - Version Bumping
+
+**Location**: `.github/workflows/bump-deployment-versions.yaml`
+
+**Purpose**: Automatically update deployment version numbers
+
+**Triggers**:
+- `release` published
+- `workflow_dispatch` (manual)
+
+---
+
+### weekly-reports.yaml - Weekly Reporting
+
+**Location**: `.github/workflows/weekly-reports.yaml`
+
+**Purpose**: Generate weekly project health reports
+
+**Triggers**:
+- `schedule` - Weekly on Sundays at 9 AM UTC
+
+**Reports**:
+- Test coverage trends
+- Deployment frequency
+- Issue/PR velocity
+- Security scan results
+
+---
+
+### release.yaml - Release Automation
+
+**Location**: `.github/workflows/release.yaml`
+
+**Purpose**: Automated release process
+
+**Triggers**:
+- `push` tag matching `v*`
+- `workflow_dispatch` (manual)
+
+**Steps**:
+1. Generate changelog
+2. Create GitHub release
+3. Build and publish Docker images
+4. Deploy to production (if configured)
+
+---
+
+### cost-tracking.yaml - Cost Monitoring
+
+**Location**: `.github/workflows/cost-tracking.yaml`
+
+**Purpose**: Track and report GCP/AWS costs
+
+**Triggers**:
+- `schedule` - Daily
+
+---
+
+## Infrastructure (3 workflows)
+
+### terraform-validate.yaml - Terraform Validation
+
+**Location**: `.github/workflows/terraform-validate.yaml`
+
+**Purpose**: Validate Terraform configurations
+
+**Triggers**:
+- `pull_request` affecting *.tf files
+- `push` to main affecting *.tf files
+
+**Validations**:
+- `terraform fmt` - Format checking
+- `terraform validate` - Syntax validation
+- `tflint` - Best practices linting
+
+---
+
+### validate-k8s-configs.yml - K8s Config Validation
+
+**Location**: `.github/workflows/validate-k8s-configs.yml`
+
+**Purpose**: Validate Kubernetes configurations
+
+**Triggers**:
+- `pull_request` affecting K8s files
+
+**Validations**:
+- kubeconform schema validation
+- Resource limits check
+- Security context validation
+
+---
+
+### shell-tests.yml - Shell Script Testing
+
+**Location**: `.github/workflows/shell-tests.yml`
+
+**Purpose**: Test shell scripts with bats
+
+**Triggers**:
+- `pull_request` affecting *.sh files
+- `push` to main
+
+**Tools**:
+- bats (Bash Automated Testing System)
+- shellcheck (already in pre-commit)
+
+---
+
+## Build & Hygiene (1 workflow)
+
+### build-hygiene.yaml - Build Quality Checks
+
+**Location**: `.github/workflows/build-hygiene.yaml`
+
+**Purpose**: Enforce build quality standards
+
+**Triggers**:
+- `push`
+- `pull_request`
+
+**Checks**:
+- No TODO/FIXME in production code (warnings only)
+- No console.log in production code
+- No commented-out code blocks
+- Consistent formatting
+
+---
+
+## Workflow Dependency Graph
+
+See [WORKFLOW_DIAGRAM.mdx](./WORKFLOW_DIAGRAM.mdx) for a visual Mermaid diagram showing workflow dependencies and execution order.
+
+---
+
+## Workflow Patterns
+
+### Reusable Workflows
+
+**Location**: `.github/workflows/reusable/` (planned)
+
+**Purpose**: Extract common patterns into reusable workflows
+
+**Current Candidates for Extraction**:
+1. **setup-python-deps** - Python + uv setup (already a composite action)
+2. **docker-build-and-push** - Docker build pattern
+3. **deploy-to-gke** - GKE deployment pattern
+4. **run-tests-with-coverage** - Test execution pattern
+
+### Composite Actions
+
+**Location**: `.github/actions/`
+
+**Existing Actions**:
+1. **setup-python-deps** - Standardized Python + uv setup
+2. **retry-step** - Retry logic with exponential backoff
+
+---
+
+## Consolidation Opportunities
+
+### High Priority
+
+**1. Documentation Workflows (2 → 1)**
+- Merge `docs-validation.yaml` + `link-checker.yaml` → `docs.yaml`
+- Both validate documentation, just different aspects
+- Estimated savings: 1 workflow, clearer organization
+
+**2. Security Workflows (2 → 1)**
+- Merge `security-scan.yaml` + `security-validation.yml` → `security.yaml`
+- Both focus on security, different scanners
+- Estimated savings: 1 workflow
+
+### Medium Priority
+
+**3. Deployment Validation (3 → 2)**
+- Consolidate `validate-deployments.yaml`, `validate-kubernetes.yaml`, `validate-k8s-configs.yml`
+- All validate K8s/deployment configs
+- Keep `deployment-validation.yml` separate (runs on PR)
+- Estimated savings: 1-2 workflows
+
+### Low Priority
+
+**4. Smoke Tests**
+- Currently embedded in various workflows
+- Could be extracted to `smoke-tests.yaml` (already exists)
+
+---
+
+## Trigger Patterns
+
+### Push to Main/Develop
+- ci.yaml (main pipeline)
+- quality-tests.yaml
+- e2e-tests.yaml (weekly)
+- security-scan.yaml
+- coverage-trend.yaml
+- performance-regression.yaml
+
+### Pull Request
+- ci.yaml
+- quality-tests.yaml
+- deployment-validation.yml (if deployment files changed)
+- security-scan.yaml
+- All validate-*.yaml workflows (if relevant files changed)
+
+### Scheduled (Recurring)
+- **Daily**: security-scan (3 AM), gcp-drift-detection, workflow-health-dashboard, cost-tracking
+- **Weekly**: quality-tests (Sunday 12 AM), e2e-tests (Monday 2 AM), gcp-compliance-scan, track-skipped-tests, weekly-reports (Sunday 9 AM)
+- **Hourly**: observability-alerts
+
+### Manual (workflow_dispatch)
+- All workflows support manual triggering
+- Useful for testing and debugging
+
+---
+
+## Performance Characteristics
+
+| Workflow | Duration | Frequency | Cost Impact |
+|----------|----------|-----------|-------------|
+| ci.yaml | 12-35 min | Every push/PR | HIGH |
+| quality-tests.yaml | 15-25 min | Push + Weekly | MEDIUM |
+| e2e-tests.yaml | 20-30 min | Push + Weekly | MEDIUM |
+| security-scan.yaml | 8-12 min | Daily + Push | MEDIUM |
+| deployment-validation.yml | 5-8 min | PR (deploy files) | LOW |
+| All others | 2-10 min | Varies | LOW |
+
+**Total CI/CD Minutes per Month**: ~15,000-20,000 minutes (estimated)
+
+---
+
+## Best Practices
+
+### When to Use Which Workflow
+
+**For Development**:
+- Local testing: `make test-dev` (1-2 min)
+- Before push: `make validate-push` (3-5 min) - auto-runs
+- After push: ci.yaml runs automatically
+
+**For PRs**:
+- ci.yaml runs on all PRs
+- deployment-validation.yml runs if deployment files changed
+- security-scan.yaml runs on all PRs
+
+**For Releases**:
+- release.yaml creates GitHub release
+- deploy-production-gke.yaml deploys to production
+- Manual approval required for production
+
+### Workflow Debugging
+
+```bash
+# Test workflow locally with act
+make act-dry-run  # See what would run
+
+# Run specific workflow
+act push --workflows .github/workflows/ci.yaml
+
+# Run specific job
+act push --job test
+```
+
+### Caching Strategy
+
+**Python Dependencies**:
+- Cached by: `actions/cache@v4` with key based on `uv.lock`
+- Saves: 1-2 minutes per workflow run
+- Location: `~/.cache/uv`
+
+**Docker Layers**:
+- Cached by: Docker Buildx layer caching
+- Saves: 5-10 minutes per build
+- Location: GitHub Actions cache
+
+---
+
+## Troubleshooting
+
+### "Workflow failed but no logs"
+
+Check GitHub Actions UI for detailed logs. Common issues:
+- Secrets not configured
+- Permissions insufficient
+- Cache corruption
+
+### "Workflow taking too long"
+
+Check for:
+- Cache misses (slow dependency installation)
+- Sequential vs parallel execution
+- Unnecessary retries
+
+### "Workflow not triggering"
+
+Check:
+- Trigger conditions (paths, branches)
+- Workflow file syntax (use actionlint)
+- Repository settings (Actions enabled?)
+
+---
+
+## Related Documentation
+
+- **Validation Strategy**: [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) - Tiered validation approach
+- **Commands Reference**: [COMMANDS.mdx](./COMMANDS.mdx) - All Makefile targets
+- **Workflow Diagram**: [WORKFLOW_DIAGRAM.mdx](./WORKFLOW_DIAGRAM.mdx) - Visual workflow dependencies
+- **CI Configuration**: `.github/workflows/` - Workflow source files
+- **Composite Actions**: `.github/actions/` - Reusable action components
+
+---
+
+## Contributing
+
+When adding new workflows:
+
+1. **Choose appropriate trigger** - Don't run on every push if not needed
+2. **Add to appropriate category** - Follow existing patterns
+3. **Use composite actions** - Reuse setup-python-deps, retry-step
+4. **Add caching** - Cache dependencies and build artifacts
+5. **Set timeout** - Prevent runaway workflows
+6. **Test locally** - Use `act` to test before committing
+7. **Update this documentation** - Add to appropriate category
+
+---
+
+**Last Updated**: 2025-11-16 (CI/CD Optimization - Phase 5)
+**Total Workflows**: 31 workflows
+**Version**: 1.0.0
+**Status**: Active
