@@ -395,6 +395,33 @@ Multi-layered testing approach ensuring production quality:
 **Coverage Report**: `make test-coverage` (opens htmlcov/index.html)
 **Complete Details**: See [Testing Documentation](docs/advanced/testing.mdx) for metrics, strategies, and CI/CD integration
 
+### CI/CD Test Execution
+
+Tests run in parallel across multiple GitHub Actions workflows for comprehensive quality assurance:
+
+| **Workflow** | **Tests** | **Duration** | **Trigger** | **Status Check** |
+|--------------|-----------|--------------|-------------|------------------|
+| **[ci.yaml](.github/workflows/ci.yaml)** | Unit tests (`pytest -m "unit and not llm"`) | ~5-10 min | Every PR, push to main/develop | ✅ Required |
+| **[integration-tests.yaml](.github/workflows/integration-tests.yaml)** | Integration tests (`pytest -m integration`) | ~8-12 min | Every PR, push to main/develop | ✅ Required |
+| **[e2e-tests.yaml](.github/workflows/e2e-tests.yaml)** | E2E tests (`pytest -m e2e`) + API tests | ~15-20 min | Every PR, push to main/develop, weekly | ✅ Required |
+| **[quality-tests.yaml](.github/workflows/quality-tests.yaml)** | Property, contract, performance tests | ~10-15 min | Every PR, push to main/develop | ✅ Required |
+
+**Infrastructure**:
+- **ci.yaml**: Fast unit tests with mocked dependencies
+- **integration-tests.yaml**: Full Docker stack with **4x parallelization** via pytest-split (PostgreSQL:9432, Redis:9379, OpenFGA:9080, Keycloak:9082, Qdrant:9333)
+- **e2e-tests.yaml**: Full Docker stack on offset ports for complete user journey validation
+- **quality-tests.yaml**: Property-based testing (Hypothesis), contract validation (MCP protocol), performance regression tracking
+
+**Parallelization**:
+- **integration-tests.yaml** uses pytest-split with matrix strategy (4 groups) for **4x faster execution**
+- Each group runs independently for maximum CI efficiency
+
+**Pre-push Hooks**:
+- **Fast mode** (default): Optimized unit tests (~2-3 min) via pytest-testmon
+- **Comprehensive mode**: `make validate-pre-push` runs all test suites including integration tests (~8-12 min)
+
+**Best Practice**: All workflows run in parallel for fast feedback. Integration tests now have **full CI visibility** with parallelization, catching infrastructure issues before merge.
+
 ## Feature Flags
 
 Control features dynamically without code changes:

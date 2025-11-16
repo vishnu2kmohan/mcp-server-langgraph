@@ -42,6 +42,9 @@ from langgraph.graph import StateGraph
 from mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
 from mcp_server_langgraph.patterns.swarm import Swarm, SwarmState
 
+# Module-level marker: Regression prevention tests (unit tests)
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="langgraph_return_types")
 class TestLangGraphReturnTypes:

@@ -24,6 +24,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Module-level marker: All tests in this file are unit tests
+pytestmark = pytest.mark.unit
+
 
 def test_jwt_secret_constant_exists():
     """Verify TEST_JWT_SECRET constant exists in tests/constants.py."""
