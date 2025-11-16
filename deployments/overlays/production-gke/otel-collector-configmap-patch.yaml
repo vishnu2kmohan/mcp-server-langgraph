@@ -69,7 +69,6 @@ data:
         log:
           endpoint: logging.googleapis.com:443
         # Workload Identity handles authentication automatically
-        use_insecure: false
 
       # Cloud Logging
       # UPDATE THIS: Replace vishnu-production-project with your actual GCP project ID

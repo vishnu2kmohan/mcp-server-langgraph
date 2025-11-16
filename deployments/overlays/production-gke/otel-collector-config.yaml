@@ -59,7 +59,6 @@ exporters:
     log:
       endpoint: logging.googleapis.com:443
     # Workload Identity handles authentication automatically
-    use_insecure: false
 
   # Cloud Logging
   googlecloud/logs:
