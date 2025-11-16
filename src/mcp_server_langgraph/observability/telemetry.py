@@ -266,6 +266,13 @@ class ObservabilityConfig:
             unit="1",
         )
 
+        # Code execution metrics
+        self.code_executions = self.meter.create_counter(
+            name="code.executions",
+            description="Total code execution requests",
+            unit="1",
+        )
+
     def _setup_logging(self, enable_file_logging: bool = False) -> None:
         """
         Configure structured logging with OpenTelemetry and optional log rotation.

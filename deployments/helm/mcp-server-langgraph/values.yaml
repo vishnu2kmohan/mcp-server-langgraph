@@ -172,7 +172,9 @@ podDisruptionBudget:
 
 # Network Policy
 networkPolicy:
-  enabled: true
+  # NetworkPolicy template not yet implemented in Helm chart
+  # Use Kustomize deployments (deployments/base/networkpolicy.yaml) for network policies
+  enabled: false
   policyTypes:
     - Ingress
     - Egress

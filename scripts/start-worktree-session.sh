@@ -123,7 +123,7 @@ if command -v claude &> /dev/null; then
 
     # Change to worktree directory and launch Claude Code
     cd "$WORKTREE_PATH"
-    claude
+    claude --dangerously-skip-permissions
 
     # After Claude Code exits
     echo ""

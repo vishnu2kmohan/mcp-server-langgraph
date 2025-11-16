@@ -18,7 +18,7 @@ from typing import Set
 
 import pytest
 
-# Use built-in tomllib (Python 3.11+) or fallback to tomli
+# Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
 try:
     import tomllib
 except ImportError:

@@ -142,7 +142,7 @@ Run pre-sprint checks:
 make test-unit
 
 # 2. Check code quality
-make lint
+make lint-check
 
 # 3. Verify infrastructure (if needed)
 make health-check

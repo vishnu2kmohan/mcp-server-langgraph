@@ -15,6 +15,7 @@ Tests cover:
 """
 
 import gc
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -464,20 +465,32 @@ def test_generate_formats_code_with_black(generator, simple_workflow):
             consecutive_blanks = 0
 
 
+@pytest.mark.skipif(
+    not hasattr(sys.modules.get("mcp_server_langgraph.builder.codegen.generator", None), "black"),
+    reason="Black not installed - cannot test black formatting error path",
+)
 def test_generate_with_black_formatting_error_returns_unformatted_code(generator, simple_workflow):
     """Test generate() returns unformatted code if Black formatting fails."""
+    # Import black module to get reference for mocking
+    from mcp_server_langgraph.builder.codegen import generator as gen_module
+
     # Arrange - Mock black.format_str to raise exception
-    with patch("mcp_server_langgraph.builder.codegen.generator.black.format_str") as mock_black:
-        mock_black.side_effect = Exception("Black formatting failed")
+    with patch.object(gen_module, "BLACK_AVAILABLE", True):
+        # Get the actual black module from the generator module
+        if hasattr(gen_module, "black"):
+            with patch.object(gen_module.black, "format_str") as mock_black:
+                mock_black.side_effect = Exception("Black formatting failed")
 
-        # Act
-        code = generator.generate(simple_workflow)
+                # Act
+                code = generator.generate(simple_workflow)
 
-        # Assert
-        assert code is not None
-        assert len(code) > 0
-        # Code should still contain workflow content even if not formatted
-        assert "test_workflow" in code.lower()
+                # Assert
+                assert code is not None
+                assert len(code) > 0
+                # Code should still contain workflow content even if not formatted
+                assert "test_workflow" in code.lower()
+        else:
+            pytest.skip("Black not available in generator module")
 
 
 def test_generate_with_no_routing_functions_includes_comment(generator):

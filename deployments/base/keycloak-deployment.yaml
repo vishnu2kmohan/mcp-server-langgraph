@@ -164,10 +164,14 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: var-tmp
+          mountPath: /var/tmp
         - name: cache
           mountPath: /opt/keycloak/data/tmp
         - name: work-dir
           mountPath: /opt/keycloak/data
+        - name: lib
+          mountPath: /opt/keycloak/lib
         - name: providers
           mountPath: /opt/keycloak/providers
         - name: themes
@@ -175,9 +179,13 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
+      - name: var-tmp
+        emptyDir: {}
       - name: cache
         emptyDir: {}
       - name: work-dir
+        emptyDir: {}
+      - name: lib
         emptyDir: {}
       - name: providers
         emptyDir: {}

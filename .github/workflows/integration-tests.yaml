@@ -1,0 +1,287 @@
+name: Integration Tests
+
+# ==============================================================================
+# Integration Testing Workflow
+# ==============================================================================
+#
+# PURPOSE:
+#   Run integration tests that validate infrastructure interactions
+#   using isolated test infrastructure (docker-compose.test.yml)
+#
+# WHEN TO RUN:
+#   - On pull requests to main/develop
+#   - On push to main/develop
+#   - Manual workflow dispatch
+#
+# TEST INFRASTRUCTURE:
+#   - Isolated services on offset ports (9000+ range)
+#   - PostgreSQL (9432), Redis (9379, 9380), OpenFGA (9080), Keycloak (9082), Qdrant (9333)
+#   - Ephemeral storage (tmpfs) for speed
+#   - No conflicts with development environment
+#
+# PARALLELIZATION:
+#   - Uses pytest-split for 4x parallelization
+#   - Matrix strategy with 4 groups for faster execution
+#
+# ==============================================================================
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '**.mdx'
+      - 'adr/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ============================================================================
+  # Integration Tests with Test Infrastructure
+  # ============================================================================
+
+  integration-tests:
+    name: Integration Tests (Group ${{ matrix.split-group }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        split-group: [1, 2, 3, 4]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Cache uv binary
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/uv
+        key: uv-binary-${{ runner.os }}-0.5.0
+        restore-keys: uv-binary-${{ runner.os }}-
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        key: ${{ runner.os }}-uv-integration-${{ hashFiles('uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-integration-
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Install dependencies
+      run: |
+        # Install with dev extra for testing framework
+        # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
+        uv sync --frozen --extra dev
+        echo "✓ Dependencies installed from lockfile with dev extra"
+
+    - name: Start test infrastructure
+      run: |
+        echo "Starting test infrastructure (docker-compose.test.yml)..."
+        echo "Building fresh Docker images to ensure latest code is used..."
+        docker compose -f docker-compose.test.yml up -d --build
+
+        echo "Waiting for all services to report healthy..."
+        echo "This may take up to 10 minutes for all services to initialize on slow runners..."
+
+        # Wait for all services to be healthy (max 10 minutes = 600 seconds)
+        for i in {1..200}; do
+          HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
+          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
+
+          echo "Attempt $i/200: $HEALTHY/$TOTAL services healthy"
+
+          # Show which services are not healthy yet (for debugging)
+          if [ "$HEALTHY" -ne "$TOTAL" ]; then
+            UNHEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health != "healthy") | "\(.Service): \(.Health // "starting")"' | tr '\n' ', ' | sed 's/,$//')
+            if [ -n "$UNHEALTHY" ]; then
+              echo "  ⏳ Waiting for: $UNHEALTHY"
+            fi
+          fi
+
+          if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
+            echo "✅ All $TOTAL services are healthy!"
+            break
+          fi
+
+          if [ $i -eq 200 ]; then
+            echo "❌ Timeout waiting for services after 10 minutes. Current status:"
+            docker compose -f docker-compose.test.yml ps
+            echo ""
+            echo "Showing logs for all services:"
+            docker compose -f docker-compose.test.yml logs --tail=50
+            exit 1
+          fi
+
+          sleep 3
+        done
+
+        echo ""
+        echo "Final service status:"
+        docker compose -f docker-compose.test.yml ps
+
+    - name: Verify test infrastructure
+      run: |
+        echo "=== Verifying PostgreSQL ==="
+        docker compose -f docker-compose.test.yml exec -T postgres-test pg_isready -U postgres || {
+          echo "❌ PostgreSQL not ready"
+          docker compose -f docker-compose.test.yml logs postgres-test
+          exit 1
+        }
+        echo "✓ PostgreSQL ready"
+
+        echo ""
+        echo "=== Verifying Redis (checkpoints) ==="
+        docker compose -f docker-compose.test.yml exec -T redis-test redis-cli ping || {
+          echo "❌ Redis not ready"
+          docker compose -f docker-compose.test.yml logs redis-test
+          exit 1
+        }
+        echo "✓ Redis ready"
+
+        echo ""
+        echo "=== Verifying OpenFGA ==="
+        for i in {1..30}; do
+          if curl -sf http://localhost:9080/healthz > /dev/null 2>&1; then
+            echo "✓ OpenFGA ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ OpenFGA not ready after 30 attempts"
+            docker compose -f docker-compose.test.yml logs openfga-test
+            exit 1
+          fi
+          echo "Waiting for OpenFGA... (attempt $i/30)"
+          sleep 2
+        done
+
+        echo ""
+        echo "=== Verifying Qdrant ==="
+        for i in {1..20}; do
+          if curl -sf http://localhost:9333/healthz > /dev/null 2>&1; then
+            echo "✓ Qdrant ready"
+            break
+          fi
+          if [ $i -eq 20 ]; then
+            echo "❌ Qdrant not ready after 20 attempts"
+            docker compose -f docker-compose.test.yml logs qdrant-test
+            exit 1
+          fi
+          echo "Waiting for Qdrant... (attempt $i/20)"
+          sleep 2
+        done
+
+        echo ""
+        echo "=== All test infrastructure services verified! ==="
+
+    - name: Run Integration Tests (Group ${{ matrix.split-group }}/4)
+      run: |
+        source .venv/bin/activate
+        echo "=== Running integration tests (group ${{ matrix.split-group }}/4 with pytest-split) ==="
+        # --splits 4: Total number of groups
+        # --group $N: Which group to run (1-based indexing)
+        # -m integration: Only run integration tests
+        # -v --tb=short: Verbose with short tracebacks
+        # --cov: Generate coverage report for this split
+        TESTING=true OTEL_SDK_DISABLED=true pytest \
+          --splits 4 \
+          --group ${{ matrix.split-group }} \
+          -m integration \
+          -v --tb=short \
+          --cov=src/mcp_server_langgraph \
+          --cov-report=xml:coverage-integration-${{ matrix.split-group }}.xml
+
+    - name: Upload integration coverage artifact
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-integration-${{ matrix.split-group }}
+        path: coverage-integration-${{ matrix.split-group }}.xml
+        retention-days: 1
+
+    - name: Cleanup infrastructure
+      if: always()
+      run: |
+        echo "Stopping test infrastructure..."
+        docker compose -f docker-compose.test.yml down -v
+        echo "✓ Test infrastructure stopped and volumes removed"
+
+  # ============================================================================
+  # Merge Coverage Reports
+  # ============================================================================
+
+  merge-coverage:
+    name: Merge Integration Coverage
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+
+    - name: Install coverage tools
+      run: |
+        pip install coverage[toml]
+
+    - name: Download all coverage artifacts
+      uses: actions/download-artifact@v5
+      with:
+        pattern: coverage-integration-*
+        path: coverage-reports/
+        merge-multiple: true
+
+    - name: Combine coverage reports
+      run: |
+        echo "Combining coverage reports from all splits..."
+        coverage combine coverage-reports/coverage-integration-*.xml || echo "No coverage files to combine"
+        coverage xml -o coverage-integration-combined.xml || echo "Failed to generate combined XML"
+        coverage report || echo "Failed to generate coverage report"
+
+    - name: Upload combined coverage
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-integration-combined
+        path: coverage-integration-combined.xml
+        retention-days: 7
+
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request' && always()
+      uses: py-cov-action/python-coverage-comment-action@v3
+      with:
+        GITHUB_TOKEN: ${{ github.token }}
+        COVERAGE_DATA_BRANCH: coverage-data-integration
+        MINIMUM_GREEN: 80
+        MINIMUM_ORANGE: 70

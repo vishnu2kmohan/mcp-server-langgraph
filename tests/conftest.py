@@ -1561,6 +1561,62 @@ async def postgres_with_schema(postgres_connection_real):
     # No cleanup - schema persists for all tests in session
 
 
+@pytest.fixture
+async def db_pool_gdpr(integration_test_env):
+    """
+    PostgreSQL connection pool with GDPR schema for integration/security tests.
+
+    Creates a connection pool and initializes GDPR schema tables.
+    Used by security tests and GDPR compliance tests that need pool-based access.
+
+    OpenAI Codex Finding Fix (2025-11-16):
+    =======================================
+    This fixture replaces the Alembic-based approach in test_sql_injection_gdpr.py
+    which failed due to asyncio.run() conflicts in pytest-asyncio context.
+
+    Executes schema SQL directly using async connection pool.
+    """
+    if not integration_test_env:
+        pytest.skip("Integration test environment not available (requires Docker)")
+
+    try:
+        import asyncpg
+    except ImportError:
+        pytest.skip("asyncpg not installed")
+
+    from pathlib import Path
+
+    # Create connection pool
+    pool = await asyncpg.create_pool(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        user=os.getenv("POSTGRES_USER", "postgres"),
+        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+        database=os.getenv("POSTGRES_DB", "mcp_test"),
+        min_size=1,
+        max_size=5,
+    )
+
+    # Execute GDPR schema SQL directly
+    project_root = Path(__file__).parent.parent
+    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
+
+    if schema_file.exists():
+        schema_sql = schema_file.read_text()
+
+        async with pool.acquire() as conn:
+            try:
+                await conn.execute(schema_sql)
+            except Exception:
+                # Schema might already exist (CREATE TABLE IF NOT EXISTS makes this idempotent)
+                pass
+
+    yield pool
+
+    # Cleanup
+    await pool.close()
+
+
 @pytest.fixture(scope="session")
 def qdrant_available():
     """Check if Qdrant is available for testing."""
@@ -1675,6 +1731,50 @@ def mock_user_alice():
 def mock_user_bob():
     """Mock user bob (session-scoped for performance)"""
     return {"username": "bob", "tier": "standard", "organization": "acme", "roles": ["user"]}
+
+
+@pytest.fixture(scope="session")
+def register_mcp_test_users():
+    """
+    Register test users for MCP integration tests (session-scoped).
+
+    Creates InMemoryUserProvider with pre-registered test users that match
+    JWT tokens created by mock_jwt_token fixture. This ensures authorization
+    works in fallback mode.
+
+    Returns:
+        InMemoryUserProvider with "alice" user registered
+
+    OpenAI Codex Finding (2025-11-16):
+    ===================================
+    MCP integration tests failed with "user not found" because:
+    - mock_jwt_token creates JWT with sub="alice"
+    - InMemoryUserProvider starts empty (security requirement: CWE-798 prevention)
+    - Tests tried to add alice AFTER server creation, but timing/instance mismatch
+
+    Solution: Session-scoped fixture registers alice BEFORE any MCP tests run,
+    so all tests share the same provider instance with pre-registered users.
+
+    Usage in tests:
+        @pytest.fixture
+        async def mcp_server(register_mcp_test_users):
+            auth = AuthMiddleware(user_provider=register_mcp_test_users, ...)
+            return MCPAgentServer(auth=auth)
+    """
+    from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
+
+    # Create provider with TEST_JWT_SECRET for token verification
+    provider = InMemoryUserProvider(secret_key=TEST_JWT_SECRET)
+
+    # Register "alice" user (matches mock_jwt_token fixture sub claim)
+    provider.add_user(
+        username="alice",
+        password="test-password",
+        email="alice@example.com",
+        roles=["user", "admin"],
+    )
+
+    return provider
 
 
 @pytest.fixture

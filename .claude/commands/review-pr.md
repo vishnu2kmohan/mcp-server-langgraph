@@ -171,7 +171,7 @@ pytest -m unit --durations=20
 ```bash
 # Simulate CI locally
 make test-all-quality
-make lint
+make lint-check
 make security-check
 ```
 
@@ -191,7 +191,7 @@ pytest --cov=src --cov-report=html tests/
 open htmlcov/index.html
 
 # Run linters
-make lint
+make lint-check
 
 # Run security scans
 make security-check

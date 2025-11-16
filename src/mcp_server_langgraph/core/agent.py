@@ -259,14 +259,19 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     # Determine if this needs tools or direct response
     content = last_message.content if isinstance(last_message.content, str) else str(last_message.content)
     if any(keyword in content.lower() for keyword in ["search", "calculate", "lookup"]):
-        state["next_action"] = "use_tools"
+        next_action = "use_tools"
     else:
-        state["next_action"] = "respond"
+        next_action = "respond"
 
-    state["routing_confidence"] = 0.5  # Low confidence for fallback
-    state["reasoning"] = "Fallback keyword-based routing"
-
-    return state
+    # NOTE: Don't return "messages" key - operator.add would duplicate them!
+    # Only return fields we're modifying.
+    return {
+        "next_action": next_action,
+        "routing_confidence": 0.5,  # Low confidence for fallback
+        "reasoning": "Fallback keyword-based routing",
+        "user_id": state.get("user_id"),
+        "request_id": state.get("request_id"),
+    }
 
 
 def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> Any:  # noqa: C901
@@ -324,7 +329,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         Implements Anthropic's Just-in-Time loading strategy.
         """
         if not enable_dynamic_loading or not context_loader:
-            return state
+            # NOTE: Not modifying any state - return empty dict to avoid duplication
+            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
         last_message = state["messages"][-1]
 
@@ -362,7 +368,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                 logger.error(f"Dynamic context loading failed: {e}", exc_info=True)
                 # Continue without dynamic context
 
-        return state
+        # NOTE: We modified state["messages"] in place (line 356 inserts context).
+        # Don't return "messages" - operator.add would duplicate them!
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     async def compact_context(state: AgentState) -> AgentState:
         """
@@ -371,7 +379,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         Implements Anthropic's "Compaction" technique for long-horizon tasks.
         """
         if not enable_context_compaction:
-            return state
+            # NOTE: Not modifying any state - exclude messages to avoid duplication
+            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
         messages = state["messages"]
 
@@ -399,7 +408,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         else:
             state["compaction_applied"] = False
 
-        return state
+        # NOTE: We modified state["messages"] in place (line 388).
+        # Don't return "messages" - operator.add would duplicate them!
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     async def route_input(state: AgentState) -> AgentState:
         """
@@ -436,12 +447,20 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                 except Exception as e:
                     logger.error(f"Pydantic AI routing failed, using fallback: {e}", exc_info=True)
                     # Fallback to simple routing
-                    state = _fallback_routing(state, last_message)
+                    fallback_result = _fallback_routing(state, last_message)
+                    # Merge fallback result into state
+                    for key, value in fallback_result.items():
+                        state[key] = value
             else:
                 # Fallback routing if Pydantic AI not available
-                state = _fallback_routing(state, last_message)
+                fallback_result = _fallback_routing(state, last_message)
+                # Merge fallback result into state
+                for key, value in fallback_result.items():
+                    state[key] = value
 
-        return state
+        # NOTE: Don't return "messages" - operator.add would duplicate them!
+        # This applies to both Pydantic AI and fallback paths.
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     async def use_tools(state: AgentState) -> AgentState:
         """
@@ -690,7 +709,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         """
         if not enable_verification:
             state["next_action"] = "end"
-            return state
+            # NOTE: Don't return "messages" - operator.add would duplicate them!
+            return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
         # Get the response to verify (last message)
         response_message = state["messages"][-1]
@@ -746,7 +766,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             state["verification_passed"] = True
             state["next_action"] = "end"
 
-        return state
+        # NOTE: Don't return "messages" - operator.add would duplicate them!
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     async def refine_response(state: AgentState) -> AgentState:
         """
@@ -772,7 +793,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             extra={"attempt": state["refinement_attempts"], "feedback": feedback_preview},
         )
 
-        return state
+        # NOTE: We modified state["messages"] in place (line 786 removes last message).
+        # Don't return "messages" - operator.add would duplicate them!
+        return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
     def should_continue(state: AgentState) -> Literal["use_tools", "respond", "end"]:
         """Conditional edge function for routing"""

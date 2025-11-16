@@ -439,6 +439,7 @@ markers = [
     "staging: Staging environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
     "infrastructure: Infrastructure and deployment configuration tests",
+    "database: Database integration tests (schema setup, migrations, queries)",
     "diagnostic: Diagnostic and troubleshooting tests",
     "documentation: Documentation validation tests (code blocks, examples)",
     "precommit: Pre-commit hook validation tests",
@@ -487,9 +488,10 @@ omit = [
 [tool.coverage.report]
 # Codex Recommendation: Enforce minimum 80% coverage threshold
 # Prevents coverage regressions and ensures adequate test coverage
-# Current: 64% (adjusted from 80% - see docs-internal/COVERAGE_IMPROVEMENT_PLAN.md)
-# Target: 80%+ (tracked in GitHub issue)
-fail_under = 64
+# Current: 66% (incremental progress: +2% from 64%)
+# Target: 80%+ (tracked in GitHub issue, incremental increases per release)
+# Next increment: 68% (target: +2-5% per release)
+fail_under = 66
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

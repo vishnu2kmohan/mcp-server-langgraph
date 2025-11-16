@@ -45,7 +45,7 @@ processors:
         value: staging
         action: insert
       - key: service.version
-        value: ${SERVICE_VERSION:-unknown}
+        value: latest
         action: insert
       - key: cloud.provider
         value: gcp
@@ -76,13 +76,7 @@ exporters:
       service_resource_labels: true
     trace:
       # Cloud Trace
-    use_insecure: false
-    timeout: 12s
-    retry_on_failure:
-      enabled: true
-      initial_interval: 5s
-      max_interval: 30s
-      max_elapsed_time: 300s
+    timeout: 30s
 
   # Prometheus (for local metrics scraping)
   prometheus:

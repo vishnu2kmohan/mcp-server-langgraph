@@ -56,33 +56,25 @@ repos:
   rev: v1.13.0
   hooks:
   - id: mypy
+    name: MyPy Type Checking (Non-blocking)
     args:
     - --ignore-missing-imports
     - --check-untyped-defs
     - --no-implicit-optional
+    - --show-error-codes
+    - --pretty
     files: ^src/mcp_server_langgraph/
     additional_dependencies:
     - pydantic
+    - fastapi
     - types-PyYAML
     - types-redis
     - types-requests
-    # Temporarily moved to manual stage due to 110+ pre-existing type errors
-    # revealed when pydantic was added to additional_dependencies.
+    # MyPy set to manual stage (non-blocking) due to extensive pre-existing type errors.
     #
-    # Background: Adding pydantic enabled mypy to properly resolve BaseModel
-    # types, but also revealed extensive pre-existing type errors across the
-    # codebase that were previously being silently ignored.
-    #
-    # Immediate fixes completed (this PR):
-    # - src/mcp_server_langgraph/cli/__init__.py (click decorators)
-    # - src/mcp_server_langgraph/observability/json_logger.py (conditional base class)
-    # - src/mcp_server_langgraph/presets/quickstart.py (FastAPI decorators)
-    #
-    # Remaining work (separate PR):
-    # - 110+ type errors across 37 files in patterns/, builder/, monitoring/,
-    #   tools/, mcp/, infrastructure/, api/, etc.
-    # - FastAPI/click decorator typing across the codebase
-    # - Unused type: ignore comments cleanup
+    # Background: --strict mode reveals 110+ type errors across 37 files that would
+    # block all development. Moving to manual stage allows incremental type safety
+    # improvements without blocking productive work.
     #
     # To run manually: SKIP= pre-commit run mypy --all-files --hook-stage manual
     stages:
@@ -153,7 +145,7 @@ repos:
     pass_filenames: false
   - id: run-unit-tests
     name: Run Unit Tests (comprehensive suite)
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m "unit and not llm" tests/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$

@@ -263,7 +263,7 @@ Automatically re-runs tests when files change.
 pytest -n 4
 
 # Use all CPU cores
-pytest -n auto  # (used by make targets)
+pytest -n auto  # (used by Make targets)
 ```
 
 ### Custom Test Selection
