@@ -30,6 +30,7 @@ class SyncResult:
     docs_adrs: Set[str] = field(default_factory=set)
     missing_in_docs: Set[str] = field(default_factory=set)
     missing_in_source: Set[str] = field(default_factory=set)
+    uppercase_filenames: List[Path] = field(default_factory=list)
     stats: Dict[str, int] = field(default_factory=dict)
 
     @property
@@ -65,17 +66,23 @@ class AdrSyncValidator:
         # Find all ADRs in docs
         docs_adrs = self._find_adrs(self.docs_adr_dir, ".mdx")
 
+        # Check for uppercase filenames (should be lowercase adr-*, not ADR-*)
+        uppercase_filenames = self._find_uppercase_filenames()
+
         # Compare
         missing_in_docs = source_adrs - docs_adrs
         missing_in_source = docs_adrs - source_adrs
 
-        is_synced = len(missing_in_docs) == 0 and len(missing_in_source) == 0
+        is_synced = (
+            len(missing_in_docs) == 0 and len(missing_in_source) == 0 and len(uppercase_filenames) == 0
+        )
 
         stats = {
             "source_count": len(source_adrs),
             "docs_count": len(docs_adrs),
             "missing_in_docs": len(missing_in_docs),
             "missing_in_source": len(missing_in_source),
+            "uppercase_count": len(uppercase_filenames),
         }
 
         return SyncResult(
@@ -84,6 +91,7 @@ class AdrSyncValidator:
             docs_adrs=docs_adrs,
             missing_in_docs=missing_in_docs,
             missing_in_source=missing_in_source,
+            uppercase_filenames=uppercase_filenames,
             stats=stats,
         )
 
@@ -111,6 +119,25 @@ class AdrSyncValidator:
 
         return adrs
 
+    def _find_uppercase_filenames(self) -> List[Path]:
+        """
+        Find ADR files with uppercase naming (ADR-* instead of adr-*).
+
+        Returns:
+            List of files with incorrect uppercase naming
+        """
+        uppercase_files = []
+
+        for directory, extension in [(self.adr_dir, ".md"), (self.docs_adr_dir, ".mdx")]:
+            if not directory.exists():
+                continue
+
+            # Look for uppercase ADR-* pattern
+            for adr_file in directory.glob(f"ADR-*{extension}"):
+                uppercase_files.append(adr_file)
+
+        return uppercase_files
+
     def print_report(self, result: SyncResult) -> None:
         """Print validation report to stdout."""
         print("\n" + "=" * 80)
@@ -121,6 +148,14 @@ class AdrSyncValidator:
         print("\n📊 Statistics:")
         print(f"  ADRs in /adr: {result.stats['source_count']}")
         print(f"  ADRs in /docs/architecture: {result.stats['docs_count']}")
+
+        # Uppercase filename warnings
+        if result.uppercase_filenames:
+            print(f"\n⚠️  Uppercase filenames detected ({len(result.uppercase_filenames)}):")
+            for uppercase_file in sorted(result.uppercase_filenames):
+                lowercase_name = uppercase_file.name.replace("ADR-", "adr-")
+                print(f"    • {uppercase_file.relative_to(self.repo_root)}")
+                print(f"      Rename to: {uppercase_file.parent / lowercase_name}")
 
         # Missing ADRs
         if result.missing_in_docs:
@@ -136,16 +171,26 @@ class AdrSyncValidator:
         # Recommendations
         if not result.is_synced:
             print("\n💡 Recommendations:")
+            rec_num = 1
+            if result.uppercase_filenames:
+                print(f"  {rec_num}. Rename uppercase files to lowercase:")
+                for uppercase_file in sorted(result.uppercase_filenames):
+                    lowercase_name = uppercase_file.name.replace("ADR-", "adr-")
+                    print(f"     mv {uppercase_file.relative_to(self.repo_root)} ", end="")
+                    print(f"{uppercase_file.parent.relative_to(self.repo_root)}/{lowercase_name}")
+                rec_num += 1
             if result.missing_in_docs:
-                print("  1. Sync ADRs from /adr to /docs/architecture:")
+                print(f"  {rec_num}. Sync ADRs from /adr to /docs/architecture:")
                 for adr in sorted(result.missing_in_docs):
                     print(f"     cp adr/{adr}.md docs/architecture/{adr}.mdx")
+                rec_num += 1
             if result.missing_in_source:
-                print("  2. Review orphaned ADRs in /docs/architecture")
-                print("  3. Consider adding them to /adr or removing if outdated")
+                print(f"  {rec_num}. Review orphaned ADRs in /docs/architecture")
+                print(f"  {rec_num+1}. Consider adding them to /adr or removing if outdated")
+                rec_num += 2
 
-            print("\n  4. Add pre-commit hook to prevent future desync:")
-            print("     .git/hooks/pre-commit.d/check-adr-sync")
+            print(f"\n  {rec_num}. Pre-commit hook is configured to prevent future desync")
+            print("     Hook: validate-adr-sync in .pre-commit-config.yaml")
 
         # Summary
         print("\n" + "=" * 80)
