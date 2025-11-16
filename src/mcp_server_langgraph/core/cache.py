@@ -179,7 +179,7 @@ class CacheService:
                 f"Redis cache unavailable, L2 cache disabled: {e}",
                 extra={"redis_url": redis_url},
             )
-            self.redis = None  # type: ignore[assignment]
+            self.redis = None
             self.redis_available = False
 
         # Cache stampede prevention locks
