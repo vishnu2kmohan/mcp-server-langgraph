@@ -25,13 +25,28 @@ from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, Conversa
 
 @pytest.fixture
 async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
-    """Create test database pool for security tests"""
+    """
+    Create test database pool for security tests.
+
+    Uses environment variables for configuration to support both:
+    - Local development (localhost:5432)
+    - Docker integration tests (postgres-test:5432)
+
+    OpenAI Codex Finding (2025-11-16):
+    ====================================
+    Previous implementation hardcoded host="localhost", causing connection
+    failures in Docker integration tests (OSError: [Errno 111] Connect call failed).
+
+    Fixed by using POSTGRES_HOST environment variable from docker-compose.test.yml.
+    """
+    import os
+
     pool = await asyncpg.create_pool(
-        host="localhost",
-        port=5432,
-        user="postgres",
-        password="postgres",
-        database="gdpr",
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        user=os.getenv("POSTGRES_USER", "postgres"),
+        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+        database=os.getenv("POSTGRES_DB", "gdpr"),
         min_size=1,
         max_size=5,
     )

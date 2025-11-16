@@ -1636,21 +1636,31 @@ def mock_infisical_response():
 @pytest.fixture
 def mock_jwt_token():
     """
-    Generate a mock JWT token with deterministic timestamps.
+    Generate a mock JWT token with current timestamps.
 
-    Uses fixed time: 2024-01-01T00:00:00Z
+    Uses datetime.now(UTC) to ensure token is always valid during test execution.
+    Expiration is set to TEST_JWT_EXPIRATION_HOURS (1 hour) from now.
 
     IMPORTANT: Uses TEST_JWT_SECRET from tests/constants.py to ensure
     token signing matches server verification in all test environments.
+
+    OpenAI Codex Finding (2025-11-16):
+    ====================================
+    Previous implementation used FIXED_TIME=2024-01-01, causing "Token expired"
+    errors in integration tests because the token was 2 years old.
+
+    Fixed by using datetime.now(UTC) for current time instead of fixed timestamp.
     """
     import jwt
 
-    FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    from tests.constants import TEST_JWT_EXPIRATION_HOURS
+
+    NOW = datetime.now(timezone.utc)
 
     payload = {
         "sub": "alice",
-        "exp": FIXED_TIME + timedelta(hours=1),
-        "iat": FIXED_TIME,
+        "exp": NOW + timedelta(hours=TEST_JWT_EXPIRATION_HOURS),
+        "iat": NOW,
     }
     return jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
