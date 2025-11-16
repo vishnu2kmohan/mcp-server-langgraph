@@ -20,6 +20,7 @@ Related:
     - SCIM security bug (commit abb04a6a) - historical incident
 """
 
+import gc
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -323,9 +324,14 @@ class TestConfiguredAsyncMockRaise:
         assert error_message == "Service unavailable"
 
 
+@pytest.mark.xdist_group(name="testasyncmockhelperintegration")
 @pytest.mark.skipif(not HELPERS_AVAILABLE, reason="Helpers not yet implemented (RED phase)")
 class TestAsyncMockHelperIntegration:
     """Integration tests ensuring helpers work together correctly."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_mixed_helper_usage(self):
@@ -378,9 +384,14 @@ class TestAsyncMockHelperIntegration:
             await openfga.check_permission(user=user_id, relation="viewer", object="document:any")
 
 
+@pytest.mark.xdist_group(name="testredphaseverification")
 @pytest.mark.skipif(HELPERS_AVAILABLE, reason="This test verifies RED phase")
 class TestRedPhaseVerification:
     """Meta-test to verify we're in RED phase (helpers not yet implemented)."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_helpers_not_yet_implemented(self):
         """GIVEN: TDD RED phase
