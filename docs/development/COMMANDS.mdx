@@ -404,7 +404,7 @@ Commands follow consistent naming patterns for easy discovery:
 
 ### Which validation command should I use?
 
-**Before commit**: `make validate-commit` (<30s, Tier 1)
+**Before commit**: `make validate-commit` (&lt;30s, Tier 1)
 **Before push**: `make validate-push` (3-5 min, Tier 2) - *auto-runs on git push*
 **Before PR**: `make validate-full` (12-15 min, Tier 3)
 
@@ -427,7 +427,7 @@ make test-unit PYTEST_ARGS="tests/path/to/test_file.py"
 uv run pytest -m "not slow" tests/
 
 # Use fast shortcuts
-make test-fast-core  # Only fast tests (<5s each)
+make test-fast-core  # Only fast tests (&lt;5s each)
 ```
 
 ### How do I run tests in parallel?
