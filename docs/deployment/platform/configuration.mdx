@@ -221,46 +221,48 @@ python -c "from langgraph.agent import graph; print(graph)"
 
 ### Reference
 
-<AccordionGroup>
-  <Accordion title="Example langgraph.json">
-    ```json
-    {
-      "dependencies": ["."],
-      "graphs": {
-        "agent": "./langgraph/agent.py:graph"
-      },
-      "env": {
-        "MODEL_NAME": "claude-3-5-sonnet-20241022",
-        "LANGSMITH_TRACING": "true",
-        "LANGSMITH_PROJECT": "my-agent-prod",
-        "MAX_ITERATIONS": "10"
-      },
-      "python_version": "3.11",
-      "dockerfile_lines": []
-    }
-    ```
-  </Accordion>
+#### Example langgraph.json
 
-  <Accordion title="Example graph export">
-    ```python
-    from langgraph.graph import StateGraph, END
-    from langgraph.checkpoint.memory import MemorySaver
-    from typing import TypedDict, Annotated
+Complete configuration file with all options:
 
-    class State(TypedDict):
-        messages: Annotated[list, "The conversation messages"]
+```json
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./langgraph/agent.py:graph"
+  },
+  "env": {
+    "MODEL_NAME": "claude-3-5-sonnet-20241022",
+    "LANGSMITH_TRACING": "true",
+    "LANGSMITH_PROJECT": "my-agent-prod",
+    "MAX_ITERATIONS": "10"
+  },
+  "python_version": "3.11",
+  "dockerfile_lines": []
+}
+```
 
-    def agent_node(state: State):
-        # Your agent logic
-        return state
+#### Example graph export
 
-    workflow = StateGraph(State)
-    workflow.add_node("agent", agent_node)
-    workflow.set_entry_point("agent")
-    workflow.add_edge("agent", END)
+How to export a compiled graph for LangGraph Platform:
 
-    # Export for platform
-    graph = workflow.compile(checkpointer=MemorySaver())
-    ```
-  </Accordion>
-</AccordionGroup>
+```python
+from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
+from typing import TypedDict, Annotated
+
+class State(TypedDict):
+    messages: Annotated[list, "The conversation messages"]
+
+def agent_node(state: State):
+    # Your agent logic
+    return state
+
+workflow = StateGraph(State)
+workflow.add_node("agent", agent_node)
+workflow.set_entry_point("agent")
+workflow.add_edge("agent", END)
+
+# Export for platform
+graph = workflow.compile(checkpointer=MemorySaver())
+```
