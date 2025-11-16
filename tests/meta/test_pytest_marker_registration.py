@@ -17,7 +17,12 @@ from pathlib import Path
 from typing import Set
 
 import pytest
-import toml
+
+# Use built-in tomllib (Python 3.11+) or fallback to tomli
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 
 def get_registered_markers() -> Set[str]:
@@ -28,7 +33,8 @@ def get_registered_markers() -> Set[str]:
         Set of marker names (e.g., {'unit', 'integration', 'e2e'})
     """
     pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-    config = toml.load(pyproject_path)
+    with open(pyproject_path, "rb") as f:
+        config = tomllib.load(f)
 
     markers = config.get("tool", {}).get("pytest", {}).get("ini_options", {}).get("markers", [])
 

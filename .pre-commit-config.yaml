@@ -75,6 +75,39 @@ repos:
     stages:
     - pre-push
     pass_filenames: false
+  - id: check-subprocess-timeout
+    name: Enforce subprocess timeout parameters
+    description: 'Ensures all subprocess.run() calls include timeout parameter to prevent test hangs.
+
+
+      Prevents regression of 119 subprocess.run() calls without timeout.
+
+      Fix: Add timeout=60 parameter to subprocess.run() calls.
+
+      '
+    entry: .venv/bin/python .pre-commit-hooks/check_subprocess_timeout.py
+    language: system
+    types: [python]
+    files: ^tests/.*\.py$
+    stages:
+    - pre-commit
+    - pre-push
+  - id: check-banned-imports
+    name: Validate no banned/deprecated imports
+    description: 'Detects usage of deprecated imports (e.g., toml instead of tomllib).
+
+
+      Prevents issues like:
+      - import toml (deprecated in Python 3.11+)
+      - import imp (removed in Python 3.12+)
+
+      '
+    entry: .venv/bin/python .pre-commit-hooks/check_banned_imports.py
+    language: system
+    types: [python]
+    stages:
+    - pre-commit
+    - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
     entry: bash -c 'uv lock --check || (echo "ERROR - uv.lock out of sync. Run uv lock"; exit 1)'
