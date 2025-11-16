@@ -435,7 +435,16 @@ class InMemoryUserProvider(UserProvider):
     async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
         """Get user by ID"""
         # Extract username from user_id format "user:username"
-        username = user_id.split(":")[-1] if ":" in user_id else user_id
+        # Also handle worker-safe IDs from pytest-xdist (e.g., "user:test_gw0_alice" → "alice")
+        if ":" in user_id:
+            id_part = user_id.split(":", 1)[1]  # Remove "user:" prefix
+            # Check if it's a worker-safe ID (format: test_gw\d+_username)
+            import re
+
+            match = re.match(r"test_gw\d+_(.*)", id_part)
+            username = match.group(1) if match else id_part
+        else:
+            username = user_id
         return await self.get_user_by_username(username)
 
     async def get_user_by_username(self, username: str) -> Optional[UserData]:

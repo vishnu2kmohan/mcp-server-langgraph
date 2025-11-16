@@ -25,9 +25,9 @@ from tests.helpers.async_mock_helpers import configured_async_mock
 def inmemory_provider_with_users():
     """Create InMemoryUserProvider with test users (post Finding #2 fix)"""
     provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
-    provider.add_user("alice", "alice123", "alice@acme.com", ["user", "premium"])
-    provider.add_user("bob", "bob123", "bob@acme.com", ["user"])
-    provider.add_user("admin", "admin123", "admin@acme.com", ["admin"])
+    provider.add_user("alice", "alice123", "alice@acme.com", ["user", "premium"], user_id=get_user_id("alice"))
+    provider.add_user("bob", "bob123", "bob@acme.com", ["user"], user_id=get_user_id("bob"))
+    provider.add_user("admin", "admin123", "admin@acme.com", ["admin"], user_id=get_user_id("admin"))
     return provider
 
 
@@ -219,7 +219,7 @@ class TestInMemoryUserProvider:
         provider1 = inmemory_provider_with_users
         token = provider1.create_token("alice")
         provider2 = InMemoryUserProvider(secret_key="different-secret", use_password_hashing=False)
-        provider2.add_user("alice", "password", "alice@test.com", ["user"])
+        provider2.add_user("alice", "password", "alice@test.com", ["user"], user_id=get_user_id("alice"))
         result = await provider2.verify_token(token)
         assert result.valid is False
         assert result.error == "Invalid token"
