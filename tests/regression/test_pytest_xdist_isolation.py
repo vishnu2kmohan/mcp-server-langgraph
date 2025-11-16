@@ -233,16 +233,33 @@ class TestPytestXdistIsolation:
 
     def test_xdist_group_marker_keeps_tests_in_same_worker(self):
         """
-        Test that @pytest.mark.xdist_group marker works correctly.
+        DOCUMENTATION TEST: Documents @pytest.mark.xdist_group marker behavior.
+
+        **WARNING**: This is an INERT test that only documents expected behavior.
+        It cannot fail on regression because it always passes (assert True).
 
         All tests in this class should run in the same worker because
         they have the same xdist_group marker.
 
         This is important for tests that share state or fixtures.
+
+        **TODO**: Convert to executable test that parses pytest-xdist output.
+        Proper implementation would:
+        1. Run pytest with -n 2 in subprocess
+        2. Parse output for [gw#] worker identifiers
+        3. Verify all tests in same xdist_group run on same worker
+        4. Use pytest's pytester plugin for subprocess execution
+
+        References:
+        - OpenAI Codex Finding: "Regression tests are inert documentation"
+        - pytest-xdist documentation: Worker assignment and grouping
         """
-        # This test validates the marker is working
-        # In pytest-xdist output, all tests in this class should show same [gw#]
-        assert True  # Placeholder - validation happens via pytest-xdist output
+        # DOCUMENTATION PLACEHOLDER - This test documents expected behavior
+        # Manual validation: Run pytest -n auto -v and verify [gw#] markers match
+        pytest.skip(
+            "Documentation test - describes xdist_group behavior but doesn't validate it. "
+            "Manual validation: Run 'pytest -n auto -v' and check [gw#] markers."
+        )
 
 
 # ==============================================================================

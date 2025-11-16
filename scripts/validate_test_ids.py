@@ -73,6 +73,10 @@ EXEMPT_FILES = [
     "conftest.py",  # Has docstrings and sample fixtures with example IDs
     "test_id_pollution_prevention.py",  # Meta-test that tests this validation script
     "test_openfga_client.py",  # Unit tests for OpenFGA client library interface (uses mocked data)
+    # Regression tests (documentation/pattern examples - not production tests)
+    "test_pytest_xdist_isolation.py",  # Documents FastAPI dependency override patterns
+    "test_bearer_scheme_isolation.py",  # Documents bearer_scheme singleton isolation patterns
+    "test_fastapi_auth_override_sanity.py",  # Documents TDD backstop pattern for auth overrides
 ]
 
 

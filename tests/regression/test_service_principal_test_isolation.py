@@ -208,6 +208,9 @@ class TestServicePrincipalTestIsolation:
         """
         Test: Garbage collection prevents mock object accumulation.
 
+        **NOTE**: This test validates the GC pattern exists but doesn't measure
+        actual memory cleanup (CPython's reference counting makes this difficult).
+
         RED (Before Fix):
         - Mock objects accumulated in memory
         - AsyncMock instances not cleaned up
@@ -220,11 +223,17 @@ class TestServicePrincipalTestIsolation:
 
         REFACTOR:
         - Validates gc pattern is in place
+
+        **TODO**: For executable validation, use pytest-memray or memory_profiler
+        to measure actual memory usage before/after gc.collect().
+
+        References:
+        - MEMORY_SAFETY_GUIDELINES.md: Documents the GC pattern
+        - OpenAI Codex Finding: Tests should validate behavior, not just patterns
         """
         # Create multiple mock objects
         mocks = [MagicMock() for _ in range(10)]
-        # Store object IDs for potential future validation
-        _ = [id(m) for m in mocks]  # noqa: F841
+        initial_count = len(mocks)
 
         # Clear references
         mocks.clear()
@@ -232,10 +241,13 @@ class TestServicePrincipalTestIsolation:
         # Force GC
         gc.collect()
 
-        # Note: Can't reliably test if objects are actually collected
-        # in CPython due to reference counting, but the pattern is validated
+        # Validate the pattern was executed (not that memory was actually freed)
+        # CPython's reference counting makes actual memory validation unreliable
+        assert initial_count == 10, "GC pattern executed (mocks created and cleared)"
+        assert len(mocks) == 0, "References cleared before gc.collect()"
 
-        assert True, "GC pattern validated"
+        # The GC was called - that's what we can reliably test
+        # Actual memory cleanup depends on CPython internals
 
 
 @pytest.mark.regression

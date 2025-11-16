@@ -380,7 +380,10 @@ class TestAuthOverrideSanityPattern:
 
 def test_auth_override_sanity_benefits():
     """
-    📚 Document the benefits of auth override sanity tests.
+    DOCUMENTATION TEST: Benefits of auth override sanity tests.
+
+    **NOTE**: This is a DOCUMENTATION test that describes benefits and best practices.
+    It serves as living documentation, not as executable validation.
 
     Benefits:
     ---------
@@ -422,5 +425,15 @@ def test_auth_override_sanity_benefits():
     - [ ] New endpoint has auth override sanity test
     - [ ] Sanity test follows the pattern (bearer_scheme + async override)
     - [ ] Cleanup is present (dependency_overrides.clear())
+
+    **Actual validation**: See TestGDPREndpointAuthOverrides and
+    TestAuthOverrideSanityPattern classes which execute real HTTP requests.
+
+    References:
+    - OpenAI Codex Finding: "TDD backstop for auth overrides"
+    - This file contains executable examples of the sanity pattern
     """
-    assert True, "Benefits documented"
+    # DOCUMENTATION - This test explains benefits of auth override sanity tests
+    # Actual validation happens in TestGDPREndpointAuthOverrides class
+    # No assertion needed - the docstring IS the value
+    pass  # Intentionally empty - documentation is in docstring
