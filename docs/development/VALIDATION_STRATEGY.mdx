@@ -11,7 +11,7 @@ This document explains our **tiered validation strategy** implemented as part of
 **Problem**: Running all 130+ validators on every `git push` took 8-12 minutes, slowing developer iteration.
 
 **Solution**: Split validators into 3 tiers based on criticality and speed:
-- **Tier 1 (Pre-commit)**: Fast auto-fixers and critical linters (<30s)
+- **Tier 1 (Pre-commit)**: Fast auto-fixers and critical linters (`<30s`)
 - **Tier 2 (Pre-push)**: Type checking, fast tests, deployment validation (3-5 min)
 - **Tier 3 (CI/Manual)**: Comprehensive tests, slow validation, security scans (12-15 min)
 
@@ -19,13 +19,13 @@ This document explains our **tiered validation strategy** implemented as part of
 
 ---
 
-## Tier 1: Pre-Commit (<30s)
+## Tier 1: Pre-Commit (`<30s`)
 
 **When**: Runs automatically on `git commit` (before commit is created)
 
 **Purpose**: Auto-fix formatting and catch obvious errors immediately
 
-**Target Duration**: <30 seconds
+**Target Duration**: `<30` seconds
 
 ### What Runs
 
@@ -162,7 +162,7 @@ make validate-push  # Run Tier 1 + Tier 2 validators (3-5 min)
 - Mutation testing (test effectiveness validation)
 - Benchmark tests (performance trend tracking)
 - Slow test detection (individual tests >10s)
-- Test suite performance validation (<120s target)
+- Test suite performance validation (`<120s` target)
 
 **Security Scans**:
 - Full Trivy scan (all severity levels)
@@ -175,7 +175,7 @@ make validate-push  # Run Tier 1 + Tier 2 validators (3-5 min)
 - `audit-todo-fixme-markers` - TODO/FIXME audit
 - `check-mermaid-styling` - Diagram styling (moved to manual 2025-11-16)
 - `check-async-mock-configuration` - AsyncMock config (65 violations, work in progress)
-- `validate-test-suite-performance` - Performance regression (<120s)
+- `validate-test-suite-performance` - Performance regression (`<120s`)
 - `detect-slow-unit-tests` - Individual slow tests (>10s)
 
 ### How to Run Manually
@@ -203,7 +203,7 @@ make validate-full  # Run Tier 1 + Tier 2 + Tier 3 validators (12-15 min)
 
 | Tier | When | Duration | Purpose | Command |
 |------|------|----------|---------|---------|
-| **Tier 1** | `git commit` | <30s | Auto-fix formatting, catch obvious errors | `make validate-commit` |
+| **Tier 1** | `git commit` | `<30s` | Auto-fix formatting, catch obvious errors | `make validate-commit` |
 | **Tier 2** | `git push` | 3-5 min | Type checking, fast tests, critical validation | `make validate-push` |
 | **Tier 3** | CI / Manual | 12-15 min | Comprehensive tests, slow validation, security | `make validate-full` |
 
@@ -234,7 +234,7 @@ make validate-full  # Run Tier 1 + Tier 2 + Tier 3 validators (12-15 min)
 ### When It's Safe to Skip
 
 **Skip Tier 1 (commit hooks)**: NEVER recommended
-- These are fast (<30s) and catch obvious errors
+- These are fast (`<30s`) and catch obvious errors
 - Auto-fixers improve code quality automatically
 
 **Skip Tier 2 (pre-push hooks)**: Rarely safe
@@ -345,7 +345,7 @@ This validation strategy was implemented as part of **CI/CD Optimization - Phase
 **Recommended workflow for productive development:**
 
 1. **Code changes** - Make your changes
-2. **Quick validation** - `make validate-commit` (<30s)
+2. **Quick validation** - `make validate-commit` (`<30s`)
 3. **Commit** - `git commit` (Tier 1 runs automatically)
 4. **Comprehensive check** - `make validate-push` (3-5 min, before pushing)
 5. **Push** - `git push` (Tier 2 runs automatically)
@@ -432,13 +432,13 @@ pre-commit run --all-files 2>&1 | grep "Passed\|Failed"
 
 | Tier | Target | Actual | Status |
 |------|--------|--------|--------|
-| Tier 1 (Pre-commit) | <30s | ~25s | ✅ GOOD |
+| Tier 1 (Pre-commit) | `<30s` | ~25s | ✅ GOOD |
 | Tier 2 (Pre-push) | 3-5 min | ~4-5 min | ✅ GOOD |
 | Tier 3 (CI/Manual) | 12-15 min | ~12-18 min | ⚠️ ACCEPTABLE |
 
 ### Optimization Strategies
 
-**For Pre-Commit (<30s goal)**:
+**For Pre-Commit (`<30s` goal)**:
 - Keep only auto-fixers and fast linters
 - No network operations (no external API calls)
 - No slow file operations (no large file parsing)
