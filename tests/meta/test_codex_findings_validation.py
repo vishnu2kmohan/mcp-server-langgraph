@@ -207,7 +207,10 @@ class TestKeycloakServiceConfiguration:
         """
         Validate Keycloak has required environment variables.
 
-        Required vars: KEYCLOAK_ADMIN, KEYCLOAK_ADMIN_PASSWORD, KC_DB, KC_DB_URL
+        Required vars:
+        - Admin credentials: KEYCLOAK_ADMIN (legacy) OR KC_BOOTSTRAP_ADMIN_USERNAME (Keycloak 22+)
+        - Database: KC_DB, KC_DB_URL
+        - Health: KC_HEALTH_ENABLED
         """
         compose_file = Path(__file__).parent.parent.parent / "docker" / "docker-compose.test.yml"
 
@@ -219,19 +222,30 @@ class TestKeycloakServiceConfiguration:
         assert "environment" in keycloak_service, "keycloak-test service must have environment variables"
 
         env_vars = keycloak_service["environment"]
-        required_vars = [
-            "KEYCLOAK_ADMIN",
-            "KEYCLOAK_ADMIN_PASSWORD",
-            "KC_DB",
-            "KC_DB_URL",
-            "KC_HEALTH_ENABLED",
-        ]
 
         # Convert list of KEY=VALUE or dict to set of keys
         if isinstance(env_vars, list):
             env_keys = {var.split("=")[0] for var in env_vars}
         else:
             env_keys = set(env_vars.keys())
+
+        # Admin credentials: Accept either old (KEYCLOAK_ADMIN) or new (KC_BOOTSTRAP_ADMIN_USERNAME) format
+        has_admin_username = "KEYCLOAK_ADMIN" in env_keys or "KC_BOOTSTRAP_ADMIN_USERNAME" in env_keys
+        has_admin_password = "KEYCLOAK_ADMIN_PASSWORD" in env_keys or "KC_BOOTSTRAP_ADMIN_PASSWORD" in env_keys
+
+        assert has_admin_username, (
+            "keycloak-test service missing admin username: " "must have KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME"
+        )
+        assert has_admin_password, (
+            "keycloak-test service missing admin password: " "must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
+        )
+
+        # Database and health configuration (required regardless of Keycloak version)
+        required_vars = [
+            "KC_DB",
+            "KC_DB_URL",
+            "KC_HEALTH_ENABLED",
+        ]
 
         for var in required_vars:
             assert var in env_keys, f"keycloak-test service missing required environment variable: {var}"
