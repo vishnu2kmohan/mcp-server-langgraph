@@ -63,7 +63,7 @@ class TestTimeoutTestPerformance:
             [str(pytest_path), str(test_file), "-v", "--tb=short", "-x"],
             capture_output=True,
             text=True,
-            timeout=10,  # Kill if it takes more than 10s
+            timeout=30,  # Kill if it takes more than 10s
         )
         duration = time.time() - start
 

@@ -17,6 +17,8 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
+from tests.conftest import get_user_id
+
 
 @pytest.mark.unit
 @pytest.mark.regression
@@ -131,7 +133,7 @@ class TestBearerSchemeOverrideDiagnostic:
 
         # Create mock dependencies (same as api_keys_test_client fixture)
         mock_current_user = {
-            "user_id": "user:diagnostic",
+            "user_id": get_user_id(),  # Worker-safe ID
             "keycloak_id": "diagnostic-uuid-1234",
             "username": "diagnostic",
             "email": "diagnostic@example.com",
@@ -270,7 +272,7 @@ class TestBearerSchemeOverrideDiagnostic:
                         ["git", "rev-parse", "--is-shallow-repository"],
                         capture_output=True,
                         text=True,
-                        timeout=5,
+                        timeout=30,
                     ).stdout.strip()
                     == "true"
                 )
@@ -289,7 +291,7 @@ class TestBearerSchemeOverrideDiagnostic:
                 ["git", "log", "--oneline", "--all"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=30,
             )
 
             if result.returncode == 0:

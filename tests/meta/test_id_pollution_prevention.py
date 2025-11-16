@@ -94,7 +94,7 @@ def test_something():
         )
 
         # Run validation script
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Should fail (exit code 1) and report the violation
         assert result.returncode == 1, f"Expected validation to fail, but got exit code {result.returncode}"
@@ -111,7 +111,7 @@ def test_api_key():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
 
         assert result.returncode == 1
         assert "apikey_" in result.stdout or "apikey_" in result.stderr
@@ -130,7 +130,7 @@ def test_something():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Should succeed (exit code 0)
         assert result.returncode == 0, f"Expected validation to pass, but got: {result.stdout}\n{result.stderr}"

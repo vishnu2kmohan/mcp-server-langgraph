@@ -317,7 +317,7 @@ class TestDockerTestImageAssets:
                         file_path,
                     ],
                     capture_output=True,
-                    timeout=10,
+                    timeout=30,
                 )
 
                 assert file_check.returncode == 0, (

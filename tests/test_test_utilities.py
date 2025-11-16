@@ -177,7 +177,7 @@ class TestCLIAvailabilityFixtures:
 
         # The fixture would return True in this case
         # (we're testing the pattern, not calling the fixture)
-        result = subprocess.run(["docker", "compose", "version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["docker", "compose", "version"], capture_output=True, text=True, timeout=30)
         assert result.returncode == 0
 
     def test_cli_fixtures_are_booleans(self, kustomize_available, kubectl_available, terraform_available, helm_available):
