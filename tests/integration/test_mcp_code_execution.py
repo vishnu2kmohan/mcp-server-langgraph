@@ -26,9 +26,26 @@ class TestMCPCodeExecutionEndpoint:
 
     @pytest.fixture
     async def mcp_server(self):
-        """Create MCP server instance"""
+        """Create MCP server instance with fallback authorization enabled for tests"""
         # MCPAgentServer initializes in __init__, no separate initialize() method needed
         server = MCPAgentServer()
+
+        # Enable fallback authorization AFTER server creation (OpenFGA not available in test env)
+        # Direct attribute modification works because settings instantiated at module import
+        if hasattr(server, "auth") and hasattr(server.auth, "settings"):
+            server.auth.settings.allow_auth_fallback = True
+            server.auth.settings.environment = "test"
+
+        # Register "alice" test user for fallback authorization (matches mock_jwt_token fixture)
+        # InMemoryUserProvider starts with empty users_db for security (CWE-798 prevention)
+        if hasattr(server.auth, "user_provider"):
+            server.auth.user_provider.add_user(
+                username="alice",
+                password="test-password",
+                email="alice@example.com",
+                roles=["user"],
+            )
+
         return server
 
     @pytest.mark.asyncio
@@ -126,9 +143,26 @@ class TestMCPToolDiscoveryEndpoint:
 
     @pytest.fixture
     async def mcp_server(self):
-        """Create MCP server instance"""
+        """Create MCP server instance with fallback authorization enabled for tests"""
         # MCPAgentServer initializes in __init__, no separate initialize() method needed
         server = MCPAgentServer()
+
+        # Enable fallback authorization AFTER server creation (OpenFGA not available in test env)
+        # Direct attribute modification works because settings instantiated at module import
+        if hasattr(server, "auth") and hasattr(server.auth, "settings"):
+            server.auth.settings.allow_auth_fallback = True
+            server.auth.settings.environment = "test"
+
+        # Register "alice" test user for fallback authorization (matches mock_jwt_token fixture)
+        # InMemoryUserProvider starts with empty users_db for security (CWE-798 prevention)
+        if hasattr(server.auth, "user_provider"):
+            server.auth.user_provider.add_user(
+                username="alice",
+                password="test-password",
+                email="alice@example.com",
+                roles=["user"],
+            )
+
         return server
 
     @pytest.mark.asyncio
