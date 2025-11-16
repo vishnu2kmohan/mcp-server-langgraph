@@ -25,62 +25,122 @@ class TestMCPCodeExecutionEndpoint:
         gc.collect()
 
     @pytest.fixture
-    async def mcp_server(self):
-        """Create MCP server instance with fallback authorization enabled for tests"""
-        # MCPAgentServer initializes in __init__, no separate initialize() method needed
-        server = MCPAgentServer()
+    async def mcp_server(self, register_mcp_test_users):
+        """
+        Create MCP server instance with pre-configured auth for tests.
 
-        # Enable fallback authorization AFTER server creation (OpenFGA not available in test env)
-        # Direct attribute modification works because settings instantiated at module import
-        if hasattr(server, "auth") and hasattr(server.auth, "settings"):
-            server.auth.settings.allow_auth_fallback = True
-            server.auth.settings.environment = "test"
+        Uses constructor-based dependency injection to provide AuthMiddleware
+        with registered test users. This ensures authorization works in fallback mode.
 
-        # Register "alice" test user for fallback authorization (matches mock_jwt_token fixture)
-        # InMemoryUserProvider starts with empty users_db for security (CWE-798 prevention)
-        if hasattr(server.auth, "user_provider"):
-            server.auth.user_provider.add_user(
-                username="alice",
-                password="test-password",
-                email="alice@example.com",
-                roles=["user"],
-            )
+        OpenAI Codex Finding Fix (2025-11-16):
+        =======================================
+        Previous implementation tried to add users AFTER server creation, causing
+        "user not found" failures. New pattern injects pre-configured auth.
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create auth middleware with pre-registered user provider
+        auth = AuthMiddleware(
+            secret_key=register_mcp_test_users.secret_key,
+            user_provider=register_mcp_test_users,
+            openfga_client=None,
+            session_store=None,
+            settings=MagicMock(
+                allow_auth_fallback=True,
+                environment="test",
+            ),
+        )
+
+        # Create server with injected auth (uses new constructor parameter)
+        server = MCPAgentServer(auth=auth)
+
+        return server
+
+    @pytest.fixture
+    async def mcp_server_with_code_execution(self, register_mcp_test_users, monkeypatch):
+        """
+        Create MCP server with code execution ENABLED.
+
+        Uses monkeypatch to set environment variable BEFORE server creation,
+        so settings are properly configured during initialization.
+
+        OpenAI Codex Finding Fix (2025-11-16):
+        =======================================
+        Previous implementation tried to patch settings AFTER server creation.
+        Settings are read at module import and server init time, so post-init
+        patching doesn't work. Use monkeypatch BEFORE server creation instead.
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+
+        # Set environment variable BEFORE server init
+        monkeypatch.setenv("ENABLE_CODE_EXECUTION", "true")
+
+        # Reload settings to pick up new environment variable
+        # This is needed because settings is a global Pydantic Settings instance
+        from importlib import reload
+
+        from mcp_server_langgraph.core import config
+
+        reload(config)
+
+        # Create auth middleware with pre-registered user provider
+        auth = AuthMiddleware(
+            secret_key=register_mcp_test_users.secret_key,
+            user_provider=register_mcp_test_users,
+            openfga_client=None,
+            session_store=None,
+            settings=MagicMock(
+                allow_auth_fallback=True,
+                environment="test",
+            ),
+        )
+
+        # Create server with injected auth
+        server = MCPAgentServer(auth=auth)
 
         return server
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        True,
-        reason="TODO: Fix test - settings patch doesn't affect already-initialized server. Needs refactor to create server with mocked settings, not patch after init.",
-    )
-    async def test_execute_python_tool_listed(self, mcp_server):
-        """Test that execute_python appears in tool list when enabled"""
-        with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
-            mock_settings.enable_code_execution = True
+    async def test_execute_python_tool_listed(self, mcp_server_with_code_execution):
+        """
+        Test that execute_python appears in tool list when enabled.
 
-            # Get tool list
-            tools = await mcp_server.list_tools_public()
+        OpenAI Codex Finding Fix (2025-11-16):
+        =======================================
+        Now uses dedicated fixture with code execution enabled VIA environment
+        variable BEFORE server creation, not post-init patching.
+        """
+        # Get tool list from server with code execution enabled
+        tools = await mcp_server_with_code_execution.list_tools_public()
 
-            # Should include execute_python
-            tool_names = [t.name for t in tools]
-            assert "execute_python" in tool_names
+        # Should include execute_python
+        tool_names = [t.name for t in tools]
+        assert "execute_python" in tool_names, f"execute_python not found in {tool_names}"
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        True,
-        reason="TODO: Fix test - settings patch doesn't affect already-initialized server. Needs refactor to create server with mocked settings, not patch after init.",
-    )
     async def test_execute_python_not_listed_when_disabled(self, mcp_server):
-        """Test that execute_python is not listed when disabled"""
-        with patch("mcp_server_langgraph.core.config.settings") as mock_settings:
-            mock_settings.enable_code_execution = False
+        """
+        Test that execute_python is not listed when disabled.
 
-            # Get tool list
-            tools = await mcp_server.list_tools_public()
+        Uses default mcp_server fixture which has code execution disabled
+        (default settings).
 
-            # Should NOT include execute_python
-            tool_names = [t.name for t in tools]
-            assert "execute_python" not in tool_names
+        OpenAI Codex Finding Fix (2025-11-16):
+        =======================================
+        No longer tries to patch settings post-init. Instead relies on default
+        settings (code execution disabled) via regular mcp_server fixture.
+        """
+        # Get tool list from server with default settings (code execution disabled)
+        tools = await mcp_server.list_tools_public()
+
+        # Should NOT include execute_python
+        tool_names = [t.name for t in tools]
+        assert "execute_python" not in tool_names, f"execute_python should not be in {tool_names}"
 
     @pytest.mark.asyncio
     async def test_execute_python_via_mcp(self, mcp_server, mock_jwt_token):
@@ -142,26 +202,37 @@ class TestMCPToolDiscoveryEndpoint:
         gc.collect()
 
     @pytest.fixture
-    async def mcp_server(self):
-        """Create MCP server instance with fallback authorization enabled for tests"""
-        # MCPAgentServer initializes in __init__, no separate initialize() method needed
-        server = MCPAgentServer()
+    async def mcp_server(self, register_mcp_test_users):
+        """
+        Create MCP server instance with pre-configured auth for tests.
 
-        # Enable fallback authorization AFTER server creation (OpenFGA not available in test env)
-        # Direct attribute modification works because settings instantiated at module import
-        if hasattr(server, "auth") and hasattr(server.auth, "settings"):
-            server.auth.settings.allow_auth_fallback = True
-            server.auth.settings.environment = "test"
+        Uses constructor-based dependency injection to provide AuthMiddleware
+        with registered test users. This ensures authorization works in fallback mode.
 
-        # Register "alice" test user for fallback authorization (matches mock_jwt_token fixture)
-        # InMemoryUserProvider starts with empty users_db for security (CWE-798 prevention)
-        if hasattr(server.auth, "user_provider"):
-            server.auth.user_provider.add_user(
-                username="alice",
-                password="test-password",
-                email="alice@example.com",
-                roles=["user"],
-            )
+        OpenAI Codex Finding Fix (2025-11-16):
+        =======================================
+        Previous implementation tried to add users AFTER server creation, causing
+        "user not found" failures. New pattern injects pre-configured auth.
+        """
+        from unittest.mock import MagicMock
+
+        from mcp_server_langgraph.auth.middleware import AuthMiddleware
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create auth middleware with pre-registered user provider
+        auth = AuthMiddleware(
+            secret_key=register_mcp_test_users.secret_key,
+            user_provider=register_mcp_test_users,
+            openfga_client=None,
+            session_store=None,
+            settings=MagicMock(
+                allow_auth_fallback=True,
+                environment="test",
+            ),
+        )
+
+        # Create server with injected auth (uses new constructor parameter)
+        server = MCPAgentServer(auth=auth)
 
         return server
 

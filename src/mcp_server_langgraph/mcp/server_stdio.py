@@ -20,6 +20,7 @@ from mcp.types import Resource, TextContent, Tool
 from pydantic import AnyUrl, BaseModel, Field
 
 from mcp_server_langgraph.auth.factory import create_auth_middleware
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
 from mcp_server_langgraph.core.config import Settings, settings
@@ -105,32 +106,72 @@ class SearchConversationsInput(BaseModel):
 class MCPAgentServer:
     """MCP Server exposing LangGraph agent with OpenFGA authorization"""
 
-    def __init__(self, openfga_client: OpenFGAClient | None = None) -> None:
+    def __init__(
+        self,
+        openfga_client: OpenFGAClient | None = None,
+        auth: AuthMiddleware | None = None,
+    ) -> None:
+        """
+        Initialize MCP Agent Server with optional dependency injection.
+
+        Args:
+            openfga_client: Optional OpenFGA client for authorization.
+                           If None, creates one from settings.
+            auth: Optional pre-configured AuthMiddleware instance.
+                  If provided, this takes precedence over creating auth from settings.
+                  This enables dependency injection for testing and custom configurations.
+
+        Example:
+            # Default creation (production):
+            server = MCPAgentServer()
+
+            # Custom auth injection (testing):
+            custom_auth = AuthMiddleware(user_provider=custom_provider, ...)
+            server = MCPAgentServer(auth=custom_auth)
+
+        OpenAI Codex Finding (2025-11-16):
+        ===================================
+        Added `auth` parameter for constructor-based dependency injection.
+        This allows tests to inject pre-configured AuthMiddleware with registered users,
+        fixing the "user not found" failures in integration tests.
+        """
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
 
-        # Validate JWT secret is configured for in-memory auth provider
-        # Keycloak uses RS256 with JWKS (public key crypto) and doesn't need JWT_SECRET_KEY
-        if settings.auth_provider == "inmemory" and not settings.jwt_secret_key:
-            raise ValueError(
-                "CRITICAL: JWT secret key not configured for in-memory auth provider. "
-                "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
-                "The in-memory auth provider requires a secure secret key for HS256 token signing."
-            )
+        # Initialize auth middleware
+        if auth is not None:
+            # Use injected auth (dependency injection pattern)
+            logger.info("Using injected AuthMiddleware instance")
+            self.auth = auth
 
-        # SECURITY: Fail-closed pattern - require OpenFGA in production
-        if settings.environment == "production" and self.openfga is None:
-            raise ValueError(
-                "CRITICAL: OpenFGA authorization is required in production mode. "
-                "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
-                "or set ENVIRONMENT=development for local testing. "
-                "Fallback authorization is not secure enough for production use."
-            )
+            # If injected auth doesn't have OpenFGA but we have a client, update it
+            # This handles the case where auth is injected but openfga_client is also provided
+            if self.openfga is not None and self.auth.openfga is None:
+                logger.info("Updating injected auth with provided OpenFGA client")
+                self.auth.openfga = self.openfga
+        else:
+            # Create auth using factory (respects settings.auth_provider)
+            # Validate JWT secret is configured for in-memory auth provider
+            # Keycloak uses RS256 with JWKS (public key crypto) and doesn't need JWT_SECRET_KEY
+            if settings.auth_provider == "inmemory" and not settings.jwt_secret_key:
+                raise ValueError(
+                    "CRITICAL: JWT secret key not configured for in-memory auth provider. "
+                    "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
+                    "The in-memory auth provider requires a secure secret key for HS256 token signing."
+                )
 
-        # Initialize auth using factory (respects settings.auth_provider)
-        self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
+            # SECURITY: Fail-closed pattern - require OpenFGA in production
+            if settings.environment == "production" and self.openfga is None:
+                raise ValueError(
+                    "CRITICAL: OpenFGA authorization is required in production mode. "
+                    "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
+                    "or set ENVIRONMENT=development for local testing. "
+                    "Fallback authorization is not secure enough for production use."
+                )
+
+            self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
 
         self._setup_handlers()
 

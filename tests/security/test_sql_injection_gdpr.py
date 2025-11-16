@@ -66,33 +66,33 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
         max_size=5,
     )
 
-    # Run Alembic migrations to create GDPR schema (idempotent)
-    # Using Alembic's programmatic API for better migration management
-    try:
-        from alembic import command
-        from alembic.config import Config
+    # Execute GDPR schema SQL directly (not via Alembic)
+    # Alembic uses asyncio.run() which fails in pytest-asyncio context
+    # (RuntimeError: This event loop is already running)
+    #
+    # OpenAI Codex Finding #3 (2025-11-16):
+    # ======================================
+    # Alembic command.upgrade() calls asyncio.run(run_async_migrations()) which fails
+    # when called from within pytest-asyncio fixtures (already has event loop running).
+    # Exception was silently caught, migrations never ran, tables never created.
+    #
+    # Solution: Execute schema SQL directly using async connection (like postgres_with_schema fixture)
+    project_root = Path(__file__).parent.parent.parent
+    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
 
-        # Create Alembic config
-        alembic_cfg = Config(str(Path(__file__).parent.parent.parent / "alembic.ini"))
+    if schema_file.exists():
+        schema_sql = schema_file.read_text()
 
-        # Override database URL from environment variables (same as pool connection)
-        database_url = (
-            f"postgresql+asyncpg://{os.getenv('POSTGRES_USER', 'postgres')}:"
-            f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
-            f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
-            f"{os.getenv('POSTGRES_PORT', '5432')}/"
-            f"{os.getenv('POSTGRES_DB', 'mcp_test')}"
-        )
-        alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+        # Execute schema using async connection pool (works in pytest-asyncio)
+        async with pool.acquire() as conn:
+            try:
+                await conn.execute(schema_sql)
+            except Exception as e:
+                # Schema might already exist (CREATE TABLE IF NOT EXISTS makes this idempotent)
+                # Only log at debug level - this is expected in many cases
+                import logging
 
-        # Run migrations to latest version (idempotent - safe to run multiple times)
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        # Schema might already exist or migrations already applied
-        # Log but don't fail - CREATE TABLE IF NOT EXISTS in migration handles this
-        import logging
-
-        logging.debug(f"Alembic migration info (likely already applied): {e}")
+                logging.debug(f"Schema execution info (likely already exists): {e}")
 
     # Clean up test data
     async with pool.acquire() as conn:

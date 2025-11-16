@@ -279,3 +279,155 @@ class TestStagingDeploymentRequirements:
         # Validate CPU
         assert "cpu" in requests, "CPU request not specified"
         assert "cpu" in limits, "CPU limit not specified"
+
+    def test_mcp_server_has_topology_spread_constraints(self):
+        """
+        Test: MCP Server deployment must have topology spread constraints for HA.
+
+        RED (Before Fix):
+        - No topology spread constraints configured
+        - Pods may cluster in single zone
+        - Violates high availability requirements
+
+        GREEN (After Fix):
+        - Zone constraint: maxSkew 1, whenUnsatisfiable DoNotSchedule (strict)
+        - Hostname constraint: maxSkew 2, whenUnsatisfiable ScheduleAnyway (soft)
+
+        REFACTOR:
+        - This ensures pods distributed across zones for resilience
+        """
+        base_file = Path("deployments/base/deployment.yaml")
+
+        with open(base_file) as f:
+            manifest = yaml.safe_load(f)
+
+        constraints = manifest["spec"]["template"]["spec"].get("topologySpreadConstraints", [])
+
+        assert len(constraints) > 0, (
+            "MCP Server deployment missing topologySpreadConstraints.\n"
+            "Without this, pods may cluster in single zone, violating HA requirements.\n"
+            "Fix: Add topologySpreadConstraints to deployments/base/deployment.yaml"
+        )
+
+        # Validate zone constraint
+        zone_constraints = [c for c in constraints if c["topologyKey"] == "topology.kubernetes.io/zone"]
+
+        assert len(zone_constraints) == 1, f"Expected exactly 1 zone topology constraint, found {len(zone_constraints)}"
+
+        zone_constraint = zone_constraints[0]
+        assert (
+            zone_constraint["maxSkew"] == 1
+        ), f"Zone constraint maxSkew should be 1 (strict), got {zone_constraint['maxSkew']}"
+        assert zone_constraint["whenUnsatisfiable"] == "DoNotSchedule", (
+            f"Zone constraint should use DoNotSchedule for strict enforcement, " f"got {zone_constraint['whenUnsatisfiable']}"
+        )
+
+        # Validate hostname (node) constraint
+        hostname_constraints = [c for c in constraints if c["topologyKey"] == "kubernetes.io/hostname"]
+
+        assert (
+            len(hostname_constraints) == 1
+        ), f"Expected exactly 1 hostname topology constraint, found {len(hostname_constraints)}"
+
+        hostname_constraint = hostname_constraints[0]
+        assert hostname_constraint["maxSkew"] == 2, (
+            f"Hostname constraint maxSkew should be 2 (allow some flexibility), " f"got {hostname_constraint['maxSkew']}"
+        )
+
+    def test_mcp_server_has_required_pod_anti_affinity(self):
+        """
+        Test: MCP Server must have REQUIRED pod anti-affinity for hostname.
+
+        RED (Before Fix):
+        - Only preferred anti-affinity (soft constraint)
+        - Scheduler may place multiple replicas on same node
+        - Reduces blast radius resilience
+
+        GREEN (After Fix):
+        - Required anti-affinity for hostname (strict - prevents co-location)
+        - Preferred anti-affinity for zone (soft - distributes across zones)
+
+        REFACTOR:
+        - This prevents accidental pod co-location on same node
+        """
+        base_file = Path("deployments/base/deployment.yaml")
+
+        with open(base_file) as f:
+            manifest = yaml.safe_load(f)
+
+        affinity = manifest["spec"]["template"]["spec"].get("affinity", {})
+        pod_anti_affinity = affinity.get("podAntiAffinity", {})
+
+        # Check for REQUIRED anti-affinity
+        required = pod_anti_affinity.get("requiredDuringSchedulingIgnoredDuringExecution", [])
+
+        assert len(required) > 0, (
+            "MCP Server deployment missing REQUIRED podAntiAffinity.\n"
+            "Without this, multiple replicas may be scheduled on same node.\n"
+            "Fix: Add requiredDuringSchedulingIgnoredDuringExecution for hostname topology"
+        )
+
+        # Validate hostname anti-affinity is required
+        hostname_required = [term for term in required if term.get("topologyKey") == "kubernetes.io/hostname"]
+
+        assert len(hostname_required) == 1, (
+            "MCP Server must have REQUIRED anti-affinity for hostname.\n"
+            "This prevents multiple replicas on same node (reduces blast radius)."
+        )
+
+        # Also verify preferred exists for zone distribution
+        preferred = pod_anti_affinity.get("preferredDuringSchedulingIgnoredDuringExecution", [])
+        zone_preferred = [
+            term for term in preferred if term.get("podAffinityTerm", {}).get("topologyKey") == "topology.kubernetes.io/zone"
+        ]
+
+        assert len(zone_preferred) > 0, "MCP Server should also have PREFERRED anti-affinity for zone distribution"
+
+    def test_mcp_server_has_startup_probe(self):
+        """
+        Test: MCP Server must have startup probe for slow initialization.
+
+        RED (Before Fix):
+        - No startup probe configured
+        - Liveness probe triggers during startup
+        - Pod killed prematurely → CrashLoopBackOff
+
+        GREEN (After Fix):
+        - Startup probe with high failureThreshold (30+)
+        - Liveness probe doesn't start until startup succeeds
+
+        REFACTOR:
+        - This allows MCP Server 60+ seconds to initialize
+        """
+        base_file = Path("deployments/base/deployment.yaml")
+
+        with open(base_file) as f:
+            manifest = yaml.safe_load(f)
+
+        containers = manifest["spec"]["template"]["spec"]["containers"]
+        mcp_server = next((c for c in containers if c["name"] == "mcp-server-langgraph"), None)
+
+        assert mcp_server, "MCP Server container not found"
+
+        assert "startupProbe" in mcp_server, (
+            "MCP Server missing startup probe.\n"
+            "Without this, liveness probe may kill pod during slow startup.\n"
+            "Fix: Add startupProbe with high failureThreshold to deployment.yaml"
+        )
+
+        startup_probe = mcp_server["startupProbe"]
+
+        # Validate sufficient timeout for slow startup
+        failure_threshold = startup_probe.get("failureThreshold", 0)
+        period_seconds = startup_probe.get("periodSeconds", 1)
+        total_timeout = failure_threshold * period_seconds
+
+        assert failure_threshold >= 30, (
+            f"Startup probe failureThreshold should be ≥30 for slow initialization.\n"
+            f"Got: {failure_threshold} (total timeout: {total_timeout}s)"
+        )
+
+        assert total_timeout >= 60, (
+            f"Startup probe total timeout should be ≥60 seconds.\n"
+            f"Got: {total_timeout}s (failureThreshold={failure_threshold} * periodSeconds={period_seconds})"
+        )
