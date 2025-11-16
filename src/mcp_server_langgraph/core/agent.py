@@ -483,7 +483,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             tool_response = AIMessage(
                 content="No tool calls found. Proceeding with direct response.",
             )
-            return {**state, "messages": state["messages"] + [tool_response], "next_action": "respond"}
+            # NOTE: Return only new message, not state["messages"] + [tool_response]
+            # operator.add automatically appends to existing messages
+            return {**state, "messages": [tool_response], "next_action": "respond"}
 
         logger.info(
             "Executing tools",
@@ -507,8 +509,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                 logger.info("Parallel execution enabled but only 1 tool call - using serial execution")
             tool_messages = await _execute_tools_serial(tool_calls)
 
-        # Append all tool messages to state (preserves conversation history)
-        return {**state, "messages": state["messages"] + tool_messages, "next_action": "respond"}
+        # NOTE: Return only new messages, not state["messages"] + tool_messages
+        # operator.add automatically appends to existing messages
+        return {**state, "messages": tool_messages, "next_action": "respond"}
 
     async def _execute_tools_serial(tool_calls: list[dict]) -> list:  # type: ignore[type-arg]
         """Execute tools serially (one at a time)"""
