@@ -32,6 +32,7 @@ References:
 - Migration from 0.2.28 → 0.6.10 → 1.0.3 (breaking changes)
 """
 
+import gc
 from typing import Any, Dict
 
 import pytest
@@ -42,6 +43,7 @@ from mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
 from mcp_server_langgraph.patterns.swarm import Swarm, SwarmState
 
 
+@pytest.mark.xdist_group(name="langgraph_return_types")
 class TestLangGraphReturnTypes:
     """
     Test suite validating LangGraph 1.0.3+ return type behavior.
@@ -49,6 +51,10 @@ class TestLangGraphReturnTypes:
     These tests document the breaking API change and ensure our patterns
     handle both dict and Pydantic model types correctly.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_langgraph_1_0_3_returns_dict_not_pydantic_model(self):
         """
@@ -219,12 +225,17 @@ class TestLangGraphReturnTypes:
         )
 
 
+@pytest.mark.xdist_group(name="langgraph_compatibility")
 class TestBackwardCompatibilityPatterns:
     """
     Test patterns for writing code that works with both dict and Pydantic returns.
 
     These patterns help maintain backward compatibility if LangGraph changes behavior again.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_safe_dict_access_pattern(self):
         """
