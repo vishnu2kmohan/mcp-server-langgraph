@@ -2,8 +2,10 @@
 
 ACTIVE VALIDATORS:
 - frontmatter_validator: YAML frontmatter validation (complementary to Mintlify)
-- codeblock_validator: Code block language tag validation
 - mdx_extension_validator: MDX file extension enforcement
+
+DISABLED VALIDATORS (2025-11-15):
+- codeblock_validator: DISABLED - Too many false positives (see .pre-commit-config.yaml)
 
 ARCHIVED VALIDATORS (2025-11-15):
 Most validators have been archived to scripts/validators/archive/ as we've
@@ -16,7 +18,9 @@ Mintlify's built-in validation:
 See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 """
 
-from .codeblock_validator import CodeBlockError, CodeBlockValidator
+# Disabled 2025-11-15: Code block validator caused too many false positives
+# from .codeblock_validator import CodeBlockError, CodeBlockValidator
+
 from .frontmatter_validator import FrontmatterError, FrontmatterValidator
 from .mdx_extension_validator import ExtensionError, MDXExtensionValidator
 
@@ -25,6 +29,7 @@ __all__ = [
     "FrontmatterError",
     "MDXExtensionValidator",
     "ExtensionError",
-    "CodeBlockValidator",
-    "CodeBlockError",
+    # Disabled validators (commented out to prevent import errors)
+    # "CodeBlockValidator",
+    # "CodeBlockError",
 ]
