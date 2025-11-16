@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import requires_tool
+
 
 @pytest.mark.xdist_group(name="testdockertestimageassets")
 class TestDockerTestImageAssets:
@@ -173,6 +175,7 @@ class TestDockerTestImageAssets:
     @pytest.mark.slow
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
+    @requires_tool("docker")
     def test_docker_test_image_contains_deployments_at_runtime(self, project_root):
         """
         Test that built Docker test image actually contains deployments/ at runtime.
@@ -241,6 +244,7 @@ class TestDockerTestImageAssets:
     @pytest.mark.slow
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
+    @requires_tool("docker")
     def test_docker_test_image_contains_scripts_at_runtime(self, project_root):
         """
         Test that built Docker test image actually contains scripts/ at runtime.

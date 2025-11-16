@@ -22,6 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -37,6 +39,7 @@ class TestHelmTemplateRendering:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("helm")
     def test_helm_template_renders_without_errors(self):
         """Test that helm template command succeeds."""
         result = subprocess.run(
@@ -46,6 +49,7 @@ class TestHelmTemplateRendering:
         assert result.returncode == 0, f"Helm template failed: {result.stderr}"
         assert len(result.stdout) > 0, "Helm template produced no output"
 
+    @requires_tool("helm")
     def test_helm_template_produces_valid_yaml(self):
         """Test that rendered templates are valid YAML."""
         result = subprocess.run(
@@ -66,6 +70,7 @@ class TestHelmTemplateRendering:
             assert "kind" in doc, f"Document {i} missing 'kind' field"
             assert "metadata" in doc, f"Document {i} missing 'metadata' field"
 
+    @requires_tool("helm")
     def test_helm_template_checksum_annotations_present(self):
         """Test that deployment has checksum annotations for config/secret changes."""
         result = subprocess.run(
@@ -112,12 +117,14 @@ class TestHelmLint:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("helm")
     def test_helm_lint_passes(self):
         """Test that helm lint passes without warnings or errors."""
         result = subprocess.run(["helm", "lint", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60)
 
         assert result.returncode == 0, f"Helm lint failed:\n{result.stderr}\n{result.stdout}"
 
+    @requires_tool("helm")
     def test_helm_lint_output_contains_success(self):
         """Test that helm lint output indicates success."""
         result = subprocess.run(["helm", "lint", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60)
@@ -178,6 +185,7 @@ class TestHelmTemplateWithValues:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("helm")
     def test_helm_template_with_custom_values(self):
         """Test rendering with custom values doesn't fail."""
         # Create temporary values with some overrides
@@ -216,6 +224,7 @@ replicaCount: 2
             if temp_values.exists():
                 temp_values.unlink()
 
+    @requires_tool("helm")
     def test_helm_template_with_staging_values(self):
         """Test rendering with staging values if available."""
         staging_values = CHART_PATH.parent / "values-staging.yaml"
@@ -241,6 +250,7 @@ replicaCount: 2
         assert result.returncode == 0, f"Helm template with staging values failed: {result.stderr}"
         assert len(result.stdout) > 0, "Helm template produced no output"
 
+    @requires_tool("helm")
     def test_helm_template_with_production_values(self):
         """Test rendering with production values if available."""
         production_values = CHART_PATH.parent / "values-production.yaml"

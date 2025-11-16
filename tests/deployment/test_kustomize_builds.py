@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -45,6 +47,7 @@ class TestKustomizeBuilds:
         gc.collect()
 
     @pytest.mark.parametrize("overlay_path", OVERLAYS)
+    @requires_tool("kustomize")
     def test_overlay_builds_without_errors(self, overlay_path):
         """
         Test that kustomize build completes without errors.
@@ -78,6 +81,7 @@ class TestKustomizeBuilds:
         assert result.stdout.strip(), f"Kustomize build produced no output for {overlay_path}"
 
     @pytest.mark.parametrize("overlay_path", OVERLAYS)
+    @requires_tool("kustomize")
     def test_built_manifests_are_valid_yaml(self, overlay_path):
         """
         Test that built manifests parse as valid YAML.
@@ -130,6 +134,7 @@ class TestStagingGKEOverlay:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def _build_overlay(self):
         """Helper to build staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
@@ -232,6 +237,7 @@ class TestProductionGKEOverlay:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def _build_overlay(self):
         """Helper to build production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
@@ -354,6 +360,7 @@ class TestBaseResources:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def _build_base(self):
         """Helper to build base."""
         base_path = REPO_ROOT / "deployments/base"
@@ -469,6 +476,7 @@ class TestServiceMeshConfig:
 
 # Fixtures for reusable test setup
 @pytest.fixture(scope="session")
+@requires_tool("kustomize")
 def check_kustomize_installed():
     """Ensure kustomize is installed before running tests."""
     result = subprocess.run(["kustomize", "version"], capture_output=True, text=True, timeout=60)
