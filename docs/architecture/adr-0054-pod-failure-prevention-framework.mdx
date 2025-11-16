@@ -161,7 +161,7 @@ chmod +x .githooks/pre-commit
 ### Defense in Depth Strategy
 
 ```mermaid
-graph TD
+flowchart TD
     A[Developer Makes Change] --> B[Pre-commit Hook]
     B --> C{Validation Passed?}
     C -->|No| D[Commit Blocked]
@@ -173,9 +173,23 @@ graph TD
     I --> J[Apply to Cluster]
     J --> K[Pods Running]
 
-    style D fill:#ff6b6b
-    style H fill:#ff6b6b
-    style K fill:#51cf66
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef developerStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef cicdStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef deployStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef resultStyle fill:#ccebc5,stroke:#82c99a,stroke-width:2px,color:#333
+
+    class A developerStyle
+    class B,F validationStyle
+    class C,G decisionStyle
+    class D,H errorStyle
+    class E,I successStyle
+    class J deployStyle
+    class K resultStyle
 ```
 
 **Multiple validation layers ensure no configuration errors reach production**

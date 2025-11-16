@@ -188,24 +188,30 @@ repos:
 
           Fix: Run 'make git-hooks' to restore proper configuration
 
-      - id: fix-mdx-syntax
-        name: Fix MDX Syntax Errors (Code Block Closings)
-        entry: uv run python scripts/fix_mdx_syntax.py --all
-        language: python
-        additional_dependencies: []
-        files: \.mdx$
-        pass_filenames: false
-        always_run: false
-        description: |
-          Automatically fixes common MDX syntax errors:
-          - Pattern 1: Duplicate ```LANG after closing ```
-          - Pattern 2: ```LANG before </CodeGroup>
-          - Pattern 3: ```LANG before MDX tags (<Note>, <Warning>, etc.)
-          - Pattern 4: ```LANG before markdown text (##, **, etc.)
-
-          Prevents Mintlify build failures from malformed code block closings.
-          Regression prevention for 2025-11-12 documentation audit findings.
-          See: docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md
+      # DISABLED 2025-11-15: This hook has a bug where it removes language specifiers
+      # from code block OPENINGS (```python, ```bash), thinking they're malformed
+      # closings. This breaks MDX parsing by causing acorn parse errors.
+      #
+      # Use `mintlify broken-links` for validation instead - it's more reliable.
+      #
+      # - id: fix-mdx-syntax
+      #   name: Fix MDX Syntax Errors (Code Block Closings)
+      #   entry: uv run python scripts/fix_mdx_syntax.py --all
+      #   language: python
+      #   additional_dependencies: []
+      #   files: \.mdx$
+      #   pass_filenames: false
+      #   always_run: false
+      #   description: |
+      #     Automatically fixes common MDX syntax errors:
+      #     - Pattern 1: Duplicate ```LANG after closing ```
+      #     - Pattern 2: ```LANG before </CodeGroup>
+      #     - Pattern 3: ```LANG before MDX tags (<Note>, <Warning>, etc.)
+      #     - Pattern 4: ```LANG before markdown text (##, **, etc.)
+      #
+      #     Prevents Mintlify build failures from malformed code block closings.
+      #     Regression prevention for 2025-11-12 documentation audit findings.
+      #     See: docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md
 
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
@@ -352,17 +358,17 @@ repos:
       # Tests moved to: test_documentation_structure.py and test_documentation_integrity.py
 
       - id: mintlify-broken-links-check
-        name: Mintlify Broken Links Validation (PRIMARY - Manual Stage)
+        name: Mintlify Broken Links Validation (PRIMARY Validator)
         entry: bash -c 'cd docs && npx mintlify broken-links'
         language: system
         files: ^docs/.*\.mdx$
         pass_filenames: false
         always_run: false
-        stages: [manual]  # Manual: Run with SKIP= pre-commit run mintlify-broken-links-check
+        stages: [pre-push]  # Slow: comprehensive MDX validation, moved to pre-push (2025-11-15)
         description: |
           🎯 PRIMARY VALIDATOR for Mintlify documentation (docs/)
 
-          This is now the AUTHORITATIVE validator for docs/ - runs automatically in CI.
+          This is now the AUTHORITATIVE validator for docs/ - runs on pre-push and in CI.
           Replaces 5 previous Python validators (link_validator, navigation_validator,
           image_validator, frontmatter_validator, check_internal_links).
 
@@ -376,13 +382,13 @@ repos:
           ✅ MDX syntax is valid
           ✅ No orphaned pages
 
-          Why manual stage?
-          - Mintlify CLI is slower (~8-12s) than pre-commit target (< 30s)
-          - Already runs automatically in CI/CD (docs-validation.yaml workflow)
-          - Comprehensive validation best suited for CI rather than every commit
-          - Local pre-push has specialized validators for unique checks
+          Runs automatically on git push (pre-push stage):
+          - Duration: ~8-12s (acceptable within pre-push 8-12 min budget)
+          - Catches MDX syntax errors BEFORE pushing to remote
+          - Prevents broken documentation from reaching repository
+          - More reliable than custom Python validators
 
-          Run manually for comprehensive local validation:
+          Manual run for immediate validation:
           $ SKIP= pre-commit run mintlify-broken-links-check --all-files
           OR
           $ make docs-validate-mintlify
@@ -390,8 +396,9 @@ repos:
           $ cd docs && npx mintlify broken-links
 
           Migration (2025-11-15):
-          - Mintlify CLI is now PRIMARY validator in CI (docs-validation.yaml)
+          - Mintlify CLI is now PRIMARY validator (pre-push + CI)
           - Removed redundant Python validators from pre-push
+          - Moved from manual to pre-push to catch errors before remote push
           - See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 
       - id: validate-documentation-integrity

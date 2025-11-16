@@ -189,7 +189,7 @@ llm = Ollama(
 
     # Or with Docker
     docker pull vllm/vllm-openai:latest
-    ```html
+    ```
   </Step>
 
   <Step title="Start vLLM Server">
@@ -206,7 +206,7 @@ llm = Ollama(
       -p 8000:8000 \
       vllm/vllm-openai:latest \
       --model meta-llama/Llama-3.2-3B-Instruct
-    ```html
+    ```
   </Step>
 
   <Step title="Configure MCP Server">
@@ -216,7 +216,7 @@ llm = Ollama(
     OPENAI_API_BASE=http://localhost:8000/v1
     OPENAI_API_KEY=EMPTY
     LLM_MODEL_NAME=meta-llama/Llama-3.2-3B-Instruct
-    ```html
+    ```
   </Step>
 
   <Step title="Test">
@@ -231,7 +231,7 @@ llm = Ollama(
 
     response = await llm.ainvoke("Explain quantum computing")
     print(response.content)
-    ```markdown
+    ```
   </Step>
 </Steps>
 
@@ -511,7 +511,7 @@ ollama pull llama3.2:3b         # Default (usually q4)
 
 #### Concurrent Requests
 
-```
+```python
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -532,7 +532,7 @@ results = await process_batch(queries)
 
 #### Context Caching
 
-```
+```python
 ## Reuse context across requests
 from langchain.memory import ConversationBufferMemory
 
