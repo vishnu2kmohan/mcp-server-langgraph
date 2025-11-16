@@ -90,11 +90,13 @@ keycloak:
   # Client secret from External Secrets
   existingSecret: "mcp-server-langgraph-keycloak-secrets"
 
-# OpenFGA configuration
-openfga:
-  apiUrl: "https://openfga.production.svc.cluster.local:8080"
-  storeId: "production-store-id"
-  modelId: "production-model-id"
+# OpenFGA configuration removed - app-level config should use secrets.openfgaStoreId/openfgaModelId
+# Chart-level openfga configuration (if needed) should match OpenFGA chart schema
+# openfga:
+#   postgresql:
+#     enabled: true
+#   service:
+#     type: ClusterIP
 
 # Monitoring and observability
 monitoring:

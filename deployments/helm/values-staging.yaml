@@ -4,7 +4,7 @@
 # Image configuration
 image:
   repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
-  tag: "latest"  # Staging uses latest for testing
+  tag: "staging"  # Staging uses 'staging' tag (schema forbids 'latest')
   variant: "base"
 
 # Reduced replicas for staging
@@ -67,11 +67,13 @@ keycloak:
   clientId: "mcp-server-langgraph-staging"
   existingSecret: "mcp-server-langgraph-keycloak-secrets"
 
-# OpenFGA configuration (staging)
-openfga:
-  apiUrl: "http://openfga-staging.svc.cluster.local:8080"
-  storeId: "staging-store-id"
-  modelId: "staging-model-id"
+# OpenFGA configuration removed - app-level config should use secrets.openfgaStoreId/openfgaModelId
+# Chart-level openfga configuration (if needed) should match OpenFGA chart schema
+# openfga:
+#   postgresql:
+#     enabled: true
+#   service:
+#     type: ClusterIP
 
 # Monitoring (enabled for testing)
 monitoring:
