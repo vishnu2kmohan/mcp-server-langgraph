@@ -21,11 +21,19 @@ from typing import List, Tuple
 class AsyncMockChecker(ast.NodeVisitor):
     """AST visitor to detect potential async mock issues."""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, source_lines: List[str]):
         self.filename = filename
+        self.source_lines = source_lines
         self.issues: List[Tuple[int, str]] = []
         self.has_asyncmock_import = False
         self.in_xfail_function = False
+
+    def has_noqa_comment(self, lineno: int) -> bool:
+        """Check if a line has # noqa: async-mock comment."""
+        if lineno <= 0 or lineno > len(self.source_lines):
+            return False
+        line = self.source_lines[lineno - 1]  # Convert 1-indexed to 0-indexed
+        return "# noqa: async-mock" in line or "#noqa: async-mock" in line
 
     def visit_ImportFrom(self, node: ast.ImportFrom):
         """Check if AsyncMock is imported."""
@@ -163,6 +171,7 @@ class AsyncMockChecker(ast.NodeVisitor):
                     "_get_user_realm_roles",  # Synchronous role retrieval
                     "_get_user_client_roles",  # Synchronous role retrieval
                     "_get_user_groups",  # Synchronous group retrieval
+                    "get_cache",  # Synchronous cache singleton retrieval
                 ]
 
                 if method_name:
@@ -173,7 +182,8 @@ class AsyncMockChecker(ast.NodeVisitor):
                         for pattern in async_patterns:
                             if pattern in method_name.lower():
                                 # Skip if we're in a function with @pytest.mark.xfail
-                                if not self.in_xfail_function:
+                                # Skip if line has # noqa: async-mock comment
+                                if not self.in_xfail_function and not self.has_noqa_comment(node.lineno):
                                     self.issues.append(
                                         (
                                             node.lineno,
@@ -192,11 +202,14 @@ def check_file(filepath: Path) -> List[Tuple[int, str]]:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
+        # Split content into lines for noqa comment checking
+        source_lines = content.splitlines()
+
         # Parse the AST
         tree = ast.parse(content, filename=str(filepath))
 
         # Visit all nodes
-        checker = AsyncMockChecker(str(filepath))
+        checker = AsyncMockChecker(str(filepath), source_lines)
         checker.visit(tree)
 
         return checker.issues

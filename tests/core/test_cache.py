@@ -550,9 +550,10 @@ class TestCacheInvalidate:
 
     def test_cache_invalidate_pattern(self, cache_service_with_mock_redis):
         """Test cache_invalidate with pattern"""
+        # Note: get_cache() is NOT async (regular function), so we don't use AsyncMock
         with patch(
-            "mcp_server_langgraph.core.cache.get_cache", new_callable=AsyncMock, return_value=cache_service_with_mock_redis
-        ):
+            "mcp_server_langgraph.core.cache.get_cache", return_value=cache_service_with_mock_redis
+        ):  # noqa: async-mock
             cache_service_with_mock_redis.mock_redis.keys.return_value = [b"user:123:key1"]
 
             cache_invalidate("user:123:*")
