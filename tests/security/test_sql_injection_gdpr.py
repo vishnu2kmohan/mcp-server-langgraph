@@ -65,11 +65,17 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     if schema_file.exists():
         schema_sql = schema_file.read_text()
         async with pool.acquire() as conn:
-            try:
-                await conn.execute(schema_sql)
-            except Exception:
-                # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
-                pass
+            # Split SQL file into individual statements (asyncpg.execute handles one statement at a time)
+            statements = [stmt.strip() for stmt in schema_sql.split(";") if stmt.strip()]
+            for statement in statements:
+                try:
+                    await conn.execute(statement)
+                except Exception as e:
+                    # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
+                    # Log but don't fail - tables may already exist
+                    import logging
+
+                    logging.debug(f"Schema creation warning (likely table already exists): {e}")
 
     # Clean up test data
     async with pool.acquire() as conn:
