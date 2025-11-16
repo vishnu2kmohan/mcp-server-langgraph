@@ -585,8 +585,8 @@ validate-pre-push:
 	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Unit Tests..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short && echo "✓ Unit tests passed" || (echo "✗ Unit tests failed" && exit 1)
+	@echo "▶ Unit Tests (with coverage)..."
+	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Unit tests passed (coverage collected)" || (echo "✗ Unit tests failed" && exit 1)
 	@echo ""
 	@echo "▶ Smoke Tests..."
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)

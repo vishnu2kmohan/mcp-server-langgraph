@@ -7,6 +7,16 @@ This meta-test prevents coverage regression by failing if:
 - Overall coverage < 64% (CI threshold)
 - Coverage decreases from previous baseline
 
+**PERFORMANCE OPTIMIZATION** (OpenAI Codex Finding - 2025-11-16):
+This test now reads existing `.coverage` file if available instead of
+re-running the full test suite. This eliminates duplicate test execution
+in pre-push hooks, saving 3-4 minutes per push.
+
+Workflow:
+1. Makefile PHASE 3 runs tests with coverage (creates `.coverage` file)
+2. This test reads `.coverage` and validates threshold
+3. Falls back to running tests if `.coverage` doesn't exist (CI/dev compatibility)
+
 Coverage targets:
 - Current: 65.78% (after Phase 1 improvements)
 - Minimum: 64% (CI threshold) ⚠️ MUST NOT DROP BELOW
@@ -34,7 +44,7 @@ How to improve coverage:
 Related:
 - pyproject.toml: Coverage configuration (fail_under = 64)
 - .github/workflows/ci.yaml: CI coverage enforcement
-- hooks/pre-commit: Local coverage check (planned)
+- Makefile: PHASE 3 runs tests with coverage (creates `.coverage` file)
 """
 
 import os
@@ -47,19 +57,20 @@ import pytest
 
 @pytest.mark.meta
 @pytest.mark.unit
-@pytest.mark.timeout(480)  # 8 minutes - runs full coverage suite as subprocess
+@pytest.mark.timeout(480)  # 8 minutes - max time if fallback runs tests
 def test_minimum_coverage_threshold():
     """
     Test that overall test coverage meets minimum 64% threshold.
 
-    This meta-test runs the full test suite with coverage measurement
-    and validates that overall coverage is ≥ 64%.
+    **OPTIMIZED** (2025-11-16): Reads existing `.coverage` file if available.
+    Only runs tests if `.coverage` is missing (dev/CI fallback).
 
     Coverage is measured across all source files in src/mcp_server_langgraph/
     excluding test files, examples, and scripts.
 
-    IMPORTANT: This test is slow (runs full test suite with coverage).
-    Skip in development with: pytest -m "not meta"
+    Performance:
+    - With existing .coverage: < 1 second (fast!)
+    - Without .coverage: ~2-3 minutes (fallback, runs tests with coverage)
     """
     # Skip in xdist workers (coverage measurement must be centralized)
     if os.getenv("PYTEST_XDIST_WORKER"):
@@ -68,43 +79,19 @@ def test_minimum_coverage_threshold():
     project_root = Path(__file__).parent.parent.parent
     assert (project_root / "pyproject.toml").exists()
 
-    # Run tests with coverage
-    # Note: We use -m unit to run only unit tests (faster)
-    # Integration/E2E tests should also be covered, but unit tests are primary
-    result = subprocess.run(
-        [
-            "pytest",
-            "-m",
-            "unit",
-            "--cov=src/mcp_server_langgraph",
-            "--cov-report=term-missing:skip-covered",
-            "--cov-report=term",
-            "-q",
-            "--tb=no",
-            "--no-header",
-        ],
-        cwd=project_root,
-        capture_output=True,
-        text=True,
-        timeout=480,  # 8 minute timeout (matches @pytest.mark.timeout decorator)
-    )
+    coverage_file = project_root / ".coverage"
 
-    output = result.stdout + result.stderr
-
-    # Parse coverage percentage
-    # Format: "TOTAL    12345   1234    90%"
-    coverage_pattern = r"TOTAL\s+\d+\s+\d+\s+(\d+)%"
-    match = re.search(coverage_pattern, output)
-
-    if not match:
-        # Try alternative format: "TOTAL    90%"
-        alt_pattern = r"TOTAL.*?(\d+)%"
-        match = re.search(alt_pattern, output)
-
-    if not match:
-        pytest.fail(f"Could not parse coverage from output:\n{output[-1000:]}")  # Last 1000 chars
-
-    coverage_pct = int(match.group(1))
+    # OPTIMIZATION: Check if coverage data already exists (from Makefile PHASE 3)
+    if coverage_file.exists():
+        # Fast path: Read existing coverage data
+        coverage_pct = _read_existing_coverage(project_root)
+        source = "existing .coverage file"
+    else:
+        # Fallback: Run tests with coverage (dev/CI compatibility)
+        print("⚠️  No .coverage file found - running tests with coverage (slow)")
+        print("    Tip: Run 'make validate-pre-push' for faster pre-push validation")
+        coverage_pct = _run_tests_with_coverage(project_root)
+        source = "fresh test run"
 
     # Minimum threshold (aligned with pyproject.toml fail_under)
     MIN_COVERAGE = 64
@@ -113,7 +100,7 @@ def test_minimum_coverage_threshold():
     BASELINE_COVERAGE = 65  # 65.78% rounded down for safety margin
 
     assert coverage_pct >= MIN_COVERAGE, (
-        f"Coverage too low: {coverage_pct}% (minimum: {MIN_COVERAGE}%)\n"
+        f"Coverage too low: {coverage_pct}% (minimum: {MIN_COVERAGE}%) [source: {source}]\n"
         f"Coverage regression detected!\n"
         f"\n"
         f"To diagnose:\n"
@@ -133,10 +120,103 @@ def test_minimum_coverage_threshold():
     # Warn if below baseline (not a hard failure, but indicates regression)
     if coverage_pct < BASELINE_COVERAGE:
         print(
-            f"\n⚠️  Coverage below baseline: {coverage_pct}% (baseline: {BASELINE_COVERAGE}%)\n"
+            f"\n⚠️  Coverage below baseline: {coverage_pct}% (baseline: {BASELINE_COVERAGE}%) [source: {source}]\n"
             f"   Consider adding tests to maintain or improve coverage."
         )
     else:
-        print(f"\n✅ Coverage: {coverage_pct}% (minimum: {MIN_COVERAGE}%, baseline: {BASELINE_COVERAGE}%)")
+        print(f"\n✅ Coverage: {coverage_pct}% (minimum: {MIN_COVERAGE}%, baseline: {BASELINE_COVERAGE}%) [source: {source}]")
 
     return coverage_pct
+
+
+def _read_existing_coverage(project_root: Path) -> int:
+    """
+    Read coverage percentage from existing `.coverage` file.
+
+    This is FAST (< 1 second) because it just reads existing data.
+
+    Returns:
+        Coverage percentage as integer
+    """
+    # Use coverage report command to read existing data
+    result = subprocess.run(
+        [
+            "coverage",
+            "report",
+            "--precision=0",  # No decimal places
+            "--skip-empty",
+        ],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        timeout=30,  # Should be very fast
+    )
+
+    output = result.stdout + result.stderr
+
+    # Parse coverage percentage
+    # Format: "TOTAL    12345   1234    90%"
+    coverage_pattern = r"TOTAL\s+\d+\s+\d+\s+(\d+)%"
+    match = re.search(coverage_pattern, output)
+
+    if not match:
+        # Try alternative format: "TOTAL    90%"
+        alt_pattern = r"TOTAL.*?(\d+)%"
+        match = re.search(alt_pattern, output)
+
+    if not match:
+        pytest.fail(
+            f"Could not parse coverage from existing .coverage file:\n{output[-1000:]}\n"
+            f"Try running: pytest --cov to regenerate coverage data"
+        )
+
+    return int(match.group(1))
+
+
+def _run_tests_with_coverage(project_root: Path) -> int:
+    """
+    Run full test suite with coverage measurement (fallback).
+
+    This is SLOW (~2-3 minutes) but ensures compatibility when `.coverage`
+    file doesn't exist (dev environment, CI, etc.).
+
+    Returns:
+        Coverage percentage as integer
+    """
+    # Run tests with coverage
+    # Note: We use -m unit to run only unit tests (faster)
+    # Integration/E2E tests should also be covered, but unit tests are primary
+    result = subprocess.run(
+        [
+            "pytest",
+            "-m",
+            "unit",
+            "--cov=src/mcp_server_langgraph",
+            "--cov-report=term-missing:skip-covered",
+            "--cov-report=term",
+            "-q",
+            "--tb=no",
+            "--no-header",
+        ],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        timeout=480,  # 8 minute timeout
+    )
+
+    output = result.stdout + result.stderr
+
+    # Parse coverage percentage
+    # Format: "TOTAL    12345   1234    90%"
+    coverage_pattern = r"TOTAL\s+\d+\s+\d+\s+(\d+)%"
+    match = re.search(coverage_pattern, output)
+
+    if not match:
+        # Try alternative format: "TOTAL    90%"
+        alt_pattern = r"TOTAL.*?(\d+)%"
+        match = re.search(alt_pattern, output)
+
+    if not match:
+        pytest.fail(f"Could not parse coverage from output:\n{output[-1000:]}")  # Last 1000 chars
+
+    return int(match.group(1))
