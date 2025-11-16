@@ -503,11 +503,11 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: ScheduleAnyway
+        whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
             app: mcp-server-langgraph
-      - maxSkew: 1
+      - maxSkew: 2
         topologyKey: kubernetes.io/hostname
         whenUnsatisfiable: ScheduleAnyway
         labelSelector:
@@ -515,6 +515,14 @@ spec:
             app: mcp-server-langgraph
       affinity:
         podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - mcp-server-langgraph
+            topologyKey: kubernetes.io/hostname
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
             podAffinityTerm:
@@ -525,15 +533,6 @@ spec:
                   values:
                   - mcp-server-langgraph
               topologyKey: topology.kubernetes.io/zone
-          - weight: 50
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                  - mcp-server-langgraph
-              topologyKey: kubernetes.io/hostname
       tolerations:
       - key: workload
         operator: Equal
