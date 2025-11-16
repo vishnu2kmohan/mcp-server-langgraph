@@ -290,8 +290,18 @@ class AuthMiddleware:
                 },
             )
 
-            # Extract username from user_id
-            username = user_id.split(":")[-1] if ":" in user_id else user_id
+            # Extract username from user_id (handle worker-safe IDs for pytest-xdist)
+            # InMemoryUserProvider is test-only, so this test-specific logic is acceptable
+            # Examples: "user:alice" → "alice", "user:test_gw0_alice" → "alice"
+            if ":" in user_id:
+                id_part = user_id.split(":", 1)[1]  # Remove "user:" prefix
+                # Check if it's a worker-safe ID (format: test_gw\d+_username)
+                import re
+
+                match = re.match(r"test_gw\d+_(.*)", id_part)
+                username = match.group(1) if match else id_part
+            else:
+                username = user_id
 
             # Get user data - try in-memory first, then query provider
             user_data = None

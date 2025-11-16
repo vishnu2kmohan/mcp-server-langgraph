@@ -28,9 +28,17 @@ def auth_middleware_with_users():
 
     settings = Settings(allow_auth_fallback=True, environment="development")
     user_provider = InMemoryUserProvider(secret_key="test-key", use_password_hashing=False)
-    user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["user", "premium"])
-    user_provider.add_user(username="bob", password="bob123", email="bob@acme.com", roles=["user"])
-    user_provider.add_user(username="admin", password="admin123", email="admin@acme.com", roles=["admin"])
+    user_provider.add_user(
+        username="alice",
+        password="alice123",
+        email="alice@acme.com",
+        roles=["user", "premium"],
+        user_id=get_user_id("alice"),
+    )
+    user_provider.add_user(username="bob", password="bob123", email="bob@acme.com", roles=["user"], user_id=get_user_id("bob"))
+    user_provider.add_user(
+        username="admin", password="admin123", email="admin@acme.com", roles=["admin"], user_id=get_user_id("admin")
+    )
     return AuthMiddleware(secret_key="test-key", user_provider=user_provider, settings=settings)
 
 
@@ -327,7 +335,7 @@ class TestAuthMiddleware:
         auth1 = auth_middleware_with_users
         token = auth1.create_token("alice")
         user_provider2 = InMemoryUserProvider(use_password_hashing=False)
-        user_provider2.add_user("alice", "password", "alice@test.com", ["user"])
+        user_provider2.add_user("alice", "password", "alice@test.com", ["user"], user_id=get_user_id("alice"))
         auth2 = AuthMiddleware(secret_key="different-secret", user_provider=user_provider2)
         result = await auth2.verify_token(token)
         assert result.valid is False
@@ -490,7 +498,9 @@ class TestStandaloneVerifyToken:
         """Test standalone verification with default secret"""
         secret = "your-secret-key-change-in-production"
         user_provider = InMemoryUserProvider(secret_key=secret, use_password_hashing=False)
-        user_provider.add_user(username="alice", password="alice123", email="alice@test.com", roles=["user"])
+        user_provider.add_user(
+            username="alice", password="alice123", email="alice@test.com", roles=["user"], user_id=get_user_id("alice")
+        )
         auth = AuthMiddleware(secret_key=secret, user_provider=user_provider)
         token = auth.create_token("alice")
         result = await verify_token(token)
@@ -550,7 +560,13 @@ class TestGetCurrentUser:
         Without proper dependency injection, bearer tokens are never validated.
         """
         user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
-        user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["user", "premium"])
+        user_provider.add_user(
+            username="alice",
+            password="alice123",
+            email="alice@acme.com",
+            roles=["user", "premium"],
+            user_id=get_user_id("alice"),
+        )
         auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
         token = auth.create_token("alice", expires_in=3600)
@@ -587,7 +603,9 @@ class TestGetCurrentUser:
         from fastapi import HTTPException
 
         user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
-        user_provider.add_user(username="alice", password="alice123", email="alice@acme.com", roles=["premium"])
+        user_provider.add_user(
+            username="alice", password="alice123", email="alice@acme.com", roles=["premium"], user_id=get_user_id("alice")
+        )
         auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
         payload = {
@@ -697,7 +715,9 @@ class TestGetCurrentUser:
         This ensures consistent format regardless of JWT structure.
         """
         user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
-        user_provider.add_user(username="dave", password="dave123", email="dave@acme.com", roles=["admin"])
+        user_provider.add_user(
+            username="dave", password="dave123", email="dave@acme.com", roles=["admin"], user_id=get_user_id("dave")
+        )
         auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider)
         set_global_auth_middleware(auth)
         payload = {
@@ -909,8 +929,16 @@ class TestAuthFallbackWithExternalProviders:
         REGRESSION TEST: Ensure the fix didn't break existing InMemory behavior.
         """
         user_provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
-        user_provider.add_user(username="admin", password="admin123", email="admin@test.com", roles=["admin"])
-        user_provider.add_user(username="alice", password="alice123", email="alice@test.com", roles=["user", "premium"])
+        user_provider.add_user(
+            username="admin", password="admin123", email="admin@test.com", roles=["admin"], user_id=get_user_id("admin")
+        )
+        user_provider.add_user(
+            username="alice",
+            password="alice123",
+            email="alice@test.com",
+            roles=["user", "premium"],
+            user_id=get_user_id("alice"),
+        )
         auth = AuthMiddleware(secret_key="test-secret", user_provider=user_provider, settings=test_settings_with_fallback)
         result = await auth.authorize(user_id=get_user_id("admin"), relation="executor", resource="tool:chat")
         assert result is True

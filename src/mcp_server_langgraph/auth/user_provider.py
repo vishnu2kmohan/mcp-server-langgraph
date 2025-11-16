@@ -341,7 +341,7 @@ class InMemoryUserProvider(UserProvider):
         hash_bytes = password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hash_bytes)
 
-    def add_user(self, username: str, password: str, email: str, roles: list[str]) -> None:
+    def add_user(self, username: str, password: str, email: str, roles: list[str], user_id: Optional[str] = None) -> None:
         """
         Add a new user to the in-memory database
 
@@ -362,22 +362,24 @@ class InMemoryUserProvider(UserProvider):
             password: Plaintext password (will be hashed if use_password_hashing=True)
             email: Email address
             roles: List of role names (e.g., ["user"], ["admin"], ["user", "premium"])
+            user_id: Optional user_id override for testing (e.g., worker-safe IDs in pytest-xdist)
 
         Security:
             - Passwords are automatically hashed with bcrypt if use_password_hashing=True
             - For production, use KeycloakUserProvider instead of InMemoryUserProvider
         """
         stored_password = self._hash_password(password) if self.use_password_hashing else password
+        generated_user_id = user_id if user_id is not None else f"user:{username}"
 
         self.users_db[username] = UserDBEntry(
-            user_id=f"user:{username}",
+            user_id=generated_user_id,
             email=email,
             password=stored_password,
             roles=roles,
             active=True,
         )
 
-        logger.info(f"Added user: {username}", extra={"user_id": f"user:{username}", "roles": roles})
+        logger.info(f"Added user: {username}", extra={"user_id": generated_user_id, "roles": roles})
 
     async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
         """
