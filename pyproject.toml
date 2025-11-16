@@ -55,6 +55,7 @@ dependencies = [
     "redis[hiredis]>=6.4.0",  # Also used for conversation checkpoints (db 1)
     "asyncpg>=0.29.0",  # PostgreSQL async driver for GDPR/HIPAA/SOC2 compliance storage
     "sqlalchemy[asyncio]>=2.0.0",  # Async ORM for cost tracking persistence
+    "alembic>=1.15.0",  # Database migrations for GDPR schema (async-ready with SQLAlchemy 2.0)
     "pyyaml>=6.0.3",
     "apscheduler>=3.11.0",
     "python-json-logger>=4.0.0",

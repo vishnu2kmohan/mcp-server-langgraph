@@ -32,6 +32,12 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     - Local development (localhost:5432)
     - Docker integration tests (postgres-test:5432)
 
+    Uses Alembic for professional database migrations:
+    - Versioned schema management
+    - Automatic upgrade/downgrade paths
+    - Idempotent migrations (safe to run multiple times)
+    - Better than manual SQL file execution
+
     OpenAI Codex Finding (2025-11-16):
     ====================================
     Previous implementation hardcoded host="localhost", causing connection
@@ -44,8 +50,8 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     Tests failed with "relation 'conversations' does not exist" because the GDPR
     schema wasn't created in the testdb database.
 
-    Fixed by reading migrations/001_gdpr_schema.sql and executing it before tests.
-    Uses CREATE TABLE IF NOT EXISTS for idempotency.
+    Initially fixed by manually executing migrations/001_gdpr_schema.sql.
+    Subsequently improved by migrating to Alembic for professional database migrations.
     """
     import os
     from pathlib import Path
@@ -60,22 +66,33 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
         max_size=5,
     )
 
-    # Create GDPR schema if it doesn't exist (idempotent)
-    schema_file = Path(__file__).parent.parent.parent / "migrations" / "001_gdpr_schema.sql"
-    if schema_file.exists():
-        schema_sql = schema_file.read_text()
-        async with pool.acquire() as conn:
-            # Split SQL file into individual statements (asyncpg.execute handles one statement at a time)
-            statements = [stmt.strip() for stmt in schema_sql.split(";") if stmt.strip()]
-            for statement in statements:
-                try:
-                    await conn.execute(statement)
-                except Exception as e:
-                    # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
-                    # Log but don't fail - tables may already exist
-                    import logging
+    # Run Alembic migrations to create GDPR schema (idempotent)
+    # Using Alembic's programmatic API for better migration management
+    try:
+        from alembic import command
+        from alembic.config import Config
 
-                    logging.debug(f"Schema creation warning (likely table already exists): {e}")
+        # Create Alembic config
+        alembic_cfg = Config(str(Path(__file__).parent.parent.parent / "alembic.ini"))
+
+        # Override database URL from environment variables (same as pool connection)
+        database_url = (
+            f"postgresql+asyncpg://{os.getenv('POSTGRES_USER', 'postgres')}:"
+            f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
+            f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
+            f"{os.getenv('POSTGRES_PORT', '5432')}/"
+            f"{os.getenv('POSTGRES_DB', 'mcp_test')}"
+        )
+        alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+
+        # Run migrations to latest version (idempotent - safe to run multiple times)
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        # Schema might already exist or migrations already applied
+        # Log but don't fail - CREATE TABLE IF NOT EXISTS in migration handles this
+        import logging
+
+        logging.debug(f"Alembic migration info (likely already applied): {e}")
 
     # Clean up test data
     async with pool.acquire() as conn:
