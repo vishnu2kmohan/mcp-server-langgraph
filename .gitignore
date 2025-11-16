@@ -53,6 +53,7 @@ venv.bak/
 
 # pytest
 .pytest_cache/
+.testmondata
 .coverage
 htmlcov/
 coverage.xml
