@@ -124,9 +124,11 @@ CREATE INDEX IF NOT EXISTS idx_conversations_archived ON conversations(archived)
 CREATE INDEX IF NOT EXISTS idx_conversations_user_last_message ON conversations(user_id, last_message_at DESC);
 
 -- Index for retention cleanup (90-day auto-deletion)
+-- Note: Cannot use NOW() in index predicate (not immutable)
+-- Cleanup queries will filter by date in WHERE clause using this index
 CREATE INDEX IF NOT EXISTS idx_conversations_retention_cleanup
     ON conversations(last_message_at)
-    WHERE archived = FALSE AND last_message_at < (NOW() - INTERVAL '90 days');
+    WHERE archived = FALSE;
 
 COMMENT ON TABLE conversations IS 'Conversation history (90-day retention, GDPR Article 17)';
 COMMENT ON COLUMN conversations.messages IS 'Array of message objects in JSONB format';
@@ -167,9 +169,10 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_timestamp_action
     ON audit_logs(user_id, timestamp DESC, action) WHERE user_id IS NOT NULL;
 
 -- Index for retention (7-year archival to cold storage)
+-- Note: Cannot use NOW() in index predicate (not immutable)
+-- Archival queries will filter by date in WHERE clause using this index
 CREATE INDEX IF NOT EXISTS idx_audit_logs_retention_archival
-    ON audit_logs(timestamp)
-    WHERE timestamp < (NOW() - INTERVAL '90 days');
+    ON audit_logs(timestamp);
 
 COMMENT ON TABLE audit_logs IS 'Comprehensive audit trail (7-year retention, HIPAA §164.312(b), SOC2 CC6.6)';
 COMMENT ON COLUMN audit_logs.user_id IS 'NOT a foreign key - preserved for audit even after user deletion';

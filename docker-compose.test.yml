@@ -48,7 +48,10 @@ services:
       POSTGRES_INITDB_ARGS: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
     ports:
       - "9432:5432"
-    # No volumes - ephemeral storage for test isolation
+    volumes:
+      # Mount migration scripts for database initialization
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    # No persistent volumes - ephemeral storage for test isolation
     tmpfs:
       - /var/lib/postgresql/data:rw,noexec,nosuid,size=256m
     healthcheck:
