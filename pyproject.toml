@@ -439,6 +439,7 @@ markers = [
     "staging: Staging environment deployment tests",
     "skip_resilience_reset: Opt-out of autouse resilience state reset fixture (for circuit breaker tests)",
     "infrastructure: Infrastructure and deployment configuration tests",
+    "database: Database integration tests (schema setup, migrations, queries)",
     "diagnostic: Diagnostic and troubleshooting tests",
     "documentation: Documentation validation tests (code blocks, examples)",
     "precommit: Pre-commit hook validation tests",
