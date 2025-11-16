@@ -527,6 +527,7 @@ def test_dev_dependencies_are_importable():
         # CLI tools
         "langgraph_cli",  # CLI tool, not imported in tests
         "mutmut",  # CLI tool, not imported in tests
+        "bandit",  # CLI tool; stevedore plugin loader logs ERROR about missing sarif_om (optional SARIF formatter dependency we don't use)
         # Uvicorn extras
         "uvicorn",  # may have [standard] extras, import works as 'uvicorn'
         "redis",  # may have [hiredis] extras, import works as 'redis'
