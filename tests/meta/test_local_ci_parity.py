@@ -92,6 +92,60 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
     return hook_path
 
 
+@pytest.fixture(scope="module")
+def shared_precommit_config(shared_repo_root: Path) -> dict:
+    """
+    Load and parse .pre-commit-config.yaml (shared across all tests in module).
+
+    Since we've migrated from custom bash pre-push hooks to pre-commit framework,
+    validation now checks .pre-commit-config.yaml instead of bash script patterns.
+    """
+    config_path = shared_repo_root / ".pre-commit-config.yaml"
+    if not config_path.exists():
+        pytest.skip(
+            "\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            ".pre-commit-config.yaml not found\n"
+            "═══════════════════════════════════════════════════════════════\n"
+            "\n"
+            "Pre-commit configuration file is missing. This is unexpected.\n"
+            "Please restore .pre-commit-config.yaml from repository.\n"
+        )
+
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+
+
+@pytest.fixture(scope="module")
+def shared_pre_push_hooks(shared_precommit_config: dict) -> List[dict]:
+    """
+    Extract all hooks configured for pre-push stage.
+
+    Returns list of hook configurations that will run on git push.
+    """
+    pre_push_hooks = []
+    for repo in shared_precommit_config.get("repos", []):
+        for hook in repo.get("hooks", []):
+            stages = hook.get("stages", ["commit"])  # Default stage is commit
+            if "pre-push" in stages or stages == ["pre-push"]:
+                pre_push_hooks.append(hook)
+    return pre_push_hooks
+
+
+def find_hook_by_id(hooks: List[dict], hook_id: str) -> dict:
+    """Find a hook by its ID."""
+    for hook in hooks:
+        if hook.get("id") == hook_id:
+            return hook
+    return None
+
+
+def hook_contains_pattern(hook: dict, pattern: str) -> bool:
+    """Check if hook's entry command contains a pattern."""
+    entry = hook.get("entry", "")
+    return pattern in entry
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Test Classes
 # ══════════════════════════════════════════════════════════════════════════════

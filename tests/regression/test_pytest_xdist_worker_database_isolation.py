@@ -66,34 +66,9 @@ class TestPostgresWorkerIsolation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_current_postgres_fixture_uses_shared_connection(self):
-        """
-        🔴 RED PHASE PLACEHOLDER: Documents postgres_connection_clean shared connection issue.
-
-        **WARNING**: This is an INERT test that only documents the problem.
-        It cannot fail on regression because it always passes (assert True).
-
-        The fixture wraps postgres_connection_real (session-scoped) and does
-        TRUNCATE cleanup. In pytest-xdist, multiple workers share the same
-        PostgreSQL instance, so TRUNCATE affects ALL workers.
-
-        **TODO**: Convert to executable test using pytest-xdist subprocess pattern.
-        Proper implementation would:
-        1. Spawn 2 xdist workers in subprocess
-        2. Worker A writes data to postgres
-        3. Worker B does TRUNCATE
-        4. Verify Worker A's data is gone (proving pollution occurs)
-
-        References:
-        - OpenAI Codex Finding: "Regression tests are inert documentation"
-        - See tests with 🟢 GREEN for actual validation tests
-        """
-        # PLACEHOLDER - This test documents the problem but doesn't validate it
-        # It will always pass, even if the bug returns
-        pytest.skip(
-            "RED phase placeholder test - documents problem but doesn't validate it. "
-            "See test_worker_scoped_schemas_would_provide_isolation for actual validation."
-        )
+    # REMOVED: RED phase placeholder test - no longer needed
+    # The worker-scoped schema isolation is now implemented and validated
+    # by test_worker_scoped_schemas_would_provide_isolation below.
 
     def test_worker_scoped_schemas_would_provide_isolation(self):
         """
@@ -157,33 +132,9 @@ class TestRedisWorkerIsolation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_current_redis_fixture_uses_shared_database(self):
-        """
-        🔴 RED PHASE PLACEHOLDER: Documents redis_client_clean shared database issue.
-
-        **WARNING**: This is an INERT test that only documents the problem.
-        It cannot fail on regression because it always passes (assert True).
-
-        The fixture wraps redis_client_real (session-scoped) and does
-        FLUSHDB cleanup. In pytest-xdist, multiple workers share the same
-        Redis instance and DB, so FLUSHDB affects ALL workers.
-
-        **TODO**: Convert to executable test using pytest-xdist subprocess pattern.
-        Proper implementation would:
-        1. Spawn 2 xdist workers in subprocess
-        2. Worker A writes keys to Redis DB 0
-        3. Worker B does FLUSHDB
-        4. Verify Worker A's keys are gone (proving pollution occurs)
-
-        References:
-        - OpenAI Codex Finding: "Regression tests are inert documentation"
-        - See test_worker_scoped_redis_databases_would_provide_isolation for actual validation
-        """
-        # PLACEHOLDER - This test documents the problem but doesn't validate it
-        pytest.skip(
-            "RED phase placeholder test - documents problem but doesn't validate it. "
-            "See test_worker_scoped_redis_databases_would_provide_isolation for actual validation."
-        )
+    # REMOVED: RED phase placeholder test - no longer needed
+    # The worker-scoped Redis DB isolation is now implemented and validated
+    # by test_worker_scoped_redis_databases_would_provide_isolation below.
 
     def test_worker_scoped_redis_databases_would_provide_isolation(self):
         """
@@ -269,33 +220,9 @@ class TestOpenFGAWorkerIsolation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_current_openfga_fixture_uses_shared_store(self):
-        """
-        🔴 RED PHASE PLACEHOLDER: Documents openfga_client_clean shared store issue.
-
-        **WARNING**: This is an INERT test that only documents the problem.
-        It cannot fail on regression because it always passes (assert True).
-
-        The fixture wraps openfga_client_real (session-scoped) and deletes
-        tuples for cleanup. In pytest-xdist, multiple workers share the same
-        OpenFGA store, so tuple deletion affects ALL workers.
-
-        **TODO**: Convert to executable test using pytest-xdist subprocess pattern.
-        Proper implementation would:
-        1. Spawn 2 xdist workers in subprocess
-        2. Worker A writes authorization tuples
-        3. Worker B deletes tuples
-        4. Verify Worker A's tuples are gone (proving pollution occurs)
-
-        References:
-        - OpenAI Codex Finding: "Regression tests are inert documentation"
-        - See test_worker_scoped_openfga_stores_would_provide_isolation for actual validation
-        """
-        # PLACEHOLDER - This test documents the problem but doesn't validate it
-        pytest.skip(
-            "RED phase placeholder test - documents problem but doesn't validate it. "
-            "See test_worker_scoped_openfga_stores_would_provide_isolation for actual validation."
-        )
+    # REMOVED: RED phase placeholder test - no longer needed
+    # The worker-scoped OpenFGA pattern (tuple tracking) is now implemented and validated
+    # by test_worker_scoped_openfga_stores_would_provide_isolation below.
 
     def test_worker_scoped_openfga_stores_would_provide_isolation(self):
         """

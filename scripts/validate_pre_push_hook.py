@@ -110,11 +110,16 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
         return False, errors
 
     # Check for minimum required validations
-    # Updated 2025-11-16: Relaxed validation to support different hook organizations
-    # Hooks may be organized by domain (deployment, documentation, etc.) rather than test type
+    # Updated 2025-11-16: Comprehensive test suite execution required
+    # After finding validation gap (141 tests not run), now require full test suites
     required_patterns = {
         "mypy": r"mypy|type.*check",
-        "pytest": r"pytest|test",  # Any pytest usage is OK
+        "unit_tests": r"(run-unit-tests|pytest.*-m.*unit)",  # Comprehensive unit test suite
+        "smoke_tests": r"(run-smoke-tests|pytest.*tests/smoke)",  # Smoke tests
+        "integration_tests": r"(run-integration-tests|pytest.*tests/integration)",  # Integration tests
+        "api_tests": r"(run-api-tests|pytest.*-m.*api)",  # API endpoint tests
+        "mcp_tests": r"(run-mcp-server-tests|test_mcp_stdio_server)",  # MCP server tests
+        "property_tests": r"(run-property-tests|pytest.*-m.*property)",  # Property-based tests
         "deployment_validation": r"(test_(helm|kustomize|network|service)|deployment)",
         "documentation": r"(test_documentation|mintlify|docs)",
     }
@@ -134,23 +139,9 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
         errors.append(
             "❌ Required validations missing from .pre-commit-config.yaml:\n"
             + "\n".join(f"   - {cat}" for cat in missing_required)
-            + "\n   Fix: Ensure these validations are configured in pre-push hooks"
+            + "\n   Fix: Ensure these validations are configured in pre-push hooks\n"
+            + "\n   CRITICAL: All comprehensive test suites must run in pre-push to prevent CI surprises"
         )
-
-    # Optional validation categories (warnings only, don't fail)
-    optional_patterns = {
-        "unit_tests": r"pytest.*(unit|tests/unit)",
-        "smoke_tests": r"pytest.*(smoke|tests/smoke)",
-        "integration_tests": r"pytest.*(integration|tests/integration)",
-    }
-
-    for category, pattern in optional_patterns.items():
-        found = any(re.search(pattern, f"{hook['id']} {hook['entry']}".lower()) for hook in pre_push_hooks)
-        if not found:
-            warnings.append(
-                f"ℹ️  Optional validation not found: {category}\n"
-                f"   Hooks may be organized differently (domain-specific vs test-type)"
-            )
 
     # Count total pre-push hooks (informational)
     hook_count = len(pre_push_hooks)

@@ -260,20 +260,24 @@ class TestDocumentationCodeBlocks:
 
 
 @pytest.mark.regression
+@pytest.mark.skip(reason="Codeblock validator removed 2025-11-16 - now using Mintlify validation")
 def test_pre_commit_hook_config_has_codeblock_validation():
     """
-    Test: Pre-commit configuration includes code block validation hook.
+    DEPRECATED 2025-11-16: Codeblock validator was removed due to high false positives.
 
-    Ensures the pre-commit hook that caught this issue is still configured.
+    We now rely on Mintlify's built-in validation for documentation quality checks.
+    The 'validate-code-block-languages' hook no longer exists and this test is kept
+    for historical context only.
+
+    Original purpose: Ensure pre-commit hook validated code block languages to prevent
+    untagged code blocks from being committed.
+
+    Migration: mintlify-broken-links-check (pre-push hook) now provides comprehensive
+    documentation validation including code blocks.
+
+    See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
     """
-    pre_commit_config = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
-    assert pre_commit_config.exists(), "Pre-commit config not found"
-
-    content = pre_commit_config.read_text()
-    assert "validate-code-block-languages" in content, (
-        "Pre-commit hook 'validate-code-block-languages' not found in config. "
-        "This hook is required to catch untagged code blocks before CI."
-    )
+    pass  # Test skipped - functionality replaced by Mintlify
 
 
 @pytest.mark.regression
