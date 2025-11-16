@@ -13,10 +13,20 @@ from pathlib import Path
 
 import pytest
 
-from scripts.validators.image_validator import ImageError, ImageValidator, InvalidImageFormatError, MissingImageError
+# Try to import validators - skip tests if deprecated/archived
+try:
+    from scripts.validators.image_validator import ImageError, ImageValidator, InvalidImageFormatError, MissingImageError
+
+    VALIDATOR_AVAILABLE = True
+except ModuleNotFoundError:
+    # Validators were deprecated and moved to archive
+    VALIDATOR_AVAILABLE = False
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(not VALIDATOR_AVAILABLE, reason="image_validator deprecated (moved to archive)"),
+]
 
 
 @pytest.mark.xdist_group(name="testimagevalidator")
