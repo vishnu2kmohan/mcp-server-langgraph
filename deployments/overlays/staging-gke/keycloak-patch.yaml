@@ -20,14 +20,13 @@ spec:
           protocol: TCP
 
         # Security context for Keycloak container
-        # TODO: Re-enable readOnlyRootFilesystem with pre-built/optimized Keycloak image
-        # Current issue: Quarkus rebuild at startup requires writable filesystem
-        # Tracked in: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/TBD
+        # readOnlyRootFilesystem enabled with volume mounts for writable directories
+        # (/tmp, /opt/keycloak/data, /opt/keycloak/providers, /opt/keycloak/themes)
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 1000
-          readOnlyRootFilesystem: false  # Temporarily disabled - see TODO above
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
