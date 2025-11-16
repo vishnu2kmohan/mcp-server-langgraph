@@ -15,6 +15,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -169,6 +171,7 @@ class TestImagePullPolicy:
         """Get staging overlay directory."""
         return Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
 
+    @requires_tool("kubectl")
     def test_staging_overlay_has_imagepullpolicy_always(self, staging_overlay_dir):
         """
         Test that staging overlay sets imagePullPolicy: Always for all containers.
@@ -291,6 +294,7 @@ class TestKubernetesValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kubectl")
     def test_kubeconform_validates_manifests(self):
         """Test that manifests pass kubeconform validation."""
         overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
@@ -320,6 +324,7 @@ class TestKubernetesValidation:
             validate_result.returncode == 0
         ), f"Kubeconform validation failed:\n{validate_result.stdout}\n{validate_result.stderr}"
 
+    @requires_tool("kubectl")
     def test_kustomize_builds_successfully(self):
         """Test that Kustomize overlays build without errors."""
         overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"

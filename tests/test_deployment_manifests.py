@@ -22,6 +22,8 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -193,6 +195,7 @@ class TestKustomizeOverlays:
         gc.collect()
 
     @pytest.mark.parametrize("overlay", ["dev", "staging", "production"])
+    @requires_tool("kustomize")
     def test_kustomize_overlay_builds(self, project_root: Path, overlay: str) -> None:
         """
         Test that Kustomize overlays build without errors.
@@ -226,6 +229,7 @@ class TestKustomizeOverlays:
             pytest.fail(f"Invalid YAML output from kustomize build: {e}")
 
     @pytest.mark.parametrize("overlay", ["aws", "gcp", "azure"])
+    @requires_tool("kustomize")
     def test_cloud_provider_overlay_builds(self, project_root: Path, overlay: str) -> None:
         """
         Test that cloud provider overlays build successfully.
@@ -308,6 +312,7 @@ class TestHelmChart:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("helm")
     def test_helm_chart_lints_successfully(self, helm_chart_dir: Path) -> None:
         """
         Test that Helm chart passes helm lint validation.
@@ -331,6 +336,7 @@ class TestHelmChart:
 
         assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
 
+    @requires_tool("helm")
     def test_helm_chart_renders_successfully(self, helm_chart_dir: Path) -> None:
         """Test that Helm chart renders without errors.
 

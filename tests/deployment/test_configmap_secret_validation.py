@@ -25,6 +25,8 @@ from typing import Dict, List, Set
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -38,6 +40,7 @@ class TestConfigMapValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
         """Build kustomize and return parsed YAML documents."""
         if not shutil.which("kustomize"):
@@ -227,6 +230,7 @@ class TestSecretValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
         """Build kustomize and return parsed YAML documents."""
         if not shutil.which("kustomize"):

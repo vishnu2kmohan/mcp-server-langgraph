@@ -24,10 +24,13 @@ from typing import List, Optional
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 @pytest.fixture(scope="module")
+@requires_tool("docker")
 def docker_compose_available():
     """Check if docker-compose is available."""
     try:
@@ -45,6 +48,7 @@ def docker_compose_available():
 
 
 @pytest.fixture(scope="module")
+@requires_tool("docker")
 def docker_available():
     """Check if Docker daemon is available."""
     try:
@@ -372,6 +376,7 @@ class TestDockerComposeHealthChecksIntegration:
 
 
 @pytest.mark.integration
+@requires_tool("docker")
 def test_health_check_command_availability(docker_available):
     """
     Test that common health check commands are available in their respective images.

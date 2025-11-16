@@ -17,6 +17,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -38,6 +40,7 @@ class TestNetworkPolicyPorts:
         gc.collect()
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def staging_network_policies(self):
         """Load NetworkPolicies from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
@@ -51,6 +54,7 @@ class TestNetworkPolicyPorts:
         return [doc for doc in documents if doc and doc.get("kind") == "NetworkPolicy"]
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
@@ -287,6 +291,7 @@ class TestNetworkPolicyComments:
 
 
 @pytest.mark.requires_kustomize
+@requires_tool("kustomize")
 def test_network_policy_coverage():
     """
     Test that critical components have NetworkPolicies defined.

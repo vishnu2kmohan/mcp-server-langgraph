@@ -24,6 +24,8 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 
 # Test configuration - Environment-agnostic path resolution
 def _find_project_root() -> Path:
@@ -62,6 +64,7 @@ def get_all_overlays() -> List[Path]:
     return [d for d in OVERLAYS_DIR.iterdir() if d.is_dir() and (d / "kustomization.yaml").exists()]
 
 
+@requires_tool("kubectl")
 def build_kustomize(overlay_path: Path) -> List[Dict[str, Any]]:
     """Build kustomize overlay and return parsed manifests"""
     result = subprocess.run(
@@ -362,6 +365,7 @@ class TestKustomizeBuildValidity:
         gc.collect()
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
+    @requires_tool("kubectl")
     def test_kustomize_builds_successfully(self, overlay: Path):
         """Kustomize build must succeed without errors"""
         result = subprocess.run(["kubectl", "kustomize", str(overlay)], capture_output=True, text=True, timeout=60)
@@ -369,6 +373,7 @@ class TestKustomizeBuildValidity:
         assert result.returncode == 0, f"Kustomize build failed for {overlay.name}:\n{result.stderr}"
 
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
+    @requires_tool("kubectl")
     def test_manifests_pass_dry_run(self, overlay: Path):
         """
         Manifests must pass kubectl dry-run validation

@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -33,6 +35,7 @@ class TestServiceAccountSeparation:
         gc.collect()
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"
@@ -166,6 +169,7 @@ class TestWorkloadIdentityBindings:
         gc.collect()
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def staging_service_accounts(self):
         """Load ServiceAccounts from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
@@ -179,6 +183,7 @@ class TestWorkloadIdentityBindings:
         return [doc for doc in documents if doc and doc.get("kind") == "ServiceAccount"]
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def production_service_accounts(self):
         """Load ServiceAccounts from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
@@ -279,6 +284,7 @@ class TestRBACConfiguration:
         gc.collect()
 
     @pytest.fixture
+    @requires_tool("kustomize")
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"

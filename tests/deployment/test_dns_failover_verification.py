@@ -22,6 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -158,6 +160,7 @@ class TestDNSResolution:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kubectl")
     def _validate_dns_test_pod_manifest(self, dns_name: str) -> tuple[bool, str]:
         """
         Validate DNS test pod manifest using kubectl dry-run.
@@ -294,6 +297,7 @@ class TestServiceConfiguration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kubectl")
     def test_redis_session_service_uses_external_name(self):
         """
         Test that redis-session Service uses ExternalName type with DNS.
@@ -329,6 +333,7 @@ class TestServiceConfiguration:
             service["spec"]["externalName"] == "redis-session-staging.staging.internal"
         ), f"Service should use DNS name, got: {service['spec'].get('externalName')}"
 
+    @requires_tool("kubectl")
     def test_configmap_uses_dns_names(self):
         """
         Test that ConfigMap uses DNS names instead of hard-coded IPs.
@@ -437,6 +442,7 @@ class TestDNSFailoverSimulation:
             f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\n" f"Recommended: 300 seconds (5 minutes)"
         )
 
+    @requires_tool("kubectl")
     def test_deployment_can_connect_to_services_via_dns(self):
         """
         Test that the deployment can connect to services via DNS names.

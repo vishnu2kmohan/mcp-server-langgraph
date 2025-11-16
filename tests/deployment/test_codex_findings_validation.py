@@ -24,6 +24,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -232,6 +234,7 @@ class TestCriticalIssues:
 
             pytest.fail(error_msg)
 
+    @requires_tool("kustomize")
     def test_no_unsubstituted_kustomize_variables(self):
         """
         Test that Kustomize variables are properly substituted.
@@ -475,6 +478,7 @@ class TestLowPriorityIssues:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @requires_tool("kustomize")
     def test_no_unused_secret_generators(self):
         """
         Test that all secret generators are actually used.
