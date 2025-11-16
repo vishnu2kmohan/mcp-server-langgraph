@@ -245,7 +245,7 @@ test-ci:
 
 test-integration:
 	@echo "Running integration tests in Docker environment (matches CI)..."
-	./scripts/test-integration.sh
+	./scripts/test-integration.sh --build
 	@echo "✓ Integration tests complete"
 
 test-integration-local:
