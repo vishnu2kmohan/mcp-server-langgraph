@@ -114,8 +114,9 @@ repos:
       Fix: Add timeout=60 parameter to subprocess.run() calls.
 
       '
-    entry: .venv/bin/python .pre-commit-hooks/check_subprocess_timeout.py
-    language: system
+    entry: python .pre-commit-hooks/check_subprocess_timeout.py
+    language: python
+    additional_dependencies: []
     types: [python]
     files: ^tests/.*\.py$
     stages:
@@ -131,8 +132,9 @@ repos:
       - import imp (removed in Python 3.12+)
 
       '
-    entry: .venv/bin/python .pre-commit-hooks/check_banned_imports.py
-    language: system
+    entry: python .pre-commit-hooks/check_banned_imports.py
+    language: python
+    additional_dependencies: []
     types: [python]
     stages:
     - pre-commit
