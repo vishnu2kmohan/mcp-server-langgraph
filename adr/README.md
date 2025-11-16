@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-11-12
-**Total ADRs**: 54
+**Last Updated**: 2025-11-15
+**Total ADRs**: 58
 
 ## Overview
 
@@ -93,6 +93,8 @@ Each ADR follows this structure:
 | [ADR-0047](adr-0047-visual-workflow-builder.md) | Visual Workflow Builder | Unknown | Unknown |
 | [ADR-0050](adr-0050-dependency-singleton-pattern-justification.md) | Dependency Singleton Pattern Justification | Accepted | 2025-11-10 |
 | [ADR-0054](adr-0054-pod-failure-prevention-framework.md) | Pod Failure Prevention Framework | Accepted | 2025-11-12 |
+| [ADR-0055](adr-0055-diagram-visualization-standards.md) | Diagram Visualization Standards | Accepted | 2025-11-15 |
+| [ADR-0057](adr-0057-circuit-breaker-decorator-closure-isolation.md) | Circuit Breaker Decorator Closure Isolation | Unknown | Unknown |
 
 ### Performance & Resilience
 
@@ -108,6 +110,7 @@ Each ADR follows this structure:
 | [ADR-0008](adr-0008-infisical-secrets-management.md) | 8. Infisical for Secrets Management | Unknown | Unknown |
 | [ADR-0012](adr-0012-compliance-framework-integration.md) | 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA) | Unknown | Unknown |
 | [ADR-0041](adr-0041-postgresql-gdpr-storage.md) | Pure PostgreSQL for GDPR/HIPAA/SOC2 Compliance Storage | Accepted | 2025-11-02 |
+| [ADR-0056](adr-0056-asyncmock-configuration-prevention.md) | AsyncMock Configuration Prevention Mechanisms | Accepted | 2025-11-13 |
 
 ### Testing & Quality
 
@@ -118,6 +121,7 @@ Each ADR follows this structure:
 | [ADR-0049](adr-0049-pytest-fixture-consolidation.md) | Pytest Fixture Consolidation and Organization | Unknown | Unknown |
 | [ADR-0052](adr-0052-pytest-xdist-isolation-strategy.md) | Pytest-xdist Isolation Strategy | Unknown | Unknown |
 | [ADR-0053](adr-0053-ci-cd-failure-prevention-framework.md) | CI/CD Failure Prevention Framework | Accepted | 2025-11-12 |
+| [ADR-0058](adr-0058-pytest-xdist-state-pollution-prevention.md) | Pytest-xdist State Pollution Prevention and Mitigation | Unknown | Unknown |
 
 ## Creating a New ADR
 
