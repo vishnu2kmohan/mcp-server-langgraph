@@ -102,7 +102,8 @@ jobs:
     - name: Start test infrastructure
       run: |
         echo "Starting test infrastructure (docker-compose.test.yml)..."
-        docker compose -f docker-compose.test.yml up -d
+        echo "Building fresh Docker images to ensure latest code is used..."
+        docker compose -f docker-compose.test.yml up -d --build
 
         echo "Waiting for all services to report healthy..."
         echo "This may take up to 10 minutes for all services to initialize on slow runners..."
