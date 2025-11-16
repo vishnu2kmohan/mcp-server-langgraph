@@ -188,24 +188,30 @@ repos:
 
           Fix: Run 'make git-hooks' to restore proper configuration
 
-      - id: fix-mdx-syntax
-        name: Fix MDX Syntax Errors (Code Block Closings)
-        entry: uv run python scripts/fix_mdx_syntax.py --all
-        language: python
-        additional_dependencies: []
-        files: \.mdx$
-        pass_filenames: false
-        always_run: false
-        description: |
-          Automatically fixes common MDX syntax errors:
-          - Pattern 1: Duplicate ```LANG after closing ```
-          - Pattern 2: ```LANG before </CodeGroup>
-          - Pattern 3: ```LANG before MDX tags (<Note>, <Warning>, etc.)
-          - Pattern 4: ```LANG before markdown text (##, **, etc.)
-
-          Prevents Mintlify build failures from malformed code block closings.
-          Regression prevention for 2025-11-12 documentation audit findings.
-          See: docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md
+      # DISABLED 2025-11-15: This hook has a bug where it removes language specifiers
+      # from code block OPENINGS (```python, ```bash), thinking they're malformed
+      # closings. This breaks MDX parsing by causing acorn parse errors.
+      #
+      # Use `mintlify broken-links` for validation instead - it's more reliable.
+      #
+      # - id: fix-mdx-syntax
+      #   name: Fix MDX Syntax Errors (Code Block Closings)
+      #   entry: uv run python scripts/fix_mdx_syntax.py --all
+      #   language: python
+      #   additional_dependencies: []
+      #   files: \.mdx$
+      #   pass_filenames: false
+      #   always_run: false
+      #   description: |
+      #     Automatically fixes common MDX syntax errors:
+      #     - Pattern 1: Duplicate ```LANG after closing ```
+      #     - Pattern 2: ```LANG before </CodeGroup>
+      #     - Pattern 3: ```LANG before MDX tags (<Note>, <Warning>, etc.)
+      #     - Pattern 4: ```LANG before markdown text (##, **, etc.)
+      #
+      #     Prevents Mintlify build failures from malformed code block closings.
+      #     Regression prevention for 2025-11-12 documentation audit findings.
+      #     See: docs-internal/DOCUMENTATION_AUDIT_2025-11-12_FIXES.md
 
       - id: validate-mintlify-docs
         name: Validate Mintlify Documentation
