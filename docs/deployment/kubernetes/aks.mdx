@@ -25,7 +25,7 @@ This guide covers deploying to AKS with production-ready configuration including
 
 ### Install Prerequisites
 
-```bash
+```
 ## Install Azure CLI
 brew install azure-cli
 
@@ -40,7 +40,7 @@ az aks install-cli
 ```
 ### Create Resource Group
 
-```bash
+```
 ## Create resource group
 az group create \
   --name langgraph-rg \
@@ -54,7 +54,7 @@ az configure --defaults group=langgraph-rg location=eastus
 
 #### Using Azure CLI
 
-```bash
+```
 ## Create AKS cluster
 az aks create \
   --name langgraph-cluster \
@@ -85,7 +85,7 @@ kubectl get nodes
 ```
 #### Advanced Configuration
 
-```bash
+```
 ## Create with custom networking
 az aks create \
   --name langgraph-cluster \
@@ -121,7 +121,7 @@ az aks create \
 
 #### Enable Workload Identity
 
-```bash
+```
 ## Enable OIDC issuer
 az aks update \
   --name langgraph-cluster \
@@ -138,7 +138,7 @@ export AKS_OIDC_ISSUER=$(az aks show \
 ```
 #### Create Managed Identity
 
-```bash
+```
 ## Create user-assigned managed identity
 az identity create \
   --name mcp-server-langgraph-identity \
@@ -161,7 +161,7 @@ export IDENTITY_OBJECT_ID=$(az identity show \
 
 #### Create Federated Credentials
 
-```bash
+```
 ## Create federated credential
 az identity federated-credential create \
   --name mcp-server-langgraph-federated-credential \
@@ -189,7 +189,7 @@ metadata:
 
 #### Create PostgreSQL Server
 
-```bash
+```
 ## Create PostgreSQL flexible server
 az postgres flexible-server create \
   --name langgraph-postgres \
@@ -249,7 +249,7 @@ POSTGRES_HOST=$(az postgres flexible-server show \
 
 After creating the databases, initialize the GDPR schema:
 
-```bash
+```
 ## Apply GDPR schema (5 tables: user_profiles, user_preferences, consent_records, conversations, audit_logs)
 PGPASSWORD=your-admin-password psql \
   -h $POSTGRES_HOST \
@@ -269,7 +269,7 @@ See [GDPR Storage Configuration](/deployment/gdpr-storage-configuration) for ret
 
 #### Configure Private Endpoint
 
-```bash
+```
 ## Create private endpoint
 az network private-endpoint create \
   --name postgres-private-endpoint \
@@ -301,7 +301,7 @@ az network private-dns link vnet create \
 
 #### Create Redis Cache
 
-```bash
+```
 ## Create Redis cache
 az redis create \
   --name langgraph-redis \
@@ -339,7 +339,7 @@ az redis patch-schedule set \
 
 #### Create Key Vault
 
-```bash
+```
 ## Create Key Vault
 az keyvault create \
   --name langgraph-keyvault \
@@ -361,7 +361,7 @@ az role assignment create \
 ```
 #### Store Secrets
 
-```bash
+```
 ## Store secrets
 az keyvault secret set \
   --vault-name langgraph-keyvault \
@@ -385,7 +385,7 @@ az keyvault secret set \
 ```
 #### CSI Driver Integration
 
-```bash
+```
 ## Enable Key Vault addon
 az aks enable-addons \
   --name langgraph-cluster \
@@ -470,7 +470,7 @@ spec:
 
 #### Create ACR
 
-```bash
+```
 ## Create container registry
 az acr create \
   --name langgraphacr \
@@ -490,7 +490,7 @@ az acr login --name langgraphacr
 ```
 #### Build and Push Images
 
-```bash
+```
 ## Build in ACR (no local Docker needed)
 az acr build \
   --registry langgraphacr \
@@ -507,7 +507,7 @@ docker push langgraphacr.azurecr.io/langgraph/agent:latest
 
 #### Install AGIC
 
-```bash
+```
 ## Create Application Gateway
 az network application-gateway create \
   --name langgraph-appgw \
@@ -568,7 +568,7 @@ spec:
 
 #### Enable Container Insights
 
-```bash
+```
 ## Enable monitoring
 az aks enable-addons \
   --name langgraph-cluster \
@@ -695,7 +695,7 @@ spec:
     targetPort: 9090
 ```
 **Deploy**:
-```bash
+```
 ## Create namespace
 kubectl create namespace mcp-server-langgraph
 
@@ -711,7 +711,7 @@ kubectl logs -f deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 #### Cluster Autoscaler
 
-```bash
+```
 ## Enable cluster autoscaler
 az aks update \
   --name langgraph-cluster \

@@ -17,7 +17,7 @@ See [ADR-0037](/architecture/adr-0037-identity-federation) for architecture deta
 
 #### LDAP/Active Directory
 
-```bash
+```
 ## Set environment variables
 export LDAP_CONNECTION_URL='ldap://ad.example.com:389'
 export LDAP_BIND_DN='CN=Service Account,OU=Service Accounts,DC=example,DC=com'
@@ -32,7 +32,7 @@ See [setup_ldap_federation.py](/reference/setup-scripts#setup_ldap_federation-py
 
 #### Google Workspace
 
-```bash
+```
 ## Set credentials
 export GOOGLE_CLIENT_ID='your-client-id.apps.googleusercontent.com'
 export GOOGLE_CLIENT_SECRET='your-secret'
@@ -87,7 +87,7 @@ See [setup_saml_idp.py](/reference/setup-scripts#setup_saml_idp-py) for full doc
 
 #### Federated User Login
 
-```python
+```
 1. User visits: https://app.example.com
 2. Clicks "Sign in with Google" (or LDAP, ADFS, etc.)
 3. Redirects to Keycloak
@@ -147,7 +147,7 @@ providers:
 
 #### Test LDAP Connection
 
-```bash
+```
 ## In Keycloak Admin Console:
 ## User Federation → ldap → Test connection
 ## User Federation → ldap → Test authentication
@@ -155,7 +155,7 @@ providers:
 ```
 #### Test OIDC Login
 
-```bash
+```
 ## Visit Keycloak account console
 https://keycloak.example.com/realms/langgraph-agent/account
 
@@ -165,7 +165,7 @@ https://keycloak.example.com/realms/langgraph-agent/account
 ```
 #### Verify JWT Issuance
 
-```bash
+```
 ## After federated login, get JWT
 curl -X POST http://localhost:8080/auth/login \
   -d '{"username": "alice@example.com", "password": "federated-password"}'

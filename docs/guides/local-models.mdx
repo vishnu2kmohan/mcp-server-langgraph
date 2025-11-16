@@ -166,7 +166,7 @@ llm = Ollama(
     num_thread=8,  # CPU threads
     num_gpu=1,     # Use GPU
 )
-```bash
+```
 #### Available Models
 
 | Model | Size | Use Case | Memory Required |
@@ -369,7 +369,7 @@ spec:
     requests:
       storage: 100Gi
   storageClassName: fast-ssd
-```yaml
+```
 #### Load Models via Init Container
 
 ```
@@ -511,7 +511,7 @@ ollama pull llama3.2:3b         # Default (usually q4)
 
 #### Concurrent Requests
 
-```python
+```
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -549,12 +549,12 @@ response2 = await llm.ainvoke(
     "Give me an example",
     memory=memory  # Ollama remembers previous context
 )
-```python
+```
 ### Fine-Tuning
 
 #### Create Modelfile
 
-```text
+```
 ## Modelfile
 FROM llama3.2:3b
 
@@ -571,7 +571,7 @@ PARAMETER stop "Assistant:"
 
 #### Build Custom Model
 
-```bash
+```
 ## Create model
 ollama create my-custom-model -f Modelfile
 
@@ -585,7 +585,7 @@ LLM_MODEL_NAME=my-custom-model
 
 #### Fine-Tune with LoRA
 
-```bash
+```
 ## Use libraries like axolotl or unsloth
 uv pip install unsloth
 

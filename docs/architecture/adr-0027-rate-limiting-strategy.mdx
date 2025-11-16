@@ -245,7 +245,7 @@ RATE_LIMITS = {
 
 #### Environment Variables
 
-```bash
+```
 ## Rate Limiting
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_STORAGE_URI=redis://localhost:6379
@@ -272,7 +272,7 @@ FF_RATE_LIMIT_ENFORCEMENT_MODE=enforce  # enforce, log_only, disabled
 
 #### New Metrics
 
-```python
+```
 ## Rate limit violations
 rate_limit_exceeded_total{tier, endpoint, limit_type}
 rate_limit_remaining{tier, endpoint}
@@ -287,7 +287,7 @@ suspicious_activity_total{ip, user_id, reason}
 
 #### Prometheus Alerts
 
-```yaml
+```
 - alert: HighRateLimitViolations
   expr: rate(rate_limit_exceeded_total[5m]) > 10
   for: 5m

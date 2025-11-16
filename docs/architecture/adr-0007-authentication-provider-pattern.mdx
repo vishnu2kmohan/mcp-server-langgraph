@@ -36,7 +36,7 @@ We will implement a **pluggable authentication provider pattern** using the Abst
 
 #### Architecture
 
-```python
+```
 ## Abstract interface
 class UserProvider(ABC):
     @abstractmethod
@@ -62,7 +62,7 @@ def create_user_provider(auth_provider: Literal["inmemory", "keycloak"]) -> User
 
 #### Configuration
 
-```python
+```
 ## Environment variables
 AUTH_PROVIDER=keycloak  # or "inmemory"
 KEYCLOAK_SERVER_URL=https://keycloak.example.com

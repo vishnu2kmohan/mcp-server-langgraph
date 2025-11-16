@@ -39,7 +39,7 @@ Access conversation history and context.
 **URI Pattern**: `conversation://{conversation_id}`
 
 **Example**:
-```python
+```
 ## Read conversation
 resource = await client.read_resource("conversation://conv_123")
 
@@ -69,7 +69,7 @@ Access local or remote files.
 **URI Pattern**: `file://{path}`
 
 **Example**:
-```python
+```
 ## Read file
 resource = await client.read_resource("file:///docs/manual.pdf")
 
@@ -96,7 +96,7 @@ Access curated knowledge bases and documentation.
 **URI Pattern**: `knowledge://{knowledge_base_id}`
 
 **Example**:
-```python
+```
 ## Search knowledge base
 resource = await client.read_resource(
     "knowledge://product-docs",
@@ -128,7 +128,7 @@ Access external HTTP/HTTPS endpoints.
 **URI Pattern**: `http[s]://{url}`
 
 **Example**:
-```python
+```
 ## Fetch HTTP resource
 resource = await client.read_resource(
     "https://api.example.com/users/123"
@@ -157,7 +157,7 @@ Access database tables and queries.
 **URI Pattern**: `db://{database}/{table}` or `db://{database}/query`
 
 **Example**:
-```python
+```
 ## Read table data
 resource = await client.read_resource(
     "db://analytics/events",
@@ -186,7 +186,7 @@ print(f"Found {len(events['rows'])} events")
 
 Discover available resources:
 
-```python
+```
 ## List all resources
 resources = await client.list_resources()
 
@@ -220,7 +220,7 @@ for resource in resources:
 
 Access resource content:
 
-```python
+```
 ## Read resource
 resource = await client.read_resource("conversation://conv_123")
 
@@ -230,7 +230,7 @@ for content in resource.contents:
     print(f"Content: {content.text[:200]}...")
 ```
 **With Parameters**:
-```python
+```
 ## Read with parameters
 resource = await client.read_resource(
     "knowledge://product-docs",
@@ -245,7 +245,7 @@ resource = await client.read_resource(
 
 Get notifications when resources change:
 
-```python
+```
 ## Subscribe to resource updates
 await client.subscribe_resource("conversation://conv_123")
 
@@ -273,7 +273,7 @@ client.on("resource_updated", on_resource_updated)
 
 Stop receiving updates:
 
-```python
+```
 ## Unsubscribe
 await client.unsubscribe_resource("conversation://conv_123")
 ```
@@ -281,7 +281,7 @@ await client.unsubscribe_resource("conversation://conv_123")
 
 Define reusable resource patterns:
 
-```python
+```
 ## Define template
 template = {
     "uriTemplate": "conversation://{conversation_id}",
@@ -299,7 +299,7 @@ resource = await client.read_resource(uri)
 
 Resources respect authorization rules:
 
-```python
+```
 ## Check access
 allowed = await openfga_client.check_permission(
     user=f"user:{user_id}",
@@ -315,7 +315,7 @@ resource = await client.read_resource("conversation://conv_123")
 ```
 
 **Grant access**:
-```python
+```
 ## Grant user view access to conversation
 await openfga_client.write_tuples([{
     "user": f"user:{user_id}",

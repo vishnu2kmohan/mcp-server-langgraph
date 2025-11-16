@@ -23,7 +23,7 @@ Modern AI agents require numerous I/O-bound operations:
 - **Concurrent requests**: Multiple users, parallel tool executions
 
 Traditional synchronous Python blocks the event loop on I/O:
-```python
+```
 ## Synchronous (BLOCKS entire thread)
 response = requests.get("https://api.llm.com/chat")  # 5 seconds
 session = redis_client.get("session:123")            # 20ms
@@ -46,7 +46,7 @@ We will adopt an **async-first architecture** using Python's `asyncio` throughou
 
 **All I/O operations MUST be async**. Pure CPU work MAY be sync.
 
-```python
+```
 ## ✅ Async I/O operations
 async def call_llm(prompt: str) -> str:
     async with httpx.AsyncClient() as client:
@@ -96,7 +96,7 @@ We use async-compatible libraries:
 #### Async/Await Patterns
 
 ##### Pattern 1: Concurrent Execution
-```python
+```
 ## Execute multiple I/O operations concurrently
 async def enrich_user_data(user_id: str) -> UserData:
     # Run 3 API calls in parallel (total time = max(t1, t2, t3), not sum)
@@ -109,7 +109,7 @@ async def enrich_user_data(user_id: str) -> UserData:
     return UserData(session=session, roles=roles, preferences=preferences)
 ```
 ##### Pattern 2: Async Iteration
-```python
+```
 ## Stream results instead of blocking
 async def process_batch(user_ids: List[str]):
     async for user_id in async_iterator(user_ids):
@@ -118,7 +118,7 @@ async def process_batch(user_ids: List[str]):
 ```
 
 ##### Pattern 3: Timeout Management
-```python
+```
 ## Prevent operations from hanging
 async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
     try:
@@ -188,7 +188,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
 
 #### Async Codebase Statistics
 
-```bash
+```
 ## 451 async functions across codebase
 $ grep -r "async def" src/ --include="*.py" | wc -l
 451
@@ -204,7 +204,7 @@ $ grep -r "async def" src/ --include="*.py" | wc -l
 
 #### FastAPI Integration
 
-```python
+```
 ## src/mcp_server_langgraph/api/gdpr.py
 from fastapi import FastAPI, Depends
 
@@ -223,7 +223,7 @@ async def export_user_data(
 ```
 #### Async Context Managers
 
-```python
+```
 ## Async resource management
 async with redis.asyncio.from_url(redis_url) as client:
     await client.set("key", "value")
@@ -250,7 +250,7 @@ result = await run_sync_in_async(blocking_cpu_work, data)
 ```
 #### Async Testing
 
-```python
+```
 ## tests/test_session.py
 import pytest
 
@@ -400,7 +400,7 @@ Async Architecture:
 
 #### Uvicorn ASGI Server
 
-```bash
+```
 ## Start async server with 4 workers
 uvicorn mcp_server_langgraph.mcp.server_streamable:app \
     --workers 4 \
@@ -411,7 +411,7 @@ uvicorn mcp_server_langgraph.mcp.server_streamable:app \
 
 #### LangGraph Async Support
 
-```python
+```
 ## core/agent.py
 from langgraph.graph import StateGraph
 
@@ -427,7 +427,7 @@ result = await compiled.ainvoke({"messages": [user_message]})
 
 #### Redis Async Client
 
-```python
+```
 ## auth/session.py
 import redis.asyncio as redis
 
@@ -441,7 +441,7 @@ class RedisSessionStore(SessionStore):
 ```
 #### OpenFGA Async Client
 
-```python
+```
 ## auth/openfga.py
 from openfga_sdk import OpenFgaClient
 
@@ -454,7 +454,7 @@ class OpenFGAClient:
 ### Best Practices
 
 #### 1. Always Await Async Functions
-```python
+```
 ## ❌ BAD: Forgot await (returns coroutine, not result)
 result = async_function()
 
@@ -462,7 +462,7 @@ result = async_function()
 result = await async_function()
 ```
 #### 2. Use `asyncio.gather()` for Concurrent I/O
-```python
+```
 ## ❌ BAD: Sequential (slow)
 result1 = await call1()
 result2 = await call2()
@@ -477,7 +477,7 @@ result1, result2, result3 = await asyncio.gather(
 ```
 
 #### 3. Set Timeouts for I/O Operations
-```python
+```
 ## Always use timeouts to prevent hanging
 result = await asyncio.wait_for(external_api_call(), timeout=30)
 ```

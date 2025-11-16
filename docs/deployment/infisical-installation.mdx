@@ -48,7 +48,7 @@ Do you need Infisical?
 - Fastest and most reliable
 
 **Usage**:
-```bash
+```
 ## Docker Compose (development)
 docker compose up -d
 
@@ -76,7 +76,7 @@ kubectl apply -k deployments/kustomize/base
 - Managed by pip
 
 **Installation**:
-```bash
+```
 ## Install with Infisical support
 uv sync --extra secrets
 
@@ -100,7 +100,7 @@ python -c "from infisical_client import InfisicalClient; print('✓ Infisical in
 - Predictable version
 
 **Installation**:
-```bash
+```
 ## Install specific version with wheels
 uv pip install infisical-python==2.3.5
 
@@ -132,7 +132,7 @@ uv pip show infisical-python
 
 **Installation**:
 
-```bash
+```
 ## 1. Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
@@ -167,7 +167,7 @@ python -c "from infisical_client import InfisicalClient; print('✓ Built succes
 - Perfect for development
 
 **Setup**:
-```bash
+```
 ## Create .env file
 cat > .env << EOF
 JWT_SECRET_KEY=your-secret-key-here
@@ -182,7 +182,7 @@ python -m mcp_server_langgraph.mcp.server_streamable
 ```
 **How it works**:
 The application checks for Infisical, and if unavailable, uses `os.getenv()`:
-```python
+```
 ## Automatic fallback in SecretsManager
 if not self.client:
     return os.getenv(key, fallback)
@@ -195,7 +195,7 @@ if not self.client:
 
 Use the provided script to build wheels for multiple Python versions:
 
-```bash
+```
 ## Build wheels for all supported versions (3.10, 3.11, 3.12)
 ./scripts/build-infisical-wheels.sh
 
@@ -220,7 +220,7 @@ wheels/
 ```
 #### Installing from Local Wheels
 
-```bash
+```
 ## Auto-detect Python version
 uv pip install --no-index --find-links=wheels/py$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")') infisical-python
 
@@ -256,7 +256,7 @@ error: command 'cargo' not found
 ```
 **Solution**: Either install Rust or use pre-built wheels:
 
-```bash
+```
 ## Option A: Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
@@ -280,7 +280,7 @@ ERROR: Could not find a version that satisfies the requirement infisical-python=
 **Cause**: Version 2.3.6 lacks wheels for some platforms (x86_64 Linux).
 
 **Solutions**:
-```bash
+```
 ## Option A: Use version with wheels
 uv pip install infisical-python==2.3.5
 
@@ -299,7 +299,7 @@ docker compose up -d
 error: failed to run custom build command for `pyo3-ffi`
 ```
 **Solutions**:
-```bash
+```
 ## Set compatibility flag
 export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
@@ -328,7 +328,7 @@ uv sync --extra secrets
    - Generate Universal Auth credentials
 
 4. **Configure environment**:
-```bash
+```
 ## Add to .env
 INFISICAL_SITE_URL=https://app.infisical.com
 INFISICAL_CLIENT_ID=your-client-id
@@ -352,7 +352,7 @@ docker build -t mcp-server-langgraph -f docker/Dockerfile .
 ```
 #### Kubernetes
 
-```yaml
+```
 ## Use Helm chart with Infisical enabled
 helm install mcp-server deployments/helm/mcp-server-langgraph \
   --set secrets.infisicalClientId=<client-id> \
@@ -362,7 +362,7 @@ helm install mcp-server deployments/helm/mcp-server-langgraph \
 
 #### Cloud Run / App Engine
 
-```bash
+```
 ## Build with Cloud Build (uses Dockerfile)
 gcloud builds submit --tag gcr.io/PROJECT_ID/mcp-server-langgraph
 
@@ -394,7 +394,7 @@ gcloud run deploy mcp-server \
 ### Security Best Practices
 
 #### Never commit secrets
-```bash
+```
 ## ❌ NEVER do this
 git add .env
 git commit -m "Add secrets"
@@ -406,14 +406,14 @@ echo "*.pem" >> .gitignore
 ```
 
 #### Use Infisical in production
-```bash
+```
 ## ✅ Centralized secrets management
 ## ✅ Audit logs
 ## ✅ Role-based access control
 ## ✅ Secret rotation
 ```
 #### Rotate secrets regularly
-```bash
+```
 ## Update secrets in Infisical
 ## Application automatically fetches new values
 ## No code deployment needed

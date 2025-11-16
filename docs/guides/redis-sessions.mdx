@@ -248,7 +248,7 @@ sequenceDiagram
 
 #### Session TTL
 
-```bash
+```
 ## Fixed TTL (no extension)
 SESSION_TTL_SECONDS=3600  # 1 hour
 SESSION_SLIDING_WINDOW=false
@@ -265,7 +265,7 @@ SESSION_REFRESH_THRESHOLD=3600  # Refresh if < 1hr left
 
 #### Concurrent Sessions
 
-```bash
+```
 ## Limit concurrent sessions per user
 SESSION_MAX_CONCURRENT=5
 
@@ -328,7 +328,7 @@ session = await session_mgr.create_session(
 
 #### Get Session
 
-```python
+```
 ## Get by session ID
 session = await session_mgr.get_session(session_id)
 
@@ -344,7 +344,7 @@ for s in sessions:
 ```
 #### Refresh Session
 
-```python
+```
 ## Manual refresh
 session = await session_mgr.refresh_session(session_id)
 print(f"Extended until: {session.expires_at}")
@@ -355,7 +355,7 @@ print(f"Extended until: {session.expires_at}")
 
 #### Revoke Session
 
-```python
+```
 ## Revoke single session
 await session_mgr.revoke_session(session_id)
 
@@ -370,7 +370,7 @@ await session_mgr.revoke_session(
 ```
 #### Session Analytics
 
-```python
+```
 ## Count active sessions
 total = await session_mgr.count_active_sessions()
 print(f"Active sessions: {total}")
@@ -468,7 +468,7 @@ Benefits:
 
 Configure Redis persistence:
 
-```bash
+```
 ## redis.conf
 save 900 1       # Save after 900s if >= 1 key changed
 save 300 10      # Save after 300s if >= 10 keys changed
@@ -483,14 +483,14 @@ Or use managed Redis with automatic backups (Memorystore, ElastiCache, Azure Cac
 #### Security
 
 **Authentication**:
-```bash
+```
 ## Always use password
 REDIS_PASSWORD=strong-random-password
 requirepass strong-random-password
 ```
 
 **Encryption**:
-```bash
+```
 ## TLS/SSL in production
 REDIS_SSL=true
 REDIS_URL=rediss://redis-session:6380/0
@@ -506,7 +506,7 @@ REDIS_PASSWORD=password
 
 #### Memory Management
 
-```bash
+```
 ## redis.conf
 maxmemory 2gb
 maxmemory-policy allkeys-lru  # Evict least recently used
@@ -523,7 +523,7 @@ redis-cli INFO memory
 
 **Key metrics to track**:
 
-```text
+```
 ## Active sessions
 redis_db_keys{db="db0"}
 

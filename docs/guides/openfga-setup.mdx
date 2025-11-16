@@ -313,7 +313,7 @@ OPENFGA_API_SCHEME=https               # http or https
 ## Optional: Performance
 OPENFGA_MAX_RETRIES=3                  # Retry failed requests
 OPENFGA_TIMEOUT=30                     # Request timeout (seconds)
-```python
+```
 #### Client Configuration
 
 ```
@@ -347,7 +347,7 @@ client = OpenFGAClient(
 
 #### Creating Relationships
 
-```python
+```
 ## Grant alice admin access to organization
 await client.write_tuples([{
     "user": "user:alice",
@@ -390,7 +390,7 @@ else:
 
 #### Listing Permissions
 
-```python
+```
 ## What can user access?
 tools = await client.list_objects(
     user="user:alice",
@@ -411,7 +411,7 @@ print(f"Can execute chat: {users}")
 
 #### Deleting Relationships
 
-```python
+```
 ## Revoke specific permission
 await client.delete_tuples([{
     "user": "user:bob",
@@ -468,7 +468,7 @@ spec:
           limits:
             cpu: 1000m
             memory: 1Gi
-```python
+```
 #### PostgreSQL Backend
 
 **Always use PostgreSQL in production** (not in-memory):
@@ -500,7 +500,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 #### Performance Tuning
 
-```bash
+```
 ## Enable caching
 OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
 OPENFGA_CHECK_QUERY_CACHE_LIMIT=10000
@@ -517,7 +517,7 @@ OPENFGA_LOG_FORMAT=json
 
 #### Monitoring
 
-```yaml
+```
 ## ServiceMonitor for Prometheus
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -534,7 +534,7 @@ spec:
 
 **Key Metrics**:
 
-```text
+```
 ## Check rate
 rate(openfga_check_total[5m])
 
@@ -553,7 +553,7 @@ openfga_tuple_count
 
 #### Backup Tuples
 
-```python
+```
 ## Export all relationship tuples
 tuples = await client.read_tuples()
 
@@ -564,7 +564,7 @@ with open('openfga-backup.json', 'w') as f:
 
 #### Restore Tuples
 
-```python
+```
 ## Import tuples
 import json
 with open('openfga-backup.json', 'r') as f:
@@ -575,7 +575,7 @@ await client.write_tuples(tuples)
 
 #### Database Backup
 
-```bash
+```
 ## Backup PostgreSQL
 pg_dump -U openfga openfga > openfga-backup.sql
 

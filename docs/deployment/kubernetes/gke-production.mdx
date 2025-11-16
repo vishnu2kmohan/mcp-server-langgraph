@@ -309,7 +309,7 @@ terraform apply tfplan
 
 #### Step 3: Configure kubectl
 
-```bash
+```
 ## Get credentials
 eval $(terraform output -raw kubectl_config_command)
 
@@ -463,7 +463,7 @@ Enable image signing to ensure only trusted container images run in your cluster
 
 #### Setup Monitoring
 
-```bash
+```
 ## Create dashboards and alerts
 ./monitoring/gcp/setup-monitoring.sh PROJECT_ID
 ```

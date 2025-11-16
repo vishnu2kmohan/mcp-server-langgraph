@@ -33,7 +33,7 @@ The MCP server currently uses generic Python exceptions (`Exception`, `ValueErro
 
 #### Analysis
 
-```bash
+```
 ## Current state: No custom exceptions
 $ grep -r "class.*Exception" src/ | wc -l
 0
@@ -165,7 +165,7 @@ class RetryPolicy(str, Enum):
 
 #### Raising Exceptions
 
-```python
+```
 ## Authentication error with context
 raise TokenExpiredError(
     message="JWT token expired at 2025-10-20T10:30:00Z",
@@ -364,7 +364,7 @@ raise TokenInvalidError(
 
 #### Phase 4: Update Tests
 
-```python
+```
 ## Old test
 with pytest.raises(Exception):
     verify_token(invalid_token)
@@ -381,7 +381,7 @@ assert exc_info.value.retry_policy == RetryPolicy.NEVER
 
 #### Environment Variables
 
-```bash
+```
 ## Exception Handling
 EXCEPTION_INCLUDE_TRACEBACK=false  # Don't expose in prod
 EXCEPTION_DETAILED_ERRORS=false    # Sanitize error messages

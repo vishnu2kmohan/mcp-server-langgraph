@@ -399,7 +399,7 @@ Version 2.5.0 delivers **enterprise-grade observability** and **developer experi
 git pull origin main
 ```
 **Step 2: (Optional) Choose Infisical installation method**
-```bash
+```
 ## Option 1: Docker (automatic)
 docker compose up -d
 
@@ -415,14 +415,14 @@ uv sync --extra secrets
 make test-integration
 ```
 **Step 4: Update CI/CD**
-```yaml
+```
 ## Remove this line from .github/workflows/ci.yaml
 ## continue-on-error: true  # ← DELETE THIS
 ```
 
 #### Testing the Upgrade
 
-```bash
+```
 ## 1. Run all tests
 make test
 

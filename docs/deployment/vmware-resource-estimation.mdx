@@ -496,7 +496,7 @@ flowchart TD
 
 ##### Key Metrics (Prometheus)
 
-```yaml
+```
 ## CPU Utilization (target: 50-70%)
 avg(rate(container_cpu_usage_seconds_total[5m])) by (pod)
 
@@ -520,7 +520,7 @@ rate(container_network_transmit_bytes_total[5m])
 
 #### Capacity Planning Alerts
 
-```yaml
+```
 ## CPU pressure
 alert: HighCPUUsage
 expr: avg(rate(container_cpu_usage_seconds_total[5m])) > 0.8
@@ -600,7 +600,7 @@ targetMemoryUtilization: 80%
 
 Before deploying to production, conduct load testing:
 
-```bash
+```
 ## Example: Simulate 1000 concurrent users
 hey -n 100000 -c 1000 -q 10 \
   -H "Authorization: Bearer $TOKEN" \

@@ -223,7 +223,7 @@ resource "example" "name" {
 #### Pre-commit Hook Standards
 
 **Rule 1**: Python hooks use `language: python`
-```yaml
+```
 - id: my-python-hook
   entry: python3 scripts/my_script.py
   language: python  # Not 'system'
@@ -238,7 +238,7 @@ resource "example" "name" {
 - Regression test validates alignment
 
 **Rule 3**: Provide descriptions
-```yaml
+```
 - id: validate-workflow-test-deps
   name: Validate Workflow Test Dependencies
   description: |

@@ -38,7 +38,7 @@ Navigate to: **Settings → Secrets and variables → Actions**
 
 ##### Application Secrets
 
-```bash
+```
 ## Anthropic API Key (required for tests)
 ANTHROPIC_API_KEY=sk-ant-...
 
@@ -51,7 +51,7 @@ OPENFGA_MODEL_ID=01HYYY...
 ```
 ##### Infrastructure Secrets (Optional)
 
-```bash
+```
 ## Kubernetes Configuration (base64 encoded)
 KUBECONFIG_DEV=$(cat ~/.kube/config | base64)
 KUBECONFIG_STAGING=$(cat ~/.kube/config | base64)
@@ -158,7 +158,7 @@ Create environment: `production`
 9. **Comment** - Post check results
 
 **Setup:**
-```bash
+```
 ## Create labeler configuration (already exists)
 cat .github/labeler.yml
 ```
@@ -196,7 +196,7 @@ cat .github/labeler.yml
 6. **Notify** - Send Slack notifications
 
 **Usage:**
-```bash
+```
 ## Create and push tag
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
@@ -288,7 +288,7 @@ Protection rules:
 
 #### Setting Up Kubeconfig
 
-```bash
+```
 ## Encode kubeconfig for GitHub Actions
 cat ~/.kube/config | base64 > kubeconfig.b64
 
@@ -300,7 +300,7 @@ rm kubeconfig.b64
 ```
 #### Testing Secrets Locally
 
-```bash
+```
 ## Install GitHub CLI
 brew install gh  # macOS
 ## or
@@ -366,7 +366,7 @@ gh secret set ANTHROPIC_API_KEY -b"sk-ant-..."
 **Error:** `Unable to connect to cluster`
 
 **Solution:**
-```bash
+```
 ## Ensure base64 encoded
 cat ~/.kube/config | base64 -w 0 | gh secret set KUBECONFIG_PROD
 
@@ -393,7 +393,7 @@ kubectl --kubeconfig=test-kubeconfig get nodes
 ##### 5. Dependabot PRs Not Auto-Merging
 
 **Setup auto-merge:**
-```bash
+```
 ## Enable auto-merge in repository settings
 ## Settings → General → Pull Requests → Allow auto-merge
 
@@ -405,7 +405,7 @@ gh repo edit --enable-auto-merge
 
 ##### View Logs
 
-```bash
+```
 ## List workflow runs
 gh run list --workflow=ci.yaml
 
@@ -418,7 +418,7 @@ gh run download <run-id>
 
 ##### Re-run Failed Jobs
 
-```bash
+```
 ## Re-run specific workflow
 gh run rerun <run-id>
 
@@ -494,7 +494,7 @@ concurrency:
 
 All workflows support manual triggering via `workflow_dispatch`:
 
-```bash
+```
 ## Via GitHub UI
 ## Go to Actions → Select workflow → Run workflow
 
@@ -516,7 +516,7 @@ gh workflow run release.yaml
 Workflows use GitHub Actions cache to improve performance:
 
 #### Python Dependencies
-```yaml
+```
 - uses: actions/setup-python@v5
   with:
     python-version: '3.12'
@@ -527,7 +527,7 @@ Workflows use GitHub Actions cache to improve performance:
 ```
 
 #### Helm Charts
-```yaml
+```
 - name: Cache Helm
   uses: actions/cache@v4
   with:
@@ -537,7 +537,7 @@ Workflows use GitHub Actions cache to improve performance:
     key: ${{ runner.os }}-helm-${{ hashFiles('deployments/helm/**/Chart.yaml') }}
 ```
 #### kubectl Binary
-```yaml
+```
 - name: Cache kubectl
   uses: actions/cache@v4
   with:
@@ -568,7 +568,7 @@ All workflows include retention policies to manage storage costs:
 
 #### 1. Secret Rotation
 
-```bash
+```
 ## Rotate secrets regularly
 gh secret set JWT_SECRET_KEY -b"$(openssl rand -base64 32)"
 

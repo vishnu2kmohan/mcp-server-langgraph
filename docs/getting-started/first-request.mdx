@@ -20,7 +20,7 @@ Let's send your first message to the MCP Server with LangGraph! This guide walks
 
 Verify services are running:
 
-```bash
+```
 ## Check agent health
 curl http://localhost:8000/health
 
@@ -264,7 +264,7 @@ echo "View trace: http://localhost:16686/trace/$TRACE_ID"
 
 #### Simple Q&A
 
-```python
+```
 ## Ask a question
 response = httpx.post(url, headers=headers, json={
     "query": "Explain quantum computing in simple terms"
@@ -273,7 +273,7 @@ response = httpx.post(url, headers=headers, json={
 
 #### Multi-Turn Conversation
 
-```python
+```
 ## Conversation with context
 conversation = [
     {"role": "user", "content": "I'm learning Python"},
@@ -287,7 +287,7 @@ response = httpx.post(url, headers=headers, json={
 ```
 #### Tool Usage
 
-```python
+```
 ## Agent can use tools automatically
 response = httpx.post(url, headers=headers, json={
     "query": "Search for the latest news about AI"
@@ -297,7 +297,7 @@ response = httpx.post(url, headers=headers, json={
 
 #### Streaming Responses
 
-```python
+```
 ## Get streaming response (SSE)
 async with httpx.AsyncClient() as client:
     async with client.stream(
@@ -313,7 +313,7 @@ async with httpx.AsyncClient() as client:
 
 #### Authentication Errors
 
-```python
+```
 ## 401 Unauthorized
 {
   "error": "unauthorized",
@@ -325,7 +325,7 @@ async with httpx.AsyncClient() as client:
 
 #### Authorization Errors
 
-```python
+```
 ## 403 Forbidden
 {
   "error": "forbidden",
@@ -336,7 +336,7 @@ async with httpx.AsyncClient() as client:
 
 #### Rate Limiting
 
-```python
+```
 ## 429 Too Many Requests
 {
   "error": "rate_limit_exceeded",
@@ -349,7 +349,7 @@ async with httpx.AsyncClient() as client:
 
 #### Server Errors
 
-```python
+```
 ## 500 Internal Server Error
 {
   "error": "internal_error",

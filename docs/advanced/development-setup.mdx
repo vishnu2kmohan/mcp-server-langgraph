@@ -37,7 +37,7 @@ This setup is optimized for productivity with hot reload, debugging support, cod
 #### Install Core Tools
 
 **macOS**:
-```bash
+```
 ## Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -46,7 +46,7 @@ brew install python@3.12 git docker docker compose # Install uv (fast Python pac
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 **Ubuntu/Debian**:
-```bash
+```
 ## Update package list
 sudo apt update
 
@@ -75,7 +75,7 @@ wsl --install -d Ubuntu-22.04
 ```
 #### Verify Installation
 
-```bash
+```
 ## Check Python version
 python3.12 --version  # Should be 3.12.x
 
@@ -92,7 +92,7 @@ uv --version
 
 ### Clone Repository
 
-```bash
+```
 ## Fork the repository (on GitHub)
 ## Then clone your fork
 git clone https://github.com/YOUR_USERNAME/mcp-server-langgraph.git
@@ -117,7 +117,7 @@ git remote -v
 - Uses `uv.lock` for reproducible builds
 </Note>
 
-```bash
+```
 ## Install ALL dependencies (recommended for development)
 uv sync
 
@@ -149,7 +149,7 @@ Only use manual `uv venv` if you need:
 
 If you need manual control:
 
-```bash
+```
 ## Create venv manually with specific Python version
 uv venv --python 3.12
 
@@ -296,7 +296,7 @@ code --install-extension charliermarsh.ruff
 
 #### Create .env File
 
-```bash
+```
 ## Copy example
 cp .env.example .env
 
@@ -306,7 +306,7 @@ vim .env  # or use your preferred editor
 
 #### Development .env
 
-```bash
+```
 ## Environment
 ENV=development
 DEBUG=true
@@ -352,7 +352,7 @@ LANGSMITH_ENABLED=false
 ```
 #### Using direnv (Optional but Recommended)
 
-```bash
+```
 ## Install direnv
 brew install direnv  # macOS
 sudo apt install direnv  # Ubuntu
@@ -374,7 +374,7 @@ direnv allow
 
 #### Install Pre-commit
 
-```bash
+```
 ## Install pre-commit
 uv tool install pre-commit
 
@@ -434,7 +434,7 @@ repos:
 
 #### Start Services
 
-```bash
+```
 ## Start all development services
 docker compose -f docker-compose.dev.yml up -d
 
@@ -529,7 +529,7 @@ volumes:
 
 #### Development Server
 
-```bash
+```
 ## Preferred: Use uv run
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
@@ -545,7 +545,7 @@ curl http://localhost:8000/health/live
 ```
 #### Run with Docker
 
-```bash
+```
 ## Build image
 docker build -t mcp-server-langgraph:dev .
 
@@ -561,7 +561,7 @@ docker run -p 8000:8000 \
 
 #### Run Tests
 
-```bash
+```
 ## Run unit tests
 uv run pytest -m unit
 
@@ -586,7 +586,7 @@ uv run pytest-watch
 ```
 #### Debugging Tests
 
-```bash
+```
 ## Run with pdb debugger
 uv run pytest --pdb
 
@@ -602,7 +602,7 @@ uv run pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb
 
 #### Format Code
 
-```bash
+```
 ## Format with black
 black src/ tests/
 
@@ -614,7 +614,7 @@ make format
 ```
 #### Lint Code
 
-```bash
+```
 ## Run flake8
 flake8 src/ tests/
 
@@ -630,7 +630,7 @@ make lint
 
 #### Auto-fix Issues
 
-```bash
+```
 ## Fix import sorting
 isort --fix src/
 
@@ -644,7 +644,7 @@ autopep8 --in-place --aggressive --aggressive src/
 
 #### Using Alembic
 
-```bash
+```
 ## Install Alembic
 uv pip install alembic
 
@@ -678,7 +678,7 @@ alembic history
 
 #### Debug with ipdb
 
-```python
+```
 ## Add this line where you want to break
 import ipdb; ipdb.set_trace()
 
@@ -687,7 +687,7 @@ breakpoint()
 ```
 #### Remote Debugging
 
-```python
+```
 ## Install debugpy
 uv pip install debugpy
 
@@ -770,7 +770,7 @@ services-logs:  ## View service logs
 	docker compose -f docker-compose.dev.yml logs -f
 ```
 **Usage**:
-```bash
+```
 ## Show all commands
 make help
 
@@ -863,7 +863,7 @@ make services-up
 
 #### Speed Up Development
 
-```bash
+```
 ## Use uv instead of pip (10-100x faster)
 uv add package-name
 

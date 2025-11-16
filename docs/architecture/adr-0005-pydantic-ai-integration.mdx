@@ -212,7 +212,7 @@ class AgentResponse(BaseModel):
 ```
 #### Usage in Agent
 
-```python
+```
 ## src/mcp_server_langgraph/core/agent.py
 decision = await pydantic_agent.route_message(message)
 ## decision.action: "use_tools" (typed!)
@@ -231,7 +231,7 @@ except Exception:
 ```
 #### Confidence Threshold
 
-```python
+```
 ## feature_flags.py
 pydantic_ai_confidence_threshold: float = 0.7
 

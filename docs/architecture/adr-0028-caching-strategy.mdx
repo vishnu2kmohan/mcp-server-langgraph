@@ -248,7 +248,7 @@ cached_content = caching.CachedContent.create(
 ```
 #### Examples
 
-```python
+```
 ## Authorization cache
 "auth:permission:user:alice:resource:doc123:action:read:v1"
 
@@ -302,7 +302,7 @@ async def update_user_profile(user_id: str, updates: dict):
 ```
 #### Cache Stampede Prevention
 
-```python
+```
 ## Lock-based cache refresh (prevent thundering herd)
 async def get_with_lock(key: str, fetcher: Callable, ttl: int):
     if cached := cache_get(key):
@@ -368,7 +368,7 @@ async def get_llm_response(prompt: str) -> str:
 
 #### Environment Variables
 
-```bash
+```
 ## Cache Configuration
 CACHE_L1_SIZE=1000
 CACHE_L1_TTL=60
@@ -384,7 +384,7 @@ GEMINI_ENABLE_CONTEXT_CACHING=true
 
 #### New Metrics
 
-```python
+```
 ## Cache hit/miss rates
 cache_hits_total{layer, namespace}
 cache_misses_total{layer, namespace}

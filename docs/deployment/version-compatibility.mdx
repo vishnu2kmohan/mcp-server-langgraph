@@ -171,7 +171,7 @@ This document tracks all infrastructure component versions across deployment met
 
 #### After Deploying (Docker Compose)
 
-```bash
+```
 ## Start all services
 docker compose up -d
 
@@ -204,7 +204,7 @@ curl http://localhost:3000/api/health
 ```
 #### After Deploying (Kubernetes)
 
-```bash
+```
 ## Deploy with Kustomize
 kubectl apply -k deployments/kustomize/overlays/staging
 
@@ -265,7 +265,7 @@ We follow this upgrade cadence:
 
 #### Docker Compose Rollback
 
-```bash
+```
 ## Stop current services
 docker compose down
 
@@ -282,7 +282,7 @@ docker compose up -d
 ```
 #### Kubernetes Rollback
 
-```bash
+```
 ## Rollback specific deployment
 kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 kubectl rollout undo deployment/keycloak -n mcp-server-langgraph

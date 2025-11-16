@@ -18,7 +18,7 @@ Always check logs first: `kubectl logs -f <pod-name>` or `docker compose logs -f
 
 ### Quick Diagnostic Commands
 
-```bash
+```
 ## Check overall health
 curl http://localhost:8000/health
 
@@ -944,7 +944,7 @@ curl http://localhost:8080/realms/langgraph/.well-known/openid-configuration
 
 #### Enable Debug Logging
 
-```python
+```
 ## config.py
 import logging
 
@@ -977,7 +977,7 @@ logger.debug("debug_message", user_id="alice", action="login")
 
 #### Distributed Tracing
 
-```python
+```
 ## Enable OpenTelemetry tracing
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -1014,7 +1014,7 @@ async def send_message(request: Request):
 ```
 #### Health Checks
 
-```python
+```
 ## Detailed health check
 from fastapi import status
 

@@ -26,7 +26,7 @@ Complete guide for setting up your local development environment.
 
 Get up and running in 5 minutes:
 
-```bash
+```
 ## 1. Clone the repository
 git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp_server_langgraph
@@ -95,7 +95,7 @@ uv run python examples/client_stdio.py
 
 ##### 1. Fork and Clone
 
-```bash
+```
 ## Fork the repository on GitHub first, then:
 git clone https://github.com/YOUR_USERNAME/mcp_server_langgraph.git
 cd mcp_server_langgraph
@@ -116,7 +116,7 @@ git remote -v
   - Uses `uv.lock` for reproducible builds
 </Note>
 
-```bash
+```
 ## uv sync creates .venv automatically and installs all dependencies
 uv sync
 
@@ -125,7 +125,7 @@ uv run python -c "import langgraph, anthropic; print('All imports successful')"
 ```
 **Using Make (recommended):**
 
-```bash
+```
 ## Install all dependencies
 make install-dev
 
@@ -137,7 +137,7 @@ make install-dev
 
 If you need manual control (e.g., specific Python version or custom location):
 
-```bash
+```
 ## Create venv manually with specific Python version
 uv venv --python 3.12
 
@@ -185,7 +185,7 @@ You need at least one LLM provider API key. Choose the one that works best for y
 
 **Option 4: Local Models (Ollama)**
 
-```bash
+```
 ## Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 
@@ -197,7 +197,7 @@ ollama pull llama3.1
 
 ##### 5. Configure Environment
 
-```bash
+```
 ## Copy example environment
 cp .env.example .env
 
@@ -210,7 +210,7 @@ code .env  # VS Code
 ```
 **Minimal .env configuration:**
 
-```bash
+```
 ## Choose your LLM provider
 LLM_PROVIDER=google  # or anthropic, openai, ollama
 
@@ -231,7 +231,7 @@ JWT_SECRET_KEY=dev-secret-change-in-production
 
 ##### 6. Start Infrastructure Services
 
-```bash
+```
 ## Start all services (OpenFGA, Jaeger, Prometheus, Grafana)
 docker compose up -d
 
@@ -247,7 +247,7 @@ docker compose ps
 ```
 **Check service health:**
 
-```bash
+```
 ## OpenFGA
 curl http://localhost:8080/healthz
 
@@ -263,7 +263,7 @@ open http://localhost:3000
 
 ##### 7. Setup OpenFGA Authorization
 
-```bash
+```
 ## Run setup script
 uv run python scripts/setup_openfga.py
 
@@ -279,7 +279,7 @@ echo "OPENFGA_MODEL_ID=01HYYYYYYYY" >> .env
 
 ##### 8. Verify Installation
 
-```bash
+```
 ## Run unit tests
 uv run pytest -m unit -v
 
@@ -298,7 +298,7 @@ uv run python examples/client_stdio.py
 
 #### Daily Development Cycle
 
-```bash
+```
 ## 1. Start your day - update from upstream
 git fetch upstream
 git checkout main
@@ -331,7 +331,7 @@ git push origin feat/your-feature
 ```
 #### Using Make Commands
 
-```bash
+```
 ## See all available commands
 make help
 
@@ -384,7 +384,7 @@ Create `.vscode/settings.json`:
 
 #### Running Tests
 
-```bash
+```
 ## All tests
 pytest
 
@@ -411,7 +411,7 @@ open htmlcov/index.html
 
 Create test files in `tests/` directory:
 
-```python
+```
 ## tests/test_my_feature.py
 import pytest
 from my_module import my_function
@@ -441,7 +441,7 @@ async def test_my_integration():
 
 #### Debug MCP Server
 
-```bash
+```
 ## Run with debug logging
 LOG_LEVEL=DEBUG python -m mcp_server_langgraph.mcp.server_stdio
 
@@ -451,7 +451,7 @@ echo "LOG_LEVEL=DEBUG" >> .env
 
 #### Debug with Python Debugger
 
-```python
+```
 ## Add breakpoint in code
 import pdb; pdb.set_trace()
 
@@ -460,7 +460,7 @@ breakpoint()
 ```
 #### Debug Tests
 
-```bash
+```
 ## Run pytest with debugger
 pytest --pdb
 
@@ -470,7 +470,7 @@ pytest -x --pdb
 
 #### View Traces
 
-```bash
+```
 ## Open Jaeger UI
 open http://localhost:16686
 
@@ -479,7 +479,7 @@ open http://localhost:16686
 ```
 #### Check Logs
 
-```bash
+```
 ## Docker service logs
 docker compose logs -f
 
@@ -498,7 +498,7 @@ tail -f mcp-server-langgraph.log
 
 ##### "ModuleNotFoundError"
 
-```bash
+```
 ## Check if .venv exists
 ls -la .venv
 
@@ -510,7 +510,7 @@ uv run python your_script.py
 ```
 ##### "Port already in use"
 
-```bash
+```
 ## Check what's using the port
 lsof -i :8080  # Mac/Linux
 netstat -ano | findstr :8080  # Windows
@@ -524,7 +524,7 @@ docker compose up -d
 
 ##### "OpenFGA connection refused"
 
-```bash
+```
 ## Check if OpenFGA is running
 docker compose ps
 
@@ -536,7 +536,7 @@ docker compose restart openfga
 ```
 ##### "API key invalid"
 
-```bash
+```
 ## Verify key is set
 echo $GOOGLE_API_KEY  # Linux/Mac
 echo %GOOGLE_API_KEY%  # Windows
@@ -549,7 +549,7 @@ cat .env | grep API_KEY
 
 ##### Tests failing
 
-```bash
+```
 ## Update dependencies
 uv sync
 

@@ -26,7 +26,7 @@ The `langgraph.json` file in your project root defines your deployment configura
   },
   "python_version": "3.11"
 }
-```bash
+```
 ### Configuration Options
 
 <ParamField path="dependencies" type="array" required>
@@ -105,7 +105,7 @@ Set environment variables in two ways:
 1. **langgraph.json** - For non-sensitive config
 2. **LangSmith Secrets** - For API keys and sensitive data
 
-```bash
+```
 ## Set secrets (recommended for API keys)
 langsmith secret set ANTHROPIC_API_KEY "your-key"
 langsmith secret set OPENAI_API_KEY "your-key"
@@ -194,7 +194,7 @@ Access via different endpoints:
 
 Validate your configuration before deploying:
 
-```bash
+```
 ## Test locally
 langgraph dev
 

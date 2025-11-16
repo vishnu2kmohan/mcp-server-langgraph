@@ -256,7 +256,7 @@ error_duration = Histogram(
 
 #### Example 1: Authentication Error
 
-```python
+```
 ## auth/middleware.py
 async def verify_token(self, token: str) -> TokenVerification:
     """Verify JWT token with proper error handling"""
@@ -304,7 +304,7 @@ async def verify_token(self, token: str) -> TokenVerification:
 
 #### Example 2: LLM Fallback
 
-```python
+```
 ## llm/factory.py
 async def create_llm_with_fallback(
     self,
@@ -362,7 +362,7 @@ async def create_llm_with_fallback(
 ```
 #### Example 3: Service Layer Error
 
-```python
+```
 ## core/compliance/data_export.py
 async def export_user_data(
     self,

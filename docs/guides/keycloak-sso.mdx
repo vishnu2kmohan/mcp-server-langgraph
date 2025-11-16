@@ -353,7 +353,7 @@ await sync_user_to_openfga(
 
 Trigger sync for existing users:
 
-```python
+```
 ## Sync single user
 await sync_user_to_openfga(
     user_id="alice",
@@ -434,7 +434,7 @@ KEYCLOAK_VERIFY_SSL=true  # REQUIRED!
 
 #### Performance Tuning
 
-```yaml
+```
 ## Kubernetes resources
 resources:
   requests:
@@ -462,7 +462,7 @@ postgresql:
 ```
 #### Backup & Recovery
 
-```bash
+```
 ## Backup PostgreSQL (Keycloak database)
 kubectl exec -n mcp-server-langgraph \
   $(kubectl get pod -n mcp-server-langgraph -l app=postgresql -o jsonpath='{.items[0].metadata.name}') \

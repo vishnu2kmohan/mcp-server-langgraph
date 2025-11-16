@@ -104,7 +104,7 @@ async function makeRequest(query) {
 
 #### Exchange Flow
 
-```python
+```
 1. Client sends request with API key header
 2. Kong custom plugin intercepts request
 3. Plugin validates key with Keycloak (via MCP server)
@@ -279,7 +279,7 @@ api_key_cache_hits / (api_key_cache_hits + api_key_cache_misses)
 
 #### Step 1: Export Existing Keys
 
-```bash
+```
 ## List Kong consumers
 curl http://kong-admin:8001/consumers
 
@@ -288,7 +288,7 @@ curl http://kong-admin:8001/consumers/USER/key-auth
 ```
 #### Step 2: Recreate in Keycloak
 
-```bash
+```
 ## For each user, create new API key
 curl -X POST /api/v1/api-keys \
   -H "Authorization: Bearer USER_JWT" \
@@ -329,7 +329,7 @@ if __name__ == "__main__":
 ```
 #### Webhook Integration
 
-```python
+```
 ## External system calls your webhook with API key
 from fastapi import FastAPI, Header, HTTPException
 

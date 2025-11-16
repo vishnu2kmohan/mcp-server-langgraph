@@ -51,7 +51,7 @@ config.py (line 9)
 #### 3. Configuration Race Condition
 
 **Problem**: Telemetry initialized before configuration was fully loaded:
-```python
+```
 ## Line 268-278 (v2.7.0)
 try:
     from mcp_server_langgraph.core.config import settings
@@ -89,7 +89,7 @@ We will **refactor observability to use lazy initialization** with an explicit `
 
 ##### Module-Level Lazy Proxies
 
-```python
+```
 ## observability/telemetry.py
 _observability_config: ObservabilityConfig | None = None
 
@@ -116,7 +116,7 @@ tracer = type('LazyTracer', (), {
 
 ##### Secrets Manager Decoupling
 
-```python
+```
 ## secrets/manager.py
 def _get_logger():
     """Get logger, preferring observability if initialized, else stdlib."""
@@ -188,7 +188,7 @@ def _setup_logging(self, enable_file_logging: bool = False):
 
 #### API Surface
 
-```python
+```
 ## New public API
 from mcp_server_langgraph.observability.telemetry import (
     init_observability,      # Initialize system
@@ -210,7 +210,7 @@ from mcp_server_langgraph.observability.telemetry import (
 ```
 #### Usage Pattern
 
-```python
+```
 ## main.py
 async def main():
     # STEP 1: Initialize observability first

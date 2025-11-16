@@ -305,7 +305,7 @@ Adds ColorBrewer2 theme initialization to sequence diagrams.
     4. Invalid HTML in labels (use `&lt;` not `<`)
 
     **Solution**:
-    ```bash
+```
     ## Extract and validate specific diagram
     sed -n '/```mermaid/,/```/p' file.mdx | sed '1d;$d' > test.mmd
     mmdc -i test.mmd -o test.svg

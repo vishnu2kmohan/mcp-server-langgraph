@@ -467,7 +467,7 @@ terraform apply
 
 Here's how modules work together in a complete environment:
 
-```hcl
+```
 ## terraform/environments/gcp-prod/main.tf
 
 terraform {
@@ -715,7 +715,7 @@ All modules implement security best practices:
   **Don't copy module code**. Reference modules from a central location and customize via variables.
 </Warning>
 
-```hcl
+```
 ## ✅ Good - Reference module
 module "vpc" {
   source = "../../modules/gcp-vpc"
@@ -739,7 +739,7 @@ module "vpc" {
 
 Never commit sensitive values to Git:
 
-```hcl
+```
 ## terraform.tfvars (in .gitignore)
 project_id = "my-project"
 cloudsql_additional_users = {
@@ -781,7 +781,7 @@ module "cloudsql" {
 
 #### View Outputs
 
-```bash
+```
 ## All outputs
 terraform output
 
@@ -792,7 +792,7 @@ terraform output -json > outputs.json
 
 #### Update Infrastructure
 
-```bash
+```
 ## Make changes to terraform.tfvars or variables
 
 ## Preview changes
@@ -814,7 +814,7 @@ terraform import module.gke.google_container_cluster.autopilot \
   **Caution**: This destroys all infrastructure. Use only for dev/test environments.
 </Warning>
 
-```bash
+```
 ## Disable deletion protection first
 ## Edit terraform.tfvars:
 ## enable_deletion_protection = false
@@ -908,7 +908,7 @@ terraform/modules/my-module/
 
 #### Module Template
 
-```hcl
+```
 ## main.tf
 locals {
   common_labels = merge(

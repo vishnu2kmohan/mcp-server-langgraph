@@ -33,7 +33,7 @@ This document defines the version pinning strategy for Docker images and deploym
 
 All production deployments **MUST** use explicit version tags following semantic versioning:
 
-```yaml
+```
 ## ✅ CORRECT
 image: mcp-server-langgraph:2.4.0
 image: mcp-server-langgraph:v2.4.0
@@ -47,7 +47,7 @@ image: mcp-server-langgraph  # defaults to latest
 
 Staging environments **SHOULD** use explicit version tags with environment prefix:
 
-```yaml
+```
 ## ✅ PREFERRED
 newTag: staging-2.4.0
 
@@ -63,7 +63,7 @@ newTag: staging-latest
 
 Development environments **MAY** use latest tags for rapid iteration:
 
-```yaml
+```
 ## ✅ ACCEPTABLE for local dev
 newTag: dev-latest
 newTag: dev-${GIT_SHA}
@@ -171,7 +171,7 @@ Run the version sync script:
 ```
 #### 3. Create Git Tag
 
-```bash
+```
 ## Create annotated tag
 git tag -a v2.5.0 -m "Release version 2.5.0"
 
@@ -183,7 +183,7 @@ git push origin v2.5.0
 
 Our CI/CD pipeline automatically creates:
 
-```bash
+```
 ## On git tag push (v2.5.0):
 - mcp-server-langgraph:2.5.0
 - mcp-server-langgraph:2.5
@@ -205,7 +205,7 @@ Our CI/CD pipeline automatically creates:
 
 #### Recommended Formats
 
-```yaml
+```
 ## Semantic version (production)
 mcp-server-langgraph:2.4.0
 mcp-server-langgraph:v2.4.0
@@ -225,7 +225,7 @@ mcp-server-langgraph:prod-2.4.0
 
 #### Anti-Patterns (DO NOT USE)
 
-```yaml
+```
 ## ❌ No tag specified (defaults to :latest)
 mcp-server-langgraph
 
@@ -244,7 +244,7 @@ mcp-server-langgraph:v2.4
 
 #### Development
 
-```yaml
+```
 ## kustomize/overlays/dev/kustomization.yaml
 images:
   - name: mcp-server-langgraph
@@ -255,7 +255,7 @@ images:
 
 #### Staging
 
-```yaml
+```
 ## kustomize/overlays/staging/kustomization.yaml
 images:
   - name: mcp-server-langgraph
@@ -265,7 +265,7 @@ images:
 
 #### Production
 
-```yaml
+```
 ## kustomize/overlays/production/kustomization.yaml
 images:
   - name: mcp-server-langgraph
@@ -280,7 +280,7 @@ images:
 
 Always use `IfNotPresent` or `Never` with pinned tags:
 
-```yaml
+```
 ## ✅ CORRECT (with pinned tag)
 image: mcp-server-langgraph:2.4.0
 imagePullPolicy: IfNotPresent
@@ -311,7 +311,7 @@ Before deploying to production:
 
 #### Automated Verification
 
-```bash
+```
 ## Check for :latest tags in production configs
 ./scripts/check-latest-tags.sh
 
@@ -326,7 +326,7 @@ Before deploying to production:
 
 #### Kustomize Rollback
 
-```bash
+```
 ## Update overlay to previous version
 cd deployments/kustomize/overlays/production
 vim kustomization.yaml  # Change newTag: v2.4.0 → v2.3.0
@@ -339,7 +339,7 @@ kubectl rollout status deployment/prod-mcp-server-langgraph
 ```
 #### Helm Rollback
 
-```bash
+```
 ## Rollback to previous release
 helm rollback mcp-server-langgraph
 
@@ -354,7 +354,7 @@ helm upgrade mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 #### Kubernetes Native Rollback
 
-```bash
+```
 ## Rollback deployment to previous revision
 kubectl rollout undo deployment/mcp-server-langgraph
 
@@ -370,7 +370,7 @@ kubectl rollout history deployment/mcp-server-langgraph
 
 #### Manual Check
 
-```bash
+```
 ## Check running version in Kubernetes
 kubectl get deployment mcp-server-langgraph -o jsonpath='{.spec.template.spec.containers[0].image}'
 
@@ -382,7 +382,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
 
 #### Automated Monitoring
 
-```yaml
+```
 ## Prometheus alert for version drift
 - alert: ImageVersionMismatch
   expr: kube_deployment_spec_replicas{deployment="mcp-server-langgraph"}
@@ -397,7 +397,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
 
 #### GitHub Actions Example
 
-```yaml
+```
 ## .github/workflows/deploy.yml
 - name: Deploy to Production
   run: |
@@ -419,7 +419,7 @@ kubectl get deployments --all-namespaces -o jsonpath='{range .items[*]}{.metadat
 
 #### Pre-commit Hook
 
-```bash
+```
 ## .git/hooks/pre-commit
 #!/bin/bash
 ## Check for :latest tags in production paths
@@ -488,7 +488,7 @@ See [VERSION_COMPATIBILITY](/deployment/version-compatibility) for detailed infr
 
 #### Issue: "Image pull backoff"
 
-```bash
+```
 ## Check if version exists in registry
 docker pull mcp-server-langgraph:2.4.0
 
@@ -500,7 +500,7 @@ docker push gcr.io/PROJECT/mcp-server-langgraph:2.4.0
 
 #### Issue: "Deployment using old version"
 
-```bash
+```
 ## Force new deployment
 kubectl rollout restart deployment/mcp-server-langgraph
 
@@ -510,7 +510,7 @@ kubectl set image deployment/mcp-server-langgraph \
 ```
 #### Issue: "Version mismatch across environments"
 
-```bash
+```
 ## Audit all deployments
 kubectl get deployments --all-namespaces -o wide | grep langgraph
 

@@ -19,7 +19,7 @@ This checklist helps verify that your GKE staging environment follows security b
 - [ ] Private Google Access is enabled for GKE subnet
 
 **Verification:**
-```bash
+```
 ## List VPCs
 gcloud compute networks list
 
@@ -38,7 +38,7 @@ gcloud compute networks subnets describe staging-gke-subnet \
 - [ ] Binary Authorization is enabled
 
 **Verification:**
-```bash
+```
 ## Check cluster configuration
 gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
@@ -67,7 +67,7 @@ gcloud container clusters describe staging-mcp-server-langgraph-gke \
 - [ ] Metadata service (169.254.169.254) is blocked
 
 **Verification:**
-```bash
+```
 ## List network policies
 kubectl get networkpolicies -n staging-mcp-server-langgraph
 
@@ -82,7 +82,7 @@ kubectl describe networkpolicy allow-egress -n staging-mcp-server-langgraph
 - [ ] SSH access restricted to IAP (35.235.240.0/20)
 
 **Verification:**
-```bash
+```
 ## List firewall rules for staging VPC
 gcloud compute firewall-rules list --filter="network:staging-vpc"
 ```
@@ -96,7 +96,7 @@ gcloud compute firewall-rules list --filter="network:staging-vpc"
 - [ ] No service account keys are used
 
 **Verification:**
-```bash
+```
 ## Check service account IAM bindings
 gcloud iam service-accounts get-iam-policy \
   mcp-staging-sa@vishnu-sandbox-20250310.iam.gserviceaccount.com
@@ -111,7 +111,7 @@ gcloud iam service-accounts keys list \
 - [ ] Pods successfully authenticate without keys
 
 **Verification:**
-```bash
+```
 ## Check K8s service account annotation
 kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
 
@@ -130,7 +130,7 @@ kubectl run -it --rm test \
 - [ ] Repository condition restricts access
 
 **Verification:**
-```bash
+```
 ## Check Workload Identity Pool
 gcloud iam workload-identity-pools describe github-actions-pool \
   --location=global
@@ -150,7 +150,7 @@ gcloud iam workload-identity-pools providers describe github-provider \
 - [ ] No plaintext secrets in code or configs
 
 **Verification:**
-```bash
+```
 ## List staging secrets
 gcloud secrets list --filter="name:staging-*"
 
@@ -165,7 +165,7 @@ gcloud secrets get-iam-policy staging-jwt-secret
 - [ ] Kubernetes secrets are created/updated
 
 **Verification:**
-```bash
+```
 ## Check ESO is running
 kubectl get pods -n external-secrets-system
 
@@ -184,7 +184,7 @@ kubectl get secret mcp-staging-secrets -n staging-mcp-server-langgraph
 - [ ] Images use minimal base (distroless)
 
 **Verification:**
-```bash
+```
 ## Check image source
 kubectl get deployment staging-mcp-server-langgraph -n staging-mcp-server-langgraph \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
@@ -201,7 +201,7 @@ gcloud container binauthz policy export
 - [ ] seccompProfile is set
 
 **Verification:**
-```bash
+```
 ## Check pod security context
 kubectl get pod -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.securityContext'
@@ -217,7 +217,7 @@ kubectl get pods -n staging-mcp-server-langgraph -o json | \
 - [ ] Application connects via localhost (127.0.0.1)
 
 **Verification:**
-```bash
+```
 ## Check Cloud SQL proxy container
 kubectl get pod -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | select(.name == "cloud-sql-proxy")'
@@ -232,7 +232,7 @@ kubectl get pod -n staging-mcp-server-langgraph -o json | \
 - [ ] Redis uses TLS (if enabled)
 
 **Verification:**
-```bash
+```
 ## GKE encryption is automatic, verify cluster exists
 kubectl cluster-info
 
@@ -248,7 +248,7 @@ gcloud sql instances describe mcp-staging-postgres \
 - [ ] Automatic backups are enabled
 
 **Verification:**
-```bash
+```
 ## Check Cloud SQL IP configuration
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(ipAddresses[])'
@@ -265,7 +265,7 @@ gcloud sql instances describe mcp-staging-postgres \
 - [ ] Automatic failover enabled (standard tier)
 
 **Verification:**
-```bash
+```
 ## Check Redis configuration
 gcloud redis instances describe mcp-staging-redis \
   --region=us-central1
@@ -285,7 +285,7 @@ gcloud redis instances describe mcp-staging-redis \
 - [ ] No sensitive data in logs
 
 **Verification:**
-```bash
+```
 ## Check recent logs
 gcloud logging read \
   "resource.type=k8s_container
@@ -304,7 +304,7 @@ gcloud logging logs list --filter="logName:cloudaudit.googleapis.com"
 - [ ] Dashboards created
 
 **Verification:**
-```bash
+```
 ## List metrics
 gcloud monitoring metrics-descriptors list \
   --filter="metric.type:kubernetes.io/container/*" \
@@ -319,7 +319,7 @@ gcloud alpha monitoring policies list
 - [ ] Sampling rate configured
 
 **Verification:**
-```bash
+```
 ## This is configured in OTel collector, check collector logs
 kubectl logs -n staging-mcp-server-langgraph -l app=otel-collector
 ```
@@ -332,7 +332,7 @@ kubectl logs -n staging-mcp-server-langgraph -l app=otel-collector
 - [ ] Owner/team labels present
 
 **Verification:**
-```bash
+```
 ## Check GKE cluster labels
 gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
@@ -348,7 +348,7 @@ kubectl get pods -n staging-mcp-server-langgraph --show-labels
 - [ ] LimitRange configured
 
 **Verification:**
-```bash
+```
 ## Check container resources
 kubectl get pods -n staging-mcp-server-langgraph -o json | \
   jq '.items[].spec.containers[] | {name: .name, resources: .resources}'
@@ -367,7 +367,7 @@ kubectl get limitrange -n staging-mcp-server-langgraph
 - [ ] Recovery procedure documented
 
 **Verification:**
-```bash
+```
 ## Check backup configuration
 gcloud sql instances describe mcp-staging-postgres \
   --format='value(settings.backupConfiguration.enabled)'
@@ -395,7 +395,7 @@ gcloud sql backups list --instance=mcp-staging-postgres
 - [ ] Deployment creates audit trail
 
 **Verification:**
-```bash
+```
 ## Check recent deployments in Cloud Console
 gcloud container clusters get-credentials staging-mcp-server-langgraph-gke --region=us-central1
 kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
@@ -410,7 +410,7 @@ kubectl rollout history deployment/staging-mcp-server-langgraph -n staging-mcp-s
 - [ ] Scan results reviewed regularly
 
 **Verification:**
-```bash
+```
 ## Enable Container Analysis API if not already
 gcloud services enable containeranalysis.googleapis.com
 
@@ -437,7 +437,7 @@ gcloud artifacts docker images scan \
 - [ ] Automatic rollback configured in CI/CD
 
 **Test Rollback:**
-```bash
+```
 ## Manual rollback test
 kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 kubectl rollout status deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph

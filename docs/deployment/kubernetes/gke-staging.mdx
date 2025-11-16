@@ -87,7 +87,7 @@ flowchart TB
 
 Run the automated infrastructure setup script:
 
-```bash
+```
 ## Set your GCP project ID
 export GCP_PROJECT_ID=vishnu-sandbox-20250310
 
@@ -111,7 +111,7 @@ If you prefer manual setup, follow these steps:
 
 #### 1.1 Create VPC Network
 
-```bash
+```
 ## Create VPC
 gcloud compute networks create staging-vpc \
   --subnet-mode=custom \
@@ -185,7 +185,7 @@ echo -n "YOUR_REAL_GOOGLE_KEY" | gcloud secrets versions add staging-google-api-
 
 External Secrets Operator syncs secrets from GCP Secret Manager to Kubernetes:
 
-```bash
+```
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -221,7 +221,7 @@ kubectl get pods -n external-secrets-system
 
 Edit `.github/workflows/deploy-staging-gke.yaml` and replace `PROJECT_NUMBER` with your actual project number:
 
-```yaml
+```
 ## Get your project number:
 gcloud projects describe vishnu-sandbox-20250310 --format="value(projectNumber)"
 
@@ -234,7 +234,7 @@ workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workl
 
 For the first deployment, deploy manually to verify everything works:
 
-```bash
+```
 ## Get GKE credentials
 gcloud container clusters get-credentials staging-mcp-server-langgraph-gke \
   --region=us-central1
@@ -291,7 +291,7 @@ Failed:       0
 ```
 #### Check Health Endpoints
 
-```bash
+```
 ## Port-forward to service
 kubectl port-forward -n staging-mcp-server-langgraph svc/staging-mcp-server-langgraph 8080:80
 
@@ -336,7 +336,7 @@ kubectl get networkpolicies -n staging-mcp-server-langgraph
 
 Pods authenticate as GCP service accounts without keys:
 
-```bash
+```
 ## Verify Workload Identity annotation
 kubectl describe sa mcp-server-langgraph -n staging-mcp-server-langgraph | grep iam.gke.io
 
@@ -352,7 +352,7 @@ kubectl run -it --rm test \
 
 Only signed/approved images can be deployed:
 
-```bash
+```
 ## Check Binary Authorization status
 gcloud container clusters describe staging-mcp-server-langgraph-gke \
   --region=us-central1 \
@@ -362,7 +362,7 @@ gcloud container clusters describe staging-mcp-server-langgraph-gke \
 
 Secrets are stored in GCP Secret Manager and synced via External Secrets:
 
-```bash
+```
 ## List secrets in Secret Manager
 gcloud secrets list --filter="name:staging-*"
 
@@ -392,7 +392,7 @@ Monitor these metrics in Cloud Monitoring:
 
 Create alert policies for:
 
-```bash
+```
 ## CPU usage > 80%
 ## Memory usage > 80%
 ## Pod restart count > 5
@@ -458,7 +458,7 @@ GitHub Actions automatically rolls back on deployment failure.
 
 #### Manual Rollback
 
-```bash
+```
 ## Rollback to previous version
 kubectl rollout undo deployment/staging-mcp-server-langgraph -n staging-mcp-server-langgraph
 

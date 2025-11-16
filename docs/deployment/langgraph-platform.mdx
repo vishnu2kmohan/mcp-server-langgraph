@@ -151,10 +151,10 @@ langgraph dev
 ## Test in another terminal
 langgraph deployment invoke --local \
   --input '{"messages": [{"role": "user", "content": "test"}]}'
-```python
+```
 #### Invoke Deployed Graph
 
-```bash
+```
 ## Basic invocation
 langgraph deployment invoke my-agent-prod \
   --input '{"messages": [{"role": "user", "content": "Hello!"}]}'
@@ -212,7 +212,7 @@ LANGSMITH_PROJECT=my-agent-staging langgraph deploy my-agent-staging
 
 ## Production
 LANGSMITH_PROJECT=my-agent-prod langgraph deploy my-agent-prod
-```bash
+```
 ### Monitoring
 
 #### LangSmith Integration

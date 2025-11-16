@@ -150,7 +150,7 @@ llm = LLMFactory(
 
 #### Extended Context (200K tokens)
 
-```python
+```
 ## Process long documents
 with open("long_document.txt", "r") as f:
     document = f.read()  # 150K tokens
@@ -279,7 +279,7 @@ print(response.model_dump_json(indent=2))
 ```
 #### Streaming
 
-```python
+```
 ## Stream token-by-token
 async def stream_response(query: str):
     async for chunk in llm.astream(query):
@@ -469,7 +469,7 @@ async def call_with_fallback(query: str):
 
 #### Prompt Caching
 
-```python
+```
 ## Enable prompt caching for repeated context
 ## (saves on input tokens for cached content)
 
@@ -502,7 +502,7 @@ response = client.messages.create(
 ```
 #### Batching
 
-```python
+```
 ## Process multiple requests efficiently
 import asyncio
 
@@ -555,7 +555,7 @@ response = await llm.ainvoke(query)
 
 #### Model Selection
 
-```python
+```
 ## Use cheaper model for simple tasks
 def get_optimal_model(complexity: str) -> str:
     if complexity == "simple":
@@ -596,7 +596,7 @@ await store_usage_metrics({
 ```
 #### Budget Limits
 
-```python
+```
 ## Enforce per-user budgets
 async def check_budget(user_id: str, estimated_cost: float):
     """Check if user has budget remaining"""
@@ -629,7 +629,7 @@ async def send_message(
 
 #### LangSmith Integration
 
-```python
+```
 ## Automatic tracking with LangSmith
 import os
 

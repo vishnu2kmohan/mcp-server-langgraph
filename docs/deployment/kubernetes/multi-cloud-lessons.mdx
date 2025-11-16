@@ -44,13 +44,13 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
 ### 1. **kubectl Validation: Always Use Server-Side Dry-Run**
 
 ❌ **WRONG** (Client-side - doesn't see CRDs):
-```yaml
+```
 - name: Validate manifests
   run: |
     kubectl apply --dry-run=client -f /tmp/manifests.yaml
 ```
 ✅ **CORRECT** (Server-side - validates against actual cluster):
-```yaml
+```
 - name: Validate manifests
   run: |
     kubectl apply --dry-run=server -f /tmp/manifests.yaml
@@ -173,14 +173,14 @@ metadata:
 ### 5. **Namespace Creation: Always Create Before Validation**
 
 ❌ **WRONG** (Namespace created during deployment):
-```yaml
+```
 - name: Deploy
   run: |
     kubectl create namespace staging-mcp-server-langgraph
     kubectl apply -k deployments/overlays/staging
 ```
 ✅ **CORRECT** (Namespace created before validation):
-```yaml
+```
 - name: Create namespace
   run: |
     kubectl create namespace staging-mcp-server-langgraph --dry-run=client -o yaml | kubectl apply -f -
@@ -579,7 +579,7 @@ configMapGenerator:
 ### Issue 2: Disk Space for Docker Builds
 
 **Enhanced Cleanup** (`.github/workflows/ci.yaml`):
-```yaml
+```
 - name: Free disk space
   run: |
     echo "=== Disk space before cleanup ==="

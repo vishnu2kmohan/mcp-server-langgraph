@@ -43,7 +43,7 @@ We will implement the **full agentic loop** in our LangGraph agent with the foll
 
 **Implementation**: `ContextManager` class with conversation compaction
 
-```python
+```
 ## src/mcp_server_langgraph/core/context_manager.py
 
 class ContextManager:
@@ -81,7 +81,7 @@ class ContextManager:
 
 **Implementation**: `OutputVerifier` class with quality evaluation
 
-```python
+```
 ## src/mcp_server_langgraph/llm/verifier.py
 
 class OutputVerifier:
@@ -114,7 +114,7 @@ class OutputVerifier:
 
 **Implementation**: Refinement loop in agent graph
 
-```python
+```
 ## Workflow: respond → verify → (if failed) → refine → respond
 workflow.add_edge("respond", "verify")
 workflow.add_edge("verify", END)  # if passed
@@ -181,7 +181,7 @@ class AgentState(TypedDict):
 
 Added feature flags and configuration options:
 
-```python
+```
 ## .env or config.py
 
 ## Context Management
@@ -314,7 +314,7 @@ ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true  # Test with verification enabled
 ```
 #### Phase 2: Canary Deployment
-```bash
+```
 ## Deploy to 10% of users
 ENABLE_CONTEXT_COMPACTION=true
 ENABLE_VERIFICATION=true
@@ -350,7 +350,7 @@ VERIFICATION_MODE=standard
 
 #### Unit Tests
 
-```python
+```
 ## tests/test_context_manager.py
 def test_compaction_preserves_recent_messages()
 def test_summarization_captures_key_info()
@@ -364,7 +364,7 @@ def test_verification_feedback_quality()
 
 #### Integration Tests
 
-```python
+```
 ## tests/test_agentic_loop.py
 def test_full_loop_with_refinement()
 def test_compaction_triggers_correctly()
@@ -373,7 +373,7 @@ def test_max_refinement_attempts_respected()
 ```
 #### Property-Based Tests
 
-```python
+```
 ## tests/property/test_agentic_properties.py
 @given(conversation=st.lists(st.text()))
 def test_compaction_is_idempotent(conversation)

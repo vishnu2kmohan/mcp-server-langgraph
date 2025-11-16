@@ -133,7 +133,7 @@ jobs:
         run: |
           langgraph deployment invoke mcp-server-langgraph-prod \
             --input '{"messages": [{"role": "user", "content": "Hello"}]}'
-```bash
+```
 #### Environment Protection Rules
 
 Set up deployment approvals in GitHub:
@@ -338,7 +338,7 @@ workflows:
   </Accordion>
 
   <Accordion title="Notify on Deployment">
-    ```yaml
+```
     - name: Notify Slack
       if: success()
       uses: slackapi/slack-github-action@v1
@@ -357,7 +357,7 @@ workflows:
 
 #### Automatic Rollback on Failure
 
-```yaml
+```
 - name: Deploy to Production
   id: deploy
   run: langgraph deploy my-agent-prod --tag production
@@ -379,7 +379,7 @@ workflows:
 
 #### Manual Rollback
 
-```bash
+```
 ## List revisions
 langgraph deployment list my-agent-prod
 

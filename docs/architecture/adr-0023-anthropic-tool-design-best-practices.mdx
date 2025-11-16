@@ -201,7 +201,7 @@ class ResponseOptimizer:
 
 ##### Updated Tool Schemas
 
-```python
+```
 ## Agent interaction
 Tool(name="agent_chat", inputSchema=ChatInput.model_json_schema())
 
@@ -334,12 +334,12 @@ Track the following to measure success:
 #### For Tool Users (Agents)
 
 Old code continues to work:
-```python
+```
 ## Still works (backward compatible)
 result = await client.call_tool("chat", {"message": "Hello"})
 ```
 New features available:
-```python
+```
 ## Recommended: Use new names and features
 result = await client.call_tool("agent_chat", {
     "message": "Explain quantum computing",

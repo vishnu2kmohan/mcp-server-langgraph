@@ -203,6 +203,8 @@
               "deployment/kubernetes/gke-staging",
               "deployment/gke-autopilot-resource-constraints",
               "kubernetes/CONFIGMAP_BEST_PRACTICES",
+              "kubernetes/KEYCLOAK_READONLY_FILESYSTEM",
+              "kubernetes/POD_CRASH_RESOLUTION_2025-11-12",
               "deployment/kubernetes/eks",
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",

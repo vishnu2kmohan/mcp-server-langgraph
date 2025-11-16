@@ -211,7 +211,7 @@ kubectl apply -k deployments/kubernetes/overlays/aks
 
 #### 1. Namespace and RBAC
 
-```bash
+```
 ## Create namespace
 kubectl apply -f - << 'EOF'
 apiVersion: v1
@@ -273,7 +273,7 @@ data:
 
 **Secrets** for sensitive data:
 
-```bash
+```
 ## Generate secrets
 export JWT_SECRET=$(openssl rand -base64 32)
 export REDIS_PASSWORD=$(openssl rand -base64 32)
@@ -296,7 +296,7 @@ kubectl create secret generic mcp-server-langgraph-secrets \
 
 #### 3. Deploy Keycloak
 
-```bash
+```
 ## Deploy Keycloak with PostgreSQL
 helm install keycloak bitnami/keycloak \
   --namespace mcp-server-langgraph \
@@ -325,7 +325,7 @@ See [Keycloak SSO Guide](/guides/keycloak-sso) for detailed setup.
 
 #### 4. Deploy Redis
 
-```bash
+```
 ## Deploy Redis with replication
 helm install redis-session bitnami/redis \
   --namespace mcp-server-langgraph \
@@ -353,7 +353,7 @@ See [Redis Sessions Guide](/guides/redis-sessions) for details.
 
 #### 5. Deploy OpenFGA
 
-```bash
+```
 ## Deploy OpenFGA with PostgreSQL
 kubectl apply -f - << 'EOF'
 apiVersion: apps/v1
@@ -410,7 +410,7 @@ python scripts/setup/setup_openfga.py
 
 #### 6. Deploy Application
 
-```bash
+```
 ## Deploy all manifests
 kubectl apply -f deployments/kubernetes/base/deployment.yaml
 kubectl apply -f deployments/kubernetes/base/service.yaml

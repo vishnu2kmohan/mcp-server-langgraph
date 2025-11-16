@@ -53,7 +53,7 @@ Before starting, ensure you have:
 
 The easiest way to set up Vertex AI with Workload Identity:
 
-```bash
+```
 ## Run the automated setup script
 ./scripts/gcp/setup-vertex-ai-staging.sh
 ```
@@ -78,7 +78,7 @@ gcloud services enable aiplatform.googleapis.com \
 ```
 #### Step 2: Create Service Account
 
-```bash
+```
 ## Create service account
 gcloud iam service-accounts create vertex-ai-staging \
   --display-name="Vertex AI Staging" \
@@ -114,7 +114,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 ```
 #### Step 4: Setup Workload Identity Binding
 
-```bash
+```
 ## Allow Kubernetes SA to impersonate GCP SA
 gcloud iam service-accounts add-iam-policy-binding \
   vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com \
@@ -158,7 +158,7 @@ env:
 
 The Kubernetes service account is annotated to use Workload Identity:
 
-```yaml
+```
 ## deployments/overlays/staging-gke/serviceaccount-patch.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -173,7 +173,7 @@ metadata:
 
 After running the setup script, deploy the updated configuration:
 
-```bash
+```
 ## Apply the updated manifests
 kubectl apply -k deployments/overlays/staging-gke
 
@@ -188,7 +188,7 @@ kubectl get pods -n staging-mcp-server-langgraph
 
 #### 1. Verify Workload Identity Binding
 
-```bash
+```
 ## Check GCP service account IAM policy
 gcloud iam service-accounts get-iam-policy \
   vertex-ai-staging@vishnu-sandbox-20250310.iam.gserviceaccount.com
@@ -198,7 +198,7 @@ gcloud iam service-accounts get-iam-policy \
 ```
 #### 2. Verify Kubernetes Annotation
 
-```bash
+```
 ## Check service account annotation
 kubectl get serviceaccount mcp-server-langgraph -n staging-mcp-server-langgraph \
   -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}'
@@ -209,7 +209,7 @@ kubectl get serviceaccount mcp-server-langgraph -n staging-mcp-server-langgraph 
 
 #### 3. Test Authentication from Pod
 
-```bash
+```
 ## Get a shell in the pod
 POD_NAME=$(kubectl get pods -n staging-mcp-server-langgraph -l app=mcp-server-langgraph -o jsonpath='{.items[0].metadata.name}')
 
@@ -222,7 +222,7 @@ kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- gcloud auth list
 ```
 #### 4. Test Vertex AI Access
 
-```bash
+```
 ## Test Vertex AI API access
 kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
 from google.cloud import aiplatform
@@ -240,7 +240,7 @@ EOF
 
 #### 5. Test with LiteLLM
 
-```bash
+```
 ## Test LLM integration
 kubectl exec -it $POD_NAME -n staging-mcp-server-langgraph -- python3 << 'EOF'
 from litellm import completion
@@ -415,7 +415,7 @@ Vertex AI charges per 1,000 characters (roughly equivalent to tokens):
 
 #### Setting Quotas
 
-```bash
+```
 ## Check current quota
 gcloud ai quota list --region=us-central1
 
@@ -428,7 +428,7 @@ gcloud ai quota update \
 
 #### Monitoring Costs
 
-```bash
+```
 ## View Vertex AI usage in Cloud Console
 gcloud logging read \
   "resource.type=aiplatform.googleapis.com/Endpoint

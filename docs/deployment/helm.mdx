@@ -18,7 +18,7 @@ Deploy the MCP Server with LangGraph using Helm for simplified Kubernetes deploy
 
 ### Quick Start
 
-```bash
+```
 ## Add Helm repository (future - when published)
 ## helm repo add langgraph https://your-org.github.io/helm-charts
 ## helm repo update
@@ -400,7 +400,7 @@ config:
 **Never commit secrets to Git!** Use `--set` flags, external secret managers, or Kubernetes secrets.
 </Warning>
 
-```yaml
+```
 ## In values.yaml (DO NOT commit actual values!)
 secrets:
   # LLM API Keys
@@ -559,7 +559,7 @@ helm install mcp-server-langgraph ./deployments/helm/mcp-server-langgraph \
 
 #### Minor Version Upgrade
 
-```bash
+```
 ## Update values if needed
 vim values-production.yaml
 
@@ -574,7 +574,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 ```
 #### Major Version Upgrade
 
-```bash
+```
 ## Check for breaking changes
 helm show notes ./deployments/helm/mcp-server-langgraph
 
@@ -595,7 +595,7 @@ kubectl get pods -n mcp-server-langgraph
 
 #### Rollback
 
-```bash
+```
 ## List release history
 helm history mcp-server-langgraph -n mcp-server-langgraph
 
@@ -607,7 +607,7 @@ helm rollback mcp-server-langgraph 3 -n mcp-server-langgraph
 ```
 ### Uninstallation
 
-```bash
+```
 ## Uninstall release
 helm uninstall mcp-server-langgraph -n mcp-server-langgraph
 
@@ -626,7 +626,7 @@ kubectl delete pvc --all -n mcp-server-langgraph
 
 #### Custom Init Containers
 
-```yaml
+```
 ## values.yaml
 initContainers:
   - name: wait-for-database
@@ -641,7 +641,7 @@ initContainers:
 ```
 #### Custom Sidecars
 
-```yaml
+```
 ## values.yaml
 sidecars:
   - name: cloud-sql-proxy
@@ -660,7 +660,7 @@ sidecars:
 
 #### Custom Volumes
 
-```yaml
+```
 ## values.yaml
 extraVolumes:
   - name: model-cache
@@ -673,7 +673,7 @@ extraVolumeMounts:
 ```
 #### Environment Variables
 
-```yaml
+```
 ## values.yaml
 extraEnv:
   - name: CUSTOM_VAR
@@ -689,7 +689,7 @@ extraEnv:
 
 #### Prometheus Integration
 
-```yaml
+```
 ## values.yaml
 metrics:
   enabled: true
@@ -706,7 +706,7 @@ podAnnotations:
 ```
 #### Grafana Dashboards
 
-```bash
+```
 ## Import dashboards from configmap
 kubectl create configmap langgraph-dashboards \
   --from-file=dashboards/ \

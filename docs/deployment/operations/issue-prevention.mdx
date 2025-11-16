@@ -43,7 +43,7 @@ RUN python -c "import mcp_server_langgraph; print(mcp_server_langgraph.__version
 
 **Automated Check**: Add to CI/CD:
 
-```yaml
+```
 - name: Validate Docker image
   run: |
     docker run --rm $IMAGE_NAME python -c "import mcp_server_langgraph"
@@ -284,7 +284,7 @@ metadata:
 
 **Automated Check**:
 
-```yaml
+```
 - name: Validate RBAC necessity
   run: |
     # Check if app uses Kubernetes API
@@ -333,7 +333,7 @@ kubectl api-resources | grep externalsecret
 
 **Universal CI/CD Pattern**:
 
-```yaml
+```
 - name: Validate manifests (server-side)
   run: |
     # Generate manifests
@@ -369,7 +369,7 @@ kubectl api-resources | grep externalsecret
 
 1. **Create namespace BEFORE validation**:
 
-```yaml
+```
 - name: Ensure namespace exists
   run: |
     kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
@@ -441,7 +441,7 @@ spec:
 
 **Automated Check**:
 
-```yaml
+```
 - name: Check for env conflicts
   run: |
     kubectl kustomize deployments/overlays/$ENV | \

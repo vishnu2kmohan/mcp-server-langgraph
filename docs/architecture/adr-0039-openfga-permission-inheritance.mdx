@@ -212,7 +212,7 @@ async def check_permission(
 ```
 #### Configuration
 
-```bash
+```
 ## OpenFGA Permission Inheritance
 OPENFGA_PERMISSION_INHERITANCE_ENABLED=true
 OPENFGA_LOG_INHERITED_ACCESS=true  # Log when service uses inherited permissions
@@ -282,7 +282,7 @@ async def associate_with_user(
 ```
 
 **Authorization Check Enhancement**:
-```python
+```
 ## In middleware or route handlers
 allowed = await check_permission(
     user_id="service:batch-job",

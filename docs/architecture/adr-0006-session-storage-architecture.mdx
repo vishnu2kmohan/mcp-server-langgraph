@@ -41,7 +41,7 @@ We will implement a **pluggable session storage architecture** with an abstract 
 
 #### Architecture
 
-```python
+```
 ## Abstract interface
 class SessionStore(ABC):
     @abstractmethod
@@ -70,7 +70,7 @@ def create_session_store(backend: Literal["memory", "redis"]) -> SessionStore:
 
 #### Configuration
 
-```python
+```
 ## Environment variables
 SESSION_BACKEND=redis  # or "memory"
 REDIS_URL=redis://localhost:6379/0

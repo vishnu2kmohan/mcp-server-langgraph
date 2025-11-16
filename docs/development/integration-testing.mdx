@@ -25,7 +25,7 @@ Integration tests verify that the MCP Server works correctly with real external 
 
 ### Quick Start
 
-```bash
+```
 ## Run all integration tests (simplest way)
 make test-integration
 
@@ -41,7 +41,7 @@ make test-integration
 
 #### Basic Usage
 
-```bash
+```
 ## Run integration tests in Docker (recommended)
 make test-integration
 
@@ -63,7 +63,7 @@ make test-integration-cleanup
 
 #### Advanced Usage
 
-```bash
+```
 ## Using the script directly with options
 ./scripts/test-integration.sh --build     # Force rebuild
 ./scripts/test-integration.sh --keep      # Keep containers after tests
@@ -174,7 +174,7 @@ All fixtures automatically:
 
 #### View Service Logs
 
-```bash
+```
 ## While tests are running
 docker compose -f docker/docker-compose.test.yml logs test-runner
 docker compose -f docker/docker-compose.test.yml logs postgres-test
@@ -186,7 +186,7 @@ docker compose -f docker/docker-compose.test.yml logs openfga-test
 
 #### Keep Containers Running
 
-```bash
+```
 ## Run tests and keep containers for inspection
 ./scripts/test-integration.sh --keep
 
@@ -205,7 +205,7 @@ docker compose -f docker/docker-compose.test.yml down -v
 ```
 #### Run Single Test
 
-```bash
+```
 ## Start services
 docker compose -f docker/docker-compose.test.yml up -d postgres-test openfga-test redis-test
 
@@ -231,7 +231,7 @@ docker compose -f docker/docker-compose.test.yml down -v
 
 Integration tests run automatically in CI:
 
-```yaml
+```
 ## .github/workflows/ci.yaml
 - name: Set up Docker Buildx
   uses: docker/setup-buildx-action@v3
@@ -275,14 +275,14 @@ Integration tests run automatically in CI:
 
 #### Tests Time Out
 
-```bash
+```
 ## Increase health check timeout
 TIMEOUT=300 ./scripts/wait-for-services.sh
 ```
 
 #### Services Won't Start
 
-```bash
+```
 ## Check service logs
 docker compose -f docker/docker-compose.test.yml logs postgres-test
 
@@ -293,7 +293,7 @@ docker system info
 
 Integration tests use isolated network with no exposed ports. If you see port conflicts:
 
-```bash
+```
 ## Stop other containers
 docker ps
 docker stop <conflicting-container>
@@ -304,7 +304,7 @@ docker compose -f docker/docker-compose.yml down
 
 #### Permission Errors
 
-```bash
+```
 ## Make scripts executable
 chmod +x scripts/test-integration.sh
 chmod +x scripts/wait-for-services.sh
@@ -318,7 +318,7 @@ docker ps  # Should work without sudo
 
 #### Recommended Flow
 
-```bash
+```
 ## 1. Write code
 vim src/mcp_server_langgraph/auth/openfga.py
 
@@ -333,7 +333,7 @@ make test-integration
 
 #### Alternative: Keep Services Running
 
-```bash
+```
 ## Start services once
 make test-integration-services
 

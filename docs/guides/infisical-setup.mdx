@@ -169,7 +169,7 @@ from mcp_server_langgraph.core.config import settings
 api_key = settings.anthropic_api_key
 db_password = settings.redis_password
 jwt_secret = settings.jwt_secret_key
-```python
+```
 #### Manual Secret Retrieval
 
 ```
@@ -200,7 +200,7 @@ for secret in secrets:
 
 #### Environment-Specific Secrets
 
-```python
+```
 ## Load secrets based on environment
 environment = os.getenv("ENVIRONMENT", "development")
 
@@ -323,7 +323,7 @@ service_account_write = client.create_service_account(
 
 Enable audit logs to track secret access:
 
-```python
+```
 ## View audit logs
 logs = client.get_audit_logs(
     project_id=project_id,
@@ -380,7 +380,7 @@ while True:
 
 #### Zero-Downtime Rotation
 
-```python
+```
 ## 1. Add new secret with version suffix
 client.create_secret(
     secret_name="ANTHROPIC_API_KEY_V2",

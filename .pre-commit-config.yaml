@@ -190,12 +190,11 @@ repos:
 
       - id: fix-mdx-syntax
         name: Fix MDX Syntax Errors (Code Block Closings)
-        entry: uv run python scripts/fix_mdx_syntax.py
+        entry: uv run python scripts/fix_mdx_syntax.py --all
         language: python
         additional_dependencies: []
         files: \.mdx$
-        args: ['--file']
-        pass_filenames: true
+        pass_filenames: false
         always_run: false
         description: |
           Automatically fixes common MDX syntax errors:

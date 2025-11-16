@@ -12,7 +12,7 @@ contentType: "how-to"
 
 #### Install Grafana
 
-```bash
+```
 ## Add Grafana repo
 helm repo add grafana https://grafana.github.io/helm-charts
 
@@ -331,7 +331,7 @@ redis_commands_processed_total
 The `monitoring/prometheus/rules/slo-recording-rules.yaml` file contains 40+ recording rules that pre-compute Service Level Indicators (SLIs) for fast querying in Grafana.
 
 **Load recording rules**:
-```bash
+```
 ## Kubernetes with Prometheus Operator
 kubectl apply -f monitoring/prometheus/rules/slo-recording-rules.yaml
 
@@ -464,7 +464,7 @@ rule_files:
     - Burn rate < 1.0: Consuming slower (healthy)
 
     **Alert on fast burn**:
-    ```yaml
+```
     - alert: FastErrorBudgetBurn
       expr: job:error_budget:burn_rate_1h > 14.4
       for: 5m

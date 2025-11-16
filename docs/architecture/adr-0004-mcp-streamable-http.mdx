@@ -169,7 +169,7 @@ We will support **two MCP server implementations**:
 
 #### StreamableHTTP Server (Primary)
 
-```python
+```
 ## src/mcp_server_langgraph/mcp/server_streamable.py
 app = FastAPI(title="MCP Server with LangGraph")
 
@@ -184,7 +184,7 @@ async def health_check():
 ```
 #### stdio Server
 
-```python
+```
 ## src/mcp_server_langgraph/mcp/server_stdio.py
 async def main():
     server = Server("mcp-server-langgraph")
@@ -201,7 +201,7 @@ CMD ["python", "src/mcp_server_langgraph/mcp/server_streamable.py"]  # Default t
 ```
 #### Usage Examples
 
-```bash
+```
 ## Production: StreamableHTTP
 python -m mcp_server_langgraph.mcp.server_streamable
 ## → http://localhost:8000

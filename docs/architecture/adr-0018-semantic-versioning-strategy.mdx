@@ -96,7 +96,7 @@ Supported pre-release identifiers:
 - **rc**: Release candidate, final testing
 
 **Examples**:
-```text
+```
 3.0.0-alpha.1   # First alpha of v3.0.0
 3.0.0-beta.2    # Second beta
 3.0.0-rc.1      # First release candidate
@@ -107,7 +107,7 @@ Supported pre-release identifiers:
 Format: `X.Y.Z+BUILD.INFO`
 
 Used for CI/CD builds:
-```bash
+```
 2.2.0+build.123        # CI build number
 2.2.0+sha.a5b8c3d      # Git commit SHA
 2.2.0+20251013.1420    # Timestamp build
@@ -139,7 +139,7 @@ Used for CI/CD builds:
 
 #### Version Storage
 
-```python
+```
 ## src/mcp_server_langgraph/__init__.py
 __version__ = "2.2.0"
 
@@ -177,7 +177,7 @@ We use [Keep a Changelog](https://keepachangelog.com/) format:
 
 #### Git Tagging Convention
 
-```bash
+```
 ## Stable releases
 git tag -a v2.2.0 -m "Release 2.2.0: Session Management & Role Mapping"
 
@@ -190,7 +190,7 @@ git tag -a v3.0.0-beta.1 -m "Release 3.0.0-beta.1: OpenAPI v3 Support"
 
 Using GitHub Actions `.github/workflows/release.yaml`:
 
-```yaml
+```
 ## Triggered by push tags matching v*
 on:
   push:
@@ -312,7 +312,7 @@ v3.0.0: Remove InMemoryUserProvider
 #### Deployment Automation
 
 **Kubernetes/Helm**: Version tags trigger Docker image builds
-```yaml
+```
 ## deployment.yaml
 image: ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0
 ```
@@ -338,7 +338,7 @@ langgraph deploy --version v2.2.0
 ```
 #### Health Endpoint
 
-```python
+```
 ## src/mcp_server_langgraph/health/checks.py
 from mcp_server_langgraph import __version__
 

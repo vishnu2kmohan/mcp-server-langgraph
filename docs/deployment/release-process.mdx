@@ -77,7 +77,7 @@ The workflow will automatically:
 
 ##### Option 2: Git Tag + Push
 
-```bash
+```
 ## Create and push a tag
 git tag v2.5.0
 git push origin v2.5.0
@@ -88,7 +88,7 @@ gh release create v2.5.0 --generate-notes
 ```
 ##### Option 3: GitHub CLI
 
-```bash
+```
 ## Create release with auto-generated notes
 gh release create v2.5.0 --generate-notes
 
@@ -129,7 +129,7 @@ Pre-release versions (alpha, beta, rc) are handled specially:
 
 **Creating a pre-release**:
 
-```bash
+```
 ## GitHub UI: Check "Set as a pre-release"
 ## GitHub CLI:
 gh release create v2.5.0-beta.1 --prerelease --notes "Beta release for testing"
@@ -140,7 +140,7 @@ If you need to update versions manually (outside of a release):
 
 #### Using the Script
 
-```bash
+```
 ## Test with dry run first
 DRY_RUN=1 bash scripts/deployment/bump-versions.sh 2.5.0
 
@@ -172,7 +172,7 @@ After a release is published and versions are updated, deploy using:
 
 #### Docker Compose
 
-```bash
+```
 ## Pull latest images
 docker compose pull
 
@@ -184,7 +184,7 @@ docker compose exec agent python -c "from mcp_server_langgraph import __version_
 ```
 #### Kubernetes (kubectl)
 
-```bash
+```
 ## Update deployment image
 kubectl set image deployment/mcp-server-langgraph \
   mcp-server-langgraph=ghcr.io/vishnu2kmohan/mcp-server-langgraph:2.5.0 \
@@ -199,7 +199,7 @@ kubectl rollout status deployment/mcp-server-langgraph -n mcp-server-langgraph
 
 #### Helm
 
-```bash
+```
 ## Update from local chart
 helm upgrade --install mcp-server-langgraph \
   deployments/helm/mcp-server-langgraph \
@@ -214,7 +214,7 @@ helm upgrade --install mcp-server-langgraph \
 ```
 #### Kustomize
 
-```bash
+```
 ## Development
 kubectl apply -k deployments/kustomize/overlays/dev
 
@@ -273,7 +273,7 @@ kubectl apply -k deployments/kustomize/overlays/production
    - Merge conflict → Manually resolve and push
 
 **Manual fix**:
-```bash
+```
 ## Re-run the version bump manually
 bash scripts/deployment/bump-versions.sh 2.5.0
 git add -A
@@ -289,7 +289,7 @@ git push origin main
    - Registry authentication → Check GITHUB_TOKEN
 
 **Manual build**:
-```bash
+```
 ## Build multi-platform image
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
@@ -305,7 +305,7 @@ docker buildx build \
    - OCI push failure → Check registry authentication
 
 **Manual publish**:
-```bash
+```
 ## Package chart
 helm package deployments/helm/mcp-server-langgraph --version 2.5.0
 
@@ -317,7 +317,7 @@ helm push mcp-server-langgraph-2.5.0.tgz \
 
 If deployment versions don't match the release:
 
-```bash
+```
 ## Check current versions
 grep "version" pyproject.toml
 grep "Version:" docker-compose.yml
@@ -339,7 +339,7 @@ If you need to rollback a release:
 
 #### Rollback Deployment
 
-```bash
+```
 ## Kubernetes
 kubectl rollout undo deployment/mcp-server-langgraph -n mcp-server-langgraph
 
@@ -352,7 +352,7 @@ docker compose up -d
 ```
 #### Delete Release
 
-```bash
+```
 ## Delete release (keeps tag)
 gh release delete v2.5.0
 
@@ -363,7 +363,7 @@ git push origin :refs/tags/v2.5.0
 
 #### Revert Version Bump
 
-```bash
+```
 ## Find the version bump commit
 git log --oneline | grep "bump deployment versions"
 

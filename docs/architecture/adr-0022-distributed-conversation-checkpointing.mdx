@@ -66,7 +66,7 @@ We will implement **distributed conversation checkpointing using Redis** with a 
 
 #### Architecture
 
-```python
+```
 ## Factory pattern for checkpointers (similar to session storage)
 def _create_checkpointer() -> BaseCheckpointSaver:
     backend = settings.checkpoint_backend  # "memory" or "redis"
@@ -89,7 +89,7 @@ Same Redis instance, different databases:
 - **Database 0**: Authentication sessions (`SESSION_BACKEND=redis`)
 - **Database 1**: Conversation checkpoints (`CHECKPOINT_BACKEND=redis`)
 
-```bash
+```
 ## Session storage (existing)
 REDIS_URL=redis://localhost:6379/0
 
@@ -98,7 +98,7 @@ CHECKPOINT_REDIS_URL=redis://localhost:6379/1
 ```
 #### Configuration
 
-```python
+```
 ## .env
 CHECKPOINT_BACKEND=redis  # "memory" (dev) or "redis" (production)
 CHECKPOINT_REDIS_URL=redis://localhost:6379/1
@@ -210,7 +210,7 @@ redis:
 
 #### Checkpointer Factory
 
-```python
+```
 ## src/mcp_server_langgraph/core/agent.py
 
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -246,7 +246,7 @@ def create_agent_graph():
 
 #### Configuration Settings
 
-```python
+```
 ## src/mcp_server_langgraph/core/config.py
 
 class Settings(BaseSettings):
@@ -291,7 +291,7 @@ User Request 3 → Pod C (same thread_id)
 
 #### Unit Tests
 
-```python
+```
 ## tests/test_checkpointer.py
 
 def test_create_checkpointer_memory():
@@ -309,7 +309,7 @@ def test_create_checkpointer_redis():
 
 #### Integration Tests
 
-```python
+```
 ## tests/test_distributed_checkpointing.py
 
 @pytest.mark.integration
@@ -363,7 +363,7 @@ CHECKPOINT_REDIS_URL=redis://redis-service:6379/1
 
 #### HPA with Redis Checkpointer
 
-```yaml
+```
 ## deployments/kubernetes/base/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -381,7 +381,7 @@ spec:
 
 #### HPA Configuration
 
-```yaml
+```
 ## deployments/kubernetes/base/hpa.yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -396,7 +396,7 @@ spec:
 #### Metrics
 
 Add OpenTelemetry metrics for checkpointer operations:
-```python
+```
 ## Checkpoint operation latency
 checkpoint_read_duration = Histogram("checkpoint.read.duration")
 checkpoint_write_duration = Histogram("checkpoint.write.duration")
@@ -409,7 +409,7 @@ checkpoint_errors = Counter("checkpoint.errors")
 
 #### Alerts
 
-```yaml
+```
 ## Prometheus alerts
 - alert: CheckpointerHighLatency
   expr: histogram_quantile(0.95, checkpoint_read_duration) > 0.1

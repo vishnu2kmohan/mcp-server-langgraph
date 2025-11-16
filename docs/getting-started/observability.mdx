@@ -313,7 +313,7 @@ active_gauge.add(1)
 
 Add scraping configuration:
 
-```yaml
+```
 ## prometheus.yml
 scrape_configs:
   - job_name: 'mcp-server-langgraph'
@@ -324,7 +324,7 @@ scrape_configs:
 ```
 #### Alerting Rules
 
-```yaml
+```
 ## alerts.yml
 groups:
   - name: langgraph_agent
@@ -360,7 +360,7 @@ groups:
 
 #### Import Dashboards
 
-```bash
+```
 ## Import pre-built dashboards
 kubectl create configmap grafana-dashboards \
   --from-file=dashboards/ \
@@ -554,7 +554,7 @@ All logs are JSON-formatted with trace context:
 
 #### Kubernetes
 
-```yaml
+```
 ## Sidecar for OpenTelemetry Collector
 - name: otel-collector
   image: otel/opentelemetry-collector:latest
@@ -569,7 +569,7 @@ All logs are JSON-formatted with trace context:
 
 Configure trace sampling for high-traffic:
 
-```python
+```
 ## config.py
 TRACE_SAMPLE_RATE = 0.1  # Sample 10% of traces
 
@@ -579,7 +579,7 @@ sampler = TraceIdRatioBased(TRACE_SAMPLE_RATE)
 ```
 #### Data Retention
 
-```yaml
+```
 ## Jaeger retention
 --span-storage.type=elasticsearch
 --es.index-prefix=jaeger

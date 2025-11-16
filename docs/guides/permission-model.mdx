@@ -114,7 +114,7 @@ type task
     define viewer: [user] from project
 ```
 **Usage**:
-```python
+```
 ## Team lead creates project
 await client.write_tuples([
     {"user": "user:alice", "relation": "lead", "object": "team:engineering"},
@@ -157,7 +157,7 @@ type resource
     define viewer: [user] or editor
 ```
 **Isolation**:
-```python
+```
 ## Tenant A admin
 await client.write_tuples([
     {"user": "user:alice", "relation": "admin", "object": "tenant:company_a"},
@@ -196,7 +196,7 @@ type file
     define viewer: [user] or editor or owner or viewer from parent
 ```
 **Inheritance**:
-```python
+```
 ## Set folder permissions
 await client.write_tuples([
     {"user": "user:alice", "relation": "owner", "object": "folder:docs"},
@@ -271,7 +271,7 @@ condition time_limited_access(current_time: timestamp, expiry: timestamp) {
 ```
 
 **Usage**:
-```python
+```
 ## Check with context
 allowed = await client.check_permission(
     user="user:bob",
@@ -287,7 +287,7 @@ allowed = await client.check_permission(
 
 #### Model Validation
 
-```bash
+```
 ## Use OpenFGA CLI
 fga model validate --file model.fga
 
@@ -492,7 +492,7 @@ client = OpenFGAClient(
 2. Write new model
 3. Migrate existing tuples if needed
 
-```python
+```
 ## Old: "can_read" relation
 old_tuples = await client.read_tuples(relation="can_read")
 

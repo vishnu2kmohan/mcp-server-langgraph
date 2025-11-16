@@ -33,7 +33,7 @@ flowchart BT
 #### Test Execution
 
 **Local Testing**:
-```bash
+```
 ## Unit tests only
 make test-unit
 
@@ -54,7 +54,7 @@ make test-mutation
 ```
 
 **CI Testing**:
-```bash
+```
 ## Exact CI command
 ENABLE_TRACING=false \
 ENABLE_METRICS=false \
@@ -78,7 +78,7 @@ pytest -m unit --tb=line -q
 **Schedule:** Weekly (too slow for every PR)
 
 **Command:**
-```bash
+```
 ## Local execution
 make test-mutation
 
@@ -104,7 +104,7 @@ mutmut html  # Open html/index.html
 **Alert:** Automatic PR comment if 20%+ slower
 
 **Baseline Tracking:**
-```bash
+```
 ## Run benchmarks
 pytest -m benchmark -v --benchmark-only --benchmark-autosave
 

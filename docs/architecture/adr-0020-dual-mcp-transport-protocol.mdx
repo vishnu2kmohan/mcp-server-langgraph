@@ -91,7 +91,7 @@ flowchart TD
 
 **Protocol**: JSON-RPC over stdin/stdout
 
-```python
+```
 ## src/mcp_server_langgraph/mcp/server_stdio.py
 
 from mcp import Server, stdio_server
@@ -136,7 +136,7 @@ Client receives tool list
 mcp-server-langgraph = "mcp_server_langgraph.mcp.server_stdio:main"
 ```
 **Usage**:
-```bash
+```
 ## Run as MCP server for Claude Desktop
 mcp-server-langgraph
 ```
@@ -145,7 +145,7 @@ mcp-server-langgraph
 
 **Protocol**: HTTP with Server-Sent Events (SSE) for streaming
 
-```python
+```
 ## src/mcp_server_langgraph/mcp/server_streamable.py
 
 from fastapi import FastAPI
@@ -193,7 +193,7 @@ mcp-server-langgraph-http = "mcp_server_langgraph.mcp.server_streamable:main"
 ```
 
 **Usage**:
-```bash
+```
 ## Run as HTTP server
 mcp-server-langgraph-http --host 0.0.0.0 --port 8000
 ```
@@ -225,7 +225,7 @@ mcp-server-langgraph-http --host 0.0.0.0 --port 8000
 
 Both transports use the same core agent:
 
-```python
+```
 ## src/mcp_server_langgraph/core/agent.py
 
 from langgraph.graph import StateGraph
@@ -264,7 +264,7 @@ agent_graph = graph.compile()
 - Process lifecycle management
 
 **Configuration**:
-```bash
+```
 ## No environment variables needed (uses stdin/stdout)
 ## Works with default config
 ```
@@ -303,7 +303,7 @@ GET  /mcp/health            # Health check
 ```
 
 **Configuration**:
-```bash
+```
 ## Environment variables
 export MCP_HTTP_HOST=0.0.0.0
 export MCP_HTTP_PORT=8000
@@ -431,7 +431,7 @@ eventSource.onmessage = (event) => {
 
 #### Local Development (STDIO)
 
-```bash
+```
 ## 1. Add to Claude Desktop config
 cat > ~/.config/claude/claude_desktop_config.json <<EOF
 {
@@ -449,7 +449,7 @@ EOF
 
 #### Kubernetes (StreamableHTTP)
 
-```yaml
+```
 ## deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -484,7 +484,7 @@ spec:
 ```
 #### Docker Compose (StreamableHTTP)
 
-```yaml
+```
 ## docker-compose.yml
 version: '3.8'
 
@@ -503,7 +503,7 @@ services:
 
 #### Cloud Run (StreamableHTTP)
 
-```bash
+```
 ## Deploy to Google Cloud Run
 gcloud run deploy mcp-server \
   --image ghcr.io/vishnu2kmohan/mcp-server-langgraph:v2.2.0 \
@@ -540,7 +540,7 @@ gcloud run deploy mcp-server \
 
 #### STDIO Transport Tests
 
-```python
+```
 ## tests/test_mcp_stdio.py
 import pytest
 import subprocess
@@ -568,7 +568,7 @@ def test_stdio_list_tools():
 
 #### StreamableHTTP Transport Tests
 
-```python
+```
 ## tests/test_mcp_http.py
 import pytest
 from httpx import AsyncClient

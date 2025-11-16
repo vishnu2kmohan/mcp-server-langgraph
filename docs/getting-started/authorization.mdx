@@ -34,7 +34,7 @@ MCP Server with LangGraph uses **OpenFGA** for fine-grained, relationship-based 
 
 The default model supports:
 
-```yaml
+```
 ## Users can be:
 - Owners (full access)
 - Admins (manage permissions)
@@ -196,7 +196,7 @@ type document
 
 Isolate resources by organization:
 
-```python
+```
 ## Organization setup
 await client.write_tuples([
     # Alice owns org
@@ -217,7 +217,7 @@ allowed = await client.check_permission(
 
 Admins inherit all member permissions:
 
-```python
+```
 ## Model defines: member or admin can execute
 ## So admins automatically get member permissions
 
@@ -240,7 +240,7 @@ allowed = await client.check_permission(
 
 Fine-grained document permissions:
 
-```python
+```
 ## Document ownership
 await client.write_tuples([{
     "user": "user:alice",
@@ -317,7 +317,7 @@ See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
 #### Check Permission
 
-```python
+```
 ## Check if user can perform action
 allowed = await client.check_permission(
     user="user:alice",
@@ -334,7 +334,7 @@ else:
 
 #### Grant Permission
 
-```python
+```
 ## Single tuple
 await client.write_tuples([{
     "user": "user:alice",
@@ -351,7 +351,7 @@ await client.write_tuples([
 ```
 #### Revoke Permission
 
-```python
+```
 ## Delete specific tuple
 await client.delete_tuples([{
     "user": "user:bob",
@@ -366,7 +366,7 @@ await client.delete_tuples([t for t in tuples if t['user'] == 'user:bob'])
 
 #### List User Permissions
 
-```python
+```
 ## What can user access?
 objects = await client.list_objects(
     user="user:alice",
@@ -387,7 +387,7 @@ print(f"Can execute chat: {users}")
 
 #### Enable Authorization Logging
 
-```bash
+```
 ## .env
 LOG_LEVEL=DEBUG
 

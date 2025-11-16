@@ -59,7 +59,7 @@ The MCP Server follows the [12-Factor App](https://12factor.net/) methodology fo
 **Purpose**: Local development and testing
 
 **Configuration**:
-```bash
+```
 ## .env.development
 ENV=development
 DEBUG=true
@@ -89,7 +89,7 @@ ENABLE_METRICS=false
 **Purpose**: Pre-production testing and validation
 
 **Configuration**:
-```bash
+```
 ## .env.staging
 ENV=staging
 DEBUG=false
@@ -128,7 +128,7 @@ PROMETHEUS_PORT=9090
 **Purpose**: Live user-facing deployment
 
 **Configuration**:
-```bash
+```
 ## .env.production
 ENV=production
 DEBUG=false
@@ -238,7 +238,7 @@ OPENFGA_MODEL_ID=${OPENFGA_MODEL_ID}
 ```
 
 **LLM Providers**:
-```bash
+```
 ## Anthropic
 ANTHROPIC_API_KEY=${ANTHROPIC_KEY}
 
@@ -256,7 +256,7 @@ OLLAMA_BASE_URL=http://ollama:11434
 
 #### .env File Structure
 
-```bash
+```
 ## .env
 ## DO NOT COMMIT THIS FILE TO GIT
 
@@ -315,7 +315,7 @@ LANGSMITH_ENABLED=false
 
 Create a template for new developers:
 
-```bash
+```
 ## .env.example
 ## Copy to .env and fill in values
 
@@ -344,7 +344,7 @@ LANGSMITH_ENABLED=false
 
 **CRITICAL**: Never commit secrets to git:
 
-```bash
+```
 ## .gitignore
 .env
 .env.*
@@ -382,7 +382,7 @@ for secret in secrets:
 #### Environment-Specific Secrets
 
 **Development**:
-```bash
+```
 ## Infisical: development environment
 ANTHROPIC_API_KEY=sk-ant-dev-...
 REDIS_URL=redis://localhost:6379
@@ -390,7 +390,7 @@ KEYCLOAK_URL=http://localhost:8080
 ```
 
 **Production**:
-```bash
+```
 ## Infisical: production environment
 ANTHROPIC_API_KEY=sk-ant-prod-...
 REDIS_URL=redis://prod-redis-master:6379

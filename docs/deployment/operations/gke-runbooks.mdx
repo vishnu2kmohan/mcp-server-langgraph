@@ -568,7 +568,7 @@ gcloud container clusters describe production-mcp-server-langgraph-gke \
   --format="yaml(currentMasterVersion,releaseChannel)"
 ```
 **Manual upgrade** (if needed):
-```bash
+```
 ## Check available versions
 gcloud container get-server-config --region=us-central1
 
@@ -599,7 +599,7 @@ gcloud sql instances reschedule-maintenance mcp-prod-postgres \
 
 #### Active Alerts
 
-```bash
+```
 ## List firing alerts
 gcloud alpha monitoring policies list \
   --filter="enabled=true" \
@@ -667,7 +667,7 @@ For complete disaster recovery automation:
   **This stops all traffic**. Use only in critical situations (security breach, data corruption).
 </Warning>
 
-```bash
+```
 ## Scale to zero
 kubectl scale deployment production-mcp-server-langgraph \
   -n production-mcp-server-langgraph \
@@ -680,7 +680,7 @@ kubectl scale deployment production-mcp-server-langgraph \
 ```
 #### Emergency Maintenance Mode
 
-```yaml
+```
 ## Apply maintenance page
 apiVersion: v1
 kind: Service

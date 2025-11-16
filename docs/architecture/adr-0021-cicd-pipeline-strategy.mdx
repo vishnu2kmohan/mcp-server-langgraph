@@ -371,7 +371,7 @@ jobs:
 
 #### Kubernetes Validation
 
-```bash
+```
 ## scripts/validation/validate_deployments.sh
 
 ## Validate all Kubernetes manifests
@@ -393,7 +393,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 
 #### Docker Build Validation
 
-```yaml
+```
 ## .github/workflows/ci.yaml
 - name: Build multi-platform images
   run: |
@@ -516,7 +516,7 @@ kubectl wait --for=condition=ready pod -l app=langgraph-agent --timeout=300s
 ### Best Practices
 
 #### 1. Fail Fast
-```yaml
+```
 ## Run fast checks first (lint, type-check) before slow tests
 jobs:
   lint:
@@ -526,7 +526,7 @@ jobs:
 ```
 
 #### 2. Matrix Testing
-```yaml
+```
 ## Test multiple Python versions
 strategy:
   matrix:
@@ -534,7 +534,7 @@ strategy:
     os: [ubuntu-latest, macos-latest]
 ```
 #### 3. Caching
-```yaml
+```
 ## Cache dependencies to speed up runs
 - uses: actions/cache@v3
   with:
@@ -543,7 +543,7 @@ strategy:
 ```
 
 #### 4. Conditional Workflows
-```yaml
+```
 ## Skip expensive tests on docs-only changes
 on:
   push:
@@ -552,7 +552,7 @@ on:
       - 'docs/**'
 ```
 #### 5. Secure Secrets
-```yaml
+```
 ## Use GitHub Secrets for sensitive data
 env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

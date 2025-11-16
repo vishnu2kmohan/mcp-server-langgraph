@@ -69,7 +69,7 @@ Follows Anthropic's best practice: "Expose a response_format enum parameter for 
 </Info>
 
 **Example Usage**:
-```python
+```
 ## Basic usage with default concise format
 response = await client.call_tool("agent_chat", {
     "message": "Explain quantum entanglement",
@@ -167,7 +167,7 @@ Search conversations using keywords and filters. **Replaces** the old `list_conv
 </Info>
 
 **Example Usage**:
-```python
+```
 ## Search for specific conversations
 results = await client.call_tool("conversation_search", {
     "query": "project alpha",
@@ -243,7 +243,7 @@ Retrieve a specific conversation thread by ID.
 ```
 
 **Example Usage**:
-```python
+```
 ## First, search for conversations
 search_results = await client.call_tool("conversation_search", {
     "query": "project updates",
@@ -406,7 +406,7 @@ results = await client.call_tool("query_database", {
 
 List all available tools:
 
-```python
+```
 ## List tools
 tools = await client.list_tools()
 
@@ -453,7 +453,7 @@ else:
 
 For long-running tools:
 
-```python
+```
 ## Start execution
 task_id = await client.call_tool_async(
     name="execute_code",
@@ -570,7 +570,7 @@ print(result.content[0].text)
 
 Tools respect authorization rules:
 
-```python
+```
 ## Check if user can execute tool
 allowed = await openfga_client.check_permission(
     user=f"user:{user_id}",
@@ -583,7 +583,7 @@ if not allowed:
 ```
 
 **Grant permission**:
-```python
+```
 ## Grant user access to tool
 await openfga_client.write_tuples([{
     "user": f"user:{user_id}",
@@ -595,7 +595,7 @@ await openfga_client.write_tuples([{
 
 Chain multiple tools:
 
-```python
+```
 ## 1. Search for information
 search_result = await client.call_tool("search_web", {
     "query": "Python async best practices"

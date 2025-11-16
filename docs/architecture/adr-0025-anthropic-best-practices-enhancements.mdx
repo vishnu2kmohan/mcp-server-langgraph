@@ -53,7 +53,7 @@ We implement all identified enhancements to achieve comprehensive adherence to A
 - Supports unlimited context corpus with intelligent retrieval
 
 **How**:
-```python
+```
 ## New module: src/mcp_server_langgraph/core/dynamic_context_loader.py
 class DynamicContextLoader:
     - Qdrant vector store integration
@@ -83,7 +83,7 @@ class DynamicContextLoader:
 - Respects dependencies through topological sorting
 
 **How**:
-```python
+```
 ## New module: src/mcp_server_langgraph/core/parallel_executor.py
 class ParallelToolExecutor:
     - Dependency graph analysis
@@ -110,7 +110,7 @@ class ParallelToolExecutor:
 - Fallback to rule-based extraction
 
 **How**:
-```python
+```
 ## Enhanced in: src/mcp_server_langgraph/core/context_manager.py
 async def extract_key_information_llm(messages):
     - XML-structured prompts
@@ -312,20 +312,20 @@ Use threads instead of asyncio for parallel execution.
 #### Key Metrics to Track
 
 **Dynamic Context Loading**:
-```python
+```
 - context.semantic_search.latency_ms
 - context.load.cache_hit_rate
 - context.load.token_savings_total
 - context.load.contexts_loaded_per_request
 ```
 **Parallel Execution**:
-```python
+```
 - parallel.tools.concurrent_total
 - parallel.tools.latency_reduction_ms
 - parallel.tools.dependency_levels_avg
 ```
 **LLM Extraction**:
-```python
+```
 - extraction.llm.success_rate
 - extraction.llm.fallback_rate
 - extraction.categories.items_per_category
@@ -341,7 +341,7 @@ Use threads instead of asyncio for parallel execution.
 #### For Developers
 
 **Enabling Dynamic Context Loading**:
-```bash
+```
 ## 1. Start Qdrant
 docker compose up -d qdrant
 
@@ -361,13 +361,13 @@ await loader.index_context(
 ```
 
 **Enabling Parallel Execution**:
-```bash
+```
 ## Enable in .env
 ENABLE_PARALLEL_EXECUTION=true
 MAX_PARALLEL_TOOLS=5
 ```
 **Enabling LLM Extraction**:
-```bash
+```
 ## Enable in .env
 ENABLE_LLM_EXTRACTION=true
 ```

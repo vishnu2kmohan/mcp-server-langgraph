@@ -37,7 +37,7 @@ When adding a new configuration key that will be referenced by a deployment:
    ```
 
 2. **Add to environment variables** if using JSON 6902 patches:
-   ```yaml
+```
    - name: MY_NEW_KEY
      valueFrom:
        configMapKeyRef:
@@ -89,7 +89,7 @@ The following keys are required in production ConfigMaps:
 ### Optional vs Required Keys
 
 - **Optional keys**: Use `optional: true` in `configMapKeyRef`:
-  ```yaml
+```
   - name: OPTIONAL_KEY
     valueFrom:
       configMapKeyRef:
