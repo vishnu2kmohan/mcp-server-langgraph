@@ -316,23 +316,13 @@ class TestHelmChart:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="CODEX FINDING #7: Helm template parsing error with prometheus-rules files. "
-        "Using xfail(strict=True) so CI fails when fixed, alerting team to remove this marker. "
-        "Tracked in: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/TBD",
-    )
     def test_helm_chart_lints_successfully(self, helm_chart_dir: Path) -> None:
         """
         Test that Helm chart passes helm lint validation.
 
         High Priority Issue: Various Helm chart configuration issues.
 
-        CODEX FINDING #7: Converted skip → xfail(strict=True).
-        Test will FAIL CI when Helm issue is fixed, prompting marker removal.
-
-        KNOWN ISSUE: Prometheus rules file inclusion causes parse errors.
-        This is tracked for a dedicated Helm-focused PR.
+        Fixed in Session 2: Ran 'helm dependency update' to resolve prometheus rules parsing errors.
         Kustomize deployments (primary method) are unaffected.
         """
         # CODEX FINDING #1: Check if helm is available
@@ -353,19 +343,12 @@ class TestHelmChart:
 
         assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="CODEX FINDING #7: Helm template parsing error with prometheus-rules files. "
-        "Using xfail(strict=True) so CI fails when fixed, alerting team to remove this marker. "
-        "Tracked in: https://github.com/vishnu2kmohan/mcp-server-langgraph/issues/TBD",
-    )
     def test_helm_chart_renders_successfully(self, helm_chart_dir: Path) -> None:
         """Test that Helm chart renders without errors.
 
-        CODEX FINDING #7: Converted skip → xfail(strict=True).
-        Test will FAIL CI when Helm issue is fixed, prompting marker removal.
+        Fixed in Session 2: Ran 'helm dependency update' to resolve prometheus rules parsing errors.
 
-        KNOWN ISSUE: Depends on successful lint. See test_helm_chart_lints_successfully.
+        Depends on successful lint. See test_helm_chart_lints_successfully.
         """
         # CODEX FINDING #1: Check if helm is available
         if not shutil.which("helm"):
@@ -411,6 +394,8 @@ class TestHelmChart:
         Test that Helm chart health probe paths match the canonical deployment.
 
         Medium Priority Issue #8: Helm uses /health but base uses /health/live.
+
+        Note: Helm chart uses .Values.healthChecks structure, not .Values.livenessProbe.
         """
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
@@ -425,25 +410,23 @@ class TestHelmChart:
         expected_readiness = "/health/ready"
         expected_startup = "/health/startup"
 
-        # Check livenessProbe
-        liveness_path = values.get("livenessProbe", {}).get("httpGet", {}).get("path")
+        # Check livenessProbe (in healthChecks structure)
+        liveness_path = values.get("healthChecks", {}).get("liveness", {}).get("path")
         assert liveness_path == expected_liveness, (
-            f"Helm values.yaml livenessProbe path is '{liveness_path}', " f"should be '{expected_liveness}'"
+            f"Helm values.yaml healthChecks.liveness.path is '{liveness_path}', " f"should be '{expected_liveness}'"
         )
 
-        # Check readinessProbe
-        readiness_path = values.get("readinessProbe", {}).get("httpGet", {}).get("path")
+        # Check readinessProbe (in healthChecks structure)
+        readiness_path = values.get("healthChecks", {}).get("readiness", {}).get("path")
         assert readiness_path == expected_readiness, (
-            f"Helm values.yaml readinessProbe path is '{readiness_path}', " f"should be '{expected_readiness}'"
+            f"Helm values.yaml healthChecks.readiness.path is '{readiness_path}', " f"should be '{expected_readiness}'"
         )
 
-        # Check startupProbe if it exists
-        startup_probe = values.get("startupProbe", {})
-        if startup_probe:
-            startup_path = startup_probe.get("httpGet", {}).get("path")
-            assert startup_path == expected_startup, (
-                f"Helm values.yaml startupProbe path is '{startup_path}', " f"should be '{expected_startup}'"
-            )
+        # Check startupProbe (in healthChecks structure)
+        startup_path = values.get("healthChecks", {}).get("startup", {}).get("path")
+        assert startup_path == expected_startup, (
+            f"Helm values.yaml healthChecks.startup.path is '{startup_path}', " f"should be '{expected_startup}'"
+        )
 
     def test_helm_istio_resources_have_conditional_checks(self, helm_chart_dir: Path) -> None:
         """

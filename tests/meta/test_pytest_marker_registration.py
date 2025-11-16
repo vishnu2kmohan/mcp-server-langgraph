@@ -13,11 +13,11 @@ See: https://docs.pytest.org/en/stable/how-to/mark.html
 import ast
 import gc
 import re
+import tomllib
 from pathlib import Path
 from typing import Set
 
 import pytest
-import toml
 
 
 def get_registered_markers() -> Set[str]:
@@ -28,7 +28,8 @@ def get_registered_markers() -> Set[str]:
         Set of marker names (e.g., {'unit', 'integration', 'e2e'})
     """
     pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-    config = toml.load(pyproject_path)
+    with open(pyproject_path, "rb") as f:
+        config = tomllib.load(f)
 
     markers = config.get("tool", {}).get("pytest", {}).get("ini_options", {}).get("markers", [])
 

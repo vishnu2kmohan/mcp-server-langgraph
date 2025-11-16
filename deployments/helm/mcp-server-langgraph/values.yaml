@@ -172,7 +172,9 @@ podDisruptionBudget:
 
 # Network Policy
 networkPolicy:
-  enabled: true
+  # NetworkPolicy template not yet implemented in Helm chart
+  # Use Kustomize deployments (deployments/base/networkpolicy.yaml) for network policies
+  enabled: false
   policyTypes:
     - Ingress
     - Egress
@@ -186,7 +188,7 @@ healthChecks:
     timeoutSeconds: 3
     failureThreshold: 30
   liveness:
-    path: /health
+    path: /health/live
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
