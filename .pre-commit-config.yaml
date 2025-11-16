@@ -47,7 +47,7 @@ repos:
   hooks:
   - id: bandit
     args:
-    - -ll
+    - -lll
     - -x
     - tests
     - --skip
@@ -62,6 +62,7 @@ repos:
     - --no-implicit-optional
     files: ^src/mcp_server_langgraph/
     additional_dependencies:
+    - pydantic
     - types-PyYAML
     - types-redis
     - types-requests
