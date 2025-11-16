@@ -156,6 +156,40 @@ class TokenVerification(BaseModel):
         return cls(**data)
 
 
+class PasswordVerification(BaseModel):
+    """
+    Type-safe password verification response
+
+    Returned from verify_password() operations.
+    Provides structured response for password validation with user data on success.
+    """
+
+    valid: bool = Field(..., description="Whether password is valid")
+    user: Optional[Dict[str, Any]] = Field(default=None, description="User data if password valid")
+    error: Optional[str] = Field(default=None, description="Error message if password invalid")
+
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+        json_schema_extra={
+            "example": {
+                "valid": True,
+                "user": {"username": "alice", "user_id": "user:alice", "email": "alice@example.com", "roles": ["user"]},
+                "error": None,
+            }
+        },
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for backward compatibility"""
+        return self.model_dump(exclude_none=True)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "PasswordVerification":
+        """Create PasswordVerification from dictionary"""
+        return cls(**data)
+
+
 class UserProvider(ABC):
     """
     Abstract base class for user providers
@@ -210,6 +244,22 @@ class UserProvider(ABC):
 
         Returns:
             TokenVerification with validation result
+        """
+
+    @abstractmethod
+    async def verify_password(self, username: str, password: str) -> PasswordVerification:
+        """
+        Verify username and password combination
+
+        Convenience method for testing and validation scenarios.
+        For full authentication with token generation, use authenticate() instead.
+
+        Args:
+            username: Username to verify
+            password: Password to verify
+
+        Returns:
+            PasswordVerification with validation result and user data if valid
         """
 
     @abstractmethod
@@ -340,6 +390,60 @@ class InMemoryUserProvider(UserProvider):
 
         hash_bytes = password_hash.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hash_bytes)
+
+    async def verify_password(self, username: str, password: str) -> PasswordVerification:
+        """
+        Verify username and password combination
+
+        Convenience method for testing and validation scenarios.
+        Returns structured PasswordVerification with user data on success.
+
+        For full authentication with token generation, use authenticate() instead.
+
+        Args:
+            username: Username to verify
+            password: Password to verify
+
+        Returns:
+            PasswordVerification with validation result and user data if valid
+
+        Security:
+            - Uses constant-time comparison for password hashes when bcrypt is available
+            - Does not reveal whether username exists (timing-safe where possible)
+            - Returns same error structure for non-existent users and invalid passwords
+        """
+        with tracer.start_as_current_span("inmemory.verify_password") as span:
+            span.set_attribute("auth.username", username)
+
+            # Validate inputs
+            if not username or not password:
+                span.set_attribute("auth.result", "invalid_input")
+                return PasswordVerification(valid=False, error="Username and password are required")
+
+            # Check if user exists
+            if username not in self.users_db:
+                span.set_attribute("auth.result", "user_not_found")
+                # Don't reveal user existence - return generic error
+                return PasswordVerification(valid=False, error="Invalid credentials")
+
+            user = self.users_db[username]
+
+            # Verify password
+            if not self._verify_password(password, user["password"]):
+                span.set_attribute("auth.result", "invalid_password")
+                return PasswordVerification(valid=False, error="Invalid credentials")
+
+            # Success - return user data
+            span.set_attribute("auth.result", "success")
+            return PasswordVerification(
+                valid=True,
+                user={
+                    "username": username,
+                    "user_id": user["user_id"],
+                    "email": user["email"],
+                    "roles": user["roles"],
+                },
+            )
 
     def add_user(self, username: str, password: str, email: str, roles: list[str], user_id: Optional[str] = None) -> None:
         """
@@ -636,6 +740,60 @@ class KeycloakUserProvider(UserProvider):
             return TokenVerification(valid=True, payload=payload)
         except Exception as e:
             return TokenVerification(valid=False, error=str(e))
+
+    async def verify_password(self, username: str, password: str) -> PasswordVerification:
+        """
+        Verify username and password combination using Keycloak
+
+        Convenience method for testing and validation scenarios.
+        Returns structured PasswordVerification with user data on success.
+
+        For full authentication with token generation, use authenticate() instead.
+
+        Args:
+            username: Username to verify
+            password: Password to verify
+
+        Returns:
+            PasswordVerification with validation result and user data if valid
+
+        Security:
+            - Delegates to Keycloak for password verification
+            - Uses Keycloak's secure password hashing and verification
+            - Returns same error structure for non-existent users and invalid passwords
+        """
+        with tracer.start_as_current_span("keycloak.verify_password") as span:
+            span.set_attribute("auth.username", username)
+
+            # Validate inputs
+            if not username or not password:
+                span.set_attribute("auth.result", "invalid_input")
+                return PasswordVerification(valid=False, error="Username and password are required")
+
+            try:
+                # Attempt authentication with Keycloak
+                auth_response = await self.authenticate(username, password)
+
+                if not auth_response.authorized:
+                    span.set_attribute("auth.result", "authentication_failed")
+                    return PasswordVerification(valid=False, error="Invalid credentials")
+
+                # Success - return user data
+                span.set_attribute("auth.result", "success")
+                return PasswordVerification(
+                    valid=True,
+                    user={
+                        "username": auth_response.username,
+                        "user_id": auth_response.user_id,
+                        "email": auth_response.email,
+                        "roles": auth_response.roles,
+                    },
+                )
+
+            except Exception as e:
+                span.set_attribute("auth.result", "error")
+                logger.error(f"Password verification failed for {username}: {e}", exc_info=True)
+                return PasswordVerification(valid=False, error="Password verification failed")
 
     async def list_users(self) -> List[UserData]:
         """

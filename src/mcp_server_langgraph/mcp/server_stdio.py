@@ -110,6 +110,7 @@ class MCPAgentServer:
         self,
         openfga_client: OpenFGAClient | None = None,
         auth: AuthMiddleware | None = None,
+        settings: Settings | None = None,
     ) -> None:
         """
         Initialize MCP Agent Server with optional dependency injection.
@@ -120,6 +121,10 @@ class MCPAgentServer:
             auth: Optional pre-configured AuthMiddleware instance.
                   If provided, this takes precedence over creating auth from settings.
                   This enables dependency injection for testing and custom configurations.
+            settings: Optional Settings instance for runtime configuration.
+                     If provided, enables dynamic feature toggling (e.g., code execution).
+                     If None, uses global settings. This allows tests to inject custom
+                     configuration without module reloading.
 
         Example:
             # Default creation (production):
@@ -129,12 +134,25 @@ class MCPAgentServer:
             custom_auth = AuthMiddleware(user_provider=custom_provider, ...)
             server = MCPAgentServer(auth=custom_auth)
 
+            # Custom settings injection (testing):
+            test_settings = Settings(enable_code_execution=True)
+            server = MCPAgentServer(settings=test_settings)
+
         OpenAI Codex Finding (2025-11-16):
         ===================================
         Added `auth` parameter for constructor-based dependency injection.
         This allows tests to inject pre-configured AuthMiddleware with registered users,
         fixing the "user not found" failures in integration tests.
+
+        Added `settings` parameter (2025-11-16):
+        ========================================
+        Enables runtime configuration without module reloading. Fixes code execution
+        tool visibility issues in integration tests where ENABLE_CODE_EXECUTION env
+        var changes didn't take effect due to module-level settings caching.
         """
+        # Store settings for runtime configuration
+        self.settings = settings if settings is not None else globals()["settings"]
+
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
@@ -155,7 +173,7 @@ class MCPAgentServer:
             # Create auth using factory (respects settings.auth_provider)
             # Validate JWT secret is configured for in-memory auth provider
             # Keycloak uses RS256 with JWKS (public key crypto) and doesn't need JWT_SECRET_KEY
-            if settings.auth_provider == "inmemory" and not settings.jwt_secret_key:
+            if self.settings.auth_provider == "inmemory" and not self.settings.jwt_secret_key:
                 raise ValueError(
                     "CRITICAL: JWT secret key not configured for in-memory auth provider. "
                     "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
@@ -163,7 +181,7 @@ class MCPAgentServer:
                 )
 
             # SECURITY: Fail-closed pattern - require OpenFGA in production
-            if settings.environment == "production" and self.openfga is None:
+            if self.settings.environment == "production" and self.openfga is None:
                 raise ValueError(
                     "CRITICAL: OpenFGA authorization is required in production mode. "
                     "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
@@ -171,7 +189,7 @@ class MCPAgentServer:
                     "Fallback authorization is not secure enough for production use."
                 )
 
-            self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
+            self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
         self._setup_handlers()
 
@@ -290,7 +308,8 @@ class MCPAgentServer:
         )
 
         # Add execute_python if code execution is enabled
-        if settings.enable_code_execution:
+        # Use runtime settings evaluation (not module-level cached value)
+        if self.settings.enable_code_execution:
             from mcp_server_langgraph.tools.code_execution_tools import ExecutePythonInput
 
             tools.append(

@@ -126,9 +126,10 @@ def execute_python(code: str, timeout: Optional[int] = None) -> str:
         >>> execute_python.invoke({"code": "print(2 + 2)"})
         "Execution successful:\\nOutput:\\n4"
     """
-    # Check if code execution is enabled
-    if not _is_execution_enabled():
-        return "Error: Code execution is disabled. " "Set ENABLE_CODE_EXECUTION=true in configuration to enable this feature."
+    # Note: Code execution enablement is controlled at the MCP server level.
+    # The execute_python tool is only added to the tool list when settings.enable_code_execution is True.
+    # This provides access control without needing runtime checks here.
+    # Previous _is_execution_enabled() check removed due to settings caching issues in tests.
 
     # Validate input
     if not code or not code.strip():

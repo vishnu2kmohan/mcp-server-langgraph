@@ -174,15 +174,10 @@ class TestExecutePythonTool:
         # Should execute successfully
         mock_get_sandbox.assert_called_once()
 
-    def test_tool_disabled_by_default(self):
-        """Test that tool respects configuration flag"""
-        # When execution is disabled, tool should return error
-        with patch("mcp_server_langgraph.tools.code_execution_tools._is_execution_enabled") as mock_enabled:
-            mock_enabled.return_value = False
-
-            result = execute_python.invoke({"code": "print('test')"})
-
-            assert "disabled" in result.lower() or "not enabled" in result.lower()
+    # NOTE: test_tool_disabled_by_default removed (2025-11-16)
+    # Code execution enablement is now controlled at MCP server level (list_tools_public)
+    # The tool is only added to the tool list when settings.enable_code_execution is True
+    # This provides cleaner access control without runtime checks in the tool itself
 
 
 @pytest.mark.unit

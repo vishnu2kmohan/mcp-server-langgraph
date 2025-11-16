@@ -60,33 +60,30 @@ class TestMCPCodeExecutionEndpoint:
         return server
 
     @pytest.fixture
-    async def mcp_server_with_code_execution(self, register_mcp_test_users, monkeypatch):
+    async def mcp_server_with_code_execution(self, register_mcp_test_users):
         """
         Create MCP server with code execution ENABLED.
 
-        Uses monkeypatch to set environment variable BEFORE server creation,
-        so settings are properly configured during initialization.
+        Uses settings dependency injection to enable code execution at runtime
+        without module reloading or environment variable manipulation.
 
-        OpenAI Codex Finding Fix (2025-11-16):
-        =======================================
-        Previous implementation tried to patch settings AFTER server creation.
-        Settings are read at module import and server init time, so post-init
-        patching doesn't work. Use monkeypatch BEFORE server creation instead.
+        OpenAI Codex Finding Fix (2025-11-16) - UPDATED:
+        =================================================
+        Now uses Settings dependency injection instead of module reloading.
+        This is cleaner, faster, and avoids the settings caching issue entirely.
         """
         from unittest.mock import MagicMock
 
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
+        from mcp_server_langgraph.core.config import Settings
 
-        # Set environment variable BEFORE server init
-        monkeypatch.setenv("ENABLE_CODE_EXECUTION", "true")
-
-        # Reload settings to pick up new environment variable
-        # This is needed because settings is a global Pydantic Settings instance
-        from importlib import reload
-
-        from mcp_server_langgraph.core import config
-
-        reload(config)
+        # Create test settings with code execution enabled
+        test_settings = Settings(
+            enable_code_execution=True,
+            environment="test",
+            auth_provider="inmemory",
+            allow_auth_fallback=True,
+        )
 
         # Create auth middleware with pre-registered user provider
         auth = AuthMiddleware(
@@ -100,8 +97,8 @@ class TestMCPCodeExecutionEndpoint:
             ),
         )
 
-        # Create server with injected auth
-        server = MCPAgentServer(auth=auth)
+        # Create server with injected auth AND settings
+        server = MCPAgentServer(auth=auth, settings=test_settings)
 
         return server
 
