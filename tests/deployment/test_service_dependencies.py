@@ -35,7 +35,7 @@ def load_yaml_documents(file_path: Path) -> List[Dict[str, Any]]:
 
 def build_kustomize_manifests(overlay_dir: Path) -> str:
     """Build Kustomize manifests and return as string."""
-    result = subprocess.run(["kubectl", "kustomize", str(overlay_dir)], capture_output=True, text=True, check=True)
+    result = subprocess.run(["kubectl", "kustomize", str(overlay_dir)], capture_output=True, text=True, check=True, timeout=60)
     return result.stdout
 
 

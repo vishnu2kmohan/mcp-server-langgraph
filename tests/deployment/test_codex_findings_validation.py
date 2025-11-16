@@ -253,7 +253,9 @@ class TestCriticalIssues:
 
         # Build production-gke overlay
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
 
         # Skip if build fails (other tests will catch that)
         if result.returncode != 0:
@@ -511,7 +513,9 @@ class TestLowPriorityIssues:
 
         # Build the overlay to see what's actually used
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
 
         if result.returncode != 0:
             pytest.skip(f"Kustomize build failed: {result.stderr}")

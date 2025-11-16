@@ -40,10 +40,7 @@ class TestHelmTemplateRendering:
     def test_helm_template_renders_without_errors(self):
         """Test that helm template command succeeds."""
         result = subprocess.run(
-            ["helm", "template", "test-release", str(CHART_PATH)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
+            ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         assert result.returncode == 0, f"Helm template failed: {result.stderr}"
@@ -52,10 +49,7 @@ class TestHelmTemplateRendering:
     def test_helm_template_produces_valid_yaml(self):
         """Test that rendered templates are valid YAML."""
         result = subprocess.run(
-            ["helm", "template", "test-release", str(CHART_PATH)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
+            ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         assert result.returncode == 0, "Helm template command failed"
@@ -75,10 +69,7 @@ class TestHelmTemplateRendering:
     def test_helm_template_checksum_annotations_present(self):
         """Test that deployment has checksum annotations for config/secret changes."""
         result = subprocess.run(
-            ["helm", "template", "test-release", str(CHART_PATH)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
+            ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         assert result.returncode == 0, "Helm template command failed"
@@ -123,23 +114,13 @@ class TestHelmLint:
 
     def test_helm_lint_passes(self):
         """Test that helm lint passes without warnings or errors."""
-        result = subprocess.run(
-            ["helm", "lint", str(CHART_PATH)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-        )
+        result = subprocess.run(["helm", "lint", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60)
 
         assert result.returncode == 0, f"Helm lint failed:\n{result.stderr}\n{result.stdout}"
 
     def test_helm_lint_output_contains_success(self):
         """Test that helm lint output indicates success."""
-        result = subprocess.run(
-            ["helm", "lint", str(CHART_PATH)],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-        )
+        result = subprocess.run(["helm", "lint", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60)
 
         assert result.returncode == 0, "Helm lint command failed"
 
@@ -160,11 +141,7 @@ class TestHelmDependencies:
 
     def test_helm_command_available(self):
         """Test that helm command is available in PATH."""
-        result = subprocess.run(
-            ["which", "helm"],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["which", "helm"], capture_output=True, text=True, timeout=60)
 
         if result.returncode != 0:
             pytest.skip("Helm not installed - skipping Helm tests")
@@ -228,6 +205,7 @@ replicaCount: 2
                 capture_output=True,
                 text=True,
                 cwd=REPO_ROOT,
+                timeout=60,
             )
 
             assert result.returncode == 0, f"Helm template with custom values failed: {result.stderr}"
@@ -257,6 +235,7 @@ replicaCount: 2
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
+            timeout=60,
         )
 
         assert result.returncode == 0, f"Helm template with staging values failed: {result.stderr}"
@@ -281,6 +260,7 @@ replicaCount: 2
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
+            timeout=60,
         )
 
         assert result.returncode == 0, f"Helm template with production values failed: {result.stderr}"

@@ -41,7 +41,9 @@ class TestNetworkPolicyPorts:
     def staging_network_policies(self):
         """Load NetworkPolicies from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Staging build failed: {result.stderr}")
 
@@ -52,7 +54,9 @@ class TestNetworkPolicyPorts:
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -195,7 +199,9 @@ class TestNetworkPolicySelectors:
     def production_network_policies(self):
         """Load NetworkPolicies from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -303,7 +309,7 @@ def test_network_policy_coverage():
         )
 
     base_path = REPO_ROOT / "deployments/base"
-    result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+    result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60)
 
     if result.returncode != 0:
         pytest.skip(f"Base build failed: {result.stderr}")

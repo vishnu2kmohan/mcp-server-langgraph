@@ -77,9 +77,7 @@ class TestKeycloakConfigValidationHook:
         try:
             # Run validation script
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
+                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
             )
 
             assert result.returncode == 0, f"Hook should pass with Keycloak enabled. stderr: {result.stderr}"
@@ -107,9 +105,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
+                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
             )
 
             assert result.returncode == 1, "Hook should fail when Keycloak service missing"
@@ -141,9 +137,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
+                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
             )
 
             assert result.returncode == 1, "Hook should fail when health check missing"
@@ -180,9 +174,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
+                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
             )
 
             assert result.returncode == 1, "Hook should fail when required env vars missing"
@@ -228,9 +220,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)],
-                capture_output=True,
-                text=True,
+                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
             )
 
             # Hook should warn or fail about inadequate start_period
@@ -253,9 +243,7 @@ class TestKeycloakConfigValidationHook:
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
         result = subprocess.run(
-            ["python", "scripts/validate_keycloak_config.py", str(compose_file)],
-            capture_output=True,
-            text=True,
+            ["python", "scripts/validate_keycloak_config.py", str(compose_file)], capture_output=True, text=True, timeout=60
         )
 
         assert result.returncode == 0, (

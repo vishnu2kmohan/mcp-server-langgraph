@@ -39,6 +39,7 @@ def wait_for_service(
                 capture_output=True,
                 text=True,
                 check=True,
+                timeout=60,
             )
 
             # Check if service is healthy
@@ -102,7 +103,7 @@ def get_service_logs(
         cmd.extend(["--tail", str(tail)])
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=60)
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error retrieving logs: {e}"
@@ -123,6 +124,7 @@ def cleanup_test_containers(compose_file: str = "docker/docker-compose.test.yml"
             ["docker", "compose", "-f", compose_file, "down", "-v", "--remove-orphans"],
             capture_output=True,
             check=True,
+            timeout=60,
         )
         return True
     except subprocess.CalledProcessError:
@@ -149,6 +151,7 @@ def is_service_running(
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
         # If command returns container ID, service is running
         return bool(result.stdout.strip())
@@ -178,6 +181,7 @@ def get_service_port(
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
         # Output format: 0.0.0.0:PORT or :::PORT
         if result.stdout.strip():
@@ -208,7 +212,7 @@ def exec_in_service(
     cmd = ["docker", "compose", "-f", compose_file, "exec", "-T", service_name] + command
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         return result.stdout, result.stderr, result.returncode
     except subprocess.CalledProcessError as e:
         return "", str(e), e.returncode
@@ -248,11 +252,7 @@ class TestEnvironment:
     def __enter__(self):
         """Start services and wait for health"""
         # Start services
-        subprocess.run(
-            ["docker", "compose", "-f", self.compose_file, "up", "-d"],
-            check=True,
-            capture_output=True,
-        )
+        subprocess.run(["docker", "compose", "-f", self.compose_file, "up", "-d"], check=True, capture_output=True, timeout=60)
 
         # Wait for services to be healthy
         if self.services:

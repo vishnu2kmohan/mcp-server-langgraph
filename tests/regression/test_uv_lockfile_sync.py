@@ -106,12 +106,7 @@ class TestUVLockfileSynchronization:
         project_root = Path(__file__).parent.parent.parent
 
         # Run uv lock --check (same command CI uses)
-        result = subprocess.run(
-            ["uv", "lock", "--check"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["uv", "lock", "--check"], cwd=project_root, capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, (
             f"❌ uv.lock is OUT OF SYNC with pyproject.toml!\n\n"

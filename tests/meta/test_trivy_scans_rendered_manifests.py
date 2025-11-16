@@ -157,6 +157,7 @@ def test_rendered_manifests_include_security_contexts():
         capture_output=True,
         text=True,
         cwd="/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph",
+        timeout=60,
     )
 
     assert result.returncode == 0, f"kubectl kustomize failed: {result.stderr}"

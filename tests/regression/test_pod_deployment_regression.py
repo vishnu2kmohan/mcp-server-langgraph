@@ -64,7 +64,9 @@ def get_all_overlays() -> List[Path]:
 
 def build_kustomize(overlay_path: Path) -> List[Dict[str, Any]]:
     """Build kustomize overlay and return parsed manifests"""
-    result = subprocess.run(["kubectl", "kustomize", str(overlay_path)], capture_output=True, text=True, check=True)
+    result = subprocess.run(
+        ["kubectl", "kustomize", str(overlay_path)], capture_output=True, text=True, check=True, timeout=60
+    )
     manifests = list(yaml.safe_load_all(result.stdout))
     return [m for m in manifests if m is not None]
 
@@ -362,7 +364,7 @@ class TestKustomizeBuildValidity:
     @pytest.mark.parametrize("overlay", get_all_overlays(), ids=lambda x: x.name)
     def test_kustomize_builds_successfully(self, overlay: Path):
         """Kustomize build must succeed without errors"""
-        result = subprocess.run(["kubectl", "kustomize", str(overlay)], capture_output=True, text=True)
+        result = subprocess.run(["kubectl", "kustomize", str(overlay)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, f"Kustomize build failed for {overlay.name}:\n{result.stderr}"
 
@@ -376,14 +378,18 @@ class TestKustomizeBuildValidity:
         - Missing required fields
         - Schema violations
         """
-        result = subprocess.run(["kubectl", "kustomize", str(overlay)], capture_output=True, text=True)
+        result = subprocess.run(["kubectl", "kustomize", str(overlay)], capture_output=True, text=True, timeout=60)
 
         if result.returncode != 0:
             pytest.skip(f"Kustomize build failed for {overlay.name}")
 
         # Apply with dry-run to validate
         dry_run_result = subprocess.run(
-            ["kubectl", "apply", "--dry-run=client", "-f", "-"], input=result.stdout, capture_output=True, text=True
+            ["kubectl", "apply", "--dry-run=client", "-f", "-"],
+            input=result.stdout,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
 
         # Allow errors for missing cluster resources (namespaces, CRDs, etc.)

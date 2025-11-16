@@ -212,11 +212,7 @@ class TestKustomizeOverlays:
         if not overlay_dir.exists():
             pytest.skip(f"Overlay {overlay} does not exist")
 
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, (
             f"Kustomize build failed for overlay '{overlay}':\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
@@ -249,11 +245,7 @@ class TestKustomizeOverlays:
         if not overlay_dir.exists():
             pytest.skip(f"Cloud provider overlay {overlay} does not exist")
 
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, (
             f"Kustomize build failed for cloud provider overlay '{overlay}':\n"
@@ -345,11 +337,7 @@ class TestHelmChart:
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
 
-        result = subprocess.run(
-            ["helm", "lint", str(helm_chart_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["helm", "lint", str(helm_chart_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
 
@@ -378,9 +366,7 @@ class TestHelmChart:
             pytest.skip("Helm chart directory does not exist")
 
         result = subprocess.run(
-            ["helm", "template", "test-release", str(helm_chart_dir)],
-            capture_output=True,
-            text=True,
+            ["helm", "template", "test-release", str(helm_chart_dir)], capture_output=True, text=True, timeout=60
         )
 
         assert result.returncode == 0, f"Helm template failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"

@@ -110,10 +110,7 @@ def test_validation_script_exists_and_is_executable():
 
     # Verify script can be executed
     result = subprocess.run(
-        [sys.executable, str(script_path)],
-        capture_output=True,
-        text=True,
-        cwd=script_path.parent.parent,
+        [sys.executable, str(script_path)], capture_output=True, text=True, cwd=script_path.parent.parent, timeout=60
     )
 
     assert result.returncode == 0, (
@@ -144,11 +141,7 @@ def test_all_pytest_flags_are_supported_by_installed_plugins():
     addopts = pytest_config.get("addopts", "")
 
     # Get pytest help output
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "--help"],
-        capture_output=True,
-        text=True,
-    )
+    result = subprocess.run([sys.executable, "-m", "pytest", "--help"], capture_output=True, text=True, timeout=60)
 
     assert result.returncode == 0, f"pytest --help failed: {result.stderr}"
 

@@ -50,10 +50,7 @@ class TestMCPSkipAuthFixtureEnforcement:
         import subprocess
 
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 

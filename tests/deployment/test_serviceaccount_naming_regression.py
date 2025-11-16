@@ -217,10 +217,7 @@ class TestValidationScript:
     def test_validation_script_passes_on_correct_naming(self):
         """Validation script should pass when all ServiceAccounts are correctly named."""
         result = subprocess.run(
-            ["python", "scripts/validate_serviceaccount_names.py"],
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
+            ["python", "scripts/validate_serviceaccount_names.py"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         # Should exit with code 0 (success)

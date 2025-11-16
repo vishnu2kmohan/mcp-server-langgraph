@@ -45,9 +45,7 @@ def test_all_async_mocks_have_return_values():
     script_path = Path(__file__).parent.parent.parent / "scripts" / "check_async_mock_configuration.py"
 
     result = subprocess.run(
-        [sys.executable, str(script_path)] + [str(f) for f in test_files],
-        capture_output=True,
-        text=True,
+        [sys.executable, str(script_path)] + [str(f) for f in test_files], capture_output=True, text=True, timeout=60
     )
 
     # Collect violations for detailed error message

@@ -28,12 +28,7 @@ class TestGitignoreValidation:
     @staticmethod
     def get_tracked_files() -> Set[str]:
         """Get all files tracked by git."""
-        result = subprocess.run(
-            ["git", "ls-files"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        result = subprocess.run(["git", "ls-files"], capture_output=True, text=True, check=True, timeout=60)
         return set(result.stdout.strip().split("\n"))
 
     @staticmethod

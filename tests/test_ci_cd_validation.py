@@ -76,10 +76,7 @@ class TestKustomizeConfigurations:
 
             # Run kustomize build
             result = subprocess.run(
-                ["kustomize", "build", str(overlay_dir)],
-                capture_output=True,
-                text=True,
-                cwd=overlay_dir,
+                ["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, cwd=overlay_dir, timeout=60
             )
 
             assert result.returncode == 0, (
@@ -162,6 +159,7 @@ class TestKustomizeConfigurations:
                 capture_output=True,
                 text=True,
                 cwd=overlay_dir,
+                timeout=60,
             )
 
             # Check for common patch errors

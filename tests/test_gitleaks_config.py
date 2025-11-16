@@ -72,6 +72,7 @@ class TestGitleaksConfig:
             cwd=Path(__file__).parent.parent,
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         # Should either succeed (0) or fail but NOT due to documentation examples
@@ -154,6 +155,7 @@ DATABASE_PASSWORD=SuperSecretPassword123!
                 cwd=Path(__file__).parent.parent,
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             # Should detect secrets in the test file
