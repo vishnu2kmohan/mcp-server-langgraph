@@ -1,4 +1,4 @@
-.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit pre-commit-setup git-hooks
+.PHONY: help help-common help-advanced install install-dev setup-infra setup-openfga setup-infisical test test-unit test-integration test-coverage test-coverage-fast test-coverage-html test-coverage-xml test-coverage-terminal test-coverage-changed test-property test-contract test-regression test-mutation test-infra-up test-infra-down test-infra-logs test-e2e test-api test-mcp-server test-new test-quick-new validate-openapi validate-deployments validate-docker-image validate-all validate-workflows validate-pre-push test-workflows test-workflow-% act-dry-run deploy-dev deploy-staging deploy-production lint format security-check lint-check lint-fix lint-pre-commit lint-pre-push lint-install clean dev-setup quick-start monitoring-dashboard health-check health-check-fast db-migrate load-test stress-test docs-serve docs-build docs-deploy docs-validate docs-validate-mdx docs-validate-links docs-validate-version docs-validate-mintlify docs-fix-mdx docs-test docs-audit generate-reports pre-commit-setup git-hooks
 
 # Sequential-only targets (cannot be parallelized)
 .NOTPARALLEL: deploy-production deploy-staging deploy-dev setup-keycloak setup-openfga setup-infisical dev-setup
@@ -1144,6 +1144,28 @@ docs-audit:
 	@make docs-validate || true
 	@echo ""
 	@echo "See docs-internal/DOCUMENTATION_AUDIT_*.md for detailed reports"
+
+# ==============================================================================
+# Test Infrastructure Reports
+# ==============================================================================
+
+generate-reports:  ## Regenerate all test infrastructure scan reports
+	@echo "📊 Regenerating test infrastructure reports..."
+	@echo ""
+	@echo "🔍 Running AsyncMock configuration scan..."
+	@$(UV_RUN) python scripts/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@echo "✅ AsyncMock scan complete"
+	@echo ""
+	@echo "🔍 Running memory safety scan..."
+	@$(UV_RUN) python scripts/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@echo "✅ Memory safety scan complete"
+	@echo ""
+	@echo "📈 Generating test suite statistics..."
+	@$(UV_RUN) python scripts/generate_test_stats.py > docs-internal/reports/TEST_SUITE_STATS.md 2>&1 || true
+	@echo "✅ Test statistics generated"
+	@echo ""
+	@echo "✅ All reports regenerated in docs-internal/reports/"
+	@echo "💡 Review with: ls -lh docs-internal/reports/"
 
 # ==============================================================================
 # Enhanced Testing Targets

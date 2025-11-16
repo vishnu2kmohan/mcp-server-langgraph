@@ -318,7 +318,8 @@ stages: [pre-push]
 - ✅ Helper fixtures created (`tests/helpers/async_mock_helpers.py`)
 - ✅ Helper tests passing (21 tests, 100% coverage)
 - ✅ Bulk-fix script created (`scripts/bulk_fix_async_mock.py`)
-- ⏳ Violations remaining: **435** (0% complete)
+- ✅ Bulk remediation: **342 violations fixed** (78.6% complete)
+- ⏳ Violations remaining: **93** (includes 6 false positives)
 
 **Estimated Completion Time:** 8-12 hours
 **Breakdown:**
