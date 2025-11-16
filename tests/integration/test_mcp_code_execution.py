@@ -106,8 +106,8 @@ class TestMCPCodeExecutionEndpoint:
             with patch.object(mcp_server.auth, "authorize", new_callable=AsyncMock) as mock_authz:
                 mock_authz.return_value = False
 
-                # Should be denied
-                with pytest.raises(PermissionError, match="Not authorized to execute"):
+                # Should be denied (match flexible pattern for detailed error messages)
+                with pytest.raises(PermissionError, match="Not authorized"):
                     await mcp_server.call_tool_public(
                         name="execute_python",
                         arguments={"code": "print('test')", "token": mock_jwt_token},

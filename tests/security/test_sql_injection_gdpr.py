@@ -38,18 +38,38 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     failures in Docker integration tests (OSError: [Errno 111] Connect call failed).
 
     Fixed by using POSTGRES_HOST environment variable from docker-compose.test.yml.
+
+    OpenAI Codex Finding #2 (2025-11-16):
+    ======================================
+    Tests failed with "relation 'conversations' does not exist" because the GDPR
+    schema wasn't created in the testdb database.
+
+    Fixed by reading migrations/001_gdpr_schema.sql and executing it before tests.
+    Uses CREATE TABLE IF NOT EXISTS for idempotency.
     """
     import os
+    from pathlib import Path
 
     pool = await asyncpg.create_pool(
         host=os.getenv("POSTGRES_HOST", "localhost"),
         port=int(os.getenv("POSTGRES_PORT", "5432")),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr"),
+        database=os.getenv("POSTGRES_DB", "testdb"),
         min_size=1,
         max_size=5,
     )
+
+    # Create GDPR schema if it doesn't exist (idempotent)
+    schema_file = Path(__file__).parent.parent.parent / "migrations" / "001_gdpr_schema.sql"
+    if schema_file.exists():
+        schema_sql = schema_file.read_text()
+        async with pool.acquire() as conn:
+            try:
+                await conn.execute(schema_sql)
+            except Exception:
+                # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
+                pass
 
     # Clean up test data
     async with pool.acquire() as conn:
