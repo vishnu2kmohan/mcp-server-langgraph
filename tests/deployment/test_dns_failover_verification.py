@@ -53,6 +53,7 @@ class TestDNSConfiguration:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -79,6 +80,7 @@ class TestDNSConfiguration:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -121,6 +123,7 @@ class TestDNSConfiguration:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -213,6 +216,7 @@ spec:
                 ["kubectl", "apply", "-f", temp_file, "--dry-run=client", "-o", "yaml"],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             is_valid = result.returncode == 0
@@ -309,6 +313,7 @@ class TestServiceConfiguration:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -343,6 +348,7 @@ class TestServiceConfiguration:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -395,6 +401,7 @@ class TestDNSFailoverSimulation:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:
@@ -420,6 +427,7 @@ class TestDNSFailoverSimulation:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         ttl = int(result.stdout.strip())
@@ -449,6 +457,7 @@ class TestDNSFailoverSimulation:
             ],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         if result.returncode != 0:

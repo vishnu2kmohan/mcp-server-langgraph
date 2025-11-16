@@ -203,9 +203,13 @@ class TestAppConfiguration:
 
         assert app is not None
 
-    def test_configure_app_for_production(self):
+    def test_configure_app_for_production(self, monkeypatch):
         """Test configuring app for production environment"""
         from mcp_server_langgraph.infrastructure.app_factory import create_app
+
+        # Set required production environment variables
+        monkeypatch.setenv("AUTH_PROVIDER", "keycloak")
+        monkeypatch.setenv("GDPR_STORAGE_BACKEND", "postgres")
 
         app = create_app(environment="production")
 

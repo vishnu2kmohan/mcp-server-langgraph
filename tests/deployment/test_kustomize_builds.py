@@ -65,7 +65,9 @@ class TestKustomizeBuilds:
         full_path = REPO_ROOT / overlay_path
 
         # Run kustomize build
-        result = subprocess.run(["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
 
         # Assert build succeeded
         assert result.returncode == 0, (
@@ -95,7 +97,9 @@ class TestKustomizeBuilds:
         full_path = REPO_ROOT / overlay_path
 
         # Build the overlay
-        result = subprocess.run(["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(full_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
 
         # Skip if build failed (covered by other test)
         if result.returncode != 0:
@@ -129,7 +133,9 @@ class TestStagingGKEOverlay:
     def _build_overlay(self):
         """Helper to build staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -229,7 +235,9 @@ class TestProductionGKEOverlay:
     def _build_overlay(self):
         """Helper to build production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -349,7 +357,9 @@ class TestBaseResources:
     def _build_base(self):
         """Helper to build base."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
@@ -461,7 +471,7 @@ class TestServiceMeshConfig:
 @pytest.fixture(scope="session")
 def check_kustomize_installed():
     """Ensure kustomize is installed before running tests."""
-    result = subprocess.run(["kustomize", "version"], capture_output=True, text=True)
+    result = subprocess.run(["kustomize", "version"], capture_output=True, text=True, timeout=60)
     if result.returncode != 0:
         pytest.fail(
             "kustomize is not installed. Install it with:\n"

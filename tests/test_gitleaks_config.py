@@ -72,6 +72,7 @@ class TestGitleaksConfig:
             cwd=Path(__file__).parent.parent,
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         # Should either succeed (0) or fail but NOT due to documentation examples
@@ -137,7 +138,9 @@ class TestGitleaksConfig:
         This ensures our allowlist doesn't go too far and miss real issues.
         """
         # Create a temporary file with a real-looking secret
-        test_file = Path(__file__).parent.parent / "test_secret_detection.tmp"
+        # IMPORTANT: Use a filename that is NOT in the .gitleaks.toml allowlist
+        # (test_*.tmp is allowlisted, so we use .validation instead)
+        test_file = Path(__file__).parent.parent / "gitleaks-validation-file.txt"
 
         try:
             test_file.write_text(
@@ -148,18 +151,19 @@ DATABASE_PASSWORD=SuperSecretPassword123!
 """
             )
 
-            # Run gitleaks on this specific file
+            # Run gitleaks on the entire directory (--source expects a directory, not a file)
             result = subprocess.run(
-                ["gitleaks", "detect", "--config", ".gitleaks.toml", "--no-git", "--source", str(test_file)],
+                ["gitleaks", "detect", "--config", ".gitleaks.toml", "--no-git"],
                 cwd=Path(__file__).parent.parent,
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             # Should detect secrets in the test file
             assert (
-                result.returncode != 0 or "test_secret_detection.tmp" in result.stdout
-            ), "Gitleaks should still detect real secrets"
+                result.returncode != 0 or "gitleaks-validation-file.txt" in result.stdout
+            ), f"Gitleaks should detect real secrets in {test_file.name}"
 
         finally:
             # Clean up test file

@@ -63,20 +63,22 @@ spec:
         # TODO: Set via Terraform outputs or external configuration
         postgresql:
           enabled: false
-          externalHost: "${POSTGRES_HOST}" # e.g., postgres.example.com or RDS endpoint
-          externalPort: 5432
-          database: mcp_langgraph
-          existingSecret: postgres-credentials
+          external:
+            host: "${POSTGRES_HOST}" # e.g., postgres.example.com or RDS endpoint
+            port: 5432
+            database: mcp_langgraph
+            existingSecret: postgres-credentials
 
         # Redis configuration (from Terraform)
         # TODO: Set via Terraform outputs or external configuration
         redis:
           enabled: false
-          externalHost: "${REDIS_HOST}" # e.g., redis.example.com or ElastiCache endpoint
-          externalPort: 6379
-          cluster:
-            enabled: true
-          existingSecret: redis-credentials
+          external:
+            host: "${REDIS_HOST}" # e.g., redis.example.com or ElastiCache endpoint
+            port: 6379
+            cluster:
+              enabled: true
+            existingSecret: redis-credentials
 
         # OpenFGA configuration
         openfga:

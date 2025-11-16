@@ -8,20 +8,24 @@ compatible with centralized log aggregation platforms (ELK, Datadog, Splunk, Clo
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type
 
 from opentelemetry import trace
 
-try:
-    from pythonjsonlogger.json import JsonFormatter
+# Type annotation for conditional base class
+if TYPE_CHECKING:
+    JsonFormatterBase: Type[logging.Formatter] = logging.Formatter
+else:
+    try:
+        from pythonjsonlogger.json import JsonFormatter
 
-    JsonFormatterBase = JsonFormatter
-except (ImportError, AttributeError):
-    # Fallback if pythonjsonlogger is not available
-    JsonFormatterBase = logging.Formatter  # type: ignore[assignment,misc]
+        JsonFormatterBase = JsonFormatter
+    except (ImportError, AttributeError):
+        # Fallback if pythonjsonlogger is not available
+        JsonFormatterBase = logging.Formatter
 
 
-class CustomJSONFormatter(JsonFormatterBase):
+class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
     """
     Enhanced JSON formatter with OpenTelemetry trace context injection
 

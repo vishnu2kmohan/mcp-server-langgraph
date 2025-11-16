@@ -79,6 +79,7 @@ CMD ["pytest", "-m", "integration"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             assert result.returncode == 0, f"Hook should pass with required directories. stderr: {result.stderr}"
@@ -113,6 +114,7 @@ CMD ["pytest"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when src/ directory missing"
@@ -148,6 +150,7 @@ CMD ["pytest"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when tests/ directory missing"
@@ -183,6 +186,7 @@ CMD ["pytest"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when pyproject.toml missing"
@@ -219,6 +223,7 @@ CMD ["pytest"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             # Hook should warn about scripts/ being copied
@@ -257,6 +262,7 @@ CMD ["pytest"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             # Hook should warn about deployments/ being copied
@@ -302,6 +308,7 @@ CMD ["pytest", "-m", "integration"]
                 ["python", "scripts/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
+                timeout=60,
             )
 
             assert result.returncode == 0, f"Hook should validate final-test stage correctly. stderr: {result.stderr}"
@@ -324,6 +331,7 @@ CMD ["pytest", "-m", "integration"]
             ["python", "scripts/validate_docker_image_contents.py", str(dockerfile)],
             capture_output=True,
             text=True,
+            timeout=60,
         )
 
         assert result.returncode == 0, (

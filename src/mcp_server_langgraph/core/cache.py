@@ -152,6 +152,9 @@ class CacheService:
         if redis_ssl is False:
             redis_ssl = getattr(settings, "redis_ssl", False)
 
+        # Declare redis with Optional type for proper type checking
+        self.redis: Optional[redis.Redis[bytes]] = None
+
         try:
             # Build Redis URL with database number using helper function
             # This prevents malformed URLs from simple string concatenation
@@ -179,7 +182,7 @@ class CacheService:
                 f"Redis cache unavailable, L2 cache disabled: {e}",
                 extra={"redis_url": redis_url},
             )
-            self.redis = None  # type: ignore[assignment]
+            self.redis = None
             self.redis_available = False
 
         # Cache stampede prevention locks
@@ -219,7 +222,7 @@ class CacheService:
         self.stats["l1_misses"] += 1
 
         # Try L2 if enabled
-        if level == CacheLayer.L2 and self.redis_available:
+        if level == CacheLayer.L2 and self.redis_available and self.redis is not None:
             try:
                 data = self.redis.get(key)
                 if data:
@@ -270,7 +273,7 @@ class CacheService:
             self.l1_cache[key] = value
 
         # Set in L2
-        if level == CacheLayer.L2 and self.redis_available:
+        if level == CacheLayer.L2 and self.redis_available and self.redis is not None:
             try:
                 self.redis.setex(key, ttl, pickle.dumps(value))
                 logger.debug(f"L2 cache set: {key} (TTL: {ttl}s)")
@@ -293,7 +296,7 @@ class CacheService:
         self.l1_cache.pop(key, None)
 
         # Delete from L2
-        if self.redis_available:
+        if self.redis_available and self.redis is not None:
             try:
                 self.redis.delete(key)
             except Exception as e:
@@ -312,7 +315,7 @@ class CacheService:
         self.l1_cache.clear()
 
         # Clear L2
-        if self.redis_available:
+        if self.redis_available and self.redis is not None:
             try:
                 # SECURITY FIX (OpenAI Codex Finding #6): Always use pattern-based deletion
                 # Never use flushdb() as it clears the ENTIRE Redis database, including

@@ -38,10 +38,7 @@ class TestMakefilePrePushParity:
     def repo_root(self) -> Path:
         """Get repository root directory."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -317,10 +314,7 @@ class TestMakefileValidationConsistency:
     def repo_root(self) -> Path:
         """Get repository root directory."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 

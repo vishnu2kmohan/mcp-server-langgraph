@@ -459,7 +459,7 @@ cp coverage-artifacts/coverage-unit.xml coverage-merged.xml
         broken_script.chmod(0o755)
 
         # Test that it fails when file doesn't exist
-        result = subprocess.run([str(broken_script)], cwd=tmp_path, capture_output=True, text=True)
+        result = subprocess.run([str(broken_script)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
 
         assert result.returncode != 0, "Broken script should fail when file missing"
 
@@ -489,7 +489,7 @@ fi
         fixed_script.chmod(0o755)
 
         # Test that it succeeds even when file doesn't exist
-        result = subprocess.run([str(fixed_script)], cwd=tmp_path, capture_output=True, text=True)
+        result = subprocess.run([str(fixed_script)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, "Fixed script should succeed even with missing file"
         assert (tmp_path / "coverage-merged.xml").exists(), "Should create coverage-merged.xml"
@@ -523,7 +523,7 @@ fi
         fixed_script.chmod(0o755)
 
         # Test that it succeeds and copies the file
-        result = subprocess.run([str(fixed_script)], cwd=tmp_path, capture_output=True, text=True)
+        result = subprocess.run([str(fixed_script)], cwd=tmp_path, capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, "Fixed script should succeed with existing file"
         assert (tmp_path / "coverage-merged.xml").exists(), "Should create coverage-merged.xml"

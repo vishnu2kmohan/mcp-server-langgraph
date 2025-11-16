@@ -36,7 +36,9 @@ class TestServiceAccountSeparation:
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Base build failed: {result.stderr}")
 
@@ -167,7 +169,9 @@ class TestWorkloadIdentityBindings:
     def staging_service_accounts(self):
         """Load ServiceAccounts from staging overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/staging-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Staging build failed: {result.stderr}")
 
@@ -178,7 +182,9 @@ class TestWorkloadIdentityBindings:
     def production_service_accounts(self):
         """Load ServiceAccounts from production overlay."""
         overlay_path = REPO_ROOT / "deployments/overlays/production-gke"
-        result = subprocess.run(["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Production build failed: {result.stderr}")
 
@@ -276,7 +282,9 @@ class TestRBACConfiguration:
     def base_resources(self):
         """Load all base resources."""
         base_path = REPO_ROOT / "deployments/base"
-        result = subprocess.run(["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT)
+        result = subprocess.run(
+            ["kustomize", "build", str(base_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+        )
         if result.returncode != 0:
             pytest.skip(f"Base build failed: {result.stderr}")
 

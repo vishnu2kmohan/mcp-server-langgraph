@@ -354,6 +354,7 @@ def test_rendered_staging_manifest_has_otel_security_context():
         capture_output=True,
         text=True,
         cwd="/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph",
+        timeout=60,
     )
 
     assert result.returncode == 0, f"kubectl kustomize failed: {result.stderr}"

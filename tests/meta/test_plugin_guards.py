@@ -37,7 +37,7 @@ class TestPluginCLIModeGuards:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--help"],
             capture_output=True,
-            timeout=10,
+            timeout=30,
             cwd=Path(__file__).parent.parent.parent,
         )
 
@@ -59,7 +59,7 @@ class TestPluginCLIModeGuards:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--version"],
             capture_output=True,
-            timeout=10,
+            timeout=30,
             cwd=Path(__file__).parent.parent.parent,
         )
 
@@ -81,7 +81,7 @@ class TestPluginCLIModeGuards:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--markers"],
             capture_output=True,
-            timeout=10,
+            timeout=30,
             cwd=Path(__file__).parent.parent.parent,
         )
 

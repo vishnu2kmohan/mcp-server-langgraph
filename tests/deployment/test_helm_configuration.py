@@ -85,10 +85,7 @@ def test_helm_chart_lints_successfully(helm_chart_path):
     Green phase: After fixing templates, helm lint should pass.
     """
     result = subprocess.run(
-        ["helm", "lint", str(helm_chart_path)],
-        capture_output=True,
-        text=True,
-        cwd=helm_chart_path.parent,
+        ["helm", "lint", str(helm_chart_path)], capture_output=True, text=True, cwd=helm_chart_path.parent, timeout=60
     )
 
     assert result.returncode == 0, (

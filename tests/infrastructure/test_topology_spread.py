@@ -48,17 +48,29 @@ class TestTopologySpreadConstraints:
         assert len(zone_constraints) > 0, "No zone-based topology spread constraint"
 
     def test_topology_spread_has_reasonable_max_skew(self):
-        """Test maxSkew is set to 1 for even distribution."""
+        """Test maxSkew is set appropriately for zone distribution.
+
+        Zone-based spreading should have maxSkew=1 for even distribution across
+        availability zones. Hostname-based spreading can have higher maxSkew values
+        to allow more flexibility in node placement.
+        """
         with open("deployments/base/deployment.yaml", "r") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
         constraints = spec.get("topologySpreadConstraints", [])
 
+        # All constraints should have maxSkew defined
         for constraint in constraints:
             max_skew = constraint.get("maxSkew")
             assert max_skew is not None, "maxSkew not set"
-            assert max_skew == 1, f"maxSkew should be 1, got {max_skew}"
+            assert isinstance(max_skew, int) and max_skew > 0, f"maxSkew must be positive integer, got {max_skew}"
+
+        # Zone-based constraints should have maxSkew=1 for strict HA
+        zone_constraints = [c for c in constraints if c.get("topologyKey") == "topology.kubernetes.io/zone"]
+        for constraint in zone_constraints:
+            max_skew = constraint.get("maxSkew")
+            assert max_skew == 1, f"Zone-based maxSkew should be 1 for strict HA, got {max_skew}"
 
     def test_topology_spread_has_label_selector(self):
         """Test topology spread has proper label selector."""

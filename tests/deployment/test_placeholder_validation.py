@@ -44,10 +44,7 @@ DANGEROUS_PLACEHOLDERS = [
 def build_overlay(overlay_path: Path) -> str:
     """Build Kustomize overlay and return manifest as string."""
     result = subprocess.run(
-        ["kubectl", "kustomize", str(overlay_path)],
-        capture_output=True,
-        text=True,
-        cwd=REPO_ROOT,
+        ["kubectl", "kustomize", str(overlay_path)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
     )
 
     if result.returncode != 0:

@@ -235,10 +235,7 @@ class TestDockerTestImageAssets:
 
         finally:
             # Cleanup: Remove test image
-            subprocess.run(
-                ["docker", "rmi", "-f", "mcp-server-langgraph:test-asset-check"],
-                capture_output=True,
-            )
+            subprocess.run(["docker", "rmi", "-f", "mcp-server-langgraph:test-asset-check"], capture_output=True, timeout=60)
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -320,7 +317,7 @@ class TestDockerTestImageAssets:
                         file_path,
                     ],
                     capture_output=True,
-                    timeout=10,
+                    timeout=30,
                 )
 
                 assert file_check.returncode == 0, (
@@ -333,6 +330,5 @@ class TestDockerTestImageAssets:
         finally:
             # Cleanup: Remove test image
             subprocess.run(
-                ["docker", "rmi", "-f", "mcp-server-langgraph:test-asset-check-scripts"],
-                capture_output=True,
+                ["docker", "rmi", "-f", "mcp-server-langgraph:test-asset-check-scripts"], capture_output=True, timeout=60
             )

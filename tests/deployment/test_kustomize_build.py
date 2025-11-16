@@ -42,7 +42,7 @@ def build_kustomize(overlay_dir: Path) -> tuple[str, str, int]:
 
     Returns: (stdout, stderr, returncode)
     """
-    result = subprocess.run(["kubectl", "kustomize", str(overlay_dir)], capture_output=True, text=True)
+    result = subprocess.run(["kubectl", "kustomize", str(overlay_dir)], capture_output=True, text=True, timeout=60)
     return result.stdout, result.stderr, result.returncode
 
 

@@ -35,7 +35,7 @@ def test_awk_percentage_calculation():
     for total_runs, successful_runs, expected in test_cases:
         # Simulate awk calculation
         cmd = f'awk "BEGIN {{printf \\"%.1f\\", {successful_runs} * 100 / {total_runs}}}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)  # nosec B602
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         success_rate = result.stdout.strip()
 
         assert success_rate == expected, (
@@ -64,7 +64,7 @@ def test_awk_comparison_calculations():
 
     for success_rate, threshold, expected in test_cases:
         cmd = f'awk "BEGIN {{print ({success_rate} >= {threshold})}}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)  # nosec B602
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         comparison_result = result.stdout.strip()
 
         assert comparison_result == expected, (
@@ -92,7 +92,7 @@ def test_awk_duration_formatting():
 
     for duration, divisor, expected in test_cases:
         cmd = f'awk "BEGIN {{printf \\"%.1f\\", {duration} / {divisor}}}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)  # nosec B602
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
@@ -120,7 +120,7 @@ def test_awk_integer_formatting():
 
     for duration, divisor, expected in test_cases:
         cmd = f'awk "BEGIN {{printf \\"%d\\", {duration} / {divisor}}}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)  # nosec B602
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
@@ -160,7 +160,7 @@ def test_awk_available_in_shell():
     awk is part of POSIX and available in all Unix-like systems,
     including GitHub Actions runners.
     """
-    result = subprocess.run(["which", "awk"], capture_output=True, text=True, check=False)
+    result = subprocess.run(["which", "awk"], capture_output=True, text=True, check=False, timeout=60)
 
     assert result.returncode == 0, "awk should be available in PATH"
     assert result.stdout.strip(), "awk path should be returned"

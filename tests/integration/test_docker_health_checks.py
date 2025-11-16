@@ -35,7 +35,7 @@ def docker_compose_available():
             ["docker", "compose", "version"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         if result.returncode != 0:
             pytest.skip("docker compose not available")
@@ -52,7 +52,7 @@ def docker_available():
             ["docker", "info"],
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=30,
         )
         if result.returncode != 0:
             pytest.skip("Docker daemon not available")

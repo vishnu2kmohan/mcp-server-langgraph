@@ -186,11 +186,7 @@ class TestImagePullPolicy:
         3. Pod uses cached vulnerable version instead of pulling updated image
         """
         # Build the kustomize output
-        result = subprocess.run(
-            ["kubectl", "kustomize", str(staging_overlay_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kubectl", "kustomize", str(staging_overlay_dir)], capture_output=True, text=True, timeout=60)
 
         if result.returncode != 0:
             pytest.skip(f"kubectl kustomize failed: {result.stderr}")
@@ -304,26 +300,19 @@ class TestKubernetesValidation:
 
         # Check if kubeconform is installed
         try:
-            subprocess.run(["kubeconform", "--version"], capture_output=True, check=True)
+            subprocess.run(["kubeconform", "--version"], capture_output=True, check=True, timeout=60)
         except (subprocess.CalledProcessError, FileNotFoundError):
             pytest.skip("kubeconform not installed")
 
         # Run kubeconform on the overlay
-        result = subprocess.run(
-            ["kubectl", "kustomize", str(overlays_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kubectl", "kustomize", str(overlays_dir)], capture_output=True, text=True, timeout=60)
 
         if result.returncode != 0:
             pytest.skip(f"kubectl kustomize failed: {result.stderr}")
 
         # Validate with kubeconform
         validate_result = subprocess.run(
-            ["kubeconform", "-strict", "-summary"],
-            input=result.stdout,
-            capture_output=True,
-            text=True,
+            ["kubeconform", "-strict", "-summary"], input=result.stdout, capture_output=True, text=True, timeout=60
         )
 
         # Should not have validation errors
@@ -338,11 +327,7 @@ class TestKubernetesValidation:
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")
 
-        result = subprocess.run(
-            ["kubectl", "kustomize", str(overlays_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kubectl", "kustomize", str(overlays_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, f"Kustomize build failed:\n{result.stderr}"
         assert len(result.stdout) > 0, "Kustomize build produced no output"

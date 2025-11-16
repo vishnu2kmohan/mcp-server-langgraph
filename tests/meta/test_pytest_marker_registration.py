@@ -13,11 +13,16 @@ See: https://docs.pytest.org/en/stable/how-to/mark.html
 import ast
 import gc
 import re
-import tomllib
 from pathlib import Path
 from typing import Set
 
 import pytest
+
+# Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 
 def get_registered_markers() -> Set[str]:

@@ -35,12 +35,7 @@ def shared_repo_root() -> Path:
 
     This avoids redundant git commands by computing repo root once per module.
     """
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60)
     return Path(result.stdout.strip())
 
 
@@ -294,10 +289,7 @@ class TestMakefileValidationTarget:
     def makefile_path(self) -> Path:
         """Get path to Makefile."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip()) / "Makefile"
 
@@ -420,10 +412,7 @@ class TestLocalCIParity:
     def ci_workflow_path(self) -> Path:
         """Get path to main CI workflow."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         repo_root = Path(result.stdout.strip())
         return repo_root / ".github" / "workflows" / "ci.yaml"
@@ -438,10 +427,7 @@ class TestLocalCIParity:
     def pre_push_hook_path(self) -> Path:
         """Get path to pre-push hook."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         repo_root = Path(result.stdout.strip())
         return repo_root / ".git" / "hooks" / "pre-push"
@@ -513,10 +499,7 @@ class TestCIGapPrevention:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -581,10 +564,7 @@ class TestPytestXdistParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -735,10 +715,7 @@ class TestOtelSdkDisabledParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -863,10 +840,7 @@ class TestApiMcpTestSuiteParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -975,10 +949,7 @@ class TestMakefilePrePushParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1153,10 +1124,7 @@ class TestActionlintHookStrictness:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1245,10 +1213,7 @@ class TestMyPyBlockingParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1389,10 +1354,7 @@ class TestIsolationValidationStrictness:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1489,10 +1451,7 @@ class TestMakefileDependencyExtras:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1616,10 +1575,7 @@ class TestPrePushDependencyValidation:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1714,10 +1670,7 @@ class TestPreCommitHookStageFlag:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -1805,10 +1758,7 @@ class TestContractTestMarkerParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -2024,10 +1974,7 @@ class TestCIPushStageValidatorsJob:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -2143,10 +2090,7 @@ class TestPostCommitHookTemplate:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -2244,10 +2188,7 @@ class TestHypothesisProfileParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -2371,10 +2312,7 @@ class TestPrePushEnvironmentSanityChecks:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 
@@ -2518,10 +2456,7 @@ class TestRegressionPrevention:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         return Path(result.stdout.strip())
 

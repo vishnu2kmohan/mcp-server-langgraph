@@ -44,9 +44,7 @@ def test_workflow_syntax_valid(workflow_file):
     - observability-alerts.yaml:119,206,253 - invalid secrets.* in job if
     """
     result = subprocess.run(
-        ["actionlint", "-no-color", "-shellcheck=", str(workflow_file)],
-        capture_output=True,
-        text=True,
+        ["actionlint", "-no-color", "-shellcheck=", str(workflow_file)], capture_output=True, text=True, timeout=60
     )
 
     # Collect all errors for better debugging
@@ -66,10 +64,7 @@ def test_actionlint_installed():
 
     This is a prerequisite test that ensures the validation tool is present.
     """
-    result = subprocess.run(
-        ["which", "actionlint"],
-        capture_output=True,
-    )
+    result = subprocess.run(["which", "actionlint"], capture_output=True, timeout=60)
 
     assert (
         result.returncode == 0

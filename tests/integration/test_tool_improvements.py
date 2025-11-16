@@ -17,6 +17,7 @@ from mcp.types import TextContent
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
+from tests.conftest import get_user_id
 
 # Mark as integration test to ensure it runs in CI (Integration test)
 pytestmark = pytest.mark.integration
@@ -65,14 +66,15 @@ class TestResponseFormatControl:
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
 
+        user_id = get_user_id()
         arguments = {
             "message": "Tell me about quantum computing",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "response_format": "concise",
         }
 
-        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_chat(arguments, mock_span, user_id)
 
         assert isinstance(result, list)
         assert len(result) > 0
@@ -97,14 +99,15 @@ class TestResponseFormatControl:
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
 
+        user_id = get_user_id()
         arguments = {
             "message": "Explain quantum computing in detail",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "response_format": "detailed",
         }
 
-        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_chat(arguments, mock_span, user_id)
 
         assert isinstance(result, list)
         response_text = result[0].text
@@ -127,13 +130,14 @@ class TestResponseFormatControl:
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
 
         # No response_format specified
+        user_id = get_user_id()
         arguments = {
             "message": "Hello",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
         }
 
-        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_chat(arguments, mock_span, user_id)
         # Should succeed (default to concise)
         assert isinstance(result, list)
 
@@ -160,14 +164,15 @@ class TestSearchFocusedTools:
 
         mock_span = mocker.Mock()
 
+        user_id = get_user_id()
         arguments = {
             "query": "project",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "limit": 10,
         }
 
-        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, user_id)
 
         assert isinstance(result, list)
         response_text = result[0].text
@@ -187,14 +192,15 @@ class TestSearchFocusedTools:
 
         mock_span = mocker.Mock()
 
+        user_id = get_user_id()
         arguments = {
             "query": "conv",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "limit": 5,
         }
 
-        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, user_id)
         response_text = result[0].text
 
         # Should indicate truncation
@@ -208,14 +214,15 @@ class TestSearchFocusedTools:
 
         mock_span = mocker.Mock()
 
+        user_id = get_user_id()
         arguments = {
             "query": "nonexistent",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "limit": 10,
         }
 
-        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, user_id)
         response_text = result[0].text
 
         # Should provide helpful message
@@ -230,14 +237,15 @@ class TestSearchFocusedTools:
 
         mock_span = mocker.Mock()
 
+        user_id = get_user_id()
         arguments = {
             "query": "",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "limit": 10,
         }
 
-        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, user_id)
         response_text = result[0].text
 
         # Should return recent conversations (up to limit)
@@ -302,15 +310,16 @@ class TestEnhancedErrorMessages:
         mock_span = mocker.Mock()
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
 
+        user_id = get_user_id()
         arguments = {
             "message": "Hello",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "thread_id": "restricted_conversation",
         }
 
         with pytest.raises(PermissionError) as exc_info:
-            await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+            await mcp_server._handle_chat(arguments, mock_span, user_id)
 
         error_message = str(exc_info.value)
 
@@ -471,15 +480,16 @@ class TestEndToEndToolImprovements:
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
 
         # Test with concise format
+        user_id = get_user_id()
         arguments = {
             "message": "Explain quantum computing",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "thread_id": "test_thread",
             "response_format": "concise",
         }
 
-        result = await mcp_server._handle_chat(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_chat(arguments, mock_span, user_id)
 
         assert isinstance(result, list)
         assert len(result) == 1
@@ -511,14 +521,15 @@ class TestEndToEndToolImprovements:
         mock_span.get_span_context.return_value = mocker.Mock(trace_id=123)
         mock_span.set_attribute = mocker.Mock()
 
+        user_id = get_user_id()
         arguments = {
             "query": "project alpha",
-            "user_id": "user:alice",
+            "user_id": user_id,
             "token": TEST_TOKEN,
             "limit": 5,
         }
 
-        result = await mcp_server._handle_search_conversations(arguments, mock_span, "user:alice")
+        result = await mcp_server._handle_search_conversations(arguments, mock_span, user_id)
 
         assert isinstance(result, list)
         response_text = result[0].text

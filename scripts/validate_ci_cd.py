@@ -340,6 +340,10 @@ class CICDValidator:
                 if self.auto_fix and result.fix_command:
                     print_info(f"  Attempting auto-fix...")
                     try:
+                        # SECURITY: shell=True is acceptable here because:
+                        # 1. fix_command values are hardcoded in this script, not user input
+                        # 2. This is a local development tool, not production code
+                        # 3. Complex commands like "uv lock && git add uv.lock" require shell
                         subprocess.run(result.fix_command, shell=True, cwd=self.project_root, check=True)  # nosec B602
                         print_success("  Auto-fix completed")
                     except subprocess.CalledProcessError:

@@ -212,11 +212,7 @@ class TestKustomizeOverlays:
         if not overlay_dir.exists():
             pytest.skip(f"Overlay {overlay} does not exist")
 
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, (
             f"Kustomize build failed for overlay '{overlay}':\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
@@ -249,11 +245,7 @@ class TestKustomizeOverlays:
         if not overlay_dir.exists():
             pytest.skip(f"Cloud provider overlay {overlay} does not exist")
 
-        result = subprocess.run(
-            ["kustomize", "build", str(overlay_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, (
             f"Kustomize build failed for cloud provider overlay '{overlay}':\n"
@@ -320,10 +312,10 @@ class TestHelmChart:
         """
         Test that Helm chart passes helm lint validation.
 
-        High Priority Issue: Various Helm chart configuration issues.
+        FIXED (2025-11-16): Helm dependency build resolved CODEX FINDING #7.
+        Prometheus rules file parsing error was fixed by running helm dependency update/build.
 
-        Fixed in Session 2: Ran 'helm dependency update' to resolve prometheus rules parsing errors.
-        Kustomize deployments (primary method) are unaffected.
+        Note: Kustomize deployments (primary method) are unaffected.
         """
         # CODEX FINDING #1: Check if helm is available
         if not shutil.which("helm"):
@@ -335,18 +327,16 @@ class TestHelmChart:
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
 
-        result = subprocess.run(
-            ["helm", "lint", str(helm_chart_dir)],
-            capture_output=True,
-            text=True,
-        )
+        result = subprocess.run(["helm", "lint", str(helm_chart_dir)], capture_output=True, text=True, timeout=60)
 
         assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
 
     def test_helm_chart_renders_successfully(self, helm_chart_dir: Path) -> None:
         """Test that Helm chart renders without errors.
 
-        Fixed in Session 2: Ran 'helm dependency update' to resolve prometheus rules parsing errors.
+        FIXED (2025-11-16): Helm dependency build resolved CODEX FINDING #7.
+        Chart now renders successfully after dependencies were built.
+        Ran 'helm dependency update' to resolve prometheus rules parsing errors.
 
         Depends on successful lint. See test_helm_chart_lints_successfully.
         """
@@ -361,9 +351,7 @@ class TestHelmChart:
             pytest.skip("Helm chart directory does not exist")
 
         result = subprocess.run(
-            ["helm", "template", "test-release", str(helm_chart_dir)],
-            capture_output=True,
-            text=True,
+            ["helm", "template", "test-release", str(helm_chart_dir)], capture_output=True, text=True, timeout=60
         )
 
         assert result.returncode == 0, f"Helm template failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"

@@ -44,7 +44,9 @@ class TestConfigMapValidation:
             pytest.skip("kustomize not installed")
 
         overlay_dir = REPO_ROOT / overlay_path
-        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True, timeout=60
+        )
 
         # Parse all YAML documents
         return list(yaml.safe_load_all(result.stdout))
@@ -231,7 +233,9 @@ class TestSecretValidation:
             pytest.skip("kustomize not installed")
 
         overlay_dir = REPO_ROOT / overlay_path
-        result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, check=True, timeout=60
+        )
 
         return list(yaml.safe_load_all(result.stdout))
 

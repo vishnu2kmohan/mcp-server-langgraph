@@ -1,0 +1,121 @@
+{{- if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "mcp-server-langgraph.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mcp-server-langgraph.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "mcp-server-langgraph.selectorLabels" . | nindent 6 }}
+  policyTypes:
+  {{- range .Values.networkPolicy.policyTypes }}
+  - {{ . }}
+  {{- end }}
+
+  ingress:
+  # Allow traffic from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: {{ .Values.service.targetPort }}
+
+  # Allow traffic from same namespace (for service mesh)
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.service.targetPort }}
+
+  # Allow prometheus scraping
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+    ports:
+    - protocol: TCP
+      port: {{ .Values.service.targetPort }}
+
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow OpenFGA
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: openfga
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow OTEL Collector
+  - to:
+    - podSelector:
+        matchLabels:
+          app: otel-collector
+    ports:
+    - protocol: TCP
+      port: 4317
+
+  # Allow Keycloak
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: keycloak
+    ports:
+    - protocol: TCP
+      port: {{ .Values.keycloak.service.port }}
+
+  # Allow PostgreSQL
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgresql
+    ports:
+    - protocol: TCP
+      port: {{ .Values.postgresql.primary.service.ports.postgresql | default 5432 }}
+
+  # Allow Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: {{ .Values.redis.master.service.ports.redis | default 6379 }}
+
+  # Allow Qdrant
+  - to:
+    - podSelector:
+        matchLabels:
+          app: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+
+  # Allow external API calls (Anthropic, OpenAI, Google AI, Infisical, etc.)
+  # This permits egress to public internet for LLM providers and secrets management
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32  # Block cloud metadata service
+        - 10.0.0.0/8          # Block private networks
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}

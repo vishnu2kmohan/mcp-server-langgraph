@@ -13,7 +13,7 @@ import json
 import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -568,7 +568,7 @@ class RedisSessionStore(SessionStore):
 
             # Store session in Redis
             session_key = f"session:{session_id}"
-            await self.redis.hset(session_key, mapping=session_data)  # type: ignore[arg-type]
+            await self.redis.hset(session_key, mapping=cast(Mapping[str | bytes, bytes | float | int | str], session_data))
             await self.redis.expire(session_key, ttl)
 
             # Track user sessions
@@ -604,14 +604,14 @@ class RedisSessionStore(SessionStore):
                 metadata = {}
 
             session = SessionData(
-                session_id=data.get("session_id"),  # type: ignore[arg-type]
-                user_id=data.get("user_id"),  # type: ignore[arg-type]
-                username=data.get("username"),  # type: ignore[arg-type]
+                session_id=cast(str, data.get("session_id")),
+                user_id=cast(str, data.get("user_id")),
+                username=cast(str, data.get("username")),
                 roles=data.get("roles", "").split(",") if data.get("roles") else [],
                 metadata=metadata,
-                created_at=data.get("created_at"),  # type: ignore[arg-type]
-                last_accessed=data.get("last_accessed"),  # type: ignore[arg-type]
-                expires_at=data.get("expires_at"),  # type: ignore[arg-type]
+                created_at=cast(str, data.get("created_at")),
+                last_accessed=cast(str, data.get("last_accessed")),
+                expires_at=cast(str, data.get("expires_at")),
             )
 
             # Update last accessed (sliding window)
