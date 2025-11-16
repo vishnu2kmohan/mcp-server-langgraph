@@ -44,12 +44,13 @@ jobs:
 
       - name: Verify graceful degradation
         env:
-          JWT_SECRET_KEY: "test-secret-key-for-ci"
+          # IMPORTANT: Must match TEST_JWT_SECRET in tests/constants.py
+          JWT_SECRET_KEY: "test-secret-key-for-integration-tests"
         run: |
           uv run python -c "
           from mcp_server_langgraph.core.config import settings
           # Should work with environment variable fallback
-          assert settings.jwt_secret_key == 'test-secret-key-for-ci'
+          assert settings.jwt_secret_key == 'test-secret-key-for-integration-tests'
           print('✓ Graceful degradation works without Infisical')
           "
 

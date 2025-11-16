@@ -241,7 +241,13 @@ def test_swarm_performance(benchmark):
 
 @pytest.mark.integration
 def test_swarm_with_memory_checkpointer():
-    """Test swarm works with MemorySaver checkpointer."""
+    """
+    Test swarm works with MemorySaver checkpointer.
+
+    Note: LangGraph 1.0.3+ returns dict from compiled.invoke(), not Pydantic model.
+    Use dict key access (result["query"]) instead of attribute access (result.query).
+    See: tests/regression/test_langgraph_return_types.py for detailed explanation.
+    """
     from langgraph.checkpoint.memory import MemorySaver
 
     def agent(q: str) -> str:
@@ -254,7 +260,8 @@ def test_swarm_with_memory_checkpointer():
     result = compiled.invoke(SwarmState(query="test"), config={"configurable": {"thread_id": "test-thread"}})
 
     assert result is not None
-    assert result.query == "test"
+    # LangGraph 1.0.3+ returns dict, not Pydantic model - use dict access
+    assert result["query"] == "test"
 
 
 # ==============================================================================

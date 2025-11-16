@@ -17,6 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
+from tests.constants import TEST_JWT_SECRET  # noqa: E402
+
 # Guard optional dev dependencies - may not be installed in all environments
 try:
     from freezegun import freeze_time  # noqa: E402
@@ -45,7 +47,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 # The container handles test mode configuration automatically.
 # We only set critical ones that can't be overridden:
 os.environ.setdefault("ENVIRONMENT", "test")  # Trigger test mode
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-testing-only")
+os.environ.setdefault("JWT_SECRET_KEY", TEST_JWT_SECRET)  # Use centralized test constant
 os.environ.setdefault("HIPAA_INTEGRITY_SECRET", "test-hipaa-secret-key-for-testing-only")
 os.environ.setdefault("OTEL_SDK_DISABLED", "true")  # Disable OpenTelemetry SDK
 
@@ -150,6 +152,18 @@ def pytest_configure(config):
             cpu_count = os.cpu_count() or 4
             config.option.numprocesses = cpu_count
             logging.info(f"psutil not available - using CPU count: {cpu_count} workers")
+
+    # JWT Secret Validation - Pre-validate before integration tests run
+    # OpenAI Codex Finding (2025-11-16): Integration tests failed due to JWT secret mismatch
+    # Validate JWT_SECRET_KEY is set correctly before tests run to fail fast with clear error
+    jwt_secret = os.environ.get("JWT_SECRET_KEY")
+    if jwt_secret and jwt_secret != TEST_JWT_SECRET:
+        logging.warning(
+            f"JWT_SECRET_KEY environment variable ('{jwt_secret}') does not match "
+            f"TEST_JWT_SECRET constant ('{TEST_JWT_SECRET}'). "
+            f"Integration tests may fail with authentication errors. "
+            f"Update JWT_SECRET_KEY or tests/constants.py to match."
+        )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -1625,6 +1639,9 @@ def mock_jwt_token():
     Generate a mock JWT token with deterministic timestamps.
 
     Uses fixed time: 2024-01-01T00:00:00Z
+
+    IMPORTANT: Uses TEST_JWT_SECRET from tests/constants.py to ensure
+    token signing matches server verification in all test environments.
     """
     import jwt
 
@@ -1635,7 +1652,7 @@ def mock_jwt_token():
         "exp": FIXED_TIME + timedelta(hours=1),
         "iat": FIXED_TIME,
     }
-    return jwt.encode(payload, "test-secret-key", algorithm="HS256")
+    return jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
 
 @pytest.fixture(scope="session")

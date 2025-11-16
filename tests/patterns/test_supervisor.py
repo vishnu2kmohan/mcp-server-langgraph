@@ -224,7 +224,13 @@ def test_supervisor_performance(benchmark):
 
 @pytest.mark.integration
 def test_supervisor_with_checkpointer():
-    """Test supervisor works with LangGraph checkpointer."""
+    """
+    Test supervisor works with LangGraph checkpointer.
+
+    Note: LangGraph 1.0.3+ returns dict from compiled.invoke(), not Pydantic model.
+    Use dict key access (result["task"]) instead of attribute access (result.task).
+    See: tests/regression/test_langgraph_return_types.py for detailed explanation.
+    """
     from langgraph.checkpoint.memory import MemorySaver
 
     def agent(task: str) -> str:
@@ -238,7 +244,8 @@ def test_supervisor_with_checkpointer():
     result = compiled.invoke(SupervisorState(task="test"), config={"configurable": {"thread_id": "test-123"}})
 
     assert result is not None
-    assert result.task == "test"
+    # LangGraph 1.0.3+ returns dict, not Pydantic model - use dict access
+    assert result["task"] == "test"
 
 
 # ==============================================================================
