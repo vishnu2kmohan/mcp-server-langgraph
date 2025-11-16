@@ -13,6 +13,7 @@ from mcp_server_langgraph.auth.factory import create_auth_middleware, create_ses
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider
+from tests.conftest import get_user_id
 
 # ============================================================================
 # Fixtures
@@ -564,10 +565,12 @@ class TestRedisMetadataSerializationFix:
         # Use real RedisSessionStore with mock Redis client
         from unittest.mock import AsyncMock
 
+        from tests.helpers import configured_async_mock
+
         # Create a real storage dict to simulate Redis behavior
         redis_storage = {}
 
-        mock_redis = AsyncMock()
+        mock_redis = configured_async_mock(return_value=None)
 
         # Mock hset to actually store data (handles both hset(key, mapping) and hset(key, field, value))
         async def mock_hset(key, field=None, value=None, mapping=None, **kwargs):
@@ -604,7 +607,7 @@ class TestRedisMetadataSerializationFix:
 
             # Create session with metadata
             session_id = await store.create(
-                user_id="user:test",
+                user_id=get_user_id("test"),
                 username="test",
                 roles=["user"],
                 metadata=metadata,
@@ -629,10 +632,12 @@ class TestRedisMetadataSerializationFix:
         """
         from unittest.mock import AsyncMock
 
+        from tests.helpers import configured_async_mock
+
         # Create a real storage dict
         redis_storage = {}
 
-        mock_redis = AsyncMock()
+        mock_redis = configured_async_mock(return_value=None)
 
         async def mock_hset(key, field=None, value=None, mapping=None, **kwargs):
             if mapping:
@@ -670,7 +675,7 @@ class TestRedisMetadataSerializationFix:
             }
 
             session_id = await store.create(
-                user_id="user:test",
+                user_id=get_user_id("test"),
                 username="test",
                 roles=["user"],
                 metadata=metadata,
@@ -735,7 +740,7 @@ class TestMemorySessionStoreFix:
 
         # Should be able to create sessions
         session_id = await store.create(
-            user_id="user:test",
+            user_id=get_user_id("test"),
             username="test",
             roles=["user"],
         )
@@ -745,7 +750,7 @@ class TestMemorySessionStoreFix:
         # Should be able to retrieve sessions
         session = await store.get(session_id)
         assert session is not None
-        assert session.user_id == "user:test"
+        assert session.user_id == get_user_id("test")
 
     def test_memory_session_store_uses_configured_ttl(self, mock_settings):
         """
@@ -851,8 +856,9 @@ class TestSessionStoreRegistration:
         middleware = create_auth_middleware(mock_settings)
 
         # Create session via middleware's session store
+        gdpr_test_user_id = get_user_id("gdpr_test")
         session_id = await middleware.session_store.create(
-            user_id="user:gdpr_test",
+            user_id=gdpr_test_user_id,
             username="gdpr_test",
             roles=["user"],
             metadata={"ip": "192.168.1.1"},
@@ -864,5 +870,5 @@ class TestSessionStoreRegistration:
 
         # CRITICAL: Session must be retrievable (same store instance)
         assert retrieved_session is not None, "Session not found - stores are different instances"
-        assert retrieved_session.user_id == "user:gdpr_test"
+        assert retrieved_session.user_id == gdpr_test_user_id
         assert retrieved_session.metadata["ip"] == "192.168.1.1"

@@ -37,6 +37,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from tests.helpers.async_mock_helpers import configured_async_mock
+
 
 @pytest.mark.unit
 @pytest.mark.regression
@@ -62,44 +64,30 @@ class TestLitellmCleanupWarnings:
         - Currently FAILS: RuntimeWarning emitted during teardown
         - After fix (GREEN): No warnings, clean async cleanup
         """
-        # Mock litellm to avoid actual API calls
         with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
-            mock_response = AsyncMock()
-            mock_response.choices = [AsyncMock()]
+            mock_response = configured_async_mock(return_value=None)
+            mock_response.choices = [configured_async_mock(return_value=None)]
             mock_response.choices[0].message.content = "Test response"
             mock_acompletion.return_value = mock_response
-
-            # Import after patch to ensure mock is used
             from mcp_server_langgraph.llm.factory import LLMFactory
 
-            # Create LLM factory and make async call
             llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
-
-            # Capture warnings during async completion call
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)
-
-                # Make async LLM call
                 from langchain_core.messages import HumanMessage
 
                 messages = [HumanMessage(content="test")]
                 await llm.ainvoke(messages)
-
-                # Ensure cleanup happens (should be automatic via fixture)
-                # Force garbage collection to trigger any pending cleanup
                 gc.collect()
-                await asyncio.sleep(0.1)  # Allow async cleanup to complete
-
-            # Verify no RuntimeWarning about unawaited coroutines
+                await asyncio.sleep(0.1)
             runtime_warnings = [w for w in captured_warnings if issubclass(w.category, RuntimeWarning)]
             litellm_warnings = [
                 w for w in runtime_warnings if "close_litellm_async_clients" in str(w.message) or "coroutine" in str(w.message)
             ]
-
             assert (
                 len(litellm_warnings) == 0
             ), f"Expected no litellm cleanup warnings, but got {len(litellm_warnings)}:\n" + "\n".join(
-                f"  - {w.message}" for w in litellm_warnings
+                (f"  - {w.message}" for w in litellm_warnings)
             )
 
     def test_litellm_sync_completion_cleanup_no_warning(self):
@@ -110,30 +98,24 @@ class TestLitellmCleanupWarnings:
         to ensure no regression.
         """
         with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
-            mock_response = AsyncMock()
-            mock_response.choices = [AsyncMock()]
+            mock_response = configured_async_mock(return_value=None)
+            mock_response.choices = [configured_async_mock(return_value=None)]
             mock_response.choices[0].message.content = "Test response"
             mock_completion.return_value = mock_response
-
             from mcp_server_langgraph.llm.factory import LLMFactory
 
             llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
-
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)
-
                 from langchain_core.messages import HumanMessage
 
                 messages = [HumanMessage(content="test")]
                 llm.invoke(messages)
-
                 gc.collect()
-
             runtime_warnings = [w for w in captured_warnings if issubclass(w.category, RuntimeWarning)]
             litellm_warnings = [
                 w for w in runtime_warnings if "close_litellm_async_clients" in str(w.message) or "coroutine" in str(w.message)
             ]
-
             assert len(litellm_warnings) == 0, f"Expected no warnings for sync completion, got {len(litellm_warnings)}"
 
     @pytest.mark.asyncio
@@ -152,11 +134,10 @@ class TestLitellmCleanupWarnings:
         - No RuntimeWarning during teardown
         """
         with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
-            mock_response = AsyncMock()
-            mock_response.choices = [AsyncMock()]
+            mock_response = configured_async_mock(return_value=None)
+            mock_response.choices = [configured_async_mock(return_value=None)]
             mock_response.choices[0].message.content = "Test response"
             mock_acompletion.return_value = mock_response
-
             from langchain_core.messages import HumanMessage
 
             from mcp_server_langgraph.llm.factory import LLMFactory
@@ -164,9 +145,6 @@ class TestLitellmCleanupWarnings:
             llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
             messages = [HumanMessage(content="test")]
             await llm.ainvoke(messages)
-
-            # Fixture should handle cleanup automatically
-            # No assertions needed - just verify no warnings during teardown
 
     @pytest.mark.asyncio
     async def test_multiple_litellm_calls_cleanup(self):
@@ -176,31 +154,24 @@ class TestLitellmCleanupWarnings:
         This simulates realistic test scenarios where multiple LLM calls are made.
         """
         with patch("mcp_server_langgraph.llm.factory.acompletion") as mock_acompletion:
-            mock_response = AsyncMock()
-            mock_response.choices = [AsyncMock()]
+            mock_response = configured_async_mock(return_value=None)
+            mock_response.choices = [configured_async_mock(return_value=None)]
             mock_response.choices[0].message.content = "Test response"
             mock_acompletion.return_value = mock_response
-
             from langchain_core.messages import HumanMessage
 
             from mcp_server_langgraph.llm.factory import LLMFactory
 
             llm = LLMFactory(provider="anthropic", model_name="claude-3-5-sonnet-20241022")
             messages = [HumanMessage(content="test")]
-
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", RuntimeWarning)
-
-                # Make multiple async calls
                 for _ in range(3):
                     await llm.ainvoke(messages)
-
                 gc.collect()
                 await asyncio.sleep(0.1)
-
             runtime_warnings = [w for w in captured_warnings if issubclass(w.category, RuntimeWarning)]
             litellm_warnings = [
                 w for w in runtime_warnings if "close_litellm_async_clients" in str(w.message) or "coroutine" in str(w.message)
             ]
-
             assert len(litellm_warnings) == 0, f"Expected no warnings after multiple calls, got {len(litellm_warnings)}"

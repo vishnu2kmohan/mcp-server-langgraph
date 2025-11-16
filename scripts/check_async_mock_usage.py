@@ -156,6 +156,13 @@ class AsyncMockChecker(ast.NodeVisitor):
                 # Add functions here that are definitely NOT async but match naming patterns
                 sync_function_whitelist = [
                     "_get_sandbox",  # Synchronous factory function
+                    "get_agent_graph",  # Synchronous agent graph factory
+                    "create_auth_middleware",  # Synchronous middleware factory
+                    "create_summarization_model",  # Synchronous LLM factory
+                    "get_admin_token",  # Synchronous token retrieval (uses sync httpx)
+                    "_get_user_realm_roles",  # Synchronous role retrieval
+                    "_get_user_client_roles",  # Synchronous role retrieval
+                    "_get_user_groups",  # Synchronous group retrieval
                 ]
 
                 if method_name:

@@ -22,6 +22,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from mcp_server_langgraph.api.scim import list_users
+from tests.helpers.async_mock_helpers import configured_async_mock
 
 
 @pytest.mark.xdist_group(name="unit_scim_filters_tests")
@@ -42,14 +43,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: Keycloak search_users is called with exact=true flag
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -62,21 +57,12 @@ class TestSCIMFilterParsing:
                 }
             ]
         )
-
-        # Act
         result = await list_users(
-            filter='userName eq "alice"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='userName eq "alice"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query["username"] == "alice"
         assert query["exact"] == "true", "userName eq should use exact match"
         assert result.totalResults == 1
@@ -93,14 +79,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: Keycloak search_users is called WITHOUT exact flag (prefix search)
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -121,21 +101,12 @@ class TestSCIMFilterParsing:
                 },
             ]
         )
-
-        # Act
         result = await list_users(
-            filter='userName sw "ali"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='userName sw "ali"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query["username"] == "ali"
         assert "exact" not in query, "userName sw should NOT use exact flag for prefix search"
         assert result.totalResults == 2
@@ -150,14 +121,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: Keycloak search_users is called with exact=true flag
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -170,21 +135,12 @@ class TestSCIMFilterParsing:
                 }
             ]
         )
-
-        # Act
         await list_users(
-            filter='email eq "alice@example.com"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='email eq "alice@example.com"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query["email"] == "alice@example.com"
         assert query["exact"] == "true", "email eq should use exact match"
 
@@ -198,14 +154,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: Keycloak search_users is called WITHOUT exact flag (prefix search)
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -226,21 +176,12 @@ class TestSCIMFilterParsing:
                 },
             ]
         )
-
-        # Act
         result = await list_users(
-            filter='email sw "alice@"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='email sw "alice@"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query["email"] == "alice@"
         assert "exact" not in query, "email sw should NOT use exact flag for prefix search"
         assert result.totalResults == 2
@@ -255,14 +196,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: All users are returned (fail-safe behavior)
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -275,21 +210,12 @@ class TestSCIMFilterParsing:
                 }
             ]
         )
-
-        # Act - malformed filter without quotes
         await list_users(
-            filter="userName eq alice",  # Missing quotes - malformed
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter="userName eq alice", startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert - should call with empty query (fail-safe)
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query == {}, "Malformed filter should result in empty query (fail-safe)"
 
     @pytest.mark.asyncio
@@ -302,14 +228,8 @@ class TestSCIMFilterParsing:
         WHEN: list_users endpoint is called
         THEN: All users are returned
         """
-        # Arrange
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(
             return_value=[
                 {
@@ -330,21 +250,10 @@ class TestSCIMFilterParsing:
                 },
             ]
         )
-
-        # Act
-        result = await list_users(
-            filter=None,  # No filter
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
-        )
-
-        # Assert
+        result = await list_users(filter=None, startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak)
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
-
         assert query == {}, "No filter should result in empty query (return all)"
         assert result.totalResults == 2
 
@@ -361,25 +270,12 @@ class TestSCIMFilterEdgeCases:
     @pytest.mark.unit
     async def test_filter_with_spaces_in_value(self):
         """Test filter with spaces in the search value"""
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(return_value=[])
-
-        # Act
         await list_users(
-            filter='userName eq "Alice Smith"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='userName eq "Alice Smith"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
         assert query["username"] == "Alice Smith"
@@ -388,25 +284,12 @@ class TestSCIMFilterEdgeCases:
     @pytest.mark.unit
     async def test_filter_with_special_characters(self):
         """Test filter with special characters in email"""
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(return_value=[])
-
-        # Act
         await list_users(
-            filter='email sw "user+test@"',
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='email sw "user+test@"', startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         call_args = mock_keycloak.search_users.call_args
         query = call_args.kwargs["query"]
         assert query["email"] == "user+test@"
@@ -416,25 +299,12 @@ class TestSCIMFilterEdgeCases:
     @pytest.mark.unit
     async def test_pagination_parameters_passed_correctly(self):
         """Test that pagination parameters are passed to Keycloak correctly"""
-        current_user = {
-            "user_id": "admin:test",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
+        current_user = {"user_id": "admin:test", "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users = AsyncMock(return_value=[])
-
-        # Act
         await list_users(
-            filter='userName sw "ali"',
-            startIndex=51,  # SCIM uses 1-based indexing
-            count=25,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter='userName sw "ali"', startIndex=51, count=25, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Assert
         call_args = mock_keycloak.search_users.call_args
-        assert call_args.kwargs["first"] == 50  # Keycloak uses 0-based, so 51-1=50
+        assert call_args.kwargs["first"] == 50
         assert call_args.kwargs["max"] == 25

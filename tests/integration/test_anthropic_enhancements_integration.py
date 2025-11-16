@@ -1,21 +1,7 @@
 import gc
 import os
 
-"""
-Integration tests for Anthropic Best Practices Enhancements
-
-Tests all enhancements working together:
-1. Just-in-Time Context Loading (Dynamic Context Loader)
-2. Parallel Tool Execution
-3. Enhanced Structured Note-Taking (LLM Extraction)
-4. Full agentic loop integration
-
-Requires:
-- Qdrant running (for dynamic context)
-- Redis running (for checkpointing)
-- LLM configured (for extraction and agent)
-"""
-
+"\nIntegration tests for Anthropic Best Practices Enhancements\n\nTests all enhancements working together:\n1. Just-in-Time Context Loading (Dynamic Context Loader)\n2. Parallel Tool Execution\n3. Enhanced Structured Note-Taking (LLM Extraction)\n4. Full agentic loop integration\n\nRequires:\n- Qdrant running (for dynamic context)\n- Redis running (for checkpointing)\n- LLM configured (for extraction and agent)\n"
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -26,6 +12,7 @@ from mcp_server_langgraph.core.agent import create_agent_graph
 from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoader, search_and_load_context
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
+from tests.helpers.async_mock_helpers import configured_async_mock
 
 
 @pytest.fixture(scope="module")
@@ -69,71 +56,50 @@ class TestDynamicContextIntegration:
 
         qdrant_url = getenv("QDRANT_URL", "localhost")
         qdrant_port = int(getenv("QDRANT_PORT", "6333"))
-
         loader = DynamicContextLoader(
-            qdrant_url=qdrant_url,
-            qdrant_port=qdrant_port,
-            collection_name="test_integration_contexts",
+            qdrant_url=qdrant_url, qdrant_port=qdrant_port, collection_name="test_integration_contexts"
         )
-
         try:
-            # Index some contexts
             contexts_to_index = [
                 {
                     "ref_id": "python_basics",
-                    "content": "Python is a high-level programming language with dynamic typing. "
-                    "It supports multiple paradigms including procedural, object-oriented, and functional.",
+                    "content": "Python is a high-level programming language with dynamic typing. It supports multiple paradigms including procedural, object-oriented, and functional.",
                     "ref_type": "documentation",
                     "summary": "Python language basics",
                     "metadata": {"topic": "programming", "difficulty": "beginner"},
                 },
                 {
                     "ref_id": "python_async",
-                    "content": "Python's asyncio library provides infrastructure for asynchronous I/O. "
-                    "Use async/await syntax for coroutines. Great for concurrent network operations.",
+                    "content": "Python's asyncio library provides infrastructure for asynchronous I/O. Use async/await syntax for coroutines. Great for concurrent network operations.",
                     "ref_type": "documentation",
                     "summary": "Python async programming",
                     "metadata": {"topic": "programming", "difficulty": "intermediate"},
                 },
                 {
                     "ref_id": "docker_intro",
-                    "content": "Docker is a containerization platform that packages applications with their dependencies. "
-                    "Uses images and containers for consistent deployment across environments.",
+                    "content": "Docker is a containerization platform that packages applications with their dependencies. Uses images and containers for consistent deployment across environments.",
                     "ref_type": "documentation",
                     "summary": "Docker introduction",
                     "metadata": {"topic": "devops", "difficulty": "beginner"},
                 },
             ]
-
-            # Index all contexts
             for ctx in contexts_to_index:
                 await loader.index_context(**ctx)
-
-            # Search for Python-related content
             python_results = await loader.semantic_search(
-                query="How do I write asynchronous code in Python?",
-                top_k=2,
-                min_score=0.5,
+                query="How do I write asynchronous code in Python?", top_k=2, min_score=0.5
             )
-
             assert len(python_results) >= 1
-            # Should find python_async as most relevant
-            assert any(r.ref_id == "python_async" for r in python_results)
-
-            # Load the contexts
+            assert any((r.ref_id == "python_async" for r in python_results))
             loaded = await loader.load_batch(python_results, max_tokens=1000)
             assert len(loaded) >= 1
-
-            # Verify loaded content
             async_ctx = next((c for c in loaded if c.ref_id == "python_async"), None)
             assert async_ctx is not None
             assert "asyncio" in async_ctx.content
         finally:
-            # Cleanup test collection
             try:
                 qdrant_client.delete_collection("test_integration_contexts")
             except Exception:
-                pass  # Best effort cleanup
+                pass
 
     @pytest.mark.asyncio
     async def test_progressive_discovery(self, qdrant_client):
@@ -142,54 +108,39 @@ class TestDynamicContextIntegration:
 
         qdrant_url = getenv("QDRANT_URL", "localhost")
         qdrant_port = int(getenv("QDRANT_PORT", "6333"))
-
         loader = DynamicContextLoader(
-            qdrant_url=qdrant_url,
-            qdrant_port=qdrant_port,
-            collection_name="test_integration_progressive",
+            qdrant_url=qdrant_url, qdrant_port=qdrant_port, collection_name="test_integration_progressive"
         )
-
         try:
-            # Index related contexts at different specificity levels
             await loader.index_context(
                 ref_id="ml_overview",
                 content="Machine learning is a subset of AI focused on learning from data",
                 ref_type="documentation",
                 summary="ML overview",
             )
-
             await loader.index_context(
                 ref_id="neural_networks",
                 content="Neural networks are ML models inspired by biological neurons",
                 ref_type="documentation",
                 summary="Neural networks intro",
             )
-
             await loader.index_context(
                 ref_id="transformers",
                 content="Transformers are neural network architectures using self-attention mechanisms",
                 ref_type="documentation",
                 summary="Transformer architecture",
             )
-
-            # Progressive discovery: start broad, get specific
-            # Round 1: Broad query
             round1 = await loader.semantic_search("machine learning", top_k=1)
             assert len(round1) >= 1
-
-            # Round 2: More specific based on discovery
             round2 = await loader.semantic_search("neural network architectures", top_k=1)
             assert len(round2) >= 1
-
-            # Round 3: Very specific
             round3 = await loader.semantic_search("transformer attention mechanism", top_k=1)
             assert len(round3) >= 1
         finally:
-            # Cleanup test collection
             try:
                 qdrant_client.delete_collection("test_integration_progressive")
             except Exception:
-                pass  # Best effort cleanup
+                pass
 
 
 @pytest.mark.integration
@@ -205,7 +156,6 @@ class TestParallelExecutionIntegration:
     async def test_real_tool_parallel_execution(self):
         """Test parallel execution with simulated real tools"""
         executor = ParallelToolExecutor(max_parallelism=3)
-
         execution_log = []
 
         async def simulated_tool_executor(tool_name: str, arguments: dict):
@@ -217,47 +167,29 @@ class TestParallelExecutionIntegration:
                 "apply_discount": 0.05,
                 "send_email": 0.2,
             }
-
             delay = tool_delays.get(tool_name, 0.1)
             execution_log.append(("start", tool_name, asyncio.get_event_loop().time()))
-
             await asyncio.sleep(delay)
-
             execution_log.append(("end", tool_name, asyncio.get_event_loop().time()))
-
-            # Return simple result (not ToolResult - that's created by executor)
             return {"status": "success", "data": f"result_from_{tool_name}"}
 
-        # Realistic workflow: fetch data in parallel, process sequentially
         invocations = [
-            # Level 0: Parallel data fetching
+            ToolInvocation(tool_name="fetch_user", arguments={"user_id": "123"}, invocation_id="inv_user", dependencies=[]),
             ToolInvocation(
-                tool_name="fetch_user",
-                arguments={"user_id": "123"},
-                invocation_id="inv_user",
-                dependencies=[],
+                tool_name="fetch_orders", arguments={"user_id": "123"}, invocation_id="inv_orders", dependencies=[]
             ),
-            ToolInvocation(
-                tool_name="fetch_orders",
-                arguments={"user_id": "123"},
-                invocation_id="inv_orders",
-                dependencies=[],
-            ),
-            # Level 1: Process fetched data
             ToolInvocation(
                 tool_name="calculate_total",
                 arguments={"orders": "$inv_orders.result"},
                 invocation_id="inv_calc",
                 dependencies=["inv_orders"],
             ),
-            # Level 2: Apply business logic
             ToolInvocation(
                 tool_name="apply_discount",
                 arguments={"total": "$inv_calc.result", "user": "$inv_user.result"},
                 invocation_id="inv_discount",
                 dependencies=["inv_calc", "inv_user"],
             ),
-            # Level 3: Final action
             ToolInvocation(
                 tool_name="send_email",
                 arguments={"amount": "$inv_discount.result"},
@@ -265,20 +197,12 @@ class TestParallelExecutionIntegration:
                 dependencies=["inv_discount"],
             ),
         ]
-
         results = await executor.execute_parallel(invocations, simulated_tool_executor)
-
-        # Verify all completed successfully
         assert len(results) == 5
-        # ToolResult objects have .error attribute (None if successful)
-        assert all(r.error is None for r in results)
-
-        # Verify parallel execution optimization
-        # fetch_user and fetch_orders should have started nearly simultaneously
-        user_start = next(t for e, n, t in execution_log if e == "start" and n == "fetch_user")
-        orders_start = next(t for e, n, t in execution_log if e == "start" and n == "fetch_orders")
-
-        assert abs(user_start - orders_start) < 0.05  # Started within 50ms
+        assert all((r.error is None for r in results))
+        user_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_user"))
+        orders_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_orders"))
+        assert abs(user_start - orders_start) < 0.05
 
 
 @pytest.mark.integration
@@ -293,58 +217,25 @@ class TestContextManagerIntegration:
     @pytest.mark.asyncio
     async def test_compaction_then_extraction(self):
         """Test compaction followed by extraction"""
-        # Patch the factory function to return our mock
         with patch("mcp_server_langgraph.core.context_manager.create_summarization_model") as mock_llm_factory:
-            # Mock LLM
-            mock_llm = AsyncMock()
+            mock_llm = configured_async_mock(return_value=None)
 
-            # Create mock responses
             def mock_ainvoke(messages):
                 """Mock ainvoke that handles both list and string inputs"""
-                # Check if this is extraction or summarization based on content
                 if isinstance(messages, list):
                     prompt_text = str(messages)
                 else:
                     prompt_text = str(messages)
-
                 response = MagicMock()
                 if "Extract and categorize" in prompt_text or "DECISIONS" in prompt_text:
-                    # Extraction call
-                    response.content = """DECISIONS:
-- Implement feature X
-
-REQUIREMENTS:
-- Must support async operations
-
-FACTS:
-- Current system handles 1K RPS
-
-ACTION_ITEMS:
-- Write implementation plan
-
-ISSUES:
-- None
-
-PREFERENCES:
-- Use Python for backend
-"""
+                    response.content = "DECISIONS:\n- Implement feature X\n\nREQUIREMENTS:\n- Must support async operations\n\nFACTS:\n- Current system handles 1K RPS\n\nACTION_ITEMS:\n- Write implementation plan\n\nISSUES:\n- None\n\nPREFERENCES:\n- Use Python for backend\n"
                 else:
-                    # Summarization call
                     response.content = "Summary of conversation: User requested feature X, discussed implementation."
-
                 return response
 
-            # Set up mock
             mock_llm.ainvoke = AsyncMock(side_effect=lambda msg: mock_ainvoke(msg))
             mock_llm_factory.return_value = mock_llm
-
-            manager = ContextManager(
-                compaction_threshold=500,  # Higher threshold to avoid compression_ratio > 1
-                target_after_compaction=300,
-                recent_message_count=2,
-            )
-
-            # Create long conversation
+            manager = ContextManager(compaction_threshold=500, target_after_compaction=300, recent_message_count=2)
             messages = [
                 HumanMessage(content="Let's implement feature X"),
                 SystemMessage(content="Analyzing requirements"),
@@ -356,18 +247,10 @@ PREFERENCES:
                 SystemMessage(content="I'll help with that"),
                 HumanMessage(content="I prefer using Python for the backend"),
             ]
-
-            # Compact
             compaction_result = await manager.compact_conversation(messages)
-            # Compression ratio should be <= 1.0 (clamped to prevent validation errors)
             assert compaction_result.compression_ratio <= 1.0
-            # Should compact if over threshold (otherwise returns original)
             assert len(compaction_result.compacted_messages) <= len(messages)
-
-            # Extract key info from compacted conversation
             key_info = await manager.extract_key_information_llm(compaction_result.compacted_messages)
-
-            # Verify extraction worked
             assert len(key_info["decisions"]) >= 1
             assert len(key_info["requirements"]) >= 1
             assert len(key_info["action_items"]) >= 1
@@ -396,10 +279,7 @@ class TestFullAgentIntegration:
         - RUN_FULL_INTEGRATION_TESTS=1
         - Docker infrastructure (Qdrant, Redis) via integration_test_env fixture
         """
-        # Create agent with all enhancements
         agent = create_agent_graph()
-
-        # Initial state
         state = {
             "messages": [HumanMessage(content="How do I implement async code in Python?")],
             "next_action": "respond",
@@ -415,17 +295,10 @@ class TestFullAgentIntegration:
             "refinement_attempts": None,
             "user_request": None,
         }
-
-        # Run agent
         config = {"configurable": {"thread_id": "test_thread_1"}}
         result = await agent.ainvoke(state, config=config)
-
-        # Verify agent completed successfully
         assert "messages" in result
         assert len(result["messages"]) > 1
-
-        # Should have loaded dynamic context
-        # (verify by checking if system messages with context were added)
         system_messages = [m for m in result["messages"] if isinstance(m, SystemMessage)]
         assert len(system_messages) > 0
 
@@ -441,7 +314,6 @@ class TestFullAgentIntegration:
         Requires full infrastructure and LLM API access.
         """
         agent = create_agent_graph()
-
         state = {
             "messages": [
                 HumanMessage(
@@ -461,15 +333,10 @@ class TestFullAgentIntegration:
             "refinement_attempts": 0,
             "user_request": None,
         }
-
         config = {"configurable": {"thread_id": "test_thread_2"}}
         result = await agent.ainvoke(state, config=config)
-
-        # Verify verification was performed
         assert "verification_passed" in result
         assert "verification_score" in result
-
-        # If verification failed, should have refinement attempts
         if not result["verification_passed"]:
             assert result.get("refinement_attempts", 0) > 0
 
@@ -495,7 +362,6 @@ class TestEndToEndWorkflow:
         Requires langchain-google-genai package to be installed.
         Runs when RUN_FULL_INTEGRATION_TESTS environment variable is set.
         """
-        # Mock Qdrant
         with patch("mcp_server_langgraph.core.dynamic_context_loader.QdrantClient") as mock_qdrant_cls:
             mock_qdrant = MagicMock()
             mock_qdrant.get_collections.return_value.collections = []
@@ -512,79 +378,37 @@ class TestEndToEndWorkflow:
                 )
             ]
             mock_qdrant_cls.return_value = mock_qdrant
-
-            # Mock sentence_transformers module (imported conditionally)
             with patch("sentence_transformers.SentenceTransformer") as mock_st:
                 mock_embedder = MagicMock()
                 mock_embedder.encode.return_value = [0.1] * 384
                 mock_st.return_value = mock_embedder
-
-                # Create dynamic context loader
-                loader = DynamicContextLoader(
-                    qdrant_url="localhost",
-                    qdrant_port=6333,
-                    collection_name="test",
-                )
-
-                # Perform search and load
+                loader = DynamicContextLoader(qdrant_url="localhost", qdrant_port=6333, collection_name="test")
                 results = await search_and_load_context(
-                    query="How to use async in Python?",
-                    loader=loader,
-                    top_k=3,
-                    max_tokens=1000,
+                    query="How to use async in Python?", loader=loader, top_k=3, max_tokens=1000
                 )
-
-                # Verify workflow completed
                 assert mock_qdrant.search.called
                 assert mock_embedder.encode.called
-
-        # Mock LLM for context manager (use correct import path)
         with patch("mcp_server_langgraph.core.context_manager.create_summarization_model") as mock_llm_factory:
-            mock_llm = AsyncMock()
+            mock_llm = configured_async_mock(return_value=None)
 
             async def mock_ainvoke(prompt):
                 response = MagicMock()
                 if "Extract and categorize" in prompt:
-                    response.content = """DECISIONS:
-- Use asyncio for async operations
-
-REQUIREMENTS:
-- Support Python 3.10+
-
-FACTS:
-- asyncio is in stdlib
-
-ACTION_ITEMS:
-- Write example code
-
-ISSUES:
-- None
-
-PREFERENCES:
-- None
-"""
+                    response.content = "DECISIONS:\n- Use asyncio for async operations\n\nREQUIREMENTS:\n- Support Python 3.10+\n\nFACTS:\n- asyncio is in stdlib\n\nACTION_ITEMS:\n- Write example code\n\nISSUES:\n- None\n\nPREFERENCES:\n- None\n"
                 else:
                     response.content = "Summary of discussion"
                 return response
 
             mock_llm.ainvoke = mock_ainvoke
             mock_llm_factory.return_value = mock_llm
-
-            # Create context manager
             manager = ContextManager()
-
-            # Extract information
             messages = [
                 HumanMessage(content="We decided to use asyncio for async operations"),
                 HumanMessage(content="Must support Python 3.10+"),
             ]
-
             extraction = await manager.extract_key_information_llm(messages)
-
             assert len(extraction["decisions"]) >= 1
             assert len(extraction["requirements"]) >= 1
-
-        # Test parallel executor
         executor = ParallelToolExecutor(max_parallelism=5)
 
         async def mock_tool(invocation):
@@ -605,12 +429,9 @@ PREFERENCES:
             ToolInvocation(tool_name="tool2", arguments={}, invocation_id="inv2", dependencies=[]),
             ToolInvocation(tool_name="tool3", arguments={}, invocation_id="inv3", dependencies=["inv1", "inv2"]),
         ]
-
         results = await executor.execute_parallel(invocations, mock_tool)
         assert len(results) == 3
-        assert all(r.success for r in results)
-
-        # Verify all components worked together
+        assert all((r.success for r in results))
         print("\n✅ End-to-end workflow test passed:")
         print("  - Dynamic context loading: ✓")
         print("  - LLM extraction: ✓")
@@ -618,5 +439,4 @@ PREFERENCES:
 
 
 if __name__ == "__main__":
-    # Run integration tests
     pytest.main([__file__, "-v", "-m", "integration"])

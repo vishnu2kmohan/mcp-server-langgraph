@@ -14,6 +14,8 @@ import pytest
 from fastapi import HTTPException
 
 from mcp_server_langgraph.api.scim import create_group, create_user, delete_user, update_user
+from tests.conftest import get_user_id
+from tests.helpers.async_mock_helpers import configured_async_mock
 
 
 @pytest.mark.xdist_group(name="scim_security_tests")
@@ -38,13 +40,7 @@ class TestSCIMSecurityControls:
         CWE-862: Missing Authorization
         OWASP A01:2021 - Broken Access Control
         """
-        # Given: A regular user without admin privileges
-        current_user = {
-            "user_id": "user:alice",
-            "username": "alice",
-            "roles": ["user"],  # NOT admin
-        }
-
+        current_user = {"user_id": get_user_id("alice"), "username": "alice", "roles": ["user"]}
         user_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": "newuser@example.com",
@@ -52,24 +48,12 @@ class TestSCIMSecurityControls:
             "emails": [{"value": "newuser@example.com", "primary": True}],
             "active": True,
         }
-
-        mock_keycloak = AsyncMock()
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_keycloak = configured_async_mock(return_value=None)
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-        # Configure mock to return False for permission check
         mock_openfga.check_permission.return_value = False
-
-        # When: Regular user attempts to create a user
-        # Then: Should be REJECTED with 403 Forbidden
         with pytest.raises(HTTPException) as exc_info:
-            await create_user(
-                user_data=user_data,
-                current_user=current_user,
-                keycloak=mock_keycloak,
-                openfga=mock_openfga,
-            )
-
+            await create_user(user_data=user_data, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga)
         assert exc_info.value.status_code == 403
         assert "admin" in exc_info.value.detail.lower()
 
@@ -78,30 +62,15 @@ class TestSCIMSecurityControls:
         """
         SECURITY TEST: Regular user should NOT be able to delete users via SCIM.
         """
-        # Given: Regular user
-        current_user = {
-            "user_id": "user:alice",
-            "username": "alice",
-            "roles": ["user"],
-        }
-
-        mock_keycloak = AsyncMock()
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        current_user = {"user_id": get_user_id("alice"), "username": "alice", "roles": ["user"]}
+        mock_keycloak = configured_async_mock(return_value=None)
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-        # Configure mock to return False for permission check
         mock_openfga.check_permission.return_value = False
-
-        # When: Regular user tries to delete a user
-        # Then: Should be REJECTED
         with pytest.raises(HTTPException) as exc_info:
             await delete_user(
-                user_id="user-to-delete-123",
-                current_user=current_user,
-                keycloak=mock_keycloak,
-                openfga=mock_openfga,
+                user_id="user-to-delete-123", current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga
             )
-
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -109,30 +78,11 @@ class TestSCIMSecurityControls:
         """
         SECURITY TEST: Regular user should NOT be able to create groups via SCIM.
         """
-        # Given: Regular user
-        current_user = {
-            "user_id": "user:alice",
-            "username": "alice",
-            "roles": ["user"],
-        }
-
-        group_data = {
-            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
-            "displayName": "Engineering",
-            "members": [],
-        }
-
-        mock_keycloak = AsyncMock()
-
-        # When: Regular user tries to create a group
-        # Then: Should be REJECTED
+        current_user = {"user_id": get_user_id("alice"), "username": "alice", "roles": ["user"]}
+        group_data = {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"], "displayName": "Engineering", "members": []}
+        mock_keycloak = configured_async_mock(return_value=None)
         with pytest.raises(HTTPException) as exc_info:
-            await create_group(
-                group_data=group_data,
-                current_user=current_user,
-                keycloak=mock_keycloak,
-            )
-
+            await create_group(group_data=group_data, current_user=current_user, keycloak=mock_keycloak)
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -140,30 +90,15 @@ class TestSCIMSecurityControls:
         """
         SECURITY TEST: Regular user should NOT be able to update users via SCIM PATCH.
         """
-        # Given: Regular user
-        current_user = {
-            "user_id": "user:alice",
-            "username": "alice",
-            "roles": ["user"],
-        }
-
-        # Mock SCIM PATCH request
+        current_user = {"user_id": get_user_id("alice"), "username": "alice", "roles": ["user"]}
         from mcp_server_langgraph.scim.schema import SCIMPatchOperation, SCIMPatchRequest
 
         patch_request = SCIMPatchRequest(Operations=[SCIMPatchOperation(op="replace", path="active", value=False)])
-
-        mock_keycloak = AsyncMock()
-
-        # When: Regular user tries to update another user
-        # Then: Should be REJECTED
+        mock_keycloak = configured_async_mock(return_value=None)
         with pytest.raises(HTTPException) as exc_info:
             await update_user(
-                user_id="user-to-update-123",
-                patch_request=patch_request,
-                current_user=current_user,
-                keycloak=mock_keycloak,
+                user_id="user-to-update-123", patch_request=patch_request, current_user=current_user, keycloak=mock_keycloak
             )
-
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -171,13 +106,7 @@ class TestSCIMSecurityControls:
         """
         Admin users SHOULD be able to create users via SCIM.
         """
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         user_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": "newuser@example.com",
@@ -185,8 +114,7 @@ class TestSCIMSecurityControls:
             "emails": [{"value": "newuser@example.com", "primary": True}],
             "active": True,
         }
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.create_user.return_value = "new-user-id-123"
         mock_keycloak.get_user.return_value = {
             "id": "new-user-id-123",
@@ -196,20 +124,11 @@ class TestSCIMSecurityControls:
             "lastName": "User",
             "enabled": True,
         }
-
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: Admin creates a user
-        # Then: Should SUCCEED
         result = await create_user(
-            user_data=user_data,
-            current_user=current_user,
-            keycloak=mock_keycloak,
-            openfga=mock_openfga,
+            user_data=user_data, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga
         )
-
         assert result.userName == "newuser@example.com"
 
     @pytest.mark.asyncio
@@ -219,13 +138,7 @@ class TestSCIMSecurityControls:
 
         This is for SSO/IdP provisioning scenarios (Okta, Azure AD, etc.)
         """
-        # Given: SCIM client authentication (service account)
-        current_user = {
-            "user_id": "service:scim-client",
-            "username": "scim-client",
-            "roles": ["scim-provisioner"],  # Special SCIM role
-        }
-
+        current_user = {"user_id": "service:scim-client", "username": "scim-client", "roles": ["scim-provisioner"]}
         user_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": "provisioned@example.com",
@@ -233,8 +146,7 @@ class TestSCIMSecurityControls:
             "emails": [{"value": "provisioned@example.com", "primary": True}],
             "active": True,
         }
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.create_user.return_value = "provisioned-user-id"
         mock_keycloak.get_user.return_value = {
             "id": "provisioned-user-id",
@@ -244,20 +156,11 @@ class TestSCIMSecurityControls:
             "lastName": "User",
             "enabled": True,
         }
-
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: SCIM client creates a user
-        # Then: Should SUCCEED
         result = await create_user(
-            user_data=user_data,
-            current_user=current_user,
-            keycloak=mock_keycloak,
-            openfga=mock_openfga,
+            user_data=user_data, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga
         )
-
         assert result.userName == "provisioned@example.com"
 
     @pytest.mark.asyncio
@@ -271,29 +174,24 @@ class TestSCIMSecurityControls:
 
         Security Control: Admin authorization check via OpenFGA before SCIM user provisioning
         """
-        # Setup: Grant alice admin relation, bob is regular user
-        await openfga_client_real.write_tuples([{"user": "user:alice", "relation": "admin", "object": "organization:acme"}])
-
-        # Test 1: Alice (with admin relation) should be allowed SCIM operations
+        await openfga_client_real.write_tuples(
+            [{"user": get_user_id("alice"), "relation": "admin", "object": "organization:acme"}]
+        )
         is_alice_admin = await openfga_client_real.check_permission(
-            user="user:alice", relation="admin", object="organization:acme"
+            user=get_user_id("alice"), relation="admin", object="organization:acme"
         )
         assert is_alice_admin is True, "Alice should have admin relation to organization"
-
-        # Test 2: Bob (without admin relation) should be denied SCIM operations
         is_bob_admin = await openfga_client_real.check_permission(
-            user="user:bob", relation="admin", object="organization:acme"
+            user=get_user_id("bob"), relation="admin", object="organization:acme"
         )
         assert is_bob_admin is False, "Bob should NOT have admin relation to organization"
-
-        # Test 3: Verify non-existent user has no admin rights
         is_unknown_admin = await openfga_client_real.check_permission(
-            user="user:unknown", relation="admin", object="organization:acme"
+            user=get_user_id("unknown"), relation="admin", object="organization:acme"
         )
         assert is_unknown_admin is False, "Unknown user should NOT have admin privileges"
-
-        # Cleanup
-        await openfga_client_real.delete_tuples([{"user": "user:alice", "relation": "admin", "object": "organization:acme"}])
+        await openfga_client_real.delete_tuples(
+            [{"user": get_user_id("alice"), "relation": "admin", "object": "organization:acme"}]
+        )
 
 
 @pytest.mark.xdist_group(name="scim_filter_injection_tests")
@@ -320,17 +218,9 @@ class TestSCIMFilterInjection:
         """
         from mcp_server_langgraph.api.scim import list_users
 
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        # Given: Safe filter with userName eq
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         filter_expr = 'userName eq "alice@example.com"'
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users.return_value = [
             {
                 "id": "user-123",
@@ -341,18 +231,10 @@ class TestSCIMFilterInjection:
                 "enabled": True,
             }
         ]
-
-        # When: Filter is processed
         result = await list_users(
-            filter=filter_expr,
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
+            filter=filter_expr, startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak
         )
-
-        # Then: Should safely extract username
-        assert result.totalResults == 1  # Should return the mocked user
+        assert result.totalResults == 1
         mock_keycloak.search_users.assert_called_once()
         call_args = mock_keycloak.search_users.call_args
         assert call_args[1]["query"]["username"] == "alice@example.com"
@@ -368,26 +250,13 @@ class TestSCIMFilterInjection:
         """
         from mcp_server_langgraph.api.scim import list_users
 
-        current_user = {"user_id": "user:admin", "username": "admin", "roles": ["admin"]}
-
-        # Given: Malformed filter (no quotes - IndexError case)
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         filter_expr = "userName eq alice"
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.search_users.return_value = []
-
-        # When: Malformed filter is processed
-        # Then: Should NOT crash, should fail-safe to empty query
-        await list_users(
-            filter=filter_expr,
-            startIndex=1,
-            count=100,
-            current_user=current_user,
-            keycloak=mock_keycloak,
-        )
-        # Should call search_users with empty query (fail-safe behavior)
+        await list_users(filter=filter_expr, startIndex=1, count=100, current_user=current_user, keycloak=mock_keycloak)
         call_args = mock_keycloak.search_users.call_args
-        assert call_args[1]["query"] == {}  # Empty query due to malformed filter
+        assert call_args[1]["query"] == {}
 
 
 @pytest.mark.xdist_group(name="scim_error_handling_tests")
@@ -405,10 +274,7 @@ class TestSCIMErrorHandling:
         """Test scim_error() helper with scimType parameter"""
         from mcp_server_langgraph.api.scim import scim_error
 
-        # When: Create SCIM error with scimType
         response = scim_error(404, "Resource not found", scim_type="notFound")
-
-        # Then: Should return JSONResponse with correct format
         assert response.status_code == 404
         import json
 
@@ -426,31 +292,14 @@ class TestSCIMErrorHandling:
         """
         from mcp_server_langgraph.api.scim import delete_user
 
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: Delete user
-        await delete_user(
-            user_id="user-to-delete-123",
-            current_user=current_user,
-            keycloak=mock_keycloak,
-            openfga=mock_openfga,
-        )
-
-        # Then: Should disable user in Keycloak
-        mock_keycloak.update_user.assert_called_once_with("user-to-delete-123", {"enabled": False})
-
-        # Then: Should delete OpenFGA tuples
-        mock_openfga.delete_tuples_for_object.assert_called_once_with("user:user-to-delete-123")
+        user_id_to_delete = "user-to-delete-123"
+        await delete_user(user_id=user_id_to_delete, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga)
+        mock_keycloak.update_user.assert_called_once_with(user_id_to_delete, {"enabled": False})
+        mock_openfga.delete_tuples_for_object.assert_called_once_with(get_user_id("user-to-delete-123"))
 
     @pytest.mark.asyncio
     async def test_get_user_not_found_returns_404(self):
@@ -459,25 +308,11 @@ class TestSCIMErrorHandling:
         """
         from mcp_server_langgraph.api.scim import get_user
 
-        # Given: User
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
-        mock_keycloak.get_user.return_value = None  # User not found
-
-        # When: Get non-existent user
-        # Then: Should return 404
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
+        mock_keycloak.get_user.return_value = None
         with pytest.raises(HTTPException) as exc_info:
-            await get_user(
-                user_id="non-existent-user-id",
-                current_user=current_user,
-                keycloak=mock_keycloak,
-            )
-
+            await get_user(user_id="non-existent-user-id", current_user=current_user, keycloak=mock_keycloak)
         assert exc_info.value.status_code == 404
         assert "not found" in exc_info.value.detail
 
@@ -488,13 +323,7 @@ class TestSCIMErrorHandling:
         """
         from mcp_server_langgraph.api.scim import create_user
 
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         user_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
             "userName": "newuser@example.com",
@@ -502,24 +331,12 @@ class TestSCIMErrorHandling:
             "emails": [{"value": "newuser@example.com", "primary": True}],
             "active": True,
         }
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.create_user.side_effect = Exception("Keycloak connection error")
-
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: Keycloak raises exception
-        # Then: Should return 500
         with pytest.raises(HTTPException) as exc_info:
-            await create_user(
-                user_data=user_data,
-                current_user=current_user,
-                keycloak=mock_keycloak,
-                openfga=mock_openfga,
-            )
-
+            await create_user(user_data=user_data, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga)
         assert exc_info.value.status_code == 500
         assert "Failed to create user" in exc_info.value.detail
 
@@ -531,16 +348,9 @@ class TestSCIMErrorHandling:
         from mcp_server_langgraph.api.scim import update_user
         from mcp_server_langgraph.scim.schema import SCIMPatchOperation, SCIMPatchRequest
 
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         patch_request = SCIMPatchRequest(Operations=[SCIMPatchOperation(op="replace", path="active", value=False)])
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.get_user.return_value = {
             "id": "user-123",
             "username": "alice@example.com",
@@ -548,28 +358,12 @@ class TestSCIMErrorHandling:
             "enabled": True,
         }
         mock_keycloak.update_user.return_value = None
-
-        # Mock second get_user call to return updated user
         mock_keycloak.get_user.side_effect = [
-            {
-                "id": "user-123",
-                "username": "alice@example.com",
-                "email": "alice@example.com",
-                "enabled": True,
-            },
-            {
-                "id": "user-123",
-                "username": "alice@example.com",
-                "email": "alice@example.com",
-                "enabled": False,  # Updated
-            },
+            {"id": "user-123", "username": "alice@example.com", "email": "alice@example.com", "enabled": True},
+            {"id": "user-123", "username": "alice@example.com", "email": "alice@example.com", "enabled": False},
         ]
-
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: PATCH user to disable
         result = await update_user(
             user_id="user-123",
             patch_request=patch_request,
@@ -577,8 +371,6 @@ class TestSCIMErrorHandling:
             keycloak=mock_keycloak,
             openfga=mock_openfga,
         )
-
-        # Then: Should update user and return updated SCIM user
         assert result.active is False
         mock_keycloak.update_user.assert_called_once()
 
@@ -589,42 +381,20 @@ class TestSCIMErrorHandling:
         """
         from mcp_server_langgraph.api.scim import create_group
 
-        # Given: Admin user
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
         group_data = {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             "displayName": "Engineering",
-            "members": [
-                {"value": "user-1", "display": "Alice"},
-                {"value": "user-2", "display": "Bob"},
-            ],
+            "members": [{"value": "user-1", "display": "Alice"}, {"value": "user-2", "display": "Bob"}],
         }
-
-        mock_keycloak = AsyncMock()
+        mock_keycloak = configured_async_mock(return_value=None)
         mock_keycloak.create_group.return_value = "group-123"
-        mock_keycloak.get_group.return_value = {
-            "id": "group-123",
-            "name": "Engineering",
-        }
-
-        mock_openfga = AsyncMock()
-        # Configure mock to return False for permission check
+        mock_keycloak.get_group.return_value = {"id": "group-123", "name": "Engineering"}
+        mock_openfga = configured_async_mock(return_value=None)
         mock_openfga.check_permission.return_value = False
-
-        # When: Create group with members
         result = await create_group(
-            group_data=group_data,
-            current_user=current_user,
-            keycloak=mock_keycloak,
-            openfga=mock_openfga,
+            group_data=group_data, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga
         )
-
-        # Then: Should add both members
         assert mock_keycloak.add_user_to_group.call_count == 2
         mock_keycloak.add_user_to_group.assert_any_call("user-1", "group-123")
         mock_keycloak.add_user_to_group.assert_any_call("user-2", "group-123")
@@ -637,24 +407,10 @@ class TestSCIMErrorHandling:
         """
         from mcp_server_langgraph.api.scim import get_group
 
-        # Given: User
-        current_user = {
-            "user_id": "user:admin",
-            "username": "admin",
-            "roles": ["admin"],
-        }
-
-        mock_keycloak = AsyncMock()
-        mock_keycloak.get_group.return_value = None  # Group not found
-
-        # When: Get non-existent group
-        result = await get_group(
-            group_id="non-existent-group",
-            current_user=current_user,
-            keycloak=mock_keycloak,
-        )
-
-        # Then: Should return SCIM error
+        current_user = {"user_id": get_user_id("admin"), "username": "admin", "roles": ["admin"]}
+        mock_keycloak = configured_async_mock(return_value=None)
+        mock_keycloak.get_group.return_value = None
+        result = await get_group(group_id="non-existent-group", current_user=current_user, keycloak=mock_keycloak)
         import json
 
         assert result.status_code == 404
