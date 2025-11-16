@@ -9,9 +9,10 @@ contentType: "reference"
 ---
 
 <Info>
-**Last Updated**: November 1, 2025
+**Last Updated**: November 15, 2025
 **Mermaid Version**: 11.4.1+
-**Total Diagrams**: 58+ across 50+ files
+**Total Diagrams**: 82+ across 67+ files
+**Compliance**: 100% production diagrams
 </Info>
 
 ## MANDATORY REQUIREMENTS
@@ -36,11 +37,11 @@ These requirements apply to ALL user-facing documentation (docs/*.mdx).
 
 | Metric | Status |
 |--------|--------|
-| **Total diagrams** | 58+ across 50+ files |
-| **ColorBrewer2 Set3 styled** | 95%+ (48+ files) |
+| **Total diagrams** | 82+ across 67+ files |
+| **ColorBrewer2 Set3 styled** | 100% (all production files) |
 | **Modern syntax usage** | 100% (all flowcharts) |
 | **Sequence diagrams themed** | 100% |
-| **Average complexity** | 34.0/100 (healthy) |
+| **Average complexity** | 34.0/100 (healthy, target &lt; 50) |
 
 ### Validation Status
 
@@ -394,6 +395,20 @@ Adds ColorBrewer2 theme initialization to sequence diagrams.
 
 ---
 
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="ADR-0055: Diagram Visualization Standards" icon="file-lines" href="/architecture/adr-0055-diagram-visualization-standards">
+    Architectural decision record with rationale, compliance metrics, and academic references
+  </Card>
+
+  <Card title="Internal Validation Infrastructure" icon="gear">
+    For maintainers: See `docs/.mintlify/MERMAID_OPTIMIZATION_GUIDE.md` for validation scripts, pre-commit hook configuration, and migration history
+  </Card>
+</CardGroup>
+
+---
+
 <Check>
-**Quality Status**: 95% of diagrams follow these standards with excellent consistency
+**Quality Status**: 100% of production diagrams follow these standards (achieved 2025-11-15)
 </Check>

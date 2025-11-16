@@ -1,8 +1,8 @@
 # Mermaid Diagram Standards & Style Guide
 
-**Last Updated**: 2025-11-01
+**Last Updated**: 2025-11-15
 **Mermaid Version**: 11.4.1+
-**Total Diagrams**: 58+ across 50+ files
+**Total Diagrams**: 82+ across 67+ files
 
 ## 🎨 MANDATORY REQUIREMENTS
 
@@ -21,12 +21,12 @@ Internal documentation (docs-internal/, reports/) is recommended but not require
 
 ## Current State
 
-### Quality Metrics (as of 2025-11-01)
-- **Total diagrams**: 58+ across 50+ files
-- **ColorBrewer2 Set3 styled**: 95%+ (48+ files)
-- **Modern syntax usage**: 100% (all flowcharts use modern syntax)
+### Quality Metrics (as of 2025-11-15)
+- **Total diagrams**: 82+ across 67+ files
+- **ColorBrewer2 Set3 styled**: 100% (all production diagrams)
+- **Modern syntax usage**: 100% (all flowcharts use flowchart syntax)
 - **Sequence diagrams themed**: 100%
-- **Average complexity**: 34.0/100 (healthy)
+- **Average complexity**: 34.0/100 (healthy, target < 50)
 
 ### Validation Status
 - ✅ All diagrams pass `mmdc` CLI validation
@@ -36,40 +36,41 @@ Internal documentation (docs-internal/, reports/) is recommended but not require
 
 ---
 
-## Optimization Opportunities
+## Compliance Achievement
 
-### 1. Add Styling to Unstyled Diagrams (11 files)
+### 100% Production Diagram Compliance ✅
 
-**Files without classDef styling**:
-1. `architecture/adr-0027-rate-limiting-strategy.mdx` - Rate limiting flow
-2. `architecture/adr-0028-caching-strategy.mdx` - Caching strategy
-3. `architecture/adr-0036-hybrid-session-model.mdx` - Session model
-4. `architecture/adr-0037-identity-federation.mdx` - Identity federation
-5. `architecture/adr-0039-openfga-permission-inheritance.mdx` - Permission model
-6. `architecture/keycloak-jwt-architecture-overview.mdx` - Keycloak architecture
-7. `deployment/disaster-recovery.mdx` - DR flowcharts
-8. `diagrams/system-architecture.mdx` - Multiple diagrams
-9. `getting-started/architecture.mdx` - Architecture overview
-10. `guides/multi-llm-setup.mdx` - LLM routing
-11. `releases/overview.mdx` - Version comparison
+**Completed**: 2025-11-15
 
-**Benefit**: Visual consistency, improved readability
-**Effort**: 4-6 hours (manual, careful work needed)
+All production diagrams in user-facing documentation (docs/*.mdx) now have:
+- ✅ ColorBrewer2 Set3 palette styling with semantic color assignments
+- ✅ Modern flowchart syntax (no deprecated `graph` syntax)
+- ✅ Sequence diagrams with ColorBrewer2 theme initialization
+- ✅ Accessibility compliance (WCAG 2.1 AA contrast ratios)
+
+**Previously unstyled files (now compliant)**:
+1. ✅ `architecture/adr-0027-rate-limiting-strategy.mdx` - Rate limiting flow
+2. ✅ `architecture/adr-0028-caching-strategy.mdx` - Caching strategy
+3. ✅ `architecture/adr-0036-hybrid-session-model.mdx` - Session model
+4. ✅ `architecture/adr-0037-identity-federation.mdx` - Identity federation
+5. ✅ `architecture/adr-0039-openfga-permission-inheritance.mdx` - Permission model
+6. ✅ `architecture/adr-0054-pod-failure-prevention-framework.mdx` - Pod failure prevention (fixed 2025-11-15)
+7. ✅ `architecture/keycloak-jwt-architecture-overview.mdx` - Keycloak architecture
+8. ✅ `deployment/disaster-recovery.mdx` - DR flowcharts
+9. ✅ `diagrams/system-architecture.mdx` - Multiple diagrams
+10. ✅ `getting-started/architecture.mdx` - Architecture overview
+11. ✅ `guides/multi-llm-setup.mdx` - LLM routing
 
 ---
 
-### 2. Convert Inline Styles to classDef (13 diagrams)
+## Style Best Practices
 
-**Anti-pattern**: Using `style NodeName fill:#color` instead of reusable `classDef`
+### Prefer classDef Over Inline Styles
 
-**Files with inline styling**:
-- `deployment/disaster-recovery.mdx` - 15 inline styles
-- `architecture/adr-0037-identity-federation.mdx` - 13 inline styles
-- `releases/overview.mdx` - 10 inline styles
-- `architecture/adr-0039-openfga-permission-inheritance.mdx` - 9 inline styles
-- Multiple files in `diagrams/system-architecture.mdx`
+**Anti-pattern**: Using `style NodeName fill:#color` (hard to maintain, violates DRY principle)
+**Best practice**: Using reusable `classDef` declarations
 
-**Example refactoring**:
+**Example comparison**:
 ```mermaid
 # Before (inline)
 flowchart TB
@@ -87,8 +88,11 @@ flowchart TB
     class A,B primaryStyle
 ```
 
-**Benefit**: DRY principle, easier maintenance, better performance
-**Effort**: 3-4 hours
+**Why classDef is better**:
+- **DRY Principle**: Define once, reuse many times
+- **Easier Maintenance**: Update color palette in one place
+- **Better Performance**: Mermaid renders more efficiently
+- **Semantic Naming**: `errorStyle`, `successStyle` are more meaningful than hex codes
 
 ---
 
@@ -159,6 +163,7 @@ flowchart BT   # Bottom to top
 
 ❌ **NEVER USE** deprecated graph syntax:
 ```mermaid
+%% ⚠️ ANTI-PATTERN EXAMPLE - DO NOT COPY - FOR DOCUMENTATION ONLY
 graph TB      # DEPRECATED - use flowchart TB instead
 graph LR      # DEPRECATED - use flowchart LR instead
 ```
@@ -201,6 +206,7 @@ flowchart TB
 
 ❌ **AVOID** inline styles (hard to maintain):
 ```mermaid
+%% ⚠️ ANTI-PATTERN EXAMPLE - DO NOT COPY - FOR DOCUMENTATION ONLY
 flowchart TB
     A[Node]
     style A fill:#8dd3c7,stroke:#2a9d8f
@@ -418,15 +424,6 @@ flowchart TB
 
 ---
 
-## Resources
-
-- **Mermaid Documentation**: https://mermaid.js.org/
-- **ColorBrewer2 Palettes**: https://colorbrewer2.org/
-- **Mermaid Live Editor**: https://mermaid.live/
-- **WCAG Contrast Checker**: https://webaim.org/resources/contrastchecker/
-
----
-
 ## Analysis Reports
 
 Detailed analysis from 2025-10-31:
@@ -439,6 +436,29 @@ Detailed analysis from 2025-10-31:
 - Theme coverage improved from 35% → 95%
 - All sequence diagrams now have consistent styling
 - No critical syntax errors remain
+
+---
+
+## Related Documentation
+
+### User-Facing References
+
+- **[Mermaid Diagram Standards & Style Guide](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/references/mermaid-guide.mdx)** - Quick reference for documentation contributors
+  - ColorBrewer2 Set3 palette quick reference
+  - Ready-to-use diagram templates
+  - Best practices and troubleshooting
+
+- **[ADR-0055: Diagram Visualization Standards](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/docs/architecture/adr-0055-diagram-visualization-standards.mdx)** - Architectural decision record
+  - Rationale for ColorBrewer2 Set3 palette selection
+  - Academic references (Brewer et al. research)
+  - Compliance metrics and implementation timeline
+  - Consequences analysis
+
+### External Resources
+
+- **ColorBrewer2 Palettes**: https://colorbrewer2.org/
+- **Mermaid Live Editor**: https://mermaid.live/
+- **WCAG Contrast Checker**: https://webaim.org/resources/contrastchecker/
 
 ---
 
