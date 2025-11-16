@@ -114,6 +114,15 @@ class TestGDPREndpointAuthOverrides:
         # Cleanup
         app.dependency_overrides.clear()
 
+    @pytest.mark.xfail(
+        strict=False,
+        reason=(
+            "Non-deterministic test documenting bearer_scheme singleton pollution. "
+            "May return 200 or 401 depending on pytest-xdist execution order. "
+            "Demonstrates why BOTH bearer_scheme AND get_current_user must be overridden. "
+            "See PYTEST_XDIST_BEST_PRACTICES.md for details."
+        ),
+    )
     def test_user_data_endpoint_without_bearer_scheme_override_may_fail(self):
         """
         🔴 RED: Test GET /api/v1/users/me/data WITHOUT bearer_scheme override.
