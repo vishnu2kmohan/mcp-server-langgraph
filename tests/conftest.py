@@ -1303,15 +1303,15 @@ async def redis_client_real(integration_test_env):
 
 
 @pytest.fixture(scope="session")
-async def openfga_client_real(integration_test_env):
+async def openfga_client_real(integration_test_env, test_infrastructure_ports):
     """Real OpenFGA client for integration tests with auto-initialization"""
     if not integration_test_env:
         pytest.skip("Integration test environment not available (requires Docker)")
 
     from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
 
-    # OpenFGA test URL - uses port 9080 for test environment (docker-compose.test.yml)
-    api_url = os.getenv("OPENFGA_API_URL", "http://localhost:9080")
+    # OpenFGA test URL - use infrastructure port from fixture (ensures consistency)
+    api_url = os.getenv("OPENFGA_API_URL", f"http://localhost:{test_infrastructure_ports['openfga_http']}")
 
     # Create client without store/model initially
     client = OpenFGAClient(api_url=api_url, store_id=None, model_id=None)
