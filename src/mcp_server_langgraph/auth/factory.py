@@ -214,6 +214,7 @@ def create_auth_middleware(settings: Settings, openfga_client: Optional[OpenFGAC
         openfga_client=openfga_client,
         user_provider=user_provider,
         session_store=session_store,
+        settings=settings,
     )
 
     logger.info(

@@ -262,7 +262,8 @@ class TestKeycloakUserProvider:
                     result = await provider.authenticate("alice", "password123")
                     assert result.authorized is True
                     assert result.username == "alice"
-                    assert result.user_id == get_user_id("alice")
+                    # Keycloak users have clean user:username format (no worker-safe IDs)
+                    assert result.user_id == f"user:{result.username}"
                     assert result.email == "alice@acme.com"
                     assert "premium" in result.roles
                     assert result.access_token == "access-token-123"
@@ -335,7 +336,8 @@ class TestKeycloakUserProvider:
             user = await provider.get_user_by_username("alice")
             assert user is not None
             assert user.username == "alice"
-            assert user.user_id == get_user_id("alice")
+            # Keycloak users have clean user:username format (no worker-safe IDs)
+            assert user.user_id == f"user:{user.username}"
             assert user.email == "alice@acme.com"
             assert "premium" in user.roles
 
