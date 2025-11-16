@@ -299,7 +299,8 @@ class TestSCIMErrorHandling:
         user_id_to_delete = "user-to-delete-123"
         await delete_user(user_id=user_id_to_delete, current_user=current_user, keycloak=mock_keycloak, openfga=mock_openfga)
         mock_keycloak.update_user.assert_called_once_with(user_id_to_delete, {"enabled": False})
-        mock_openfga.delete_tuples_for_object.assert_called_once_with(get_user_id("user-to-delete-123"))
+        # OpenFGA gets called with "user:" prefix (production code doesn't use worker-safe IDs)
+        mock_openfga.delete_tuples_for_object.assert_called_once_with(f"user:{user_id_to_delete}")
 
     @pytest.mark.asyncio
     async def test_get_user_not_found_returns_404(self):
