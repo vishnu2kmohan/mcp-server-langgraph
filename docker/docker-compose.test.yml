@@ -164,8 +164,10 @@ services:
 
 networks:
   test-network:
+    name: mcp-test-network
     driver: bridge
     # Network isolation prevents conflicts with dev environment
+    # Explicit name ensures consistency with mcp-*-test container naming
 
 # No volumes - tests are ephemeral
 # All data deleted when containers stop
