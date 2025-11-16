@@ -81,8 +81,8 @@ spec:
 
         # OpenFGA Configuration (if using managed OpenFGA or self-hosted)
         - name: OPENFGA_API_URL
-          # TODO: Replace example.com with actual OpenFGA URL
-          value: "https://openfga.${DOMAIN}"
+          # TODO: Replace DOMAIN with your actual domain (e.g., example.com)
+          value: "https://openfga.DOMAIN"
 
         - name: OPENFGA_STORE_ID
           valueFrom:
@@ -111,8 +111,8 @@ spec:
 
         # OpenTelemetry Configuration
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          # TODO: Replace example.com with actual OTEL collector URL
-          value: "https://otel-collector.${DOMAIN}:4317"
+          # TODO: Replace DOMAIN with your actual domain (e.g., example.com)
+          value: "https://otel-collector.DOMAIN:4317"
 
         - name: OTEL_SERVICE_NAME
           value: "mcp-server-langgraph"
