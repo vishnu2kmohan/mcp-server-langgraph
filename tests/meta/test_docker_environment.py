@@ -176,10 +176,13 @@ class TestDockerfileTestConfiguration:
             assert deployments_line < pip_install_line, "deployments/ should be copied before pip install"
 
 
-@pytest.mark.integration
 @pytest.mark.xdist_group(name="testdockerimageassets")
 class TestDockerImageAssets:
-    """Integration tests for built Docker images."""
+    """Meta-tests validating Docker image contents.
+
+    These tests run on the host machine to validate the structure and contents
+    of Docker images. They are NOT integration tests that run inside Docker.
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""

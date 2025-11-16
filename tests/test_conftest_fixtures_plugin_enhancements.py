@@ -41,7 +41,7 @@ class TestConfTestFixturesPluginEnhancements:
         # The plugin is loaded via conftest_fixtures_plugin.py:pytest_configure
         # Verify plugin is registered with pytest
         plugin_manager = request.config.pluginmanager
-        assert plugin_manager.is_registered(name="conftest_fixtures_plugin") or any(
+        assert plugin_manager.has_plugin("conftest_fixtures_plugin") or any(
             "conftest_fixtures_plugin" in str(plugin) for plugin in plugin_manager.get_plugins()
         ), "Fixture organization plugin not loaded"
 

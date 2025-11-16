@@ -14,10 +14,13 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.integration
 @pytest.mark.xdist_group(name="docker_image_contents")
 class TestDockerImageContents:
-    """Validate Docker image contains required files and directories"""
+    """Meta-test validating Docker image contains required files and directories.
+
+    This test runs on the host machine to validate Docker image contents,
+    NOT as an integration test inside Docker.
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""

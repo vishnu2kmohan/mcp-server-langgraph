@@ -382,15 +382,18 @@ class TestDockerImageContents:
         assert "COPY tests/" in stage_section, "Dockerfile must copy tests/ directory"
         assert "COPY pyproject.toml" in stage_section, "Dockerfile must copy pyproject.toml"
 
-        # Validate scripts/ and deployments/ are NOT copied (correct design)
-        # These are only needed for meta-tests run on host, not Docker integration tests
-        assert "COPY scripts/" not in stage_section, (
-            "scripts/ should NOT be in Docker image - meta-tests run on host. "
-            "If you see this failure, confirm whether integration tests actually need scripts/."
+        # Validate scripts/ and deployments/ ARE copied (required for integration tests)
+        # These directories are needed by integration tests running in Docker:
+        # - deployments/: Required by test_pod_deployment_regression.py for K8s manifest validation
+        # - scripts/: Required by test_mdx_validation.py, test_codeblock_autofixer.py
+        # See: scripts/validate_docker_image_contents.py lines 74-75, 101-103
+        assert "COPY scripts/" in stage_section, (
+            "scripts/ must be in Docker image - needed by integration tests. "
+            "Integration tests like test_mdx_validation.py require access to validation scripts."
         )
-        assert "COPY deployments/" not in stage_section, (
-            "deployments/ should NOT be in Docker image - deployment tests run on host. "
-            "If you see this failure, confirm whether integration tests actually need deployments/."
+        assert "COPY deployments/" in stage_section, (
+            "deployments/ must be in Docker image - needed by integration tests. "
+            "Integration tests like test_pod_deployment_regression.py require K8s manifests."
         )
 
     def test_meta_tests_run_on_host_not_docker(self):

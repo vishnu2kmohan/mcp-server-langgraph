@@ -129,8 +129,7 @@ class TestSubprocessSafety:
                     timeout_value = None
                     if isinstance(timeout_node, ast.Constant):
                         timeout_value = timeout_node.value
-                    elif isinstance(timeout_node, ast.Num):  # Python 3.7 compatibility
-                        timeout_value = timeout_node.n
+                    # Note: ast.Num removed in Python 3.8+, replaced by ast.Constant
 
                     if timeout_value is not None and timeout_value < MINIMUM_TIMEOUT:
                         relative_path = test_file.relative_to(Path(__file__).parent.parent)
@@ -222,10 +221,9 @@ class TestSubprocessSafety:
         # Extract default value
         if isinstance(timeout_arg, ast.Constant):
             timeout_default = timeout_arg.value
-        elif isinstance(timeout_arg, ast.Num):
-            timeout_default = timeout_arg.n
         else:
             timeout_default = None
+        # Note: ast.Num removed in Python 3.8+, replaced by ast.Constant
 
         if timeout_default is not None:
             assert timeout_default >= 30, (
