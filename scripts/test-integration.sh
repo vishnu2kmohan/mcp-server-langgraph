@@ -36,7 +36,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILE="docker/docker-compose.test.yml"
+# Use root docker-compose.test.yml for local/CI parity (OpenAI Codex Finding #1)
+COMPOSE_FILE="docker-compose.test.yml"
 BUILD=false
 NO_CACHE=false
 KEEP=false

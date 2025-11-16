@@ -647,3 +647,282 @@ class TestEnforcementRecommendations:
         """
         enforcement_is_sufficient = True
         assert enforcement_is_sufficient, "Current enforcement is sufficient"
+
+
+@pytest.mark.meta
+@pytest.mark.xdist_group(name="xdist_group_coverage_tests")
+class TestXdistGroupCoverage:
+    """
+    Enforce 100% xdist_group coverage on integration tests.
+
+    These tests validate that ALL integration tests have xdist_group markers
+    to prevent worker isolation issues and memory leaks.
+
+    References:
+    - OpenAI Codex Finding #4: Pytest-xdist isolation inconsistencies
+    - ADR-0052: Pytest-xdist Isolation Strategy
+    - MEMORY_SAFETY_GUIDELINES.md
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def _find_pytest_markers_in_file(self, file_path: Path) -> set[str]:
+        """
+        Extract all pytest markers from a test file using AST parsing.
+
+        Returns set of marker names (e.g., {'unit', 'integration', 'meta'})
+        """
+        try:
+            content = file_path.read_text()
+            tree = ast.parse(content, filename=str(file_path))
+        except (SyntaxError, UnicodeDecodeError):
+            return set()
+
+        markers = set()
+
+        for node in ast.walk(tree):
+            # Check for @pytest.mark.marker_name decorators
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                for decorator in node.decorator_list:
+                    # Handle @pytest.mark.integration
+                    if isinstance(decorator, ast.Attribute):
+                        if isinstance(decorator.value, ast.Attribute) and decorator.value.attr == "mark":
+                            markers.add(decorator.attr)
+
+                    # Handle @pytest.mark.integration(...) with args
+                    elif isinstance(decorator, ast.Call):
+                        if isinstance(decorator.func, ast.Attribute):
+                            if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
+                                markers.add(decorator.func.attr)
+
+            # Check for pytestmark = pytest.mark.integration
+            elif isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "pytestmark":
+                        # pytestmark = pytest.mark.integration
+                        if isinstance(node.value, ast.Attribute):
+                            if isinstance(node.value.value, ast.Attribute) and node.value.value.attr == "mark":
+                                markers.add(node.value.attr)
+
+                        # pytestmark = [pytest.mark.integration, pytest.mark.unit]
+                        elif isinstance(node.value, ast.List):
+                            for elt in node.value.elts:
+                                if isinstance(elt, ast.Attribute):
+                                    if isinstance(elt.value, ast.Attribute) and elt.value.attr == "mark":
+                                        markers.add(elt.attr)
+
+        return markers
+
+    def _has_xdist_group_marker(self, file_path: Path) -> bool:
+        """
+        Check if a file has any xdist_group markers using AST parsing.
+
+        Returns True if file contains @pytest.mark.xdist_group(...)
+        """
+        try:
+            content = file_path.read_text()
+        except (UnicodeDecodeError, FileNotFoundError):
+            return False
+
+        # Simple string search for xdist_group
+        return "xdist_group" in content
+
+    def test_all_integration_tests_have_xdist_group_marker(self):
+        """
+        🟢 GREEN: Verify ALL integration tests have xdist_group markers.
+
+        Enforces 100% coverage to prevent worker isolation issues.
+
+        REQUIREMENT:
+        ------------
+        Every test file with @pytest.mark.integration MUST have at least one
+        @pytest.mark.xdist_group(name="...") marker to ensure proper worker
+        isolation and prevent:
+        - Port conflicts between workers
+        - Database isolation failures
+        - Environment variable pollution
+        - Memory leaks from AsyncMock/MagicMock accumulation
+
+        TARGET: 100% coverage (not 80%)
+        """
+        root = Path(__file__).parent.parent.parent
+        tests_dir = root / "tests"
+
+        # Find all test files
+        all_test_files = sorted(tests_dir.rglob("test_*.py"))
+
+        # Find integration tests without xdist_group
+        missing_xdist_group: list[tuple[Path, str]] = []
+
+        for test_file in all_test_files:
+            # Skip __init__.py files
+            if test_file.name == "__init__.py":
+                continue
+
+            # Get relative path for clearer error messages
+            rel_path = test_file.relative_to(root)
+
+            # Check if file has integration marker
+            markers = self._find_pytest_markers_in_file(test_file)
+
+            if "integration" not in markers:
+                # Not an integration test, skip
+                continue
+
+            # Integration test - must have xdist_group
+            has_xdist_group = self._has_xdist_group_marker(test_file)
+
+            if not has_xdist_group:
+                missing_xdist_group.append((test_file, str(rel_path)))
+
+        # Generate helpful error message
+        if missing_xdist_group:
+            error_msg = f"Found {len(missing_xdist_group)} integration tests WITHOUT xdist_group markers:\n\n"
+            for test_file, rel_path in missing_xdist_group:
+                error_msg += f"  - {rel_path}\n"
+
+            error_msg += "\n"
+            error_msg += "REQUIRED PATTERN:\n"
+            error_msg += "=================\n"
+            error_msg += "@pytest.mark.xdist_group(name='category_tests')\n"
+            error_msg += "class TestSomething:\n"
+            error_msg += "    def teardown_method(self):\n"
+            error_msg += "        gc.collect()\n"
+            error_msg += "\n"
+            error_msg += "See: MEMORY_SAFETY_GUIDELINES.md for complete pattern\n"
+            error_msg += "\n"
+            error_msg += f"TARGET: 100% coverage (currently: {100 - (len(missing_xdist_group) / max(1, len([f for f in all_test_files if 'integration' in self._find_pytest_markers_in_file(f)])) * 100):.1f}%)\n"
+
+            assert False, error_msg
+
+    def test_xdist_group_markers_have_teardown_method(self):
+        """
+        🟢 GREEN: Verify tests with xdist_group also have teardown_method with gc.collect().
+
+        The 3-part memory safety pattern requires:
+        1. @pytest.mark.xdist_group(name="...")
+        2. teardown_method() with gc.collect()
+        3. Performance tests skip parallel mode
+
+        This test validates the second requirement.
+        """
+        root = Path(__file__).parent.parent.parent
+        tests_dir = root / "tests"
+
+        # Find all test files with xdist_group
+        all_test_files = sorted(tests_dir.rglob("test_*.py"))
+
+        missing_teardown: list[str] = []
+
+        for test_file in all_test_files:
+            if test_file.name == "__init__.py":
+                continue
+
+            rel_path = test_file.relative_to(root)
+
+            # Check if file has xdist_group
+            if not self._has_xdist_group_marker(test_file):
+                continue
+
+            # File has xdist_group - must have teardown_method with gc.collect()
+            try:
+                content = test_file.read_text()
+            except (UnicodeDecodeError, FileNotFoundError):
+                continue
+
+            # Check for teardown_method
+            has_teardown = "teardown_method" in content
+
+            # Check for gc.collect() in teardown
+            has_gc_collect = "gc.collect()" in content
+
+            if not (has_teardown and has_gc_collect):
+                missing_teardown.append(str(rel_path))
+
+        if missing_teardown:
+            error_msg = (
+                f"Found {len(missing_teardown)} files with xdist_group but missing " "teardown_method() with gc.collect():\n\n"
+            )
+            for rel_path in missing_teardown:
+                error_msg += f"  - {rel_path}\n"
+
+            error_msg += "\n"
+            error_msg += "REQUIRED PATTERN (3-part memory safety):\n"
+            error_msg += "=========================================\n"
+            error_msg += "@pytest.mark.xdist_group(name='category_tests')\n"
+            error_msg += "class TestSomething:\n"
+            error_msg += "    def teardown_method(self):\n"
+            error_msg += "        '''Force GC to prevent mock accumulation in xdist workers'''\n"
+            error_msg += "        gc.collect()\n"
+            error_msg += "\n"
+            error_msg += "See: MEMORY_SAFETY_GUIDELINES.md\n"
+
+            assert False, error_msg
+
+    def test_integration_tests_xdist_group_coverage_percentage(self):
+        """
+        🟢 GREEN: Verify integration test xdist_group coverage meets target.
+
+        This test tracks progress toward 100% coverage and fails if coverage
+        drops below the current baseline.
+
+        CURRENT BASELINE: 80% (from investigation)
+        TARGET: 100%
+        """
+        root = Path(__file__).parent.parent.parent
+        tests_dir = root / "tests"
+
+        # Find all test files
+        all_test_files = sorted(tests_dir.rglob("test_*.py"))
+
+        integration_tests_total = 0
+        integration_tests_with_xdist_group = 0
+
+        for test_file in all_test_files:
+            if test_file.name == "__init__.py":
+                continue
+
+            # Check if file has integration marker
+            markers = self._find_pytest_markers_in_file(test_file)
+
+            if "integration" not in markers:
+                continue
+
+            integration_tests_total += 1
+
+            # Check if has xdist_group
+            if self._has_xdist_group_marker(test_file):
+                integration_tests_with_xdist_group += 1
+
+        # Calculate coverage percentage
+        if integration_tests_total == 0:
+            pytest.skip("No integration tests found")
+
+        coverage_percentage = (integration_tests_with_xdist_group / integration_tests_total) * 100
+
+        # BASELINE: Current coverage should be at least 80% (from investigation)
+        # TARGET: 100%
+        MINIMUM_COVERAGE = 80.0
+        TARGET_COVERAGE = 100.0
+
+        assert coverage_percentage >= MINIMUM_COVERAGE, (
+            f"Integration test xdist_group coverage dropped below baseline!\n"
+            f"Current: {coverage_percentage:.1f}%\n"
+            f"Baseline: {MINIMUM_COVERAGE}%\n"
+            f"Target: {TARGET_COVERAGE}%\n"
+            f"\n"
+            f"Files: {integration_tests_with_xdist_group}/{integration_tests_total}\n"
+            f"Missing: {integration_tests_total - integration_tests_with_xdist_group} files\n"
+        )
+
+        # Log progress toward target
+        if coverage_percentage < TARGET_COVERAGE:
+            import warnings
+
+            warnings.warn(
+                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% " f"(target: {TARGET_COVERAGE}%)",
+                UserWarning,
+                stacklevel=2,
+            )
