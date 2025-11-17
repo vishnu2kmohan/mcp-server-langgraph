@@ -366,14 +366,19 @@ def test_pytest_addopts_flags_have_required_plugins():
    - **Details**: tests/test_documentation_integrity.py::TestADRSynchronization now calls scripts/validators/adr_sync_validator.py
    - **Pattern**: Script → Hook → Meta-test (established architecture)
 
-3. **Documentation Validation Consolidation**
-   - **Impact**: 6 hooks + 7 scripts → 2 hooks + 1 comprehensive script
-   - **Action**: Create `scripts/validators/validate_documentation.py`
-   - **Benefit**: Clear ownership, ~500+ lines saved
+3. **Documentation Validation Consolidation** ✅ COMPLETE (2025-11-15)
+   - **Impact**: 6 hooks + 7 scripts → 4 hooks + Mintlify CLI (PRIMARY validator)
+   - **Action**: Migrated to Mintlify CLI `broken-links` as authoritative validator
+   - **Benefit**: 91-93% faster (105-155s → 8-12s), 77% code reduction (~3,500 → ~800 lines)
+   - **Details**: See docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md for complete migration
+   - **Note**: This was completed BEFORE current consolidation work (separate effort)
 
-4. **GitHub Workflow Validation**
-   - **Impact**: 4 hooks → 2 hooks
-   - **Action**: Merge validate-github-workflows + validate-github-action-versions
+4. **GitHub Workflow Validation** ✅ COMPLETE (2025-11-17)
+   - **Impact**: 4 hooks → 3 hooks, ~100-150 lines savings
+   - **Action**: Merged validate-github-workflows + validate-github-action-versions
+   - **Details**: Created scripts/validators/validate_github_workflows_comprehensive.py
+   - **Test**: tests/meta/test_consolidated_workflow_validator.py validates all functionality
+   - **Pattern**: Script → Hook → Meta-test (established architecture)
 
 ---
 
@@ -446,14 +451,14 @@ def test_pytest_addopts_flags_have_required_plugins():
 
 ### Consolidation Impact
 
-| Consolidation | Lines Saved | Hooks Reduced | Impact |
-|---------------|-------------|---------------|--------|
-| ✅ Pytest Config | 50 | 0 | Single source of truth |
-| 📋 ADR Sync | 40 | 0 | Pending |
-| 📋 Documentation | 300-400 | 4-5 | HIGH - major simplification |
-| 📋 Workflows | 100-150 | 2 | HIGH - clearer separation |
-| 📋 Test Isolation | 100 | 0 | Enhanced script |
-| **TOTAL** | **590-740** | **6-7** | **Significant maintenance reduction** |
+| Consolidation | Lines Saved | Hooks Reduced | Impact | Status |
+|---------------|-------------|---------------|--------|--------|
+| ✅ Pytest Config | 50 | 0 | Single source of truth | DONE (2025-11-16) |
+| ✅ ADR Sync | 40 | 0 | Single source of truth | DONE (2025-11-17) |
+| ✅ Documentation | 2,700 | 9 | 91-93% faster validation | DONE (2025-11-15) |
+| ✅ Workflows | 100-150 | 1 | Clearer separation | DONE (2025-11-17) |
+| 📋 Test Isolation | 100 | 0 | Enhanced script | Future |
+| **TOTAL** | **2,990-3,040** | **10** | **Massive maintenance reduction** | **80% COMPLETE** |
 
 ---
 

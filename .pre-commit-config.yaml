@@ -707,19 +707,28 @@ repos:
       Per TDD best practices, this ensures local configs never reach version control.
 
       '
-  - id: validate-github-workflows
-    name: Validate GitHub Actions Workflow Context Usage
-    entry: uv run python scripts/validate_github_workflows.py
+  - id: validate-github-workflows-comprehensive
+    name: Validate GitHub Workflows (Comprehensive)
+    entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
     language: system
-    files: ^\.github/workflows/.*\.ya?ml$
+    files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
-    description: 'Validates that GitHub Actions workflows don''t reference undefined
-
-      context variables (e.g., github.event.workflow_run.* when workflow_run
-
-      trigger is not enabled). Prevents CI/CD failures from context errors.
-
-      '
+    stages:
+      - pre-push
+    description: "Comprehensive GitHub Actions workflow validation (consolidated):\n\n\
+      Replaces: validate-github-workflows + validate-github-action-versions\n\n\
+      Validations performed:\n\
+      1. YAML syntax validation\n\
+      2. Context usage (github.event.* against enabled triggers)\n\
+      3. Action version validation (published tags, no invalid versions)\n\
+      4. Permissions validation (workflows creating issues have 'issues: write')\n\n\
+      Prevents:\n\
+      - Using github.event.pull_request.* without pull_request trigger\n\
+      - Invalid action versions (e.g., astral-sh/setup-uv@v7.1.1)\n\
+      - Missing permissions for issue creation\n\n\
+      Consolidation: Part of validator consolidation effort (2025-11-17)\n\
+      See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md\n\
+      Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
     entry: uv run python scripts/validate_gke_autopilot_compliance.py
@@ -1020,48 +1029,9 @@ repos:
       Prevents regression of Codex Findings #3, #4, #9
 
       '
-  - id: validate-github-action-versions
-    name: Validate GitHub Actions Action Versions
-    entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that all GitHub Actions use published, valid version tags and have correct permissions.
-
-
-      Invalid versions prevented (OpenAI Codex Phase 5):
-
-      1. astral-sh/setup-uv@v7.1.1 (should be v7.1.0 or v7) - FIXED
-
-      2. actions/cache@v4.3.0 (should be v4.2.0 or v4) - FIXED
-
-      3. Other non-existent action version tags
-
-
-      Permissions validated:
-
-      - Workflows creating issues must have ''issues: write'' permission
-
-      - Workflows have minimal required permissions (security best practice)
-
-
-      Test suite (8 tests):
-
-      - Action version validation (3 tests)
-
-      - Permissions validation (3 tests)
-
-      - YAML syntax validation (2 tests)
-
-
-      Following TDD principles: Tests written FIRST, then fixes applied.
-
-      See: docs-internal/GITHUB_ACTIONS_VALIDATION_REPORT.md
-
-      '
+  # NOTE: validate-github-action-versions hook REMOVED (2025-11-17)
+  # Consolidated into validate-github-workflows-comprehensive (above)
+  # See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md
   - id: validate-kustomize-builds
     name: Validate Kustomize Overlays Build Successfully
     entry: uv run pytest tests/deployment/test_kustomize_builds.py -v --tb=short
