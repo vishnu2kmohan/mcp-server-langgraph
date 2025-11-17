@@ -7,6 +7,8 @@ Validates that all MDX files have valid YAML frontmatter with required fields.
 Required fields:
 - title: Page title (must be non-empty string)
 - description: Page description (must be non-empty string)
+- icon: Icon identifier for the page (must be non-empty string)
+- contentType: Type of content (must be one of: explanation, reference, tutorial, how-to, guide)
 
 Exit codes:
 - 0: All validations passed
@@ -55,6 +57,16 @@ class InvalidYAMLError(FrontmatterError):
         super().__init__(f"Invalid YAML in {file_path}: {error}")
 
 
+class InvalidContentTypeError(FrontmatterError):
+    """Exception raised when contentType has an invalid value."""
+
+    def __init__(self, file_path: str, value: str, valid_types: list):
+        self.file_path = file_path
+        self.value = value
+        self.valid_types = valid_types
+        super().__init__(f"Invalid contentType '{value}' in {file_path}. " f"Must be one of: {', '.join(valid_types)}")
+
+
 @dataclass
 class ValidationResult:
     """Result of frontmatter validation."""
@@ -76,7 +88,10 @@ class FrontmatterValidator:
     """Validates MDX file frontmatter."""
 
     # Required fields in frontmatter
-    REQUIRED_FIELDS = ["title", "description"]
+    REQUIRED_FIELDS = ["title", "description", "icon", "contentType"]
+
+    # Valid content types
+    VALID_CONTENT_TYPES = ["explanation", "reference", "tutorial", "how-to", "guide"]
 
     # Patterns to exclude from validation
     EXCLUDE_PATTERNS = [
@@ -200,6 +215,12 @@ class FrontmatterValidator:
             ):
                 errors.append(MissingRequiredFieldError(relative_path, field_name))
 
+        # Validate contentType value if present
+        if "contentType" in frontmatter and frontmatter["contentType"]:
+            content_type = frontmatter["contentType"].strip()
+            if content_type not in self.VALID_CONTENT_TYPES:
+                errors.append(InvalidContentTypeError(relative_path, content_type, self.VALID_CONTENT_TYPES))
+
         return errors
 
     def print_report(self, result: ValidationResult) -> None:
@@ -222,6 +243,7 @@ class FrontmatterValidator:
             missing_fm = [e for e in result.errors if isinstance(e, MissingFrontmatterError)]
             missing_fields = [e for e in result.errors if isinstance(e, MissingRequiredFieldError)]
             invalid_yaml = [e for e in result.errors if isinstance(e, InvalidYAMLError)]
+            invalid_content_type = [e for e in result.errors if isinstance(e, InvalidContentTypeError)]
 
             if missing_fm:
                 print(f"\n  Missing frontmatter ({len(missing_fm)}):")
@@ -238,10 +260,17 @@ class FrontmatterValidator:
                 for error in invalid_yaml:
                     print(f"    ❌ {error.file_path}")
 
+            if invalid_content_type:
+                print(f"\n  Invalid contentType ({len(invalid_content_type)}):")
+                for error in invalid_content_type:
+                    print(f"    ❌ {error.file_path}: '{error.value}' (valid: {', '.join(error.valid_types)})")
+
             print("\n  💡 Solution: Add frontmatter to MDX files:")
             print("     ---")
             print('     title: "Page Title"')
             print('     description: "Page description"')
+            print('     icon: "book-open"')
+            print('     contentType: "explanation"')
             print("     ---")
 
         # Summary
