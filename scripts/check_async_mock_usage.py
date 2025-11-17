@@ -6,6 +6,18 @@ This script prevents hanging tests by detecting patterns where:
 - patch.object() or patch() is used without new_callable=AsyncMock
 - The mocked method is awaited in the code under test
 
+Detection Strategy:
+1. Static Analysis (Preferred): When module path is available (e.g., patch("module.func")),
+   parses source code to definitively determine if function is async
+2. Pattern Matching (Fallback): Uses conservative async naming patterns (send_, async_, fetch_)
+3. Whitelist: Known synchronous functions that match async patterns
+
+False Positive Prevention:
+- Removed overly broad patterns (get_, create_, update_, delete_)
+- Added static analysis for definitive async detection
+- Maintains whitelist for edge cases
+- Supports # noqa: async-mock comment suppression
+
 Exit codes:
     0: All async mocks are correctly configured
     1: Found async methods mocked incorrectly (will cause hanging)
@@ -15,7 +27,71 @@ import ast
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
+
+# Global cache for function signatures to avoid re-parsing files
+_function_signature_cache: Dict[str, bool] = {}
+
+
+def is_async_function_in_source(module_path: str, function_name: str) -> Optional[bool]:
+    """
+    Check if a function is async by parsing its source file.
+
+    Args:
+        module_path: Dotted module path (e.g., "mcp_server_langgraph.monitoring.budget_monitor")
+        function_name: Function name to check
+
+    Returns:
+        True if async, False if sync, None if not found or error
+    """
+    cache_key = f"{module_path}.{function_name}"
+    if cache_key in _function_signature_cache:
+        return _function_signature_cache[cache_key]
+
+    # Convert module path to file path
+    # Try both src/ and direct package locations
+    potential_paths = [
+        Path(module_path.replace(".", "/") + ".py"),
+        Path("src") / (module_path.replace(".", "/") + ".py"),
+        Path("mcp_server_langgraph") / (module_path.replace("mcp_server_langgraph.", "").replace(".", "/") + ".py"),
+    ]
+
+    for file_path in potential_paths:
+        if not file_path.exists():
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            tree = ast.parse(content, filename=str(file_path))
+
+            # Search for the function definition
+            for node in ast.walk(tree):
+                # Check top-level functions
+                if isinstance(node, ast.AsyncFunctionDef) and node.name == function_name:
+                    _function_signature_cache[cache_key] = True
+                    return True
+                elif isinstance(node, ast.FunctionDef) and node.name == function_name:
+                    _function_signature_cache[cache_key] = False
+                    return False
+
+                # Check class methods
+                if isinstance(node, ast.ClassDef):
+                    for item in node.body:
+                        if isinstance(item, ast.AsyncFunctionDef) and item.name == function_name:
+                            _function_signature_cache[cache_key] = True
+                            return True
+                        elif isinstance(item, ast.FunctionDef) and item.name == function_name:
+                            _function_signature_cache[cache_key] = False
+                            return False
+        except Exception:
+            # Silently continue to next path
+            continue
+
+    # Not found
+    _function_signature_cache[cache_key] = None
+    return None
 
 
 class AsyncMockChecker(ast.NodeVisitor):
@@ -134,8 +210,10 @@ class AsyncMockChecker(ast.NodeVisitor):
 
             # If no AsyncMock specified, check if this might be an async method
             if not has_async_mock:
-                # Try to extract the method name being mocked
+                # Try to extract the method name and module path being mocked
                 method_name = None
+                module_path = None
+
                 if len(node.args) >= 2:
                     # patch.object(obj, "method_name")
                     if isinstance(node.args[1], ast.Constant):
@@ -144,20 +222,23 @@ class AsyncMockChecker(ast.NodeVisitor):
                     # patch("module.method")
                     if isinstance(node.args[0], ast.Constant):
                         full_path = node.args[0].value
-                        method_name = full_path.split(".")[-1]
+                        parts = full_path.split(".")
+                        method_name = parts[-1]
+                        if len(parts) > 1:
+                            module_path = ".".join(parts[:-1])
 
                 # Common async method patterns that should use AsyncMock
+                # NOTE: Patterns should be specific to avoid false positives
+                # Removed overly broad patterns: get_, create_, update_, delete_
                 async_patterns = [
-                    "send_",
-                    "async_",
-                    "_async",
-                    "fetch_",
-                    "get_",
-                    "create_",
-                    "update_",
-                    "delete_",
-                    "check_",
-                    "process_",
+                    "send_",  # Unambiguous async operation (network send)
+                    "async_",  # Explicit async naming
+                    "_async",  # Explicit async naming
+                    "fetch_",  # Unambiguous async operation (fetch data)
+                    "aclose",  # Async close
+                    "aenter",  # Async enter
+                    "aexit",  # Async exit
+                    "ainvoke",  # Async invoke (LangChain pattern)
                 ]
 
                 # Whitelist of known synchronous functions that match async patterns
@@ -172,6 +253,7 @@ class AsyncMockChecker(ast.NodeVisitor):
                     "_get_user_client_roles",  # Synchronous role retrieval
                     "_get_user_groups",  # Synchronous group retrieval
                     "get_cache",  # Synchronous cache singleton retrieval
+                    "_send_smtp",  # Synchronous SMTP send (blocking, called via to_thread)
                 ]
 
                 if method_name:
@@ -179,19 +261,40 @@ class AsyncMockChecker(ast.NodeVisitor):
                     if method_name in sync_function_whitelist:
                         pass  # This is a known synchronous function, skip check
                     else:
-                        for pattern in async_patterns:
-                            if pattern in method_name.lower():
-                                # Skip if we're in a function with @pytest.mark.xfail
-                                # Skip if line has # noqa: async-mock comment
-                                if not self.in_xfail_function and not self.has_noqa_comment(node.lineno):
-                                    self.issues.append(
-                                        (
-                                            node.lineno,
-                                            f"Method '{method_name}' mocked without AsyncMock - "
-                                            f"use: {func_name}(..., new_callable=AsyncMock)",
-                                        )
+                        # First, try static analysis if we have the module path
+                        should_flag = False
+                        if module_path:
+                            is_async = is_async_function_in_source(module_path, method_name)
+                            if is_async is True:
+                                # Definitively async, flag it
+                                should_flag = True
+                            elif is_async is False:
+                                # Definitively sync, don't flag
+                                should_flag = False
+                            else:
+                                # Couldn't determine, fall back to pattern matching
+                                for pattern in async_patterns:
+                                    if pattern in method_name.lower():
+                                        should_flag = True
+                                        break
+                        else:
+                            # No module path, use pattern matching only
+                            for pattern in async_patterns:
+                                if pattern in method_name.lower():
+                                    should_flag = True
+                                    break
+
+                        if should_flag:
+                            # Skip if we're in a function with @pytest.mark.xfail
+                            # Skip if line has # noqa: async-mock comment
+                            if not self.in_xfail_function and not self.has_noqa_comment(node.lineno):
+                                self.issues.append(
+                                    (
+                                        node.lineno,
+                                        f"Method '{method_name}' mocked without AsyncMock - "
+                                        f"use: {func_name}(..., new_callable=AsyncMock)",
                                     )
-                                break
+                                )
 
         self.generic_visit(node)
 

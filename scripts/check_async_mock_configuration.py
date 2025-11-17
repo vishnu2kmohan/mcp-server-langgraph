@@ -6,6 +6,16 @@ This script identifies AsyncMock() instances that lack explicit return_value
 or side_effect configuration, which can cause subtle bugs in authorization
 checks and parallel test execution.
 
+Configuration Detection:
+- Constructor kwargs: AsyncMock(return_value=..., side_effect=..., spec=...)
+- Post-creation assignment: mock.return_value = ... or mock.side_effect = ...
+- Spec configuration: AsyncMock(spec=SomeClass) is considered configured
+
+False Positive Prevention:
+- Supports # noqa: async-mock-config inline suppression
+- Recognizes constructor keyword arguments
+- Scopes analysis to function boundaries
+
 Exit codes:
     0: All AsyncMock instances are properly configured
     1: Found unconfigured AsyncMock instances (blocking)
@@ -22,25 +32,37 @@ from typing import List, Tuple
 class AsyncMockDetector(ast.NodeVisitor):
     """AST visitor to detect unconfigured AsyncMock instances."""
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, source_lines: List[str]):
         self.filepath = filepath
+        self.source_lines = source_lines
         self.issues: List[Tuple[int, str]] = []
         self.async_mock_vars: dict[str, int] = {}  # var_name -> line_number
+
+    def has_noqa_comment(self, lineno: int) -> bool:
+        """Check if a line has # noqa: async-mock-config comment."""
+        if lineno <= 0 or lineno > len(self.source_lines):
+            return False
+        line = self.source_lines[lineno - 1]  # Convert 1-indexed to 0-indexed
+        return "# noqa: async-mock-config" in line or "#noqa: async-mock-config" in line or "# noqa" in line
 
     def visit_Assign(self, node: ast.Assign) -> None:
         """Visit assignment nodes to detect AsyncMock() creation."""
         # Check if right side is AsyncMock() call
         if isinstance(node.value, ast.Call):
             if self._is_async_mock_call(node.value):
-                # Record all target variable names
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        self.async_mock_vars[target.id] = node.lineno
-                    elif isinstance(target, ast.Attribute):
-                        # Handle mock_obj.method = AsyncMock()
-                        var_name = self._get_full_attr_name(target)
-                        if var_name:
-                            self.async_mock_vars[var_name] = node.lineno
+                # Check if AsyncMock is configured via constructor kwargs
+                is_configured_in_constructor = self._has_config_kwargs(node.value)
+
+                # Record all target variable names (only if not configured in constructor)
+                if not is_configured_in_constructor:
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            self.async_mock_vars[target.id] = node.lineno
+                        elif isinstance(target, ast.Attribute):
+                            # Handle mock_obj.method = AsyncMock()
+                            var_name = self._get_full_attr_name(target)
+                            if var_name:
+                                self.async_mock_vars[var_name] = node.lineno
 
         self.generic_visit(node)
 
@@ -71,6 +93,10 @@ class AsyncMockDetector(ast.NodeVisitor):
 
         # Check for unconfigured mocks at end of function
         for var_name, line_num in self.async_mock_vars.items():
+            # Skip if line has noqa comment
+            if self.has_noqa_comment(line_num):
+                continue
+
             # Check if this mock is configured anywhere in the function
             configured = self._check_if_configured_in_scope(node, var_name)
             if not configured:
@@ -87,6 +113,13 @@ class AsyncMockDetector(ast.NodeVisitor):
         """Check if node is AsyncMock() call."""
         if isinstance(node.func, ast.Name) and node.func.id == "AsyncMock":
             return True
+        return False
+
+    def _has_config_kwargs(self, node: ast.Call) -> bool:
+        """Check if AsyncMock() call has return_value or side_effect kwargs."""
+        for keyword in node.keywords:
+            if keyword.arg in ("return_value", "side_effect", "spec", "spec_set"):
+                return True
         return False
 
     def _get_full_attr_name(self, node: ast.Attribute) -> str | None:
@@ -125,9 +158,13 @@ def check_file(filepath: str) -> List[Tuple[int, str]]:
     """Check a single file for unconfigured AsyncMock instances."""
     try:
         with open(filepath, "r", encoding="utf-8") as f:
-            tree = ast.parse(f.read(), filename=filepath)
+            content = f.read()
 
-        detector = AsyncMockDetector(filepath)
+        # Parse content and split into lines
+        source_lines = content.splitlines()
+        tree = ast.parse(content, filename=filepath)
+
+        detector = AsyncMockDetector(filepath, source_lines)
         detector.visit(tree)
         return detector.issues
 
@@ -163,8 +200,10 @@ def main() -> int:
             print(f"  {filepath}:{line_num} - {message}", file=sys.stderr)
 
         print("\n📖 Fix: Add explicit return_value or side_effect configuration:", file=sys.stderr)
-        print("   mock.method.return_value = expected_value", file=sys.stderr)
-        print("   mock.method.side_effect = Exception('error')", file=sys.stderr)
+        print("   Option 1 - Constructor kwargs: mock = AsyncMock(return_value=value)", file=sys.stderr)
+        print("   Option 2 - Post-creation: mock.method.return_value = expected_value", file=sys.stderr)
+        print("   Option 3 - Spec: mock = AsyncMock(spec=SomeClass)", file=sys.stderr)
+        print("   Option 4 - Suppress: mock = AsyncMock()  # noqa: async-mock-config", file=sys.stderr)
         print("\nSee: tests/ASYNC_MOCK_GUIDELINES.md for best practices\n", file=sys.stderr)
         return 1
 

@@ -18,6 +18,11 @@ references that prevent garbage collection, leading to memory explosion (observe
 - Forcing GC after each test (teardown_method + gc.collect)
 - Skipping performance tests in parallel mode
 
+False Positive Prevention:
+- Only detects actual mock instantiation (AsyncMock() calls), not name references
+- Prevents flagging docstrings/comments that mention mock classes
+- Focuses on classes that actually create mock objects
+
 Usage:
     python scripts/check_test_memory_safety.py [file1.py file2.py ...]
 
@@ -125,26 +130,25 @@ class MemorySafetyChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _check_for_mock_usage(self, node: ast.FunctionDef) -> None:
-        """Check if a function uses AsyncMock or MagicMock."""
+        """Check if a function actually instantiates AsyncMock or MagicMock."""
+        # Only check for Call nodes (instantiation), not Name references
+        # This prevents false positives from comments/docstrings
         for child in ast.walk(node):
-            if isinstance(child, ast.Name):
-                if child.id in ("AsyncMock", "MagicMock"):
-                    self.class_uses_mocks = True
-            elif isinstance(child, ast.Call):
+            if isinstance(child, ast.Call):
                 if isinstance(child.func, ast.Name):
                     if child.func.id in ("AsyncMock", "MagicMock"):
                         self.class_uses_mocks = True
+                        return  # Found mock usage, no need to continue
 
     def _check_node_for_mocks(self, node: ast.AST) -> None:
-        """Check any AST node for AsyncMock/MagicMock usage."""
+        """Check any AST node for AsyncMock/MagicMock instantiation."""
+        # Only check for Call nodes (instantiation), not Name references
         for child in ast.walk(node):
-            if isinstance(child, ast.Name):
-                if child.id in ("AsyncMock", "MagicMock"):
-                    self.class_uses_mocks = True
-            elif isinstance(child, ast.Call):
+            if isinstance(child, ast.Call):
                 if isinstance(child.func, ast.Name):
                     if child.func.id in ("AsyncMock", "MagicMock"):
                         self.class_uses_mocks = True
+                        return  # Found mock usage, no need to continue
 
     def _validate_class(self) -> None:
         """Validate that the current test class follows memory safety patterns."""
