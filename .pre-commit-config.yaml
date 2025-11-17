@@ -296,7 +296,7 @@ repos:
     name: Validate GitHub Actions with actionlint
     entry: >
       bash -c 'if command -v actionlint >/dev/null 2>&1; then
-      actionlint -no-color -shellcheck= ".github/workflows/*.yml" ".github/workflows/*.yaml" 2>&1;
+      actionlint -no-color -shellcheck= .github/workflows/*.yml .github/workflows/*.yaml 2>&1;
       else echo "Skipping: actionlint not installed (install from https://github.com/rhysd/actionlint)";
       exit 0; fi'
     language: system
