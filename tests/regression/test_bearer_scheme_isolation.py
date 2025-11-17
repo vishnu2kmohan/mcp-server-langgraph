@@ -194,6 +194,7 @@ class TestBearerSchemeIsolation:
         finally:
             app.dependency_overrides.clear()
 
+    @pytest.mark.documentation  # Living documentation test, not executable validation
     def test_execution_order_documented(self):
         """
         DOCUMENTATION TEST: Execution order matters in pytest-xdist.

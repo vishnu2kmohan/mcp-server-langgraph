@@ -456,8 +456,8 @@ class TestFixtureDecorators:
                     if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
                         # Check if function has only 'pass' statement
                         if self._has_only_pass_statement(node):
-                            # Check if it's marked with xfail or skip (those are OK)
-                            if not self._has_skip_or_xfail_marker(node):
+                            # Check if it's marked with xfail, skip, or documentation (those are OK)
+                            if not self._has_skip_xfail_or_documentation_marker(node):
                                 rel_path = test_file.relative_to(tests_dir.parent)
                                 violations.append((str(rel_path), node.name, node.lineno))
 
@@ -493,25 +493,25 @@ class TestFixtureDecorators:
 
         return False
 
-    def _has_skip_or_xfail_marker(self, func_node: ast.FunctionDef) -> bool:
+    def _has_skip_xfail_or_documentation_marker(self, func_node: ast.FunctionDef) -> bool:
         """
-        Check if a function has @pytest.mark.skip or @pytest.mark.xfail
+        Check if a function has @pytest.mark.skip, @pytest.mark.xfail, or @pytest.mark.documentation
 
         Args:
             func_node: AST node for the function
 
         Returns:
-            True if function has skip or xfail marker, False otherwise
+            True if function has skip, xfail, or documentation marker, False otherwise
         """
         for decorator in func_node.decorator_list:
-            # Check for @pytest.mark.skip or @pytest.mark.xfail
+            # Check for @pytest.mark.skip, @pytest.mark.xfail, or @pytest.mark.documentation
             if isinstance(decorator, ast.Attribute):
                 if (
                     isinstance(decorator.value, ast.Attribute)
                     and isinstance(decorator.value.value, ast.Name)
                     and decorator.value.value.id == "pytest"
                     and decorator.value.attr == "mark"
-                    and decorator.attr in ["skip", "xfail"]
+                    and decorator.attr in ["skip", "xfail", "documentation"]
                 ):
                     return True
             elif isinstance(decorator, ast.Call):

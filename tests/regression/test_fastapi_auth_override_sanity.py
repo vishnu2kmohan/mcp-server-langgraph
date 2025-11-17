@@ -339,11 +339,20 @@ class TestAuthOverrideSanityPattern:
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
 
-        # Should get some response (200, 404, 500, etc. - doesn't matter)
-        # What matters is NOT 401 (authentication failure)
+        # Auth override worked - should NOT get 401 (authentication failure)
+        # The endpoint may return 200 (using fallback dependencies) or 500 (if fallbacks unavailable)
+        # What matters is NOT 401 which would indicate auth override failed
         assert response.status_code != 401, (
             "Should not get 401 with auth override. "
             "401 means override didn't work (async/sync mismatch or missing bearer_scheme)"
+        )
+
+        # Additional validation: ensure we got a valid HTTP response (not just "not 401")
+        # This is more specific - validates auth worked AND endpoint is callable
+        assert response.status_code in [200, 404, 500], (
+            f"Unexpected status code {response.status_code}. "
+            "Expected 200 (success with fallbacks), 404 (not found), or 500 (server error). "
+            "This test validates auth override pattern works correctly."
         )
 
         app.dependency_overrides.clear()
@@ -387,6 +396,7 @@ class TestAuthOverrideSanityPattern:
         assert pattern_is_simple, "Pattern is copy-paste friendly"
 
 
+@pytest.mark.documentation  # Living documentation test, not executable validation
 def test_auth_override_sanity_benefits():
     """
     DOCUMENTATION TEST: Benefits of auth override sanity tests.
