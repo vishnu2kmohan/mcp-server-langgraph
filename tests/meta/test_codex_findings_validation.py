@@ -345,15 +345,18 @@ class TestDockerImageContents:
     def test_dockerfile_copies_required_directories_for_integration_tests(self):
         """
         Validate Dockerfile final-test stage copies src/, tests/, and pyproject.toml.
+        Per ADR-0053, scripts/ and deployments/ must be EXCLUDED from Docker image.
 
         CODEX FINDING: ModuleNotFoundError for 'scripts' module when importing
-        documentation validators. However, scripts/ is only needed for meta-tests
-        run on host, not integration tests in Docker.
+        documentation validators. ADR-0053 resolution: scripts/ and deployments/
+        are excluded from Docker image. Meta-tests requiring these directories
+        run on the host, not in containers.
 
-        This test validates the current design is correct.
+        This test validates ADR-0053 compliance.
 
         References:
-        - docker/Dockerfile final-test stage
+        - docker/Dockerfile final-test stage (lines 262-265)
+        - ADR-0053: Docker Image Contents Policy
         """
         dockerfile_path = Path(__file__).parent.parent.parent / "docker" / "Dockerfile"
 
@@ -364,36 +367,42 @@ class TestDockerImageContents:
         # Find final-test stage
         assert "FROM runtime-slim AS final-test" in content, "final-test stage not found in Dockerfile"
 
-        # Extract final-test stage section
+        # Extract final-test stage section (get more lines to ensure we capture all COPY commands)
         lines = content.split("\n")
         stage_start = None
+        stage_end = None
         for i, line in enumerate(lines):
             if "FROM runtime-slim AS final-test" in line:
                 stage_start = i
+            elif stage_start is not None and line.strip().startswith("FROM "):
+                stage_end = i
                 break
 
         assert stage_start is not None, "final-test stage not found"
 
-        # Get next 20 lines (stage content)
-        stage_section = "\n".join(lines[stage_start : stage_start + 20])
+        if stage_end is None:
+            stage_end = len(lines)
+
+        stage_section = "\n".join(lines[stage_start:stage_end])
 
         # Validate required COPY commands present
         assert "COPY src/" in stage_section, "Dockerfile must copy src/ directory"
         assert "COPY tests/" in stage_section, "Dockerfile must copy tests/ directory"
         assert "COPY pyproject.toml" in stage_section, "Dockerfile must copy pyproject.toml"
 
-        # Validate scripts/ and deployments/ ARE copied (required for integration tests)
-        # These directories are needed by integration tests running in Docker:
-        # - deployments/: Required by test_pod_deployment_regression.py for K8s manifest validation
-        # - scripts/: Required by test_mdx_validation.py, test_codeblock_autofixer.py
-        # See: scripts/validate_docker_image_contents.py lines 74-75, 101-103
-        assert "COPY scripts/" in stage_section, (
-            "scripts/ must be in Docker image - needed by integration tests. "
-            "Integration tests like test_mdx_validation.py require access to validation scripts."
+        # Validate scripts/ and deployments/ are NOT copied (ADR-0053 compliance)
+        # Per ADR-0053: These directories must be excluded from Docker image.
+        # Meta-tests requiring these directories run on host, not in container.
+        # See: scripts/validate_docker_image_contents.py for pre-commit enforcement
+        assert "COPY scripts/" not in stage_section, (
+            "❌ ADR-0053 VIOLATION: scripts/ must NOT be in Docker image. "
+            "Meta-tests requiring scripts/ run on host, not in container. "
+            "See docker/Dockerfile lines 262-265 for ADR-0053 compliance notes."
         )
-        assert "COPY deployments/" in stage_section, (
-            "deployments/ must be in Docker image - needed by integration tests. "
-            "Integration tests like test_pod_deployment_regression.py require K8s manifests."
+        assert "COPY deployments/" not in stage_section, (
+            "❌ ADR-0053 VIOLATION: deployments/ must NOT be in Docker image. "
+            "Meta-tests requiring deployments/ run on host, not in container. "
+            "See docker/Dockerfile lines 262-265 for ADR-0053 compliance notes."
         )
 
     def test_meta_tests_run_on_host_not_docker(self):
