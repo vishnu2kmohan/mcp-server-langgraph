@@ -14,7 +14,12 @@ This test follows TDD principles:
 import ast
 import gc
 import sys
-import tomllib
+
+# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 from pathlib import Path
 
 import pytest

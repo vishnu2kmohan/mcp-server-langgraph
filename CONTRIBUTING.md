@@ -171,9 +171,9 @@ Runs automatically on `git push` for **all files**. Matches CI exactly.
 - Integration tests (last failed): `pytest tests/integration/ -x --tb=short --lf`
 - Property tests: `HYPOTHESIS_PROFILE=ci pytest -m property -x --tb=short`
 
-**Phase 4: Pre-commit Hooks (Push Stage)** (5-8 min)
+**Phase 4: Pre-commit Hooks (Pre-Push Stage)** (5-8 min)
 - All comprehensive validators (documentation, deployment, etc.)
-- Runs with `--hook-stage push` flag
+- Runs with `--hook-stage pre-push` flag
 
 ```bash
 # Auto-runs on push
@@ -197,7 +197,7 @@ make validate-pre-push
 # Or run specific phases
 uv run pytest tests/ -m unit           # Phase 3: Unit tests
 uv run pytest tests/smoke/             # Phase 3: Smoke tests
-pre-commit run --all-files --hook-stage push  # Phase 4
+pre-commit run --all-files --hook-stage pre-push  # Phase 4
 ```
 
 #### Performance Monitoring

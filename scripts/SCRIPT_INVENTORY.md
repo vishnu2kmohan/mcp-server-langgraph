@@ -1,8 +1,26 @@
 # Scripts Directory Inventory
 
-**Last Updated**: 2025-11-16
-**Total Scripts**: 172 (123 Python, 49 Shell)
+**Last Updated**: 2025-11-17 (Cleanup performed)
+**Total Scripts**: 130 (after cleanup from 172)
 **Audit Scope**: Comprehensive analysis of all scripts in `scripts/` directory
+
+## Recent Cleanup (2025-11-17)
+
+**Scripts Reorganized: 42** (out of 117 UNUSED identified)
+
+| Action | Count | Location | Description |
+|--------|-------|----------|-------------|
+| **Archived** | 31 | `scripts/archive/completed/` | One-time fix scripts (add_*.py, fix_*.py) |
+| **Deleted** | 7 | - | Deprecated validators replaced by Mintlify/active validators |
+| **Moved to dev/** | 4 | `scripts/dev/` | Development analysis tools |
+
+**Archived scripts**: add_colorbrewer_styling.py, add_comprehensive_test_hooks.py, add_diagram_styling.py, add_gc_import.py, add_memory_safety_to_tests.py, add_sequence_diagram_themes.py, add_subprocess_timeouts.py, add_subprocess_timeouts_simple.py, add_xdist_group_markers.py, fix_auth_test_pollution.py, fix_closing_fence_tags.py, fix_code_fence_closures.py, fix_decorator_leftover.py, fix_duplicate_h1.py, fix_hardcoded_ids.py, fix_import_issues.py, fix_kube_score_issues.py, fix_mdx_angle_brackets.py, fix_memory_safety_unified.py, fix_memory_safety_v3.py, fix_mermaid_sequence_diagrams.py, fix_production_settings_tests.py, fix_rate_limiter_tests.py, fix_short_timeouts.py, fix_subprocess_timeouts_ast.py, fix_subprocess_timeouts_comprehensive.py, fix_test_memory_safety.py, fix_xdist_violations.py, fix_yaml_indentation_complete.py, fix_yaml_indentation.py, fix_yaml_list_indentation.py
+
+**Deleted validators**: validate_all_mermaid.py (replaced by check_mermaid_styling.py), validate_documentation_links.py (replaced by Mintlify), validate_mdx_syntax.py (replaced by Mintlify), validate_mintlify_docs.py (duplicate), validate_test_suite.py (unused), validators/validate_docs.py (replaced by active validators), validators/validate_github_workflows_comprehensive.py (replaced by validate_github_workflows.py)
+
+**Moved to dev/**: audit_resource_ratios.py, detect_missing_lang_tags.py, identify_critical_tests.py, measure_hook_performance.py
+
+**Remaining**: 75 scripts still categorized as UNUSED/Utilities - to be addressed in future cleanup iterations
 
 ---
 
