@@ -1,3 +1,10 @@
+---
+title: "Docker Health Check Patterns"
+description: "Portable health check patterns for Docker Compose services that work across minimal base images without relying on utilities like curl or wget"
+icon: "heart-pulse"
+contentType: "guide"
+---
+
 # Docker Compose Health Check Patterns - Portable Best Practices
 
 ## Overview
@@ -181,7 +188,7 @@ healthcheck:
   start_period: 10s
 ```
 
-**For older MongoDB versions (<5.0):**
+**For older MongoDB versions (&lt;5.0):**
 ```yaml
 healthcheck:
   test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]

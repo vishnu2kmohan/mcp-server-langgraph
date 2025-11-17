@@ -147,7 +147,7 @@ Local models provide privacy, no API costs, and offline capabilities - perfect f
 
 #### Ollama Configuration
 
-```
+```python
 from langchain_community.llms import Ollama
 
 llm = Ollama(
@@ -166,7 +166,7 @@ llm = Ollama(
     num_thread=8,  # CPU threads
     num_gpu=1,     # Use GPU
 )
-```
+```bash
 #### Available Models
 
 | Model | Size | Use Case | Memory Required |
@@ -237,7 +237,7 @@ llm = Ollama(
 
 #### vLLM Features
 
-```
+```bash
 ## Enable speculative decoding (faster inference)
 python -m vllm.entrypoints.openai.api_server \
   --model meta-llama/Llama-3.2-3B-Instruct \
@@ -295,7 +295,7 @@ python -m vllm.entrypoints.openai.api_server \
 
 #### Kubernetes with Ollama
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -369,10 +369,10 @@ spec:
     requests:
       storage: 100Gi
   storageClassName: fast-ssd
-```
+```bash
 #### Load Models via Init Container
 
-```
+```yaml
 spec:
   initContainers:
   - name: pull-models
@@ -393,7 +393,7 @@ spec:
 
 #### MCP Server with Local LLM
 
-```
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -420,7 +420,7 @@ spec:
           limits:
             memory: "4Gi"
             cpu: "4000m"
-```
+```python
 
 ### Model Selection
 
@@ -445,7 +445,7 @@ llm = LLMFactory(
     provider="ollama",
     model_name=select_local_model("code")
 )
-```
+```python
 
 #### By Hardware
 
@@ -481,7 +481,7 @@ model = select_model_by_hardware()
 
 #### GPU Acceleration
 
-```
+```python
 ## Ollama automatically uses GPU if available
 ollama run llama3.2:3b
 
@@ -497,7 +497,7 @@ CUDA_VISIBLE_DEVICES=1 ollama serve
 
 #### Quantization
 
-```
+```python
 ## Ollama models are pre-quantized
 ## Pull different quantization levels:
 
@@ -507,11 +507,11 @@ ollama pull llama3.2:3b-q8_0    # 8-bit (larger, better quality)
 ollama pull llama3.2:3b         # Default (usually q4)
 
 ## Trade-off: smaller = faster but lower quality
-```
+```bash
 
 #### Concurrent Requests
 
-```
+```python
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -528,11 +528,11 @@ async def process_batch(queries: list):
     return results
 
 results = await process_batch(queries)
-```
+```bash
 
 #### Context Caching
 
-```
+```python
 ## Reuse context across requests
 from langchain.memory import ConversationBufferMemory
 
@@ -549,12 +549,12 @@ response2 = await llm.ainvoke(
     "Give me an example",
     memory=memory  # Ollama remembers previous context
 )
-```
+```bash
 ### Fine-Tuning
 
 #### Create Modelfile
 
-```
+```bash
 ## Modelfile
 FROM llama3.2:3b
 
@@ -567,11 +567,11 @@ PARAMETER temperature 0.7
 PARAMETER num_ctx 4096
 PARAMETER stop "Human:"
 PARAMETER stop "Assistant:"
-```
+```bash
 
 #### Build Custom Model
 
-```
+```bash
 ## Create model
 ollama create my-custom-model -f Modelfile
 
@@ -581,11 +581,11 @@ ollama run my-custom-model "Write a Python function"
 ## Use in MCP Server
 ## .env
 LLM_MODEL_NAME=my-custom-model
-```
+```bash
 
 #### Fine-Tune with LoRA
 
-```
+```bash
 ## Use libraries like axolotl or unsloth
 uv pip install unsloth
 
@@ -597,7 +597,7 @@ python fine_tune.py \
 
 ## Import to Ollama
 ollama create my-fine-tuned -f Modelfile.finetune
-```
+```python
 
 ### Monitoring
 
@@ -640,7 +640,7 @@ def monitor_resources():
 ## Log metrics
 metrics = monitor_resources()
 logger.info("Resource usage", **metrics)
-```
+```python
 
 #### Performance Metrics
 
@@ -675,7 +675,7 @@ async def call_local_llm(query: str):
     local_llm_tokens.labels(model="llama3.2:3b", type="output").inc(output_tokens)
 
     return response
-```
+```bash
 
 ### Troubleshooting
 
@@ -754,7 +754,6 @@ async def call_local_llm(query: str):
 
     # Test connection
     curl http://localhost:11434
-    ```
     ```
   </Accordion>
 </AccordionGroup>
