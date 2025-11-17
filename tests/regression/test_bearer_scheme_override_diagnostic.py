@@ -47,11 +47,10 @@ class TestBearerSchemeOverrideDiagnostic:
         If this test fails, the fix from commit 05a54e1 is missing.
         """
         import re
-        from pathlib import Path
 
-        test_file = Path(__file__).parent.parent / "api" / "test_api_keys_endpoints.py"
-        assert test_file.exists(), f"Test file not found: {test_file}"
+        from tests.helpers import get_integration_test_file
 
+        test_file = get_integration_test_file("api/test_api_keys_endpoints.py")
         content = test_file.read_text()
 
         # Check 1: bearer_scheme is imported
@@ -320,9 +319,9 @@ def test_bearer_scheme_override_documentation():
     This test ensures that the fix is properly documented in test files
     so future developers understand why it's necessary.
     """
-    from pathlib import Path
+    from tests.helpers import get_integration_test_file
 
-    test_file = Path(__file__).parent.parent / "api" / "test_api_keys_endpoints.py"
+    test_file = get_integration_test_file("api/test_api_keys_endpoints.py")
     content = test_file.read_text()
 
     # Check for documentation comment
