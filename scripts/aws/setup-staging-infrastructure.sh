@@ -107,7 +107,7 @@ deploy_infrastructure() {
     terraform plan -out=tfplan
 
     # Apply
-    log_warn "About to create AWS resources. This will incur costs (~$324/month for staging)."
+    log_warn "About to create AWS resources. This will incur costs (~\$324/month for staging)."
     read -p "Continue? (yes/no): " CONFIRM
     if [ "$CONFIRM" != "yes" ]; then
         log_error "Deployment cancelled"
