@@ -44,7 +44,7 @@ class TestCodexFindingsRemediation:
     @pytest.fixture
     def e2e_test_file(self, project_root: Path) -> Path:
         """Get E2E test file path."""
-        return project_root / "tests" / "e2e" / "test_full_user_journey.py"
+        return project_root / "tests" / "integration" / "e2e" / "test_full_user_journey.py"
 
     @pytest.fixture
     def helpers_file(self, project_root: Path) -> Path:
@@ -59,7 +59,7 @@ class TestCodexFindingsRemediation:
     @pytest.fixture
     def gdpr_test_file(self, project_root: Path) -> Path:
         """Get GDPR test file path."""
-        return project_root / "tests" / "test_gdpr.py"
+        return project_root / "tests" / "integration" / "test_gdpr.py"
 
     def _parse_python_file(self, file_path: Path) -> ast.Module:
         """Parse Python file into AST."""

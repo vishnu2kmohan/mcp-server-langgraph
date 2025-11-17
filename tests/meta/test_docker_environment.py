@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 @pytest.fixture(scope="module")
 def project_root():

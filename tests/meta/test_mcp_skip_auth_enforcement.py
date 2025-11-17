@@ -57,7 +57,7 @@ class TestMCPSkipAuthFixtureEnforcement:
     @pytest.fixture
     def service_principals_test_file(self, repo_root: Path) -> Path:
         """Get path to service principals test file."""
-        return repo_root / "tests" / "api" / "test_service_principals_endpoints.py"
+        return repo_root / "tests" / "integration" / "api" / "test_service_principals_endpoints.py"
 
     def test_sp_test_client_sets_mcp_skip_auth_false(self, service_principals_test_file: Path):
         """Test that sp_test_client fixture sets MCP_SKIP_AUTH="false" explicitly.

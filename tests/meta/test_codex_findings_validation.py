@@ -170,7 +170,7 @@ class TestKeycloakServiceConfiguration:
 
         Decision: Enable Keycloak for full E2E auth testing (trade-off: +60s startup).
         """
-        compose_file = Path(__file__).parent.parent.parent / "docker" / "docker-compose.test.yml"
+        compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
@@ -189,7 +189,7 @@ class TestKeycloakServiceConfiguration:
 
         Health checks ensure tests only run when Keycloak is ready.
         """
-        compose_file = Path(__file__).parent.parent.parent / "docker" / "docker-compose.test.yml"
+        compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
         with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
@@ -212,7 +212,7 @@ class TestKeycloakServiceConfiguration:
         - Database: KC_DB, KC_DB_URL
         - Health: KC_HEALTH_ENABLED
         """
-        compose_file = Path(__file__).parent.parent.parent / "docker" / "docker-compose.test.yml"
+        compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
         with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
