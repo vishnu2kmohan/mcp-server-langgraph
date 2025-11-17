@@ -58,6 +58,9 @@
         "jsonrpc",
         "result"
       ],
+      "not": {
+        "required": ["error"]
+      },
       "type": "object"
     },
     "jsonrpc_error": {

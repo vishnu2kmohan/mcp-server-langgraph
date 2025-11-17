@@ -91,12 +91,16 @@ class TestInitializeContract:
         gc.collect()
 
     def test_initialize_request_format(self, validate_with_schema, mcp_schemas):
-        """Initialize request must include protocolVersion and clientInfo"""
+        """Initialize request must include protocolVersion, clientInfo, and capabilities"""
         request = {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
-            "params": {"protocolVersion": "0.1.0", "clientInfo": {"name": "test-client", "version": "1.0.0"}},
+            "params": {
+                "protocolVersion": "0.1.0",
+                "clientInfo": {"name": "test-client", "version": "1.0.0"},
+                "capabilities": {},
+            },
         }
 
         validate_with_schema(request, "initialize_request")
@@ -120,7 +124,8 @@ class TestInitializeContract:
             },
         }
 
-        validate_with_schema(response, "initialize_response")
+        # Validate the result content (initialize_response schema is for result, not full JSON-RPC wrapper)
+        validate_with_schema(response["result"], "initialize_response")
 
     def test_initialize_response_missing_capabilities(self, validate_with_schema, mcp_schemas):
         """Initialize response must include capabilities"""
@@ -170,7 +175,8 @@ class TestToolsContract:
             },
         }
 
-        validate_with_schema(response, "tools_list_response")
+        # Validate the result content (tools_list_response schema is for result, not full JSON-RPC wrapper)
+        validate_with_schema(response["result"], "tools_list_response")
 
     def test_tool_must_have_name_and_description(self, validate_with_schema, mcp_schemas):
         """Each tool must have name and description"""
@@ -198,7 +204,8 @@ class TestToolsContract:
             "result": {"content": [{"type": "text", "text": "Hello! How can I help you?"}], "isError": False},
         }
 
-        validate_with_schema(response, "tools_call_response")
+        # Validate the result content (tools_call_response schema is for result, not full JSON-RPC wrapper)
+        validate_with_schema(response["result"], "tools_call_response")
 
     def test_tools_call_response_must_have_content(self, validate_with_schema, mcp_schemas):
         """tools/call response must include content field"""
@@ -241,7 +248,8 @@ class TestResourcesContract:
             },
         }
 
-        validate_with_schema(response, "resources_list_response")
+        # Validate the result content (resources_list_response schema is for result, not full JSON-RPC wrapper)
+        validate_with_schema(response["result"], "resources_list_response")
 
     def test_resource_must_have_uri_and_name(self, validate_with_schema, mcp_schemas):
         """Each resource must have uri and name"""
