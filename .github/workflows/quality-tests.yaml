@@ -150,7 +150,9 @@ jobs:
 
           # Match local development: parallel execution with OTEL disabled
           # This will fail the job if pytest exits with non-zero (due to set -e above)
-          OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-contract.xml
+          # Note: Contract tests focus on protocol compliance, not code coverage
+          # Coverage collection enabled for reporting, but threshold disabled (--no-cov-fail)
+          OTEL_SDK_DISABLED=true uv run pytest -n auto -m contract -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-contract.xml --no-cov-fail
 
           echo "✅ All contract tests passed successfully"
 
