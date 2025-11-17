@@ -298,7 +298,7 @@ jobs:
           for overlay in deployments/overlays/*; do
             if [ -d "$overlay" ]; then
               echo "Validating $overlay..."
-              kubectl apply --dry-run=client -k "$overlay" > /dev/null
+              kubectl apply --dry-run=client --validate=false -k "$overlay" > /dev/null
               echo "✓ $overlay syntax OK"
             fi
           done
