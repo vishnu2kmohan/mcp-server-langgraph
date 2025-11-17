@@ -63,7 +63,7 @@ class TestJSONRPCFormat:
         """Error responses must have code and message"""
         error_response = {"jsonrpc": "2.0", "id": 1, "error": {"code": -32600, "message": "Invalid Request"}}
 
-        validate_with_schema(error_response, "jsonrpc_response")
+        validate_with_schema(error_response, "jsonrpc_error")
 
     def test_response_cannot_have_both_result_and_error(self, validate_with_schema):
         """JSON-RPC responses must have either result or error, not both"""
