@@ -12,7 +12,6 @@ Codex Finding 2a fix - consolidating 5 separate pytest sessions into one.
 import gc
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 
