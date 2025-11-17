@@ -2,29 +2,51 @@
 """
 Test ID Pollution Prevention - Pre-commit Validation Script
 
-This script validates that test files use worker-safe ID helpers instead of hardcoded IDs.
+This script validates that INTEGRATION test files use worker-safe ID helpers
+instead of hardcoded IDs to prevent pytest-xdist state pollution.
 
-CRITICAL: Hardcoded IDs like "user:alice" or "apikey_test123" cause state pollution
-in pytest-xdist parallel execution, leading to flaky tests and intermittent failures.
+CRITICAL: Hardcoded IDs like "user:alice" or "apikey_test123" in integration tests
+cause state pollution in pytest-xdist parallel execution, leading to flaky tests
+and intermittent failures when multiple workers access shared databases.
+
+Scope:
+- ✅ VALIDATES: Integration tests that interact with real databases/services
+- ⏭️  SKIPS: Unit tests with InMemory backends (no pollution risk - separate memory space per worker)
+- ⏭️  SKIPS: Mock configurations in unit tests (isolated from external state)
+- ⏭️  SKIPS: Assertion validations of response formats
+
+Why unit tests with InMemory backends are safe:
+- InMemory stores use Python dictionaries (no shared database)
+- Each pytest-xdist worker has separate memory space
+- No state pollution possible between workers
+- Hardcoded IDs are fine for testing data model validation logic
 
 Prevention mechanism:
 - Pre-commit hook runs this script on test files before allowing commit
-- Script detects hardcoded ID patterns and blocks commit with helpful error message
-- Developers must use worker-safe helpers (get_user_id, get_api_key_id)
+- Script detects hardcoded ID patterns in integration tests
+- Blocks commit with helpful error message
+- Integration tests must use worker-safe helpers (get_user_id, get_api_key_id)
 
-Worker-safe helper usage:
+Worker-safe helper usage (for integration tests):
     from tests.conftest import get_user_id, get_api_key_id
 
-    def test_something():
+    @pytest.mark.integration
+    def test_something(db_session):
         user_id = get_user_id()  # ✅ Worker-safe
         apikey_id = get_api_key_id()  # ✅ Worker-safe
 
         # NOT: user_id = "user:alice"  # ❌ Hardcoded - will fail validation
-        # NOT: apikey_id = "apikey_test123"  # ❌ Hardcoded - will fail validation
+
+Unit test example (allowed - uses InMemory backend):
+    @pytest.mark.unit
+    def test_data_model():
+        storage = InMemoryUserProfileStore()
+        profile = UserProfile(user_id="user:alice")  # ✅ Safe - InMemory backend
+        assert profile.user_id == "user:alice"
 
 Exit codes:
-    0: All tests pass (no hardcoded IDs found)
-    1: Validation failed (hardcoded IDs detected)
+    0: All tests pass (no hardcoded IDs in integration tests)
+    1: Validation failed (hardcoded IDs detected in integration tests)
 
 Usage:
     # Validate single file
@@ -37,6 +59,7 @@ Related:
     - tests/conftest.py: Worker-safe ID helper implementations
     - tests/meta/test_id_pollution_prevention.py: Meta-tests for this script
     - .pre-commit-config.yaml: Hook configuration
+    - adr/adr-0058-pytest-xdist-state-pollution-prevention.md: Architecture decision
 """
 
 import argparse
@@ -66,6 +89,20 @@ LEGITIMATE_PATTERNS = [
     # Comments (documentation)
     r"#.*user:[a-zA-Z0-9_-]+",
     r"#.*apikey_[a-zA-Z0-9_-]+",
+    # Mock/AsyncMock configurations (unit test isolation)
+    r'Mock\(.*["\']user:[a-zA-Z0-9_-]+',
+    r'AsyncMock\(.*["\']user:[a-zA-Z0-9_-]+',
+    r'Mock\(.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'AsyncMock\(.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'return_value\s*=.*["\']user:[a-zA-Z0-9_-]+',
+    r'return_value\s*=.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'\.return_value\s*=.*["\']user:[a-zA-Z0-9_-]+',
+    r'\.return_value\s*=.*["\']apikey_[a-zA-Z0-9_-]+',
+    # Assertion right-hand side (validating response format, not creating records)
+    r'assert\s+\w+\s*==\s*["\']user:[a-zA-Z0-9_-]+["\']',
+    r'assert\s+\w+\s*==\s*["\']apikey_[a-zA-Z0-9_-]+["\']',
+    r'assert\s+.*\[.*\]\s*==\s*["\']user:[a-zA-Z0-9_-]+["\']',
+    r'assert\s+.*\[.*\]\s*==\s*["\']apikey_[a-zA-Z0-9_-]+["\']',
 ]
 
 # Files that are allowed to have hardcoded IDs (special cases)
@@ -83,6 +120,48 @@ EXEMPT_FILES = [
 def is_file_exempt(file_path: Path) -> bool:
     """Check if file is exempt from validation (special cases like conftest.py, meta-tests)."""
     return any(exempt in str(file_path) for exempt in EXEMPT_FILES)
+
+
+def is_unit_test_with_inmemory(file_path: Path) -> bool:
+    """
+    Check if file is a unit test that uses InMemory backends.
+
+    Unit tests with InMemory backends (dictionaries) cannot cause pytest-xdist pollution
+    because each worker has separate memory space. Therefore, hardcoded IDs are safe
+    in these tests - they're testing data model validation logic, not database operations.
+
+    Args:
+        file_path: Path to test file to check
+
+    Returns:
+        True if file is a unit test with InMemory backend, False otherwise
+    """
+    try:
+        content = file_path.read_text(encoding="utf-8")
+
+        # Check for unit test markers
+        has_unit_marker = "@pytest.mark.unit" in content or "pytest.mark.unit" in content
+
+        # Check for InMemory backend usage
+        inmemory_patterns = [
+            "InMemoryUserProfileStore",
+            "InMemoryAuthStore",
+            "InMemoryAPIKeyStore",
+            "InMemoryCheckpointSaver",
+            "InMemory",  # Generic InMemory pattern
+            "HIPAAControls",  # Uses in-memory dict for emergency grants
+            "MemorySaver",  # LangGraph in-memory checkpointer
+            "TestClient",  # FastAPI in-memory test client (no real server)
+            "AsyncMock",  # Unit tests with mocked external dependencies
+            "from unittest.mock import",  # Unit tests using mocks
+        ]
+        uses_inmemory = any(pattern in content for pattern in inmemory_patterns)
+
+        # If it's marked as unit test AND uses InMemory backends, it's safe
+        return has_unit_marker and uses_inmemory
+
+    except Exception:
+        return False
 
 
 def is_legitimate_usage(line: str) -> bool:
@@ -184,6 +263,11 @@ def validate_test_file(file_path: Path) -> bool:
     # Skip exempt files (conftest.py, meta-tests)
     if is_file_exempt(file_path):
         print(f"⏭️  {file_path} - Exempt (special case)")
+        return True
+
+    # Skip unit tests with InMemory backends (no database pollution possible)
+    if is_unit_test_with_inmemory(file_path):
+        print(f"⏭️  {file_path} - Unit test with InMemory backend (no pollution risk)")
         return True
 
     violations = find_hardcoded_ids(file_path)

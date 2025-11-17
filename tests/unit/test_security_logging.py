@@ -11,6 +11,7 @@ import gc
 import pytest
 
 from mcp_server_langgraph.core.security import sanitize_for_logging
+from tests.conftest import get_user_id
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -192,7 +193,7 @@ class TestLogSanitization:
         # GIVEN: Arguments containing session identifier
         arguments = {
             "session_id": "sess_abc123xyz789",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "action": "login",
         }
 
@@ -208,7 +209,7 @@ class TestLogSanitization:
         """Test that user_id is redacted for GDPR/CCPA compliance"""
         # GIVEN: Arguments containing user identifier (PII)
         arguments = {
-            "user_id": "user:bob",
+            "user_id": get_user_id("bob"),
             "operation": "delete_account",
         }
 
@@ -240,7 +241,7 @@ class TestLogSanitization:
         arguments = {
             "token": "jwt_token_here",
             "session_id": "sess_12345",
-            "user_id": "user:charlie",
+            "user_id": get_user_id("charlie"),
             "username": "charlie",
             "message": "Hello, world!",
         }
@@ -272,7 +273,7 @@ class TestLogSanitizationWithRealWorldPayloads:
             "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyOmFsaWNlIiwicm9sZXMiOlsidXNlciJdfQ.xyz",
             "message": "What is the weather today?",
             "thread_id": "conv_abc123",
-            "context": {"user_id": "alice", "session_id": "sess_456"},
+            "context": {"user_id": get_user_id("alice"), "session_id": "sess_456"},
         }
 
         # WHEN: Sanitizing for logging

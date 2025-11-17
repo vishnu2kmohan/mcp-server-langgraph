@@ -17,6 +17,7 @@ import pytest
 from pytest import FixtureRequest
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig
+from tests.conftest import get_user_id
 
 # Test configuration - can be overridden via environment variables
 KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:8180")
@@ -428,7 +429,7 @@ class TestKeycloakClientAdminAPIs:
         try:
             # Update attributes (RED phase - will fail until implemented)
             new_attributes = {
-                "owner": "user:alice",
+                "owner": get_user_id("alice"),
                 "environment": "test",
                 "purpose": "integration-testing",
             }

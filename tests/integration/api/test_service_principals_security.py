@@ -18,6 +18,7 @@ from mcp_server_langgraph.api.service_principals import (
     associate_service_principal_with_user,
     create_service_principal,
 )
+from tests.conftest import get_user_id
 
 
 @pytest.mark.xdist_group(name="service_principal_security_tests")
@@ -39,7 +40,7 @@ class TestServicePrincipalSecurity:
         """
         # Given: A regular user (alice) attempts to create service principal
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],  # NOT admin
         }
@@ -49,7 +50,7 @@ class TestServicePrincipalSecurity:
             name="malicious-service",
             description="Privilege escalation attempt",
             authentication_mode="client_credentials",
-            associated_user_id="user:admin",  # Attempting to impersonate admin
+            associated_user_id=get_user_id("admin"),  # Attempting to impersonate admin
             inherit_permissions=True,
         )
 
@@ -77,14 +78,14 @@ class TestServicePrincipalSecurity:
         """
         # Given: Alice owns a service principal
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],
         }
 
         service_principal = MagicMock()
         service_principal.service_id = "alice-service"
-        service_principal.owner_user_id = "user:alice"
+        service_principal.owner_user_id = get_user_id("alice")
 
         mock_sp_manager = AsyncMock()
         mock_sp_manager.get_service_principal.return_value = service_principal
@@ -94,7 +95,7 @@ class TestServicePrincipalSecurity:
         with pytest.raises(HTTPException) as exc_info:
             await associate_service_principal_with_user(
                 service_id="alice-service",
-                user_id="user:admin",  # Attempting to impersonate admin
+                user_id=get_user_id("admin"),  # Attempting to impersonate admin
                 inherit_permissions=True,
                 current_user=current_user,
                 sp_manager=mock_sp_manager,
@@ -109,7 +110,7 @@ class TestServicePrincipalSecurity:
         """
         # Given: Admin user
         current_user = {
-            "user_id": "user:admin",
+            "user_id": get_user_id("admin"),
             "username": "admin",
             "roles": ["admin"],
         }
@@ -118,7 +119,7 @@ class TestServicePrincipalSecurity:
             name="legitimate-service",
             description="Admin-created service",
             authentication_mode="client_credentials",
-            associated_user_id="user:alice",
+            associated_user_id=get_user_id("alice"),
             inherit_permissions=True,
         )
 
@@ -130,8 +131,8 @@ class TestServicePrincipalSecurity:
             name: str = "legitimate-service"
             description: str = "Admin-created service"
             authentication_mode: str = "client_credentials"
-            associated_user_id: str = "user:alice"
-            owner_user_id: str = "user:admin"
+            associated_user_id: str = get_user_id("alice")
+            owner_user_id: str = get_user_id("admin")
             inherit_permissions: bool = True
             enabled: bool = True
             created_at: str = "2025-01-01T00:00:00"
@@ -150,7 +151,7 @@ class TestServicePrincipalSecurity:
         )
 
         assert result.service_id == "legitimate-service"
-        assert result.associated_user_id == "user:alice"
+        assert result.associated_user_id == get_user_id("alice")
 
     @pytest.mark.asyncio
     async def test_allow_user_to_create_service_principal_for_self(self):
@@ -159,7 +160,7 @@ class TestServicePrincipalSecurity:
         """
         # Given: Regular user
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],
         }
@@ -172,8 +173,8 @@ class TestServicePrincipalSecurity:
             name: str = "alice-automation"
             description: str = "Alice's automation service"
             authentication_mode: str = "client_credentials"
-            associated_user_id: str = "user:alice"
-            owner_user_id: str = "user:alice"
+            associated_user_id: str = get_user_id("alice")
+            owner_user_id: str = get_user_id("alice")
             inherit_permissions: bool = True
             enabled: bool = True
             created_at: str = "2025-01-01T00:00:00"
@@ -183,7 +184,7 @@ class TestServicePrincipalSecurity:
             name="alice-automation",
             description="Alice's automation service",
             authentication_mode="client_credentials",
-            associated_user_id="user:alice",  # Same as current_user
+            associated_user_id=get_user_id("alice"),  # Same as current_user
             inherit_permissions=True,
         )
 
@@ -200,7 +201,7 @@ class TestServicePrincipalSecurity:
         )
 
         assert result.service_id == "alice-automation"
-        assert result.associated_user_id == "user:alice"
+        assert result.associated_user_id == get_user_id("alice")
 
     @pytest.mark.asyncio
     @pytest.mark.integration
@@ -218,24 +219,24 @@ class TestServicePrincipalSecurity:
         # Alice can impersonate (she has elevated privileges)
         # Bob cannot impersonate (regular user)
         await openfga_client_real.write_tuples(
-            [{"user": "user:alice", "relation": "can_impersonate", "object": "system:authorization"}]
+            [{"user": get_user_id("alice"), "relation": "can_impersonate", "object": "system:authorization"}]
         )
 
         # Test 1: Alice (with can_impersonate) should be allowed
         can_alice_impersonate = await openfga_client_real.check_permission(
-            user="user:alice", relation="can_impersonate", object="system:authorization"
+            user=get_user_id("alice"), relation="can_impersonate", object="system:authorization"
         )
         assert can_alice_impersonate is True, "Alice should have can_impersonate permission"
 
         # Test 2: Bob (without can_impersonate) should be denied
         can_bob_impersonate = await openfga_client_real.check_permission(
-            user="user:bob", relation="can_impersonate", object="system:authorization"
+            user=get_user_id("bob"), relation="can_impersonate", object="system:authorization"
         )
         assert can_bob_impersonate is False, "Bob should NOT have can_impersonate permission"
 
         # Cleanup: Delete test tuples
         await openfga_client_real.delete_tuples(
-            [{"user": "user:alice", "relation": "can_impersonate", "object": "system:authorization"}]
+            [{"user": get_user_id("alice"), "relation": "can_impersonate", "object": "system:authorization"}]
         )
 
     @pytest.mark.asyncio
@@ -256,19 +257,19 @@ class TestServicePrincipalSecurity:
         # User A → SP1 → User B (allowed)
         # User B → User C (NOT allowed, should block SP1 → SP2 → User C)
         await openfga_client_real.write_tuples(
-            [{"user": "service_principal:sp1", "relation": "acts_as", "object": "user:userB"}]
+            [{"user": "service_principal:sp1", "relation": "acts_as", "object": get_user_id("userB")}]
         )
 
         # Test 1: Verify SP1 can act as User B
         can_sp1_act_as_userB = await openfga_client_real.check_permission(
-            user="service_principal:sp1", relation="acts_as", object="user:userB"
+            user="service_principal:sp1", relation="acts_as", object=get_user_id("userB")
         )
         assert can_sp1_act_as_userB is True, "SP1 should be able to act as User B"
 
         # Test 2: Verify User B does NOT have permission to User C
         # (This prevents SP1 from creating SP2 that acts_as User C)
         can_userB_act_as_userC = await openfga_client_real.check_permission(
-            user="user:userB", relation="can_impersonate", object="user:userC"
+            user=get_user_id("userB"), relation="can_impersonate", object=get_user_id("userC")
         )
         assert can_userB_act_as_userC is False, "User B should NOT have permission to User C"
 
@@ -278,5 +279,5 @@ class TestServicePrincipalSecurity:
 
         # Cleanup
         await openfga_client_real.delete_tuples(
-            [{"user": "service_principal:sp1", "relation": "acts_as", "object": "user:userB"}]
+            [{"user": "service_principal:sp1", "relation": "acts_as", "object": get_user_id("userB")}]
         )

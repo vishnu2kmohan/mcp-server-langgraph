@@ -16,6 +16,8 @@ import gc
 
 import pytest
 
+from tests.conftest import get_user_id
+
 
 @pytest.mark.xdist_group(name="integration_mcp_startup_validation_tests")
 class TestMCPServerStartupValidation:
@@ -147,7 +149,7 @@ class TestEndToEndDependencyWiring:
                 name="E2E Test Service",
                 description="End-to-end test",
                 authentication_mode="client_credentials",
-                owner_user_id="user:test",
+                owner_user_id=get_user_id("test"),
                 inherit_permissions=True,
             )
 

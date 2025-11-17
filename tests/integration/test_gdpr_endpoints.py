@@ -15,12 +15,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.conftest import get_user_id
+
 
 @pytest.fixture
 def mock_auth_user() -> Dict[str, Any]:
     """Mock authenticated user for testing."""
+    user_id = get_user_id("alice")
     return {
-        "user_id": "user:alice",
+        "user_id": user_id,
         "username": "alice",
         "email": "alice@example.com",
         "roles": ["user", "premium"],

@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, ConsentRecord
+from tests.conftest import get_user_id
 
 
 @pytest.mark.integration
@@ -74,7 +75,7 @@ class TestPostgresAuditLogStore:
         # Create audit log entry
         entry = AuditLogEntry(
             log_id=f"log_{uuid.uuid4().hex[:8]}",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             action="conversation.create",
             resource_type="conversation",
             resource_id="conv_123",
@@ -91,7 +92,7 @@ class TestPostgresAuditLogStore:
         # Should be retrievable
         retrieved = await audit_store.get(log_id)
         assert retrieved is not None
-        assert retrieved.user_id == "user:alice"
+        assert retrieved.user_id == get_user_id("alice")
         assert retrieved.action == "conversation.create"
         assert retrieved.resource_type == "conversation"
         assert retrieved.resource_id == "conv_123"
@@ -110,21 +111,21 @@ class TestPostgresAuditLogStore:
         entries = [
             AuditLogEntry(
                 log_id=f"log_alice_1_{uuid.uuid4().hex[:8]}",
-                user_id="user:alice",
+                user_id=get_user_id("alice"),
                 action="login",
                 resource_type="auth",
                 timestamp=datetime.now(timezone.utc).isoformat() + "Z",
             ),
             AuditLogEntry(
                 log_id=f"log_alice_2_{uuid.uuid4().hex[:8]}",
-                user_id="user:alice",
+                user_id=get_user_id("alice"),
                 action="conversation.view",
                 resource_type="conversation",
                 timestamp=datetime.now(timezone.utc).isoformat() + "Z",
             ),
             AuditLogEntry(
                 log_id=f"log_bob_1_{uuid.uuid4().hex[:8]}",
-                user_id="user:bob",
+                user_id=get_user_id("bob"),
                 action="login",
                 resource_type="auth",
                 timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -135,14 +136,14 @@ class TestPostgresAuditLogStore:
             await audit_store.log(entry)
 
         # Get logs for Alice
-        alice_logs = await audit_store.get_user_logs("user:alice")
+        alice_logs = await audit_store.get_user_logs(get_user_id("alice"))
         assert len(alice_logs) >= 2
-        assert all(log.user_id == "user:alice" for log in alice_logs)
+        assert all(log.user_id == get_user_id("alice") for log in alice_logs)
 
         # Get logs for Bob
-        bob_logs = await audit_store.get_user_logs("user:bob")
+        bob_logs = await audit_store.get_user_logs(get_user_id("bob"))
         assert len(bob_logs) >= 1
-        assert all(log.user_id == "user:bob" for log in bob_logs)
+        assert all(log.user_id == get_user_id("bob") for log in bob_logs)
 
     async def test_get_logs_by_date_range(self, audit_store):
         """Test retrieving logs within date range"""
@@ -153,7 +154,7 @@ class TestPostgresAuditLogStore:
         # Create log entry for today
         entry = AuditLogEntry(
             log_id=f"log_today_{uuid.uuid4().hex[:8]}",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             action="data.access",
             resource_type="user_data",
             timestamp=now.isoformat() + "Z",
@@ -179,7 +180,7 @@ class TestPostgresAuditLogStore:
         # Create logs for user
         entry = AuditLogEntry(
             log_id=f"log_gdpr_{uuid.uuid4().hex[:8]}",
-            user_id="user:charlie",
+            user_id=get_user_id("charlie"),
             action="data.view",
             resource_type="personal_data",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -189,7 +190,7 @@ class TestPostgresAuditLogStore:
         await audit_store.log(entry)
 
         # Anonymize logs for user (GDPR Article 17)
-        count = await audit_store.anonymize_user_logs("user:charlie")
+        count = await audit_store.anonymize_user_logs(get_user_id("charlie"))
         assert count >= 1
 
         # Verify log still exists but user_id is anonymized
@@ -213,7 +214,7 @@ class TestPostgresAuditLogStore:
         """Test audit log with empty metadata (edge case)"""
         entry = AuditLogEntry(
             log_id=f"log_empty_meta_{uuid.uuid4().hex[:8]}",
-            user_id="user:test",
+            user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -230,7 +231,7 @@ class TestPostgresAuditLogStore:
         """Test audit log with nested JSON metadata"""
         entry = AuditLogEntry(
             log_id=f"log_complex_{uuid.uuid4().hex[:8]}",
-            user_id="user:test",
+            user_id=get_user_id("test"),
             action="complex.action",
             resource_type="test",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -257,7 +258,7 @@ class TestPostgresAuditLogStore:
         async def create_log(i):
             entry = AuditLogEntry(
                 log_id=f"log_concurrent_{i}_{uuid.uuid4().hex[:8]}",
-                user_id=f"user:concurrent_{i}",
+                user_id=get_user_id(f"concurrent_{i}"),
                 action="concurrent.test",
                 resource_type="test",
                 timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -323,7 +324,7 @@ class TestPostgresConsentStore:
         """
         record = ConsentRecord(
             consent_id=f"consent_{uuid.uuid4().hex[:8]}",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             consent_type="analytics",
             granted=True,
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -336,7 +337,7 @@ class TestPostgresConsentStore:
         assert consent_id == record.consent_id
 
         # Should be retrievable
-        user_consents = await consent_store.get_user_consents("user:alice")
+        user_consents = await consent_store.get_user_consents(get_user_id("alice"))
         assert len(user_consents) >= 1
         assert any(c.consent_id == consent_id for c in user_consents)
 
@@ -345,7 +346,7 @@ class TestPostgresConsentStore:
         # Create multiple consent records for same user and type
         consent_1 = ConsentRecord(
             consent_id=f"consent_old_{uuid.uuid4().hex[:8]}",
-            user_id="user:bob",
+            user_id=get_user_id("bob"),
             consent_type="marketing",
             granted=False,  # Initially declined
             timestamp=(datetime.now(timezone.utc) - timedelta(hours=2)).isoformat() + "Z",
@@ -353,7 +354,7 @@ class TestPostgresConsentStore:
 
         consent_2 = ConsentRecord(
             consent_id=f"consent_new_{uuid.uuid4().hex[:8]}",
-            user_id="user:bob",
+            user_id=get_user_id("bob"),
             consent_type="marketing",
             granted=True,  # Later accepted
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -363,7 +364,7 @@ class TestPostgresConsentStore:
         await consent_store.create(consent_2)
 
         # Get latest consent
-        latest = await consent_store.get_latest_consent("user:bob", "marketing")
+        latest = await consent_store.get_latest_consent(get_user_id("bob"), "marketing")
         assert latest is not None
         assert latest.consent_id == consent_2.consent_id
         assert latest.granted is True  # Latest consent should be True
@@ -375,7 +376,7 @@ class TestPostgresConsentStore:
         GDPR requires demonstrating that consent was given.
         All consent changes must be recorded for audit trail.
         """
-        user_id = "user:audit_test"
+        user_id = get_user_id("audit_test")
 
         # Create consent history: granted → revoked → granted
         consents = [
@@ -416,7 +417,7 @@ class TestPostgresConsentStore:
 
     async def test_multiple_consent_types(self, consent_store):
         """Test managing multiple consent types for same user"""
-        user_id = "user:multi_consent"
+        user_id = get_user_id("multi_consent")
 
         # Create different consent types
         consent_types = ["analytics", "marketing", "third_party", "profiling"]
@@ -442,7 +443,7 @@ class TestPostgresConsentStore:
         """Test consent record with rich metadata"""
         record = ConsentRecord(
             consent_id=f"consent_meta_{uuid.uuid4().hex[:8]}",
-            user_id="user:metadata_test",
+            user_id=get_user_id("metadata_test"),
             consent_type="marketing",
             granted=True,
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -457,7 +458,7 @@ class TestPostgresConsentStore:
         await consent_store.create(record)
 
         # Retrieve and verify metadata
-        latest = await consent_store.get_latest_consent("user:metadata_test", "marketing")
+        latest = await consent_store.get_latest_consent(get_user_id("metadata_test"), "marketing")
         assert latest is not None
         assert latest.metadata["source"] == "web_form"
         assert latest.metadata["jurisdiction"] == "EU"
@@ -514,7 +515,7 @@ class TestPostgresStorageEdgeCases:
         """Test creating audit log with None for optional fields"""
         entry = AuditLogEntry(
             log_id=f"log_nulls_{uuid.uuid4().hex[:8]}",
-            user_id="user:test",
+            user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -537,7 +538,7 @@ class TestPostgresStorageEdgeCases:
         """Test handling special characters and SQL injection prevention"""
         entry = AuditLogEntry(
             log_id=f"log_special_{uuid.uuid4().hex[:8]}",
-            user_id="user:test",
+            user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",
@@ -565,7 +566,7 @@ class TestPostgresStorageEdgeCases:
 
         entry = AuditLogEntry(
             log_id=f"log_large_{uuid.uuid4().hex[:8]}",
-            user_id="user:test",
+            user_id=get_user_id("test"),
             action="test.large",
             resource_type="test",
             timestamp=datetime.now(timezone.utc).isoformat() + "Z",

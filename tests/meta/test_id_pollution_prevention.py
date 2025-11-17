@@ -146,3 +146,107 @@ def test_openfga_format():
     assert response["user_id"] == "user:alice"  # ✅ Checking format
 """
         )
+
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+
+        # Should succeed (exit code 0) - assertion validations are allowed
+        assert (
+            result.returncode == 0
+        ), f"Expected validation to pass for assertion validation, but got: {result.stdout}\n{result.stderr}"
+
+    def test_validation_script_allows_unit_tests_with_inmemory(self, validation_script: Path, tmp_path: Path) -> None:
+        """Test script allows unit tests with InMemory backends (no pollution risk)."""
+        test_file = tmp_path / "test_unit_inmemory.py"
+        test_file.write_text(
+            """
+import pytest
+
+@pytest.mark.unit
+class TestUserProfile:
+    '''Test UserProfile data model with InMemory storage.'''
+
+    def test_create_user_profile(self):
+        from src.storage import InMemoryUserProfileStore
+
+        storage = InMemoryUserProfileStore()
+        user_id = "user:alice"  # ✅ Safe: InMemory backend, no database pollution
+        profile = {"user_id": user_id, "name": "Alice"}
+        storage.store(profile)
+
+        assert storage.get(user_id)["user_id"] == "user:alice"
+"""
+        )
+
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+
+        # Should succeed (exit code 0) - unit tests with InMemory can't pollute
+        assert (
+            result.returncode == 0
+        ), f"Expected validation to pass for InMemory unit test, but got: {result.stdout}\n{result.stderr}"
+        assert "InMemory" in result.stdout or "Unit test" in result.stdout
+
+    def test_validation_script_allows_mock_configurations(self, validation_script: Path, tmp_path: Path) -> None:
+        """Test script allows Mock/AsyncMock configurations in unit tests."""
+        test_file = tmp_path / "test_mock_config.py"
+        test_file.write_text(
+            """
+from unittest.mock import Mock, AsyncMock
+import pytest
+
+@pytest.mark.unit
+class TestWithMocks:
+    def test_mock_user_response(self):
+        # ✅ Mock configuration - isolates test from external state
+        mock_service = Mock()
+        mock_service.get_user.return_value = {"user_id": "user:alice"}
+
+        result = mock_service.get_user()
+        assert result["user_id"] == "user:alice"
+
+    async def test_async_mock_config(self):
+        # ✅ AsyncMock configuration
+        mock_client = AsyncMock()
+        mock_client.fetch_user = AsyncMock(return_value={"user_id": "user:bob"})
+
+        result = await mock_client.fetch_user()
+        assert result["user_id"] == "user:bob"
+"""
+        )
+
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+
+        # Should succeed (exit code 0) - mock configurations are allowed
+        assert (
+            result.returncode == 0
+        ), f"Expected validation to pass for mock configurations, but got: {result.stdout}\n{result.stderr}"
+
+    def test_validation_script_still_detects_integration_test_violations(
+        self, validation_script: Path, tmp_path: Path
+    ) -> None:
+        """Test script still detects hardcoded IDs in integration tests (real pollution risk)."""
+        test_file = tmp_path / "test_integration_bad.py"
+        test_file.write_text(
+            """
+import pytest
+
+@pytest.mark.integration
+class TestUserAPI:
+    '''Integration test with real database - MUST use worker-safe IDs.'''
+
+    async def test_create_user(self, db_session):
+        # ❌ Hardcoded ID in integration test - will cause pollution!
+        user_id = "user:alice"
+        await db_session.execute("INSERT INTO users VALUES (?)", (user_id,))
+
+        result = await db_session.fetch_one("SELECT * FROM users WHERE id = ?", (user_id,))
+        assert result
+"""
+        )
+
+        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+
+        # Should fail (exit code 1) - integration tests with hardcoded IDs are violations
+        assert (
+            result.returncode == 1
+        ), f"Expected validation to fail for integration test with hardcoded ID, but got exit code {result.returncode}"
+        assert "user:alice" in result.stdout or "user:alice" in result.stderr

@@ -12,6 +12,8 @@ import gc
 
 import pytest
 
+from tests.conftest import get_user_id
+
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testpostgresqlcleanup")
@@ -83,12 +85,12 @@ class TestOpenFGACleanup:
     async def test_first_write_tuples(self, openfga_client_clean):
         """First test: write OpenFGA tuples"""
         await openfga_client_clean.write_tuples(
-            [{"user": "user:test_cleanup_1", "relation": "viewer", "object": "document:test_doc_cleanup"}]
+            [{"user": get_user_id("test_cleanup_1"), "relation": "viewer", "object": "document:test_doc_cleanup"}]
         )
 
         # Verify tuple was written
         allowed = await openfga_client_clean.check_permission(
-            user="user:test_cleanup_1", relation="viewer", object="document:test_doc_cleanup"
+            user=get_user_id("test_cleanup_1"), relation="viewer", object="document:test_doc_cleanup"
         )
         assert allowed is True, "Tuple should exist after write"
 
@@ -97,7 +99,7 @@ class TestOpenFGACleanup:
         """Second test: should NOT see tuples from first test"""
         # With proper cleanup, tuple should not exist
         allowed = await openfga_client_clean.check_permission(
-            user="user:test_cleanup_1", relation="viewer", object="document:test_doc_cleanup"
+            user=get_user_id("test_cleanup_1"), relation="viewer", object="document:test_doc_cleanup"
         )
         assert allowed is False, "OpenFGA should be clean between tests"
 
@@ -136,7 +138,9 @@ class TestCleanupFixturePerformance:
     async def test_cleanup_is_fast_openfga(self, openfga_client_clean):
         """OpenFGA cleanup should be fast (< 100ms)"""
         # Write multiple tuples
-        tuples = [{"user": f"user:perf_test_{i}", "relation": "viewer", "object": "document:perf_doc"} for i in range(10)]
+        tuples = [
+            {"user": get_user_id(f"perf_test_{i}"), "relation": "viewer", "object": "document:perf_doc"} for i in range(10)
+        ]
         await openfga_client_clean.write_tuples(tuples)
 
         # Cleanup will happen automatically

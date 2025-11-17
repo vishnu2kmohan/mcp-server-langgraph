@@ -5,6 +5,8 @@ import gc
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.conftest import get_user_id
+
 # ============================================================================
 # Fixtures and Helpers
 # ============================================================================
@@ -119,7 +121,7 @@ class TestMCPStreamableHTTP:
         data = response.json()
         assert "access_token" in data
         assert data["token_type"] == "bearer"
-        assert data["user_id"] == "user:alice"
+        assert data["user_id"] == get_user_id("alice")
         assert data["username"] == "alice"
         assert "roles" in data
         assert "user" in data["roles"] or "premium" in data["roles"]
@@ -186,7 +188,7 @@ class TestMCPStreamableHTTP:
                 "name": "agent_chat",
                 "arguments": {
                     "message": "Hello",
-                    "user_id": "user:test",
+                    "user_id": get_user_id("test"),
                     # Missing token!
                 },
             },
@@ -213,7 +215,7 @@ class TestMCPStreamableHTTP:
                 "arguments": {
                     "message": "Hello",
                     "token": "invalid-token-12345",
-                    "user_id": "user:test",
+                    "user_id": get_user_id("test"),
                 },
             },
         }
@@ -239,7 +241,7 @@ class TestMCPStreamableHTTP:
                 "arguments": {
                     # Missing 'message' argument!
                     "token": auth_token,
-                    "user_id": "user:alice",
+                    "user_id": get_user_id("alice"),
                 },
             },
         }
@@ -262,7 +264,7 @@ class TestMCPStreamableHTTP:
                 "name": "nonexistent_tool",
                 "arguments": {
                     "token": auth_token,
-                    "user_id": "user:alice",
+                    "user_id": get_user_id("alice"),
                 },
             },
         }
@@ -585,7 +587,7 @@ class TestTokenRefresh:
 
         # Decode new token (will raise if invalid)
         payload = jwt.decode(data["access_token"], settings.jwt_secret_key, algorithms=["HS256"])
-        assert payload["sub"] == "user:alice"
+        assert payload["sub"] == get_user_id("alice")
         assert payload["username"] == "alice"
 
     def test_refresh_with_invalid_token(self, client):
@@ -612,7 +614,7 @@ class TestTokenRefresh:
         from mcp_server_langgraph.core.config import settings
 
         expired_payload = {
-            "sub": "user:alice",
+            "sub": get_user_id("alice"),
             "username": "alice",
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),  # Expired 1 hour ago
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
@@ -635,7 +637,7 @@ class TestTokenRefresh:
 
         # Create token without username
         invalid_payload = {
-            "sub": "user:alice",
+            "sub": get_user_id("alice"),
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
         }
@@ -655,7 +657,7 @@ class TestTokenRefresh:
 
         # Create token with wrong secret
         wrong_secret_payload = {
-            "sub": "user:alice",
+            "sub": get_user_id("alice"),
             "username": "alice",
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iat": datetime.now(timezone.utc),
@@ -722,7 +724,7 @@ class TestTokenValidation:
                 "arguments": {
                     "message": "Test message",
                     "token": auth_token,
-                    "user_id": "user:alice",
+                    "user_id": get_user_id("alice"),
                     "response_format": "concise",
                 },
             },
@@ -746,7 +748,7 @@ class TestTokenValidation:
                 "arguments": {
                     "message": "Test",
                     "token": auth_token,
-                    "user_id": "user:alice",
+                    "user_id": get_user_id("alice"),
                 },
             },
         }
@@ -766,7 +768,7 @@ class TestTokenValidation:
                 "name": "conversation_get",
                 "arguments": {
                     "thread_id": "test-thread",
-                    "user_id": "user:test",
+                    "user_id": get_user_id("test"),
                     # Missing token!
                 },
             },
@@ -791,7 +793,7 @@ class TestTokenValidation:
                 "arguments": {
                     "query": "test",
                     "token": auth_token,
-                    "user_id": "user:alice",
+                    "user_id": get_user_id("alice"),
                     "limit": 10,
                 },
             },
@@ -852,7 +854,7 @@ class TestMCPEndToEnd:
                 "method": "tools/call",
                 "params": {
                     "name": "conversation_search",
-                    "arguments": {"query": "test", "token": auth_token, "user_id": "user:alice", "limit": 5},
+                    "arguments": {"query": "test", "token": auth_token, "user_id": get_user_id("alice"), "limit": 5},
                 },
             },
         )
@@ -896,7 +898,7 @@ class TestMCPEndToEnd:
                 "method": "tools/call",
                 "params": {
                     "name": "conversation_search",
-                    "arguments": {"query": "test", "token": auth_token, "user_id": "user:alice", "limit": 1},
+                    "arguments": {"query": "test", "token": auth_token, "user_id": get_user_id("alice"), "limit": 1},
                 },
             },
         )

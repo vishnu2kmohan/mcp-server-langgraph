@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from mcp_server_langgraph.mcp.server_streamable import ChatInput, SearchConversationsInput
+from tests.conftest import get_user_id
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -28,7 +29,7 @@ class TestThreadIdValidation:
         # GIVEN: Valid thread_id with alphanumeric and hyphens
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv_abc123-xyz",
         }
@@ -44,7 +45,7 @@ class TestThreadIdValidation:
         # GIVEN: Valid thread_id with underscores
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv_user_123",
         }
@@ -60,7 +61,7 @@ class TestThreadIdValidation:
         # GIVEN: Malicious thread_id with newline (log injection)
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv\nFAKE LOG: User authenticated as admin",
         }
@@ -78,7 +79,7 @@ class TestThreadIdValidation:
         # GIVEN: Malicious thread_id with CR
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv\rmalicious",
         }
@@ -94,7 +95,7 @@ class TestThreadIdValidation:
         # GIVEN: Malicious thread_id with null byte (Redis key corruption)
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv\x00admin",
         }
@@ -110,7 +111,7 @@ class TestThreadIdValidation:
         # GIVEN: Malicious thread_id with colon (OpenFGA namespace injection)
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv:user:admin",
         }
@@ -126,7 +127,7 @@ class TestThreadIdValidation:
         # GIVEN: Malicious thread_id with path traversal
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "../../../admin",
         }
@@ -142,7 +143,7 @@ class TestThreadIdValidation:
         # GIVEN: Very long thread_id (>128 chars)
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv_" + "a" * 200,
         }
@@ -158,7 +159,7 @@ class TestThreadIdValidation:
         # GIVEN: Input without thread_id
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
         }
 
@@ -173,7 +174,7 @@ class TestThreadIdValidation:
         # GIVEN: Empty thread_id
         invalid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "",
         }
@@ -189,7 +190,7 @@ class TestThreadIdValidation:
         # GIVEN: thread_id with spaces
         invalid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv 123 test",
         }
@@ -209,7 +210,7 @@ class TestThreadIdValidation:
         # For now, test that query validation works
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "query": "test search",
         }
 
@@ -233,7 +234,7 @@ class TestConversationIdUsageInCode:
         # GIVEN: Valid thread_id
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv_abc123",
         }
@@ -253,7 +254,7 @@ class TestConversationIdUsageInCode:
         # GIVEN: Malicious thread_id that would create nested resource
         malicious_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv:user:admin",  # Would become "conversation:conv:user:admin"
         }
@@ -267,7 +268,7 @@ class TestConversationIdUsageInCode:
         # GIVEN: Valid thread_id
         valid_input = {
             "token": "test_token",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "message": "Hello",
             "thread_id": "conv_abc123",
         }

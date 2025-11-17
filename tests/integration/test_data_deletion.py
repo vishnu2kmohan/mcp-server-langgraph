@@ -19,6 +19,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
     InMemoryPreferencesStore,
     InMemoryUserProfileStore,
 )
+from tests.conftest import get_user_id
 
 
 @pytest.fixture
@@ -91,7 +92,7 @@ class TestDataDeletionAuditLogging:
         # Create a user profile first
         from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
 
-        user_id = "user:test123"
+        user_id = get_user_id("test123")
         username = "testuser"
 
         profile = UserProfile(
@@ -153,7 +154,7 @@ class TestDataDeletionAuditLogging:
             gdpr_storage=gdpr_storage_no_audit,
         )
 
-        user_id = "user:test456"
+        user_id = get_user_id("test456")
         username = "testuser2"
 
         # Create a user profile first
@@ -195,7 +196,7 @@ class TestDataDeletionAuditLogging:
             gdpr_storage=gdpr_storage,
         )
 
-        user_id = "user:test789"
+        user_id = get_user_id("test789")
         username = "testuser3"
 
         # Create test data
@@ -254,7 +255,7 @@ class TestDataDeletionAuditLogging:
             gdpr_storage=gdpr_storage,
         )
 
-        user_id = "user:sensitive123"
+        user_id = get_user_id("sensitive123")
         username = "sensitiveuser"
 
         # Create user
@@ -298,7 +299,7 @@ class TestDataDeletionAuditLogging:
             gdpr_storage=gdpr_storage,
         )
 
-        user_id = "user:partial123"
+        user_id = get_user_id("partial123")
         username = "partialuser"
 
         # Create user

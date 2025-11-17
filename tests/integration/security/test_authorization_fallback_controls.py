@@ -24,6 +24,7 @@ import pytest
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 from mcp_server_langgraph.core.config import Settings
+from tests.conftest import get_user_id
 
 
 @pytest.mark.security
@@ -59,7 +60,9 @@ class TestAuthorizationFallbackControls:
         )
 
         # Attempt to authorize tool execution as a regular user
-        authorized = await middleware.authorize(user_id="user:alice", relation="executor", resource="tool:code_execution")
+        authorized = await middleware.authorize(
+            user_id=get_user_id("alice"), relation="executor", resource="tool:code_execution"
+        )
 
         # SECURITY ASSERTION: Must deny access when OpenFGA unavailable and fallback disabled
         assert authorized is False, (
@@ -89,7 +92,7 @@ class TestAuthorizationFallbackControls:
         # Need to set users_db for fallback to work
         middleware.users_db = {
             "alice": {
-                "user_id": "user:alice",
+                "user_id": get_user_id("alice"),
                 "email": "alice@example.com",
                 "roles": ["user", "premium"],
                 "active": True,
@@ -97,7 +100,9 @@ class TestAuthorizationFallbackControls:
         }
 
         # Attempt to authorize tool execution
-        authorized = await middleware.authorize(user_id="user:alice", relation="executor", resource="tool:code_execution")
+        authorized = await middleware.authorize(
+            user_id=get_user_id("alice"), relation="executor", resource="tool:code_execution"
+        )
 
         # Should be allowed when fallback is explicitly enabled
         assert authorized is True, (
@@ -122,7 +127,7 @@ class TestAuthorizationFallbackControls:
 
         with caplog.at_level(logging.WARNING):
             authorized = await middleware.authorize(
-                user_id="user:alice", relation="executor", resource="tool:sensitive_operation"
+                user_id=get_user_id("alice"), relation="executor", resource="tool:sensitive_operation"
             )
 
         # Check authorization was denied
@@ -152,7 +157,7 @@ class TestAuthorizationFallbackControls:
 
         middleware.users_db = {
             "alice": {
-                "user_id": "user:alice",
+                "user_id": get_user_id("alice"),
                 "email": "alice@example.com",
                 "roles": ["user"],
                 "active": True,
@@ -160,7 +165,7 @@ class TestAuthorizationFallbackControls:
         }
 
         with caplog.at_level(logging.WARNING):
-            await middleware.authorize(user_id="user:alice", relation="executor", resource="tool:test")
+            await middleware.authorize(user_id=get_user_id("alice"), relation="executor", resource="tool:test")
 
         # Should log warning about using fallback authorization
         assert any(
@@ -186,7 +191,9 @@ class TestAuthorizationFallbackControls:
         )
 
         # Admin user should also be denied when fallback disabled
-        authorized = await middleware.authorize(user_id="user:admin", relation="executor", resource="tool:admin_operation")
+        authorized = await middleware.authorize(
+            user_id=get_user_id("admin"), relation="executor", resource="tool:admin_operation"
+        )
 
         assert authorized is False, (
             "SECURITY FAILURE: Even admin users must be denied when OpenFGA is unavailable "
@@ -213,7 +220,7 @@ class TestAuthorizationFallbackControls:
             settings=settings,
         )
 
-        authorized = await middleware.authorize(user_id="user:alice", relation="executor", resource="tool:test")
+        authorized = await middleware.authorize(user_id=get_user_id("alice"), relation="executor", resource="tool:test")
 
         # OpenFGA decision should be used (False in this case)
         assert authorized is False
@@ -268,7 +275,7 @@ class TestAuthorizationFallbackControls:
         )
 
         # Should deny access in production even with fallback enabled
-        authorized = await middleware.authorize(user_id="user:alice", relation="executor", resource="tool:test")
+        authorized = await middleware.authorize(user_id=get_user_id("alice"), relation="executor", resource="tool:test")
 
         assert authorized is False, (
             "SECURITY FAILURE: Production environment must deny fallback authorization "
