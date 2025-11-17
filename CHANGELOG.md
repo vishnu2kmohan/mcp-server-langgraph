@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Integration Test Infrastructure** (`scripts/test-integration.sh:242-244`) - Fixed Python environment configuration:
+  - Resolved bad interpreter error (`/usr/bin/python3.5: No such file or directory`)
+  - Updated to use `uv run pytest` for correct Python 3.12 environment
+  - Ensures CI/CD parity with GitHub Actions workflows
+  - Validates OpenAI Codex findings: All critical issues confirmed resolved (Settings injection working, verify_password() API correct)
+
 - **OpenAI Codex Integration Test Findings** - Resolved 3/4 validated findings from comprehensive Codex review:
   - **Mypy Enforcement** (`.pre-commit-config.yaml:53-72`) - Re-enabled mypy hook for pre-push validation (0 errors baseline confirmed)
   - **xdist Group Markers** (`tests/meta/test_slash_commands.py:292`, `test_claude_settings_schema.py:273`, `test_migration_checklists.py:175`) - Added @pytest.mark.xdist_group to 3 meta test classes for parallel execution isolation

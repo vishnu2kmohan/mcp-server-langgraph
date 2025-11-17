@@ -240,7 +240,8 @@ else
     START_TIME=$(date +%s)
 
     # Run pytest directly on host (same as CI)
-    if pytest -m integration -v --tb=short; then
+    # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
+    if uv run pytest -m integration -v --tb=short; then
         END_TIME=$(date +%s)
         DURATION=$((END_TIME - START_TIME))
 
