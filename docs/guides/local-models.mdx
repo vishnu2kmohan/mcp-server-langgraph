@@ -166,7 +166,7 @@ llm = Ollama(
     num_thread=8,  # CPU threads
     num_gpu=1,     # Use GPU
 )
-```bash
+```
 #### Available Models
 
 | Model | Size | Use Case | Memory Required |
@@ -237,7 +237,7 @@ llm = Ollama(
 
 #### vLLM Features
 
-```bash
+```
 ## Enable speculative decoding (faster inference)
 python -m vllm.entrypoints.openai.api_server \
   --model meta-llama/Llama-3.2-3B-Instruct \
@@ -369,7 +369,7 @@ spec:
     requests:
       storage: 100Gi
   storageClassName: fast-ssd
-```bash
+```
 #### Load Models via Init Container
 
 ```yaml
@@ -481,7 +481,7 @@ model = select_model_by_hardware()
 
 #### GPU Acceleration
 
-```python
+```
 ## Ollama automatically uses GPU if available
 ollama run llama3.2:3b
 
@@ -497,7 +497,7 @@ CUDA_VISIBLE_DEVICES=1 ollama serve
 
 #### Quantization
 
-```python
+```
 ## Ollama models are pre-quantized
 ## Pull different quantization levels:
 
@@ -511,7 +511,7 @@ ollama pull llama3.2:3b         # Default (usually q4)
 
 #### Concurrent Requests
 
-```python
+```
 ## Ollama handles concurrent requests
 import asyncio
 
@@ -532,7 +532,7 @@ results = await process_batch(queries)
 
 #### Context Caching
 
-```python
+```
 ## Reuse context across requests
 from langchain.memory import ConversationBufferMemory
 
@@ -549,12 +549,12 @@ response2 = await llm.ainvoke(
     "Give me an example",
     memory=memory  # Ollama remembers previous context
 )
-```bash
+```
 ### Fine-Tuning
 
 #### Create Modelfile
 
-```bash
+```
 ## Modelfile
 FROM llama3.2:3b
 
@@ -571,7 +571,7 @@ PARAMETER stop "Assistant:"
 
 #### Build Custom Model
 
-```bash
+```
 ## Create model
 ollama create my-custom-model -f Modelfile
 
@@ -585,7 +585,7 @@ LLM_MODEL_NAME=my-custom-model
 
 #### Fine-Tune with LoRA
 
-```bash
+```
 ## Use libraries like axolotl or unsloth
 uv pip install unsloth
 

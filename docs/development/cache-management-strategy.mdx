@@ -8,7 +8,7 @@ icon: "database"
 
 **Last Updated**: 2025-11-17
 **Status**: Active Policy
-**Related**: [CI/CD Pipeline](/deployment/ci-cd), [Coverage Threshold Philosophy](/development/coverage-threshold-philosophy)
+**Related**: [CI/CD Strategy ADR](/architecture/adr-0021-cicd-pipeline-strategy), [CI/CD Failure Prevention](/architecture/adr-0053-ci-cd-failure-prevention-framework), [Coverage Threshold Philosophy](/development/coverage-threshold-philosophy)
 
 ---
 
@@ -87,7 +87,7 @@ cache:
 
 **Implementation**: Validate dependencies after installation
 
-```yaml
+```
 - name: Validate dependency consistency
   run: |
     set -euo pipefail
@@ -116,7 +116,7 @@ cache:
 
 **Implementation**: Verify lockfile is current before using cache
 
-```yaml
+```
 - name: Validate lockfile is up-to-date
   run: |
     uv lock --check || {
@@ -160,7 +160,7 @@ cache-key-prefix: 'quality-tests'
 
 **Implementation**: Always use `--frozen` flag with uv sync
 
-```yaml
+```
 - name: Install dependencies
   run: |
     uv venv --python ${{ inputs.python-version }}
@@ -199,7 +199,7 @@ ModuleNotFoundError: No module named 'some_package'
 ```
 
 **Monitoring**:
-```yaml
+```
 - name: Cache diagnosis
   if: failure()
   run: |
@@ -405,7 +405,7 @@ cache-from: |
 ### Metrics to Track
 
 **1. Cache Hit Rate**:
-```yaml
+```
 - name: Report cache metrics
   run: |
     if [ "$CACHE_HIT" = "true" ]; then
@@ -417,7 +417,7 @@ cache-from: |
 ```
 
 **2. Dependency Check Success Rate**:
-```yaml
+```
 - name: Track dependency check
   id: dep_check
   run: |
@@ -439,7 +439,7 @@ gh cache list --json key,createdAt | jq '.[] | select(.key | contains("uv-v2")) 
 ### Automated Alerts
 
 **Slack notification on repeated cache issues**:
-```yaml
+```
 - name: Alert on cache corruption
   if: failure() && steps.dep_check.outputs.status == 'fail'
   uses: slackapi/slack-github-action@v1
@@ -549,7 +549,7 @@ uv --version
 
 - [GitHub Actions Caching Docs](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
 - [uv Documentation](https://docs.astral.sh/uv/)
-- [Setup Python Deps Action](/.github/actions/setup-python-deps/action.yml)
+- [Setup Python Deps Action](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/.github/actions/setup-python-deps/action.yml)
 - [Coverage Threshold Philosophy](/development/coverage-threshold-philosophy)
 
 ---
