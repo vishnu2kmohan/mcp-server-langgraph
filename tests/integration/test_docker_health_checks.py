@@ -388,8 +388,14 @@ def test_health_check_command_availability(docker_available):
         {
             "image": "qdrant/qdrant:v1.15.1",
             "command": "/usr/local/bin/grpc_health_probe",
+            "should_exist": False,
+            "description": "Qdrant v1.15+ doesn't include grpc_health_probe (uses TCP check instead)",
+        },
+        {
+            "image": "qdrant/qdrant:v1.15.1",
+            "command": "bash",
             "should_exist": True,
-            "description": "Qdrant should have grpc_health_probe",
+            "description": "Qdrant should have bash for TCP health check",
         },
         {
             "image": "qdrant/qdrant:v1.15.1",

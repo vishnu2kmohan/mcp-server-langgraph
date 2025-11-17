@@ -112,24 +112,24 @@ class TestAgenticLoopIntegration:
         test_settings.enable_verification = False
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
-            with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                # Create agent graph
-                graph = create_agent_graph()
+            # Pass test_settings directly to create_agent_graph for proper dependency injection
+            # This avoids MagicMock serialization issues with checkpointer
+            graph = create_agent_graph(settings=test_settings)
 
-                # Create initial state
-                initial_state: AgentState = {
-                    "messages": [HumanMessage(content="What is Python?")],
-                    "next_action": "",
-                    "user_id": "test_user",
-                    "request_id": "test_123",
-                }
+            # Create initial state
+            initial_state: AgentState = {
+                "messages": [HumanMessage(content="What is Python?")],
+                "next_action": "",
+                "user_id": "test_user",
+                "request_id": "test_123",
+            }
 
-                # Run the graph
-                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+            # Run the graph
+            result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                # Should have completed
-                assert "messages" in result
-                assert len(result["messages"]) > 1  # Original + response
+            # Should have completed
+            assert "messages" in result
+            assert len(result["messages"]) > 1  # Original + response
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -140,23 +140,23 @@ class TestAgenticLoopIntegration:
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_context_manager):
-                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                    graph = create_agent_graph()
+                # Pass test_settings directly to create_agent_graph for proper dependency injection
+                graph = create_agent_graph(settings=test_settings)
 
-                    initial_state: AgentState = {
-                        "messages": [HumanMessage(content="Test question")],
-                        "next_action": "",
-                        "user_id": "test_user",
-                        "request_id": "test_123",
-                    }
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="Test question")],
+                    "next_action": "",
+                    "user_id": "test_user",
+                    "request_id": "test_123",
+                }
 
-                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                    # Compaction should have been checked
-                    mock_context_manager.needs_compaction.assert_called()
+                # Compaction should have been checked
+                mock_context_manager.needs_compaction.assert_called()
 
-                    # Should have compaction_applied field in result
-                    assert "compaction_applied" in result
+                # Should have compaction_applied field in result
+                assert "compaction_applied" in result
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -168,27 +168,27 @@ class TestAgenticLoopIntegration:
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_pass):
-                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                    graph = create_agent_graph()
+                # Pass test_settings directly to create_agent_graph for proper dependency injection
+                graph = create_agent_graph(settings=test_settings)
 
-                    initial_state: AgentState = {
-                        "messages": [HumanMessage(content="Test question")],
-                        "next_action": "",
-                        "user_id": "test_user",
-                        "request_id": "test_123",
-                    }
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="Test question")],
+                    "next_action": "",
+                    "user_id": "test_user",
+                    "request_id": "test_123",
+                }
 
-                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                    # Verification should have been called
-                    mock_verifier_pass.verify_response.assert_called_once()
+                # Verification should have been called
+                mock_verifier_pass.verify_response.assert_called_once()
 
-                    # Should have verification results in state
-                    assert result.get("verification_passed") is True
-                    assert result.get("verification_score") == 0.9
+                # Should have verification results in state
+                assert result.get("verification_passed") is True
+                assert result.get("verification_score") == 0.9
 
-                    # Should NOT have refinement attempts (passed first time)
-                    assert result.get("refinement_attempts") is None or result.get("refinement_attempts") == 0
+                # Should NOT have refinement attempts (passed first time)
+                assert result.get("refinement_attempts") is None or result.get("refinement_attempts") == 0
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -200,26 +200,26 @@ class TestAgenticLoopIntegration:
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier_fail):
-                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                    graph = create_agent_graph()
+                # Pass test_settings directly to create_agent_graph for proper dependency injection
+                graph = create_agent_graph(settings=test_settings)
 
-                    initial_state: AgentState = {
-                        "messages": [HumanMessage(content="Test question")],
-                        "next_action": "",
-                        "user_id": "test_user",
-                        "request_id": "test_123",
-                    }
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="Test question")],
+                    "next_action": "",
+                    "user_id": "test_user",
+                    "request_id": "test_123",
+                }
 
-                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                    # Verification should have been called TWICE (initial + refinement)
-                    assert mock_verifier_fail.verify_response.call_count == 2
+                # Verification should have been called TWICE (initial + refinement)
+                assert mock_verifier_fail.verify_response.call_count == 2
 
-                    # Should have refinement attempt recorded
-                    assert result.get("refinement_attempts") == 1
+                # Should have refinement attempt recorded
+                assert result.get("refinement_attempts") == 1
 
-                    # Eventually should pass
-                    assert result.get("verification_passed") is True
+                # Eventually should pass
+                assert result.get("verification_passed") is True
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -243,23 +243,23 @@ class TestAgenticLoopIntegration:
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
-                with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                    graph = create_agent_graph()
+                # Pass test_settings directly to create_agent_graph for proper dependency injection
+                graph = create_agent_graph(settings=test_settings)
 
-                    initial_state: AgentState = {
-                        "messages": [HumanMessage(content="Test question")],
-                        "next_action": "",
-                        "user_id": "test_user",
-                        "request_id": "test_123",
-                    }
+                initial_state: AgentState = {
+                    "messages": [HumanMessage(content="Test question")],
+                    "next_action": "",
+                    "user_id": "test_user",
+                    "request_id": "test_123",
+                }
 
-                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                    # Should have attempted max refinements
-                    assert result.get("refinement_attempts") == 2
+                # Should have attempted max refinements
+                assert result.get("refinement_attempts") == 2
 
-                    # Should eventually give up and accept (fail-open behavior)
-                    # State should reach END even with failed verification
+                # Should eventually give up and accept (fail-open behavior)
+                # State should reach END even with failed verification
 
     @pytest.mark.integration
     def test_agent_state_structure(self):
@@ -325,30 +325,30 @@ class TestAgenticLoopIntegration:
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             with patch("mcp_server_langgraph.core.agent.ContextManager", return_value=mock_manager):
                 with patch("mcp_server_langgraph.core.agent.OutputVerifier", return_value=mock_verifier):
-                    with patch("mcp_server_langgraph.core.agent.settings", test_settings):
-                        graph = create_agent_graph()
+                    # Pass test_settings directly to create_agent_graph for proper dependency injection
+                    graph = create_agent_graph(settings=test_settings)
 
-                        # Create long conversation
-                        long_conversation = [HumanMessage(content=f"Question {i}") for i in range(10)]
+                    # Create long conversation
+                    long_conversation = [HumanMessage(content=f"Question {i}") for i in range(10)]
 
-                        initial_state: AgentState = {
-                            "messages": long_conversation,
-                            "next_action": "",
-                            "user_id": "test_user",
-                            "request_id": "test_123",
-                        }
+                    initial_state: AgentState = {
+                        "messages": long_conversation,
+                        "next_action": "",
+                        "user_id": "test_user",
+                        "request_id": "test_123",
+                    }
 
-                        result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
+                    result = await graph.ainvoke(initial_state, config={"configurable": {"thread_id": "test"}})
 
-                        # All features should have been used
-                        mock_manager.needs_compaction.assert_called()
-                        mock_manager.compact_conversation.assert_called()
-                        mock_verifier.verify_response.assert_called()
+                    # All features should have been used
+                    mock_manager.needs_compaction.assert_called()
+                    mock_manager.compact_conversation.assert_called()
+                    mock_verifier.verify_response.assert_called()
 
-                        # Should have all state fields populated
-                        assert result.get("compaction_applied") is True
-                        assert result.get("verification_passed") is True
-                        assert result.get("verification_score") == 0.88
+                    # Should have all state fields populated
+                    assert result.get("compaction_applied") is True
+                    assert result.get("verification_passed") is True
+                    assert result.get("verification_score") == 0.88
 
 
 @pytest.mark.integration
@@ -362,8 +362,18 @@ class TestAgentGraphStructure:
 
     def test_graph_has_all_nodes(self):
         """Test that graph contains all expected nodes."""
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create test settings with checkpointing disabled to avoid MagicMock serialization issues
+        test_settings = Settings(
+            service_name="test-service",
+            jwt_secret_key="test-key",
+            anthropic_api_key="test-key",
+            enable_checkpointing=False,
+        )
+
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
-            graph = create_agent_graph()
+            graph = create_agent_graph(settings=test_settings)
 
             # Get compiled graph structure
             # (LangGraph graphs don't have a direct node list, but we can verify it compiles)
@@ -371,9 +381,19 @@ class TestAgentGraphStructure:
 
     def test_graph_compiles_successfully(self):
         """Test that graph compiles without errors."""
+        from mcp_server_langgraph.core.config import Settings
+
+        # Create test settings with checkpointing disabled to avoid MagicMock serialization issues
+        test_settings = Settings(
+            service_name="test-service",
+            jwt_secret_key="test-key",
+            anthropic_api_key="test-key",
+            enable_checkpointing=False,
+        )
+
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config"):
             # Should not raise
-            graph = create_agent_graph()
+            graph = create_agent_graph(settings=test_settings)
             assert graph is not None
 
 

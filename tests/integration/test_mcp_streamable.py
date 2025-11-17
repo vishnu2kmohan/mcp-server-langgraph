@@ -39,20 +39,44 @@ def client():
 
     # Populate test users if using InMemoryUserProvider
     # (matches users in tests/e2e/keycloak-test-realm.json for consistency)
+    #
+    # IMPORTANT: Use worker-safe IDs for pytest-xdist parallel execution
+    # to prevent state pollution between workers sharing the same infrastructure
     try:
         mcp_server = get_mcp_server()
         if mcp_server and mcp_server.auth:
             user_provider = mcp_server.auth.user_provider
             if isinstance(user_provider, InMemoryUserProvider):
+                # Generate worker-safe user IDs
+                alice_id = get_user_id("alice")
+                bob_id = get_user_id("bob")
+                admin_id = get_user_id("admin")
+
                 # Only add if not already present (idempotent)
                 if "alice" not in user_provider.users_db:
                     user_provider.add_user(
-                        username="alice", password="alice123", email="alice@example.com", roles=["user", "premium"]
+                        username="alice",
+                        password="alice123",
+                        email="alice@example.com",
+                        roles=["user", "premium"],
+                        user_id=alice_id,  # Worker-safe ID for parallel execution
                     )
                 if "bob" not in user_provider.users_db:
-                    user_provider.add_user(username="bob", password="bob123", email="bob@example.com", roles=["user"])
+                    user_provider.add_user(
+                        username="bob",
+                        password="bob123",
+                        email="bob@example.com",
+                        roles=["user"],
+                        user_id=bob_id,  # Worker-safe ID for parallel execution
+                    )
                 if "admin" not in user_provider.users_db:
-                    user_provider.add_user(username="admin", password="admin123", email="admin@example.com", roles=["admin"])
+                    user_provider.add_user(
+                        username="admin",
+                        password="admin123",
+                        email="admin@example.com",
+                        roles=["admin"],
+                        user_id=admin_id,  # Worker-safe ID for parallel execution
+                    )
     except Exception:
         # If we can't access the server instance, skip user population
         # Tests may use dependency overrides or other auth mechanisms
