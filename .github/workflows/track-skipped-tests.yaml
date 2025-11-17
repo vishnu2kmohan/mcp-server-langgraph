@@ -137,7 +137,7 @@ jobs:
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
-            repo: context.repo.name,
+            repo: context.repo.repo,
             body: comment
           });
 
@@ -179,7 +179,7 @@ jobs:
 
           github.rest.issues.create({
             owner: context.repo.owner,
-            repo: context.repo.name,
+            repo: context.repo.repo,
             title: title,
             body: body,
             labels: ['technical-debt', 'testing']
