@@ -14,6 +14,7 @@ This test file was missing, causing test_all_critical_tests_exist to fail.
 Created to ensure Redis cache configuration is validated before production deployments.
 """
 
+import gc
 import os
 from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -27,8 +28,13 @@ from mcp_server_langgraph.core.config import Settings
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="test_cache_redis_config")
 class TestRedisURLParsing:
     """Validate Redis URL parsing and configuration"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_checkpoint_url_defaults(self):
         """Redis checkpoint URL should have sensible defaults"""
@@ -217,8 +223,13 @@ class TestRedisFailover:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="test_cache_redis_config")
 class TestRedisDatabaseIsolation:
     """Validate Redis database isolation between services"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_checkpoint_and_session_use_different_dbs(self):
         """Checkpoints and sessions should use different Redis databases"""
@@ -306,8 +317,13 @@ class TestRedisResilience:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="test_cache_redis_config")
 class TestRedisProductionReadiness:
     """Validate Redis configuration for production deployments"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_redis_urls_support_authentication(self):
         """Redis URLs should support password authentication"""

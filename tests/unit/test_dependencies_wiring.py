@@ -14,6 +14,7 @@ This test file was missing, causing test_all_critical_tests_exist to fail.
 Created to ensure dependency wiring is validated before production deployments.
 """
 
+import gc
 import importlib
 import sys
 from typing import Dict, Set
@@ -28,8 +29,13 @@ from mcp_server_langgraph.core.config import Settings
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="test_dependencies_wiring")
 class TestModuleImports:
     """Validate all critical modules can be imported without errors"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_core_modules_importable(self):
         """All core modules should import without errors"""
@@ -187,8 +193,13 @@ class TestInitializationOrder:
 # ============================================================================
 
 
+@pytest.mark.xdist_group(name="test_dependencies_wiring")
 class TestProductionReadiness:
     """Validate production deployment readiness"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_required_dependencies_present(self):
         """All required dependencies should be importable"""
