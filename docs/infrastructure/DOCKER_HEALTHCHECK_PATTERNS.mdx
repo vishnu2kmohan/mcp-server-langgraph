@@ -1,0 +1,712 @@
+# Docker Compose Health Check Patterns - Portable Best Practices
+
+## Overview
+
+This guide documents portable health check patterns for Docker Compose services. Following these patterns ensures health checks work across different base images, container runtimes, and environments without relying on utilities that may not be present.
+
+## Table of Contents
+
+- [Why Portable Health Checks Matter](#why-portable-health-checks-matter)
+- [Common Pitfalls](#common-pitfalls)
+- [Portable Patterns by Service Type](#portable-patterns-by-service-type)
+- [Health Check Configuration Guidelines](#health-check-configuration-guidelines)
+- [Testing Health Checks](#testing-health-checks)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Why Portable Health Checks Matter
+
+### The Problem
+
+Many Docker images use **minimal base images** (Alpine, distroless, scratch) that:
+- ❌ Lack common utilities (`curl`, `wget`, `nc`, `telnet`)
+- ❌ Don't include health check tools (`grpc_health_probe`, `httpie`)
+- ❌ May not have shell interpreters (`/bin/bash`, `/bin/sh`)
+- ❌ Minimize attack surface by removing non-essential binaries
+
+### The Solution
+
+Use **service-native health check commands** that are guaranteed to exist in the container:
+- ✅ Database clients (`pg_isready`, `redis-cli`, `mongosh`)
+- ✅ Service-specific health endpoints (`kc.sh show-config`)
+- ✅ Built-in health check binaries shipped with the service
+- ✅ TCP port checks as fallback (most portable)
+
+### Benefits
+
+1. **Reliability**: Health checks don't fail due to missing utilities
+2. **Portability**: Works across different image variants (alpine, distroless, etc.)
+3. **Security**: Doesn't require installing additional packages
+4. **Performance**: Uses lightweight native commands
+5. **Maintainability**: Survives base image updates
+
+---
+
+## Common Pitfalls
+
+### ❌ Anti-Pattern 1: Assuming `curl` Exists
+
+```yaml
+# WRONG: curl may not exist in minimal images
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+```
+
+**Why it fails:**
+- Alpine-based images: `curl` not installed by default
+- Distroless images: No package manager to install utilities
+- Security-hardened images: Utilities removed to reduce attack surface
+
+**Example failures:**
+- `qdrant:v1.15.1` - lacks `curl`, `wget`, `grpc_health_probe`
+- `quay.io/keycloak/keycloak:latest` - minimal image without `curl`
+
+### ❌ Anti-Pattern 2: Using `wget` Without Verification
+
+```yaml
+# WRONG: wget also commonly missing
+healthcheck:
+  test: ["CMD", "wget", "--spider", "http://localhost:8080/health"]
+```
+
+### ❌ Anti-Pattern 3: Hardcoded Shell Paths
+
+```yaml
+# WRONG: /bin/bash may not exist (Alpine uses /bin/sh)
+healthcheck:
+  test: ["CMD-SHELL", "/bin/bash -c 'redis-cli ping'"]
+```
+
+### ❌ Anti-Pattern 4: External Dependencies
+
+```yaml
+# WRONG: Requires installing grpc_health_probe
+healthcheck:
+  test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+  # What if grpc_health_probe isn't installed?
+```
+
+---
+
+## Portable Patterns by Service Type
+
+### PostgreSQL
+
+**✅ Recommended: Use `pg_isready`**
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U postgres"]
+  interval: 5s
+  timeout: 3s
+  retries: 10
+  start_period: 10s
+```
+
+**Why it works:**
+- `pg_isready` is always included in official PostgreSQL images
+- Checks database readiness, not just process existence
+- Returns proper exit codes (0 = healthy, 1/2 = unhealthy)
+
+**Alternative (if pg_isready unavailable):**
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "psql -U postgres -c 'SELECT 1' || exit 1"]
+```
+
+### Redis
+
+**✅ Recommended: Use `redis-cli ping`**
+
+```yaml
+healthcheck:
+  test: ["CMD", "redis-cli", "ping"]
+  interval: 3s
+  timeout: 2s
+  retries: 10
+  start_period: 5s
+```
+
+**Why it works:**
+- `redis-cli` always bundled with Redis
+- `ping` command is lightweight and fast
+- Returns `PONG` on success (exit code 0)
+
+**For Redis with AUTH:**
+```yaml
+healthcheck:
+  test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+  # Note: Password visible in docker inspect - use redis.conf ACL for production
+```
+
+### Keycloak
+
+**✅ Recommended: Use built-in `kc.sh` command**
+
+```yaml
+healthcheck:
+  # Keycloak minimal image doesn't include curl
+  # Use kc.sh show-config to verify Keycloak is initialized
+  test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config | grep -q 'kc.db' || exit 1"]
+  interval: 5s
+  timeout: 5s
+  retries: 40
+  start_period: 45s  # Keycloak slow to start
+```
+
+**Why it works:**
+- `kc.sh` is the native Keycloak management script
+- `show-config` verifies configuration loaded
+- `grep -q 'kc.db'` confirms database configured
+- No external utilities required
+
+**Alternative (if HTTP endpoint available):**
+```yaml
+healthcheck:
+  # Only if curl/wget installed or using full image variant
+  test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+```
+
+### MongoDB
+
+**✅ Recommended: Use `mongosh` or `mongo` client**
+
+```yaml
+healthcheck:
+  test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+  interval: 5s
+  timeout: 3s
+  retries: 10
+  start_period: 10s
+```
+
+**For older MongoDB versions (<5.0):**
+```yaml
+healthcheck:
+  test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+```
+
+### OpenFGA (gRPC Services)
+
+**✅ Recommended Option 1: Use bundled `grpc_health_probe`**
+
+```yaml
+healthcheck:
+  test: ["CMD", "/usr/local/bin/grpc_health_probe", "-addr=:8081"]
+  interval: 3s
+  timeout: 3s
+  retries: 15
+  start_period: 5s
+```
+
+**Requirements:**
+- Verify `grpc_health_probe` is in the image
+- Check with: `docker run --rm <image> ls /usr/local/bin/grpc_health_probe`
+
+**✅ Recommended Option 2: TCP port check (most portable)**
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/8081' || exit 1"]
+  interval: 5s
+  timeout: 3s
+  retries: 10
+```
+
+**Why it works:**
+- No external utilities needed (uses Bash built-in `/dev/tcp`)
+- Works on any image with Bash
+- Checks if port is listening
+
+**For Alpine/sh-only environments:**
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+  # Note: Requires nc (netcat) - usually present in Alpine
+```
+
+### Qdrant (Vector Database)
+
+**✅ Recommended: TCP port check**
+
+```yaml
+healthcheck:
+  # qdrant:v1.15.1 image lacks wget, curl, and grpc_health_probe
+  # Use TCP port check as most portable option
+  test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+  interval: 5s
+  timeout: 3s
+  retries: 10
+  start_period: 10s
+```
+
+**Why TCP check:**
+- Qdrant minimal image has no HTTP clients
+- Installing utilities defeats minimal image purpose
+- Port listening = service ready for most use cases
+
+**Alternative (if Python available):**
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "python3 -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 6333))' || exit 1"]
+```
+
+### Elasticsearch
+
+**✅ Recommended: Use `curl` if available, fallback to TCP**
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+  interval: 10s
+  timeout: 5s
+  retries: 12
+  start_period: 30s
+```
+
+**For minimal images:**
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/9200' || exit 1"]
+```
+
+### RabbitMQ
+
+**✅ Recommended: Use `rabbitmqctl`**
+
+```yaml
+healthcheck:
+  test: ["CMD", "rabbitmqctl", "status"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+```
+
+**Alternative (check cluster health):**
+```yaml
+healthcheck:
+  test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+```
+
+---
+
+## Health Check Configuration Guidelines
+
+### Timing Parameters Best Practices
+
+```yaml
+healthcheck:
+  interval: 5s      # How often to check (balance between responsiveness and load)
+  timeout: 3s       # MUST be <= interval (Codex validation requirement)
+  retries: 10       # Number of consecutive failures before unhealthy
+  start_period: 10s # Grace period during startup (no failures count)
+```
+
+**Rules:**
+1. **`interval >= timeout`** (required by Docker Compose validation)
+2. **`start_period`** should cover typical startup time
+3. **`retries`** should account for temporary failures (network blips)
+
+**Service-Specific Recommendations:**
+
+| Service | Interval | Timeout | Retries | Start Period | Rationale |
+|---------|----------|---------|---------|--------------|-----------|
+| Redis | 3s | 2s | 10 | 5s | Fast startup, lightweight check |
+| PostgreSQL | 5s | 3s | 10 | 10s | Moderate startup, db initialization |
+| Keycloak | 5s | 5s | 40 | 45s | Slow startup, complex initialization |
+| OpenFGA | 3s | 3s | 15 | 5s | Fast startup, gRPC ready quickly |
+| Qdrant | 5s | 3s | 10 | 10s | Moderate startup, index loading |
+
+### Exit Codes
+
+Health check commands must return proper exit codes:
+- **0**: Healthy (container ready)
+- **1**: Unhealthy (container not ready or failed)
+
+**Example with explicit exit codes:**
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U postgres && exit 0 || exit 1"]
+```
+
+### Shell vs. Exec Form
+
+**CMD-SHELL Form** (requires shell):
+```yaml
+test: ["CMD-SHELL", "pg_isready -U postgres"]
+```
+- Runs command through `/bin/sh -c`
+- Required for: pipes, redirections, variable expansion
+- **Risk**: Fails if `/bin/sh` doesn't exist (distroless images)
+
+**CMD Form** (direct exec):
+```yaml
+test: ["CMD", "redis-cli", "ping"]
+```
+- Executes command directly (no shell)
+- **Preferred** when possible (more portable)
+- Works in distroless/minimal images
+
+---
+
+## Testing Health Checks
+
+### Verify Health Check Works
+
+**1. Start service and monitor health status:**
+```bash
+docker-compose up -d postgres
+watch -n 1 'docker-compose ps postgres'
+```
+
+**2. Check health check logs:**
+```bash
+docker inspect --format='{{json .State.Health}}' postgres | jq
+```
+
+**3. Manually run health check command:**
+```bash
+docker exec postgres pg_isready -U postgres
+echo $?  # Should output 0 if healthy
+```
+
+### Test in Different Image Variants
+
+```bash
+# Test with Alpine variant
+docker run --rm postgres:17-alpine pg_isready --version
+
+# Test with Debian variant
+docker run --rm postgres:17 pg_isready --version
+
+# Test with distroless (if applicable)
+docker run --rm gcr.io/distroless/base ls /bin/sh
+# Should fail if truly distroless
+```
+
+### Validate Timing Parameters
+
+```yaml
+# Add this to your docker-compose file temporarily
+healthcheck:
+  # Intentionally misconfigured to test validation
+  interval: 2s
+  timeout: 3s  # timeout > interval - should fail validation
+```
+
+Run validation:
+```bash
+docker-compose config
+# Should report: healthcheck interval must be >= timeout
+```
+
+---
+
+## Troubleshooting
+
+### Health Check Never Becomes Healthy
+
+**Symptom:** Container stays in `starting` or `unhealthy` state
+
+**Debug steps:**
+
+1. **Check if command exists:**
+   ```bash
+   docker exec <container> which pg_isready
+   docker exec <container> which redis-cli
+   ```
+
+2. **Run health check manually:**
+   ```bash
+   docker exec <container> pg_isready -U postgres
+   # Note the exit code and output
+   ```
+
+3. **Check service is actually running:**
+   ```bash
+   docker exec <container> ps aux
+   docker logs <container>
+   ```
+
+4. **Verify ports are listening:**
+   ```bash
+   docker exec <container> netstat -tlnp
+   # or
+   docker exec <container> ss -tlnp
+   ```
+
+5. **Check start_period is sufficient:**
+   ```yaml
+   healthcheck:
+     start_period: 60s  # Increase if service slow to start
+   ```
+
+### Health Check Command Not Found
+
+**Symptom:** `executable file not found` or `command not found`
+
+**Solutions:**
+
+1. **Verify command path:**
+   ```bash
+   docker exec <container> which pg_isready
+   docker exec <container> find / -name pg_isready 2>/dev/null
+   ```
+
+2. **Check shell availability:**
+   ```bash
+   docker exec <container> ls -l /bin/sh
+   # If missing, use CMD form instead of CMD-SHELL
+   ```
+
+3. **Use absolute paths:**
+   ```yaml
+   healthcheck:
+     test: ["CMD", "/usr/bin/redis-cli", "ping"]
+   ```
+
+### Health Check Times Out
+
+**Symptom:** Health checks fail with timeout
+
+**Solutions:**
+
+1. **Increase timeout:**
+   ```yaml
+   healthcheck:
+     timeout: 10s  # Increase for slow services
+   ```
+
+2. **Use faster health check:**
+   ```yaml
+   # Instead of full HTTP request
+   healthcheck:
+     test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/8080'"]
+   ```
+
+3. **Check network latency:**
+   ```bash
+   docker exec <container> time redis-cli ping
+   # Measure actual health check execution time
+   ```
+
+### Permission Denied Errors
+
+**Symptom:** Health check fails with permission errors
+
+**Solutions:**
+
+1. **Run as correct user:**
+   ```yaml
+   healthcheck:
+     test: ["CMD-SHELL", "su - postgres -c 'pg_isready'"]
+   ```
+
+2. **Check file permissions:**
+   ```bash
+   docker exec <container> ls -l /opt/keycloak/bin/kc.sh
+   ```
+
+3. **Use sudo if available:**
+   ```yaml
+   healthcheck:
+     test: ["CMD-SHELL", "sudo -u postgres pg_isready"]
+   ```
+
+---
+
+## Decision Tree: Choosing the Right Health Check
+
+```
+START: What type of service?
+│
+├─ Database (PostgreSQL, MySQL, MongoDB)
+│  └─> Use native client command
+│     ✅ PostgreSQL: pg_isready
+│     ✅ MySQL: mysqladmin ping
+│     ✅ MongoDB: mongosh --eval "db.adminCommand('ping')"
+│
+├─ Key-Value Store (Redis, Memcached)
+│  └─> Use CLI ping command
+│     ✅ Redis: redis-cli ping
+│     ✅ Memcached: echo stats | nc localhost 11211
+│
+├─ HTTP Service with health endpoint
+│  ├─ Does image include curl/wget?
+│  │  ├─ YES: Use HTTP health endpoint
+│  │  │   ✅ curl -f http://localhost/health
+│  │  └─ NO: Use TCP port check
+│  │      ✅ timeout 1 bash -c '</dev/tcp/localhost/8080'
+│  │
+│  └─ Is service critical path?
+│      ├─ YES: Consider installing health check utility
+│      └─ NO: TCP port check is sufficient
+│
+├─ gRPC Service
+│  ├─ Is grpc_health_probe bundled?
+│  │  ├─ YES: Use grpc_health_probe
+│  │  │   ✅ grpc_health_probe -addr=:8081
+│  │  └─ NO: Use TCP port check
+│  │      ✅ timeout 1 bash -c '</dev/tcp/localhost/8081'
+│  │
+│  └─ Verify gRPC health checking is enabled in service
+│
+├─ Message Queue (RabbitMQ, Kafka)
+│  └─> Use service-specific health command
+│     ✅ RabbitMQ: rabbitmqctl status
+│     ✅ Kafka: kafka-broker-api-versions --bootstrap-server localhost:9092
+│
+└─ Custom/Unknown Service
+   └─> Default to TCP port check
+      ✅ timeout 1 bash -c '</dev/tcp/localhost/<PORT>'
+```
+
+---
+
+## Complete Examples
+
+### Example 1: PostgreSQL with Optimal Settings
+
+```yaml
+postgres:
+  image: postgres:17-alpine
+  environment:
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpass
+    POSTGRES_DB: testdb
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+    start_period: 10s
+  ports:
+    - "5432:5432"
+  networks:
+    - app-network
+```
+
+### Example 2: Redis with Auth
+
+```yaml
+redis:
+  image: redis:7-alpine
+  command: redis-server --requirepass ${REDIS_PASSWORD}
+  healthcheck:
+    test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+    interval: 3s
+    timeout: 2s
+    retries: 10
+    start_period: 5s
+  environment:
+    - REDIS_PASSWORD=${REDIS_PASSWORD}
+  ports:
+    - "6379:6379"
+```
+
+### Example 3: Keycloak with Slow Startup
+
+```yaml
+keycloak:
+  image: quay.io/keycloak/keycloak:latest
+  command: start-dev
+  environment:
+    KC_DB: postgres
+    KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+    KEYCLOAK_ADMIN: admin
+    KEYCLOAK_ADMIN_PASSWORD: admin
+  healthcheck:
+    # Keycloak minimal image lacks curl - use kc.sh
+    test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config | grep -q 'kc.db' || exit 1"]
+    interval: 5s
+    timeout: 5s
+    retries: 40
+    start_period: 45s  # Keycloak needs time to initialize
+  ports:
+    - "8080:8080"
+  depends_on:
+    postgres:
+      condition: service_healthy
+```
+
+### Example 4: Multi-Service with Dependencies
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/8000' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "8000:8000"
+```
+
+---
+
+## References
+
+- [Docker Compose Health Check Reference](https://docs.docker.com/compose/compose-file/05-services/#healthcheck)
+- [Docker Health Check Best Practices](https://docs.docker.com/engine/reference/builder/#healthcheck)
+- [Minimal Container Images Security Guide](https://cloud.google.com/architecture/best-practices-for-building-containers)
+- OpenAI Codex Finding: Docker Compose health check utilities warning
+- Project: `docker-compose.test.yml` - Production health check patterns
+
+---
+
+## Summary: Quick Reference
+
+| Service | Best Health Check | Why |
+|---------|------------------|-----|
+| PostgreSQL | `pg_isready -U postgres` | Native, always available |
+| Redis | `redis-cli ping` | Bundled client, fast |
+| Keycloak | `kc.sh show-config \| grep -q 'kc.db'` | Native command, no curl needed |
+| OpenFGA | `grpc_health_probe -addr=:8081` | gRPC standard |
+| Qdrant | `timeout 1 bash -c '</dev/tcp/localhost/6333'` | No utilities in image |
+| MongoDB | `mongosh --eval "db.adminCommand('ping')"` | Native client |
+| RabbitMQ | `rabbitmqctl status` | Service management tool |
+| Generic HTTP | `timeout 1 bash -c '</dev/tcp/localhost/PORT'` | Most portable |
+
+**Golden Rules:**
+1. ✅ **Use service-native commands** when possible
+2. ✅ **Fallback to TCP checks** for minimal images
+3. ✅ **interval >= timeout** (required)
+4. ✅ **Test in actual container** before deploying
+5. ❌ **Don't assume curl/wget exist**
+6. ❌ **Don't use hardcoded shell paths**
+
+---
+
+**Last Updated**: 2024-11-17
+**Maintained By**: Infrastructure Team
+**Related**: `docker-compose.test.yml`, `docker-compose.dev.yml`
