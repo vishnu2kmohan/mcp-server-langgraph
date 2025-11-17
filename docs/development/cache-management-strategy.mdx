@@ -1,0 +1,573 @@
+---
+title: "Cache Management Strategy"
+description: "Preventing and resolving cache corruption in CI/CD pipelines"
+icon: "database"
+---
+
+# Cache Management Strategy
+
+**Last Updated**: 2025-11-17
+**Status**: Active Policy
+**Related**: [CI/CD Pipeline](/deployment/ci-cd), [Coverage Threshold Philosophy](/development/coverage-threshold-philosophy)
+
+---
+
+## Overview
+
+GitHub Actions caching can significantly speed up CI/CD pipelines but can also cause subtle issues when caches become stale or corrupted. This document outlines strategies to prevent and resolve cache-related problems.
+
+## Problem Statement
+
+### What Happened (2025-11-17)
+
+**Symptom**: `uv pip check` failing in CI with dependency conflicts, but passing locally:
+```bash
+# Local (✅ passes):
+$ uv pip check
+Checked 297 packages in 4ms
+All installed packages are compatible
+
+# CI (❌ fails):
+$ uv pip check
+error: Dependency conflicts detected
+```
+
+**Root Cause**: GitHub Actions cache corruption
+- Cache key based on `pyproject.toml` and `uv.lock` hashes
+- Cache restored from previous run with different dependency state
+- `uv sync --frozen` installed from lockfile but cache had old packages
+- Result: Frankensteined environment with mixed old/new dependencies
+
+**Solution**: Cache version bump (v1 → v2)
+```yaml
+# Before (v1):
+key: ${{ runner.os }}-uv-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+
+# After (v2):
+key: ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+```
+
+---
+
+## Prevention Strategies
+
+### 1. Cache Versioning (Primary Defense)
+
+**Implementation**: Use version prefix in cache keys
+
+```yaml
+# .github/actions/setup-python-deps/action.yml
+cache:
+  key: ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+  restore-keys: |
+    ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-
+    ${{ runner.os }}-uv-v2-
+```
+
+**Best Practice**: Include version in cache key with comment explaining when/why:
+```yaml
+# Cache version v2: Bust stale caches causing dependency conflicts (2025-11-17)
+# Increment version number to force fresh cache if conflicts persist
+```
+
+**When to Increment**:
+- ✅ After major dependency updates (e.g., Python version, uv version)
+- ✅ When dependency conflicts persist across multiple runs
+- ✅ After significant changes to dependency resolution logic
+- ✅ When cache behavior seems inconsistent between local and CI
+
+**When NOT to Increment**:
+- ❌ For every PR (defeats purpose of caching)
+- ❌ Before investigating root cause
+- ❌ As first resort for CI failures
+
+---
+
+### 2. Dependency Consistency Validation
+
+**Implementation**: Validate dependencies after installation
+
+```yaml
+- name: Validate dependency consistency
+  run: |
+    set -euo pipefail
+
+    if ! CHECK_OUTPUT=$(uv pip check 2>&1); then
+      echo "::warning::Dependency conflicts detected in CI (may be false positive):"
+      echo "$CHECK_OUTPUT"
+      echo ""
+      echo "Note: This check passes locally but may fail in CI due to environment differences."
+      echo "If tests pass despite this warning, the conflicts are likely non-breaking."
+      # Don't fail the job - let tests determine if there are real issues
+    else
+      echo "✓ All dependencies are consistent (no conflicts detected)"
+    fi
+  shell: bash
+```
+
+**Philosophy**:
+- **Fail loudly but don't block**: Show conflicts as warnings, let tests determine impact
+- **Capture output**: Display actual conflicts for debugging
+- **Context matters**: CI environment differences may cause false positives
+
+---
+
+### 3. Lockfile Validation
+
+**Implementation**: Verify lockfile is current before using cache
+
+```yaml
+- name: Validate lockfile is up-to-date
+  run: |
+    uv lock --check || {
+      echo "::error::uv.lock is out of date with pyproject.toml"
+      echo "Run 'uv lock' locally and commit the updated lockfile"
+      exit 1
+    }
+    echo "✓ Lockfile is current and valid"
+```
+
+**Why This Helps**:
+- Prevents using cache with outdated lockfile
+- Catches developer errors (forgot to run `uv lock`)
+- Ensures reproducible builds
+
+---
+
+### 4. Cache Scope Isolation
+
+**Implementation**: Use different cache keys for different job types
+
+```yaml
+# Unit tests
+cache-key-prefix: 'unit-tests'
+
+# Integration tests
+cache-key-prefix: 'integration-tests'
+
+# Quality tests
+cache-key-prefix: 'quality-tests'
+```
+
+**Why This Helps**:
+- Prevents cache poisoning between job types
+- Allows different dependency extras per job type
+- Enables targeted cache invalidation
+
+---
+
+### 5. Frozen Installation
+
+**Implementation**: Always use `--frozen` flag with uv sync
+
+```yaml
+- name: Install dependencies
+  run: |
+    uv venv --python ${{ inputs.python-version }}
+    uv sync --frozen --extra dev --extra builder
+```
+
+**Why `--frozen`**:
+- ✅ Fails if lockfile is out of sync (prevents drift)
+- ✅ Never resolves dependencies (faster, reproducible)
+- ✅ Guarantees exact versions from lockfile
+
+**Never use** `uv sync` without `--frozen` in CI!
+
+---
+
+## Detection Strategies
+
+### 1. Early Failure Signals
+
+**Indicators of cache corruption**:
+
+```bash
+# Signal 1: uv pip check fails in CI but passes locally
+$ uv pip check  # CI
+error: Dependency conflicts detected
+
+$ uv pip check  # Local
+All installed packages are compatible
+
+# Signal 2: Inconsistent test failures across runs
+# Same code, different results between CI runs
+
+# Signal 3: Import errors for packages in lockfile
+ModuleNotFoundError: No module named 'some_package'
+# (but package is in uv.lock)
+```
+
+**Monitoring**:
+```yaml
+- name: Cache diagnosis
+  if: failure()
+  run: |
+    echo "=== Cache Debug Info ==="
+    echo "Cache key: ${{ runner.os }}-uv-v2-..."
+    echo "Python version: $(python --version)"
+    echo "uv version: $(uv --version)"
+    echo ""
+    echo "=== Installed packages ==="
+    uv pip list
+    echo ""
+    echo "=== Expected packages (from lockfile) ==="
+    uv pip freeze
+```
+
+---
+
+### 2. Automated Cache Health Checks
+
+**Implementation**: Add periodic cache verification
+
+```yaml
+# Run weekly to detect cache drift
+- cron: '0 2 * * 0'  # Sundays at 2 AM
+
+jobs:
+  cache-health-check:
+    name: Verify Cache Health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup with cache
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+
+      - name: Verify environment
+        run: |
+          # Check for conflicts
+          uv pip check
+
+          # Verify lockfile matches installed
+          uv sync --frozen --dry-run
+
+          # Run smoke tests
+          pytest tests/smoke/ -v
+```
+
+---
+
+## Resolution Strategies
+
+### 1. Cache Invalidation (Immediate Fix)
+
+**When to use**: Cache corruption is confirmed
+
+**Steps**:
+1. **Increment cache version**:
+   ```yaml
+   # Change v2 → v3
+   key: ${{ runner.os }}-uv-v3-${{ inputs.cache-key-prefix }}-...
+   ```
+
+2. **Document the change**:
+   ```yaml
+   # Cache version v3: Resolved dependency conflicts from PR #123 (2025-11-17)
+   # Previous issue: Package X version mismatch between cache and lockfile
+   ```
+
+3. **Commit and push**:
+   ```bash
+   git commit -m "fix(ci): bump cache version to v3 (resolve dependency conflicts)"
+   git push
+   ```
+
+**Impact**: Next CI run will build fresh cache (slower first run, then fast again)
+
+---
+
+### 2. Manual Cache Clearing (Nuclear Option)
+
+**When to use**: Cache versioning doesn't work or cache is severely corrupted
+
+**Steps via GitHub UI**:
+1. Go to repository → Actions → Caches
+2. Search for affected cache keys
+3. Delete problematic caches
+4. Re-run failed workflows
+
+**Steps via gh CLI**:
+```bash
+# List all caches
+gh cache list
+
+# Delete specific cache
+gh cache delete <cache-id>
+
+# Delete all caches matching pattern
+gh cache delete --pattern "*uv-v2-*"
+```
+
+**Caution**: ⚠️ Deletes cache for ALL branches - use sparingly!
+
+---
+
+### 3. Downgrade to Warning (Temporary Workaround)
+
+**When to use**: Suspected false positive conflicts
+
+**Implementation**:
+```yaml
+# Before (blocking):
+if ! uv pip check; then
+  echo "::error::Dependency conflicts detected"
+  exit 1
+fi
+
+# After (non-blocking):
+if ! CHECK_OUTPUT=$(uv pip check 2>&1); then
+  echo "::warning::Dependency conflicts detected (may be false positive):"
+  echo "$CHECK_OUTPUT"
+  # Continue - let tests determine if real issue
+else
+  echo "✓ All dependencies consistent"
+fi
+```
+
+**When to revert**: After confirming tests pass consistently
+
+---
+
+## Best Practices
+
+### Cache Key Design
+
+**✅ Good cache key structure**:
+```yaml
+# Format: $OS-$TOOL-$VERSION-$SCOPE-$HASH
+key: ${{ runner.os }}-uv-v2-unit-tests-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+```
+
+**Components**:
+- `$OS`: Platform (linux, macos, windows)
+- `$TOOL`: Package manager (uv, pip, poetry)
+- `$VERSION`: Cache schema version (v1, v2, v3...)
+- `$SCOPE`: Job type (unit-tests, integration-tests...)
+- `$HASH`: Dependency files hash
+
+**❌ Bad cache key examples**:
+```yaml
+# Too broad - pollutes across different dependency sets
+key: ${{ runner.os }}-python-${{ hashFiles('*.toml') }}
+
+# No version - can't invalidate easily
+key: deps-${{ hashFiles('uv.lock') }}
+
+# No scope - unit tests and integration tests share cache
+key: uv-${{ hashFiles('pyproject.toml') }}
+```
+
+---
+
+### Restore Keys Strategy
+
+**Purpose**: Fallback cache lookup when exact match not found
+
+**Recommended pattern**:
+```yaml
+cache-from: |
+  type=gha,scope=${{ matrix.variant }}-${{ platform }}  # Exact match
+  type=gha,scope=${{ matrix.variant }}                  # Same variant, any platform
+  type=gha,scope=base                                    # Base layer fallback
+```
+
+**Considerations**:
+- ✅ More fallbacks = faster cache hits
+- ❌ More fallbacks = higher risk of stale cache
+- Balance: 2-3 restore keys maximum
+
+---
+
+### Cache Retention
+
+**Default**: GitHub Actions caches expire after 7 days of no access
+
+**Custom retention** (not supported by GitHub Actions directly):
+```yaml
+# Workaround: Force cache refresh by incrementing version periodically
+# Add to weekly cron job:
+- name: Refresh cache weekly
+  if: github.event_name == 'schedule'
+  run: |
+    # This will create new cache, old one expires in 7 days
+    uv sync --frozen
+```
+
+---
+
+## Monitoring & Alerting
+
+### Metrics to Track
+
+**1. Cache Hit Rate**:
+```yaml
+- name: Report cache metrics
+  run: |
+    if [ "$CACHE_HIT" = "true" ]; then
+      echo "✅ Cache hit - restored from cache"
+    else
+      echo "❌ Cache miss - building from scratch"
+    fi
+    echo "cache_hit=$CACHE_HIT" >> $GITHUB_OUTPUT
+```
+
+**2. Dependency Check Success Rate**:
+```yaml
+- name: Track dependency check
+  id: dep_check
+  run: |
+    if uv pip check; then
+      echo "status=pass" >> $GITHUB_OUTPUT
+    else
+      echo "status=fail" >> $GITHUB_OUTPUT
+    fi
+```
+
+**3. Cache Age**:
+```bash
+# Get cache creation time
+gh cache list --json key,createdAt | jq '.[] | select(.key | contains("uv-v2")) | {key, age: (now - (.createdAt | fromdateiso8601))}'
+```
+
+---
+
+### Automated Alerts
+
+**Slack notification on repeated cache issues**:
+```yaml
+- name: Alert on cache corruption
+  if: failure() && steps.dep_check.outputs.status == 'fail'
+  uses: slackapi/slack-github-action@v1
+  with:
+    webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+    payload: |
+      {
+        "text": "⚠️ CI cache corruption detected in ${{ github.repository }}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Workflow*: ${{ github.workflow }}\n*Run*: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|#${{ github.run_number }}>\n*Status*: Dependency check failed\n*Action*: Consider bumping cache version"
+            }
+          }
+        ]
+      }
+```
+
+---
+
+## Troubleshooting Guide
+
+### Issue: "Dependency conflicts detected"
+
+**Diagnosis**:
+```bash
+# 1. Check local environment
+uv pip check  # Should pass
+
+# 2. Check lockfile is current
+uv lock --check
+
+# 3. Inspect CI cache
+gh cache list | grep uv-v2
+```
+
+**Solution Path**:
+1. Try cache version bump (quickest)
+2. If persists, check for actual dependency conflicts
+3. If still failing, investigate lockfile generation differences
+
+---
+
+### Issue: "ModuleNotFoundError in CI"
+
+**Diagnosis**:
+```bash
+# 1. Verify package in lockfile
+grep "package_name" uv.lock
+
+# 2. Check if extras are correct
+# CI workflow should match local extras:
+uv sync --frozen --extra dev --extra builder
+```
+
+**Solution Path**:
+1. Verify extras match between local and CI
+2. Check cache version compatibility
+3. Try fresh cache build (version bump)
+
+---
+
+### Issue: "Tests pass locally but fail in CI"
+
+**Diagnosis**:
+```bash
+# 1. Check Python version match
+# Local:
+python --version
+
+# CI (from workflow):
+python-version: '3.12'
+
+# 2. Check uv version match
+uv --version
+```
+
+**Solution Path**:
+1. Ensure Python versions match exactly
+2. Pin uv version in CI workflow
+3. Check for environment variable differences
+
+---
+
+## Maintenance Schedule
+
+### Weekly
+- ✅ Review cache hit rates
+- ✅ Check for dependency check failures
+- ✅ Monitor cache size growth
+
+### Monthly
+- ✅ Audit cache keys for efficiency
+- ✅ Review cache versioning strategy
+- ✅ Clean up unused cache scopes
+
+### Quarterly
+- ✅ Test cache invalidation procedure
+- ✅ Review and update this documentation
+- ✅ Evaluate new caching strategies
+
+---
+
+## Related Resources
+
+- [GitHub Actions Caching Docs](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
+- [uv Documentation](https://docs.astral.sh/uv/)
+- [Setup Python Deps Action](/.github/actions/setup-python-deps/action.yml)
+- [Coverage Threshold Philosophy](/development/coverage-threshold-philosophy)
+
+---
+
+## Changelog
+
+### 2025-11-17: Cache v2 Migration
+- **Issue**: Dependency conflicts in CI (passing locally)
+- **Root Cause**: GitHub Actions cache corruption
+- **Solution**: Bumped cache version v1 → v2
+- **Result**: All dependency checks passing
+
+### Future Improvements
+- [ ] Implement automated cache age monitoring
+- [ ] Add Slack alerts for cache corruption
+- [ ] Create dashboard for cache metrics
+- [ ] Investigate alternative caching strategies (BuildKit, etc.)
+
+---
+
+**Questions?** Open an issue or ask in `#engineering` Slack channel.

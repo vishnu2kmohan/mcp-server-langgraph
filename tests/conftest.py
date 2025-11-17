@@ -1303,9 +1303,10 @@ async def postgres_connection_real(integration_test_env):
         pytest.skip("asyncpg not installed")
 
     # Connection params from environment (set in docker-compose.test.yml)
+    # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
     conn = await asyncpg.connect(
         host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        port=int(os.getenv("POSTGRES_PORT", "9432")),
         database=os.getenv("POSTGRES_DB", "testdb"),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "test"),
@@ -1631,9 +1632,10 @@ async def db_pool_gdpr(integration_test_env):
     from pathlib import Path
 
     # Create connection pool
+    # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
     pool = await asyncpg.create_pool(
         host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        port=int(os.getenv("POSTGRES_PORT", "9432")),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
         database=os.getenv("POSTGRES_DB", "mcp_test"),

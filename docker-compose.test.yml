@@ -23,14 +23,14 @@
 #   - TESTING=true environment variables
 #   - Observability services optional (can be disabled)
 #
-# PORTS (standard ports assumed in isolated test environment):
-#   5432  - PostgreSQL (test)
-#   9379  - Redis checkpoints (test, offset to avoid conflicts)
-#   9380  - Redis sessions (test, offset to avoid conflicts)
-#   9333  - Qdrant (test, offset to avoid conflicts)
-#   9080  - OpenFGA HTTP API (test, offset to avoid conflicts)
-#   9081  - OpenFGA gRPC (test, offset to avoid conflicts)
-#   9082  - Keycloak (test, offset to avoid conflicts)
+# PORTS (offset by +1000 or +3000 to avoid conflicts with dev environment):
+#   9432  - PostgreSQL (test, offset +4000 from standard 5432)
+#   9379  - Redis checkpoints (test, offset +3000 from standard 6379)
+#   9380  - Redis sessions (test, offset +3001 from standard 6379)
+#   9333  - Qdrant (test, offset +3000 from standard 6333)
+#   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
+#   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
+#   9082  - Keycloak (test, offset +1002 from standard 8080)
 
 services:
   # ==============================================================================
@@ -47,7 +47,7 @@ services:
       # Test-specific settings for speed
       POSTGRES_INITDB_ARGS: "-c fsync=off -c synchronous_commit=off -c full_page_writes=off"
     ports:
-      - "5432:5432"  # Standard port (assumes isolated test environment)
+      - "9432:5432"  # Offset port to avoid conflicts with dev environment
     volumes:
       # Mount migration scripts for database initialization
       - ./migrations:/docker-entrypoint-initdb.d:ro

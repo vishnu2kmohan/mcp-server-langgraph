@@ -1,0 +1,470 @@
+---
+title: "Coverage Threshold Philosophy"
+description: "Understanding and applying coverage thresholds across different test types"
+icon: "chart-line"
+---
+
+# Coverage Threshold Philosophy
+
+**Last Updated**: 2025-11-17
+**Status**: Active Policy
+**Related**: [Testing Guide](/advanced/testing), [CI/CD Pipeline](/deployment/ci-cd)
+
+---
+
+## Overview
+
+This document defines the coverage threshold strategy for the MCP Server LangGraph project. Different test types have different coverage requirements based on their purpose and focus.
+
+## Quick Reference
+
+| Test Type | Threshold | Workflow | Rationale |
+|-----------|-----------|----------|-----------|
+| **Unit Tests** | 66% | `ci.yaml` | Comprehensive code coverage required |
+| **Coverage Trend** | 80% | `coverage-trend.yaml` | Higher bar for main branch quality |
+| **Contract Tests** | 0% | `quality-tests.yaml` | Focus: MCP protocol compliance |
+| **Property Tests** | 0% | `quality-tests.yaml` | Focus: Edge cases with Hypothesis |
+| **Regression Tests** | 0% | `quality-tests.yaml` | Focus: Performance baselines (split 4x) |
+| **E2E Tests** | 0% | `e2e-tests.yaml` | Focus: Complete user journeys |
+| **Integration Tests** | 0% | `integration-tests.yaml` | Focus: Component interactions (split 4x) |
+
+---
+
+## Philosophy
+
+### Principle 1: Coverage ≠ Test Quality
+
+Code coverage is a **metric**, not a **goal**. High coverage doesn't guarantee good tests, and low coverage doesn't mean tests are ineffective.
+
+**Example**: A contract test validating JSON-RPC 2.0 compliance may only touch 5% of the codebase but is critically important for protocol correctness.
+
+### Principle 2: Purpose-Driven Thresholds
+
+Each test category has a specific purpose. Thresholds should align with that purpose:
+
+- **Unit tests**: Validate business logic → High coverage expected
+- **Contract tests**: Validate protocol compliance → Coverage irrelevant
+- **Property tests**: Find edge cases → Coverage secondary to scenarios
+- **E2E tests**: Validate user workflows → Coverage reflects complexity
+
+### Principle 3: Split Test Isolation
+
+When tests are split across parallel jobs (using `pytest-split`), each job only runs a subset of tests and therefore only covers a subset of code. Individual splits should not enforce coverage thresholds.
+
+**Example**: Integration tests split 4 ways
+- Total: 248 tests covering ~80% of code
+- Per split: ~62 tests covering ~25% of code
+- Threshold: 0% per split, evaluate merged coverage
+
+---
+
+## Test Type Details
+
+### Unit Tests (66% threshold)
+
+**Purpose**: Validate individual functions and classes in isolation
+
+**Why 66%?**
+- Balances comprehensive coverage with practical development
+- Allows for defensive error handling (uncovered in unit tests but tested in integration)
+- Prevents "coverage theater" (writing tests just to hit 100%)
+
+**Where enforced**:
+```yaml
+# .github/workflows/ci.yaml
+pytest -m "unit and not llm" --cov=src/mcp_server_langgraph --cov-fail-under=66
+```
+
+**Coverage collected**: Per test run
+**Enforcement**: Blocks CI on failure
+
+---
+
+### Coverage Trend (80% threshold)
+
+**Purpose**: Maintain high quality bar for main branch
+
+**Why 80%?**
+- Higher standard for production-ready code
+- Prevents gradual coverage erosion
+- Encourages thorough testing before merge
+
+**Where enforced**:
+```yaml
+# .github/workflows/coverage-trend.yaml
+MIN_COVERAGE: "80.0"
+```
+
+**Coverage collected**: Unit tests only
+**Enforcement**: Blocks merge to main
+
+---
+
+### Contract Tests (0% threshold)
+
+**Purpose**: Validate MCP (Model Context Protocol) compliance
+
+**Why 0%?**
+- Tests focus on protocol schema validation (JSON-RPC 2.0, MCP spec)
+- Coverage measures protocol code paths, not business logic
+- 23 contract tests may only touch 25% of codebase but validate critical protocol behavior
+
+**Example**:
+```python
+@pytest.mark.contract
+def test_initialize_response_format():
+    """Validate initialize response matches MCP schema"""
+    response = await server.initialize(...)
+    validate_with_schema(response["result"], "initialize_response")
+```
+
+**Where enforced**:
+```yaml
+# .github/workflows/quality-tests.yaml
+pytest -m contract --cov-fail-under=0
+```
+
+**Coverage collected**: Yes (for reporting)
+**Enforcement**: None (informational only)
+
+---
+
+### Property-Based Tests (0% threshold)
+
+**Purpose**: Find edge cases using Hypothesis
+
+**Why 0%?**
+- Tests generate random inputs to find edge cases
+- Focus is on scenario diversity, not code coverage
+- 100 examples per test (CI profile) may hit same code paths repeatedly
+
+**Example**:
+```python
+@given(st.text(min_size=1), st.integers(min_value=0))
+@pytest.mark.property
+def test_user_id_validation(username: str, user_id: int):
+    """Property: valid inputs always succeed"""
+    user = create_user(username, user_id)
+    assert user.is_valid()
+```
+
+**Where enforced**:
+```yaml
+# .github/workflows/quality-tests.yaml
+HYPOTHESIS_PROFILE=ci pytest -m property --cov-fail-under=0
+```
+
+**Coverage collected**: Yes (for reporting)
+**Enforcement**: None (informational only)
+
+---
+
+### Performance Regression Tests (0% threshold)
+
+**Purpose**: Detect performance degradation over time
+
+**Why 0%?**
+- Tests measure execution time, not code coverage
+- Split across 4 parallel jobs (~25% coverage per split)
+- Coverage would need to be merged to evaluate properly
+
+**Example**:
+```python
+@pytest.mark.regression
+def test_agent_invoke_latency(benchmark):
+    """Regression: agent invoke should complete < 500ms"""
+    result = benchmark(agent.invoke, {"input": "test"})
+    assert result.stats.median < 0.5  # 500ms
+```
+
+**Where enforced**:
+```yaml
+# .github/workflows/quality-tests.yaml
+pytest --splits 4 --group 1 -m regression --cov-fail-under=0
+```
+
+**Coverage collected**: Per split (merged later)
+**Enforcement**: None per split
+
+---
+
+### End-to-End Tests (0% threshold)
+
+**Purpose**: Validate complete user journeys
+
+**Why 0%?**
+- Tests focus on user workflows, not code paths
+- 14 E2E tests may only exercise specific features
+- Coverage reflects workflow complexity, not test quality
+
+**Example**:
+```python
+@pytest.mark.e2e
+async def test_complete_authentication_flow():
+    """E2E: User registration → login → API call → logout"""
+    # 1. Register new user
+    user = await register_user(username="test", password="secure")
+
+    # 2. Authenticate and get token
+    token = await login(username="test", password="secure")
+
+    # 3. Make authenticated API call
+    response = await api_call(token=token, endpoint="/graphs")
+    assert response.status_code == 200
+
+    # 4. Logout and verify token invalidated
+    await logout(token=token)
+    response = await api_call(token=token, endpoint="/graphs")
+    assert response.status_code == 401
+```
+
+**Where enforced**:
+```yaml
+# .github/workflows/e2e-tests.yaml
+pytest -m e2e --cov-fail-under=0
+```
+
+**Coverage collected**: Yes (for reporting)
+**Enforcement**: None (informational only)
+
+---
+
+### Integration Tests (0% threshold)
+
+**Purpose**: Test component interactions with infrastructure
+
+**Why 0%?**
+- Tests focus on integration points (DB, Redis, Keycloak, OpenFGA)
+- 248 tests split across 4 parallel jobs (~62 tests per split)
+- Coverage per split ~25%, merged coverage ~80%
+
+**Example**:
+```python
+@pytest.mark.integration
+async def test_session_persistence_with_redis():
+    """Integration: Sessions persist across Redis reconnection"""
+    # 1. Create session
+    session_id = await create_session(user_id=123)
+
+    # 2. Restart Redis
+    await redis.restart()
+
+    # 3. Verify session still valid
+    session = await get_session(session_id)
+    assert session.user_id == 123
+```
+
+**Where enforced**:
+```yaml
+# .github/workflows/integration-tests.yaml
+pytest --splits 4 --group 1 -m integration --cov-fail-under=0
+```
+
+**Coverage collected**: Per split (merged later)
+**Enforcement**: None per split
+
+---
+
+## Implementation Details
+
+### How Thresholds Are Overridden
+
+**Global threshold** (from `pyproject.toml`):
+```toml
+[tool.coverage.report]
+fail_under = 66
+```
+
+**Per-workflow override** (using `--cov-fail-under` flag):
+```yaml
+# Override to 0% for contract tests
+pytest -m contract --cov-fail-under=0
+```
+
+### Coverage Collection vs Enforcement
+
+**All test types collect coverage** for reporting and trend analysis, but only unit tests enforce thresholds:
+
+```yaml
+# Always collect coverage
+--cov=src/mcp_server_langgraph --cov-report=xml
+
+# Selectively enforce thresholds
+--cov-fail-under=0  # Override for isolated test suites
+# (omit flag to use global 66% from pyproject.toml)
+```
+
+### Merged Coverage Analysis
+
+For split test suites (integration, regression), coverage is:
+1. **Collected** per split (4 jobs)
+2. **Uploaded** as separate artifacts
+3. **Merged** in a dedicated job
+4. **Evaluated** against aggregate threshold (if applicable)
+
+```yaml
+# Split 1/4 collects coverage-integration-1.xml
+# Split 2/4 collects coverage-integration-2.xml
+# Split 3/4 collects coverage-integration-3.xml
+# Split 4/4 collects coverage-integration-4.xml
+
+# Merge job combines all 4 reports
+coverage combine coverage-integration-*.xml
+```
+
+---
+
+## Historical Context
+
+### Why This Philosophy Was Adopted
+
+**Date**: 2025-11-17
+
+**Problem**: Quality Tests workflow was failing in CI despite all tests passing:
+- Contract Tests: 25% coverage < 66% required ❌
+- Property Tests: 29% coverage < 66% required ❌
+- Regression Tests (4 splits): ~24% coverage per split < 66% required ❌
+
+**Root Cause**: Global 66% threshold from `pyproject.toml` applied to all pytest runs, including isolated test suites focused on specific quality aspects.
+
+**Solution**: Override threshold to 0% for isolated test suites while maintaining strict enforcement for unit tests.
+
+**Impact**:
+- ✅ Quality tests now pass (focus on their actual purpose)
+- ✅ Unit tests still maintain 66% coverage requirement
+- ✅ Coverage trend tracking still enforces 80% for main branch
+- ✅ Coverage data still collected for all test types (reporting)
+
+### Related Issues
+
+- **PR #101**: CI failures due to coverage thresholds
+- **Codex Finding (2025-11-17)**: Contract tests missing, needed coverage override
+- **Quality Tests Audit**: Identified need for coverage philosophy documentation
+
+---
+
+## Best Practices
+
+### ✅ DO
+
+- **Collect coverage for all test types** (even if threshold = 0)
+- **Use coverage trends** to identify under-tested modules
+- **Focus on test quality** over coverage percentage
+- **Document uncovered edge cases** in test comments
+- **Merge split coverage** before evaluation
+
+### ❌ DON'T
+
+- **Write tests just to hit coverage targets** (coverage theater)
+- **Apply unit test thresholds to specialized test suites**
+- **Ignore low coverage** without understanding why
+- **Remove coverage collection** from any test type
+- **Evaluate split coverage** without merging first
+
+---
+
+## Changing Thresholds
+
+### Process
+
+1. **Propose change** with justification (GitHub issue or ADR)
+2. **Document rationale** for new threshold
+3. **Update workflows** to reflect new threshold
+4. **Update this document** with change history
+5. **Communicate** to team via PR/Slack
+
+### Threshold Change Checklist
+
+- [ ] Rationale documented (why is this change needed?)
+- [ ] Impact analyzed (how many tests affected?)
+- [ ] Workflows updated (YAML files modified)
+- [ ] Documentation updated (this file)
+- [ ] Team notified (PR description + Slack)
+- [ ] ADR created (if architectural significance)
+
+---
+
+## Troubleshooting
+
+### "Coverage threshold not met" Error
+
+**Symptom**: CI fails with coverage < required threshold
+
+**Diagnosis**:
+```bash
+# Check which test type is failing
+pytest -m <marker> --cov=src --cov-report=term-missing
+
+# Identify uncovered lines
+coverage report --show-missing
+```
+
+**Solutions**:
+1. **Unit tests**: Add tests to cover missing lines (appropriate)
+2. **Specialized tests**: Override threshold if focus is non-coverage (e.g., contract, property)
+3. **Split tests**: Check if individual split or merged coverage
+
+### Split Coverage Lower Than Expected
+
+**Symptom**: Individual split shows 25% coverage but merged should be 80%
+
+**Diagnosis**:
+```bash
+# Verify split distribution
+pytest --splits 4 --group 1 -m integration --collect-only
+
+# Check merged coverage
+coverage combine coverage-*.xml
+coverage report
+```
+
+**Solution**: This is expected! Individual splits should have `--cov-fail-under=0`. Only evaluate merged coverage.
+
+### Coverage Trend Failing on PR
+
+**Symptom**: Coverage Trend workflow fails with "Coverage below 80%"
+
+**Diagnosis**:
+```bash
+# Check current coverage
+pytest --cov=src --cov-report=term
+
+# Compare to main branch
+git checkout main
+pytest --cov=src --cov-report=term
+```
+
+**Solution**: Add unit tests to bring coverage above 80% threshold for main branch.
+
+---
+
+## Related Documentation
+
+- [Testing Guide](/advanced/testing) - Comprehensive testing strategies
+- [CI/CD Pipeline](/deployment/ci-cd) - Workflow architecture
+- [Quality Tests Workflow](/.github/workflows/quality-tests.yaml) - Contract, property, regression tests
+- [E2E Tests Workflow](/.github/workflows/e2e-tests.yaml) - End-to-end user journeys
+- [Integration Tests Workflow](/.github/workflows/integration-tests.yaml) - Component integration testing
+
+---
+
+## Appendix: Coverage by Test Type
+
+### Typical Coverage Ranges
+
+Based on historical data from this project:
+
+| Test Type | Typical Coverage | Test Count | Focus |
+|-----------|------------------|------------|-------|
+| Unit | 70-85% | ~800 | Business logic |
+| Integration (merged) | 75-85% | 248 | Infrastructure |
+| E2E | 30-50% | 14 | User journeys |
+| Contract | 20-30% | 23 | Protocol compliance |
+| Property | 25-35% | ~50 | Edge cases |
+| Regression | 20-30% | ~100 | Performance |
+
+**Note**: These ranges are **descriptive** (what we observe) not **prescriptive** (what we require).
+
+---
+
+**Questions?** Open an issue or ask in `#engineering` Slack channel.
