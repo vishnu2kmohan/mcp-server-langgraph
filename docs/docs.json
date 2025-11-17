@@ -186,7 +186,8 @@
             "group": "Infrastructure Requirements",
             "pages": [
               "infrastructure/gke-cluster-requirements",
-              "kubernetes-best-practices-implementation"
+              "kubernetes-best-practices-implementation",
+              "infrastructure/DOCKER_HEALTHCHECK_PATTERNS"
             ]
           },
           {
