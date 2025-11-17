@@ -23,6 +23,9 @@ import pytest
 
 from mcp_server_langgraph.core.config import Settings
 
+# Mark as unit test for CI filtering
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # REDIS URL PARSING TESTS
 # ============================================================================
