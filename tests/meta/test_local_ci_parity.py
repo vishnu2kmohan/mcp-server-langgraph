@@ -58,7 +58,15 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
     - tests/meta/test_hook_fixture_resilience.py (validates this behavior)
     - CONTRIBUTING.md: Documents hook installation
     """
-    hook_path = shared_repo_root / ".git" / "hooks" / "pre-push"
+    # Use git rev-parse to get common git directory (handles worktrees)
+    result = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=True, timeout=60, cwd=shared_repo_root
+    )
+    git_common_dir = Path(result.stdout.strip())
+    # If path is relative, make it relative to repo_root
+    if not git_common_dir.is_absolute():
+        git_common_dir = shared_repo_root / git_common_dir
+    hook_path = git_common_dir / "hooks" / "pre-push"
 
     if not hook_path.exists():
         pytest.skip(
@@ -425,12 +433,21 @@ class TestLocalCIParity:
 
     @pytest.fixture
     def pre_push_hook_path(self) -> Path:
-        """Get path to pre-push hook."""
+        """Get path to pre-push hook (handles git worktrees)."""
+        # Get repository root
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
         )
         repo_root = Path(result.stdout.strip())
-        return repo_root / ".git" / "hooks" / "pre-push"
+        # Use git rev-parse to get common git directory (handles worktrees)
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=True, timeout=60, cwd=repo_root
+        )
+        git_common_dir = Path(result.stdout.strip())
+        # If path is relative, make it relative to repo_root
+        if not git_common_dir.is_absolute():
+            git_common_dir = repo_root / git_common_dir
+        return git_common_dir / "hooks" / "pre-push"
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
