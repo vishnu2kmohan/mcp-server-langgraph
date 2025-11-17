@@ -64,7 +64,11 @@ Validate:
 2. Extract all navigation references
 3. Verify each referenced file exists
 4. Check for orphaned `.mdx` files not in navigation
-5. Validate frontmatter in all `.mdx` files
+5. **Validate frontmatter in all `.mdx` files** (CRITICAL)
+   - Run: `python scripts/validators/frontmatter_validator.py --docs-dir docs`
+   - Required fields: `title`, `description`, `icon`, `contentType`
+   - Valid contentType values: `explanation`, `reference`, `tutorial`, `how-to`, `guide`
+   - **Auto-fix**: `python scripts/add_missing_frontmatter.py --docs-dir docs`
 6. Check for broken internal links (relative paths)
 7. Verify code blocks have proper language tags
 8. Check for missing images referenced in docs
@@ -272,29 +276,33 @@ Enhancements and optimizations:
 
 After remediation, run these checks:
 ```bash
-# 1. Run Python validators (fast, comprehensive)
+# 1. Validate frontmatter in all MDX files (CRITICAL)
+python scripts/validators/frontmatter_validator.py --docs-dir docs
+
+# 2. Run Python validators (fast, comprehensive)
 python scripts/validators/validate_docs.py
 
-# 2. Validate Mintlify docs broken links
+# 3. Validate Mintlify docs broken links
 cd docs && npx mintlify broken-links
 
-# 3. Validate Mintlify docs can build (starts dev server)
+# 4. Validate Mintlify docs can build (starts dev server)
 cd docs && mintlify dev
 # Note: Press Ctrl+C after verifying build succeeds
 
-# 4. Alternative: Use Makefile target
+# 5. Alternative: Use Makefile target
 make docs-validate-mintlify
 
-# 5. Run all pre-commit hooks
+# 6. Run all pre-commit hooks
 pre-commit run --all-files
 
-# 6. Validate all navigation targets exist
+# 7. Validate all navigation targets exist
 python scripts/validators/navigation_validator.py
 ```
 
 ## Success Criteria
 
 Documentation is considered "clean" when:
+- ✅ **All MDX files have valid frontmatter** (title, description, icon, contentType) **(CRITICAL)**
 - ✅ All navigation links resolve to existing files
 - ✅ **Mintlify broken-links check passes (CRITICAL)**
 - ✅ **Mintlify dev build completes without errors (CRITICAL)**
