@@ -300,8 +300,16 @@ class TestGDPRSchemaFixturePattern:
 
         This is a meta-test that validates the pattern, not the implementation.
         """
-        # GIVEN: The GDPR schema file
-        project_root = Path(__file__).parent.parent.parent
+        # GIVEN: The GDPR schema file (find project root by looking for pyproject.toml)
+        current = Path(__file__).resolve()
+        project_root = None
+        for parent in current.parents:
+            if (parent / "pyproject.toml").exists():
+                project_root = parent
+                break
+
+        assert project_root is not None, "Could not find project root (no pyproject.toml)"
+
         schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
 
         # THEN: File should exist (prerequisite)
@@ -331,8 +339,16 @@ class TestGDPRSchemaFixturePattern:
         # GIVEN: Database pool (schema already created by fixture)
         pool = db_pool_gdpr
 
-        # WHEN: We execute schema SQL again
-        project_root = Path(__file__).parent.parent.parent
+        # WHEN: We execute schema SQL again (find project root by looking for pyproject.toml)
+        current = Path(__file__).resolve()
+        project_root = None
+        for parent in current.parents:
+            if (parent / "pyproject.toml").exists():
+                project_root = parent
+                break
+
+        assert project_root is not None, "Could not find project root (no pyproject.toml)"
+
         schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
         schema_sql = schema_file.read_text()
 
