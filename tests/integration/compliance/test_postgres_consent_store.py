@@ -14,6 +14,14 @@ import pytest
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsentStore, PostgresUserProfileStore
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord, UserProfile
 
+# Mark as integration test with xdist_group for worker isolation
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_consent_tests")]
+
+
+def teardown_module():
+    """Force GC to prevent mock accumulation in xdist workers"""
+    gc.collect()
+
 
 @pytest.fixture
 async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:

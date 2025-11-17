@@ -456,14 +456,18 @@ def _check_http_health(url: str, timeout: float = 2.0) -> bool:
 @pytest.fixture(scope="session")
 def docker_compose_file():
     """
-    Provide path to docker-compose.test.yml for pytest-docker-compose-v2.
+    Provide path to root docker-compose.test.yml for pytest-docker-compose-v2.
+
+    Uses root docker-compose.test.yml for local/CI parity (OpenAI Codex Finding #1).
 
     This enables automated docker-compose lifecycle management:
     - Services start automatically before test session
     - Services stop automatically after test session
     - No manual docker-compose commands needed
     """
-    return os.path.join(os.path.dirname(__file__), "..", "docker-compose.test.yml")
+    from pathlib import Path
+
+    return str(Path(__file__).parent.parent / "docker-compose.test.yml")
 
 
 @pytest.fixture(scope="session")
