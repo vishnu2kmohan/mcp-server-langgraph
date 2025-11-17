@@ -77,7 +77,17 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     # Exception was silently caught, migrations never ran, tables never created.
     #
     # Solution: Execute schema SQL directly using async connection (like postgres_with_schema fixture)
-    project_root = Path(__file__).parent.parent.parent
+    # Find project root by searching for pyproject.toml (not parent.parent.parent which gives tests/)
+    current = Path(__file__).resolve()
+    project_root = None
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            project_root = parent
+            break
+
+    if project_root is None:
+        raise RuntimeError("Could not find project root (no pyproject.toml)")
+
     schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
 
     if schema_file.exists():
