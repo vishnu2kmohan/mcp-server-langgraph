@@ -270,8 +270,9 @@ class TestFastAPIDependencyOverridesPattern:
 
         FIX: Use app.dependency_overrides instead of monkeypatch
         """
-        test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
+        from tests.helpers import get_integration_test_file
 
+        test_file = get_integration_test_file("api/test_service_principals_endpoints.py")
         with open(test_file) as f:
             content = f.read()
 
@@ -291,8 +292,9 @@ class TestFastAPIDependencyOverridesPattern:
 
     def test_api_keys_fixture_uses_dependency_overrides(self):
         """Verify API keys tests use dependency_overrides pattern"""
-        test_file = Path(__file__).parent.parent / "api" / "test_api_keys_endpoints.py"
+        from tests.helpers import get_integration_test_file
 
+        test_file = get_integration_test_file("api/test_api_keys_endpoints.py")
         with open(test_file) as f:
             content = f.read()
 

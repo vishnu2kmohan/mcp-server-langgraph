@@ -6,7 +6,10 @@
 # ==============================================================================
 # Variables
 # ==============================================================================
-PYTEST := .venv/bin/pytest
+# Use UV_RUN for pytest to auto-sync dependencies (ensures dev extras installed)
+# Regression Prevention (2025-11-16): test-regression needs dev dependencies
+# (schemathesis, freezegun, kubernetes, toml, black, psutil, flake8, isort)
+PYTEST := uv run pytest
 DOCKER_COMPOSE := docker compose
 UV_RUN := uv run
 COV_SRC := src/mcp_server_langgraph
@@ -228,6 +231,7 @@ test:
 
 test-unit:
 	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
+	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
@@ -362,16 +366,20 @@ benchmark:
 # New test targets
 test-property:
 	@echo "Running property-based tests (Hypothesis, parallel)..."
+	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m property -v
 	@echo "✓ Property tests complete"
 
 test-contract:
 	@echo "Running contract tests (MCP protocol, OpenAPI, parallel)..."
+	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m contract -v
 	@echo "✓ Contract tests complete"
 
 test-regression:
 	@echo "Running performance regression tests (parallel)..."
+	@echo "Installing dev dependencies (required for regression tests)..."
+	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m regression -v
 	@echo "✓ Regression tests complete"
 
@@ -462,6 +470,7 @@ test-e2e:
 
 test-api:
 	@echo "Running API endpoint tests (unit tests for REST APIs)..."
+	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "api and unit" -v
 	@echo "✓ API endpoint tests complete"
 
