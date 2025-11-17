@@ -26,42 +26,59 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 @pytest.mark.xdist_group(name="testadrsynchronization")
 class TestADRSynchronization:
-    """Verify ADRs are synced between source (adr/) and Mintlify docs (docs/architecture/)."""
+    """
+    Verify ADRs are synced between source (adr/) and Mintlify docs (docs/architecture/).
+
+    NOTE: This test calls the validation script (scripts/validators/adr_sync_validator.py)
+    instead of duplicating the validation logic. The script is the source of truth.
+
+    Architecture Pattern:
+    - Script = Source of truth (scripts/validators/adr_sync_validator.py)
+    - Hook = Trigger (validate-adr-sync in .pre-commit-config.yaml)
+    - Meta-Test = Validator of validator (this test)
+    """
 
     def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_adr_count_matches(self):
-        """Test that the number of ADRs in adr/ matches docs/architecture/."""
-        adr_source = list((PROJECT_ROOT / "adr").glob("adr-*.md"))
-        adr_docs = list((PROJECT_ROOT / "docs" / "architecture").glob("adr-*.mdx"))
+    def test_adr_synchronization(self):
+        """
+        Test that ADRs are synchronized between adr/ and docs/architecture/.
 
-        assert len(adr_source) == len(adr_docs), (
-            f"ADR count mismatch: {len(adr_source)} in adr/ " f"but {len(adr_docs)} in docs/architecture/"
+        This test validates:
+        1. All ADRs in adr/ have corresponding .mdx files in docs/architecture/
+        2. No orphaned .mdx files exist in docs/architecture/
+        3. ADR count matches between source and docs
+        4. No uppercase filename violations (should be adr-*, not ADR-*)
+
+        The validation is performed by calling scripts/validators/adr_sync_validator.py,
+        which is the authoritative implementation (single source of truth).
+        """
+        import subprocess
+        import sys
+
+        script_path = PROJECT_ROOT / "scripts" / "validators" / "adr_sync_validator.py"
+
+        assert script_path.exists(), (
+            f"ADR sync validator script not found: {script_path}\n" "Expected: scripts/validators/adr_sync_validator.py"
         )
 
-    def test_all_source_adrs_have_mdx_versions(self):
-        """Test that every ADR in adr/ has a corresponding .mdx file in docs/architecture/."""
-        adr_source_dir = PROJECT_ROOT / "adr"
-        adr_docs_dir = PROJECT_ROOT / "docs" / "architecture"
+        # Run the validation script - it will exit with code 1 if validation fails
+        result = subprocess.run(
+            [sys.executable, str(script_path), "--repo-root", str(PROJECT_ROOT)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
 
-        source_adrs = {f.stem for f in adr_source_dir.glob("adr-*.md")}
-        docs_adrs = {f.stem for f in adr_docs_dir.glob("adr-*.mdx")}
-
-        missing_in_docs = source_adrs - docs_adrs
-        assert not missing_in_docs, f"ADRs in adr/ missing from docs/architecture/: {sorted(missing_in_docs)}"
-
-    def test_no_orphaned_adr_mdx_files(self):
-        """Test that there are no orphaned .mdx ADR files without source .md files."""
-        adr_source_dir = PROJECT_ROOT / "adr"
-        adr_docs_dir = PROJECT_ROOT / "docs" / "architecture"
-
-        source_adrs = {f.stem for f in adr_source_dir.glob("adr-*.md")}
-        docs_adrs = {f.stem for f in adr_docs_dir.glob("adr-*.mdx")}
-
-        orphaned_in_docs = docs_adrs - source_adrs
-        assert not orphaned_in_docs, f"Orphaned ADR .mdx files in docs/architecture/: {sorted(orphaned_in_docs)}"
+        # The script prints detailed error messages, so pass them through
+        assert result.returncode == 0, (
+            f"ADR synchronization failed:\n\n"
+            f"stdout:\n{result.stdout}\n\n"
+            f"stderr:\n{result.stderr}\n\n"
+            f"Fix: Sync ADRs using the commands shown in the report above"
+        )
 
 
 @pytest.mark.xdist_group(name="testdocsjsonintegrity")

@@ -151,6 +151,118 @@ def test_create_token():
 - Aim for >80% coverage
 - Critical paths should have >90% coverage
 
+### Validation Workflow
+
+This project uses a **three-tier validation strategy** optimized for developer productivity:
+
+#### Tier-1: Pre-commit Hooks (< 30s)
+
+Runs automatically on `git commit` for **changed files only**.
+
+**What runs**:
+- Code formatting (black, isort) - auto-fixes
+- Linting (flake8, shellcheck)
+- Security scanning (bandit)
+- Quick syntax checks
+
+**Duration**: 15-30 seconds
+**Purpose**: Catch obvious issues early, auto-fix formatting
+**When**: Every commit
+
+```bash
+git commit -m "feat: your changes"
+# Automatically runs tier-1 validation
+```
+
+**Note**: You can commit frequently without performance penalty. Auto-fixers will format your code automatically.
+
+#### Tier-2: Pre-push Hooks (3-5 min)
+
+Runs automatically on `git push` with **dev profile** (faster iteration).
+
+**What runs** (4 phases):
+1. **Phase 1**: Lockfile + workflow validation (< 30s)
+2. **Phase 2**: MyPy type checking (1-2 min, warning-only)
+3. **Phase 3**: Focused test suite (unit, smoke, API tests) with dev profile
+   - Property tests: 25 examples (vs 100 in CI)
+   - Integration tests: Manual stage (run via `make test-integration`)
+4. **Phase 4**: Selected pre-commit hooks on all files
+
+**Duration**: 3-5 minutes (optimized for developer productivity)
+**Purpose**: Catch regressions before pushing to remote
+**When**: Every push
+
+```bash
+git push
+# Automatically runs tier-2 validation
+# Expected duration: 3-5 minutes
+```
+
+**CLI Availability**: External tool hooks (actionlint, mintlify, helm, kubectl) gracefully skip if tools are not installed. You can develop without installing all tools.
+
+**Emergency bypass** (use sparingly):
+```bash
+git push --no-verify  # Skip hooks (emergency only!)
+```
+
+#### Tier-3: CI/Full Validation (12-15 min)
+
+Runs automatically in **CI/CD pipelines** with **ci profile** (comprehensive).
+
+**What runs**:
+- Complete test suite with ci profile
+  - Property tests: 100 examples (thorough validation)
+  - Integration tests: Full Docker stack with 4x parallelization
+  - E2E tests: Complete user journey validation
+  - Quality tests: Property, contract, performance regression
+- All pre-commit hooks on all files
+- Full deployment validation
+- Security scans (Trivy, CodeQL)
+
+**Duration**: 12-15 minutes
+**Purpose**: Comprehensive validation before merge
+**When**: Every pull request, push to main/develop
+
+**Manual run** (CI-equivalent local validation):
+```bash
+make validate-full
+# Runs complete CI validation locally
+# Duration: 12-15 minutes
+```
+
+#### Validation Tier Summary
+
+| Tier | Stage | Duration | Profile | When | What Runs |
+|------|-------|----------|---------|------|-----------|
+| **Tier-1** | Pre-commit | < 30s | N/A | Every commit | Formatting, linting, quick checks |
+| **Tier-2** | Pre-push | 3-5 min | dev (25 examples) | Every push | Focused tests, type checking |
+| **Tier-3** | CI/Full | 12-15 min | ci (100 examples) | PR, main/develop | Complete validation |
+
+#### Best Practices
+
+**✅ DO**:
+- Commit frequently (tier-1 is fast!)
+- Push strategically (tier-2 is focused)
+- Let hooks run (they catch issues early)
+- Run `make validate-full` before creating PR (CI-equivalent)
+- Run `make test-integration` when changing infrastructure code
+
+**❌ DON'T**:
+- Use `--no-verify` unless emergency
+- Skip tier-2 validation (it's optimized for speed)
+- Expect tier-2 to catch everything (tier-3/CI is comprehensive)
+
+**Performance Monitoring**:
+```bash
+# Measure hook performance
+python scripts/measure_hook_performance.py --stage all
+```
+
+**See Also**:
+- [Git Hooks Guide](../TESTING.md#git-hooks-and-validation) - Complete guide
+- [Hook Categorization](../docs-internal/HOOK_CATEGORIZATION.md) - Detailed hook breakdown
+- [Remediation Report](../docs-internal/CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md) - Optimization rationale
+
 ## Submitting Changes
 
 ### Before Submitting

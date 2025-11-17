@@ -29,9 +29,9 @@ fi
 
 # Step 2: Check for stray XML tags
 echo "  → Checking for stray XML tags..."
-if find docs -name "*.mdx" -type f -exec grep -l '```xml$' {} \; 2>/dev/null | grep -q .; then
-    echo "    ⚠ Found stray ```xml tags, fixing..."
-    find docs -name "*.mdx" -type f -exec sed -i 's/```xml$/```/g' {} \;
+if find docs -name "*.mdx" -type f -exec grep -l '\`\`\`xml$' {} \; 2>/dev/null | grep -q .; then
+    echo "    ⚠ Found stray \`\`\`xml tags, fixing..."
+    find docs -name "*.mdx" -type f -exec sed -i 's/\`\`\`xml$/\`\`\`/g' {} \;
     FIXES_APPLIED=1
     echo "    ✓ Fixed XML tags"
 fi

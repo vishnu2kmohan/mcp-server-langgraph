@@ -164,8 +164,8 @@ def check_tests_exist() -> List[str]:
     errors = []
 
     required_tests = [
-        ("tests/unit/test_dependencies_wiring.py", "Dependency wiring tests"),
-        ("tests/unit/test_cache_redis_config.py", "Cache Redis configuration tests"),
+        ("tests/integration/test_dependencies_wiring.py", "Dependency wiring tests"),
+        ("tests/integration/test_cache_redis_config.py", "Cache Redis configuration tests"),
         ("tests/integration/test_app_startup_validation.py", "App startup validation tests"),
         ("tests/smoke/test_ci_startup_smoke.py", "CI smoke tests"),
     ]

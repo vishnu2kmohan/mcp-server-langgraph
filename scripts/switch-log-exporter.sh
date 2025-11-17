@@ -14,7 +14,7 @@ DOCKER_COMPOSE_FILE="$PROJECT_ROOT/docker/docker-compose.yml"
 
 # Validate platform
 VALID_PLATFORMS=("base" "aws" "gcp" "azure" "elasticsearch" "datadog" "splunk")
-if [[ ! " ${VALID_PLATFORMS[@]} " =~ " ${PLATFORM} " ]]; then
+if [[ ! " ${VALID_PLATFORMS[*]} " =~ \ ${PLATFORM}\  ]]; then
     echo "❌ Error: Invalid platform '$PLATFORM'"
     echo ""
     echo "Usage: $0 <platform>"

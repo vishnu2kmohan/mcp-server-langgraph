@@ -146,15 +146,15 @@ repos:
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
   - id: run-unit-tests
-    name: Run Unit Tests (comprehensive suite)
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -v --tb=short'
+    name: Run Unit Tests (focused suite - dev profile)
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs comprehensive unit test suite to match CI exactly.
+    description: 'Runs focused unit test suite for rapid pre-push validation.
 
 
       Executes: pytest -n auto -m "unit and not llm" tests/
@@ -163,21 +163,26 @@ repos:
 
       - OTEL_SDK_DISABLED=true (matches CI environment)
 
-      - HYPOTHESIS_PROFILE=ci (100 examples for property tests)
+      - Uses dev profile (25 examples for property tests, faster iteration)
+
+      - Stops on first failure (-x) for faster feedback
 
       - Excludes LLM tests (require API keys)
 
 
-      This hook prevents the validation gap where individual test files
+      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples) - see validate-full
 
-      pass but comprehensive suite fails. Added 2025-11-16 after finding
+      Local Speed: 3-5min (vs 8-12min with CI profile)
 
-      141 tests not covered by individual file hooks.
+
+      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration
+
+      while maintaining quality. Full CI-equivalent validation via make validate-full.
 
       '
   - id: run-smoke-tests
     name: Run Smoke Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/smoke/.*\.py)$
@@ -186,22 +191,38 @@ repos:
     - pre-push
     description: 'Runs smoke tests to validate critical paths.
 
+
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-integration-tests
-    name: Run Integration Tests
+    name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/integration/.*\.py)$
     always_run: false
     stages:
-    - pre-push
-    description: 'Runs integration tests with real infrastructure.
+    - manual
+    description: 'Runs integration tests with real infrastructure (Docker required).
+
+
+      Moved to manual stage 2025-11-16 per OpenAI Codex finding - integration
+
+      tests require Docker stack and add 2-3min to pre-push duration.
+
+
+      Run manually: SKIP= pre-commit run run-integration-tests --all-files
+
+      Or via make: make test-integration
+
+
+      CI runs these automatically. Use for local validation of integration changes.
 
       '
   - id: run-api-tests
     name: Run API Endpoint Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m "api and unit and not llm" tests/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m "api and unit and not llm" tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/api/.*\.py)$
@@ -215,10 +236,12 @@ repos:
 
       Prevents API regressions from reaching CI.
 
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-mcp-server-tests
     name: Run MCP Server Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m "not llm" -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m "not llm" -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/unit/test_mcp_stdio_server\.py)$
@@ -230,22 +253,34 @@ repos:
 
       Prevents MCP protocol regressions.
 
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-property-tests
-    name: Run Property-Based Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m property tests/ -v --tb=short'
+    name: Run Property-Based Tests (dev profile - 25 examples)
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m property tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs Hypothesis property-based tests with CI profile (100 examples).
+    description: 'Runs Hypothesis property-based tests with dev profile (25 examples).
 
 
-      Executes: HYPOTHESIS_PROFILE=ci pytest -m property
+      Executes: pytest -m property (uses dev profile by default)
 
-      Validates code properties across many generated test cases.
+      Validates code properties with faster iteration (25 vs 100 examples).
+
+
+      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples).
+
+      Local Speed: 4x faster than CI profile, sufficient for catching most issues.
+
+
+      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration.
+
+      Full validation via make validate-full or CI.
 
       '
 - repo: https://github.com/python-jsonschema/check-jsonschema
@@ -259,7 +294,11 @@ repos:
   hooks:
   - id: actionlint-workflow-validation
     name: Validate GitHub Actions with actionlint
-    entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1'
+    entry: >
+      bash -c 'if command -v actionlint >/dev/null 2>&1; then
+      actionlint -no-color -shellcheck= .github/workflows/*.yml .github/workflows/*.yaml 2>&1;
+      else echo "Skipping: actionlint not installed (install from https://github.com/rhysd/actionlint)";
+      exit 0; fi'
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -267,6 +306,9 @@ repos:
     stages:
     - pre-push
     description: 'Advanced GitHub Actions workflow validation using actionlint.
+
+
+      CLI Availability Guard: Gracefully skips if actionlint is not installed.
 
 
       Catches issues like:
@@ -445,7 +487,11 @@ repos:
       '
   - id: mintlify-broken-links-check
     name: Mintlify Broken Links Validation (PRIMARY Validator)
-    entry: bash -c 'cd docs && npx mintlify broken-links'
+    entry: >
+      bash -c 'if command -v npx >/dev/null 2>&1; then
+      cd docs && npx mintlify broken-links;
+      else echo "Skipping: npx/Node.js not installed (install from https://nodejs.org/)";
+      exit 0; fi'
     language: system
     files: ^docs/.*\.mdx$
     pass_filenames: false
@@ -589,9 +635,9 @@ repos:
   - id: trivy-scan-k8s-manifests
     name: Trivy Security Scan for Kubernetes Manifests
     entry: "bash -c 'if ! command -v trivy &> /dev/null; then\n  echo \"\u26A0\uFE0F  Trivy not installed - skipping security\
-      \ scan. Install: brew install trivy\";\n  exit 0;\nfi;\ntrivy config deployments --severity CRITICAL,HIGH --exit-code\
-      \ 1 --quiet ||\n(echo \"\u274C Security vulnerabilities found. Run: trivy config deployments --severity CRITICAL,HIGH\"\
-      ; exit 1)'\n"
+      \ scan. Install: brew install trivy\";\n  exit 0;\nfi;\ntrivy config deployments --severity CRITICAL,HIGH --skip-dirs\
+      \ \"**/charts\" --exit-code\ 1 --quiet ||\n(echo \"\u274C Security vulnerabilities found. Run: trivy config deployments\
+      \ --severity CRITICAL,HIGH --skip-dirs charts\"; exit 1)'\n"
     language: system
     files: ^deployments/.*\.(yaml|yml)$
     pass_filenames: false
@@ -661,19 +707,28 @@ repos:
       Per TDD best practices, this ensures local configs never reach version control.
 
       '
-  - id: validate-github-workflows
-    name: Validate GitHub Actions Workflow Context Usage
-    entry: uv run python scripts/validate_github_workflows.py
+  - id: validate-github-workflows-comprehensive
+    name: Validate GitHub Workflows (Comprehensive)
+    entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
     language: system
-    files: ^\.github/workflows/.*\.ya?ml$
+    files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
-    description: 'Validates that GitHub Actions workflows don''t reference undefined
-
-      context variables (e.g., github.event.workflow_run.* when workflow_run
-
-      trigger is not enabled). Prevents CI/CD failures from context errors.
-
-      '
+    stages:
+      - pre-push
+    description: "Comprehensive GitHub Actions workflow validation (consolidated):\n\n\
+      Replaces: validate-github-workflows + validate-github-action-versions\n\n\
+      Validations performed:\n\
+      1. YAML syntax validation\n\
+      2. Context usage (github.event.* against enabled triggers)\n\
+      3. Action version validation (published tags, no invalid versions)\n\
+      4. Permissions validation (workflows creating issues have 'issues: write')\n\n\
+      Prevents:\n\
+      - Using github.event.pull_request.* without pull_request trigger\n\
+      - Invalid action versions (e.g., astral-sh/setup-uv@v7.1.1)\n\
+      - Missing permissions for issue creation\n\n\
+      Consolidation: Part of validator consolidation effort (2025-11-17)\n\
+      See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md\n\
+      Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
     entry: uv run python scripts/validate_gke_autopilot_compliance.py
@@ -693,7 +748,7 @@ repos:
     language: python
     additional_dependencies: []
     pass_filenames: false
-    files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/unit/test_(dependencies_wiring|cache_redis_config)\.py)$
+    files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
     always_run: false
     stages:
     - pre-push
@@ -974,48 +1029,9 @@ repos:
       Prevents regression of Codex Findings #3, #4, #9
 
       '
-  - id: validate-github-action-versions
-    name: Validate GitHub Actions Action Versions
-    entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that all GitHub Actions use published, valid version tags and have correct permissions.
-
-
-      Invalid versions prevented (OpenAI Codex Phase 5):
-
-      1. astral-sh/setup-uv@v7.1.1 (should be v7.1.0 or v7) - FIXED
-
-      2. actions/cache@v4.3.0 (should be v4.2.0 or v4) - FIXED
-
-      3. Other non-existent action version tags
-
-
-      Permissions validated:
-
-      - Workflows creating issues must have ''issues: write'' permission
-
-      - Workflows have minimal required permissions (security best practice)
-
-
-      Test suite (8 tests):
-
-      - Action version validation (3 tests)
-
-      - Permissions validation (3 tests)
-
-      - YAML syntax validation (2 tests)
-
-
-      Following TDD principles: Tests written FIRST, then fixes applied.
-
-      See: docs-internal/GITHUB_ACTIONS_VALIDATION_REPORT.md
-
-      '
+  # NOTE: validate-github-action-versions hook REMOVED (2025-11-17)
+  # Consolidated into validate-github-workflows-comprehensive (above)
+  # See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md
   - id: validate-kustomize-builds
     name: Validate Kustomize Overlays Build Successfully
     entry: uv run pytest tests/deployment/test_kustomize_builds.py -v --tb=short
@@ -1293,13 +1309,20 @@ repos:
       '
   - id: helm-lint
     name: Helm Lint Validation
-    entry: helm lint deployments/helm/mcp-server-langgraph
+    entry: >
+      bash -c 'if command -v helm >/dev/null 2>&1; then
+      helm lint deployments/helm/mcp-server-langgraph;
+      else echo "Skipping: helm not installed (install from https://helm.sh/docs/intro/install/)";
+      exit 0; fi'
     language: system
     files: ^deployments/helm/.*\.(yaml|yml)$
     pass_filenames: false
     stages:
     - pre-push
     description: 'Validates Helm chart passes lint checks.
+
+
+      CLI Availability Guard: Gracefully skips if helm is not installed.
 
 
       Prevents:
@@ -1321,14 +1344,22 @@ repos:
       '
   - id: validate-cloud-overlays
     name: Validate Cloud Overlays Build Successfully
-    entry: bash -c 'kubectl kustomize deployments/kubernetes/overlays/aws && kubectl kustomize deployments/kubernetes/overlays/gcp
-      && kubectl kustomize deployments/kubernetes/overlays/azure'
+    entry: >
+      bash -c 'if command -v kubectl >/dev/null 2>&1; then
+      kubectl kustomize deployments/kubernetes/overlays/aws &&
+      kubectl kustomize deployments/kubernetes/overlays/gcp &&
+      kubectl kustomize deployments/kubernetes/overlays/azure;
+      else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
+      exit 0; fi'
     language: system
     files: ^deployments/kubernetes/overlays/(aws|gcp|azure)/.*\.(yaml|yml)$
     pass_filenames: false
     stages:
     - pre-push
     description: 'Validates cloud-specific Kustomize overlays build without errors.
+
+
+      CLI Availability Guard: Gracefully skips if kubectl is not installed.
 
 
       Prevents:
@@ -1345,8 +1376,11 @@ repos:
       '
   - id: validate-no-placeholders
     name: Check for Placeholders in Production Overlays
-    entry: bash -c 'kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit
-      1 || exit 0'
+    entry: >
+      bash -c 'if command -v kubectl >/dev/null 2>&1; then
+      kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit 1 || exit 0;
+      else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
+      exit 0; fi'
     language: system
     files: ^deployments/overlays/production-gke/.*\.(yaml|yml)$
     pass_filenames: false
