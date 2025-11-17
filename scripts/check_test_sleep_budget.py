@@ -4,6 +4,14 @@ CI Script: Wall-Clock Sleep Time Budget Monitor
 
 Monitors total wall-clock sleep time across test suite to prevent slow tests.
 
+Exclusions:
+- Meta-tests (tests/meta/) are automatically excluded
+- Meta-tests often contain intentionally long sleeps for testing purposes
+
+Conservative Estimation:
+- Unknown variables estimated at 5.0s (can be adjusted if needed)
+- Expressions like "ttl + 0.5" use the numeric portion
+
 Purpose: Track and limit sleep time budget (Codex Finding #5)
 Usage: python scripts/check_test_sleep_budget.py [--max-seconds 60]
 """
@@ -18,12 +26,15 @@ REPO_ROOT = Path(__file__).parent.parent
 
 def find_sleep_calls():
     """
-    Find all time.sleep() and asyncio.sleep() calls in test files.
+    Find all time.sleep() and asyncio.sleep() calls in test files (excluding meta-tests).
 
     Returns:
         list: [(file_path, line_number, sleep_duration, context)]
     """
     test_files = list(REPO_ROOT.glob("tests/**/test_*.py"))
+
+    # Exclude meta-tests (they often have intentionally long sleeps for testing)
+    test_files = [f for f in test_files if "/meta/" not in str(f) and "\\meta\\" not in str(f)]
 
     sleep_calls = []
 

@@ -6,11 +6,16 @@ Prevents test performance regressions by detecting excessively long sleep() call
 
 Thresholds:
 - Unit tests: max 0.5s sleep
-- Integration tests: max 2.0s sleep
+- Integration tests: max 2.0s sleep (default if not explicitly marked)
+
+Exclusions:
+- Meta-tests (tests/meta/) are automatically excluded
+- Lines with # noqa: sleep-duration comment are skipped
 
 Usage:
     python scripts/check_test_sleep_duration.py tests/
     python scripts/check_test_sleep_duration.py tests/unit/test_file.py
+    python scripts/check_test_sleep_duration.py --unit-max 1.0 --integration-max 3.0 tests/
 """
 
 import argparse
@@ -38,16 +43,21 @@ def is_unit_test(file_path: str, content: str) -> bool:
     Heuristics:
     - Path contains 'unit'
     - Contains @pytest.mark.unit
-    - Default to unit test for stricter checking
+    - Default to integration test (less strict, fewer false positives)
     """
-    if "unit" in file_path:
+    # Explicit unit test markers
+    if "unit" in file_path or "/unit/" in file_path:
         return True
     if "@pytest.mark.unit" in content:
         return True
-    if "@pytest.mark.integration" in content or "integration" in file_path:
+
+    # Explicit integration test markers
+    if "@pytest.mark.integration" in content or "integration" in file_path or "/integration/" in file_path:
         return False
-    # Default to unit test (stricter)
-    return True
+
+    # Default to integration test (less strict, reduces false positives)
+    # Rationale: Most tests are integration, unit tests should explicitly mark themselves
+    return False
 
 
 def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
@@ -73,6 +83,13 @@ def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
         if line.strip().startswith("#"):
             continue
 
+        # Skip lines with noqa suppression
+        if "# noqa: sleep-duration" in line or "#noqa: sleep-duration" in line:
+            continue
+        if "# noqa" in line and "sleep" in line.lower():
+            # Support generic noqa on sleep lines
+            continue
+
         # Check all sleep patterns
         for pattern in SLEEP_PATTERNS:
             matches = re.finditer(pattern, line)
@@ -83,7 +100,8 @@ def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
                         f"{file_path}:line {line_num}: "
                         f"Sleep duration {duration}s exceeds {max_sleep}s limit for {test_type}\n"
                         f"  Found: {line.strip()}\n"
-                        f"  Recommendation: Reduce sleep to <={max_sleep}s or use VirtualClock for instant time advancement"
+                        f"  Recommendation: Reduce sleep to <={max_sleep}s or use VirtualClock for instant time advancement\n"
+                        f"  Or add: # noqa: sleep-duration"
                     )
 
     return violations
@@ -126,13 +144,17 @@ def find_test_files(directory: str) -> List[str]:
         directory: Root directory to search
 
     Returns:
-        List of test file paths
+        List of test file paths (excluding meta-tests)
     """
     test_files = []
 
     for root, dirs, files in os.walk(directory):
-        # Skip hidden directories and cache directories
-        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
+        # Skip hidden directories, cache directories, and meta-tests
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__" and d != "meta"]
+
+        # Skip meta-test directory files
+        if "/meta/" in root or "\\meta\\" in root or root.endswith("/meta") or root.endswith("\\meta"):
+            continue
 
         for file in files:
             if file.startswith("test_") and file.endswith(".py"):

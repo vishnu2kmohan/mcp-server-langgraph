@@ -359,7 +359,7 @@ class TestNotifications:
             scheduler = CleanupScheduler(session_store=mock_session_store)
             scheduler.retention_service = mock_service
 
-            with patch.object(scheduler, "_send_cleanup_notification") as mock_notify:
+            with patch.object(scheduler, "_send_cleanup_notification", new_callable=AsyncMock) as mock_notify:
                 await scheduler._run_cleanup()
 
                 # Notification should not be sent
