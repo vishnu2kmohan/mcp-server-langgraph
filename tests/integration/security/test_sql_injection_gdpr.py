@@ -22,121 +22,28 @@ from mcp_server_langgraph.compliance.gdpr.postgres_storage import (
 )
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, Conversation, UserProfile
 
-
-@pytest.fixture
-async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
-    """
-    Create test database pool for security tests.
-
-    Uses environment variables for configuration to support both:
-    - Local development (localhost:5432)
-    - Docker integration tests (postgres-test:5432)
-
-    Uses Alembic for professional database migrations:
-    - Versioned schema management
-    - Automatic upgrade/downgrade paths
-    - Idempotent migrations (safe to run multiple times)
-    - Better than manual SQL file execution
-
-    OpenAI Codex Finding (2025-11-16):
-    ====================================
-    Previous implementation hardcoded host="localhost", causing connection
-    failures in Docker integration tests (OSError: [Errno 111] Connect call failed).
-
-    Fixed by using POSTGRES_HOST environment variable from docker-compose.test.yml.
-
-    OpenAI Codex Finding #2 (2025-11-16):
-    ======================================
-    Tests failed with "relation 'conversations' does not exist" because the GDPR
-    schema wasn't created in the testdb database.
-
-    Initially fixed by manually executing migrations/001_gdpr_schema.sql.
-    Subsequently improved by migrating to Alembic for professional database migrations.
-    """
-    import os
-    from pathlib import Path
-
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "9432")),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "mcp_test"),
-        min_size=1,
-        max_size=5,
-    )
-
-    # Execute GDPR schema SQL directly (not via Alembic)
-    # Alembic uses asyncio.run() which fails in pytest-asyncio context
-    # (RuntimeError: This event loop is already running)
-    #
-    # OpenAI Codex Finding #3 (2025-11-16):
-    # ======================================
-    # Alembic command.upgrade() calls asyncio.run(run_async_migrations()) which fails
-    # when called from within pytest-asyncio fixtures (already has event loop running).
-    # Exception was silently caught, migrations never ran, tables never created.
-    #
-    # Solution: Execute schema SQL directly using async connection (like postgres_with_schema fixture)
-    # Find project root by searching for pyproject.toml (not parent.parent.parent which gives tests/)
-    current = Path(__file__).resolve()
-    project_root = None
-    for parent in current.parents:
-        if (parent / "pyproject.toml").exists():
-            project_root = parent
-            break
-
-    if project_root is None:
-        raise RuntimeError("Could not find project root (no pyproject.toml)")
-
-    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-
-    if schema_file.exists():
-        schema_sql = schema_file.read_text()
-
-        # Execute schema using async connection pool (works in pytest-asyncio)
-        async with pool.acquire() as conn:
-            try:
-                await conn.execute(schema_sql)
-            except Exception as e:
-                # Schema might already exist (CREATE TABLE IF NOT EXISTS makes this idempotent)
-                # Only log at debug level - this is expected in many cases
-                import logging
-
-                logging.debug(f"Schema execution info (likely already exists): {e}")
-
-    # Clean up test data
-    async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'test_sec_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_sec_%'")
-        await conn.execute("DELETE FROM audit_logs WHERE log_id LIKE 'test_sec_%'")
-
-    yield pool
-
-    # Clean up after test
-    async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'test_sec_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_sec_%'")
-        await conn.execute("DELETE FROM audit_logs WHERE log_id LIKE 'test_sec_%'")
-
-    await pool.close()
+# NOTE: Using db_pool_gdpr fixture from conftest.py instead of local db_pool
+# The db_pool_gdpr fixture properly depends on integration_test_env which starts
+# Docker services (PostgreSQL). Local fixture was causing OSError: Connect call failed
+# in CI because PostgreSQL wasn't running.
 
 
 @pytest.fixture
-async def profile_store(db_pool: asyncpg.Pool) -> PostgresUserProfileStore:
+async def profile_store(db_pool_gdpr: asyncpg.Pool) -> PostgresUserProfileStore:
     """Create user profile store for security tests"""
-    return PostgresUserProfileStore(db_pool)
+    return PostgresUserProfileStore(db_pool_gdpr)
 
 
 @pytest.fixture
-async def conversation_store(db_pool: asyncpg.Pool) -> PostgresConversationStore:
+async def conversation_store(db_pool_gdpr: asyncpg.Pool) -> PostgresConversationStore:
     """Create conversation store for security tests"""
-    return PostgresConversationStore(db_pool)
+    return PostgresConversationStore(db_pool_gdpr)
 
 
 @pytest.fixture
-async def audit_store(db_pool: asyncpg.Pool) -> PostgresAuditLogStore:
+async def audit_store(db_pool_gdpr: asyncpg.Pool) -> PostgresAuditLogStore:
     """Create audit log store for security tests"""
-    return PostgresAuditLogStore(db_pool)
+    return PostgresAuditLogStore(db_pool_gdpr)
 
 
 @pytest.fixture
