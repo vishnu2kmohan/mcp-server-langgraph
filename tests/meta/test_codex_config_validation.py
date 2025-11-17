@@ -8,10 +8,15 @@ findings from 2025-11-14:
 """
 
 import gc
-import tomllib
 from pathlib import Path
 
 import pytest
+
+# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 
 @pytest.mark.meta

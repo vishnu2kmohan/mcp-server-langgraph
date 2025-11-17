@@ -150,7 +150,8 @@ class TestPreCommitHookDependencies:
                 # These hooks manage their own dependencies and should use project's environment
                 # Note: Checks for "uv run" anywhere in entry to handle bash-wrapped commands
                 # like: bash -c 'OTEL_SDK_DISABLED=true uv run pytest...'
-                if "uv run" in entry or "source .venv/bin/activate" in entry:
+                # Also allow run-pre-push-tests orchestrator which calls "uv run pytest" internally
+                if "uv run" in entry or "source .venv/bin/activate" in entry or hook_id == "run-pre-push-tests":
                     continue
 
                 # Check if hook executes Python but uses language: system

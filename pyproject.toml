@@ -88,6 +88,7 @@ dev = [
     "pytest-testmon>=2.1.0",  # Selective test execution based on code changes
     "pytest-timeout>=2.2.0",  # Prevent tests from hanging indefinitely (async mock safety)
     "psutil>=6.1.0",  # Memory monitoring for auto-tuning pytest-xdist workers
+    "tomli>=2.0.1; python_version < '3.11'",  # TOML parser backport for Python <3.11 (tomllib compat)
     # Docker infrastructure management
     "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
     "python-on-whales>=0.74.0",  # Docker management library used by test infrastructure
