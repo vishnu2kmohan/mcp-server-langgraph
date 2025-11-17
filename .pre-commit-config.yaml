@@ -146,15 +146,15 @@ repos:
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
   - id: run-unit-tests
-    name: Run Unit Tests (comprehensive suite)
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -v --tb=short'
+    name: Run Unit Tests (focused suite - dev profile)
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs comprehensive unit test suite to match CI exactly.
+    description: 'Runs focused unit test suite for rapid pre-push validation.
 
 
       Executes: pytest -n auto -m "unit and not llm" tests/
@@ -163,21 +163,26 @@ repos:
 
       - OTEL_SDK_DISABLED=true (matches CI environment)
 
-      - HYPOTHESIS_PROFILE=ci (100 examples for property tests)
+      - Uses dev profile (25 examples for property tests, faster iteration)
+
+      - Stops on first failure (-x) for faster feedback
 
       - Excludes LLM tests (require API keys)
 
 
-      This hook prevents the validation gap where individual test files
+      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples) - see validate-full
 
-      pass but comprehensive suite fails. Added 2025-11-16 after finding
+      Local Speed: 3-5min (vs 8-12min with CI profile)
 
-      141 tests not covered by individual file hooks.
+
+      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration
+
+      while maintaining quality. Full CI-equivalent validation via make validate-full.
 
       '
   - id: run-smoke-tests
     name: Run Smoke Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/smoke/.*\.py)$
@@ -186,22 +191,38 @@ repos:
     - pre-push
     description: 'Runs smoke tests to validate critical paths.
 
+
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-integration-tests
-    name: Run Integration Tests
+    name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/integration/.*\.py)$
     always_run: false
     stages:
-    - pre-push
-    description: 'Runs integration tests with real infrastructure.
+    - manual
+    description: 'Runs integration tests with real infrastructure (Docker required).
+
+
+      Moved to manual stage 2025-11-16 per OpenAI Codex finding - integration
+
+      tests require Docker stack and add 2-3min to pre-push duration.
+
+
+      Run manually: SKIP= pre-commit run run-integration-tests --all-files
+
+      Or via make: make test-integration
+
+
+      CI runs these automatically. Use for local validation of integration changes.
 
       '
   - id: run-api-tests
     name: Run API Endpoint Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m "api and unit and not llm" tests/ -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m "api and unit and not llm" tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/api/.*\.py)$
@@ -215,10 +236,12 @@ repos:
 
       Prevents API regressions from reaching CI.
 
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-mcp-server-tests
     name: Run MCP Server Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m "not llm" -v --tb=short'
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m "not llm" -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/unit/test_mcp_stdio_server\.py)$
@@ -230,22 +253,34 @@ repos:
 
       Prevents MCP protocol regressions.
 
+      Stops on first failure (-x) for faster feedback.
+
       '
   - id: run-property-tests
-    name: Run Property-Based Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m property tests/ -v --tb=short'
+    name: Run Property-Based Tests (dev profile - 25 examples)
+    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m property tests/ -x --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs Hypothesis property-based tests with CI profile (100 examples).
+    description: 'Runs Hypothesis property-based tests with dev profile (25 examples).
 
 
-      Executes: HYPOTHESIS_PROFILE=ci pytest -m property
+      Executes: pytest -m property (uses dev profile by default)
 
-      Validates code properties across many generated test cases.
+      Validates code properties with faster iteration (25 vs 100 examples).
+
+
+      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples).
+
+      Local Speed: 4x faster than CI profile, sufficient for catching most issues.
+
+
+      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration.
+
+      Full validation via make validate-full or CI.
 
       '
 - repo: https://github.com/python-jsonschema/check-jsonschema

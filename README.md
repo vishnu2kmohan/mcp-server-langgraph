@@ -677,6 +677,31 @@ We welcome contributions from the community! 🎉
    - [GitHub Discussions](https://github.com/vishnu2kmohan/mcp-server-langgraph/discussions)
    - [Support Guide](.github/SUPPORT.md)
 
+### Git Hook Performance
+
+This project uses tiered validation hooks optimized for developer productivity:
+
+| Stage | Duration | What Runs | When |
+|-------|----------|-----------|------|
+| **Pre-commit** | < 30s | Formatting, linting, quick checks | Every commit |
+| **Pre-push** | 3-5min | Unit tests, smoke tests, API tests (dev profile) | Every push |
+| **CI/Full** | 12-15min | Complete validation with CI profile (100 examples) | Pull requests, CI |
+
+**Key Points**:
+- Pre-push uses **dev profile** (25 property test examples) for faster iteration
+- CI uses **ci profile** (100 property test examples) for thorough validation
+- Integration tests moved to manual stage (run via `make test-integration` when needed)
+- Bypass for emergencies: `git push --no-verify` (use sparingly!)
+
+**Validation Tiers**:
+```bash
+make validate-commit      # Tier-1: < 30s (quick checks)
+make validate-push        # Tier-2: 3-5min (focused validation)
+make validate-full        # Tier-3: 12-15min (CI-equivalent)
+```
+
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md#validation-workflow) for detailed validation workflow.
+
 ### Contribution Areas
 
 - 💻 **Code**: Features, bug fixes, performance improvements

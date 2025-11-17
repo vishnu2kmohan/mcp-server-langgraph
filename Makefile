@@ -6,12 +6,12 @@
 # ==============================================================================
 # Variables
 # ==============================================================================
-# Use UV_RUN for pytest to auto-sync dependencies (ensures dev extras installed)
+# Use UV_RUN for all Python commands to auto-sync dependencies
 # Regression Prevention (2025-11-16): test-regression needs dev dependencies
 # (schemathesis, freezegun, kubernetes, toml, black, psutil, flake8, isort)
-PYTEST := uv run pytest
-DOCKER_COMPOSE := docker compose
 UV_RUN := uv run
+PYTEST := $(UV_RUN) pytest
+DOCKER_COMPOSE := docker compose
 COV_SRC := src/mcp_server_langgraph
 COV_OPTIONS := --cov=$(COV_SRC)
 
@@ -335,19 +335,19 @@ test-coverage-combined:
 	@echo "Step 3: Combining coverage reports..."
 	@if [ -f coverage-integration/coverage-integration.xml ]; then \
 		echo "  Found integration coverage, combining..."; \
-		.venv/bin/coverage combine --append coverage-integration/.coverage* 2>/dev/null || true; \
-		.venv/bin/coverage xml -o coverage-combined.xml; \
-		.venv/bin/coverage html -d htmlcov-combined; \
-		.venv/bin/coverage report; \
+		$(UV_RUN) coverage combine --append coverage-integration/.coverage* 2>/dev/null || true; \
+		$(UV_RUN) coverage xml -o coverage-combined.xml; \
+		$(UV_RUN) coverage html -d htmlcov-combined; \
+		$(UV_RUN) coverage report; \
 		echo ""; \
 		echo "✓ Combined coverage reports generated:"; \
 		echo "  HTML: htmlcov-combined/index.html"; \
 		echo "  XML: coverage-combined.xml"; \
 	else \
 		echo "  ⚠️  No integration coverage found, using unit tests only"; \
-		.venv/bin/coverage xml; \
-		.venv/bin/coverage html; \
-		.venv/bin/coverage report; \
+		$(UV_RUN) coverage xml; \
+		$(UV_RUN) coverage html; \
+		$(UV_RUN) coverage report; \
 	fi
 
 test-auth:
@@ -494,7 +494,7 @@ test-quick-new:
 # Validation
 validate-openapi:
 	@echo "Validating OpenAPI schema..."
-	OTEL_SDK_DISABLED=true .venv/bin/python scripts/validation/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"
+	OTEL_SDK_DISABLED=true $(UV_RUN) python scripts/validation/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"
 	@echo "✓ OpenAPI validation complete"
 
 validate-deployments:

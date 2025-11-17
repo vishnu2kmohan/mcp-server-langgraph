@@ -1,8 +1,16 @@
-# Deployment Scripts
+# Scripts Directory
+
+This directory contains 172+ scripts for deployment, validation, testing, and automation.
+
+**📋 Complete Inventory**: See [SCRIPT_INVENTORY.md](./SCRIPT_INVENTORY.md) for comprehensive categorization of all scripts by usage, priority, and status.
+
+---
+
+## Deployment Scripts
 
 Automated deployment scripts for all cloud providers implementing 11 Kubernetes best practices.
 
-## Available Scripts
+### Available Scripts
 
 - `deploy-gcp-gke.sh` - Deploy to Google Cloud Platform (GKE)
 - `deploy-aws-eks.sh` - Deploy to Amazon Web Services (EKS)
