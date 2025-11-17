@@ -1,17 +1,17 @@
 """
-Integration tests for Docker test image asset completeness.
+Integration tests for Docker test image asset exclusion (ADR-0053 compliance).
 
-Validates that the Docker test image contains all required directories
-and files needed for tests to run successfully.
+Validates that the Docker test image correctly EXCLUDES directories per ADR-0053:
+- scripts/ directory must NOT be in Docker image
+- deployments/ directory must NOT be in Docker image
+- Meta-tests requiring these directories run on the host, not in containers
 
-TDD: Written BEFORE fixing Docker image (RED phase).
+TDD: Updated to match ADR-0053 policy (meta-tests run on host).
 
-Codex Findings:
-- docker/Dockerfile:257-259 - Test image missing deployments/ directory
-- docker/Dockerfile:257-259 - Test image missing scripts/ directory
-- Import failures in test_pod_deployment_regression.py:28
-- Import failures in test_mdx_validation.py:18
-- Import failures in test_codeblock_autofixer.py:15
+ADR-0053: Docker Image Contents Policy
+- Docker image contains: src/, tests/, pyproject.toml
+- Docker image excludes: scripts/, deployments/
+- Meta-tests requiring excluded directories run on host via @pytest.mark.skipif
 """
 
 import gc
@@ -53,15 +53,17 @@ class TestDockerTestImageAssets:
     @pytest.mark.skipif(
         os.getenv("TESTING") == "true", reason="Skipped inside Docker - Dockerfile not available in test image"
     )
-    def test_dockerfile_copies_deployments_directory(self, dockerfile_path):
+    def test_dockerfile_excludes_deployments_directory(self, dockerfile_path):
         """
-        Test that Dockerfile final-test stage copies deployments/ directory.
+        Test that Dockerfile final-test stage EXCLUDES deployments/ directory per ADR-0053.
 
-        RED phase: Will fail if deployments/ is NOT copied
-        GREEN phase: Will pass after adding COPY deployments/ ./deployments/
+        ADR-0053 Policy: deployments/ should NOT be in Docker image.
+        Meta-tests requiring deployments/ run on host, not in container.
 
-        Codex Finding: test_pod_deployment_regression.py:28 fails because
-        it expects /app/deployments/overlays/ but directory is not copied.
+        GREEN phase: Passes when deployments/ is NOT copied
+        RED phase: Fails if deployments/ IS copied (violates ADR-0053)
+
+        Validation: scripts/validate_docker_image_contents.py enforces this at pre-commit.
         """
         with open(dockerfile_path, "r") as f:
             dockerfile_content = f.read()
@@ -86,31 +88,32 @@ class TestDockerTestImageAssets:
 
         final_test_stage = "\n".join(lines[final_test_start:final_test_end])
 
-        # Check that deployments/ is copied
-        assert any("COPY deployments/" in line for line in final_test_stage.split("\n")), (
-            "RED: Dockerfile final-test stage must copy deployments/ directory.\n\n"
+        # Check that deployments/ is NOT copied (ADR-0053 compliance)
+        assert not any("COPY deployments/" in line for line in final_test_stage.split("\n")), (
+            "❌ ADR-0053 VIOLATION: Dockerfile final-test stage must NOT copy deployments/ directory.\n\n"
             f"Current final-test stage:\n{final_test_stage}\n\n"
-            "Required: COPY deployments/ ./deployments/\n\n"
-            "Why: test_pod_deployment_regression.py:28 expects:\n"
-            "  OVERLAYS_DIR = REPO_ROOT / 'deployments' / 'overlays'\n"
-            "Without this copy, tests will fail with:\n"
-            "  FileNotFoundError: [Errno 2] No such file or directory: '/app/deployments/overlays'"
+            "Per ADR-0053:\n"
+            "  - deployments/ must NOT be in Docker image\n"
+            "  - Meta-tests requiring deployments/ run on host, not in container\n"
+            "  - Use @pytest.mark.skipif(os.getenv('TESTING') == 'true') for host-only tests\n\n"
+            "Remove any COPY deployments/ command from final-test stage."
         )
 
     @pytest.mark.integration
     @pytest.mark.skipif(
         os.getenv("TESTING") == "true", reason="Skipped inside Docker - Dockerfile not available in test image"
     )
-    def test_dockerfile_copies_scripts_directory(self, dockerfile_path):
+    def test_dockerfile_excludes_scripts_directory(self, dockerfile_path):
         """
-        Test that Dockerfile final-test stage copies scripts/ directory.
+        Test that Dockerfile final-test stage EXCLUDES scripts/ directory per ADR-0053.
 
-        RED phase: Will fail if scripts/ is NOT copied
-        GREEN phase: Will pass after adding COPY scripts/ ./scripts/
+        ADR-0053 Policy: scripts/ should NOT be in Docker image.
+        Meta-tests requiring scripts/ run on host, not in container.
 
-        Codex Findings:
-        - test_mdx_validation.py:18 imports from scripts.fix_mdx_syntax
-        - test_codeblock_autofixer.py:15 imports from scripts.validators.codeblock_autofixer
+        GREEN phase: Passes when scripts/ is NOT copied
+        RED phase: Fails if scripts/ IS copied (violates ADR-0053)
+
+        Validation: scripts/validate_docker_image_contents.py enforces this at pre-commit.
         """
         with open(dockerfile_path, "r") as f:
             dockerfile_content = f.read()
@@ -132,16 +135,15 @@ class TestDockerTestImageAssets:
 
         final_test_stage = "\n".join(lines[final_test_start:final_test_end])
 
-        # Check that scripts/ is copied
-        assert any("COPY scripts/" in line for line in final_test_stage.split("\n")), (
-            "RED: Dockerfile final-test stage must copy scripts/ directory.\n\n"
+        # Check that scripts/ is NOT copied (ADR-0053 compliance)
+        assert not any("COPY scripts/" in line for line in final_test_stage.split("\n")), (
+            "❌ ADR-0053 VIOLATION: Dockerfile final-test stage must NOT copy scripts/ directory.\n\n"
             f"Current final-test stage:\n{final_test_stage}\n\n"
-            "Required: COPY scripts/ ./scripts/\n\n"
-            "Why: Multiple tests import from scripts/:\n"
-            "  - test_mdx_validation.py:18 -> from fix_mdx_syntax import ...\n"
-            "  - test_codeblock_autofixer.py:15 -> from scripts.validators.codeblock_autofixer import ...\n"
-            "Without this copy, tests will fail with:\n"
-            "  ModuleNotFoundError: No module named 'scripts' or 'fix_mdx_syntax'"
+            "Per ADR-0053:\n"
+            "  - scripts/ must NOT be in Docker image\n"
+            "  - Meta-tests requiring scripts/ run on host, not in container\n"
+            "  - Use @pytest.mark.skipif(os.getenv('TESTING') == 'true') for host-only tests\n\n"
+            "Remove any COPY scripts/ command from final-test stage."
         )
 
     @pytest.mark.integration
@@ -176,15 +178,15 @@ class TestDockerTestImageAssets:
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     @requires_tool("docker")
-    def test_docker_test_image_contains_deployments_at_runtime(self, project_root):
+    def test_docker_test_image_excludes_deployments_at_runtime(self, project_root):
         """
-        Test that built Docker test image actually contains deployments/ at runtime.
+        Test that built Docker test image correctly EXCLUDES deployments/ at runtime (ADR-0053).
 
         This is an end-to-end test that builds the test image and verifies
-        the directory exists inside the container.
+        the directory does NOT exist inside the container.
 
-        RED phase: Will fail if deployments/ is not copied
-        GREEN phase: Will pass after fixing Dockerfile
+        GREEN phase: Passes when deployments/ is NOT in Docker image (ADR-0053 compliant)
+        RED phase: Fails if deployments/ IS in Docker image (violates ADR-0053)
         """
         dockerfile = project_root / "docker" / "Dockerfile"
 
@@ -210,8 +212,8 @@ class TestDockerTestImageAssets:
 
             assert result.returncode == 0, f"Docker build failed:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}"
 
-            # Run container and check if deployments/ exists
-            print("Checking if deployments/ exists in container...")
+            # Run container and check that deployments/ does NOT exist (ADR-0053)
+            print("Verifying deployments/ is excluded from container (ADR-0053)...")
             check_result = subprocess.run(
                 [
                     "docker",
@@ -227,14 +229,15 @@ class TestDockerTestImageAssets:
                 timeout=30,
             )
 
-            assert check_result.returncode == 0, (
-                "RED: /app/deployments/ directory NOT found in Docker test image.\n\n"
-                f"Error output:\n{check_result.stderr}\n\n"
-                "This means the Dockerfile is not copying deployments/ directory.\n"
-                "Add to final-test stage: COPY deployments/ ./deployments/"
+            # ADR-0053: deployments/ should NOT exist in Docker image
+            assert check_result.returncode != 0, (
+                "❌ ADR-0053 VIOLATION: /app/deployments/ directory FOUND in Docker test image!\n\n"
+                f"Directory listing:\n{check_result.stdout}\n\n"
+                "Per ADR-0053, deployments/ must NOT be in Docker image.\n"
+                "Remove COPY deployments/ command from Dockerfile final-test stage."
             )
 
-            print(f"PASS: /app/deployments/ exists in Docker image:\n{check_result.stdout}")
+            print("✅ PASS: /app/deployments/ correctly excluded from Docker image (ADR-0053 compliant)")
 
         finally:
             # Cleanup: Remove test image
@@ -245,15 +248,15 @@ class TestDockerTestImageAssets:
     @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER") is not None, reason="Docker build tests skipped in parallel mode")
     @pytest.mark.skipif(os.getenv("TESTING") == "true", reason="Skipped inside Docker - docker command not available")
     @requires_tool("docker")
-    def test_docker_test_image_contains_scripts_at_runtime(self, project_root):
+    def test_docker_test_image_excludes_scripts_at_runtime(self, project_root):
         """
-        Test that built Docker test image actually contains scripts/ at runtime.
+        Test that built Docker test image correctly EXCLUDES scripts/ at runtime (ADR-0053).
 
         This is an end-to-end test that builds the test image and verifies
-        the directory exists inside the container.
+        the directory does NOT exist inside the container.
 
-        RED phase: Will fail if scripts/ is not copied
-        GREEN phase: Will pass after fixing Dockerfile
+        GREEN phase: Passes when scripts/ is NOT in Docker image (ADR-0053 compliant)
+        RED phase: Fails if scripts/ IS in Docker image (violates ADR-0053)
         """
         dockerfile = project_root / "docker" / "Dockerfile"
 
@@ -279,8 +282,8 @@ class TestDockerTestImageAssets:
 
             assert result.returncode == 0, f"Docker build failed:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}"
 
-            # Run container and check if scripts/ exists and contains expected files
-            print("Checking if scripts/ exists in container...")
+            # Run container and check that scripts/ does NOT exist (ADR-0053)
+            print("Verifying scripts/ is excluded from container (ADR-0053)...")
             check_result = subprocess.run(
                 [
                     "docker",
@@ -296,40 +299,16 @@ class TestDockerTestImageAssets:
                 timeout=30,
             )
 
-            assert check_result.returncode == 0, (
-                "RED: /app/scripts/ directory NOT found in Docker test image.\n\n"
-                f"Error output:\n{check_result.stderr}\n\n"
-                "This means the Dockerfile is not copying scripts/ directory.\n"
-                "Add to final-test stage: COPY scripts/ ./scripts/"
+            # ADR-0053: scripts/ should NOT exist in Docker image
+            assert check_result.returncode != 0, (
+                "❌ ADR-0053 VIOLATION: /app/scripts/ directory FOUND in Docker test image!\n\n"
+                f"Directory listing:\n{check_result.stdout}\n\n"
+                "Per ADR-0053, scripts/ must NOT be in Docker image.\n"
+                "Meta-tests requiring scripts/ run on host, not in container.\n"
+                "Remove COPY scripts/ command from Dockerfile final-test stage."
             )
 
-            # Verify specific files needed by tests exist
-            required_files = [
-                "/app/scripts/fix_mdx_syntax.py",
-                "/app/scripts/validators/codeblock_autofixer.py",
-            ]
-
-            for file_path in required_files:
-                file_check = subprocess.run(
-                    [
-                        "docker",
-                        "run",
-                        "--rm",
-                        "mcp-server-langgraph:test-asset-check-scripts",
-                        "test",
-                        "-f",
-                        file_path,
-                    ],
-                    capture_output=True,
-                    timeout=30,
-                )
-
-                assert file_check.returncode == 0, (
-                    f"RED: Required file {file_path} NOT found in Docker image.\n"
-                    "This file is imported by tests and must be present."
-                )
-
-            print(f"PASS: /app/scripts/ exists in Docker image:\n{check_result.stdout}")
+            print("✅ PASS: /app/scripts/ correctly excluded from Docker image (ADR-0053 compliant)")
 
         finally:
             # Cleanup: Remove test image
