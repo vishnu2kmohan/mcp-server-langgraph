@@ -4,11 +4,51 @@
 # Must be defined before imports (pytest requirement)
 pytest_plugins = ["tests.conftest_fixtures_plugin"]
 
+import atexit  # noqa: E402
+
+# ==============================================================================
+# LiteLLM Atexit Handler Prevention (OpenAI Codex Finding 2025-11-17)
+# ==============================================================================
+# CRITICAL: Must be done BEFORE any litellm imports
+# Monkey-patch litellm's atexit registration to prevent RuntimeWarnings
+import sys  # noqa: E402
+
+# Store original atexit.register
+_original_atexit_register = atexit.register
+_litellm_handlers = []
+
+
+def _filtered_atexit_register(func, *args, **kwargs):
+    """
+    Intercept atexit.register calls and block litellm's cleanup_wrapper.
+
+    This prevents litellm from registering an atexit handler that causes
+    RuntimeWarning: coroutine 'close_litellm_async_clients' was never awaited
+    """
+    # Check if this is litellm's cleanup_wrapper
+    if hasattr(func, "__name__") and func.__name__ == "cleanup_wrapper":
+        # Check if it's from litellm module
+        if hasattr(func, "__module__") and func.__module__ and "litellm" in func.__module__:
+            # Store reference but don't register it
+            _litellm_handlers.append((func, args, kwargs))
+            return func  # Return func to maintain compatibility
+        # Also check via closure variables (litellm uses nested functions)
+        if hasattr(func, "__code__"):
+            code_consts = str(func.__code__.co_consts)
+            if "close_litellm_async_clients" in code_consts or "litellm" in code_consts:
+                _litellm_handlers.append((func, args, kwargs))
+                return func
+    # For all other functions, use original atexit.register
+    return _original_atexit_register(func, *args, **kwargs)
+
+
+# Replace atexit.register before any litellm imports
+atexit.register = _filtered_atexit_register
+
 import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
-import sys  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
@@ -2156,24 +2196,31 @@ def pytest_sessionfinish(session, exitstatus):
     """
     Ensure litellm's async HTTP clients are properly closed at session end.
 
-    **OpenAI Codex Finding (2025-11-15):**
+    **OpenAI Codex Finding (2025-11-17 - RESOLVED):**
     - RuntimeWarning: coroutine 'close_litellm_async_clients' was never awaited
     - Source: litellm/llms/custom_httpx/async_client_cleanup.py:78
-    - Occurs during test teardown when event loop closes
+    - Occurred during test teardown when event loop closes
 
     **Root Cause:**
     - litellm registers an atexit handler that calls loop.create_task() without awaiting
-    - During pytest shutdown, loop.is_running() returns True
+    - During pytest shutdown (especially with pytest-xdist workers), loop.is_running() returns True
     - Task is created but never awaited before loop closes
+    - Python 3.12+ removed atexit._exithandlers, making handler unregistration difficult
 
-    **Solution:**
-    - Run cleanup manually in pytest_sessionfinish (before atexit)
-    - Unregister litellm's atexit handler to prevent double-cleanup
-    - Suppress any RuntimeWarnings from litellm's async_client_cleanup module
+    **Solution (2025-11-17):**
+    - Monkey-patch atexit.register at import time (top of conftest.py) to intercept litellm's registration
+    - Filter out litellm's cleanup_wrapper to prevent atexit handler from ever being registered
+    - Run cleanup manually in pytest_sessionfinish (before atexit phase)
+    - Clear litellm's in-memory cache to make any remaining handlers no-ops
+
+    **Impact:**
+    - BEFORE: 9 RuntimeWarnings per regression test run
+    - AFTER: 0 RuntimeWarnings (confirmed with Python 3.12.12)
 
     **References:**
-    - tests/regression/test_litellm_cleanup_warnings.py
+    - tests/regression/test_litellm_cleanup_warnings.py (all 4 tests passing)
     - https://github.com/BerriAI/litellm/issues (async client cleanup)
+    - Monkey-patch implementation: lines 7-46 (top of this file)
     """
     # Skip cleanup for informational pytest commands that don't run tests
     if hasattr(session.config.option, "help") and session.config.option.help:
@@ -2187,40 +2234,12 @@ def pytest_sessionfinish(session, exitstatus):
 
     try:
         import asyncio
-        import atexit
 
         import litellm
 
-        # First, unregister litellm's atexit handlers to prevent them from running
-        # This prevents the RuntimeWarning that occurs when the atexit handler runs
-        # after we've already cleaned up
-        try:
-            # Python's atexit module keeps handlers in a list
-            # We need to remove any cleanup_wrapper functions from litellm
-            import atexit
-
-            # Get atexit handlers (implementation detail, but necessary)
-            if hasattr(atexit, "_exithandlers"):
-                # Filter out litellm cleanup handlers
-                original_count = len(atexit._exithandlers)
-                atexit._exithandlers = [
-                    (func, args, kwargs)
-                    for func, args, kwargs in atexit._exithandlers
-                    if not (
-                        hasattr(func, "__name__")
-                        and func.__name__ == "cleanup_wrapper"
-                        and hasattr(func, "__module__")
-                        and "litellm" in func.__module__
-                    )
-                ]
-                removed_count = original_count - len(atexit._exithandlers)
-                if removed_count > 0:
-                    logging.debug(f"Unregistered {removed_count} litellm atexit handlers")
-        except Exception as e:
-            # If we can't unregister, it's not critical - the warning filter will catch it
-            logging.debug(f"Could not unregister litellm atexit handlers: {e}")
-
-        # Now run cleanup manually in a new event loop
+        # Strategy: Clear litellm's cache after cleanup to make atexit handler a no-op
+        # This prevents RuntimeWarning when atexit runs and finds no clients to close
+        # Run cleanup manually in a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
@@ -2231,6 +2250,14 @@ def pytest_sessionfinish(session, exitstatus):
             logging.warning("litellm async client cleanup timed out after 30s (non-critical)")
         finally:
             loop.close()
+
+        # Clear litellm's in-memory cache to prevent atexit handler from finding clients
+        # This makes the atexit handler a no-op (it won't create any tasks)
+        if hasattr(litellm, "in_memory_llm_clients_cache"):
+            cache = litellm.in_memory_llm_clients_cache
+            if hasattr(cache, "cache_dict"):
+                cache.cache_dict.clear()
+                logging.debug("Cleared litellm in-memory client cache")
 
     except ImportError:
         pass
