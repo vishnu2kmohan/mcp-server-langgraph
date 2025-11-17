@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Set
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -33,6 +35,7 @@ def load_yaml_documents(file_path: Path) -> List[Dict[str, Any]]:
         return list(yaml.safe_load_all(f))
 
 
+@requires_tool("kustomize")
 def build_kustomize_manifests(overlay_dir: Path) -> str:
     """Build Kustomize manifests and return as string."""
     result = subprocess.run(["kubectl", "kustomize", str(overlay_dir)], capture_output=True, text=True, check=True, timeout=60)

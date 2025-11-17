@@ -20,6 +20,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -137,6 +139,7 @@ def test_trivy_scan_allows_documented_suppressions():
     # They are validated by test_trivy_suppressions.py to ensure proper documentation
 
 
+@requires_tool("trivy")
 def test_rendered_manifests_include_security_contexts():
     """
     Validate that rendered Kustomize manifests contain proper security contexts.

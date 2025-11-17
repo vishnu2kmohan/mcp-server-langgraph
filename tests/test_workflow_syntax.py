@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -26,6 +28,7 @@ def get_workflow_files():
     return list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
 
 
+@requires_tool("actionlint")
 @pytest.mark.parametrize("workflow_file", get_workflow_files(), ids=lambda f: f.name)
 def test_workflow_syntax_valid(workflow_file):
     """

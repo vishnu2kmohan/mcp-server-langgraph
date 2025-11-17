@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 
@@ -70,6 +72,7 @@ def kong_config():
 
 
 # Test 0: Helm Lint Validation (Prevents Codex Finding #1 - P0 Blocker)
+@requires_tool("helm")
 @pytest.mark.requires_helm
 def test_helm_chart_lints_successfully(helm_chart_path):
     """

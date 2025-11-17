@@ -36,6 +36,7 @@ CLOUD_OVERLAYS_TO_TEST = [
 ]
 
 
+@requires_tool("kustomize")
 def build_kustomize(overlay_dir: Path) -> tuple[str, str, int]:
     """
     Build Kustomize manifests.

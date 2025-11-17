@@ -17,6 +17,8 @@ from typing import List, Set
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -41,6 +43,7 @@ DANGEROUS_PLACEHOLDERS = [
 ]
 
 
+@requires_tool("kustomize")
 def build_overlay(overlay_path: Path) -> str:
     """Build Kustomize overlay and return manifest as string."""
     result = subprocess.run(

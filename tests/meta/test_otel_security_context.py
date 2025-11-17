@@ -22,6 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -340,6 +342,7 @@ def test_otel_drops_all_capabilities():
     )
 
 
+@requires_tool("kustomize")
 def test_rendered_staging_manifest_has_otel_security_context():
     """
     Verify that the rendered staging manifest includes OTel security contexts.

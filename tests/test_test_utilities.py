@@ -15,6 +15,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from mcp_server_langgraph.core.config import settings
+from tests.conftest import requires_tool
 
 
 @pytest.mark.xdist_group(name="utilities_tests")
@@ -161,6 +162,7 @@ class TestCLIAvailabilityFixtures:
         """Verify helm_available fixture returns a boolean value."""
         assert isinstance(helm_available, bool)
 
+    @requires_tool("docker")
     def test_docker_compose_available_checks_functionality(self, monkeypatch):
         """Verify docker_compose_available fixture checks docker compose functionality."""
         # Test the logic directly by importing and checking
