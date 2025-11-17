@@ -29,10 +29,12 @@ spec:
     - protocol: TCP
       port: 8000
 
-  # Allow health check probes from GKE
+  # Allow health check probes from GKE control plane
+  # GKE health checks originate from kube-system namespace
   - from:
-    - namespaceSelector: {}
-    - podSelector: {}
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: TCP
       port: 8000
@@ -47,10 +49,9 @@ spec:
     - protocol: UDP
       port: 53
 
-  # Allow Cloud SQL Proxy to reach Cloud SQL
-  - to:
-    - namespaceSelector: {}
-    ports:
+  # Allow Cloud SQL Proxy to reach Cloud SQL (Google-managed service, external to cluster)
+  # No namespace selector needed - external egress via Cloud SQL Proxy sidecar
+  - ports:
     - protocol: TCP
       port: 5432  # Cloud SQL database (PostgreSQL)
     - protocol: TCP
@@ -70,10 +71,9 @@ spec:
     - protocol: TCP
       port: 6379
 
-  # Allow egress to Vertex AI and Google APIs
-  - to:
-    - namespaceSelector: {}
-    ports:
+  # Allow egress to Vertex AI and Google APIs (external to cluster)
+  # No namespace selector needed - external egress to *.googleapis.com
+  - ports:
     - protocol: TCP
       port: 443
 

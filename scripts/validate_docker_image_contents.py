@@ -71,8 +71,9 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     - src/ directory (application source code)
     - tests/ directory (test suite)
     - pyproject.toml (Python project configuration)
-    - deployments/ directory (Kubernetes manifests - needed by test_pod_deployment_regression.py)
-    - scripts/ directory (validation scripts - needed by test_mdx_validation.py, test_codeblock_autofixer.py)
+
+    Per ADR-0053: scripts/ and deployments/ are NOT copied to the Docker image.
+    Meta-tests that require these directories run on the host, not in the container.
 
     Returns:
         Error message if validation fails, None if passes
@@ -81,8 +82,6 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
         "src/": False,
         "tests/": False,
         "pyproject.toml": False,
-        "deployments/": False,
-        "scripts/": False,
     }
 
     for cmd in copy_commands:
@@ -98,9 +97,26 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     return None  # Success
 
 
-# REMOVED: validate_excluded_directories - scripts/ and deployments/ ARE required
-# The previous assumption that "meta-tests run on host" was incorrect.
-# Integration tests in Docker DO need access to scripts/ and deployments/ directories.
+def validate_excluded_directories(copy_commands: List[str]) -> Optional[str]:
+    """
+    Validate that excluded directories are NOT copied.
+
+    Per ADR-0053: scripts/ and deployments/ should NOT be in the Docker image.
+    Meta-tests requiring these directories run on the host, not in the container.
+
+    Returns:
+        Error message if validation fails, None if passes
+    """
+    excluded_items = ["scripts/", "deployments/"]
+
+    for cmd in copy_commands:
+        for item in excluded_items:
+            if item in cmd:
+                return (
+                    f"Excluded directory '{item}' must NOT be copied to Docker image (per ADR-0053). Meta-tests run on host."
+                )
+
+    return None  # Success
 
 
 def validate_docker_image_contents(dockerfile_path: str) -> int:
@@ -136,26 +152,32 @@ def validate_docker_image_contents(dockerfile_path: str) -> int:
         print("WARNING: No COPY commands found in final-test stage", file=sys.stdout)
         # This is a warning, not an error - might be intentional
 
-    # Validation: Required directories (including deployments/ and scripts/)
+    # Validation: Required directories (per ADR-0053)
     error = validate_required_directories(copy_commands)
     if error:
         print(f"ERROR: {error}", file=sys.stderr)
-        print("\nIntegration tests require:", file=sys.stderr)
+        print("\nDocker image requires:", file=sys.stderr)
         print("  - src/ (application source code)", file=sys.stderr)
         print("  - tests/ (test suite)", file=sys.stderr)
         print("  - pyproject.toml (project configuration)", file=sys.stderr)
-        print("  - deployments/ (Kubernetes manifests - needed by test_pod_deployment_regression.py)", file=sys.stderr)
-        print(
-            "  - scripts/ (validation scripts - needed by test_mdx_validation.py, test_codeblock_autofixer.py)",
-            file=sys.stderr,
-        )
-        print("\nCodex Finding Resolution:", file=sys.stderr)
-        print("  Previous assumption that scripts/ and deployments/ should be excluded was incorrect.", file=sys.stderr)
-        print("  Integration tests running in Docker DO need access to these directories.", file=sys.stderr)
+        print("\nPer ADR-0053:", file=sys.stderr)
+        print("  - scripts/ and deployments/ are NOT copied to Docker image", file=sys.stderr)
+        print("  - Meta-tests requiring these directories run on the host", file=sys.stderr)
+        return 1
+
+    # Validation: Excluded directories (per ADR-0053)
+    error = validate_excluded_directories(copy_commands)
+    if error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        print("\nPer ADR-0053 design decision:", file=sys.stderr)
+        print("  ❌ scripts/ must NOT be in Docker image", file=sys.stderr)
+        print("  ❌ deployments/ must NOT be in Docker image", file=sys.stderr)
+        print("  ✅ Meta-tests run on host, not in container", file=sys.stderr)
+        print("\nRemove the COPY command(s) for excluded directories.", file=sys.stderr)
         return 1
 
     # All validations passed
-    print("✅ Docker image contents validation passed (src/, tests/, pyproject.toml, deployments/, scripts/)", file=sys.stdout)
+    print("✅ Docker image contents validation passed (src/, tests/, pyproject.toml)", file=sys.stdout)
     return 0
 
 

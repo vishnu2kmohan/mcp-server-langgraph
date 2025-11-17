@@ -259,8 +259,9 @@ COPY tests/ ./tests/
 COPY pyproject.toml ./
 
 # Copy additional directories required by tests
-COPY deployments/ ./deployments/
-COPY scripts/ ./scripts/
+# NOTE: Per ADR-0053, scripts/ and deployments/ are NOT copied to the Docker image.
+# Meta-tests that require these directories run on the host, not in the container.
+# Only adr/ is copied for documentation purposes.
 COPY adr/ ./adr/
 
 # Set PATH to use virtual environment
