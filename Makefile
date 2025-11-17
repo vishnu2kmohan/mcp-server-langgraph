@@ -231,8 +231,8 @@ test:
 
 test-unit:
 	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
-	@uv sync --extra dev --extra code-execution --quiet
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
 test-unit-fast:
@@ -366,21 +366,20 @@ benchmark:
 # New test targets
 test-property:
 	@echo "Running property-based tests (Hypothesis, parallel)..."
-	@uv sync --extra dev --extra code-execution --quiet
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m property -v
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -v
 	@echo "✓ Property tests complete"
 
 test-contract:
 	@echo "Running contract tests (MCP protocol, OpenAPI, parallel)..."
-	@uv sync --extra dev --extra code-execution --quiet
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m contract -v
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m contract -v
 	@echo "✓ Contract tests complete"
 
 test-regression:
 	@echo "Running performance regression tests (parallel)..."
-	@echo "Installing dev dependencies (required for regression tests)..."
-	@uv sync --extra dev --extra code-execution --quiet
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m regression -v
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m regression -v
 	@echo "✓ Regression tests complete"
 
 test-mutation:
@@ -691,11 +690,11 @@ validate-pre-push:
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 4: Pre-commit Hooks (All Files - push stage)"
+	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Pre-commit Hooks (All Files - Push Stage)..."
-	@pre-commit run --all-files --hook-stage push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
+	@pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed!"
@@ -1237,7 +1236,7 @@ generate-reports:  ## Regenerate all test infrastructure scan reports
 
 test-watch:
 	@echo "👀 Running tests in watch mode..."
-	$(PYTEST)-watch --no-cov
+	$(UV_RUN) ptw --no-cov
 
 test-fast:
 	@echo "⚡ Running all tests without coverage (parallel, fast iteration)..."

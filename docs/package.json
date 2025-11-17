@@ -1,0 +1,13 @@
+{
+  "name": "mcp-server-langgraph-docs",
+  "version": "1.0.0",
+  "description": "Documentation dependencies for MCP Server LangGraph",
+  "private": true,
+  "devDependencies": {
+    "mintlify": "4.0.250"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

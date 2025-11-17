@@ -515,7 +515,7 @@ Runs on **all files** before push. Matches CI validation exactly to eliminate su
 
 **Phase 4: Pre-commit Hooks (5-8 min)**
 - All comprehensive validators (documentation, deployment, etc.)
-- Runs with `--hook-stage push` flag
+- Runs with `--hook-stage pre-push` flag
 
 ```bash
 # Install hooks
@@ -576,7 +576,7 @@ If pre-push hooks fail:
 # Run specific phase
 uv run pytest tests/ -m unit  # Phase 3: Unit tests
 uv run pytest tests/smoke/    # Phase 3: Smoke tests
-pre-commit run --all-files --hook-stage push  # Phase 4
+pre-commit run --all-files --hook-stage pre-push  # Phase 4
 
 # Skip pre-push (emergency only - will likely fail in CI!)
 git push --no-verify

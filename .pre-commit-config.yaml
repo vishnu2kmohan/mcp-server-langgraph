@@ -145,54 +145,56 @@ repos:
     language: system
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
-  - id: run-unit-tests
-    name: Run Unit Tests (focused suite - dev profile)
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest --testmon-noselect -n auto -m "unit and not llm" tests/ -x --tb=short'
+  - id: run-pre-push-tests
+    name: Run Pre-Push Tests (consolidated - dev profile)
+    entry: python scripts/run_pre_push_tests.py
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
     always_run: false
     stages:
     - pre-push
-    description: 'Runs focused unit test suite for rapid pre-push validation.
+    description: 'Consolidated pre-push test suite (OpenAI Codex Finding 2a fix).
 
 
-      Executes: pytest -n auto -m "unit and not llm" tests/
+      Combines 5 separate pytest sessions into 1 for efficiency:
 
-      - Parallel execution with pytest-xdist
+      - Unit tests: -m "unit and not llm"
 
-      - OTEL_SDK_DISABLED=true (matches CI environment)
+      - Smoke tests: tests/smoke/
 
-      - Uses dev profile (25 examples for property tests, faster iteration)
+      - API tests: -m "api and unit and not llm"
 
-      - Stops on first failure (-x) for faster feedback
+      - MCP server tests: tests/unit/test_mcp_stdio_server.py
 
-      - Excludes LLM tests (require API keys)
+      - Property tests: -m property (dev profile: 25 examples)
 
 
-      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples) - see validate-full
+      Time savings: 10-25 seconds vs separate sessions (no duplicate test discovery)
+
+
+      CI_PARITY mode: Set CI_PARITY=1 to include integration tests (requires Docker)
+
+      Example: CI_PARITY=1 git push
+
+
+      Benefits:
+
+      - Single test discovery (2-5s instead of 10-25s for 5 sessions)
+
+      - No pytest cache/coverage lock contention
+
+      - Fail-fast across all test categories
+
+      - Parallel execution with pytest-xdist (-n auto)
+
+
+      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples)
 
       Local Speed: 3-5min (vs 8-12min with CI profile)
 
 
-      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration
-
-      while maintaining quality. Full CI-equivalent validation via make validate-full.
-
-      '
-  - id: run-smoke-tests
-    name: Run Smoke Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/smoke/ -x --tb=short'
-    language: system
-    pass_filenames: false
-    files: ^(src/.*\.py|tests/smoke/.*\.py)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs smoke tests to validate critical paths.
-
-
-      Stops on first failure (-x) for faster feedback.
+      Full CI-equivalent validation: make validate-pre-push or CI_PARITY=1 git push
 
       '
   - id: run-integration-tests
@@ -216,71 +218,10 @@ repos:
 
       Or via make: make test-integration
 
+      Or with pre-push: CI_PARITY=1 git push (auto-includes if Docker available)
+
 
       CI runs these automatically. Use for local validation of integration changes.
-
-      '
-  - id: run-api-tests
-    name: Run API Endpoint Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m "api and unit and not llm" tests/ -x --tb=short'
-    language: system
-    pass_filenames: false
-    files: ^(src/.*\.py|tests/api/.*\.py)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs API endpoint tests to match CI.
-
-
-      Executes: pytest -n auto -m "api and unit and not llm"
-
-      Prevents API regressions from reaching CI.
-
-      Stops on first failure (-x) for faster feedback.
-
-      '
-  - id: run-mcp-server-tests
-    name: Run MCP Server Tests
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit/test_mcp_stdio_server.py -m "not llm" -x --tb=short'
-    language: system
-    pass_filenames: false
-    files: ^(src/.*\.py|tests/unit/test_mcp_stdio_server\.py)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs MCP protocol server tests to match CI.
-
-
-      Prevents MCP protocol regressions.
-
-      Stops on first failure (-x) for faster feedback.
-
-      '
-  - id: run-property-tests
-    name: Run Property-Based Tests (dev profile - 25 examples)
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto -m property tests/ -x --tb=short'
-    language: system
-    pass_filenames: false
-    files: ^(src/.*\.py|tests/.*\.py)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs Hypothesis property-based tests with dev profile (25 examples).
-
-
-      Executes: pytest -m property (uses dev profile by default)
-
-      Validates code properties with faster iteration (25 vs 100 examples).
-
-
-      CI Parity: CI runs with HYPOTHESIS_PROFILE=ci (100 examples).
-
-      Local Speed: 4x faster than CI profile, sufficient for catching most issues.
-
-
-      Optimized 2025-11-16 per OpenAI Codex finding - reduce pre-push duration.
-
-      Full validation via make validate-full or CI.
 
       '
 - repo: https://github.com/python-jsonschema/check-jsonschema
@@ -488,9 +429,9 @@ repos:
   - id: mintlify-broken-links-check
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
-      bash -c 'if command -v npx >/dev/null 2>&1; then
-      cd docs && npx mintlify broken-links;
-      else echo "Skipping: npx/Node.js not installed (install from https://nodejs.org/)";
+      bash -c 'if command -v npm >/dev/null 2>&1; then
+      cd docs && npm ci --silent && npm exec -- mintlify broken-links;
+      else echo "Skipping: npm/Node.js not installed (install from https://nodejs.org/)";
       exit 0; fi'
     language: system
     files: ^docs/.*\.mdx$

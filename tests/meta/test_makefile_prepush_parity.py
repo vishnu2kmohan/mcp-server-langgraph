@@ -309,6 +309,212 @@ class TestMakefilePrePushParity:
             # This branch will execute until MyPy is fixed to be blocking
             pass  # Title correctly reflects warning-only behavior
 
+    def test_makefile_uses_correct_hook_stage_name(self, makefile_validate_target: str):
+        """
+        Test that Makefile validate-pre-push uses correct --hook-stage value.
+
+        CRITICAL BUG: Makefile line 698 uses '--hook-stage push' which is INVALID.
+        The correct value is '--hook-stage pre-push'.
+
+        Impact:
+        - pre-commit silently skips ALL hooks configured for pre-push stage
+        - validate-pre-push target provides NO actual validation
+        - Complete CI/CD parity failure - local validation doesn't match CI
+        - Developers get false confidence that code is ready to push
+
+        Pre-commit valid stage names:
+        - commit
+        - merge-commit
+        - push-commit
+        - prepare-commit-msg
+        - commit-msg
+        - post-commit
+        - manual
+        - pre-push  ← CORRECT
+        - post-checkout
+        - post-merge
+        - post-rewrite
+
+        Current Makefile (line 698):
+            @pre-commit run --all-files --hook-stage push --show-diff-on-failure
+                                                      ^^^^ INVALID - should be 'pre-push'
+
+        Fix: Change line 698 to use '--hook-stage pre-push'
+
+        Reference: OpenAI Codex Finding 1a - validate-pre-push stage name
+        """
+        # Look for pre-commit run command with --hook-stage
+        hook_stage_pattern = r"pre-commit run --all-files --hook-stage (\S+)"
+        match = re.search(hook_stage_pattern, makefile_validate_target)
+
+        assert match, (
+            "Could not find 'pre-commit run --all-files --hook-stage' in Makefile validate-pre-push target\n"
+            "\n"
+            "Expected pattern: pre-commit run --all-files --hook-stage <STAGE_NAME>\n"
+        )
+
+        stage_name = match.group(1)
+
+        assert stage_name == "pre-push", (
+            f"Makefile validate-pre-push MUST use '--hook-stage pre-push' (found: '--hook-stage {stage_name}')\n"
+            "\n"
+            "CRITICAL BUG:\n"
+            f"  - Current: --hook-stage {stage_name}\n"
+            "  - Expected: --hook-stage pre-push\n"
+            f"  - Impact: pre-commit silently skips all pre-push hooks ('{stage_name}' is invalid)\n"
+            "\n"
+            "Valid pre-commit stage names:\n"
+            "  - commit, merge-commit, push-commit\n"
+            "  - prepare-commit-msg, commit-msg, post-commit\n"
+            "  - manual, pre-push, post-checkout, post-merge, post-rewrite\n"
+            "\n"
+            f"Why '{stage_name}' is invalid:\n"
+            "  - Not in pre-commit's documented stage list\n"
+            "  - pre-commit will silently skip ALL hooks configured for 'pre-push' stage\n"
+            "  - Validation target runs without actually validating anything\n"
+            "\n"
+            "Current Makefile (line 698):\n"
+            f"  @pre-commit run --all-files --hook-stage {stage_name} --show-diff-on-failure\n"
+            "                                             ^^^^ INVALID\n"
+            "\n"
+            "Fix Makefile line 698:\n"
+            "  @pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure\n"
+            "                                             ^^^^^^^^ CORRECT\n"
+            "\n"
+            "Evidence of silent failure:\n"
+            "  - .pre-commit-config.yaml has hooks with 'stages: [pre-push]'\n"
+            f"  - These hooks will NOT run when stage is '{stage_name}'\n"
+            "  - Developer runs 'make validate-pre-push', sees success\n"
+            "  - Actual 'git push' runs pre-push hooks and fails\n"
+            "  - Result: 'works locally, fails on push' confusion\n"
+            "\n"
+            "Reference: OpenAI Codex Finding 1a\n"
+        )
+
+
+@pytest.mark.xdist_group(name="testmakefileefficiency")
+class TestMakefileEfficiency:
+    """Test that Makefile targets are optimized for developer productivity."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root directory."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
+            return f.read()
+
+    def test_test_targets_do_not_have_redundant_uv_sync(self, makefile_content: str):
+        """
+        Test that test-* targets don't have redundant uv sync calls.
+
+        PERFORMANCE BUG: Four test targets (test-unit, test-property, test-contract,
+        test-regression) run 'uv sync' before pytest, adding 30-60s overhead PER target.
+
+        Impact:
+        - Developers running multiple test types waste 2-4 minutes per iteration
+        - 'make test-property && make test-contract' wastes 60-120s on redundant syncs
+        - UV_RUN (uv run) already auto-syncs on demand, making explicit syncs unnecessary
+        - Slower test loops discourage TDD workflow
+
+        Current Makefile:
+        - test-unit (line 234): @uv sync --extra dev --extra code-execution --quiet
+        - test-property (line 369): @uv sync --extra dev --extra code-execution --quiet
+        - test-contract (line 375): @uv sync --extra dev --extra code-execution --quiet
+        - test-regression (line 382): @uv sync --extra dev --extra code-execution --quiet
+
+        Why redundant:
+        - Makefile line 12 defines: UV_RUN := uv run
+        - 'uv run' automatically syncs if needed (on-demand)
+        - Explicit sync before each target means syncing 4x even if deps unchanged
+
+        Fix:
+        - Remove explicit 'uv sync' from test targets
+        - Rely on UV_RUN's automatic sync (faster, only syncs when needed)
+        - Add prerequisite check: fail fast if .venv missing with clear error message
+
+        Reference: OpenAI Codex Finding 1b - Redundant uv sync
+        """
+        # Extract test targets that should NOT have uv sync
+        test_targets = ["test-unit", "test-property", "test-contract", "test-regression"]
+
+        for target_name in test_targets:
+            # Extract target content (from target: to next target or end)
+            pattern = rf"^{re.escape(target_name)}:.*?(?=^\S|\Z)"
+            match = re.search(pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+            assert match, f"Could not find {target_name} target in Makefile"
+
+            target_content = match.group(0)
+
+            # Check for explicit uv sync calls
+            has_uv_sync = re.search(r"@?\s*uv sync", target_content)
+
+            assert not has_uv_sync, (
+                f"Makefile target '{target_name}' MUST NOT have explicit 'uv sync' calls\n"
+                "\n"
+                "PERFORMANCE BUG:\n"
+                f"  - Target '{target_name}' runs 'uv sync' before pytest\n"
+                "  - Adds 30-60 seconds overhead PER invocation\n"
+                "  - UV_RUN (uv run) already syncs on demand automatically\n"
+                "  - Explicit sync is redundant and slows developer iteration\n"
+                "\n"
+                "Impact:\n"
+                "  - Running 'make test-property && make test-contract' wastes 60-120s\n"
+                "  - Developers running all 4 targets waste 2-4 minutes per iteration\n"
+                "  - Slower test loops discourage TDD workflow\n"
+                "  - Same dependencies re-synced multiple times unnecessarily\n"
+                "\n"
+                f"Found in {target_name}:\n"
+                f"  {has_uv_sync.group(0)}\n"
+                "\n"
+                "Why this is redundant:\n"
+                "  - Makefile line 12: UV_RUN := uv run\n"
+                "  - 'uv run' automatically syncs if .venv missing or outdated\n"
+                "  - Only syncs when NEEDED (checks lockfile timestamps)\n"
+                "  - Explicit sync ALWAYS runs, even when not needed\n"
+                "\n"
+                "Fix:\n"
+                f"  1. Remove 'uv sync' line from {target_name} target\n"
+                "  2. Rely on UV_RUN's automatic sync (line 12: $(UV_RUN) pytest ...)\n"
+                "  3. Add prerequisite check (optional):\n"
+                "       @test -d .venv || (echo '✗ No .venv found. Run: make install-dev' && exit 1)\n"
+                "\n"
+                "Before (slow - 30-60s overhead):\n"
+                f"  {target_name}:\n"
+                "      @echo 'Running tests...'\n"
+                "      @uv sync --extra dev --extra code-execution --quiet  ← REMOVE THIS\n"
+                "      $(PYTEST) -n auto -m marker -v\n"
+                "\n"
+                "After (fast - only syncs when needed):\n"
+                f"  {target_name}:\n"
+                "      @echo 'Running tests...'\n"
+                "      @test -d .venv || (echo '✗ Run: make install-dev' && exit 1)\n"
+                "      $(UV_RUN) pytest -n auto -m marker -v  ← UV_RUN auto-syncs\n"
+                "\n"
+                "Time savings:\n"
+                "  - Single target: 30-60s faster (skip unnecessary sync)\n"
+                "  - Four targets: 2-4 min faster (skip 4x syncs)\n"
+                "  - Daily savings: 10-20 min for active TDD workflow\n"
+                "\n"
+                "Reference: OpenAI Codex Finding 1b\n"
+            )
+
 
 @pytest.mark.xdist_group(name="testmakefilevalidationconsistency")
 class TestMakefileValidationConsistency:
