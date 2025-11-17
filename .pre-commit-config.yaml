@@ -294,7 +294,11 @@ repos:
   hooks:
   - id: actionlint-workflow-validation
     name: Validate GitHub Actions with actionlint
-    entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1'
+    entry: >
+      bash -c 'if command -v actionlint >/dev/null 2>&1; then
+      actionlint -no-color -shellcheck= ".github/workflows/*.yml" ".github/workflows/*.yaml" 2>&1;
+      else echo "Skipping: actionlint not installed (install from https://github.com/rhysd/actionlint)";
+      exit 0; fi'
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -302,6 +306,9 @@ repos:
     stages:
     - pre-push
     description: 'Advanced GitHub Actions workflow validation using actionlint.
+
+
+      CLI Availability Guard: Gracefully skips if actionlint is not installed.
 
 
       Catches issues like:
@@ -480,7 +487,11 @@ repos:
       '
   - id: mintlify-broken-links-check
     name: Mintlify Broken Links Validation (PRIMARY Validator)
-    entry: bash -c 'cd docs && npx mintlify broken-links'
+    entry: >
+      bash -c 'if command -v npx >/dev/null 2>&1; then
+      cd docs && npx mintlify broken-links;
+      else echo "Skipping: npx/Node.js not installed (install from https://nodejs.org/)";
+      exit 0; fi'
     language: system
     files: ^docs/.*\.mdx$
     pass_filenames: false
@@ -1328,13 +1339,20 @@ repos:
       '
   - id: helm-lint
     name: Helm Lint Validation
-    entry: helm lint deployments/helm/mcp-server-langgraph
+    entry: >
+      bash -c 'if command -v helm >/dev/null 2>&1; then
+      helm lint deployments/helm/mcp-server-langgraph;
+      else echo "Skipping: helm not installed (install from https://helm.sh/docs/intro/install/)";
+      exit 0; fi'
     language: system
     files: ^deployments/helm/.*\.(yaml|yml)$
     pass_filenames: false
     stages:
     - pre-push
     description: 'Validates Helm chart passes lint checks.
+
+
+      CLI Availability Guard: Gracefully skips if helm is not installed.
 
 
       Prevents:
@@ -1356,14 +1374,22 @@ repos:
       '
   - id: validate-cloud-overlays
     name: Validate Cloud Overlays Build Successfully
-    entry: bash -c 'kubectl kustomize deployments/kubernetes/overlays/aws && kubectl kustomize deployments/kubernetes/overlays/gcp
-      && kubectl kustomize deployments/kubernetes/overlays/azure'
+    entry: >
+      bash -c 'if command -v kubectl >/dev/null 2>&1; then
+      kubectl kustomize deployments/kubernetes/overlays/aws &&
+      kubectl kustomize deployments/kubernetes/overlays/gcp &&
+      kubectl kustomize deployments/kubernetes/overlays/azure;
+      else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
+      exit 0; fi'
     language: system
     files: ^deployments/kubernetes/overlays/(aws|gcp|azure)/.*\.(yaml|yml)$
     pass_filenames: false
     stages:
     - pre-push
     description: 'Validates cloud-specific Kustomize overlays build without errors.
+
+
+      CLI Availability Guard: Gracefully skips if kubectl is not installed.
 
 
       Prevents:
@@ -1380,8 +1406,11 @@ repos:
       '
   - id: validate-no-placeholders
     name: Check for Placeholders in Production Overlays
-    entry: bash -c 'kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit
-      1 || exit 0'
+    entry: >
+      bash -c 'if command -v kubectl >/dev/null 2>&1; then
+      kubectl kustomize deployments/overlays/production-gke | grep -E "PLACEHOLDER_|PRODUCTION_DOMAIN" && exit 1 || exit 0;
+      else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
+      exit 0; fi'
     language: system
     files: ^deployments/overlays/production-gke/.*\.(yaml|yml)$
     pass_filenames: false

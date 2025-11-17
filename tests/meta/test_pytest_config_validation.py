@@ -38,55 +38,29 @@ def test_pytest_addopts_flags_have_required_plugins():
     - --timeout → pytest-timeout
     - --cov → pytest-cov
     - --benchmark → pytest-benchmark
+
+    NOTE: This test calls the validation script (scripts/validate_pytest_config.py)
+    instead of duplicating the validation logic. The script is the source of truth.
     """
-    pyproject_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/pyproject.toml")
+    script_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/scripts/validate_pytest_config.py")
 
-    assert pyproject_path.exists(), f"pyproject.toml not found: {pyproject_path}"
+    assert script_path.exists(), f"Validation script not found: {script_path}\n" "Expected: scripts/validate_pytest_config.py"
 
-    with open(pyproject_path, "rb") as f:
-        pyproject_data = tomllib.load(f)
+    # Run the validation script - it will exit with code 1 if validation fails
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        capture_output=True,
+        text=True,
+        cwd=script_path.parent.parent,
+        timeout=60,
+    )
 
-    # Get pytest addopts
-    pytest_config = pyproject_data.get("tool", {}).get("pytest", {}).get("ini_options", {})
-    addopts = pytest_config.get("addopts", "")
-
-    assert addopts, "pytest addopts not found in pyproject.toml"
-
-    # Define plugin requirements for pytest flags
-    # Flag → Required plugin
-    plugin_requirements = {
-        "--dist": "pytest-xdist",
-        "-n": "pytest-xdist",
-        "--timeout": "pytest-timeout",
-        "--cov": "pytest-cov",
-        "--benchmark": "pytest-benchmark",
-    }
-
-    # Extract all dev dependencies
-    dev_deps = pyproject_data.get("project", {}).get("optional-dependencies", {}).get("dev", [])
-    dep_groups_dev = pyproject_data.get("dependency-groups", {}).get("dev", [])
-    all_dev_deps = dev_deps + dep_groups_dev
-
-    # Normalize dependency names (handle version specifiers)
-    installed_plugins = set()
-    for dep in all_dev_deps:
-        # Extract package name (before any comparison operators)
-        pkg_name = dep.split("[")[0].split(">")[0].split("<")[0].split("=")[0].split("!")[0].strip()
-        installed_plugins.add(pkg_name.lower())
-
-    # Check each flag in addopts
-    missing_plugins = {}
-    for flag, required_plugin in plugin_requirements.items():
-        if flag in addopts:
-            if required_plugin.lower() not in installed_plugins:
-                missing_plugins[flag] = required_plugin
-
-    assert not missing_plugins, (
-        "pytest addopts uses flags that require missing plugins:\n"
-        + "\n".join(f"  - {flag} requires {plugin}" for flag, plugin in missing_plugins.items())
-        + f"\n\nCurrent addopts: {addopts}"
-        + f"\n\nInstalled plugins: {sorted(installed_plugins)}"
-        + "\n\nFix: Add missing plugins to project.optional-dependencies.dev in pyproject.toml"
+    # The script prints detailed error messages, so pass them through
+    assert result.returncode == 0, (
+        f"Pytest config validation failed:\n\n"
+        f"stdout:\n{result.stdout}\n\n"
+        f"stderr:\n{result.stderr}\n\n"
+        f"Fix: Add missing plugins to project.optional-dependencies.dev in pyproject.toml"
     )
 
 
