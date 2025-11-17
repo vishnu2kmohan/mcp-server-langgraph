@@ -15,6 +15,8 @@ import pytest
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="test_settings_injection")
 class TestMCPServerSettingsInjection:

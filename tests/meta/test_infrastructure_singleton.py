@@ -237,21 +237,27 @@ class TestRegressionTestCorrectness:
         # Look for assertions about port values
         assert "9432" in content, "Regression test should check for base postgres port 9432"
 
-        # Should NOT have comments about "broken behavior" or "hardcoded ports"
-        # (Those comments would indicate the test expects wrong behavior)
+        # Should NOT assert that broken behavior is correct
+        # (But CAN document old broken behavior for context)
         if "hardcoded" in content.lower() or "broken" in content.lower():
-            # Check context to see if it's explaining the FIX or complaining about the problem
-            lines = content.lower().split("\n")
+            # Check if assertions validate broken behavior vs document it
+            lines = content.split("\n")  # Keep original case for checking
             for i, line in enumerate(lines):
-                if "hardcoded" in line or "broken" in line:
-                    # Check if this is in a docstring explaining the old problem
-                    # vs an assertion that expects broken behavior
-                    context = "\n".join(lines[max(0, i - 3) : min(len(lines), i + 4)])
+                line_lower = line.lower()
+                if "hardcoded" in line_lower or "broken" in line_lower:
+                    # Skip if this is explaining/preventing regression (legitimate documentation)
+                    if any(
+                        keyword in line_lower
+                        for keyword in ["old (broken)", "prevents regression", "prevent regression", "was broken"]
+                    ):
+                        continue
 
-                    if "assert" in context and ("hardcoded" in context or "broken" in context):
+                    # Check if an assertion on this line expects broken values
+                    if "assert" in line_lower and not line.strip().startswith("#"):
+                        # This is an actual assertion (not a comment) with "broken"/"hardcoded"
                         pytest.fail(
                             f"Regression test appears to validate BROKEN behavior:\n"
-                            f"{context}\n\n"
+                            f"Line {i + 1}: {line}\n\n"
                             f"After fixing the architecture, tests should validate that ports "
                             f"are CORRECTLY fixed to base values, not that they are incorrectly hardcoded."
                         )

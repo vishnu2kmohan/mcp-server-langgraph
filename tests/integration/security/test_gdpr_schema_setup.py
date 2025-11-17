@@ -32,6 +32,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.security, pytest.mark.gdpr, p
 class TestGDPRSchemaSetup:
     """Test that GDPR schema is properly initialized for security tests"""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
+
     @pytest.mark.asyncio
     async def test_gdpr_schema_file_exists(self):
         """
@@ -270,6 +276,12 @@ class TestGDPRSchemaSetup:
 @pytest.mark.xdist_group(name="integration_security_gdpr_schema_tests")
 class TestGDPRSchemaFixturePattern:
     """Test the fixture pattern for schema setup"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_fixture_uses_direct_sql_not_alembic(self):

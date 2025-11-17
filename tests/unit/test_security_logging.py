@@ -284,8 +284,8 @@ class TestLogSanitizationWithRealWorldPayloads:
         assert sanitized["token"] == expected_redaction
         assert sanitized["message"] == "What is the weather today?"
         assert sanitized["thread_id"] == "conv_abc123"
-        # Context is preserved (shallow copy)
-        assert sanitized["context"]["user_id"] == "alice"
+        # Context is preserved (shallow copy) - includes worker-prefix from get_user_id()
+        assert sanitized["context"]["user_id"] == get_user_id("alice")
 
     def test_sanitize_search_tool_payload(self):
         """Test sanitization of search tool call arguments"""

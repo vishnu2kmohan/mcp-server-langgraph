@@ -13,6 +13,8 @@ import pytest
 
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, PasswordVerification
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="test_verify_password")
 class TestUserProviderVerifyPassword:

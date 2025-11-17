@@ -234,11 +234,11 @@ class TestKeycloakConfigValidationHook:
         """
         Validate hook works with the actual docker-compose.test.yml.
 
-        GIVEN: The actual docker/docker-compose.test.yml file
+        GIVEN: The actual docker-compose.test.yml file
         WHEN: Running the validation hook
         THEN: Hook should pass (Keycloak is enabled per ADR-0053)
         """
-        compose_file = Path(__file__).parent.parent.parent / "docker" / "docker-compose.test.yml"
+        compose_file = Path(__file__).parent.parent.parent / "docker-compose.test.yml"
 
         assert compose_file.exists(), "docker-compose.test.yml not found"
 

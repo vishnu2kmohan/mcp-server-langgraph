@@ -61,13 +61,20 @@ class TestConfiguredAsyncMock:
 
     def test_default_return_value_is_none(self):
         """GIVEN: Factory is called without arguments
-        WHEN: Mock is awaited
-        THEN: Should return None (explicit safe default)
+        WHEN: Mock is called (not awaited)
+        THEN: Should return a coroutine object
         """
+        import asyncio
+        import inspect
+
         mock = configured_async_mock()
         result = mock()
-        assert result is not None  # Returns coroutine
-        # Actual return value check requires async context
+
+        # Verify it returns a coroutine
+        assert inspect.iscoroutine(result), "AsyncMock should return coroutine when called"
+
+        # Close coroutine to avoid warning
+        result.close()
 
     @pytest.mark.asyncio
     async def test_async_call_returns_none_by_default(self):

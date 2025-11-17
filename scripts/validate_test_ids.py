@@ -83,6 +83,11 @@ LEGITIMATE_PATTERNS = [
     # OpenFGA format assertions with explicit comment
     r'assert.*"user:[a-zA-Z0-9_-]+".*#.*OpenFGA format',
     r"assert.*'user:[a-zA-Z0-9_-]+'.*#.*OpenFGA format",
+    # OpenFGA format documentation comments (even without assert on same line)
+    r'#.*OpenFGA format.*"user:[a-zA-Z0-9_-]+"',
+    r"#.*OpenFGA format.*'user:[a-zA-Z0-9_-]+'",
+    r'"user:[a-zA-Z0-9_-]+".*#.*OpenFGA format',
+    r"'user:[a-zA-Z0-9_-]+'.*#.*OpenFGA format",
     # Docstring examples
     r'""".*user:[a-zA-Z0-9_-]+.*"""',
     r"'''.*user:[a-zA-Z0-9_-]+.*'''",

@@ -17,8 +17,8 @@ import click
 from .init import init_project
 
 
-@click.group()  # type: ignore[misc]
-@click.version_option(version="2.8.0", prog_name="mcpserver")  # type: ignore[misc]
+@click.group()
+@click.version_option(version="2.8.0", prog_name="mcpserver")
 def cli() -> None:
     """
     MCP Server with LangGraph CLI
@@ -32,19 +32,19 @@ def cli() -> None:
     """
 
 
-@cli.command()  # type: ignore[misc]
-@click.option(  # type: ignore[misc]
+@cli.command()
+@click.option(
     "--quickstart",
     is_flag=True,
     help="Create a minimal quick-start project (no infrastructure)",
 )
-@click.option(  # type: ignore[misc]
+@click.option(
     "--template",
     type=click.Choice(["quickstart", "production", "enterprise"]),
     default="production",
     help="Project template to use",
 )
-@click.option(  # type: ignore[misc]
+@click.option(
     "--name",
     prompt="Project name",
     help="Name of your MCP Server project",
@@ -93,15 +93,15 @@ def init(quickstart: bool, template: str, name: str) -> None:
         sys.exit(1)
 
 
-@cli.command()  # type: ignore[misc]
-@click.argument("name")  # type: ignore[misc]
-@click.option(  # type: ignore[misc]
+@cli.command()
+@click.argument("name")
+@click.option(
     "--template",
     type=click.Choice(["basic", "research", "customer-support", "code-review", "data-analyst"]),
     default="basic",
     help="Agent template to use",
 )
-@click.option(  # type: ignore[misc]
+@click.option(
     "--tools",
     multiple=True,
     help="Tools to include (e.g., search, calculator)",
@@ -138,9 +138,9 @@ def create_agent(name: str, template: str, tools: tuple[str, ...]) -> None:
         sys.exit(1)
 
 
-@cli.command()  # type: ignore[misc]
-@click.argument("name")  # type: ignore[misc]
-@click.option(  # type: ignore[misc]
+@cli.command()
+@click.argument("name")
+@click.option(
     "--description",
     prompt="Tool description",
     help="What does this tool do?",
@@ -174,15 +174,15 @@ def add_tool(name: str, description: str) -> None:
         sys.exit(1)
 
 
-@cli.command()  # type: ignore[misc]
-@click.option(  # type: ignore[misc]
+@cli.command()
+@click.option(
     "--from",
     "from_framework",
     type=click.Choice(["crewai", "langchain", "openai-agentkit", "autogpt"]),
     required=True,
     help="Framework to migrate from",
 )
-@click.option(  # type: ignore[misc]
+@click.option(
     "--input",
     "input_path",
     type=click.Path(exists=True),

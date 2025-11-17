@@ -24,6 +24,12 @@ pytestmark = pytest.mark.unit
 class TestTodoAuditor:
     """Test suite for TodoAuditor."""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
+
     @pytest.fixture
     def temp_docs_dir(self, tmp_path):
         """Create temporary docs directory for testing."""

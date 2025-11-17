@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
+
 
 def test_get_integration_test_file_returns_valid_path():
     """

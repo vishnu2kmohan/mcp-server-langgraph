@@ -58,7 +58,7 @@ spec:
             app: mcp-server-langgraph
       - maxSkew: 2
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
             app: mcp-server-langgraph

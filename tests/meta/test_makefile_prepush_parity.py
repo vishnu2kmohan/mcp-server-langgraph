@@ -49,8 +49,16 @@ class TestMakefilePrePushParity:
 
     @pytest.fixture
     def pre_push_hook_path(self, repo_root: Path) -> Path:
-        """Get path to pre-push hook."""
-        return repo_root / ".git" / "hooks" / "pre-push"
+        """Get path to pre-push hook (handles git worktrees)."""
+        # Use git rev-parse to get common git directory (handles worktrees)
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=True, timeout=60, cwd=repo_root
+        )
+        git_common_dir = Path(result.stdout.strip())
+        # If path is relative, make it relative to repo_root
+        if not git_common_dir.is_absolute():
+            git_common_dir = repo_root / git_common_dir
+        return git_common_dir / "hooks" / "pre-push"
 
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:

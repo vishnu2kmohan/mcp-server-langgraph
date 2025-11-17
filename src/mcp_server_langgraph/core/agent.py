@@ -265,7 +265,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
 
     # NOTE: Don't return "messages" key - operator.add would duplicate them!
     # Only return fields we're modifying.
-    return {
+    return {  # type: ignore[typeddict-item]
         "next_action": next_action,
         "routing_confidence": 0.5,  # Low confidence for fallback
         "reasoning": "Fallback keyword-based routing",
@@ -450,13 +450,13 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                     fallback_result = _fallback_routing(state, last_message)
                     # Merge fallback result into state
                     for key, value in fallback_result.items():
-                        state[key] = value
+                        state[key] = value  # type: ignore[literal-required]
             else:
                 # Fallback routing if Pydantic AI not available
                 fallback_result = _fallback_routing(state, last_message)
                 # Merge fallback result into state
                 for key, value in fallback_result.items():
-                    state[key] = value
+                    state[key] = value  # type: ignore[literal-required]
 
         # NOTE: Don't return "messages" - operator.add would duplicate them!
         # This applies to both Pydantic AI and fallback paths.

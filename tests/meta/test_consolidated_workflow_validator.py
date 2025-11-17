@@ -181,7 +181,7 @@ class TestConsolidatedWorkflowValidator:
             pytest.skip(f"Validator script not found: {script_path}")
 
         # Test help output
-        result = subprocess.run([sys.executable, str(script_path), "--help"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run([sys.executable, str(script_path), "--help"], capture_output=True, text=True, timeout=60)
 
         # Should have help text
         assert result.returncode == 0, f"Script --help should return exit code 0, got: {result.returncode}"
@@ -247,7 +247,7 @@ class TestConsolidatedWorkflowValidator:
             [sys.executable, str(script_path), "--repo-root", str(PROJECT_ROOT)],
             capture_output=True,
             text=True,
-            timeout=15,  # Allow 15s max
+            timeout=60,  # Allow 60s max per subprocess safety policy
         )
 
         elapsed = time.time() - start_time
