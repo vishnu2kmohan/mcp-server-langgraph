@@ -19,6 +19,13 @@ def teardown_module():
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def teardown_method_pydantic_ai():
+    """Force GC after each teardown_method to prevent mock accumulation in xdist workers"""
+    yield
+    gc.collect()
+
+
 # Test fixtures
 @pytest.fixture
 def mock_settings():

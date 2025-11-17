@@ -32,6 +32,13 @@ def teardown_module():
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def teardown_method_kubernetes_health_probes():
+    """Force GC after each teardown_method to prevent mock accumulation in xdist workers"""
+    yield
+    gc.collect()
+
+
 @pytest.mark.integration
 def test_startup_probe_accessible():
     """

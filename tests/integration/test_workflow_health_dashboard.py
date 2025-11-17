@@ -22,6 +22,13 @@ def teardown_module():
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def teardown_method_workflow_health_dashboard():
+    """Force GC after each teardown_method to prevent mock accumulation in xdist workers"""
+    yield
+    gc.collect()
+
+
 def test_dashboard_handles_zero_runs():
     """
     Test that dashboard calculations handle workflows with zero runs.

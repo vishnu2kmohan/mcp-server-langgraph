@@ -25,6 +25,13 @@ def teardown_module():
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def teardown_method_audit_log_store():
+    """Force GC after each teardown_method to prevent mock accumulation in xdist workers"""
+    yield
+    gc.collect()
+
+
 @pytest.fixture
 async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
     """

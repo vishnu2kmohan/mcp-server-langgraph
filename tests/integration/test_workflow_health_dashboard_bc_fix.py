@@ -20,6 +20,13 @@ def teardown_module():
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def teardown_method_workflow_health_dashboard_bc_fix():
+    """Force GC after each teardown_method to prevent mock accumulation in xdist workers"""
+    yield
+    gc.collect()
+
+
 def test_awk_percentage_calculation():
     """
     Test that awk can calculate success rate percentages.
