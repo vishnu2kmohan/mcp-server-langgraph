@@ -227,6 +227,7 @@ _site/
 !.claude/commands/
 !.claude/memory/
 !.claude/templates/
+!.claude/settings.json
 # Session-specific context should not be tracked
 .claude/context/
 .claude/handoff/

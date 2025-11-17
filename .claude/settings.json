@@ -1,0 +1,207 @@
+{
+  "allowedTools": {
+    "WebFetch": {
+      "allowed_domains": [
+        "docs.python.org",
+        "peps.python.org",
+        "docs.docker.com",
+        "kubernetes.io",
+        "pypi.org",
+        "github.com",
+        "docs.anthropic.com",
+        "platform.openai.com",
+        "smith.langchain.com",
+        "docs.langchain.com",
+        "fastapi.tiangolo.com",
+        "pydantic-docs.helpmanual.io",
+        "redis.io",
+        "prometheus.io",
+        "grafana.com",
+        "helm.sh",
+        "istio.io",
+        "openfga.dev",
+        "keycloak.org",
+        "infisical.com",
+        "docker.io",
+        "quay.io"
+      ]
+    },
+    "Bash": {
+      "auto_approve_patterns": [
+        "pytest tests/ -x --lf",
+        "make test-unit",
+        "make test-integration",
+        "make test-coverage",
+        "make lint",
+        "make format",
+        "git status",
+        "git log",
+        "git diff",
+        "git show",
+        "ls",
+        "cat",
+        "grep",
+        "find"
+      ]
+    }
+  },
+  "plan_mode": {
+    "default": false,
+    "auto_enable_for_keywords": [
+      "migrate",
+      "refactor",
+      "architecture",
+      "breaking change",
+      "redesign",
+      "major version"
+    ]
+  },
+  "includeCoAuthoredBy": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(**git commit**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run black --check src/ --line-length=127 && uv run isort --check src/ --profile=black --line-length=127",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "python3 scripts/validate_mintlify_docs.py docs --strict 2>&1 | grep -E '(ERROR|WARNING|passed)' || true",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit(**src/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚙️  Auto-formatting code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "echo '🔍 Linting...' && uv run flake8 {{file_path}} --max-line-length=127 --max-complexity=15 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "echo '📝 TDD Reminder: Ensure corresponding tests are written/updated in tests/ directory'",
+            "timeout": 1
+          }
+        ]
+      },
+      {
+        "matcher": "Write(**src/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚙️  Auto-formatting code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "echo '🔍 Linting...' && uv run flake8 {{file_path}} --max-line-length=127 --max-complexity=15 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "echo '📝 TDD Reminder: Write tests FIRST in tests/ directory before implementation'",
+            "timeout": 1
+          }
+        ]
+      },
+      {
+        "matcher": "Edit(**tests/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚙️  Auto-formatting test code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "if grep -q 'AsyncMock\\|MagicMock' {{file_path}} 2>/dev/null; then echo '⚠️  Memory Safety: AsyncMock/MagicMock detected. Ensure class has @pytest.mark.xdist_group and teardown_method with gc.collect()'; fi",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write(**tests/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚙️  Auto-formatting test code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "if grep -q 'AsyncMock\\|MagicMock' {{file_path}} 2>/dev/null; then echo '⚠️  Memory Safety: AsyncMock/MagicMock detected. Ensure class has @pytest.mark.xdist_group and teardown_method with gc.collect()'; fi",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(**git commit**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/workflow/update-context-files.py --recent-work --quiet",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --short",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && [ -f .claude-worktree-session ]; then echo '\n🌳 Git Worktree Session Active' && echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' && cat .claude-worktree-session | grep -E '^(SESSION_ID|BASE_BRANCH|CREATED_AT)=' | sed 's/^/  /' && echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'; fi",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "echo '🧪 TDD Mode Active: Write tests FIRST, then implementation'",
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  }
+}
