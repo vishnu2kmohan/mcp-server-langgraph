@@ -109,7 +109,17 @@ def test_dashboard_bc_command_edge_cases():
 
 def test_dashboard_workflow_file_exists():
     """Verify the workflow health dashboard file exists."""
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Find project root by looking for pyproject.toml
+    current = Path(__file__).resolve()
+    project_root = None
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            project_root = parent
+            break
+
+    assert project_root is not None, "Could not find project root (no pyproject.toml)"
+
+    workflow_file = project_root / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     assert workflow_file.exists(), f"Workflow file not found: {workflow_file}"
 
@@ -121,7 +131,18 @@ def test_dashboard_workflow_has_zero_check():
     This test reads the workflow file and checks for division-by-zero
     protection logic.
     """
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Find project root by looking for pyproject.toml
+    current = Path(__file__).resolve()
+    project_root = None
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            project_root = parent
+            break
+
+    if project_root is None:
+        pytest.skip("Could not find project root (no pyproject.toml)")
+
+    workflow_file = project_root / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     if not workflow_file.exists():
         pytest.skip("Workflow file not found")

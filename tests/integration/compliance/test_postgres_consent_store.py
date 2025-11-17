@@ -5,6 +5,7 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 """
 
 import gc
+import os
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
@@ -25,13 +26,18 @@ def teardown_module():
 
 @pytest.fixture
 async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
-    """Create test database pool"""
+    """
+    Create test database pool with environment-based configuration.
+
+    Supports both local development and CI/CD environments by using
+    environment variables with sensible defaults.
+    """
     pool = await asyncpg.create_pool(
-        host="localhost",
-        port=5432,
-        user="postgres",
-        password="postgres",
-        database="gdpr",
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", "5432")),
+        user=os.getenv("POSTGRES_USER", "postgres"),
+        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+        database=os.getenv("POSTGRES_DB", "gdpr"),
         min_size=1,
         max_size=5,
     )

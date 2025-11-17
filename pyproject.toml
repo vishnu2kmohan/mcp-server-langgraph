@@ -46,6 +46,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",
+    "pydantic-ai>=0.0.13",  # Type-safe AI agent framework for structured routing
     "httpx>=0.28.1",
     "fastapi>=0.120.3",
     "starlette>=0.48.0",  # Explicitly listed (also transitively via FastAPI) for direct imports

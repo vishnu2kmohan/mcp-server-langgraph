@@ -40,8 +40,15 @@ class TestGDPRSchemaSetup:
         The schema file should be at migrations/001_gdpr_schema.sql
         This is the source of truth for database structure.
         """
-        # GIVEN: Project root path
-        project_root = Path(__file__).parent.parent.parent
+        # GIVEN: Project root path (find by looking for pyproject.toml)
+        current = Path(__file__).resolve()
+        project_root = None
+        for parent in current.parents:
+            if (parent / "pyproject.toml").exists():
+                project_root = parent
+                break
+
+        assert project_root is not None, "Could not find project root (no pyproject.toml)"
 
         # THEN: Schema file should exist
         schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
