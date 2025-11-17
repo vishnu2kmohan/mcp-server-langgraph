@@ -22,6 +22,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.mcp, pytest.mark.auth]
 class TestMCPTestUserRegistration:
     """Test that test users are properly registered for MCP tests"""
 
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
+        gc.collect()
+
     @pytest.mark.asyncio
     async def test_register_mcp_test_users_fixture_exists(self, register_mcp_test_users):
         """
