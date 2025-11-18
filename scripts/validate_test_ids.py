@@ -113,6 +113,7 @@ LEGITIMATE_PATTERNS = [
 # Files that are allowed to have hardcoded IDs (special cases)
 EXEMPT_FILES = [
     "conftest.py",  # Has docstrings and sample fixtures with example IDs
+    "worker_safe_ids.py",  # Utility module with docstrings showing anti-patterns and solutions
     "test_id_pollution_prevention.py",  # Meta-test that tests this validation script
     "test_openfga_client.py",  # Unit tests for OpenFGA client library interface (uses mocked data)
     # Regression tests (documentation/pattern examples - not production tests)
