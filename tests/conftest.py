@@ -270,9 +270,12 @@ def init_test_observability():
 
     Consolidates 25+ duplicate module-scoped fixtures from individual test files.
     See: tests/test_fixture_organization.py for validation
+
+    IMPORTANT: Properly shuts down OpenTelemetry exporters and processors after
+    test session to prevent thread leaks and memory bloat.
     """
     from mcp_server_langgraph.core.config import Settings
-    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized
+    from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
 
     if not is_initialized():
         test_settings = Settings(
@@ -284,6 +287,11 @@ def init_test_observability():
         init_observability(settings=test_settings, enable_file_logging=False)
 
     yield
+
+    # Teardown: Shutdown OpenTelemetry exporters and processors
+    # Prevents thread leaks (OtelPeriodicExportingMetricReader, OtelBatchSpanRecordProcessor)
+    # and memory bloat during test execution
+    shutdown_observability()
 
 
 @pytest.fixture(autouse=True)
