@@ -45,7 +45,7 @@ def mock_sync_dependency():
     """Mock sync dependency (simulates get_manager)"""
 
     def get_manager():
-        manager = AsyncMock()
+        manager = AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
         manager.method.return_value = {"result": "success"}
         return manager
 
@@ -127,7 +127,9 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_async_dependency
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = lambda: AsyncMock()
+        app.dependency_overrides[get_manager] = (
+            lambda: AsyncMock()
+        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -165,7 +167,9 @@ class TestPytestXdistIsolation:
         }
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = lambda: AsyncMock()
+        app.dependency_overrides[get_manager] = (
+            lambda: AsyncMock()
+        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -195,7 +199,9 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_user
 
         # ✅ Sync dependency overridden with sync function
-        app.dependency_overrides[get_manager] = lambda: AsyncMock()
+        app.dependency_overrides[get_manager] = (
+            lambda: AsyncMock()
+        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -220,7 +226,9 @@ class TestPytestXdistIsolation:
             return {"user_id": "user:test", "username": "testuser"}
 
         app.dependency_overrides[get_current_user] = mock_user
-        app.dependency_overrides[get_manager] = lambda: AsyncMock()
+        app.dependency_overrides[get_manager] = (
+            lambda: AsyncMock()
+        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         # Verify overrides are set
         assert len(app.dependency_overrides) == 2
@@ -297,7 +305,7 @@ class TestFastAPIPatterns:
             raise HTTPException(status_code=401, detail="Not authenticated")
 
         def get_manager():
-            return AsyncMock()
+            return AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         # Create app and override dependencies (actual pattern)
         app = FastAPI()
@@ -314,7 +322,7 @@ class TestFastAPIPatterns:
             return {"user_id": "user:alice", "username": "alice"}
 
         def mock_get_manager_sync():
-            return AsyncMock()
+            return AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
         app.dependency_overrides[get_manager] = mock_get_manager_sync
