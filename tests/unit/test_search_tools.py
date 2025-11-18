@@ -197,7 +197,8 @@ class TestWebSearch:
         mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -241,7 +242,8 @@ class TestWebSearch:
         mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -269,7 +271,8 @@ class TestWebSearch:
         mock_settings.tavily_api_key = "test-tavily-key"
 
         # Mock network error
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post.side_effect = Exception("Network timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -294,7 +297,8 @@ class TestWebSearch:
         mock_response.status_code = 429  # Rate limit
         mock_response.raise_for_status = Mock(side_effect=Exception("Rate limit exceeded"))
 
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -316,7 +320,8 @@ class TestWebSearch:
         mock_response.json.return_value = {"error": "Invalid API key"}
         mock_response.raise_for_status = MagicMock()
 
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -336,7 +341,8 @@ class TestWebSearch:
         mock_settings.tavily_api_key = "test-tavily-key"
 
         # Mock timeout error
-        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
+        # Note: Don't use spec=httpx.AsyncClient since httpx.AsyncClient is already mocked by @patch
+        mock_client_instance = AsyncMock()
         mock_client_instance.post.side_effect = httpx.TimeoutException("Request timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 

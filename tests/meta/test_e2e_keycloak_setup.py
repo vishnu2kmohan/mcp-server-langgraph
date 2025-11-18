@@ -30,7 +30,9 @@ def test_keycloak_realm_import_file_exists():
     This file should contain the realm configuration with pre-configured
     client and test users for E2E testing.
     """
-    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "tests/e2e/keycloak-test-realm.json")
+    # Use Path(__file__) to get the current test file location, then navigate to repo root
+    repo_root = Path(__file__).parent.parent.parent
+    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
 
     assert realm_file.exists(), (
         f"Keycloak realm import file not found: {realm_file}\n"

@@ -55,6 +55,11 @@ class TestFrontmatterValidator:
             """---
 title: "Valid Page"
 description: "This is a valid page"
+icon: "book"
+contentType: "guide"
+seoTitle: "Valid Page SEO Title"
+seoDescription: "This is a valid page for SEO"
+keywords: ["valid", "test", "documentation"]
 ---
 
 # Valid Page
@@ -109,9 +114,9 @@ description: "Has description but no title"
 
         # Assert
         assert not result.is_valid
-        assert len(result.errors) == 1
-        assert isinstance(result.errors[0], MissingRequiredFieldError)
-        assert "title" in str(result.errors[0]).lower()
+        # Missing: title, icon, contentType, seoTitle, seoDescription, keywords (6 fields)
+        assert len(result.errors) == 6
+        assert any(isinstance(e, MissingRequiredFieldError) and "title" in str(e).lower() for e in result.errors)
 
     def test_missing_description_detected(self, tmp_path):
         """Test that missing description field is detected."""
@@ -133,9 +138,9 @@ title: "Has title but no description"
 
         # Assert
         assert not result.is_valid
-        assert len(result.errors) == 1
-        assert isinstance(result.errors[0], MissingRequiredFieldError)
-        assert "description" in str(result.errors[0]).lower()
+        # Missing: description, icon, contentType, seoTitle, seoDescription, keywords (6 fields)
+        assert len(result.errors) == 6
+        assert any(isinstance(e, MissingRequiredFieldError) and "description" in str(e).lower() for e in result.errors)
 
     def test_invalid_yaml_detected(self, tmp_path):
         """Test that invalid YAML frontmatter is detected."""
@@ -182,9 +187,9 @@ description: "Valid description"
 
         # Assert
         assert not result.is_valid
-        assert len(result.errors) == 1
-        assert "title" in str(result.errors[0]).lower()
-        assert "empty" in str(result.errors[0]).lower()
+        # Missing: title (empty), icon, contentType, seoTitle, seoDescription, keywords (6 fields)
+        assert len(result.errors) == 6
+        assert any("title" in str(e).lower() for e in result.errors)
 
     def test_empty_description_detected(self, tmp_path):
         """Test that empty description is detected as invalid."""
@@ -207,8 +212,9 @@ description: ""
 
         # Assert
         assert not result.is_valid
-        assert len(result.errors) == 1
-        assert "description" in str(result.errors[0]).lower()
+        # Missing: description (empty), icon, contentType, seoTitle, seoDescription, keywords (6 fields)
+        assert len(result.errors) == 6
+        assert any("description" in str(e).lower() for e in result.errors)
 
     def test_template_files_excluded(self, tmp_path):
         """Test that template files are excluded from validation."""
@@ -248,7 +254,10 @@ title: "Missing description"
 
         # Assert
         assert not result.is_valid
-        assert len(result.errors) == 3
+        # file1: 1 error (no frontmatter)
+        # file2: 1 error (no frontmatter)
+        # file3: 6 errors (missing description, icon, contentType, seoTitle, seoDescription, keywords)
+        assert len(result.errors) == 8
 
     def test_optional_fields_allowed(self, tmp_path):
         """Test that optional fields are allowed and don't cause errors."""
@@ -259,6 +268,11 @@ title: "Missing description"
             """---
 title: "Page Title"
 description: "Page description"
+icon: "book"
+contentType: "guide"
+seoTitle: "Page Title SEO"
+seoDescription: "Page description for SEO"
+keywords: ["test", "optional"]
 author: "Test Author"
 date: "2025-01-01"
 tags: ["tag1", "tag2"]
@@ -284,6 +298,11 @@ tags: ["tag1", "tag2"]
             """---
 title: "Valid 1"
 description: "Description 1"
+icon: "book"
+contentType: "guide"
+seoTitle: "Valid 1 SEO"
+seoDescription: "Description 1 for SEO"
+keywords: ["valid", "test"]
 ---
 # Content
 """
@@ -292,6 +311,11 @@ description: "Description 1"
             """---
 title: "Valid 2"
 description: "Description 2"
+icon: "file"
+contentType: "tutorial"
+seoTitle: "Valid 2 SEO"
+seoDescription: "Description 2 for SEO"
+keywords: ["valid", "test", "tutorial"]
 ---
 # Content
 """
