@@ -594,3 +594,7 @@ class NotImplementedError(InternalServerError):
     default_message = "Feature not implemented"
     default_error_code = "server.not_implemented"
     default_status_code = 501
+
+
+# Backward compatibility alias
+MCPServerException = MCPServerError
