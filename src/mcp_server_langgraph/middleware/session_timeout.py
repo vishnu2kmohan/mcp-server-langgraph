@@ -18,7 +18,7 @@ from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-class SessionTimeoutMiddleware(BaseHTTPMiddleware):
+class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Starlette BaseHTTPMiddleware lacks complete type stubs
     """
     Automatic session timeout middleware (HIPAA 164.312(a)(2)(iii))
 

@@ -16,7 +16,7 @@ except ImportError:
     __version__ = "2.7.0"  # Fallback
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lacks complete type stubs
     """Application settings with Infisical secrets support"""
 
     # Service

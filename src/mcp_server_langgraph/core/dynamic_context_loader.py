@@ -79,7 +79,7 @@ def _create_embeddings(
         try:
             from sentence_transformers import SentenceTransformer
 
-            class SentenceTransformerEmbeddings(Embeddings):
+            class SentenceTransformerEmbeddings(Embeddings):  # type: ignore[misc]  # LangChain Embeddings lacks complete type stubs
                 """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
 
                 def __init__(self, model_name: str) -> None:

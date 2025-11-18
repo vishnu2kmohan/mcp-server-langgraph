@@ -38,7 +38,7 @@ class CircuitBreakerState(str, Enum):
     HALF_OPEN = "half_open"  # Testing recovery
 
 
-class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
+class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: ignore[misc]  # pybreaker lacks complete type stubs
     """
     Listener for circuit breaker events.
 
