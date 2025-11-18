@@ -42,7 +42,7 @@ COPY deployments/ ./deployments/
 # Includes all test dependencies from lockfile
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --python $(which python) --no-cache -r /tmp/requirements.txt && \
-    uv pip install --python $(which python) --no-cache --no-deps -e .
+    uv pip install --python $(which python) --no-cache --no-deps .
 
 # Set test environment variables
 ENV TESTING=true

@@ -125,9 +125,16 @@ jobs:
             exit 1
           fi
 
-          # Check docker-compose
-          if ! grep -q 'POSTGRES_MULTIPLE_DATABASES.*gdpr' docker/docker-compose.yml; then
+          # Check docker-compose (supports both approaches per ADR-0060)
+          # Approach 1: Explicit POSTGRES_MULTIPLE_DATABASES=gdpr,openfga,keycloak
+          # Approach 2: Environment-based detection (POSTGRES_DB triggers migrations/000_init_databases.sh)
+          if ! grep -q 'POSTGRES_MULTIPLE_DATABASES.*gdpr' docker/docker-compose.yml && \
+             ! (grep -q 'POSTGRES_DB:.*postgres' docker/docker-compose.yml && \
+                grep -q 'GDPR_DB=' migrations/000_init_databases.sh); then
             echo "❌ ERROR: GDPR database not in docker-compose configuration"
+            echo "Expected either:"
+            echo "  1. POSTGRES_MULTIPLE_DATABASES with 'gdpr' (explicit)"
+            echo "  2. POSTGRES_DB with migrations/000_init_databases.sh defining GDPR_DB (environment-based)"
             exit 1
           fi
 
@@ -298,7 +305,9 @@ jobs:
           for overlay in deployments/overlays/*; do
             if [ -d "$overlay" ]; then
               echo "Validating $overlay..."
-              kubectl apply --dry-run=client --validate=false -k "$overlay" > /dev/null
+              # Use kustomize build instead of kubectl to avoid cluster connection
+              # This validates YAML syntax and kustomization structure without API discovery
+              kustomize build "$overlay" > /dev/null
               echo "✓ $overlay syntax OK"
             fi
           done

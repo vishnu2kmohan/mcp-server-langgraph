@@ -58,8 +58,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
-      retries: 10
-      start_period: 5s
+      retries: 20  # Increased from 10 to allow more time for migrations (60s max)
+      start_period: 10s  # Increased from 5s to allow schema initialization
     # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
       - mcp-test-network
@@ -234,13 +234,13 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      # Use TCP port check (qdrant:v1.15.1 image lacks wget, curl, and grpc_health_probe)
-      # TCP check via /dev/tcp is secure and works with minimal tooling
-      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      # Use bash explicitly for /dev/tcp support (CMD-SHELL defaults to /bin/sh which doesn't support it)
+      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature
+      test: ["CMD", "/bin/bash", "-c", "(echo > /dev/tcp/localhost/6333) >/dev/null 2>&1"]
       interval: 3s
       timeout: 3s
-      retries: 10
-      start_period: 5s
+      retries: 15  # Increased from 10 to allow more startup time (45s max)
+      start_period: 10s  # Increased from 5s for slower CI runners
     deploy:
       resources:
         limits:

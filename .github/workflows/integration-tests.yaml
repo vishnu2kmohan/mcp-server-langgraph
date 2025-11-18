@@ -200,6 +200,25 @@ jobs:
         echo ""
         echo "=== All test infrastructure services verified! ==="
 
+    - name: Verify PostgreSQL accepts connections
+      run: |
+        echo "=== Verifying PostgreSQL actually accepts connections (not just reports healthy) ==="
+        for i in {1..30}; do
+          if docker compose -f docker-compose.test.yml exec -T postgres-test \
+             psql -U postgres -d gdpr_test -c "SELECT 1" > /dev/null 2>&1; then
+            echo "✓ PostgreSQL accepting connections on gdpr_test database"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ PostgreSQL not accepting connections after 30 attempts"
+            docker compose -f docker-compose.test.yml logs postgres-test
+            exit 1
+          fi
+          echo "Waiting for PostgreSQL to accept connections... (attempt $i/30)"
+          sleep 2
+        done
+        echo ""
+
     - name: Run Integration Tests (Group ${{ matrix.split-group }}/4)
       run: |
         source .venv/bin/activate

@@ -147,7 +147,7 @@ def create_mock_current_user(user_id: str = "test_user", roles: list[str] = None
     Create a mock current_user dict for authentication testing.
 
     Args:
-        user_id: User ID in OpenFGA format (e.g., "user:alice")
+        user_id: User ID in OpenFGA format (e.g., "user:test_gw0")
         roles: List of roles (e.g., ["admin", "user"])
 
     Returns:
@@ -155,7 +155,8 @@ def create_mock_current_user(user_id: str = "test_user", roles: list[str] = None
 
     Example:
         >>> async def mock_get_current_user():
-        ...     return create_mock_current_user(user_id="user:alice", roles=["admin"])
+        ...     # Use get_user_id() for worker-safe IDs in actual tests
+        ...     return create_mock_current_user(user_id="user:test_gw0", roles=["admin"])
     """
     if roles is None:
         roles = ["user"]

@@ -114,12 +114,13 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
     # After finding validation gap (141 tests not run), now require full test suites
     required_patterns = {
         "mypy": r"mypy|type.*check",
-        "unit_tests": r"(run-unit-tests|pytest.*-m.*unit)",  # Comprehensive unit test suite
-        "smoke_tests": r"(run-smoke-tests|pytest.*tests/smoke)",  # Smoke tests
+        # Consolidated hook approach (2025-11-18): run-pre-push-tests combines unit/smoke/API/MCP/property
+        "unit_tests": r"(run-pre-push-tests|run-unit-tests|pytest.*-m.*unit)",  # Comprehensive unit test suite
+        "smoke_tests": r"(run-pre-push-tests|run-smoke-tests|pytest.*tests/smoke)",  # Smoke tests
         "integration_tests": r"(run-integration-tests|pytest.*tests/integration)",  # Integration tests
-        "api_tests": r"(run-api-tests|pytest.*-m.*api)",  # API endpoint tests
-        "mcp_tests": r"(run-mcp-server-tests|test_mcp_stdio_server)",  # MCP server tests
-        "property_tests": r"(run-property-tests|pytest.*-m.*property)",  # Property-based tests
+        "api_tests": r"(run-pre-push-tests|run-api-tests|pytest.*-m.*api)",  # API endpoint tests
+        "mcp_tests": r"(run-pre-push-tests|run-mcp-server-tests|test_mcp_stdio_server)",  # MCP server tests
+        "property_tests": r"(run-pre-push-tests|run-property-tests|pytest.*-m.*property)",  # Property-based tests
         "deployment_validation": r"(test_(helm|kustomize|network|service)|deployment)",
         "documentation": r"(test_documentation|mintlify|docs)",
     }
