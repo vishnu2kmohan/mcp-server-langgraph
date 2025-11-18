@@ -212,7 +212,8 @@ check_symlinks() {
 
     ((TOTAL_CHECKS++))
     if [[ -L "$PROJECT_ROOT/docker-compose.yml" ]]; then
-        local target=$(readlink "$PROJECT_ROOT/docker-compose.yml")
+        local target
+        target=$(readlink "$PROJECT_ROOT/docker-compose.yml")
         if [[ -f "$PROJECT_ROOT/$target" ]]; then
             print_success "docker-compose.yml symlink is valid → $target"
         else

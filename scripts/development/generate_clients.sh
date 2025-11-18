@@ -6,6 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# GENERATORS_DIR reserved for future generator configuration logic
+# shellcheck disable=SC2034
 GENERATORS_DIR="$PROJECT_ROOT/generators"
 
 echo "======================================================================"

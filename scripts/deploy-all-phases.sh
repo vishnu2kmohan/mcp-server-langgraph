@@ -52,6 +52,8 @@ deploy_phase1_infrastructure() {
     terraform apply -auto-approve
 
     BUCKET_NAME=$(terraform output -raw terraform_state_bucket)
+    # TABLE_NAME reserved for future DynamoDB lock table validation
+    # shellcheck disable=SC2034
     TABLE_NAME=$(terraform output -raw terraform_locks_table)
 
     log_success "Backend created: $BUCKET_NAME"

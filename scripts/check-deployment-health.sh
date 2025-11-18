@@ -65,8 +65,10 @@ check_deployment_ready() {
         return 1
     fi
 
-    local ready=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.readyReplicas}')
-    local desired=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.replicas}')
+    local ready
+    ready=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.readyReplicas}')
+    local desired
+    desired=$(kubectl get deployment "$deployment" -n "$NAMESPACE" -o jsonpath='{.status.replicas}')
 
     if [[ "$ready" == "$desired" ]] && [[ "$ready" -gt 0 ]]; then
         log_success "Deployment ready: $ready/$desired replicas"
@@ -112,7 +114,8 @@ check_secrets_exist() {
 check_pods_running() {
     log_info "Checking pod status..."
 
-    local pods=$(kubectl get pods -n "$NAMESPACE" -l app=mcp-server-langgraph -o jsonpath='{.items[*].metadata.name}')
+    local pods
+    pods=$(kubectl get pods -n "$NAMESPACE" -l app=mcp-server-langgraph -o jsonpath='{.items[*].metadata.name}')
 
     if [[ -z "$pods" ]]; then
         log_error "No pods found with label app=mcp-server-langgraph"
@@ -122,7 +125,8 @@ check_pods_running() {
     local all_running=true
 
     for pod in $pods; do
-        local status=$(kubectl get pod "$pod" -n "$NAMESPACE" -o jsonpath='{.status.phase}')
+        local status
+        status=$(kubectl get pod "$pod" -n "$NAMESPACE" -o jsonpath='{.status.phase}')
 
         if [[ "$status" != "Running" ]]; then
             log_error "Pod $pod is in $status state"
@@ -147,10 +151,12 @@ check_service_endpoints() {
         return 1
     fi
 
-    local endpoints=$(kubectl get endpoints "$service" -n "$NAMESPACE" -o jsonpath='{.subsets[*].addresses[*].ip}')
+    local endpoints
+    endpoints=$(kubectl get endpoints "$service" -n "$NAMESPACE" -o jsonpath='{.subsets[*].addresses[*].ip}')
 
     if [[ -n "$endpoints" ]]; then
-        local count=$(echo "$endpoints" | wc -w)
+        local count
+        count=$(echo "$endpoints" | wc -w)
         log_success "Service has $count endpoint(s)"
     else
         log_error "Service has no endpoints (no ready pods)"
@@ -173,7 +179,8 @@ check_configmap_exists() {
 check_ingress_configured() {
     log_info "Checking Ingress configuration..."
 
-    local ingresses=$(kubectl get ingress -n "$NAMESPACE" -o name 2>/dev/null)
+    local ingresses
+    ingresses=$(kubectl get ingress -n "$NAMESPACE" -o name 2>/dev/null)
 
     if [[ -z "$ingresses" ]]; then
         log_warning "No ingress resources found (might use LoadBalancer service)"
@@ -181,8 +188,10 @@ check_ingress_configured() {
     fi
 
     for ingress in $ingresses; do
-        local ingress_name=$(basename "$ingress")
-        local hosts=$(kubectl get "$ingress" -n "$NAMESPACE" -o jsonpath='{.spec.rules[*].host}')
+        local ingress_name
+        ingress_name=$(basename "$ingress")
+        local hosts
+        hosts=$(kubectl get "$ingress" -n "$NAMESPACE" -o jsonpath='{.spec.rules[*].host}')
 
         if [[ -n "$hosts" ]]; then
             log_success "Ingress $ingress_name configured with hosts: $hosts"
@@ -200,8 +209,10 @@ check_network_policy() {
         return 0
     fi
 
-    local policies=$(kubectl get networkpolicy -n "$NAMESPACE" -o name)
-    local count=$(echo "$policies" | wc -l)
+    local policies
+    policies=$(kubectl get networkpolicy -n "$NAMESPACE" -o name)
+    local count
+    count=$(echo "$policies" | wc -l)
 
     log_success "Found $count NetworkPolicy resource(s)"
 }
@@ -214,11 +225,14 @@ check_external_secrets() {
         return 0
     fi
 
-    local external_secrets=$(kubectl get externalsecret -n "$NAMESPACE" -o name 2>/dev/null)
+    local external_secrets
+    external_secrets=$(kubectl get externalsecret -n "$NAMESPACE" -o name 2>/dev/null)
 
     for es in $external_secrets; do
-        local es_name=$(basename "$es")
-        local status=$(kubectl get "$es" -n "$NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)
+        local es_name
+        es_name=$(basename "$es")
+        local status
+        status=$(kubectl get "$es" -n "$NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)
 
         if [[ "$status" == "True" ]]; then
             log_success "ExternalSecret $es_name is synced"

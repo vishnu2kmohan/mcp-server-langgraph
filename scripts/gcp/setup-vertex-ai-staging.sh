@@ -197,7 +197,8 @@ verify_configuration() {
 
     # Verify IAM bindings
     log_info "Checking IAM bindings..."
-    local bindings=$(gcloud projects get-iam-policy "$PROJECT_ID" \
+    local bindings
+    bindings=$(gcloud projects get-iam-policy "$PROJECT_ID" \
         --flatten="bindings[].members" \
         --filter="bindings.members:serviceAccount:${GCP_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com" \
         --format="value(bindings.role)")
@@ -216,7 +217,8 @@ verify_configuration() {
 
     # Verify Workload Identity binding
     log_info "Checking Workload Identity binding..."
-    local wi_binding=$(gcloud iam service-accounts get-iam-policy \
+    local wi_binding
+    wi_binding=$(gcloud iam service-accounts get-iam-policy \
         "${GCP_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com" \
         --format=json | jq -r '.bindings[] | select(.role=="roles/iam.workloadIdentityUser") | .members[]')
 
@@ -228,7 +230,8 @@ verify_configuration() {
 
     # Verify Kubernetes service account annotation
     log_info "Checking Kubernetes service account annotation..."
-    local annotation=$(kubectl get serviceaccount "$K8S_SERVICE_ACCOUNT" -n "$K8S_NAMESPACE" \
+    local annotation
+    annotation=$(kubectl get serviceaccount "$K8S_SERVICE_ACCOUNT" -n "$K8S_NAMESPACE" \
         -o jsonpath='{.metadata.annotations.iam\.gke\.io/gcp-service-account}')
 
     if [ "$annotation" == "${GCP_SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com" ]; then

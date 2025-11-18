@@ -75,7 +75,8 @@ validate_config() {
     if [ -f "$ENV_FILE" ]; then
         print_info "Using environment file: $ENV_FILE"
         # Load environment variables
-        export $(cat $ENV_FILE | grep -v '^#' | xargs)
+        # shellcheck disable=SC2046
+        export $(cat "$ENV_FILE" | grep -v '^#' | xargs)
     else
         print_warn "No environment file found, using system environment variables"
     fi

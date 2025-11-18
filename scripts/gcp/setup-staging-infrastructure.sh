@@ -23,6 +23,8 @@ set -euo pipefail
 # Configuration
 PROJECT_ID="${GCP_PROJECT_ID:-vishnu-sandbox-20250310}"
 REGION="us-central1"
+# ZONE is reserved for future zonal resource deployments
+# shellcheck disable=SC2034
 ZONE="us-central1-a"
 CLUSTER_NAME="staging-mcp-server-langgraph-gke"
 VPC_NAME="staging-mcp-slg-vpc"

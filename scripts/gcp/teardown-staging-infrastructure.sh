@@ -42,6 +42,8 @@ readonly NAMESPACE="staging-mcp-server-langgraph"
 readonly VPC_NAME="staging-vpc"
 readonly CLOUD_SQL_INSTANCE="mcp-staging-postgres"
 readonly REDIS_INSTANCE="mcp-staging-redis"
+# TERRAFORM_DIR reserved for future Terraform state cleanup
+# shellcheck disable=SC2034
 readonly TERRAFORM_DIR="terraform/environments/gcp-staging"
 readonly ARTIFACT_REGISTRY_REPO="mcp-staging"
 readonly WORKLOAD_IDENTITY_POOL="github-actions-pool"
@@ -288,7 +290,8 @@ delete_gke_cluster() {
 delete_workload_identity() {
     log_info "Deleting Workload Identity Federation resources..."
 
-    # Get project number
+    # Get project number (reserved for future provider deletion logic)
+    # shellcheck disable=SC2034
     PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
 
     # Delete provider
@@ -659,6 +662,8 @@ main() {
                 shift
                 ;;
             --keep-terraform-state)
+                # Reserved for future Terraform state cleanup logic
+                # shellcheck disable=SC2034
                 KEEP_TERRAFORM_STATE=true
                 shift
                 ;;

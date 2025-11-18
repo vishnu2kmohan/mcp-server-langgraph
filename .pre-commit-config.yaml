@@ -386,6 +386,26 @@ repos:
     files: \.mdx$
     pass_filenames: false
     always_run: false
+  - id: validate-file-naming-conventions
+    name: Validate Documentation File Naming Conventions
+    entry: uv run python scripts/validators/file_naming_validator.py --path docs
+    language: python
+    files: ^docs/.*\.(md|mdx)$
+    pass_filenames: false
+    always_run: false
+    description: |
+      Validates that documentation files follow kebab-case naming conventions.
+
+      Enforces:
+      - All .mdx files must be lowercase
+      - Use hyphens (-) not underscores (_)
+      - No spaces in filenames
+      - No .md files in docs/ directory (must use .mdx)
+
+      Prevents regression of uppercase file naming issues.
+
+      See: docs/references/documentation-authoring-guide
+      Tests: tests/unit/documentation/test_file_naming_validator.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
     entry: uv run python scripts/validators/todo_audit.py --quiet

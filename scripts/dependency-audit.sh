@@ -83,7 +83,8 @@ install_audit_tools() {
 check_outdated() {
     echo -e "${BLUE}=== Outdated Packages ===${NC}"
 
-    local outdated_count=$(pip list --outdated --format=json | jq 'length')
+    local outdated_count
+    outdated_count=$(pip list --outdated --format=json | jq 'length')
 
     if [ "$outdated_count" -eq 0 ]; then
         echo -e "${GREEN}✓ All packages are up to date${NC}"
@@ -197,9 +198,12 @@ check_version_consistency() {
 show_dependency_tree() {
     echo -e "${BLUE}=== Dependency Statistics ===${NC}"
 
-    local total_packages=$(pip list --format=json | jq 'length')
-    local outdated_packages=$(pip list --outdated --format=json | jq 'length')
-    local dev_packages=$(pip list --format=json | jq '[.[] | select(.name | test("pytest|black|mypy|flake8|bandit|isort"))] | length')
+    local total_packages
+    total_packages=$(pip list --format=json | jq 'length')
+    local outdated_packages
+    outdated_packages=$(pip list --outdated --format=json | jq 'length')
+    local dev_packages
+    dev_packages=$(pip list --format=json | jq '[.[] | select(.name | test("pytest|black|mypy|flake8|bandit|isort"))] | length')
 
     echo "Total packages installed: $total_packages"
     echo "Outdated packages: $outdated_packages"
@@ -218,7 +222,8 @@ dependabot_summary() {
     echo -e "${BLUE}=== Open Dependabot PRs ===${NC}"
 
     if command -v gh &> /dev/null; then
-        local pr_count=$(gh pr list --author "app/dependabot" --state open --json number | jq 'length')
+        local pr_count
+        pr_count=$(gh pr list --author "app/dependabot" --state open --json number | jq 'length')
 
         if [ "$pr_count" -eq 0 ]; then
             echo -e "${GREEN}✓ No open Dependabot PRs${NC}"
@@ -245,7 +250,8 @@ generate_recommendations() {
     local has_recommendations=false
 
     # Check for outdated critical packages
-    local outdated_critical=$(pip list --outdated --format=json | jq -r '.[] | select(.name | test("langgraph|fastapi|pydantic|cryptography|pyjwt")) | .name')
+    local outdated_critical
+    outdated_critical=$(pip list --outdated --format=json | jq -r '.[] | select(.name | test("langgraph|fastapi|pydantic|cryptography|pyjwt")) | .name')
     if [ -n "$outdated_critical" ]; then
         echo -e "${YELLOW}1. Update critical packages:${NC}"
         echo "$outdated_critical" | while read -r pkg; do

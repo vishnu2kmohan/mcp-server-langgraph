@@ -50,6 +50,8 @@ HELM_VALUES_FILE="$PROJECT_ROOT/deployments/helm/mcp-server-langgraph/values.yam
 KUSTOMIZE_BASE_FILE="$PROJECT_ROOT/deployments/kustomize/base/kustomization.yaml"
 KUSTOMIZE_PROD_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/production/kustomization.yaml"
 KUSTOMIZE_STAGING_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/staging/kustomization.yaml"
+# KUSTOMIZE_DEV_FILE is reserved for future use (dev overlay uses dev-latest tag)
+# shellcheck disable=SC2034
 KUSTOMIZE_DEV_FILE="$PROJECT_ROOT/deployments/kustomize/overlays/dev/kustomization.yaml"
 
 # ==============================================================================
@@ -98,7 +100,8 @@ get_current_version() {
 
 backup_file() {
     local file=$1
-    local backup_file="$BACKUP_DIR/$(basename "$file").backup-$(date +%Y%m%d-%H%M%S)"
+    local backup_file
+    backup_file="$BACKUP_DIR/$(basename "$file").backup-$(date +%Y%m%d-%H%M%S)"
 
     if [[ ! -d "$BACKUP_DIR" ]]; then
         mkdir -p "$BACKUP_DIR"

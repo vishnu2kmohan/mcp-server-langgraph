@@ -28,25 +28,35 @@ echo
 # Function to check PR status
 check_pr() {
     local pr_number=$1
+    # category parameter intentionally unused - reserved for future filtering logic
+    # shellcheck disable=SC2034
     local category=$2
 
     # Get PR details
-    local pr_data=$(gh pr view "$pr_number" --json headRefOid,title,updatedAt,statusCheckRollup 2>/dev/null || echo "")
+    local pr_data
+    pr_data=$(gh pr view "$pr_number" --json headRefOid,title,updatedAt,statusCheckRollup 2>/dev/null || echo "")
 
     if [ -z "$pr_data" ]; then
         echo -e "  ${RED}✗${NC} PR #${pr_number} - Not found"
         return
     fi
 
-    local pr_sha=$(echo "$pr_data" | jq -r '.headRefOid[0:7]')
-    local pr_title=$(echo "$pr_data" | jq -r '.title' | cut -c1-60)
-    local pr_updated=$(echo "$pr_data" | jq -r '.updatedAt')
-    local total_checks=$(echo "$pr_data" | jq '[.statusCheckRollup[]] | length')
+    local pr_sha
+    pr_sha=$(echo "$pr_data" | jq -r '.headRefOid[0:7]')
+    local pr_title
+    pr_title=$(echo "$pr_data" | jq -r '.title' | cut -c1-60)
+    local pr_updated
+    pr_updated=$(echo "$pr_data" | jq -r '.updatedAt')
+    local total_checks
+    total_checks=$(echo "$pr_data" | jq '[.statusCheckRollup[]] | length')
 
     # Count check statuses
-    local passing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "success")] | length')
-    local failing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "failure")] | length')
-    local pending=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.status == "in_progress" or .status == "queued")] | length')
+    local passing
+    passing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "success")] | length')
+    local failing
+    failing=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.conclusion == "failure")] | length')
+    local pending
+    pending=$(echo "$pr_data" | jq '[.statusCheckRollup[] | select(.status == "in_progress" or .status == "queued")] | length')
 
     # Determine status
     if [ "$total_checks" -eq 0 ]; then
