@@ -1,0 +1,128 @@
+# TruffleHog Ignore File
+#
+# Excludes test fixtures, development configurations, and example credentials
+# from secret scanning. These are NOT production secrets.
+#
+# Format: gitignore-style patterns
+# See: https://github.com/trufflesecurity/trufflehog#ignoring-paths
+
+# ============================================================================
+# Test Infrastructure Credentials
+# ============================================================================
+
+# Docker Compose - Local development/testing only
+# Contains hardcoded postgres/postgres credentials for local Docker services
+docker-compose*.yml
+docker/docker-compose.yml
+
+# Docker Compose test environment (port-offset 9000+)
+# Contains test credentials with _test database suffix
+docker-compose.test.yml
+
+# ============================================================================
+# Test Files & Fixtures
+# ============================================================================
+
+# All test files may contain mock credentials for testing
+tests/**
+test_*.py
+
+# Test fixtures directory
+tests/fixtures/**
+tests/testdata/**
+
+# ============================================================================
+# Migration Scripts
+# ============================================================================
+
+# Database migration scripts
+# NOTE: These use environment variables in production deployments
+# Hardcoded values are only for local development
+migrations/*.sh
+scripts/postgres/*.sh
+
+# ============================================================================
+# Kubernetes Base Manifests
+# ============================================================================
+
+# Kubernetes base manifests contain example/placeholder values
+# Actual secrets are provided via overlays with external secret management
+deployments/base/*.yaml
+deployments/base/**/*.yaml
+
+# Kubernetes overlays that patch with non-production credentials
+deployments/overlays/development/**
+deployments/overlays/staging-gke/**
+
+# ============================================================================
+# Example & Documentation Files
+# ============================================================================
+
+# Documentation with example credentials
+docs/**/*.mdx
+docs/**/*.md
+*.example.yaml
+*.example.yml
+*.example.env
+
+# README files with example configurations
+README.md
+DEPLOYMENT_GUIDE.md
+QUICKSTART.md
+
+# ============================================================================
+# Build & Dependency Files
+# ============================================================================
+
+# Virtual environments (third-party code)
+.venv/**
+venv/**
+.venv-test/**
+
+# Build artifacts
+dist/**
+build/**
+*.egg-info/**
+
+# Lock files (contain package hashes that trigger false positives)
+uv.lock
+poetry.lock
+Pipfile.lock
+package-lock.json
+yarn.lock
+
+# ============================================================================
+# Notes
+# ============================================================================
+#
+# Rationale for Exclusions:
+#
+# 1. docker-compose*.yml:
+#    - Contains postgres/postgres credentials
+#    - Used ONLY for local Docker development
+#    - Production uses Cloud SQL with IAM authentication
+#    - See: ADR-0056 Database Architecture
+#
+# 2. tests/**:
+#    - Test credentials for mocking authentication flows
+#    - Not used in any production code paths
+#    - Isolated to test environments only
+#
+# 3. migrations/*.sh:
+#    - Hardcoded postgres used in local init-db
+#    - Production deployments use external secrets (Secret Manager, Vault)
+#    - Environment variable injection in Kubernetes deployments
+#
+# 4. deployments/base/*.yaml:
+#    - Base manifests use placeholder values
+#    - Actual secrets provided via Kustomize overlays
+#    - Production overlays reference external secret management
+#
+# Production Secret Management:
+# - Google Secret Manager (GCP)
+# - External Secrets Operator (Kubernetes)
+# - Workload Identity for database authentication
+# - No hardcoded secrets in production deployments
+#
+# See: docs/deployment/secrets-management.mdx
+#

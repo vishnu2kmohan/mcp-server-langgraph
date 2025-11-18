@@ -88,7 +88,7 @@ class FrontmatterValidator:
     """Validates MDX file frontmatter."""
 
     # Required fields in frontmatter
-    REQUIRED_FIELDS = ["title", "description", "icon", "contentType"]
+    REQUIRED_FIELDS = ["title", "description", "icon", "contentType", "seoTitle", "seoDescription", "keywords"]
 
     # Valid content types
     VALID_CONTENT_TYPES = ["explanation", "reference", "tutorial", "how-to", "guide"]
