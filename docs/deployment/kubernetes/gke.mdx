@@ -560,9 +560,9 @@ spec:
 
 Configure structured logging to Cloud Logging:
 
-```
+```python
 ## Install dependencies
-uv add google-cloud-logging
+# uv add google-cloud-logging
 
 ## Configure logging
 import google.cloud.logging
@@ -581,6 +581,8 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     logger_factory=structlog.stdlib.LoggerFactory(),
 )
+```
+
 ```yaml
 
 ### Auto-Scaling

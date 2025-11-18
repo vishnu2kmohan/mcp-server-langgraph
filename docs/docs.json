@@ -59,7 +59,7 @@
               "security/audit-checklist",
               "security/gke-staging-checklist",
               "security/compliance",
-              "security/TRY_EXCEPT_PASS_ANALYSIS"
+              "security/try-except-pass-analysis"
             ]
           },
           {
@@ -70,10 +70,12 @@
               "advanced/development-setup",
               "advanced/troubleshooting",
               "development/integration-testing",
-              "development/COMMANDS",
-              "development/VALIDATION_STRATEGY",
-              "development/WORKFLOWS",
-              "development/WORKFLOW_DIAGRAM"
+              "development/commands",
+              "development/validation-strategy",
+              "development/workflows",
+              "development/workflow-diagram",
+              "development/coverage-threshold-philosophy",
+              "development/cache-management-strategy"
             ]
           },
           {
@@ -127,7 +129,7 @@
           {
             "group": "Configuration",
             "pages": [
-              "workflows/SECRETS"
+              "workflows/secrets"
             ]
           },
           {
@@ -187,7 +189,7 @@
             "pages": [
               "infrastructure/gke-cluster-requirements",
               "kubernetes-best-practices-implementation",
-              "infrastructure/DOCKER_HEALTHCHECK_PATTERNS"
+              "infrastructure/docker-healthcheck-patterns"
             ]
           },
           {
@@ -207,9 +209,9 @@
               "deployment/kubernetes/gke-production",
               "deployment/kubernetes/gke-staging",
               "deployment/gke-autopilot-resource-constraints",
-              "kubernetes/CONFIGMAP_BEST_PRACTICES",
-              "kubernetes/KEYCLOAK_READONLY_FILESYSTEM",
-              "kubernetes/POD_CRASH_RESOLUTION_2025-11-12",
+              "kubernetes/configmap-best-practices",
+              "kubernetes/keycloak-readonly-filesystem",
+              "kubernetes/pod-crash-resolution-2025-11-12",
               "deployment/kubernetes/eks",
               "deployment/kubernetes/eks-production",
               "deployment/kubernetes/aks",
@@ -405,9 +407,10 @@
               "architecture/adr-0053-ci-cd-failure-prevention-framework",
               "architecture/adr-0054-pod-failure-prevention-framework",
               "architecture/adr-0055-diagram-visualization-standards",
-              "architecture/adr-0056-asyncmock-configuration-prevention",
-              "architecture/adr-0057-circuit-breaker-decorator-closure-isolation",
-              "architecture/adr-0058-pytest-xdist-state-pollution-prevention"
+              "architecture/adr-0056-database-architecture-and-naming-convention",
+              "architecture/adr-0057-asyncmock-configuration-prevention",
+              "architecture/adr-0058-circuit-breaker-decorator-closure-isolation",
+              "architecture/adr-0059-pytest-xdist-state-pollution-prevention"
             ]
           },
           {

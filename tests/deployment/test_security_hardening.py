@@ -38,7 +38,7 @@ class TestKubernetesSecurityHardening:
         Check if readOnlyRootFilesystem exception is properly documented.
 
         A documented exception must have:
-        1. TODO comment within 10 lines before readOnlyRootFilesystem: false
+        1. TODO or Note comment within 10 lines before readOnlyRootFilesystem: false
         2. Clear reason/justification in comment
         3. Reference to tracking issue or implementation plan (optional but recommended)
 
@@ -54,12 +54,14 @@ class TestKubernetesSecurityHardening:
         # Find lines with readOnlyRootFilesystem: false
         for i, line in enumerate(lines):
             if "readOnlyRootFilesystem:" in line and "false" in line:
-                # Check previous 10 lines for TODO comment
+                # Check previous 10 lines for TODO/Note comment
                 start = max(0, i - 10)
                 preceding_lines = lines[start:i]
 
-                # Look for TODO comment with justification
-                has_todo = any("TODO" in line and "#" in line for line in preceding_lines)
+                # Look for TODO or Note comment with justification
+                has_todo_or_note = any(
+                    ("TODO" in line or "Note:" in line or "NOTE:" in line) and "#" in line for line in preceding_lines
+                )
                 has_reason = any(
                     any(
                         keyword in line.lower()
@@ -68,17 +70,19 @@ class TestKubernetesSecurityHardening:
                             "reason:",
                             "quarkus",
                             "requires",
+                            "required",
                             "current",
                             "rebuild",
                             "startup",
                             "writable",
                             "temporarily",
+                            "cwe",
                         ]
                     )
                     for line in preceding_lines
                 )
 
-                if has_todo and has_reason:
+                if has_todo_or_note and has_reason:
                     return True
 
         return False

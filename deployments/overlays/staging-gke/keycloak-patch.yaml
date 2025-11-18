@@ -20,9 +20,10 @@ spec:
           protocol: TCP
 
         # Security context for Keycloak container
-        # Note: Keycloak/Quarkus requires write access during build phase
-        # readOnlyRootFilesystem: false is required for Quarkus JIT compilation
-        # See: https://github.com/keycloak/keycloak/issues/10150
+        # TODO: Keycloak/Quarkus requires write access during build phase
+        # Reason: readOnlyRootFilesystem: false is required for Quarkus JIT compilation
+        # Issue: https://github.com/keycloak/keycloak/issues/10150
+        # CWE-732 mitigation: Write access limited via volume mounts below
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true

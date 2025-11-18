@@ -503,7 +503,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: ScheduleAnyway  # Allows single-zone clusters (GKE Autopilot, dev)
         labelSelector:
           matchLabels:
             app: mcp-server-langgraph

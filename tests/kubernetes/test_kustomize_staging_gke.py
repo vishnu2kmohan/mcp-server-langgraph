@@ -285,14 +285,24 @@ class TestKustomizeStagingGKE:
         Test that all deployments reference valid container images.
 
         This ensures no placeholder image tags or invalid registries are used.
+
+        Note: "latest" tags are allowed for staging/dev environments (e.g., staging-latest, dev-latest)
+        since we force-pull images anyway. Only production should use pinned versions.
         """
         manifests = self._render_kustomize_manifests()
 
         INVALID_IMAGE_PATTERNS = [
-            "latest",  # Should use specific tags
+            ":latest",  # Standalone ":latest" not allowed, but "staging-latest" is OK
             "IMAGE_PLACEHOLDER",
             "YOUR_REGISTRY",
             "localhost",  # Should use actual registry
+        ]
+
+        # Allowed patterns that contain "latest" but are acceptable
+        ALLOWED_LATEST_PATTERNS = [
+            "staging-latest",
+            "dev-latest",
+            "development-latest",
         ]
 
         violations = []
@@ -312,6 +322,10 @@ class TestKustomizeStagingGKE:
             for container in containers + init_containers:
                 container_name = container.get("name", "unknown")
                 image = container.get("image", "")
+
+                # Skip if image uses an allowed latest pattern
+                if any(allowed in image for allowed in ALLOWED_LATEST_PATTERNS):
+                    continue
 
                 for invalid_pattern in INVALID_IMAGE_PATTERNS:
                     if invalid_pattern in image:

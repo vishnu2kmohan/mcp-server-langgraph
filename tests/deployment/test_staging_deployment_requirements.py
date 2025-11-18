@@ -290,11 +290,11 @@ class TestStagingDeploymentRequirements:
         - Violates high availability requirements
 
         GREEN (After Fix):
-        - Zone constraint: maxSkew 1, whenUnsatisfiable DoNotSchedule (strict)
-        - Hostname constraint: maxSkew 2, whenUnsatisfiable ScheduleAnyway (soft)
+        - Zone constraint: maxSkew 1, whenUnsatisfiable ScheduleAnyway (flexible for single-zone GKE Autopilot)
+        - Hostname constraint: maxSkew 2, whenUnsatisfiable DoNotSchedule (spread across nodes)
 
         REFACTOR:
-        - This ensures pods distributed across zones for resilience
+        - This ensures pods distributed across zones for resilience while supporting single-zone clusters
         """
         base_file = Path("deployments/base/deployment.yaml")
 
@@ -318,8 +318,9 @@ class TestStagingDeploymentRequirements:
         assert (
             zone_constraint["maxSkew"] == 1
         ), f"Zone constraint maxSkew should be 1 (strict), got {zone_constraint['maxSkew']}"
-        assert zone_constraint["whenUnsatisfiable"] == "DoNotSchedule", (
-            f"Zone constraint should use DoNotSchedule for strict enforcement, " f"got {zone_constraint['whenUnsatisfiable']}"
+        assert zone_constraint["whenUnsatisfiable"] == "ScheduleAnyway", (
+            f"Zone constraint should use ScheduleAnyway to support single-zone GKE Autopilot clusters, "
+            f"got {zone_constraint['whenUnsatisfiable']}"
         )
 
         # Validate hostname (node) constraint
