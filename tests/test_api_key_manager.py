@@ -18,17 +18,19 @@ from unittest.mock import AsyncMock, patch
 
 import bcrypt
 import pytest
+from redis.asyncio import Redis
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
+from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
 
 @pytest.fixture
 def mock_keycloak_client():
     """Mock Keycloak client for testing"""
-    client = AsyncMock()
-    client.get_user_attributes = AsyncMock(return_value={})
-    client.update_user_attributes = AsyncMock()
-    client.search_users = AsyncMock(return_value=[])
+    client = AsyncMock(spec=KeycloakClient)
+    client.get_user_attributes = AsyncMock(return_value={})  # noqa: async-mock-config
+    client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
+    client.search_users = AsyncMock(return_value=[])  # noqa: async-mock-config
     return client
 
 
@@ -566,7 +568,7 @@ class TestAPIKeyValidationPagination:
             return all_users[first : first + max]
 
         mock_keycloak_client.search_users.side_effect = mock_search_users
-        mock_keycloak_client.update_user_attributes = AsyncMock()
+        mock_keycloak_client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
 
         # Act
         result = await api_key_manager.validate_and_get_user(api_key)
@@ -652,7 +654,7 @@ class TestAPIKeyValidationPagination:
             return all_users[first : first + max]
 
         mock_keycloak_client.search_users.side_effect = mock_search_users
-        mock_keycloak_client.update_user_attributes = AsyncMock()
+        mock_keycloak_client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
 
         # Act
         result = await api_key_manager.validate_and_get_user(api_key)
@@ -677,10 +679,10 @@ class TestAPIKeyRedisCache:
     @pytest.fixture
     def mock_redis_client(self):
         """Mock Redis client"""
-        redis_mock = AsyncMock()
-        redis_mock.get = AsyncMock(return_value=None)
-        redis_mock.setex = AsyncMock()
-        redis_mock.delete = AsyncMock()
+        redis_mock = AsyncMock(spec=Redis)
+        redis_mock.get = AsyncMock(return_value=None)  # noqa: async-mock-config
+        redis_mock.setex = AsyncMock()  # noqa: async-mock-config
+        redis_mock.delete = AsyncMock()  # noqa: async-mock-config
         return redis_mock
 
     @pytest.fixture
@@ -747,7 +749,7 @@ class TestAPIKeyRedisCache:
 
         # Mock Keycloak search
         mock_keycloak_client.search_users = AsyncMock(return_value=[mock_user])
-        mock_keycloak_client.update_user_attributes = AsyncMock()
+        mock_keycloak_client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
 
         # Act
         result = await api_key_manager_with_cache.validate_and_get_user(api_key)
@@ -777,7 +779,7 @@ class TestAPIKeyRedisCache:
                 f"apiKey_{key_id}_expiresAt": "2025-01-01T00:00:00",
             }
         )
-        mock_keycloak_client.update_user_attributes = AsyncMock()
+        mock_keycloak_client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
 
         # Act
         await api_key_manager_with_cache.revoke_api_key(user_id, key_id)
@@ -808,7 +810,7 @@ class TestAPIKeyRedisCache:
         }
 
         mock_keycloak_client.search_users = AsyncMock(return_value=[mock_user])
-        mock_keycloak_client.update_user_attributes = AsyncMock()
+        mock_keycloak_client.update_user_attributes = AsyncMock()  # noqa: async-mock-config
 
         # Act
         result = await manager.validate_and_get_user(api_key)

@@ -11,9 +11,10 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.gdpr import ConsentRecord, ConsentType, UserProfileUpdate, router
-from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData
+from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData, SessionStore
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService, DeletionResult
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 
 # ==================== Test Fixtures ====================
 
@@ -337,7 +338,7 @@ class TestGDPREndpoints:
         app.include_router(router)
 
         # Mock session store with proper return values
-        mock_session_store = AsyncMock()
+        mock_session_store = AsyncMock(spec=SessionStore)
         mock_session_store.list_user_sessions.return_value = []
         mock_session_store.get_user_profile.return_value = {
             "user_id": mock_current_user["user_id"],
@@ -347,16 +348,16 @@ class TestGDPREndpoints:
         mock_session_store.get_user_preferences.return_value = {"theme": "light", "language": "en"}
 
         # Mock GDPR storage with proper return values and nested mocks
-        mock_gdpr_storage = AsyncMock()
+        mock_gdpr_storage = AsyncMock(spec=GDPRStorage)
 
         # Mock nested storage attributes (user_profiles, preferences, etc.)
-        mock_gdpr_storage.user_profiles = AsyncMock()
+        mock_gdpr_storage.user_profiles = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.user_profiles.get.return_value = None  # Return None, handler will create default
 
-        mock_gdpr_storage.preferences = AsyncMock()
+        mock_gdpr_storage.preferences = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.preferences.get.return_value = None  # Return None, handler will return empty dict
 
-        mock_gdpr_storage.conversations = AsyncMock()
+        mock_gdpr_storage.conversations = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.conversations.list.return_value = []
 
         # Mock consents storage
@@ -372,30 +373,30 @@ class TestGDPREndpoints:
             user_agent=None,
         )
 
-        mock_gdpr_storage.consents = AsyncMock()
+        mock_gdpr_storage.consents = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.consents.create.return_value = None
         mock_gdpr_storage.consents.get_user_consents.return_value = [mock_consent]
         mock_gdpr_storage.consents.get_latest_consent.return_value = mock_consent
         mock_gdpr_storage.consents.delete_user_consents.return_value = 1
 
         # Mock audit logs
-        mock_gdpr_storage.audit_logs = AsyncMock()
+        mock_gdpr_storage.audit_logs = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.audit_logs.log.return_value = "deletion_test_123"  # Returns the audit record ID
         mock_gdpr_storage.audit_logs.create.return_value = "deletion_test_123"  # Also mock create for consistency
         mock_gdpr_storage.audit_logs.anonymize_user_logs.return_value = 0
 
         # Mock preferences deletion
-        mock_gdpr_storage.preferences = AsyncMock()
+        mock_gdpr_storage.preferences = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.preferences.get.return_value = None
         mock_gdpr_storage.preferences.delete.return_value = 1
 
         # Mock conversations
-        mock_gdpr_storage.conversations = AsyncMock()
+        mock_gdpr_storage.conversations = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.conversations.list.return_value = []
         mock_gdpr_storage.conversations.delete_user_conversations.return_value = 0
 
         # Mock user profiles
-        mock_gdpr_storage.user_profiles = AsyncMock()
+        mock_gdpr_storage.user_profiles = AsyncMock()  # noqa: async-mock-config
         mock_gdpr_storage.user_profiles.get.return_value = None
         mock_gdpr_storage.user_profiles.delete.return_value = None
 
