@@ -46,6 +46,8 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: var-tmp
+          mountPath: /var/tmp  # Required for Quarkus with readOnlyRootFilesystem
         - name: cache
           mountPath: /opt/keycloak/data/tmp  # Keycloak temp directory
         - name: work-dir
@@ -152,6 +154,8 @@ spec:
       # Volumes for writable directories
       volumes:
       - name: tmp
+        emptyDir: {}
+      - name: var-tmp
         emptyDir: {}
       - name: cache
         emptyDir: {}

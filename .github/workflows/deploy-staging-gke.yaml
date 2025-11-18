@@ -61,6 +61,20 @@ jobs:
           kubectl kustomize deployments/overlays/staging-gke > /tmp/manifests.yaml
           echo "✅ Kustomize validation passed"
 
+      - name: Validate Kustomize configuration correctness
+        run: |
+          # Install dependencies for validation tests
+          sudo apt-get update && sudo apt-get install -y python3-pip python3-venv
+          python3 -m venv /tmp/venv
+          source /tmp/venv/bin/activate
+          pip install --quiet pyyaml pytest
+
+          # Run Kustomize validation tests
+          echo "Running Kustomize staging-gke validation tests..."
+          python -m pytest tests/kubernetes/test_kustomize_staging_gke.py -v
+
+          echo "✅ Kustomize configuration correctness validated"
+
       - name: Validate manifests with kubeconform
         run: |
           wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
