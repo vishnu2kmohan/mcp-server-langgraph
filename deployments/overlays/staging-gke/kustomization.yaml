@@ -220,10 +220,11 @@ patches:
 
 # Image configuration
 # Codex Finding #6 (P1): Use full registry path for image name matching
+# For staging, use 'latest' tag with imagePullPolicy: Always to ensure newest image is always pulled
 images:
   - name: ghcr.io/vishnu2kmohan/mcp-server-langgraph
     newName: us-central1-docker.pkg.dev/vishnu-sandbox-20250310/mcp-staging/agent
-    newTag: staging-9cdd80e
+    newTag: staging-latest
 
 # Patch OpenTelemetry Collector ConfigMap with GCP-specific configuration
 # Cannot use configMapGenerator because base has static ConfigMap (not generated)
