@@ -380,6 +380,7 @@ strict = true
 [tool.pytest]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
+norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

@@ -18,6 +18,7 @@ Related:
 """
 
 import gc
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -29,6 +30,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Pre-push hooks not installed in CI environment")
 @pytest.mark.xdist_group(name="testprepushhooksync")
 class TestPrePushHookSync:
     """Validate pre-push hook configuration matches CI expectations."""
