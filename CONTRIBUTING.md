@@ -200,6 +200,55 @@ uv run pytest tests/smoke/             # Phase 3: Smoke tests
 pre-commit run --all-files --hook-stage pre-push  # Phase 4
 ```
 
+#### CI Parity Mode (Optional)
+
+**Run full integration tests locally to match CI exactly**:
+
+```bash
+# Enable CI_PARITY mode for pre-push hooks
+export CI_PARITY=1
+git push
+
+# Or run integration tests manually
+CI_PARITY=1 pytest tests/integration/ -v
+```
+
+**What CI_PARITY Does**:
+- **Normal Mode** (default): Runs ~200 critical tests (unit, api, property) - completes in ~3 min
+- **CI_PARITY=1 Mode**: Adds integration tests if Docker is available - matches CI exactly
+
+**When to Use CI_PARITY**:
+- ✅ Before opening a pull request (full validation)
+- ✅ After making infrastructure changes (database, Docker, Kubernetes)
+- ✅ When CI failures are hard to reproduce locally
+- ❌ Not needed for routine development (normal mode is sufficient)
+
+**Prerequisites**:
+- Docker must be running
+- Infrastructure containers must be healthy: `make dev-setup`
+
+**Performance Impact**:
+- Without CI_PARITY: ~3 min (fast feedback)
+- With CI_PARITY: ~8-12 min (matches CI exactly)
+
+**Example Workflow**:
+```bash
+# Routine development (fast)
+git add .
+git commit -m "feat: add new feature"
+git push  # Runs ~200 critical tests in ~3 min
+
+# Before PR (thorough)
+export CI_PARITY=1
+git push  # Runs full integration suite in ~8-12 min
+```
+
+**Implementation Details**:
+- Defined in `scripts/run_pre_push_tests.py`
+- Uses consolidated test marker: `(unit or api or property or integration) and not llm`
+- Checks Docker availability before running integration tests
+- See: `docs-internal/PRE_PUSH_OPTIMIZATION_ANALYSIS.md` for design rationale
+
 #### Performance Monitoring
 
 ```bash
