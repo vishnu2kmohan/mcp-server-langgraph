@@ -244,6 +244,13 @@ jobs:
           path: ./
           base: ${{ github.event.before || 'HEAD~1' }}
           head: HEAD
+        # Note: TruffleHog respects .trufflehogignore for excluding:
+        #   - Test infrastructure (docker-compose*.yml with postgres/postgres)
+        #   - Test files (tests/** with mock credentials)
+        #   - Migration scripts (use env vars in production)
+        #   - Kubernetes base manifests (actual secrets via External Secrets)
+        # Production secrets managed via Google Secret Manager + Workload Identity
+        # See: .trufflehogignore for full exclusion list
 
   # ============================================================================
   # Compliance Report
