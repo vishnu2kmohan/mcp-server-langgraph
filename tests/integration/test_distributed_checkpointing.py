@@ -13,6 +13,7 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from mcp_server_langgraph.core.agent import AgentState, _create_checkpointer, create_agent_graph
 from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.llm.factory import LLMFactory
 
 # Try importing RedisSaver
 try:
@@ -77,8 +78,8 @@ class TestMemoryCheckpointer:
     async def test_conversation_state_preserved_same_instance(self, monkeypatch):
         """Test conversation state is preserved within same graph instance"""
         # Mock LLM to avoid actual API calls
-        mock_llm = AsyncMock()
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+        mock_llm = AsyncMock(spec=LLMFactory)
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "memory")
@@ -121,8 +122,8 @@ class TestMemoryCheckpointer:
     async def test_conversation_state_isolated_by_thread_id(self, monkeypatch):
         """Test different thread_ids have isolated conversation state"""
         # Mock LLM to avoid actual API calls
-        mock_llm = AsyncMock()
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+        mock_llm = AsyncMock(spec=LLMFactory)
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "memory")
@@ -176,8 +177,8 @@ class TestRedisCheckpointer:
         (Simulates pod restart or scaling scenario)
         """
         # Mock LLM to avoid actual API calls
-        mock_llm = AsyncMock()
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))
+        mock_llm = AsyncMock(spec=LLMFactory)
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "redis")
