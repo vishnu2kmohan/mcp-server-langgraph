@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from mcp_server_langgraph.auth.session import InMemorySessionStore
-from mcp_server_langgraph.compliance.retention import RetentionResult
+from mcp_server_langgraph.compliance.retention import DataRetentionService, RetentionResult
 from mcp_server_langgraph.schedulers.cleanup import (
     CleanupScheduler,
     get_cleanup_scheduler,
@@ -84,7 +84,7 @@ class TestCleanupSchedulerStart:
     async def test_start_creates_retention_service(self, mock_session_store, mock_retention_config):
         """Test that start creates retention service"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -101,7 +101,7 @@ class TestCleanupSchedulerStart:
     async def test_start_schedules_job(self, mock_session_store, mock_retention_config):
         """Test that start schedules cleanup job"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -126,7 +126,7 @@ class TestCleanupSchedulerStart:
         }
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = custom_config
             MockService.return_value = mock_service
 
@@ -149,7 +149,7 @@ class TestCleanupSchedulerStart:
         }
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = invalid_config
             MockService.return_value = mock_service
 
@@ -179,7 +179,7 @@ class TestCleanupSchedulerStop:
         import asyncio
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -229,7 +229,7 @@ class TestCleanupExecution:
         ]
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             mock_service.run_all_cleanups.return_value = mock_results
             MockService.return_value = mock_service
@@ -257,7 +257,7 @@ class TestCleanupExecution:
         ]
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             mock_service.run_all_cleanups.return_value = mock_results
             MockService.return_value = mock_service
@@ -286,7 +286,7 @@ class TestCleanupExecution:
     async def test_run_cleanup_exception_handling(self, mock_session_store, mock_retention_config):
         """Test that exceptions in cleanup are caught"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             mock_service.run_all_cleanups.side_effect = Exception("Database error")
             MockService.return_value = mock_service
@@ -351,7 +351,7 @@ class TestNotifications:
         ]
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = config_no_notifications
             mock_service.run_all_cleanups.return_value = mock_results
             MockService.return_value = mock_service
@@ -389,7 +389,7 @@ class TestManualExecution:
         ]
 
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             mock_service.run_all_cleanups.return_value = mock_results
             MockService.return_value = mock_service
@@ -417,7 +417,7 @@ class TestHelperFunctions:
     async def test_get_next_run_time(self, mock_session_store, mock_retention_config):
         """Test getting next scheduled run time"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -455,7 +455,7 @@ class TestGlobalScheduler:
     async def test_start_cleanup_scheduler(self, mock_session_store, mock_retention_config):
         """Test starting global cleanup scheduler"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -476,7 +476,7 @@ class TestGlobalScheduler:
     async def test_start_cleanup_scheduler_already_running(self, mock_session_store, mock_retention_config):
         """Test starting scheduler when already running"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -496,7 +496,7 @@ class TestGlobalScheduler:
     async def test_stop_cleanup_scheduler(self, mock_session_store, mock_retention_config):
         """Test stopping global cleanup scheduler"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
@@ -545,7 +545,7 @@ class TestDryRunMode:
     async def test_dry_run_mode(self, mock_session_store, mock_retention_config):
         """Test that dry-run mode is passed through"""
         with patch("mcp_server_langgraph.schedulers.cleanup.DataRetentionService") as MockService:
-            mock_service = AsyncMock()
+            mock_service = AsyncMock(spec=DataRetentionService)
             mock_service.config = mock_retention_config
             MockService.return_value = mock_service
 
