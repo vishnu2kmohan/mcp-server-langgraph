@@ -338,14 +338,10 @@ class TestGDPREndpoints:
         app.include_router(router)
 
         # Mock session store with proper return values
+        # Note: SessionStore only has create, get, update, delete, list_user_sessions methods
+        # get_user_profile and get_user_preferences don't exist in SessionStore interface
         mock_session_store = AsyncMock(spec=SessionStore)
         mock_session_store.list_user_sessions.return_value = []
-        mock_session_store.get_user_profile.return_value = {
-            "user_id": mock_current_user["user_id"],
-            "username": mock_current_user["username"],
-            "email": mock_current_user["email"],
-        }
-        mock_session_store.get_user_preferences.return_value = {"theme": "light", "language": "en"}
 
         # Mock GDPR storage with proper return values and nested mocks
         mock_gdpr_storage = AsyncMock(spec=GDPRStorage)
@@ -400,11 +396,10 @@ class TestGDPREndpoints:
         mock_gdpr_storage.user_profiles.get.return_value = None
         mock_gdpr_storage.user_profiles.delete.return_value = None
 
-        mock_gdpr_storage.list_consent_records.return_value = {
-            "analytics": {"granted": True, "timestamp": "2025-01-01T12:00:00Z"}
-        }
-        mock_gdpr_storage.store_consent_record.return_value = None
-        mock_gdpr_storage.get_deletion_audit_log.return_value = []
+        # Mock audit logs
+        mock_gdpr_storage.audit_logs = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.audit_logs.log.return_value = "deletion_audit_test_123"  # Must start with 'deletion_'
+        mock_gdpr_storage.audit_logs.get_user_deletions.return_value = []
 
         # Define async override functions for async dependencies
         # CRITICAL: Must use async def for async dependencies (not sync lambdas)

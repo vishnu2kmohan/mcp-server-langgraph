@@ -28,6 +28,7 @@ from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
 # Docker is an optional dependency - mock if not available
 try:
+    import docker  # noqa: F401
     from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
 
     DOCKER_AVAILABLE = True
@@ -37,7 +38,7 @@ except ImportError:
 
 
 @pytest.mark.security
-@pytest.mark.unit
+@pytest.mark.integration  # Requires Docker daemon, not suitable for unit tests
 @pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestNetworkModeTransparency:
     """Test suite for network mode configuration transparency"""
@@ -188,7 +189,7 @@ class TestNetworkModeDocumentation:
 
 
 @pytest.mark.security
-@pytest.mark.unit
+@pytest.mark.integration  # Some tests require Docker daemon
 @pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestNetworkModeSecurityDefaults:
     """Test suite for network mode security defaults"""
@@ -250,7 +251,7 @@ class TestNetworkModeSecurityDefaults:
 
 
 @pytest.mark.security
-@pytest.mark.unit
+@pytest.mark.integration  # Tests require Docker daemon for validation
 @pytest.mark.xdist_group(name="security_network_mode_transparency_tests")
 class TestFutureAllowlistImplementation:
     """Test suite for future allowlist implementation requirements"""

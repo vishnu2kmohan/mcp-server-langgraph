@@ -4,7 +4,7 @@ Configuration management with Infisical secrets integration
 
 from typing import Any, List, Optional
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from mcp_server_langgraph.secrets.manager import get_secrets_manager
@@ -248,7 +248,10 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
 
     # Conversation Checkpointing (for distributed state across replicas)
     checkpoint_backend: str = "memory"  # "memory", "redis"
-    checkpoint_redis_url: str = "redis://localhost:6379/1"  # Use db 1 (sessions use db 0)
+    checkpoint_redis_url: str = Field(
+        default="redis://localhost:6379/1",  # Use db 1 (sessions use db 0)
+        validation_alias="redis_checkpoint_url",  # Accept both names
+    )
     checkpoint_redis_ttl: int = 604800  # 7 days TTL for conversation checkpoints
 
     # OpenFGA
@@ -288,7 +291,10 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
 
     # Session Management
     session_backend: str = "memory"  # "memory", "redis"
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        validation_alias="redis_session_url",  # Accept both names
+    )
     redis_host: str = "localhost"  # Redis host for rate limiting and cache
     redis_port: int = 6379  # Redis port for rate limiting and cache
     redis_password: Optional[str] = None
@@ -645,6 +651,19 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
                 # GCP credentials are typically loaded from a file path
                 # or via GOOGLE_APPLICATION_CREDENTIALS environment variable
                 pass
+
+    # ========================================================================
+    # REDIS URL ALIASES (for test compatibility)
+    # ========================================================================
+    @property
+    def redis_checkpoint_url(self) -> str:
+        """Alias for checkpoint_redis_url (test compatibility)"""
+        return self.checkpoint_redis_url
+
+    @property
+    def redis_session_url(self) -> str:
+        """Alias for redis_url (test compatibility)"""
+        return self.redis_url
 
     def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """
