@@ -1,4 +1,4 @@
-# 56. Database Architecture and Naming Convention
+# 60. Database Architecture and Naming Convention
 
 Date: 2025-11-18
 
