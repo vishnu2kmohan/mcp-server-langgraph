@@ -24,6 +24,7 @@ from mcp_server_langgraph.health.database_checks import DatabaseValidator, Envir
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testdatabasevalidationintegration")
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
 
