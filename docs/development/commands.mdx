@@ -170,7 +170,7 @@ make test-quick-new          # Quick check of new tests
 | `make validate-push` | 3-5 min | Tier 2 | Critical pre-push validation |
 | `make validate-full` | 12-15 min | Tier 3 | Comprehensive validation (CI-equivalent) |
 
-See [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) for complete details on tiered validation.
+See [VALIDATION_STRATEGY.mdx](./validation-strategy) for complete details on tiered validation.
 
 ### Specific Validators
 
@@ -418,7 +418,7 @@ Commands follow consistent naming patterns for easy discovery:
 **Before push**: `make validate-push` (3-5 min, Tier 2) - *auto-runs on git push*
 **Before PR**: `make validate-full` (12-15 min, Tier 3)
 
-See [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) for complete details.
+See [VALIDATION_STRATEGY.mdx](./validation-strategy) for complete details.
 
 ### How do I run just one test file?
 
@@ -612,7 +612,7 @@ uv run coverage html
 
 ## Related Documentation
 
-- **Validation Strategy**: [VALIDATION_STRATEGY.mdx](./VALIDATION_STRATEGY.mdx) - Complete guide to tiered validation
+- **Validation Strategy**: [VALIDATION_STRATEGY.mdx](./validation-strategy) - Complete guide to tiered validation
 - **Testing Guide**: `tests/README.md` - Test organization and patterns
 - **Pre-commit Guide**: `.pre-commit-config.yaml` - Hook configuration
 - **GitHub Actions**: `.github/workflows/` - CI/CD workflows

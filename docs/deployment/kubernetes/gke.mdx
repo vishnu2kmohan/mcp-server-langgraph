@@ -335,11 +335,11 @@ echo -n "your-jwt-secret" | gcloud secrets create jwt-secret \
 gcloud secrets add-iam-policy-binding anthropic-api-key \
   --member="serviceAccount:mcp-server-langgraph@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
-```bash
+```
 
 #### Use External Secrets Operator
 
-```
+```bash
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -391,13 +391,13 @@ spec:
     remoteRef:
       key: jwt-secret
 EOF
-```bash
+```
 
 ### Google Container Registry (GCR)
 
 #### Build and Push Images
 
-```
+```bash
 ## Configure Docker for GCR
 gcloud auth configure-docker
 
@@ -422,11 +422,11 @@ spec:
         image: gcr.io/$PROJECT_ID/mcp-server-langgraph:latest
         imagePullPolicy: Always
 EOF
-```bash
+```
 
 #### Artifact Registry (Recommended)
 
-```
+```bash
 ## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
