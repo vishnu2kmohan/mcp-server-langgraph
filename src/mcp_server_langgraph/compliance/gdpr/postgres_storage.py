@@ -355,7 +355,8 @@ class PostgresConsentStore(ConsentStore):
                 record.user_id,
                 record.consent_type,
                 record.granted,
-                record.timestamp,
+                # Convert ISO string timestamp to datetime object for asyncpg
+                datetime.fromisoformat(record.timestamp.replace("Z", "+00:00")),
                 record.ip_address,
                 record.user_agent,
                 json.dumps(record.metadata),
@@ -492,8 +493,9 @@ class PostgresConversationStore(ConversationStore):
                 conversation.user_id,
                 conversation.title,
                 json.dumps(conversation.messages),
-                conversation.created_at,
-                conversation.last_message_at,
+                # Convert ISO string timestamps to datetime objects for asyncpg
+                datetime.fromisoformat(conversation.created_at.replace("Z", "+00:00")),
+                datetime.fromisoformat(conversation.last_message_at.replace("Z", "+00:00")),
                 conversation.archived,
                 json.dumps(conversation.metadata),
             )
@@ -586,7 +588,12 @@ class PostgresConversationStore(ConversationStore):
         param_num = 1
 
         for key, value in updates.items():
-            if key in ["title", "last_message_at", "archived"]:
+            if key == "last_message_at":
+                set_clauses.append(f"{key} = ${param_num}")
+                # Convert ISO string timestamp to datetime object for asyncpg
+                values.append(datetime.fromisoformat(value.replace("Z", "+00:00")))
+                param_num += 1
+            elif key in ["title", "archived"]:
                 set_clauses.append(f"{key} = ${param_num}")
                 values.append(value)
                 param_num += 1
