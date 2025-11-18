@@ -7,7 +7,7 @@
 # via docker-entrypoint-initdb.d
 #
 # Database Architecture:
-# - mcp_test: MCP application data (GDPR tables: user_profiles, conversations, etc.)
+# - gdpr_test: GDPR compliance data (user_profiles, conversations, preferences, consents, audit_logs)
 # - openfga_test: OpenFGA authorization data (policies, tuples)
 # - keycloak_test: Keycloak SSO/authentication data (realms, users, clients)
 
@@ -26,14 +26,14 @@ EOSQL
 
 # Create databases following <service>_test naming convention
 echo "Initializing test databases..."
-create_database "mcp_test"
+create_database "gdpr_test"
 create_database "openfga_test"
 create_database "keycloak_test"
 
 echo "All test databases created successfully"
 
-# Run GDPR schema migration on mcp_test database
-echo "Running GDPR schema migration on mcp_test..."
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname=mcp_test -f /docker-entrypoint-initdb.d/001_gdpr_schema.sql
+# Run GDPR schema migration on gdpr_test database
+echo "Running GDPR schema migration on gdpr_test..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname=gdpr_test -f /docker-entrypoint-initdb.d/001_gdpr_schema.sql
 
-echo "GDPR schema migration complete on mcp_test database"
+echo "GDPR schema migration complete on gdpr_test database"

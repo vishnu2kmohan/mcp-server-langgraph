@@ -85,8 +85,9 @@ class PostgresUserProfileStore(UserProfileStore):
                     profile.username,
                     profile.email,
                     profile.full_name,
-                    profile.created_at,
-                    profile.last_updated,
+                    # Convert ISO string timestamps to datetime objects for asyncpg
+                    datetime.fromisoformat(profile.created_at.replace("Z", "+00:00")),
+                    datetime.fromisoformat(profile.last_updated.replace("Z", "+00:00")),
                     json.dumps(profile.metadata),
                 )
                 return True

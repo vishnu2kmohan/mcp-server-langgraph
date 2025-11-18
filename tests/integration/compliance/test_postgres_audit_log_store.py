@@ -45,7 +45,7 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
         port=int(os.getenv("POSTGRES_PORT", "9432")),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr"),
+        database=os.getenv("POSTGRES_DB", "gdpr_test"),
         min_size=1,
         max_size=5,
     )
