@@ -34,6 +34,7 @@ STAGING_GKE_OVERLAY = PROJECT_ROOT / "deployments" / "overlays" / "staging-gke"
 
 @pytest.mark.unit
 @pytest.mark.kubernetes
+@pytest.mark.requires_kubectl
 @pytest.mark.xdist_group(name="test_kustomize_staging_gke")
 class TestKustomizeStagingGKE:
     """Test that staging-gke Kustomize configurations are correct."""
