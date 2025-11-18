@@ -18,7 +18,6 @@ Exit Codes:
 
 import sys
 from pathlib import Path
-from typing import List
 
 
 class DependencyValidationError(Exception):
@@ -27,7 +26,7 @@ class DependencyValidationError(Exception):
     pass
 
 
-def check_keycloak_admin_credentials_wired() -> List[str]:
+def check_keycloak_admin_credentials_wired() -> list[str]:
     """
     Check that Keycloak admin credentials are passed to KeycloakConfig.
 
@@ -57,7 +56,7 @@ def check_keycloak_admin_credentials_wired() -> List[str]:
     return errors
 
 
-def check_openfga_returns_optional() -> List[str]:
+def check_openfga_returns_optional() -> list[str]:
     """
     Check that get_openfga_client returns Optional[OpenFGAClient].
 
@@ -71,9 +70,9 @@ def check_openfga_returns_optional() -> List[str]:
 
     content = dependencies_file.read_text()
 
-    # Check function signature
+    # Check function signature - accept both Optional[OpenFGAClient] and OpenFGAClient | None
     if "def get_openfga_client()" in content:
-        if "Optional[OpenFGAClient]" not in content:
+        if "Optional[OpenFGAClient]" not in content and "OpenFGAClient | None" not in content:
             errors.append(
                 "❌ CRITICAL: get_openfga_client must return Optional[OpenFGAClient]\n"
                 "   Fix: Change return type to 'Optional[OpenFGAClient]'"
@@ -90,7 +89,7 @@ def check_openfga_returns_optional() -> List[str]:
     return errors
 
 
-def check_service_principal_accepts_optional_openfga() -> List[str]:
+def check_service_principal_accepts_optional_openfga() -> list[str]:
     """
     Check that ServicePrincipalManager accepts Optional[OpenFGAClient].
 
@@ -104,26 +103,29 @@ def check_service_principal_accepts_optional_openfga() -> List[str]:
 
     content = sp_file.read_text()
 
-    # Check constructor signature
+    # Check constructor signature - accept both Optional[OpenFGAClient] and OpenFGAClient | None
     if "def __init__" in content and "openfga_client" in content:
-        if "Optional[OpenFGAClient]" not in content:
+        if "Optional[OpenFGAClient]" not in content and "OpenFGAClient | None" not in content:
             errors.append(
                 "❌ CRITICAL: ServicePrincipalManager.__init__ must accept Optional[OpenFGAClient]\n"
                 "   Fix: Change parameter type to 'openfga_client: Optional[OpenFGAClient]'"
             )
 
         # Check for guards
-        if "_sync_to_openfga" in content:
-            if "if self.openfga is None" not in content and "if not self.openfga" not in content:
-                errors.append(
-                    "⚠️  WARNING: _sync_to_openfga should guard against None OpenFGA\n"
-                    "   Recommendation: Add 'if self.openfga is None: return' at start of method"
-                )
+        if (
+            "_sync_to_openfga" in content
+            and "if self.openfga is None" not in content
+            and "if not self.openfga" not in content
+        ):
+            errors.append(
+                "⚠️  WARNING: _sync_to_openfga should guard against None OpenFGA\n"
+                "   Recommendation: Add 'if self.openfga is None: return' at start of method"
+            )
 
     return errors
 
 
-def check_cache_uses_redis_from_url() -> List[str]:
+def check_cache_uses_redis_from_url() -> list[str]:
     """
     Check that CacheService uses redis.from_url() with credentials.
 
@@ -155,7 +157,7 @@ def check_cache_uses_redis_from_url() -> List[str]:
     return errors
 
 
-def check_tests_exist() -> List[str]:
+def check_tests_exist() -> list[str]:
     """
     Check that dependency wiring tests exist.
 
@@ -229,11 +231,10 @@ def main() -> int:
         print("See ADR-0042 for details on these critical bugs.")
         print()
         return 1
-    else:
-        print("=" * 80)
-        print("✅ ALL DEPENDENCY VALIDATION CHECKS PASSED")
-        print("=" * 80)
-        return 0
+    print("=" * 80)
+    print("✅ ALL DEPENDENCY VALIDATION CHECKS PASSED")
+    print("=" * 80)
+    return 0
 
 
 if __name__ == "__main__":
