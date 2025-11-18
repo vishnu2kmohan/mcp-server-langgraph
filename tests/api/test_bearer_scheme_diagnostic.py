@@ -181,13 +181,16 @@ class TestBearerSchemeOverrideDiagnostic:
         app = FastAPI()
 
         # Create mocks
-        mock_sp_manager = AsyncMock()
+        from src.mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from src.mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+
+        mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
         mock_current_user = {
             "user_id": "user:alice",
             "username": "alice",
             "email": "alice@example.com",
         }
-        mock_openfga = AsyncMock()
+        mock_openfga = AsyncMock(spec=OpenFGAClient)
 
         # Mock functions matching async/sync
         async def mock_get_current_user_async():
