@@ -289,9 +289,10 @@ jobs:
         id: rollout
         run: |
           echo "Waiting for deployment rollout..."
+          # Timeout increased to 15m to match Helm deployment progressDeadlineSeconds (900s)
           kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
-            --timeout=10m
+            --timeout=15m
 
       # Capture deployment failure details
       - name: Capture deployment failure details

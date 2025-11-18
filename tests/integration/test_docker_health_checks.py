@@ -222,6 +222,7 @@ class TestDockerComposeHealthChecksIntegration:
 
         print(f"PASS: Keycloak health check correctly uses built-in commands: {full_command}")
 
+    @pytest.mark.timeout(150)  # Override global 60s timeout - Qdrant needs up to 120s to become healthy
     def test_qdrant_health_check_works(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test that Qdrant container health check works correctly.
@@ -230,6 +231,9 @@ class TestDockerComposeHealthChecksIntegration:
         GREEN phase: Will pass after switching to grpc_health_probe
 
         This is the integration test for the Codex finding.
+
+        Note: Requires extended timeout (150s) as Qdrant can take up to 120s to become healthy
+        in CI environments with limited resources.
         """
         compose_file = PROJECT_ROOT / "docker-compose.test.yml"
 

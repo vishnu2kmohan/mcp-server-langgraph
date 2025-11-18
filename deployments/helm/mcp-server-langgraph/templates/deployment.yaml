@@ -10,6 +10,8 @@ spec:
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   revisionHistoryLimit: 10
+  # Increased from default 600s (10m) to 900s (15m) to accommodate slower rollouts in resource-constrained environments
+  progressDeadlineSeconds: 900
   strategy:
     type: RollingUpdate
     rollingUpdate:

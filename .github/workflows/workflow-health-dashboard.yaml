@@ -115,10 +115,13 @@ jobs:
             success_rate=$(awk "BEGIN {printf \"%.1f\", $successful_runs * 100 / $total_runs}")
 
             # Calculate average duration (in seconds)
-            avg_duration=$(echo "$runs" | jq '[.[] | select(.run_duration_ms != null) | .run_duration_ms] | add / length / 1000 | floor')
+            # Handle case where no runs have duration data (returns null)
+            avg_duration=$(echo "$runs" | jq '[.[] | select(.run_duration_ms != null) | .run_duration_ms] | if length > 0 then (add / length / 1000 | floor) else 0 end')
 
             # Format duration
-            if [ "$avg_duration" -gt 3600 ]; then
+            if [ "$avg_duration" = "null" ] || [ "$avg_duration" -eq 0 ]; then
+              duration_str="N/A"
+            elif [ "$avg_duration" -gt 3600 ]; then
               duration_str="$(awk "BEGIN {printf \"%.1f\", $avg_duration / 3600}")h"
             elif [ "$avg_duration" -gt 60 ]; then
               duration_str="$(awk "BEGIN {printf \"%d\", $avg_duration / 60}")m"
