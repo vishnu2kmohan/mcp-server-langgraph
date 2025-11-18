@@ -377,7 +377,7 @@ module = [
 disallow_untyped_calls = true
 strict = true
 
-[tool.pytest.ini_options]
+[tool.pytest]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
 python_files = ["test_*.py"]
