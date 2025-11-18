@@ -15,7 +15,7 @@ from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-@tool
+@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
 def search_knowledge_base(
     query: Annotated[str, Field(description="Search query to find relevant information")],
     limit: Annotated[int, Field(ge=1, le=20, description="Maximum number of results (1-20)")] = 5,
@@ -86,7 +86,7 @@ Verify Qdrant is running and accessible at {settings.qdrant_url}"""
         return f"Error: {e}"
 
 
-@tool
+@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
 async def web_search(
     query: Annotated[str, Field(description="Search query for web search")],
     num_results: Annotated[int, Field(ge=1, le=10, description="Number of results to return (1-10)")] = 5,

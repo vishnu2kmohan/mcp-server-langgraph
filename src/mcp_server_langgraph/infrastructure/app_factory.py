@@ -93,7 +93,7 @@ def create_app(
     )
 
     # Add health check endpoint
-    @app.get("/health")
+    @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
     async def health_check() -> dict[str, str]:
         """Health check endpoint"""
         return {"status": "healthy", "service": app_settings.service_name}

@@ -122,7 +122,7 @@ class TrendsResponse(BaseModel):
 # ==============================================================================
 
 
-@app.get("/")
+@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 def root() -> Dict[str, Any]:
     """API information."""
     return {
@@ -138,7 +138,7 @@ def root() -> Dict[str, Any]:
     }
 
 
-@app.get("/api/cost/summary", response_model=CostSummaryResponse)
+@app.get("/api/cost/summary", response_model=CostSummaryResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_cost_summary(
     period: str = Query("month", description="Time period (day, week, month)"),
     group_by: Optional[str] = Query(None, description="Group by dimension (model, user, feature)"),
@@ -203,7 +203,7 @@ async def get_cost_summary(
     )
 
 
-@app.get("/api/cost/usage", response_model=List[UsageRecordResponse])
+@app.get("/api/cost/usage", response_model=List[UsageRecordResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_usage_records(
     user_id: Optional[str] = Query(None, description="Filter by user ID"),
     model: Optional[str] = Query(None, description="Filter by model"),
@@ -258,7 +258,7 @@ async def get_usage_records(
     ]
 
 
-@app.get("/api/cost/budget/{budget_id}", response_model=BudgetStatus)
+@app.get("/api/cost/budget/{budget_id}", response_model=BudgetStatus)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_budget_status(budget_id: str) -> BudgetStatus:
     """
     Get budget status.
@@ -284,7 +284,7 @@ async def get_budget_status(budget_id: str) -> BudgetStatus:
     return budget_status
 
 
-@app.post("/api/cost/budget", response_model=Budget, status_code=status.HTTP_201_CREATED)
+@app.post("/api/cost/budget", response_model=Budget, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def create_budget(request: CreateBudgetRequest) -> Budget:
     """
     Create a new budget.
@@ -322,7 +322,7 @@ async def create_budget(request: CreateBudgetRequest) -> Budget:
     return budget
 
 
-@app.get("/api/cost/trends", response_model=TrendsResponse)
+@app.get("/api/cost/trends", response_model=TrendsResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_cost_trends(
     metric: str = Query("total_cost", description="Metric to track (total_cost, token_usage)"),
     period: str = Query("7d", description="Time period (7d, 30d, 90d)"),
@@ -399,7 +399,7 @@ async def get_cost_trends(
     )
 
 
-@app.get("/api/cost/export")
+@app.get("/api/cost/export")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def export_cost_data(
     format: str = Query("csv", description="Export format (csv, json)"),
     period: str = Query("month", description="Time period"),
@@ -503,7 +503,7 @@ async def export_cost_data(
 # ==============================================================================
 
 
-@app.get("/health")
+@app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 def health_check() -> Dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "cost-monitoring-api"}

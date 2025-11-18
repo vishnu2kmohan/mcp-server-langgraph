@@ -144,7 +144,7 @@ async def _require_admin_or_scim_role(
 # User Endpoints
 
 
-@router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)
+@router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def create_user(
     user_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -212,7 +212,7 @@ async def create_user(
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
 
-@router.get("/Users/{user_id}", response_model=SCIMUser)
+@router.get("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_user(
     user_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -240,7 +240,7 @@ async def get_user(
         raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
 
 
-@router.put("/Users/{user_id}", response_model=SCIMUser)
+@router.put("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def replace_user(
     user_id: str,
     user_data: Dict[str, Any],
@@ -280,7 +280,7 @@ async def replace_user(
         return scim_error(500, f"Failed to update user: {str(e)}", "internalError")
 
 
-@router.patch("/Users/{user_id}", response_model=SCIMUser)
+@router.patch("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def update_user(
     user_id: str,
     patch_request: SCIMPatchRequest,
@@ -341,7 +341,7 @@ async def update_user(
         return scim_error(500, f"Failed to patch user: {str(e)}", "internalError")
 
 
-@router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def delete_user(
     user_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -368,7 +368,7 @@ async def delete_user(
         raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
 
 
-@router.get("/Users", response_model=SCIMListResponse)
+@router.get("/Users", response_model=SCIMListResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def list_users(
     filter: Optional[str] = Query(None, description="SCIM filter expression"),
     startIndex: int = Query(1, ge=1, description="1-based start index"),
@@ -449,7 +449,7 @@ async def list_users(
 # Group Endpoints
 
 
-@router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)
+@router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def create_group(
     group_data: Dict[str, Any],
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -509,7 +509,7 @@ async def create_group(
         return scim_error(500, f"Failed to create group: {str(e)}", "internalError")
 
 
-@router.get("/Groups/{group_id}", response_model=SCIMGroup)
+@router.get("/Groups/{group_id}", response_model=SCIMGroup)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_group(
     group_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),

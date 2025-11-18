@@ -336,7 +336,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # MCP library decorator lacks type stubs
+        @self.server.list_tools()  # type: ignore[misc]  # MCP decorator lacks type stubs
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -537,7 +537,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # MCP library decorator lacks type stubs
+        @self.server.list_resources()  # type: ignore[misc]  # MCP decorator lacks type stubs
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -1028,7 +1028,7 @@ class RefreshTokenResponse(BaseModel):
 
 
 # FastAPI endpoints for MCP StreamableHTTP transport
-@app.get("/")
+@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def root() -> dict[str, Any]:
     """Root endpoint with server info"""
     return {
@@ -1059,7 +1059,7 @@ async def root() -> dict[str, Any]:
     }
 
 
-@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
+@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
@@ -1145,7 +1145,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         )
 
 
-@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
+@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
@@ -1264,7 +1264,7 @@ async def stream_jsonrpc_response(data: dict[str, Any]) -> AsyncIterator[str]:
     yield json.dumps(data) + "\n"
 
 
-@app.post("/message", response_model=None)
+@app.post("/message", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
     """
     Handle MCP messages via StreamableHTTP POST
@@ -1429,7 +1429,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
         )
 
 
-@app.get("/tools")
+@app.get("/tools")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def list_tools() -> dict[str, Any]:
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
@@ -1437,7 +1437,7 @@ async def list_tools() -> dict[str, Any]:
     return {"tools": [tool.model_dump(mode="json") for tool in tools]}
 
 
-@app.get("/resources")
+@app.get("/resources")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def list_resources() -> dict[str, Any]:
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager

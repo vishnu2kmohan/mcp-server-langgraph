@@ -122,7 +122,7 @@ def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
     return result
 
 
-@tool
+@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
 def search_tools(
     query: Optional[str] = None,
     category: Optional[str] = None,

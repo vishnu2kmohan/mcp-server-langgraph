@@ -127,13 +127,13 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
 app = create_app()
 
 
-@app.get("/health")
+@app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def health_check() -> dict[str, str]:
     """Health check endpoint"""
     return {"status": "healthy", "service": "mcp-server-langgraph"}
 
 
-@app.get("/")
+@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def root() -> dict[str, str]:
     """Root endpoint with API information"""
     return {

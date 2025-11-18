@@ -164,7 +164,7 @@ async def _validate_user_association_permission(
 # API Endpoints
 
 
-@router.post("/", response_model=CreateServicePrincipalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CreateServicePrincipalResponse, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def create_service_principal(
     request: CreateServicePrincipalRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -251,7 +251,7 @@ async def create_service_principal(
     )
 
 
-@router.get("/", response_model=List[ServicePrincipalResponse])
+@router.get("/", response_model=List[ServicePrincipalResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def list_service_principals(
     current_user: Dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
@@ -280,7 +280,7 @@ async def list_service_principals(
     ]
 
 
-@router.get("/{service_id}", response_model=ServicePrincipalResponse)
+@router.get("/{service_id}", response_model=ServicePrincipalResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_service_principal(
     service_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -319,7 +319,7 @@ async def get_service_principal(
     )
 
 
-@router.post("/{service_id}/rotate-secret", response_model=RotateSecretResponse)
+@router.post("/{service_id}/rotate-secret", response_model=RotateSecretResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def rotate_service_principal_secret(
     service_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -359,7 +359,7 @@ async def rotate_service_principal_secret(
     )
 
 
-@router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def delete_service_principal(
     service_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -393,7 +393,7 @@ async def delete_service_principal(
     return None
 
 
-@router.post("/{service_id}/associate-user", response_model=ServicePrincipalResponse)
+@router.post("/{service_id}/associate-user", response_model=ServicePrincipalResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def associate_service_principal_with_user(
     service_id: str,
     user_id: str,

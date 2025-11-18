@@ -417,7 +417,7 @@ class MCPAgentServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
 
-        @self.server.list_tools()  # MCP library decorator lacks type stubs
+        @self.server.list_tools()  # type: ignore[misc]  # MCP decorator lacks type stubs
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -437,7 +437,7 @@ class MCPAgentServer:
             """Handle tool calls with OpenFGA authorization and tracing"""
             return await self.call_tool_public(name, arguments)
 
-        @self.server.list_resources()  # MCP library decorator lacks type stubs
+        @self.server.list_resources()  # type: ignore[misc]  # MCP decorator lacks type stubs
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

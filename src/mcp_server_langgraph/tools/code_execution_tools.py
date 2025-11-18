@@ -99,7 +99,7 @@ def _truncate_output(text: str, max_size: int = MAX_OUTPUT_SIZE) -> str:
     return f"{truncated}\n\n... (output truncated, {len(text)} total characters)"
 
 
-@tool
+@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
 def execute_python(code: str, timeout: Optional[int] = None) -> str:
     """
     Execute Python code in a secure sandboxed environment.
