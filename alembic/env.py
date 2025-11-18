@@ -15,13 +15,23 @@ config = context.config
 # Override sqlalchemy.url from environment variables
 # Format: postgresql+asyncpg://user:password@host:port/database
 # Falls back to docker-compose.test.yml defaults for local development
+#
+# Database Selection Strategy:
+# - Test environment (TESTING=true): uses mcp_test database
+# - Production/Dev: uses POSTGRES_DB environment variable (default: mcp_server)
+# - Docker Compose test: uses mcp_test database (via init script)
+#
+# Note: Tests use direct SQL (migrations/001_gdpr_schema.sql) to avoid
+# asyncio.run() conflicts with pytest-asyncio. Alembic is for production.
+default_db = "mcp_test" if os.getenv("TESTING") == "true" else os.getenv("POSTGRES_DB", "mcp_server")
+
 postgres_url = os.getenv(
     "DATABASE_URL",
     f"postgresql+asyncpg://{os.getenv('POSTGRES_USER', 'postgres')}:"
     f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
     f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
     f"{os.getenv('POSTGRES_PORT', '5432')}/"
-    f"{os.getenv('POSTGRES_DB', 'mcp_server')}",
+    f"{default_db}",
 )
 config.set_main_option("sqlalchemy.url", postgres_url)
 
