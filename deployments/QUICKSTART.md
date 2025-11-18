@@ -11,6 +11,44 @@ Before deploying, ensure you have:
 - ✅ **kubectl** and access to a Kubernetes cluster (for K8s deployment)
 - ✅ **Helm** 3.x installed (for Helm deployment)
 
+## Database Architecture
+
+The MCP Server uses a **multi-database architecture** with dedicated databases for each service:
+
+| Database | Purpose | Tables | Environment Detection |
+|----------|---------|--------|----------------------|
+| **gdpr** / **gdpr_test** | GDPR compliance (user data, consents, audit logs) | 5 tables | `POSTGRES_DB` suffix |
+| **openfga** / **openfga_test** | Authorization (relationship tuples, policies) | 3 tables | Auto-managed by OpenFGA |
+| **keycloak** / **keycloak_test** | Authentication (users, realms, clients) | 3 tables | Auto-managed by Keycloak |
+
+**Automatic Initialization**: All databases are created automatically via `migrations/000_init_databases.sh` when PostgreSQL starts. The script detects the environment from `POSTGRES_DB`:
+- **Development/Production**: `POSTGRES_DB=postgres` → creates `gdpr`, `openfga`, `keycloak`
+- **Test**: `POSTGRES_DB=gdpr_test` → creates `gdpr_test`, `openfga_test`, `keycloak_test`
+
+**Validation**: After deployment, you can validate the database architecture:
+
+```bash
+# Docker Compose
+docker compose exec agent python -c "
+from mcp_server_langgraph.health.database_checks import validate_database_architecture
+import asyncio
+result = asyncio.run(validate_database_architecture(host='postgres'))
+print(f'Valid: {result.is_valid}')
+print(f'Databases: {list(result.databases.keys())}')
+"
+
+# Kubernetes
+kubectl exec -it deployment/langgraph-agent -n langgraph-agent -- python -c "
+from mcp_server_langgraph.health.database_checks import validate_database_architecture
+import asyncio
+result = asyncio.run(validate_database_architecture(host='postgres'))
+print(f'Valid: {result.is_valid}')
+print(f'Databases: {list(result.databases.keys())}')
+"
+```
+
+**See**: [ADR-0056: Database Architecture](../adr/adr-0056-database-architecture-and-naming-convention.md) for complete architecture documentation.
+
 ## Quick Start Options
 
 ### 1. Local Development with Docker Compose (Fastest)

@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Development Docker Compose configuration
 # Provides full local development stack with all dependencies
 
@@ -85,17 +83,21 @@ services:
       timeout: 3s
       retries: 5
 
-  # PostgreSQL (GDPR/compliance storage)
+  # PostgreSQL (multi-database: gdpr, openfga, keycloak)
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: gdpr
+      POSTGRES_DB: postgres  # Non-_test suffix → triggers dev environment (creates gdpr, openfga, keycloak)
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Enhanced migration script with environment detection and validation
+      # Creates: gdpr, openfga, keycloak (dev environment - no _test suffix)
+      # Validates: All databases created + GDPR schema tables exist
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     networks:
       - mcp-network
     healthcheck:
@@ -107,9 +109,16 @@ services:
   # OpenFGA (authorization)
   openfga:
     image: openfga/openfga:latest
-    command: run
+    command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable'
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      OPENFGA_DATASTORE_ENGINE: memory  # Use memory for dev (postgres for prod)
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable
+      OPENFGA_LOG_FORMAT: json
+      OPENFGA_LOG_LEVEL: info
+      OPENFGA_PLAYGROUND_ENABLED: "true"  # Enable playground for dev
     ports:
       - "8080:8080"  # HTTP
       - "8081:8081"  # gRPC
@@ -120,7 +129,8 @@ services:
       test: ["CMD", "wget", "--spider", "http://localhost:8080/healthz"]
       interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   # Qdrant (vector database for context loading)
   qdrant:

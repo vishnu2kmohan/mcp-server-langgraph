@@ -210,7 +210,7 @@ jobs:
         # -v --tb=short: Verbose with short tracebacks
         # --cov: Generate coverage report for this split
         # Note: Integration tests run in isolation (split), coverage threshold set to 0 (overrides pyproject.toml's 66%)
-        TESTING=true OTEL_SDK_DISABLED=true pytest \
+        TESTING=true OTEL_SDK_DISABLED=true POSTGRES_DB=gdpr_test pytest \
           --splits 4 \
           --group ${{ matrix.split-group }} \
           -m integration \

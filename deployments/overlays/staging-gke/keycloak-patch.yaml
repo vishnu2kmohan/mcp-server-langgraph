@@ -20,13 +20,14 @@ spec:
           protocol: TCP
 
         # Security context for Keycloak container
-        # readOnlyRootFilesystem enabled with volume mounts for writable directories
-        # (/tmp, /opt/keycloak/data, /opt/keycloak/providers, /opt/keycloak/themes)
+        # Note: Keycloak/Quarkus requires write access during build phase
+        # readOnlyRootFilesystem: false is required for Quarkus JIT compilation
+        # See: https://github.com/keycloak/keycloak/issues/10150
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 1000
-          readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: false
           capabilities:
             drop:
               - ALL

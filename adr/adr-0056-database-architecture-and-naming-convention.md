@@ -1,0 +1,559 @@
+# 56. Database Architecture and Naming Convention
+
+Date: 2025-11-18
+
+## Status
+
+Proposed
+
+## Context
+
+The project currently uses PostgreSQL for multiple purposes across different environments:
+- **GDPR compliance storage** (user profiles, consents, audit logs, conversations, preferences)
+- **OpenFGA authorization** (relationship tuples, authorization model)
+- **Keycloak authentication** (user accounts, realms, clients, sessions)
+
+However, the current database architecture has several inconsistencies:
+
+### Current Problems
+
+**1. Inconsistent Database Naming Across Environments**
+```yaml
+# Test environment (docker-compose.test.yml)
+POSTGRES_DB: openfga_test  # Default DB
+# Migration creates: gdpr_test, openfga_test, keycloak_test
+
+# Development environment (docker-compose.dev.yml)
+POSTGRES_DB: gdpr  # Single database, no multi-db support
+
+# Main environment (docker-compose.yml)
+POSTGRES_DB: postgres  # Default DB
+POSTGRES_MULTIPLE_DATABASES: openfga,keycloak,gdpr  # Multi-db creation
+
+# Production/Staging (Helm values)
+# Uses external Cloud SQL - no explicit database naming standard
+```
+
+**2. No Clear Separation of Concerns**
+- Test environment correctly separates databases (`gdpr_test`, `openfga_test`, `keycloak_test`)
+- Dev environment uses single `gdpr` database (no separation!)
+- Main environment uses multi-database script but inconsistent naming
+- Production uses external managed databases with undefined structure
+
+**3. Migration Script Inconsistency**
+- Test environment: Uses `migrations/000_init_databases.sh` (creates 3 databases)
+- Main environment: Uses `scripts/postgres/init-multiple-databases.sh` (different script!)
+- Dev environment: No migration support (single database)
+- No validation that databases were created correctly
+
+**4. No Documented Strategy**
+- No ADR defining database architecture principles
+- No naming convention standard
+- No guidance for adding new databases
+- No validation/testing of database initialization
+
+### Why This Matters
+
+**Security**: Mixing GDPR-regulated data with authorization data in single database violates data separation principles.
+
+**Compliance**: GDPR Article 25 (Data protection by design) requires appropriate technical measures including data segregation.
+
+**Scalability**: Single database limits ability to:
+- Scale different services independently
+- Implement different backup strategies (GDPR data: 7 years, sessions: ephemeral)
+- Use different PostgreSQL extensions per service
+
+**Maintainability**: Developers must mentally track which database names to use in each environment.
+
+**Testing**: Inconsistent test environments lead to bugs that only appear in production.
+
+## Decision
+
+We will implement a **consistent multi-database architecture** with a clear naming convention and automated validation.
+
+### Architecture Principles
+
+1. **One Database Per Service** - Each logical service gets its own PostgreSQL database
+2. **Environment Suffixes** - Clear suffix naming: `{service}` (dev/prod), `{service}_test` (test)
+3. **Consistent Initialization** - Single migration script used across all environments
+4. **Automated Validation** - Health checks verify correct database structure
+5. **Documentation** - ADR + diagrams + configuration examples
+
+### Database Naming Convention
+
+| Service | Development | Test | Staging | Production |
+|---------|-------------|------|---------|------------|
+| **GDPR Compliance** | `gdpr` | `gdpr_test` | `gdpr` | `gdpr` |
+| **OpenFGA Authorization** | `openfga` | `openfga_test` | `openfga` | `openfga` |
+| **Keycloak Authentication** | `keycloak` | `keycloak_test` | `keycloak` | `keycloak` |
+
+**Rule**: Test environment ALWAYS uses `{service}_test` suffix. All other environments use `{service}`.
+
+**Rationale**:
+- Test suffix prevents accidental connection to dev/prod databases
+- No suffix in prod/staging keeps database names simple
+- Consistent across environments reduces cognitive load
+
+### Database Responsibilities
+
+#### `gdpr` / `gdpr_test`
+**Purpose**: GDPR/HIPAA/SOC2 compliance data storage
+
+**Schema**:
+- `user_profiles` - User account data (GDPR Article 15: Right to access)
+- `user_preferences` - User settings and preferences
+- `consent_records` - Consent tracking (GDPR Article 7, 7-year retention)
+- `conversations` - Chat history (90-day retention, GDPR Article 5(1)(e))
+- `audit_logs` - Compliance audit trail (HIPAA §164.312(b), 7-year retention)
+
+**Migrations**: `migrations/001_gdpr_schema.sql`
+
+**Data Classification**: PII, Regulated (GDPR/HIPAA)
+
+**Retention**:
+- Consent records: 7 years (compliance requirement)
+- Audit logs: 7 years (compliance requirement)
+- Conversations: 90 days (operational)
+- User profiles: Until deletion request (GDPR Article 17)
+
+#### `openfga` / `openfga_test`
+**Purpose**: Fine-grained authorization (relationship tuples)
+
+**Schema**: Managed by OpenFGA migrations (`openfga migrate`)
+- `tuple` - Authorization relationships (user:X can view:resource:Y)
+- `authorization_model` - Permission model versions
+- `store` - Multi-tenancy stores
+
+**Migrations**: Handled by OpenFGA container (`openfga-migrate`)
+
+**Data Classification**: Authorization metadata (non-PII)
+
+**Retention**: Operational (no compliance requirements)
+
+#### `keycloak` / `keycloak_test`
+**Purpose**: SSO, authentication, user identity
+
+**Schema**: Managed by Keycloak
+- `user_entity` - User accounts, credentials
+- `realm` - Multi-tenancy realms
+- `client` - OAuth2/OIDC client applications
+- `user_session` - Active authentication sessions
+
+**Migrations**: Handled by Keycloak container
+
+**Data Classification**: Authentication data, PII (username, email)
+
+**Retention**: Operational (managed by Keycloak session policies)
+
+### PostgreSQL Instance Strategy
+
+#### Local Development / Testing
+**Strategy**: Single PostgreSQL instance with multiple databases
+
+**Rationale**:
+- Simple setup (one container)
+- Faster development (no multi-instance coordination)
+- Resource efficient (single PostgreSQL process)
+- Test isolation via database separation (sufficient for unit/integration tests)
+
+**Configuration**:
+```yaml
+# docker-compose.yml / docker-compose.test.yml
+postgres:
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: postgres  # Default DB (not used by services)
+  volumes:
+    - ./migrations/000_init_databases.sh:/docker-entrypoint-initdb.d/000_init.sh
+    - ./migrations:/docker-entrypoint-initdb.d/migrations
+```
+
+#### Staging / Production
+**Strategy**: External managed PostgreSQL (Cloud SQL, RDS, etc.) with multiple databases
+
+**Rationale**:
+- Managed service benefits (backups, HA, monitoring)
+- Production-grade performance
+- Database-level separation for security
+- Different retention policies per database
+- Independent scaling (future: separate instances if needed)
+
+**Configuration**:
+```yaml
+# Helm values-production.yaml
+database:
+  host: "postgres-prod.c.project-id.internal"  # Cloud SQL
+  port: 5432
+  user: "app-user"  # Application service account
+  databases:
+    gdpr: "gdpr"
+    openfga: "openfga"
+    keycloak: "keycloak"
+```
+
+### Migration Script Architecture
+
+**Single Source of Truth**: `migrations/000_init_databases.sh`
+
+**Used by**:
+- `docker-compose.test.yml` - Test environment (creates `gdpr_test`, `openfga_test`, `keycloak_test`)
+- `docker-compose.yml` - Development environment (creates `gdpr`, `openfga`, `keycloak`)
+- `docker/docker-compose.dev.yml` - Alternative dev setup
+
+**Script Logic**:
+```bash
+#!/bin/bash
+# migrations/000_init_databases.sh
+set -e
+set -u
+
+# Determine environment from POSTGRES_DB suffix
+ENVIRONMENT="dev"  # Default
+if [[ "${POSTGRES_DB:-}" == *"_test" ]]; then
+    ENVIRONMENT="test"
+fi
+
+# Database names based on environment
+if [ "$ENVIRONMENT" = "test" ]; then
+    GDPR_DB="gdpr_test"
+    OPENFGA_DB="openfga_test"
+    KEYCLOAK_DB="keycloak_test"
+else
+    GDPR_DB="gdpr"
+    OPENFGA_DB="openfga"
+    KEYCLOAK_DB="keycloak"
+fi
+
+# Create databases
+create_database() {
+    local database=$1
+    echo "Creating database: $database (environment: $ENVIRONMENT)"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+        SELECT 'CREATE DATABASE $database'
+        WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$database')\\gexec
+EOSQL
+}
+
+create_database "$GDPR_DB"
+create_database "$OPENFGA_DB"
+create_database "$KEYCLOAK_DB"
+
+# Apply GDPR schema migrations
+echo "Applying GDPR schema to $GDPR_DB..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname="$GDPR_DB" \
+    -f /docker-entrypoint-initdb.d/migrations/001_gdpr_schema.sql
+```
+
+**Benefits**:
+- Single script reduces maintenance burden
+- Environment detection (`_test` suffix) ensures correct naming
+- Idempotent (`WHERE NOT EXISTS`) - safe to re-run
+- Error handling (`set -e`, `ON_ERROR_STOP=1`)
+- Clear logging for debugging
+
+### Validation Strategy
+
+**Health Check Queries**:
+```python
+# src/mcp_server_langgraph/health/database_checks.py
+
+async def validate_database_structure():
+    """Validate all required databases exist with correct schema."""
+
+    # Determine environment
+    env = "test" if os.getenv("TESTING") == "true" else "prod"
+    suffix = "_test" if env == "test" else ""
+
+    required_databases = {
+        f"gdpr{suffix}": ["user_profiles", "consent_records", "audit_logs", "conversations", "user_preferences"],
+        f"openfga{suffix}": ["tuple", "authorization_model"],
+        f"keycloak{suffix}": ["user_entity", "realm"],
+    }
+
+    for db_name, required_tables in required_databases.items():
+        # Check database exists
+        result = await conn.fetchval(
+            "SELECT 1 FROM pg_database WHERE datname = $1", db_name
+        )
+        assert result == 1, f"Database {db_name} not found!"
+
+        # Check tables exist
+        for table in required_tables:
+            result = await conn.fetchval(
+                "SELECT 1 FROM information_schema.tables WHERE table_name = $1",
+                table
+            )
+            assert result == 1, f"Table {table} not found in {db_name}!"
+```
+
+**Pre-commit Hook**: Validate docker-compose files use correct database names
+
+**CI/CD**: Integration test stage validates database structure before running tests
+
+### Environment Variable Configuration
+
+**Standard Environment Variables**:
+```bash
+# GDPR Compliance Storage
+GDPR_STORAGE_BACKEND=postgres
+GDPR_POSTGRES_HOST=localhost
+GDPR_POSTGRES_PORT=5432
+GDPR_POSTGRES_USER=postgres
+GDPR_POSTGRES_PASSWORD=postgres
+GDPR_POSTGRES_DB=gdpr  # Or gdpr_test in test environment
+
+# OpenFGA Authorization (configured by OpenFGA container)
+OPENFGA_DATASTORE_ENGINE=postgres
+OPENFGA_DATASTORE_URI=postgres://user:pass@host:5432/openfga?sslmode=disable
+
+# Keycloak Authentication (configured by Keycloak container)
+KC_DB=postgres
+KC_DB_URL=jdbc:postgresql://host:5432/keycloak
+KC_DB_USERNAME=postgres
+KC_DB_PASSWORD=postgres
+```
+
+**Auto-Configuration Helper**:
+```python
+# src/mcp_server_langgraph/core/config.py
+
+def get_database_name(service: str) -> str:
+    """Get correct database name for service based on environment."""
+    is_test = os.getenv("TESTING") == "true" or os.getenv("PYTEST_CURRENT_TEST") is not None
+    suffix = "_test" if is_test else ""
+    return f"{service}{suffix}"
+
+# Usage
+gdpr_db = get_database_name("gdpr")  # Returns "gdpr_test" in tests, "gdpr" otherwise
+```
+
+## Consequences
+
+### Positive Consequences
+
+**✅ Consistency**: Same database structure across dev/test/staging/prod
+**✅ Clarity**: Clear naming convention removes ambiguity
+**✅ Security**: Data separation aligns with GDPR data protection by design
+**✅ Testability**: Test databases clearly isolated from development
+**✅ Maintainability**: Single migration script, single source of truth
+**✅ Validation**: Automated checks catch configuration errors early
+**✅ Documentation**: ADR provides clear guidance for future changes
+**✅ Compliance**: Supports GDPR Article 25 (data protection by design)
+
+### Negative Consequences
+
+**❌ Migration Effort**: Need to update existing docker-compose files, helm values, docs
+**❌ Backward Compatibility**: Existing dev environments may need database rename
+**❌ Complexity**: Multiple databases adds operational complexity (backups, monitoring)
+**❌ Resource Usage**: Multiple databases consume more memory than single database
+
+### Neutral Consequences
+
+**→ Learning Curve**: Developers need to understand multi-database architecture
+**→ Testing Changes**: Test fixtures need updated database connection strings
+
+## Alternatives Considered
+
+### 1. Single Database for All Services
+
+**Description**: Use one PostgreSQL database with table prefixes (e.g., `gdpr_user_profiles`, `openfga_tuple`)
+
+**Pros**:
+- Simplest setup (one database)
+- Easier backups (single database dump)
+- No multi-database coordination
+
+**Cons**:
+- Violates data separation principle (GDPR compliance risk)
+- Cannot implement different retention policies per service
+- Risk of table name collisions
+- Cannot scale services independently
+- Mixing regulated (GDPR) and non-regulated data (authorization)
+
+**Why Rejected**: Security and compliance requirements mandate data separation
+
+### 2. Separate PostgreSQL Instances Per Service
+
+**Description**: Run separate PostgreSQL containers/instances for each service
+
+**Pros**:
+- Maximum isolation (network-level)
+- Independent scaling
+- Different PostgreSQL versions per service
+- Easier to migrate to managed services
+
+**Cons**:
+- High resource usage (3x PostgreSQL processes)
+- Complex local development setup
+- More infrastructure to manage
+- Network coordination overhead
+
+**Why Rejected**: Overkill for local development, adds unnecessary complexity. Can migrate to this in future if needed.
+
+### 3. Schema-Based Separation
+
+**Description**: Use PostgreSQL schemas (`gdpr.user_profiles`, `openfga.tuple`)
+
+**Pros**:
+- Single database connection
+- Logical separation
+- Namespacing prevents collisions
+
+**Cons**:
+- OpenFGA and Keycloak don't support schema configuration (expect full database access)
+- Still mixing data in single database (compliance concern)
+- Complex permission management
+- Cannot implement different backup strategies
+
+**Why Rejected**: Tooling compatibility issues and still violates data separation
+
+## Implementation Plan
+
+**Phase 1: Update Migration Scripts (Week 1)**
+- ✅ Already completed: `migrations/000_init_databases.sh` creates `gdpr_test`, `openfga_test`, `keycloak_test`
+- [ ] Remove deprecated `scripts/postgres/init-multiple-databases.sh`
+- [ ] Update main `docker-compose.yml` to use `migrations/000_init_databases.sh`
+- [ ] Update `docker-compose.dev.yml` to use consistent multi-database pattern
+
+**Phase 2: Environment Configuration (Week 1)**
+- [ ] Update test fixtures to use `os.getenv("POSTGRES_DB", "gdpr_test")` consistently
+- [ ] Add `get_database_name()` helper to `core/config.py`
+- [ ] Update application code to use helper function
+- [ ] Update docker-compose environment variables
+
+**Phase 3: Validation & Testing (Week 1)**
+- [ ] Create `health/database_checks.py` validation module
+- [ ] Add pre-commit hook to validate database names in config files
+- [ ] Add CI/CD integration test for database structure
+- [ ] Write unit tests for `get_database_name()` helper
+
+**Phase 4: Helm / Production (Week 2)**
+- [ ] Update Helm values for production/staging with database configuration
+- [ ] Document Cloud SQL setup requirements
+- [ ] Update production deployment playbooks
+- [ ] Add Terraform/Pulumi scripts for managed PostgreSQL setup
+
+**Phase 5: Documentation (Week 2)**
+- [ ] Update README.md with database architecture section
+- [ ] Create deployment guide with database setup instructions
+- [ ] Update contributing guide with local database setup
+- [ ] Create architecture diagram showing database relationships
+
+## Migration Guide
+
+### For Existing Local Development Environments
+
+**Option 1: Recreate Databases (Recommended)**
+```bash
+# Stop existing PostgreSQL
+docker compose down -v  # Removes volumes!
+
+# Update docker-compose files (git pull)
+git pull
+
+# Start with new database structure
+docker compose up -d
+
+# Verify databases created correctly
+docker compose exec postgres psql -U postgres -c '\l' | grep -E 'gdpr|openfga|keycloak'
+```
+
+**Option 2: Manual Database Creation**
+```bash
+# Connect to PostgreSQL
+docker compose exec postgres psql -U postgres
+
+# Create missing databases
+CREATE DATABASE openfga;
+CREATE DATABASE keycloak;
+
+# Rename existing database if needed
+ALTER DATABASE gdpr RENAME TO gdpr_new;
+```
+
+### For Test Environment
+
+**No action required** - Test environment already uses correct naming (`gdpr_test`, `openfga_test`, `keycloak_test`)
+
+### For Production / Staging
+
+**Cloud SQL Setup**:
+1. Create Cloud SQL PostgreSQL instance (if not exists)
+2. Create databases: `gdpr`, `openfga`, `keycloak`
+3. Run `migrations/001_gdpr_schema.sql` on `gdpr` database
+4. Let OpenFGA and Keycloak handle their schema migrations
+5. Update Helm values with database configuration
+6. Deploy via Helm
+
+## Performance Characteristics
+
+| Metric | Single Database | Multi-Database (Same Instance) | Multi-Instance |
+|--------|-----------------|-------------------------------|----------------|
+| Connection Pool Overhead | 1x | 3x | 3x |
+| Memory Usage | 1x | 1.2x | 3x |
+| Backup Complexity | Simple | Medium | High |
+| Query Performance | Same | Same | Same |
+| Operational Complexity | Low | Medium | High |
+
+**Chosen Approach**: Multi-database, same instance balances isolation with resource efficiency.
+
+## Security Considerations
+
+**Database-Level Isolation**:
+- GDPR data in separate database prevents accidental leakage to authorization logs
+- Each service can have different PostgreSQL users with limited permissions
+- Audit logs cannot be tampered with by authorization service
+
+**Future: IAM Database Authentication** (Cloud SQL):
+```yaml
+# Example: GCP Workload Identity for database access
+gdpr_service:
+  serviceAccount: gdpr-db-accessor@project.iam.gserviceaccount.com
+  cloudsql:
+    instances:
+      - project:region:instance
+    databases:
+      - gdpr  # Only access to GDPR database
+```
+
+## Monitoring & Alerting
+
+**Health Checks** (Kubernetes liveness/readiness):
+```yaml
+livenessProbe:
+  exec:
+    command:
+      - python
+      - -c
+      - "from health.database_checks import validate_database_structure; validate_database_structure()"
+  initialDelaySeconds: 30
+  periodSeconds: 30
+```
+
+**Metrics** (Prometheus):
+- `postgres_database_size_bytes{database="gdpr"}` - Database size per service
+- `postgres_connections_active{database="gdpr"}` - Active connections per database
+- `gdpr_schema_version` - Schema migration version
+
+**Alerts**:
+- Missing required tables (schema migration failure)
+- Database size exceeding retention policy limits
+- Connection pool exhaustion per database
+
+## References
+
+- Implementation: `migrations/000_init_databases.sh`
+- GDPR Schema: `migrations/001_gdpr_schema.sql`
+- Configuration: `src/mcp_server_langgraph/core/config.py`
+- Test Fixtures: `tests/integration/compliance/test_postgres_*.py`
+- Docker Compose: `docker-compose.yml`, `docker-compose.test.yml`
+- Helm Values: `deployments/helm/values-*.yaml`
+
+## Related ADRs
+
+- [ADR-0006](adr-0006-session-storage-architecture.md) - Session storage (may use PostgreSQL in future)
+- [ADR-0002](adr-0002-openfga-authorization.md) - OpenFGA authorization database
+- [ADR-0007](adr-0007-authentication-provider-pattern.md) - Keycloak authentication database
+- [ADR-0030](adr-0030-resilience-patterns.md) - Circuit breakers for database connections

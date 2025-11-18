@@ -48,16 +48,15 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-      POSTGRES_MULTIPLE_DATABASES: openfga,keycloak,gdpr
+      POSTGRES_DB: postgres  # Non-_test suffix → triggers dev environment (creates gdpr, openfga, keycloak)
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Script to create multiple databases
-      - ../scripts/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/01-init-databases.sh:ro
-      # Initialize GDPR schema after databases are created
-      - ../migrations:/docker-entrypoint-initdb.d/02-migrations
+      # Enhanced migration script with environment detection and validation
+      # Creates: gdpr, openfga, keycloak (dev environment - no _test suffix)
+      # Validates: All databases created + GDPR schema tables exist
+      - ./migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

@@ -81,6 +81,39 @@ cp .env.example .env
 # OPENFGA_MODEL_ID=from-setup
 ```
 
+### Database Architecture
+
+The project uses a **multi-database PostgreSQL architecture** with automatic initialization:
+
+**Three Dedicated Databases**:
+- `gdpr` / `gdpr_test` - GDPR compliance data (5 tables: user_profiles, user_preferences, consent_records, conversations, audit_logs)
+- `openfga` / `openfga_test` - Authorization data (3 tables managed by OpenFGA service)
+- `keycloak` / `keycloak_test` - Authentication data (3 tables managed by Keycloak service)
+
+**Environment Detection**: Automatically creates dev or test databases based on `POSTGRES_DB`:
+```bash
+# Development (default in docker-compose.yml)
+POSTGRES_DB=postgres → creates gdpr, openfga, keycloak
+
+# Test (default in docker-compose.test.yml)
+POSTGRES_DB=gdpr_test → creates gdpr_test, openfga_test, keycloak_test
+```
+
+**Validation**: Verify database setup with runtime validation:
+```bash
+# After starting infrastructure
+docker compose exec agent python -c "
+from mcp_server_langgraph.health.database_checks import validate_database_architecture
+import asyncio
+result = asyncio.run(validate_database_architecture(host='postgres'))
+print(f'Valid: {result.is_valid}')
+for db_name, db_result in result.databases.items():
+    print(f'{db_name}: exists={db_result.exists}, tables_valid={db_result.tables_valid}')
+"
+```
+
+**See**: [ADR-0056: Database Architecture](../adr/adr-0056-database-architecture-and-naming-convention.md) for complete architecture documentation.
+
 ## Making Changes
 
 ### Create a Branch

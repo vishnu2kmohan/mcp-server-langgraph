@@ -7,7 +7,13 @@
     "build": "mintlify build",
     "install:mintlify": "npm install -g mintlify"
   },
-  "keywords": ["documentation", "mintlify", "ai", "mcp", "langgraph"],
+  "keywords": [
+    "documentation",
+    "mintlify",
+    "ai",
+    "mcp",
+    "langgraph"
+  ],
   "author": "vishnu2kmohan",
   "license": "MIT"
 }

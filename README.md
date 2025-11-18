@@ -224,6 +224,61 @@ uv sync  # Installs all dependencies from pyproject.toml + uv.lock
 
 **See**: [Architecture Overview](docs/getting-started/architecture.mdx) | [ADR-0024: Agentic Loop](adr/adr-0024-agentic-loop-implementation.md) | [ADR-0025: Enhancements](adr/adr-0025-anthropic-best-practices-enhancements.md) | [All ADRs](docs/architecture/overview.mdx)
 
+## Database Architecture
+
+**Multi-Database Design**: Single PostgreSQL instance with **dedicated databases per service** for clear separation of concerns and optimized schema management.
+
+### Database Overview
+
+| Database | Purpose | Tables | Managed By | Retention |
+|----------|---------|--------|------------|-----------|
+| **gdpr** / **gdpr_test** | GDPR compliance data (user profiles, consents, audit logs) | 5 tables | Schema migrations | 7 years (audit logs) |
+| **openfga** / **openfga_test** | OpenFGA authorization (relationship tuples, policies) | 3 tables | OpenFGA service | Indefinite |
+| **keycloak** / **keycloak_test** | Keycloak authentication (users, realms, clients) | 3 tables | Keycloak service | Indefinite |
+
+### Environment-Based Naming
+
+Databases use environment-aware naming for clear separation:
+
+```bash
+# Development/Staging/Production
+gdpr, openfga, keycloak
+
+# Test Environment
+gdpr_test, openfga_test, keycloak_test
+```
+
+**Detection**: Automatic environment detection from `POSTGRES_DB` variable (suffix `_test` triggers test mode)
+
+### Automatic Initialization
+
+Database initialization is **fully automated** via `migrations/000_init_databases.sh`:
+
+1. Environment detection (dev vs test)
+2. Create all 3 databases (idempotent)
+3. Apply GDPR schema migrations
+4. Validate table structure (5 GDPR tables)
+
+**Validation**: Runtime validation via `src/mcp_server_langgraph/health/database_checks.py` ensures architecture compliance per ADR-0056.
+
+### Quick Database Setup
+
+```bash
+# Docker Compose (automatic initialization)
+docker-compose up -d postgres
+
+# Manual validation
+python -c "
+from mcp_server_langgraph.health.database_checks import validate_database_architecture
+import asyncio
+result = asyncio.run(validate_database_architecture())
+print(f'Valid: {result.is_valid}')
+print(f'Databases: {list(result.databases.keys())}')
+"
+```
+
+**See**: [ADR-0056: Database Architecture](adr/adr-0056-database-architecture-and-naming-convention.md) | [Migration Script](migrations/000_init_databases.sh) | [Database Validation Module](src/mcp_server_langgraph/health/database_checks.py)
+
 ## Quick Start
 
 ### 🐳 Docker Compose (Recommended)
