@@ -21,6 +21,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -29,9 +30,9 @@ OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 STAGING_GKE_DIR = OVERLAYS_DIR / "staging-gke"
 
 
-def load_yaml_documents(file_path: Path) -> List[Dict[str, Any]]:
+def load_yaml_documents(file_path: Path) -> list[dict[str, Any]]:
     """Load all YAML documents from a file."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         return list(yaml.safe_load_all(f))
 
 
@@ -42,12 +43,12 @@ def build_kustomize_manifests(overlay_dir: Path) -> str:
     return result.stdout
 
 
-def parse_kustomize_output(kustomize_output: str) -> List[Dict[str, Any]]:
+def parse_kustomize_output(kustomize_output: str) -> list[dict[str, Any]]:
     """Parse Kustomize output into list of manifests."""
     return list(yaml.safe_load_all(kustomize_output))
 
 
-def extract_services(manifests: List[Dict[str, Any]]) -> Set[str]:
+def extract_services(manifests: list[dict[str, Any]]) -> set[str]:
     """Extract all service names from manifests."""
     services = set()
 
@@ -64,7 +65,7 @@ def extract_services(manifests: List[Dict[str, Any]]) -> Set[str]:
     return services
 
 
-def extract_init_container_service_refs(manifests: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+def extract_init_container_service_refs(manifests: list[dict[str, Any]]) -> dict[str, list[str]]:
     """
     Extract service names referenced in init containers.
 

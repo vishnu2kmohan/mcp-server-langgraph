@@ -56,7 +56,7 @@ from unittest.mock import AsyncMock
 
 
 def configured_async_mock(
-    return_value: Any = None, side_effect: Optional[Any] = None, spec: Optional[Type] = None, **kwargs: Any
+    return_value: Any = None, side_effect: Any | None = None, spec: type | None = None, **kwargs: Any
 ) -> AsyncMock:
     """
     Create an AsyncMock with explicit return_value configuration.
@@ -94,10 +94,7 @@ def configured_async_mock(
         >>> class UserService:
         ...     async def get_user(self, user_id: str) -> dict:
         ...         pass
-        >>> mock = configured_async_mock(
-        ...     return_value={"name": "Alice"},
-        ...     spec=UserService
-        ... )
+        >>> mock = configured_async_mock(return_value={"name": "Alice"}, spec=UserService)
         >>> await mock.get_user("123")
         {'name': 'Alice'}
 
@@ -116,7 +113,7 @@ def configured_async_mock(
     return AsyncMock(**kwargs)
 
 
-def configured_async_mock_deny(spec: Optional[Type] = None, **kwargs: Any) -> AsyncMock:
+def configured_async_mock_deny(spec: type | None = None, **kwargs: Any) -> AsyncMock:
     """
     Create an AsyncMock that always returns False (authorization denial).
 
@@ -136,11 +133,7 @@ def configured_async_mock_deny(spec: Optional[Type] = None, **kwargs: Any) -> As
         >>> from tests.conftest import get_user_id
         >>> mock_openfga = configured_async_mock_deny()
         >>> user = get_user_id()  # Worker-safe ID
-        >>> await mock_openfga.check_permission(
-        ...     user=user,
-        ...     relation="viewer",
-        ...     object="document:secret"
-        ... )
+        >>> await mock_openfga.check_permission(user=user, relation="viewer", object="document:secret")
         False
 
         >>> # With spec for type safety
@@ -166,7 +159,7 @@ def configured_async_mock_deny(spec: Optional[Type] = None, **kwargs: Any) -> As
     return AsyncMock(**kwargs)
 
 
-def configured_async_mock_raise(exception: Exception, spec: Optional[Type] = None, **kwargs: Any) -> AsyncMock:
+def configured_async_mock_raise(exception: Exception, spec: type | None = None, **kwargs: Any) -> AsyncMock:
     """
     Create an AsyncMock that raises an exception when called.
 
@@ -183,18 +176,14 @@ def configured_async_mock_raise(exception: Exception, spec: Optional[Type] = Non
 
     Examples:
         >>> # Network error simulation
-        >>> mock_api = configured_async_mock_raise(
-        ...     ConnectionError("API unavailable")
-        ... )
+        >>> mock_api = configured_async_mock_raise(ConnectionError("API unavailable"))
         >>> await mock_api.fetch_data()  # Raises ConnectionError
         Traceback (most recent call last):
         ...
         ConnectionError: API unavailable
 
         >>> # Permission denied simulation
-        >>> mock_api = configured_async_mock_raise(
-        ...     PermissionError("Insufficient privileges")
-        ... )
+        >>> mock_api = configured_async_mock_raise(PermissionError("Insufficient privileges"))
         >>> await mock_api.delete_resource()  # Raises PermissionError
         Traceback (most recent call last):
         ...
@@ -204,10 +193,7 @@ def configured_async_mock_raise(exception: Exception, spec: Optional[Type] = Non
         >>> class ExternalAPI:
         ...     async def call(self) -> dict:
         ...         pass
-        >>> mock_api = configured_async_mock_raise(
-        ...     TimeoutError("Request timeout"),
-        ...     spec=ExternalAPI
-        ... )
+        >>> mock_api = configured_async_mock_raise(TimeoutError("Request timeout"), spec=ExternalAPI)
         >>> await mock_api.call()  # Raises TimeoutError
         Traceback (most recent call last):
         ...

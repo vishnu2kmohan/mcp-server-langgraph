@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
 
+
 # ============================================================================
 # Fixtures and Helpers
 # ============================================================================

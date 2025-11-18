@@ -31,7 +31,7 @@ class MemorySafetyAnalyzer(ast.NodeVisitor):
     """Analyze test files to identify classes needing memory safety fixes."""
 
     def __init__(self):
-        self.test_classes: List[Tuple[str, int, bool, bool]] = []  # (name, lineno, has_marker, has_teardown)
+        self.test_classes: list[tuple[str, int, bool, bool]] = []  # (name, lineno, has_marker, has_teardown)
         self.has_gc_import = False
         self.last_import_line = 0
         self.current_class = None
@@ -107,7 +107,7 @@ def fix_file(file_path: Path) -> bool:
         True if changes were made, False otherwise
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
             lines = content.splitlines(keepends=True)
 
@@ -164,17 +164,15 @@ def fix_file(file_path: Path) -> bool:
                             insert_idx += 1
                             break
                         # Multi-line docstring - find end
-                        else:
-                            insert_idx += 1
-                            while insert_idx < len(lines):
-                                if quote in lines[insert_idx]:
-                                    insert_idx += 1
-                                    break
+                        insert_idx += 1
+                        while insert_idx < len(lines):
+                            if quote in lines[insert_idx]:
                                 insert_idx += 1
-                            break
-                    else:
-                        # No docstring, insert here
+                                break
+                            insert_idx += 1
                         break
+                    # No docstring, insert here
+                    break
 
                 # Get class body indentation (class indent + 4 spaces)
                 class_line = lines[class_line_idx]
@@ -216,7 +214,7 @@ def fix_file(file_path: Path) -> bool:
         return False
 
 
-def find_test_files(base_dir: str = "tests") -> List[Path]:
+def find_test_files(base_dir: str = "tests") -> list[Path]:
     """Find all test files under the base directory."""
     base_path = Path(base_dir)
     if not base_path.exists():

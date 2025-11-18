@@ -31,6 +31,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
+
 # Cost per minute for public repos (GitHub Actions pricing)
 COST_PER_MIN_LINUX = 0.008  # $0.008/min for Linux runners
 
@@ -39,7 +40,7 @@ WEEKLY_BUDGET_MINS = 1500  # ~$12/week
 MONTHLY_BUDGET_MINS = 6000  # ~$48/month
 
 
-def load_runs() -> List[Dict[str, Any]]:
+def load_runs() -> list[dict[str, Any]]:
     """
     Load workflow runs from JSON files.
 
@@ -52,14 +53,14 @@ def load_runs() -> List[Dict[str, Any]]:
     runs = []
 
     try:
-        with open("workflow-runs.json", "r") as f:
+        with open("workflow-runs.json") as f:
             data = json.load(f)
             runs.extend(data.get("workflow_runs", []))
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
     try:
-        with open("workflow-runs-page2.json", "r") as f:
+        with open("workflow-runs-page2.json") as f:
             data = json.load(f)
             runs.extend(data.get("workflow_runs", []))
     except (FileNotFoundError, json.JSONDecodeError):
@@ -68,7 +69,7 @@ def load_runs() -> List[Dict[str, Any]]:
     return runs
 
 
-def analyze_usage(runs: List[Dict[str, Any]], period_days: int) -> str:
+def analyze_usage(runs: list[dict[str, Any]], period_days: int) -> str:
     """
     Analyze workflow usage and costs.
 

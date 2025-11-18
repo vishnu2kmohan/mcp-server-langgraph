@@ -114,7 +114,7 @@ class TestFullResilienceStack:
 
         # Each call retries twice, counts as 1 failure for circuit breaker
         # Need 3 calls to open circuit
-        for i in range(3):
+        for _i in range(3):
             with pytest.raises(RetryExhaustedError):
                 await func()
 
@@ -294,7 +294,7 @@ class TestErrorPropagation:
         assert get_circuit_breaker_state("test_cb_stops_retry") == CircuitBreakerState.CLOSED
 
         # First two calls (with retries) should open circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(RetryExhaustedError):
                 await func()
 
@@ -360,7 +360,7 @@ class TestConcurrentOperations:
         assert get_circuit_breaker_state("test_service2") == CircuitBreakerState.CLOSED
 
         # Fail service1 to open its circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await service1()
 

@@ -13,6 +13,7 @@ from typing import List, Set
 
 import pytest
 
+
 # Mark this as both unit and meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -26,20 +27,20 @@ class TestGitignoreValidation:
         gc.collect()
 
     @staticmethod
-    def get_tracked_files() -> Set[str]:
+    def get_tracked_files() -> set[str]:
         """Get all files tracked by git."""
         result = subprocess.run(["git", "ls-files"], capture_output=True, text=True, check=True, timeout=60)
         return set(result.stdout.strip().split("\n"))
 
     @staticmethod
-    def get_gitignore_patterns() -> List[str]:
+    def get_gitignore_patterns() -> list[str]:
         """Read .gitignore patterns."""
         gitignore_path = Path(".gitignore")
         if not gitignore_path.exists():
             return []
 
         patterns = []
-        with open(gitignore_path, "r") as f:
+        with open(gitignore_path) as f:
             for line in f:
                 line = line.strip()
                 # Skip comments and empty lines

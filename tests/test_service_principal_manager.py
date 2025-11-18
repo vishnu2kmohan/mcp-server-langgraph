@@ -88,10 +88,8 @@ class TestServicePrincipalCreation:
         mock_openfga_client.write_tuples.assert_called_once()
         tuples = mock_openfga_client.write_tuples.call_args[0][0]
         assert any(
-            (
-                t["user"] == owner_user_id and t["relation"] == "owner" and (t["object"] == f"service_principal:{service_id}")
-                for t in tuples
-            )
+            t["user"] == owner_user_id and t["relation"] == "owner" and (t["object"] == f"service_principal:{service_id}")
+            for t in tuples
         )
 
     @pytest.mark.asyncio
@@ -131,10 +129,8 @@ class TestServicePrincipalCreation:
         assert sp.inherit_permissions is True
         tuples = mock_openfga_client.write_tuples.call_args[0][0]
         assert any(
-            (
-                t["user"] == f"service:{service_id}" and t["relation"] == "acts_as" and (t["object"] == associated_user_id)
-                for t in tuples
-            )
+            t["user"] == f"service:{service_id}" and t["relation"] == "acts_as" and (t["object"] == associated_user_id)
+            for t in tuples
         )
 
     @pytest.mark.asyncio

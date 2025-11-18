@@ -199,7 +199,7 @@ class TestAppFactoryRouterMounting:
 
         # This is how uvicorn imports the app
         module = importlib.import_module("mcp_server_langgraph.app")
-        app = getattr(module, "app")
+        app = module.app
 
         assert app is not None
         assert isinstance(app, FastAPI)

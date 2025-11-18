@@ -20,6 +20,7 @@ import pytest
 
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+
 try:
     from freezegun import freeze_time
 except ImportError:
@@ -378,7 +379,7 @@ class TestRedisSessionStore:
                     "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
                     "last_accessed": datetime.now(timezone.utc).isoformat(),
                 }
-            elif session2 in key:
+            if session2 in key:
                 return {
                     "session_id": session2,
                     "user_id": get_user_id("tina"),

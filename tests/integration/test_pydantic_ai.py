@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
+
 # xdist_group for integration test worker isolation
 pytestmark = pytest.mark.xdist_group(name="integration_pydantic_ai_tests")
 

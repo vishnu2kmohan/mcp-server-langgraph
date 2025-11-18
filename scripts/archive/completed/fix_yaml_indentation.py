@@ -35,7 +35,7 @@ def fix_yaml_file(file_path: Path) -> bool:
         yaml.width = 120
 
         # Load all documents (handles multi-document YAML files)
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             documents = list(yaml.load_all(f))
 
         # Skip empty files

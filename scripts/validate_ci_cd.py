@@ -18,6 +18,7 @@ This script prevents issues like:
 
 Created after 2025-11-12 CI/CD failure incident.
 """
+
 import argparse
 import subprocess
 import sys
@@ -82,9 +83,9 @@ class CICDValidator:
     def __init__(self, project_root: Path, auto_fix: bool = False):
         self.project_root = project_root
         self.auto_fix = auto_fix
-        self.errors: List[ValidationResult] = []
-        self.warnings: List[ValidationResult] = []
-        self.successes: List[ValidationResult] = []
+        self.errors: list[ValidationResult] = []
+        self.warnings: list[ValidationResult] = []
+        self.successes: list[ValidationResult] = []
 
     def validate_lockfile_sync(self) -> ValidationResult:
         """
@@ -101,16 +102,15 @@ class CICDValidator:
 
         if result.returncode == 0:
             return ValidationResult(passed=True, message="uv.lock is synchronized with pyproject.toml")
-        else:
-            return ValidationResult(
-                passed=False,
-                message=(
-                    f"uv.lock is OUT OF SYNC with pyproject.toml\n"
-                    f"  This blocks all CI/CD workflows (see commit 67f8942)\n"
-                    f"  Output: {result.stderr.strip()}"
-                ),
-                fix_command="uv lock && git add uv.lock",
-            )
+        return ValidationResult(
+            passed=False,
+            message=(
+                f"uv.lock is OUT OF SYNC with pyproject.toml\n"
+                f"  This blocks all CI/CD workflows (see commit 67f8942)\n"
+                f"  Output: {result.stderr.strip()}"
+            ),
+            fix_command="uv lock && git add uv.lock",
+        )
 
     def validate_yaml_files(self) -> ValidationResult:
         """Validate all YAML files have correct syntax"""
@@ -138,14 +138,13 @@ class CICDValidator:
 
         if not errors:
             return ValidationResult(passed=True, message=f"All {len(yaml_files)} YAML files are valid")
-        else:
-            return ValidationResult(
-                passed=False,
-                message=(
-                    f"YAML syntax errors in {len(errors)} files:\n" + "\n".join(f"  - {e}" for e in errors[:5])  # Show first 5
-                ),
-                fix_command="yamllint --fix <file> or manually fix syntax errors",
-            )
+        return ValidationResult(
+            passed=False,
+            message=(
+                f"YAML syntax errors in {len(errors)} files:\n" + "\n".join(f"  - {e}" for e in errors[:5])  # Show first 5
+            ),
+            fix_command="yamllint --fix <file> or manually fix syntax errors",
+        )
 
     def validate_ci_python_versions(self) -> ValidationResult:
         """
@@ -256,7 +255,9 @@ class CICDValidator:
         # Filter out markers that are just partial matches (like 'foo' from conftest, 'requires_' prefix)
         # Only consider markers that appear as full @pytest.mark.marker_name decorators
         valid_used_markers = {
-            m for m in used_markers if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
+            m
+            for m in used_markers
+            if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
         }
 
         unregistered = valid_used_markers - registered_markers - builtin_markers
@@ -309,7 +310,7 @@ class CICDValidator:
 
         return ValidationResult(passed=True, message="FastAPI tests use correct dependency_overrides pattern")
 
-    def run_all_validations(self) -> Tuple[int, int, int]:
+    def run_all_validations(self) -> tuple[int, int, int]:
         """Run all validations and return (passed, warned, failed) counts"""
         print_header("CI/CD Pre-Commit Validation")
         print_info("Catching issues before they reach CI...")

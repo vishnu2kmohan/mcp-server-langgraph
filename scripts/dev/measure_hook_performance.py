@@ -46,7 +46,7 @@ class StageResult:
 
     stage: str
     total_duration: float
-    hook_results: List[HookResult]
+    hook_results: list[HookResult]
     passed: bool
 
 
@@ -238,14 +238,13 @@ def format_duration(seconds: float) -> str:
     """Format duration in human-readable format."""
     if seconds < 60:
         return f"{seconds:.1f}s"
-    elif seconds < 3600:
+    if seconds < 3600:
         minutes = int(seconds // 60)
         remaining_seconds = seconds % 60
         return f"{minutes}m {remaining_seconds:.0f}s"
-    else:
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        return f"{hours}h {minutes}m"
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    return f"{hours}h {minutes}m"
 
 
 def print_results(stage_result: StageResult) -> None:

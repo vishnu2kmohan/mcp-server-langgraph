@@ -60,7 +60,7 @@ def wait_for_service(
 
 
 def wait_for_services(
-    service_names: List[str],
+    service_names: list[str],
     compose_file: str = "docker/docker-compose.test.yml",
     timeout: int = 120,
 ) -> bool:
@@ -75,16 +75,13 @@ def wait_for_services(
     Returns:
         True if all services healthy, False if any timeout
     """
-    for service in service_names:
-        if not wait_for_service(service, compose_file, timeout):
-            return False
-    return True
+    return all(wait_for_service(service, compose_file, timeout) for service in service_names)
 
 
 def get_service_logs(
     service_name: str,
     compose_file: str = "docker/docker-compose.test.yml",
-    tail: Optional[int] = 100,
+    tail: int | None = 100,
 ) -> str:
     """
     Get logs from a Docker Compose service
@@ -163,7 +160,7 @@ def get_service_port(
     service_name: str,
     internal_port: int,
     compose_file: str = "docker/docker-compose.test.yml",
-) -> Optional[int]:
+) -> int | None:
     """
     Get the host port mapped to a service's internal port
 
@@ -195,7 +192,7 @@ def get_service_port(
 
 def exec_in_service(
     service_name: str,
-    command: List[str],
+    command: list[str],
     compose_file: str = "docker/docker-compose.test.yml",
 ) -> tuple[str, str, int]:
     """
@@ -234,7 +231,7 @@ class TestEnvironment:
     def __init__(
         self,
         compose_file: str = "docker/docker-compose.test.yml",
-        services: Optional[List[str]] = None,
+        services: list[str] | None = None,
         timeout: int = 120,
     ):
         """
@@ -255,9 +252,8 @@ class TestEnvironment:
         subprocess.run(["docker", "compose", "-f", self.compose_file, "up", "-d"], check=True, capture_output=True, timeout=60)
 
         # Wait for services to be healthy
-        if self.services:
-            if not wait_for_services(self.services, self.compose_file, self.timeout):
-                raise RuntimeError(f"Services did not become healthy within {self.timeout}s")
+        if self.services and not wait_for_services(self.services, self.compose_file, self.timeout):
+            raise RuntimeError(f"Services did not become healthy within {self.timeout}s")
 
         return self
 

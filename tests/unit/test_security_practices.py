@@ -109,10 +109,13 @@ class TestTemporaryDirectorySecurity:
         app_temp.mkdir(mode=448, parents=True, exist_ok=True)
         stat_info = app_temp.stat()
         permissions = oct(stat_info.st_mode)[-3:]
-        assert permissions in [
-            "700",
-            "755",
-        ], f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
+        assert (
+            permissions
+            in [
+                "700",
+                "755",
+            ]
+        ), f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
         app_temp.rmdir()
 
     def test_path_validation_prevents_directory_traversal(self):

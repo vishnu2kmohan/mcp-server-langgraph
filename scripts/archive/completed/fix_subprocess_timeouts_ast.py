@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+
 try:
     import libcst as cst
 except ImportError:
@@ -62,9 +63,9 @@ def fix_file(file_path: Path) -> int:
         Number of modifications made
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source_code = f.read()
-    except (UnicodeDecodeError, IOError) as e:
+    except (OSError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {file_path}: {e}")
         return 0
 
@@ -93,7 +94,7 @@ def main():
     tests_dir = repo_root / "tests"
 
     # Find all test files
-    test_files: List[Path] = []
+    test_files: list[Path] = []
     for pattern in ["test_*.py", "*_test.py"]:
         test_files.extend(tests_dir.rglob(pattern))
 

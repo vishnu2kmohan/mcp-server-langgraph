@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 
-def run_git_command(args: List[str], timeout: int = 30) -> str:
+def run_git_command(args: list[str], timeout: int = 30) -> str:
     """Run git command and return output."""
     try:
         result = subprocess.run(
@@ -76,7 +76,7 @@ def count_todos_at_commit(commit_hash: str) -> int:
         return 0
 
 
-def get_todo_history(days: int = 30) -> List[Tuple[str, int, str]]:
+def get_todo_history(days: int = 30) -> list[tuple[str, int, str]]:
     """Get TODO counts over time from git history."""
     since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
@@ -122,7 +122,7 @@ def get_todo_history(days: int = 30) -> List[Tuple[str, int, str]]:
     return history
 
 
-def calculate_velocity(history: List[Tuple[str, int, str]], days: int = 7) -> float:
+def calculate_velocity(history: list[tuple[str, int, str]], days: int = 7) -> float:
     """Calculate TODO resolution velocity (TODOs/day)."""
     if len(history) < 2:
         return 0.0
@@ -150,7 +150,7 @@ def calculate_velocity(history: List[Tuple[str, int, str]], days: int = 7) -> fl
     return velocity
 
 
-def draw_burndown_chart(history: List[Tuple[str, int, str]], width: int = 40, height: int = 10) -> str:
+def draw_burndown_chart(history: list[tuple[str, int, str]], width: int = 40, height: int = 10) -> str:
     """Draw ASCII burndown chart."""
     if not history or len(history) < 2:
         return "Not enough data for chart (need at least 2 data points)"
@@ -206,7 +206,7 @@ def draw_burndown_chart(history: List[Tuple[str, int, str]], width: int = 40, he
     return "\n".join(chart_lines)
 
 
-def generate_report(history: List[Tuple[str, int, str]], days: int) -> str:
+def generate_report(history: list[tuple[str, int, str]], days: int) -> str:
     """Generate full TODO burndown report."""
     if not history:
         return "No TODO history available"

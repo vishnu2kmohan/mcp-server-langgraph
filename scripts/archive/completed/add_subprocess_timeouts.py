@@ -42,14 +42,14 @@ class SubprocessTimeoutAdder(ast.NodeTransformer):
         return node
 
 
-def add_timeouts_to_file(file_path: Path) -> Tuple[bool, List[int]]:
+def add_timeouts_to_file(file_path: Path) -> tuple[bool, list[int]]:
     """Add timeout parameters to subprocess.run() calls in a file.
 
     Returns:
         Tuple of (modified, line_numbers)
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source = f.read()
 
         tree = ast.parse(source, filename=str(file_path))

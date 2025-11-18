@@ -20,6 +20,7 @@ Worker-safe helper usage examples:
 ```python
 from tests.conftest import get_user_id, get_api_key_id
 
+
 def test_something():
     user_id = get_user_id()  # ✅ Worker-safe
     apikey_id = get_api_key_id()  # ✅ Worker-safe

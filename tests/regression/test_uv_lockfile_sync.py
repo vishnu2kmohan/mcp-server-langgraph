@@ -66,6 +66,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Mark as unit+meta test to ensure it runs in CI (regression prevention)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 

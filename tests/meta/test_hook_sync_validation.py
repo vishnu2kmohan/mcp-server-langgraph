@@ -26,6 +26,7 @@ from typing import List
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -226,18 +227,7 @@ class TestPostCommitHookSync:
 
             # Check for bare python usage (not preceded by 'uv run')
             if re.search(r"\bpython\b", line) and "uv run python" not in line:
-                assert False, (
-                    f"Post-commit hook must use 'uv run python' for consistency\n"
-                    f"Found: {line.strip()}\n"
-                    f"\n"
-                    f"Why this matters:\n"
-                    f"- Bare 'python' uses global interpreter\n"
-                    f"- May have wrong dependencies or Python version\n"
-                    f"- 'uv run python' ensures project-managed runtime\n"
-                    f"- Consistency with other automation\n"
-                    f"\n"
-                    f"Fix: Replace 'python' with 'uv run python' in .git/hooks/post-commit"
-                )
+                raise AssertionError(f"Post-commit hook must use 'uv run python' for consistency\n" f"Found: {line.strip()}\n" f"\n" f"Why this matters:\n" f"- Bare 'python' uses global interpreter\n" f"- May have wrong dependencies or Python version\n" f"- 'uv run python' ensures project-managed runtime\n" f"- Consistency with other automation\n" f"\n" f"Fix: Replace 'python' with 'uv run python' in .git/hooks/post-commit")
 
 
 @pytest.mark.xdist_group(name="testhooktemplatesync")

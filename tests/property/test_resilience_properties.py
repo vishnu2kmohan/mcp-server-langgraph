@@ -10,6 +10,7 @@ Tests resilience invariants:
 """
 
 import asyncio
+import contextlib
 import gc
 
 import pytest
@@ -21,6 +22,7 @@ from mcp_server_langgraph.resilience.circuit_breaker import circuit_breaker, get
 from mcp_server_langgraph.resilience.fallback import fail_closed, fail_open, with_fallback
 from mcp_server_langgraph.resilience.retry import retry_with_backoff, should_retry_exception
 from mcp_server_langgraph.resilience.timeout import with_timeout
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.property]
 
@@ -44,7 +46,7 @@ class TestCircuitBreakerProperties:
         reset_circuit_breaker(resource_name)
 
         # Simulate failures
-        for i in range(fail_count):
+        for _i in range(fail_count):
             try:
 
                 @circuit_breaker(resource_name, fail_max=fail_max)
@@ -161,10 +163,8 @@ class TestRetryProperties:
             attempt_count[0] += 1
             raise Exception("Always fails")
 
-        try:
+        with contextlib.suppress(Exception):
             await always_failing_operation()
-        except Exception:
-            pass
 
         # Should have attempted exactly max_attempts times
         # Note: tenacity counts initial attempt + retries, so total = 1 + max_attempts
@@ -342,8 +342,8 @@ class TestFallbackProperties:
         async def operation_returning_bool():
             if expected_list:  # If list is non-empty, succeed
                 return True
-            else:  # If empty, simulate failure
-                raise Exception("Operation failed")
+            # If empty, simulate failure
+            raise Exception("Operation failed")
 
         result = await operation_returning_bool()
 
@@ -362,8 +362,7 @@ class TestFallbackProperties:
         async def operation_returning_bool():
             if test_dict:
                 return True
-            else:
-                raise ValueError("Empty dict not allowed")
+            raise ValueError("Empty dict not allowed")
 
         result = await operation_returning_bool()
 
@@ -613,10 +612,8 @@ class TestResilienceComposition:
             raise Exception("Service down")
 
         # First call should fail and open circuit
-        try:
+        with contextlib.suppress(Exception):
             await operation_with_cb_and_fallback()
-        except Exception:
-            pass
 
         # Subsequent calls should return fallback
         result = await operation_with_cb_and_fallback()

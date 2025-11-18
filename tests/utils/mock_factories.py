@@ -29,9 +29,11 @@ References:
 """
 
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Literal, Optional
+from typing import Any, Dict, Literal, Optional
 from unittest.mock import AsyncMock, MagicMock
+
 
 # ==============================================================================
 # OpenFGA Mock Factories
@@ -80,7 +82,7 @@ def create_mock_openfga_client(authorized: bool = True) -> AsyncMock:
 def create_mock_llm_environment(
     provider: Literal["azure", "bedrock", "openai", "ollama"],
     **custom_env_vars: str,
-) -> Generator[Dict[str, str], None, None]:
+) -> Generator[dict[str, str], None, None]:
     """
     Create mock environment variables for LLM provider testing.
 
@@ -110,7 +112,7 @@ def create_mock_llm_environment(
     """
     from unittest.mock import patch
 
-    env_vars: Dict[str, str] = {}
+    env_vars: dict[str, str] = {}
 
     if provider == "azure":
         env_vars = {
@@ -237,7 +239,7 @@ def create_isolated_circuit_breaker(
 
 
 def verify_dependency_overrides(
-    app_dependency_overrides: Dict[Any, Any],
+    app_dependency_overrides: dict[Any, Any],
     required_dependencies: list[Any],
 ) -> None:
     """

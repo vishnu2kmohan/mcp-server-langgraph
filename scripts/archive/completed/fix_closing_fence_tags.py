@@ -85,7 +85,7 @@ class ClosingFenceFixer:
 
         return False
 
-    def _fix_content(self, content: str) -> Tuple[str, List[Tuple[int, str, str]]]:
+    def _fix_content(self, content: str) -> tuple[str, list[tuple[int, str, str]]]:
         """
         Fix closing fence tags in content using state machine.
 
@@ -156,7 +156,7 @@ class ClosingFenceFixer:
                 print("\n✅ No issues found - all closing fences are correct")
 
 
-def find_markdown_files(path: Path) -> List[Path]:
+def find_markdown_files(path: Path) -> list[Path]:
     """
     Find all Markdown/MDX files in path.
 
@@ -169,15 +169,13 @@ def find_markdown_files(path: Path) -> List[Path]:
     if path.is_file():
         if path.suffix in {".md", ".mdx"}:
             return [path]
-        else:
-            print(f"⚠️  {path} is not a Markdown file", file=sys.stderr)
-            return []
-    elif path.is_dir():
+        print(f"⚠️  {path} is not a Markdown file", file=sys.stderr)
+        return []
+    if path.is_dir():
         md_files = list(path.rglob("*.md")) + list(path.rglob("*.mdx"))
         return sorted(md_files)
-    else:
-        print(f"❌ Path not found: {path}", file=sys.stderr)
-        return []
+    print(f"❌ Path not found: {path}", file=sys.stderr)
+    return []
 
 
 def main():

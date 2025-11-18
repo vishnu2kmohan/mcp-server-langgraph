@@ -20,6 +20,7 @@ from typing import Any, Dict
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -34,13 +35,13 @@ class TestPostgreSQLHighAvailability:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content.
 
         For multi-document YAML files, returns all documents as a list.
         For single-document files, returns the document as a dict.
         """
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             # Return single doc as dict, multiple docs as list
             return docs[0] if len(docs) == 1 else docs
@@ -59,7 +60,7 @@ class TestPostgreSQLHighAvailability:
             pytest.skip("PostgreSQL StatefulSet not found")
 
         # Read the full file including comments
-        with open(postgres_path, "r") as f:
+        with open(postgres_path) as f:
             content = f.read()
 
         violations = []
@@ -103,7 +104,7 @@ class TestPostgreSQLHighAvailability:
         if not postgres_path.exists():
             pytest.skip("PostgreSQL StatefulSet not found")
 
-        with open(postgres_path, "r") as f:
+        with open(postgres_path) as f:
             content = f.read()
 
         # Check for storage class documentation
@@ -128,13 +129,13 @@ class TestRedisStatefulSetWithPersistence:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content.
 
         For multi-document YAML files, returns all documents as a list.
         For single-document files, returns the document as a dict.
         """
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             # Return single doc as dict, multiple docs as list
             return docs[0] if len(docs) == 1 else docs
@@ -250,7 +251,7 @@ class TestRedisStatefulSetWithPersistence:
         if not redis_path.exists():
             pytest.skip("Redis deployment not found")
 
-        with open(redis_path, "r") as f:
+        with open(redis_path) as f:
             # Look for ConfigMap with redis.conf
             docs = list(yaml.safe_load_all(f))
 
@@ -283,13 +284,13 @@ class TestRBACLeastPrivilege:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content.
 
         For multi-document YAML files, returns all documents as a list.
         For single-document files, returns the document as a dict.
         """
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             # Return single doc as dict, multiple docs as list
             return docs[0] if len(docs) == 1 else docs
@@ -394,13 +395,13 @@ class TestContainerImageBestPractices:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content.
 
         For multi-document YAML files, returns all documents as a list.
         For single-document files, returns the document as a dict.
         """
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             # Return single doc as dict, multiple docs as list
             return docs[0] if len(docs) == 1 else docs

@@ -214,8 +214,8 @@ def worker_tmp_path(tmp_path_factory, request=None) -> Path:
         >>> def test_with_temp_files(my_temp_dir):
         >>>     temp_file = my_temp_dir / "data.json"
         >>>     temp_file.write_text('{"key": "value"}')
-        >>>     # Worker gw0: /tmp/pytest-gw0-*/data.json
-        >>>     # Worker gw1: /tmp/pytest-gw1-*/data.json
+        >>> # Worker gw0: /tmp/pytest-gw0-*/data.json
+        >>> # Worker gw1: /tmp/pytest-gw1-*/data.json
 
     References:
         - OpenAI Codex Finding: test_builder_security.py:186

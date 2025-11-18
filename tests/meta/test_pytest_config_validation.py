@@ -16,6 +16,7 @@ import gc
 import subprocess
 import sys
 
+
 # Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
 try:
     import tomllib
@@ -24,6 +25,7 @@ except ModuleNotFoundError:
 from pathlib import Path
 
 import pytest
+
 
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]

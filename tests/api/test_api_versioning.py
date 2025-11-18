@@ -139,7 +139,7 @@ class TestAPIVersionPrefixes:
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
-        gdpr_paths = [p for p in paths.keys() if "users" in p and "gdpr" not in p.lower()]
+        gdpr_paths = [p for p in paths if "users" in p and "gdpr" not in p.lower()]
         for path in gdpr_paths:
             if path.startswith("/api/"):
                 assert path.startswith("/api/v1/"), f"GDPR endpoint missing v1 prefix: {path}"
@@ -149,7 +149,7 @@ class TestAPIVersionPrefixes:
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
-        api_key_paths = [p for p in paths.keys() if "api-keys" in p or "api_keys" in p]
+        api_key_paths = [p for p in paths if "api-keys" in p or "api_keys" in p]
         for path in api_key_paths:
             assert path.startswith("/api/v1/"), f"API Keys endpoint missing v1 prefix: {path}"
 
@@ -158,7 +158,7 @@ class TestAPIVersionPrefixes:
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
-        sp_paths = [p for p in paths.keys() if "service-principals" in p or "service_principals" in p]
+        sp_paths = [p for p in paths if "service-principals" in p or "service_principals" in p]
         for path in sp_paths:
             assert path.startswith("/api/v1/"), f"Service Principals endpoint missing v1 prefix: {path}"
 
@@ -167,7 +167,7 @@ class TestAPIVersionPrefixes:
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
-        auth_paths = [p for p in paths.keys() if "/auth/" in p]
+        auth_paths = [p for p in paths if "/auth/" in p]
 
         # Auth endpoints should be versioned or documented as intentionally unversioned
         for path in auth_paths:
@@ -233,9 +233,8 @@ class TestDeprecationSupport:
         deprecated_operations = []
         for path, methods in paths.items():
             for method, operation in methods.items():
-                if method in ["get", "post", "put", "delete", "patch"]:
-                    if operation.get("deprecated"):
-                        deprecated_operations.append(f"{method.upper()} {path}")
+                if method in ["get", "post", "put", "delete", "patch"] and operation.get("deprecated"):
+                    deprecated_operations.append(f"{method.upper()} {path}")
 
         # Deprecated operations should have sunset header documented
         # (This is a forward-looking test - currently may have 0 deprecated endpoints)
@@ -270,7 +269,7 @@ class TestBackwardCompatibility:
         openapi = test_client.get("/openapi.json").json()
         paths = openapi.get("paths", {})
 
-        v1_paths = [p for p in paths.keys() if p.startswith("/api/v1/")]
+        v1_paths = [p for p in paths if p.startswith("/api/v1/")]
 
         # All v1 endpoints should exist and be accessible
         assert len(v1_paths) > 0, "Should have at least one /api/v1 endpoint"

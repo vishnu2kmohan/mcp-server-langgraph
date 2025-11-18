@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Set
 
 
-def extract_node_ids(content: str) -> Set[str]:
+def extract_node_ids(content: str) -> set[str]:
     """
     Extract all node IDs from a flowchart diagram.
 
@@ -45,7 +45,7 @@ def extract_node_ids(content: str) -> Set[str]:
     return node_ids
 
 
-def categorize_nodes(node_ids: Set[str]) -> dict:
+def categorize_nodes(node_ids: set[str]) -> dict:
     """
     Categorize nodes by semantic meaning based on naming conventions.
 
@@ -188,7 +188,7 @@ def process_file(file_path: Path, dry_run: bool = False) -> bool:
             file_path.write_text(content, encoding="utf-8")
             print(f"✅ Added styling: {file_path}")
             return True
-        elif modified:
+        if modified:
             print(f"🔍 Would add styling: {file_path}")
             return True
 

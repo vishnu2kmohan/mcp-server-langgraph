@@ -1,6 +1,7 @@
 import gc
 import os
 
+
 """Unit tests for openfga_client.py - OpenFGA Integration"""
 
 from unittest.mock import AsyncMock, MagicMock, patch

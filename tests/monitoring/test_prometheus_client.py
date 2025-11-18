@@ -23,6 +23,7 @@ import pytest
 
 from mcp_server_langgraph.monitoring.prometheus_client import MetricValue, PrometheusClient, PrometheusConfig, QueryResult
 
+
 # ==============================================================================
 # Test Fixtures
 # ==============================================================================

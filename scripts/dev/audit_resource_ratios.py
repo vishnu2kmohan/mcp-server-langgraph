@@ -158,9 +158,8 @@ def main():
         for issue in all_issues:
             print(issue)
         return 1
-    else:
-        print("\n✅ All resource ratios are compliant with GKE Autopilot limits (≤ 4.0)")
-        return 0
+    print("\n✅ All resource ratios are compliant with GKE Autopilot limits (≤ 4.0)")
+    return 0
 
 
 if __name__ == "__main__":

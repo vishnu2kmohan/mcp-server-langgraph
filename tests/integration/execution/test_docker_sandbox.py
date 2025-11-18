@@ -12,6 +12,7 @@ import os
 
 import pytest
 
+
 # These imports will fail initially - that's expected in TDD!
 try:
     from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
@@ -238,7 +239,7 @@ except Exception as e:
 
     def test_network_allowlist(self, docker_available):
         """Test network allowlist mode"""
-        limits = ResourceLimits(network_mode="allowlist", allowed_domains=tuple(["httpbin.org"]))
+        limits = ResourceLimits(network_mode="allowlist", allowed_domains=("httpbin.org",))
         sandbox = DockerSandbox(limits=limits)
 
         code = """
@@ -405,7 +406,7 @@ class TestDockerSandboxCleanup:
         import time
 
         max_wait = 5  # seconds
-        for i in range(max_wait):
+        for _i in range(max_wait):
             final_containers = len(client.containers.list(all=True))
             if final_containers <= initial_containers:
                 break

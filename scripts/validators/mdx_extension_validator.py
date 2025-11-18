@@ -37,9 +37,9 @@ class ValidationResult:
     """Result of extension validation."""
 
     is_valid: bool
-    errors: List[ExtensionError] = field(default_factory=list)
-    warnings: List[Exception] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    errors: list[ExtensionError] = field(default_factory=list)
+    warnings: list[Exception] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -79,8 +79,8 @@ class MDXExtensionValidator:
         Returns:
             ValidationResult with errors and statistics
         """
-        errors: List[ExtensionError] = []
-        stats: Dict[str, int] = {
+        errors: list[ExtensionError] = []
+        stats: dict[str, int] = {
             "total_mdx_files": 0,
             "invalid_md_files": 0,
             "total_files_scanned": 0,
@@ -109,7 +109,7 @@ class MDXExtensionValidator:
             stats=stats,
         )
 
-    def _find_files(self, pattern: str) -> Set[Path]:
+    def _find_files(self, pattern: str) -> set[Path]:
         """
         Find all files matching pattern, excluding specified directories.
 

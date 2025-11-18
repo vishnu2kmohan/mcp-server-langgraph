@@ -20,8 +20,8 @@ class FixtureOrganizationPlugin:
     """Pytest plugin to enforce fixture organization rules."""
 
     def __init__(self):
-        self.autouse_fixtures: Dict[str, List[Tuple[str, int]]] = {}
-        self.violations: List[str] = []
+        self.autouse_fixtures: dict[str, list[tuple[str, int]]] = {}
+        self.violations: list[str] = []
 
     def pytest_collection_finish(self, session):
         """
@@ -64,7 +64,7 @@ class FixtureOrganizationPlugin:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read(), filename=str(test_file))
             except (SyntaxError, UnicodeDecodeError):
                 continue

@@ -22,6 +22,7 @@ from typing import Dict, List
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -63,13 +64,13 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -416,7 +417,7 @@ class TestMakefileEfficiency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_test_targets_do_not_have_redundant_uv_sync(self, makefile_content: str):
@@ -540,7 +541,7 @@ class TestMakefileValidationConsistency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_makefile_critical_checks_exit_on_failure(self, makefile_content: str):

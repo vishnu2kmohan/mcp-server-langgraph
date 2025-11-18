@@ -20,6 +20,7 @@ import sys
 
 import pytest
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -45,12 +46,16 @@ class TestCriticalStartupValidation:
         """
         # Act & Assert: Import all critical modules
         try:
-            from mcp_server_langgraph.auth import keycloak  # noqa: F401
-            from mcp_server_langgraph.auth import openfga  # noqa: F401
-            from mcp_server_langgraph.auth import service_principal  # noqa: F401
-            from mcp_server_langgraph.core import cache  # noqa: F401
-            from mcp_server_langgraph.core import config  # noqa: F401
-            from mcp_server_langgraph.core import dependencies  # noqa: F401
+            from mcp_server_langgraph.auth import (
+                keycloak,  # noqa: F401
+                openfga,  # noqa: F401
+                service_principal,  # noqa: F401
+            )
+            from mcp_server_langgraph.core import (
+                cache,  # noqa: F401
+                config,  # noqa: F401
+                dependencies,  # noqa: F401
+            )
         except ImportError as e:
             pytest.fail(f"Critical import failure: {e}")
 

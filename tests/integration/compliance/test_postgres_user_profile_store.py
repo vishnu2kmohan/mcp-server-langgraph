@@ -14,14 +14,15 @@ Following TDD principles:
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresUserProfileStore
 from mcp_server_langgraph.compliance.gdpr.storage import UserProfile
+
 
 # Mark as integration test with xdist_group for worker isolation
 pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_user_profile_tests")]

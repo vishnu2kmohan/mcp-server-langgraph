@@ -132,7 +132,7 @@ class TestFixtureDecorators:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -162,7 +162,7 @@ class TestFixtureDecorators:
             error_msg += "\nEnsure all test parameters have corresponding @pytest.fixture definitions."
             pytest.fail(error_msg)
 
-    def _find_generator_functions_without_fixture_decorator(self) -> List[Tuple[str, str, int]]:
+    def _find_generator_functions_without_fixture_decorator(self) -> list[tuple[str, str, int]]:
         """
         Find Generator-returning functions without @pytest.fixture decorator
 
@@ -181,7 +181,7 @@ class TestFixtureDecorators:
                     continue
 
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 
@@ -213,26 +213,18 @@ class TestFixtureDecorators:
         """
         if not func_node.returns:
             # Also check for yield statements (generators without type hints)
-            for node in ast.walk(func_node):
-                if isinstance(node, (ast.Yield, ast.YieldFrom)):
-                    return True
-            return False
+            return any(isinstance(node, (ast.Yield, ast.YieldFrom)) for node in ast.walk(func_node))
 
         # Check type annotation
         return_annotation = func_node.returns
 
         # Handle Generator[...] type annotation
-        if isinstance(return_annotation, ast.Subscript):
-            if isinstance(return_annotation.value, ast.Name):
-                if return_annotation.value.id == "Generator":
-                    return True
-
-        # Also check for yield in function body (runtime behavior)
-        for node in ast.walk(func_node):
-            if isinstance(node, (ast.Yield, ast.YieldFrom)):
+        if isinstance(return_annotation, ast.Subscript) and isinstance(return_annotation.value, ast.Name):
+            if return_annotation.value.id == "Generator":
                 return True
 
-        return False
+        # Also check for yield in function body (runtime behavior)
+        return any(isinstance(node, (ast.Yield, ast.YieldFrom)) for node in ast.walk(func_node))
 
     def _has_fixture_decorator(self, func_node: ast.FunctionDef) -> bool:
         """
@@ -251,14 +243,12 @@ class TestFixtureDecorators:
                     return True
 
             # @pytest.fixture(...)
-            elif isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    if (
-                        isinstance(decorator.func.value, ast.Name)
-                        and decorator.func.value.id == "pytest"
-                        and decorator.func.attr == "fixture"
-                    ):
-                        return True
+            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                isinstance(decorator.func.value, ast.Name)
+                and decorator.func.value.id == "pytest"
+                and decorator.func.attr == "fixture"
+            ):
+                return True
 
         return False
 
@@ -290,11 +280,7 @@ class TestFixtureDecorators:
 
         name_lower = func_name.lower()
 
-        for pattern in fixture_patterns:
-            if pattern in name_lower:
-                return True
-
-        return False
+        return any(pattern in name_lower for pattern in fixture_patterns)
 
     def _has_hypothesis_given_decorator(self, func_node: ast.FunctionDef) -> bool:
         """
@@ -311,9 +297,8 @@ class TestFixtureDecorators:
             if isinstance(decorator, ast.Call):
                 if isinstance(decorator.func, ast.Name) and decorator.func.id == "given":
                     return True
-                elif isinstance(decorator.func, ast.Attribute):
-                    if decorator.func.attr == "given":
-                        return True
+                if isinstance(decorator.func, ast.Attribute) and decorator.func.attr == "given":
+                    return True
 
         return False
 
@@ -322,9 +307,9 @@ class TestFixtureDecorators:
         func_node: ast.FunctionDef,
         test_file: Path,
         tests_dir: Path,
-        defined_fixtures: Set[str],
-        builtin_fixtures: Set[str],
-        violations: List[Tuple[str, str, str, int]],
+        defined_fixtures: set[str],
+        builtin_fixtures: set[str],
+        violations: list[tuple[str, str, str, int]],
     ) -> None:
         """
         Check test function parameters for valid fixtures
@@ -366,7 +351,7 @@ class TestFixtureDecorators:
                 rel_path = test_file.relative_to(tests_dir.parent)
                 violations.append((str(rel_path), func_node.name, param_name, func_node.lineno))
 
-    def _get_parametrize_params(self, func_node: ast.FunctionDef) -> Set[str]:
+    def _get_parametrize_params(self, func_node: ast.FunctionDef) -> set[str]:
         """
         Get parameter names from @pytest.mark.parametrize decorators
 
@@ -380,26 +365,25 @@ class TestFixtureDecorators:
 
         for decorator in func_node.decorator_list:
             # Check for @pytest.mark.parametrize("param_name", ...)
-            if isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    # Check if it's pytest.mark.parametrize
-                    if (
-                        isinstance(decorator.func.value, ast.Attribute)
-                        and isinstance(decorator.func.value.value, ast.Name)
-                        and decorator.func.value.value.id == "pytest"
-                        and decorator.func.value.attr == "mark"
-                        and decorator.func.attr == "parametrize"
-                    ):
-                        # Get first argument (parameter names)
-                        if decorator.args and isinstance(decorator.args[0], ast.Constant):
-                            param_str = decorator.args[0].value
-                            # Handle "param" or "param1,param2" formats
-                            param_names = [p.strip() for p in param_str.split(",")]
-                            params.update(param_names)
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                # Check if it's pytest.mark.parametrize
+                if (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr == "parametrize"
+                ):
+                    # Get first argument (parameter names)
+                    if decorator.args and isinstance(decorator.args[0], ast.Constant):
+                        param_str = decorator.args[0].value
+                        # Handle "param" or "param1,param2" formats
+                        param_names = [p.strip() for p in param_str.split(",")]
+                        params.update(param_names)
 
         return params
 
-    def _get_patch_params(self, func_node: ast.FunctionDef) -> Set[str]:
+    def _get_patch_params(self, func_node: ast.FunctionDef) -> set[str]:
         """
         Get parameter names from @patch decorators
 
@@ -417,11 +401,13 @@ class TestFixtureDecorators:
 
         for decorator in func_node.decorator_list:
             # Check for @patch("...") or @patch.object(...)
-            if isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Name) and decorator.func.id == "patch":
-                    patch_count += 1
-                elif isinstance(decorator.func, ast.Attribute) and decorator.func.attr in ["object", "dict", "multiple"]:
-                    patch_count += 1
+            if isinstance(decorator, ast.Call) and (
+                isinstance(decorator.func, ast.Name)
+                and decorator.func.id == "patch"
+                or isinstance(decorator.func, ast.Attribute)
+                and decorator.func.attr in ["object", "dict", "multiple"]
+            ):
+                patch_count += 1
 
         # Get the last N parameters (where N = patch_count)
         # @patch decorators inject parameters in reverse order of application
@@ -433,7 +419,7 @@ class TestFixtureDecorators:
 
         return set()
 
-    def _find_placeholder_tests(self) -> List[Tuple[str, str, int]]:
+    def _find_placeholder_tests(self) -> list[tuple[str, str, int]]:
         """
         Find test functions that have only 'pass' statement
 
@@ -448,7 +434,7 @@ class TestFixtureDecorators:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -487,11 +473,7 @@ class TestFixtureDecorators:
             body_statements.append(stmt)
 
         # Check if only statement is 'pass'
-        if len(body_statements) == 1:
-            if isinstance(body_statements[0], ast.Pass):
-                return True
-
-        return False
+        return bool(len(body_statements) == 1 and isinstance(body_statements[0], ast.Pass))
 
     def _has_skip_xfail_or_documentation_marker(self, func_node: ast.FunctionDef) -> bool:
         """
@@ -514,16 +496,14 @@ class TestFixtureDecorators:
                     and decorator.attr in ["skip", "xfail", "documentation"]
                 ):
                     return True
-            elif isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    if (
-                        isinstance(decorator.func.value, ast.Attribute)
-                        and isinstance(decorator.func.value.value, ast.Name)
-                        and decorator.func.value.value.id == "pytest"
-                        and decorator.func.value.attr == "mark"
-                        and decorator.func.attr in ["skip", "xfail"]
-                    ):
-                        return True
+            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                isinstance(decorator.func.value, ast.Attribute)
+                and isinstance(decorator.func.value.value, ast.Name)
+                and decorator.func.value.value.id == "pytest"
+                and decorator.func.value.attr == "mark"
+                and decorator.func.attr in ["skip", "xfail"]
+            ):
+                return True
 
         return False
 
@@ -565,7 +545,7 @@ class TestFixtureDecorators:
             )
             pytest.fail(error_msg)
 
-    def _find_fixture_scope_violations(self) -> List[Tuple[str, str, str, str, str, int]]:
+    def _find_fixture_scope_violations(self) -> list[tuple[str, str, str, str, str, int]]:
         """
         Find fixtures with scope incompatibilities
 
@@ -597,7 +577,7 @@ class TestFixtureDecorators:
                 # Find the dependency fixture
                 dep_scope = None
                 dep_found = False
-                for dep_file, dep_fixture_name, dep_fixture_scope, _, _ in fixtures_info:
+                for _dep_file, dep_fixture_name, dep_fixture_scope, _, _ in fixtures_info:
                     if dep_fixture_name == dep_name:
                         dep_scope = dep_fixture_scope
                         dep_found = True
@@ -623,7 +603,7 @@ class TestFixtureDecorators:
 
         return violations
 
-    def _get_all_fixtures_with_dependencies(self) -> List[Tuple[Path, str, str, List[str], int]]:
+    def _get_all_fixtures_with_dependencies(self) -> list[tuple[Path, str, str, list[str], int]]:
         """
         Get all fixtures with their scopes and parameter dependencies
 
@@ -639,7 +619,7 @@ class TestFixtureDecorators:
         for pattern in search_patterns:
             for test_file in tests_dir.rglob(pattern):
                 try:
-                    with open(test_file, "r") as f:
+                    with open(test_file) as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 
@@ -672,23 +652,20 @@ class TestFixtureDecorators:
         """
         for decorator in func_node.decorator_list:
             # Check for @pytest.fixture(scope="session")
-            if isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    if (
-                        isinstance(decorator.func.value, ast.Name)
-                        and decorator.func.value.id == "pytest"
-                        and decorator.func.attr == "fixture"
-                    ):
-                        # Look for scope keyword argument
-                        for keyword in decorator.keywords:
-                            if keyword.arg == "scope":
-                                if isinstance(keyword.value, ast.Constant):
-                                    return keyword.value.value
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                isinstance(decorator.func.value, ast.Name)
+                and decorator.func.value.id == "pytest"
+                and decorator.func.attr == "fixture"
+            ):
+                # Look for scope keyword argument
+                for keyword in decorator.keywords:
+                    if keyword.arg == "scope" and isinstance(keyword.value, ast.Constant):
+                        return keyword.value.value
 
         # No scope specified = function scope (default)
         return None
 
-    def _get_all_defined_fixtures(self) -> Set[str]:
+    def _get_all_defined_fixtures(self) -> set[str]:
         """
         Get all fixture names defined in the test suite
 
@@ -704,14 +681,13 @@ class TestFixtureDecorators:
         for pattern in search_patterns:
             for test_file in tests_dir.rglob(pattern):
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 
                     for node in ast.walk(tree):
-                        if isinstance(node, ast.FunctionDef):
-                            if self._has_fixture_decorator(node):
-                                fixtures.add(node.name)
+                        if isinstance(node, ast.FunctionDef) and self._has_fixture_decorator(node):
+                            fixtures.add(node.name)
 
                 except (SyntaxError, UnicodeDecodeError):
                     continue

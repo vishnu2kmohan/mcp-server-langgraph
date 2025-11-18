@@ -20,6 +20,7 @@ from typing import Dict, List, Set
 import pytest
 import yaml
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -96,7 +97,7 @@ class TestFixtureScopeValidation:
             "openfga_client_real",
         }
 
-        fixture_scopes: Dict[str, str] = {}
+        fixture_scopes: dict[str, str] = {}
 
         for node in ast.walk(tree):
             # Check both regular and async function definitions
@@ -135,7 +136,7 @@ class TestFixtureScopeValidation:
         tree = ast.parse(content)
 
         # Find all test classes
-        test_classes: List[str] = []
+        test_classes: list[str] = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
                 test_classes.append(node.name)

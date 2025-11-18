@@ -35,6 +35,7 @@ import sys
 from pathlib import Path
 from typing import List, Set, Tuple
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class AsyncMockTransformer(ast.NodeTransformer):
         """Check if node is an AsyncMock() call."""
         if isinstance(node.func, ast.Name):
             return node.func.id == "AsyncMock"
-        elif isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Attribute):
             return node.func.attr == "AsyncMock"
         return False
 
@@ -166,7 +167,7 @@ def add_import_statement(source: str) -> str:
     return "\n".join(lines)
 
 
-def transform_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
+def transform_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     """
     Transform a single Python file to use configured AsyncMock helpers.
 
@@ -282,7 +283,7 @@ def main():
         if not file_path.is_file():
             logger.error(f"Not a file: {file_path}")
             continue
-        if not file_path.suffix == ".py":
+        if file_path.suffix != ".py":
             logger.warning(f"Not a Python file: {file_path}")
             continue
         files.append(file_path)

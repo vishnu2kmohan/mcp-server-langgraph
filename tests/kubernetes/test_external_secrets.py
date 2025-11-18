@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Define project root relative to test file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"
@@ -64,7 +65,7 @@ class TestExternalSecretsValidation:
     def _load_yaml_file(self, file_path: Path):
         """Load YAML file and return all documents."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return list(yaml.safe_load_all(f))
         except Exception:
             # Skip files that can't be parsed as YAML
@@ -252,7 +253,7 @@ class TestExternalSecretsServiceAccounts:
 
             for yaml_file in yaml_files:
                 try:
-                    with open(yaml_file, "r", encoding="utf-8") as f:
+                    with open(yaml_file, encoding="utf-8") as f:
                         content = f.read()
 
                     # Check for placeholder patterns

@@ -67,7 +67,7 @@ class K8sConfigValidator:
         """Log a success message."""
         print(f"{Colors.GREEN}✓{Colors.RESET} {message}")
 
-    def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
+    def get_kustomize_output(self, overlay_path: str) -> list[dict]:
         """Build kustomize and return parsed YAML documents."""
         overlay_dir = self.repo_root / overlay_path
 
@@ -85,11 +85,11 @@ class K8sConfigValidator:
             self.log_error(f"Error processing {overlay_path}: {str(e)}")
             return []
 
-    def extract_configmap_references(self, docs: List[Dict]) -> Dict[str, Set[str]]:
+    def extract_configmap_references(self, docs: list[dict]) -> dict[str, set[str]]:
         """Extract all ConfigMap key references from container env variables."""
         references = {}
 
-        def scan_env_vars(env_vars: List[Dict]):
+        def scan_env_vars(env_vars: list[dict]):
             for env in env_vars or []:
                 if "valueFrom" in env and "configMapKeyRef" in env["valueFrom"]:
                     ref = env["valueFrom"]["configMapKeyRef"]
@@ -118,7 +118,7 @@ class K8sConfigValidator:
 
         return references
 
-    def extract_configmap_keys(self, docs: List[Dict]) -> Dict[str, Set[str]]:
+    def extract_configmap_keys(self, docs: list[dict]) -> dict[str, set[str]]:
         """Extract all ConfigMap keys from built manifests."""
         configmaps = {}
         for doc in docs:
@@ -155,7 +155,7 @@ class K8sConfigValidator:
 
         return not has_errors
 
-    def validate_all_overlays(self, overlays: List[str]) -> bool:
+    def validate_all_overlays(self, overlays: list[str]) -> bool:
         """Validate all specified overlays."""
         print(f"\n{Colors.BLUE}=== Kubernetes Configuration Validation ==={Colors.RESET}\n")
 

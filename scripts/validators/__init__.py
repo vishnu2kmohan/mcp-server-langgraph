@@ -24,6 +24,7 @@ See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md
 from .frontmatter_validator import FrontmatterError, FrontmatterValidator
 from .mdx_extension_validator import ExtensionError, MDXExtensionValidator
 
+
 __all__ = [
     "FrontmatterValidator",
     "FrontmatterError",

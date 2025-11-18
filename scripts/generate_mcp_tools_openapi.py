@@ -9,6 +9,7 @@ for client library generation.
 import json
 from pathlib import Path
 
+
 # MCP Tools OpenAPI Specification
 mcp_tools_spec = {
     "openapi": "3.1.0",

@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Tuple
 
+
 # Icon mapping based on directory/file patterns
 ICON_MAP = {
     # Top-level categories
@@ -118,7 +119,7 @@ def get_content_type_for_file(file_path: Path) -> str:
     return CONTENT_TYPE_MAP["_default"]
 
 
-def parse_frontmatter(content: str) -> Tuple[Dict[str, str], int, int]:
+def parse_frontmatter(content: str) -> tuple[dict[str, str], int, int]:
     """
     Parse YAML frontmatter from MDX content.
 
@@ -209,10 +210,9 @@ def add_missing_fields(file_path: Path, dry_run: bool = False) -> bool:
         if dry_run:
             print(f"[DRY RUN] Would update: {file_path}")
             return True
-        else:
-            file_path.write_text(new_content, encoding="utf-8")
-            print(f"✓ Updated: {file_path}")
-            return True
+        file_path.write_text(new_content, encoding="utf-8")
+        print(f"✓ Updated: {file_path}")
+        return True
 
     except Exception as e:
         print(f"✗ Error processing {file_path}: {e}", file=sys.stderr)

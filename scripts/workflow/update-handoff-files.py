@@ -28,7 +28,7 @@ class HandoffGenerator:
         self.handoff_dir = self.claude_dir / "handoff"
         self.session_duration = session_duration_minutes
 
-    def run_git_command(self, args: List[str]) -> str:
+    def run_git_command(self, args: list[str]) -> str:
         """Run a git command and return output."""
         try:
             result = subprocess.run(
@@ -43,7 +43,7 @@ class HandoffGenerator:
             print(f"Git command failed: {e}")
             return ""
 
-    def get_recent_commits(self, hours: int = 24) -> List[Dict[str, str]]:
+    def get_recent_commits(self, hours: int = 24) -> list[dict[str, str]]:
         """Get commits from the last N hours."""
         since = f"{hours} hours ago"
         log_format = "%H|%an|%ae|%ai|%s"
@@ -70,7 +70,7 @@ class HandoffGenerator:
         """Get current git branch."""
         return self.run_git_command(["rev-parse", "--abbrev-ref", "HEAD"])
 
-    def get_git_status(self) -> Dict[str, List[str]]:
+    def get_git_status(self) -> dict[str, list[str]]:
         """Get git status (modified, untracked, staged)."""
         status = {"modified": [], "untracked": [], "staged": []}
 
@@ -97,22 +97,21 @@ class HandoffGenerator:
 
         if message_lower.startswith("feat"):
             return "feature"
-        elif message_lower.startswith("fix"):
+        if message_lower.startswith("fix"):
             return "bug fix"
-        elif message_lower.startswith("docs"):
+        if message_lower.startswith("docs"):
             return "documentation"
-        elif message_lower.startswith("test"):
+        if message_lower.startswith("test"):
             return "test"
-        elif message_lower.startswith("refactor"):
+        if message_lower.startswith("refactor"):
             return "refactoring"
-        elif message_lower.startswith("chore"):
+        if message_lower.startswith("chore"):
             return "chore"
-        elif message_lower.startswith("perf"):
+        if message_lower.startswith("perf"):
             return "performance"
-        else:
-            return "other"
+        return "other"
 
-    def extract_todos_from_code(self) -> List[Dict[str, str]]:
+    def extract_todos_from_code(self) -> list[dict[str, str]]:
         """Extract TODO comments from code."""
         todos = []
 
@@ -137,7 +136,7 @@ class HandoffGenerator:
 
         return todos[:20]  # Limit to 20 most recent
 
-    def detect_blockers(self) -> List[Dict[str, str]]:
+    def detect_blockers(self) -> list[dict[str, str]]:
         """Detect potential blockers from various sources."""
         blockers = []
 
@@ -189,7 +188,7 @@ class HandoffGenerator:
 
         return blockers
 
-    def determine_next_steps(self, commits: List[Dict], git_status: Dict) -> List[Dict[str, str]]:
+    def determine_next_steps(self, commits: list[dict], git_status: dict) -> list[dict[str, str]]:
         """Determine recommended next steps based on current state."""
         steps = []
 

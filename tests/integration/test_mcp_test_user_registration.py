@@ -15,6 +15,7 @@ import pytest
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 from tests.constants import TEST_JWT_SECRET
 
+
 pytestmark = [pytest.mark.integration, pytest.mark.mcp, pytest.mark.auth]
 
 

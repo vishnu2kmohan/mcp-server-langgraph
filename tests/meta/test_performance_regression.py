@@ -100,7 +100,7 @@ class TestTimeoutTestPerformance:
         if not test_file.exists():
             pytest.skip(f"Timeout test file not found: {test_file}")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Look for asyncio.sleep with values >= 1
@@ -173,7 +173,7 @@ class TestPropertyTestBudgets:
             pytest.skip("No property test files found")
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 content = f.read()
 
             # Find @settings decorators with deadline parameter
@@ -208,7 +208,7 @@ class TestBulkheadPerformance:
         if not test_file.exists():
             pytest.skip("Bulkhead test file not found")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Find asyncio.sleep calls
@@ -246,7 +246,7 @@ class TestPollingOptimizations:
         if not test_file.exists():
             pytest.skip("Kubernetes sandbox test file not found")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Should import poll_until
@@ -284,7 +284,7 @@ class TestPollingOptimizations:
         if not test_file.exists():
             pytest.skip("Docker sandbox test file not found")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Should import poll_until

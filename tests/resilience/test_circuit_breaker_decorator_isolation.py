@@ -29,6 +29,7 @@ See Also:
 - docs-internal/adr/ADR-0053-circuit-breaker-decorator-closure-isolation.md
 """
 
+import contextlib
 import gc
 
 import pytest
@@ -83,7 +84,7 @@ class TestCircuitBreakerDecoratorIsolation:
             raise Exception("Intentional failure")
 
         # Trigger failures to open the circuit breaker
-        for i in range(5):
+        for _i in range(5):
             try:
                 await protected_function()
             except Exception:
@@ -146,11 +147,9 @@ class TestCircuitBreakerDecoratorIsolation:
         initial_id = id(cb_initial)
 
         # Trigger failures to open circuit
-        for i in range(5):
-            try:
+        for _i in range(5):
+            with contextlib.suppress(Exception):
                 await protected_function()
-            except Exception:
-                pass
 
         # Verify circuit is open
         assert cb_initial.state.name == "open"
@@ -207,11 +206,9 @@ class TestCircuitBreakerDecoratorIsolation:
             raise Exception("Function B failure")
 
         # Trigger failures in function_a to open the circuit
-        for i in range(5):
-            try:
+        for _i in range(5):
+            with contextlib.suppress(Exception):
                 await function_a()
-            except Exception:
-                pass
 
         # Verify circuit is open
         cb = get_circuit_breaker("shared_breaker")

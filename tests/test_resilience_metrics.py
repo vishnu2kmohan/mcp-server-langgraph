@@ -16,6 +16,7 @@ import pytest
 
 from mcp_server_langgraph.resilience import metrics
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -427,11 +428,11 @@ class TestMetricsIntegration:
             patch.object(metrics.circuit_breaker_failure_counter, "add") as mock_failure,
         ):
             # Record successes
-            for i in range(5):
+            for _i in range(5):
                 metrics.record_circuit_breaker_event("llm", "success")
 
             # Record failures
-            for i in range(2):
+            for _i in range(2):
                 metrics.record_circuit_breaker_event("llm", "failure", "TimeoutError")
 
             # Verify call counts

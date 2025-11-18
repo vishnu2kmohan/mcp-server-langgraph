@@ -21,7 +21,7 @@ Exit codes:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
+
 
 # Banned import patterns with replacement suggestions
 BANNED_IMPORTS = {
@@ -54,9 +54,9 @@ class BannedImportChecker(ast.NodeVisitor):
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.violations: List[Tuple[int, str, str]] = []  # (line_no, module, message)
+        self.violations: list[tuple[int, str, str]] = []  # (line_no, module, message)
 
-    def visit_Import(self, node: ast.Import) -> None:
+    def visit_Import(self, node: ast.Import) -> None:  # noqa: N802
         """Check regular import statements"""
         for alias in node.names:
             module_name = alias.name.split(".")[0]  # Get root module
@@ -65,7 +65,7 @@ class BannedImportChecker(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:  # noqa: N802
         """Check from...import statements"""
         if node.module:
             module_name = node.module.split(".")[0]  # Get root module
@@ -87,7 +87,7 @@ class BannedImportChecker(ast.NodeVisitor):
         self.violations.append((line_no, module, message))
 
 
-def check_file(filepath: Path) -> List[str]:
+def check_file(filepath: Path) -> list[str]:
     """
     Check a single Python file for banned imports
 
@@ -115,7 +115,7 @@ def check_file(filepath: Path) -> List[str]:
         return []
 
 
-def main(argv: List[str] = None) -> int:
+def main(argv: list[str] = None) -> int:
     """
     Main entry point for pre-commit hook
 

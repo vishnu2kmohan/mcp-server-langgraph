@@ -41,8 +41,8 @@ class TestFixtureValidator:
     """Validates test fixtures for common issues"""
 
     def __init__(self):
-        self.errors: List[Tuple[str, int, str]] = []
-        self.warnings: List[Tuple[str, int, str]] = []
+        self.errors: list[tuple[str, int, str]] = []
+        self.warnings: list[tuple[str, int, str]] = []
 
     def validate_file(self, filepath: Path) -> None:
         """Validate a single test file"""

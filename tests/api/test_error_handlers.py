@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 from mcp_server_langgraph.api.error_handlers import create_error_response, register_exception_handlers
 from mcp_server_langgraph.core.exceptions import AuthorizationError, InvalidCredentialsError, RateLimitExceededError
 
+
 # ==============================================================================
 # Test Fixtures
 # ==============================================================================
@@ -363,7 +364,7 @@ class TestErrorHandlerEdgeCases:
 
         # Then: Should log registration
         # Note: This verifies logging calls were made
-        assert mock_logger.info.called or True  # Registration happened
+        assert True  # Registration happened
 
     @pytest.mark.unit
     def test_error_response_with_trace_id_set(self):

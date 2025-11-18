@@ -11,6 +11,7 @@ TDD Approach:
 import re
 from pathlib import Path
 
+
 # Find all test files with Settings creation in production mode
 test_files = list(Path("tests").rglob("test_*.py"))
 

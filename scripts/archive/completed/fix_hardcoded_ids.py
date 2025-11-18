@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 
-def fix_hardcoded_user_ids(content: str, filename: str) -> Tuple[str, int]:
+def fix_hardcoded_user_ids(content: str, filename: str) -> tuple[str, int]:
     """
     Fix hardcoded user IDs in test file content.
 
@@ -116,7 +116,7 @@ def main():
         print(f"Processing {filepath}...")
 
         # Read file
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         # Fix hardcoded IDs
@@ -139,9 +139,8 @@ def main():
     if total_fixes > 0:
         print(f"\n✅ Total: Fixed {total_fixes} hardcoded IDs in {files_modified} files")
         return 0
-    else:
-        print("\n  No hardcoded IDs found")
-        return 0
+    print("\n  No hardcoded IDs found")
+    return 0
 
 
 if __name__ == "__main__":

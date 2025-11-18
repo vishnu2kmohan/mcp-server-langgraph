@@ -17,6 +17,7 @@ import pytest
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.url_utils import ensure_redis_password_encoded
 
+
 # Mark as integration test to ensure it runs in CI
 pytestmark = pytest.mark.integration
 

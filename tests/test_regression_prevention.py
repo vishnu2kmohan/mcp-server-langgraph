@@ -19,6 +19,7 @@ from typing import List, Tuple
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -31,19 +32,19 @@ class TestPytestFixtureValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_python_test_files(self) -> List[Path]:
+    def get_python_test_files(self) -> list[Path]:
         """Get all Python test files in the tests directory"""
         test_dir = Path("tests")
         return list(test_dir.rglob("test_*.py")) + list(test_dir.rglob("*_test.py"))
 
-    def extract_fixtures_and_decorators(self, file_path: Path) -> List[Tuple[str, bool, int]]:
+    def extract_fixtures_and_decorators(self, file_path: Path) -> list[tuple[str, bool, int]]:
         """
         Extract functions with yield and check for @pytest.fixture decorator.
 
         Returns:
             List of (function_name, has_fixture_decorator, line_number)
         """
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             content = f.read()
 
         try:
@@ -56,23 +57,25 @@ class TestPytestFixtureValidation:
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 # Check if function has yield (potential fixture)
-                has_yield = any(isinstance(n, ast.Yield) or isinstance(n, ast.YieldFrom) for n in ast.walk(node))
+                has_yield = any(isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node))
 
                 if has_yield:
                     # Check for @pytest.fixture decorator (with or without arguments)
                     has_fixture_decorator = False
                     for dec in node.decorator_list:
                         # Direct decorator: @pytest.fixture or @fixture
-                        if isinstance(dec, ast.Name) and dec.id == "fixture":
+                        if (
+                            isinstance(dec, ast.Name)
+                            and dec.id == "fixture"
+                            or isinstance(dec, ast.Attribute)
+                            and dec.attr == "fixture"
+                        ) or isinstance(dec, ast.Call) and (
+                            isinstance(dec.func, ast.Name)
+                            and dec.func.id == "fixture"
+                            or isinstance(dec.func, ast.Attribute)
+                            and dec.func.attr == "fixture"
+                        ):
                             has_fixture_decorator = True
-                        elif isinstance(dec, ast.Attribute) and dec.attr == "fixture":
-                            has_fixture_decorator = True
-                        # Decorator with arguments: @pytest.fixture(...) or @fixture(...)
-                        elif isinstance(dec, ast.Call):
-                            if isinstance(dec.func, ast.Name) and dec.func.id == "fixture":
-                                has_fixture_decorator = True
-                            elif isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture":
-                                has_fixture_decorator = True
 
                     fixtures.append((node.name, has_fixture_decorator, node.lineno))
 
@@ -112,7 +115,7 @@ class TestPytestFixtureValidation:
         issues = []
 
         for test_file in self.get_python_test_files():
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 content = f.read()
 
             try:
@@ -126,11 +129,13 @@ class TestPytestFixtureValidation:
                         # Check for @pytest.fixture decorator on class
                         is_fixture_decorator = False
 
-                        if isinstance(dec, ast.Call):
-                            if isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture":
-                                is_fixture_decorator = True
-                            elif isinstance(dec.func, ast.Name) and dec.func.id == "fixture":
-                                is_fixture_decorator = True
+                        if isinstance(dec, ast.Call) and (
+                            isinstance(dec.func, ast.Attribute)
+                            and dec.func.attr == "fixture"
+                            or isinstance(dec.func, ast.Name)
+                            and dec.func.id == "fixture"
+                        ):
+                            is_fixture_decorator = True
 
                         if is_fixture_decorator:
                             issues.append(
@@ -162,7 +167,7 @@ class TestMonkeypatchReloadPattern:
         """
         test_file = Path("tests/integration/test_app_startup_validation.py")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Find all test functions that use monkeypatch.setenv
@@ -205,7 +210,7 @@ class TestWorkflowToolMaintenance:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         return list(workflow_dir.glob("*.yml")) + list(workflow_dir.glob("*.yaml"))
@@ -232,7 +237,7 @@ class TestWorkflowToolMaintenance:
         issues = []
 
         for workflow_file in self.get_workflow_files():
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             try:
@@ -275,15 +280,14 @@ class TestWorkflowToolMaintenance:
             if not workflow_file.exists():
                 continue
 
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # If using kubeconform, should have -ignore-missing-schemas
-            if "kubeconform" in content:
-                if "-ignore-missing-schemas" not in content:
-                    issues.append(
-                        f"{workflow_file} - Uses kubeconform but missing -ignore-missing-schemas flag " "(needed for CRDs)"
-                    )
+            if "kubeconform" in content and "-ignore-missing-schemas" not in content:
+                issues.append(
+                    f"{workflow_file} - Uses kubeconform but missing -ignore-missing-schemas flag " "(needed for CRDs)"
+                )
 
         assert not issues, (
             f"Found {len(issues)} kubeconform uses without -ignore-missing-schemas:\n"
@@ -300,7 +304,7 @@ class TestWorkflowActionVersions:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         return list(workflow_dir.glob("*.yml")) + list(workflow_dir.glob("*.yaml"))
@@ -315,7 +319,7 @@ class TestWorkflowActionVersions:
         issues = []
 
         for workflow_file in self.get_workflow_files():
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Find uses of astral-sh/setup-uv
@@ -349,7 +353,7 @@ class TestWorkflowSyntaxValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         if not workflow_dir.exists():
@@ -366,7 +370,7 @@ class TestWorkflowSyntaxValidation:
 
         for workflow_file in self.get_workflow_files():
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     yaml.safe_load(f)
             except yaml.YAMLError as e:
                 issues.append(f"{workflow_file} - Invalid YAML: {e}")
@@ -386,7 +390,7 @@ class TestWorkflowSyntaxValidation:
 
         for workflow_file in self.get_workflow_files():
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     workflow = yaml.safe_load(f)
 
                 if not workflow:

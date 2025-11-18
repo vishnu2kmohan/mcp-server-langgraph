@@ -10,6 +10,7 @@ import json
 import sys
 from pathlib import Path
 
+
 try:
     from fastapi.openapi.utils import get_openapi
     from openapi_spec_validator import validate_spec
@@ -32,7 +33,7 @@ def generate_openapi_schema(app_module: str = "mcp_server_langgraph.mcp.server_s
     try:
         # Import the FastAPI app
         module = importlib.import_module(app_module)
-        app = getattr(module, "app")
+        app = module.app
 
         # Generate OpenAPI schema
         schema = get_openapi(

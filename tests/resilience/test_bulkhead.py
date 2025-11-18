@@ -74,7 +74,7 @@ class TestBulkheadBasics:
             return "success"
 
         # Sequential calls should all succeed
-        for i in range(10):
+        for _i in range(10):
             result = await func()
             assert result == "success"
 

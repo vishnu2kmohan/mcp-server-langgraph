@@ -19,6 +19,7 @@ import pytest
 
 from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agent
 
+
 # ==============================================================================
 # Test generate_agent Function
 # ==============================================================================

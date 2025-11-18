@@ -50,7 +50,7 @@ class GKEResourceCalculator:
             return f"{int(millicores / 1000)}"
         return f"{int(millicores)}m"
 
-    def calculate_min_request(self, limit: str) -> Tuple[str, float]:
+    def calculate_min_request(self, limit: str) -> tuple[str, float]:
         """Calculate minimum request for a given limit to achieve 4.0x ratio"""
         limit_mc = self.parse_cpu(limit)
         min_request_mc = limit_mc / self.MAX_RATIO
@@ -58,7 +58,7 @@ class GKEResourceCalculator:
 
         return self.format_cpu(min_request_mc), ratio
 
-    def calculate_max_limit(self, request: str) -> Tuple[str, float]:
+    def calculate_max_limit(self, request: str) -> tuple[str, float]:
         """Calculate maximum limit for a given request to achieve 4.0x ratio"""
         request_mc = self.parse_cpu(request)
         max_limit_mc = request_mc * self.MAX_RATIO
@@ -66,7 +66,7 @@ class GKEResourceCalculator:
 
         return self.format_cpu(max_limit_mc), ratio
 
-    def validate_ratio(self, request: str, limit: str) -> Tuple[bool, float]:
+    def validate_ratio(self, request: str, limit: str) -> tuple[bool, float]:
         """Validate if request/limit combination is compliant"""
         request_mc = self.parse_cpu(request)
         limit_mc = self.parse_cpu(limit)
@@ -325,7 +325,7 @@ Examples:
         is_compliant, _ = calculator.validate_ratio(args.request, args.limit)
         return 0 if is_compliant else 1
 
-    elif args.limit:
+    if args.limit:
         # Calculate minimum request
         min_request, ratio = calculator.calculate_min_request(args.limit)
         print(f"\n✅ For CPU limit: {args.limit}")
@@ -333,7 +333,7 @@ Examples:
         print(f"   Ratio: {ratio:.1f}x (compliant)\n")
         return 0
 
-    elif args.request:
+    if args.request:
         # Calculate maximum limit
         max_limit, ratio = calculator.calculate_max_limit(args.request)
         print(f"\n✅ For CPU request: {args.request}")
@@ -341,9 +341,8 @@ Examples:
         print(f"   Ratio: {ratio:.1f}x (compliant)\n")
         return 0
 
-    else:
-        parser.print_help()
-        return 1
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":

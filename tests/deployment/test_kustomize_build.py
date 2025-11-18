@@ -16,6 +16,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -47,7 +48,7 @@ def build_kustomize(overlay_dir: Path) -> tuple[str, str, int]:
     return result.stdout, result.stderr, result.returncode
 
 
-def parse_manifests(manifest_text: str) -> List[Dict[str, Any]]:
+def parse_manifests(manifest_text: str) -> list[dict[str, Any]]:
     """Parse YAML manifests from text."""
     return [m for m in yaml.safe_load_all(manifest_text) if m]
 

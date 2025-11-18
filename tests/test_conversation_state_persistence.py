@@ -17,6 +17,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from mcp_server_langgraph.core.agent import AgentState, create_agent_graph
 from mcp_server_langgraph.core.config import Settings
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

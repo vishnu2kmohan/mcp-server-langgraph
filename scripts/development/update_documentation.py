@@ -6,6 +6,7 @@ Replaces old file references and import paths with new package structure.
 
 from pathlib import Path
 
+
 # Documentation update mappings
 FILE_REPLACEMENTS = {
     "python mcp_server_streamable.py": "python -m mcp_server_langgraph.mcp.server_streamable",

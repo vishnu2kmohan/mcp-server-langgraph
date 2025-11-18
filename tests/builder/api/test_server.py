@@ -23,6 +23,7 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.builder.api.server import app
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -403,7 +404,7 @@ def test_save_workflow_with_io_error_returns_500(client, valid_workflow):
     request = {"workflow": valid_workflow, "output_path": output_path}
 
     # Mock file operations to raise exception
-    with patch("builtins.open", side_effect=IOError("Permission denied")):
+    with patch("builtins.open", side_effect=OSError("Permission denied")):
         # Act
         response = client.post("/api/builder/save", json=request)
 

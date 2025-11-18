@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Module-level markers: Unit tests that validate test infrastructure (meta)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 

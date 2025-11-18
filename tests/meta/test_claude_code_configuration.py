@@ -23,6 +23,7 @@ from typing import List
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -279,13 +280,13 @@ class TestSlashCommandQuality:
         return project_root / ".claude" / "commands"
 
     @pytest.fixture
-    def command_files(self, commands_dir: Path) -> List[Path]:
+    def command_files(self, commands_dir: Path) -> list[Path]:
         """Get all command files."""
         if not commands_dir.exists():
             return []
         return list(commands_dir.glob("*.md"))
 
-    def test_all_commands_have_description(self, command_files: List[Path]):
+    def test_all_commands_have_description(self, command_files: list[Path]):
         """Test that all slash commands have a description."""
         if not command_files:
             pytest.skip("No command files found (expected in RED phase)")

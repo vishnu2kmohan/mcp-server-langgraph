@@ -14,6 +14,7 @@ import pytest
 
 from tests.e2e.real_clients import RealKeycloakAuth, RealMCPClient, real_keycloak_auth, real_mcp_client
 
+
 # Mark as unit test to ensure it runs in CI (uses mocks)
 pytestmark = pytest.mark.unit
 

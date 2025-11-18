@@ -187,12 +187,11 @@ class TestStartupValidation:
         with patch(
             "mcp_server_langgraph.api.health.validate_observability_initialized",
             return_value=(False, "Observability broken"),
-        ):
-            with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
-                with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
-                    with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with pytest.raises(SystemValidationError, match="Startup validation failed"):
-                            run_startup_validation()
+        ), patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
+            with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
+                with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
+                    with pytest.raises(SystemValidationError, match="Startup validation failed"):
+                        run_startup_validation()
 
     def test_run_startup_validation_logs_warnings(self):
         """Test startup validation logs warnings for non-critical issues"""
@@ -258,17 +257,16 @@ class TestHealthCheckEndpoint:
         with patch(
             "mcp_server_langgraph.api.health.validate_observability_initialized",
             return_value=(False, "Observability broken"),
-        ):
-            with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
-                with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
-                    with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        response = client.get("/api/v1/health")
+        ), patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
+            with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
+                with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
+                    response = client.get("/api/v1/health")
 
-                        assert response.status_code == 200  # Endpoint still works
-                        data = response.json()
-                        assert data["status"] == "unhealthy"
-                        assert len(data["errors"]) > 0
-                        assert data["checks"]["observability"] is False
+                    assert response.status_code == 200  # Endpoint still works
+                    data = response.json()
+                    assert data["status"] == "unhealthy"
+                    assert len(data["errors"]) > 0
+                    assert data["checks"]["observability"] is False
 
 
 @pytest.mark.integration

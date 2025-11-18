@@ -19,6 +19,7 @@ from typing import Any, Dict
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 # Test data
@@ -32,13 +33,13 @@ PROXY_PATCH_FILES = [
 ]
 
 
-def load_yaml_file(file_path: Path) -> Dict[str, Any]:
+def load_yaml_file(file_path: Path) -> dict[str, Any]:
     """Load a YAML file and return parsed content."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         return yaml.safe_load(f)
 
 
-def find_cloud_sql_proxy_container(manifest: Dict[str, Any]) -> Dict[str, Any] | None:
+def find_cloud_sql_proxy_container(manifest: dict[str, Any]) -> dict[str, Any] | None:
     """Find the cloud-sql-proxy container in a deployment manifest."""
     if manifest.get("kind") != "Deployment":
         return None

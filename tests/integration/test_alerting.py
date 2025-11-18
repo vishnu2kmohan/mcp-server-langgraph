@@ -25,6 +25,7 @@ from mcp_server_langgraph.integrations.alerting import (
     send_alert,
 )
 
+
 # Mark as integration test to ensure it runs in CI
 pytestmark = pytest.mark.integration
 

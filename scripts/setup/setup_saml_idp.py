@@ -56,7 +56,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_identity_provider(self, realm: str, idp_config: Dict[str, Any]):
+    async def create_identity_provider(self, realm: str, idp_config: dict[str, Any]):
         """Create identity provider"""
         if not self.access_token:
             await self.get_admin_token()
@@ -75,7 +75,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             return response.json()
 
-    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]):
+    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: dict[str, Any]):
         """Create identity provider mapper"""
         if not self.access_token:
             await self.get_admin_token()
@@ -98,7 +98,7 @@ class KeycloakAdminClient:
 async def configure_saml_identity_provider(
     keycloak_admin: KeycloakAdminClient,
     realm_name: str,
-    saml_config: Dict[str, str],
+    saml_config: dict[str, str],
 ) -> str:
     """
     Configure SAML 2.0 identity provider

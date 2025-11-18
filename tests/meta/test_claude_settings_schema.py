@@ -22,6 +22,7 @@ from typing import Dict, List
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -45,7 +46,7 @@ class TestClaudeSettingsSchema:
         return project_root / ".claude" / "settings.json"
 
     @pytest.fixture
-    def settings(self, settings_file: Path) -> Dict:
+    def settings(self, settings_file: Path) -> dict:
         """Load and parse settings.json."""
         if not settings_file.exists():
             pytest.skip("settings.json does not exist yet (expected in RED phase)")
@@ -53,7 +54,7 @@ class TestClaudeSettingsSchema:
         with open(settings_file) as f:
             return json.load(f)
 
-    def test_webfetch_domains_are_valid(self, settings: Dict):
+    def test_webfetch_domains_are_valid(self, settings: dict):
         """Test that all WebFetch allowed_domains are valid domain names."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -76,7 +77,7 @@ class TestClaudeSettingsSchema:
             f"Domains must be properly formatted (e.g., 'docs.python.org')."
         )
 
-    def test_no_wildcard_domains(self, settings: Dict):
+    def test_no_wildcard_domains(self, settings: dict):
         """Test that WebFetch allowed_domains doesn't contain wildcards."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -93,7 +94,7 @@ class TestClaudeSettingsSchema:
             f"Use specific domains instead of wildcards for security."
         )
 
-    def test_essential_documentation_domains_present(self, settings: Dict):
+    def test_essential_documentation_domains_present(self, settings: dict):
         """Test that essential documentation domains are in allowed_domains."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -118,7 +119,7 @@ class TestClaudeSettingsSchema:
 
         assert len(missing_domains) == 0, f"Missing essential domains in allowed_domains: {missing_domains}"
 
-    def test_project_specific_domains_present(self, settings: Dict):
+    def test_project_specific_domains_present(self, settings: dict):
         """Test that project-specific domains are in allowed_domains."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -149,7 +150,7 @@ class TestClaudeSettingsSchema:
                 f"Consider adding them for better Claude Code experience."
             )
 
-    def test_bash_auto_approve_patterns_are_safe(self, settings: Dict):
+    def test_bash_auto_approve_patterns_are_safe(self, settings: dict):
         """Test that Bash auto_approve_patterns don't contain dangerous commands."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -182,7 +183,7 @@ class TestClaudeSettingsSchema:
             f"These commands should require explicit approval for safety."
         )
 
-    def test_bash_patterns_are_read_only_or_safe(self, settings: Dict):
+    def test_bash_patterns_are_read_only_or_safe(self, settings: dict):
         """Test that Bash auto_approve_patterns are mostly read-only commands."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")
@@ -228,7 +229,7 @@ class TestClaudeSettingsSchema:
                 f"Ensure these are safe for automatic approval."
             )
 
-    def test_plan_mode_configuration_is_valid(self, settings: Dict):
+    def test_plan_mode_configuration_is_valid(self, settings: dict):
         """Test that plan_mode configuration has valid structure."""
         if "plan_mode" not in settings:
             # Plan mode is optional, skip if not configured
@@ -249,7 +250,7 @@ class TestClaudeSettingsSchema:
             keywords = plan_mode["auto_enable_for_keywords"]
             assert all(isinstance(k, str) for k in keywords), "All auto_enable_for_keywords must be strings"
 
-    def test_no_duplicate_domains(self, settings: Dict):
+    def test_no_duplicate_domains(self, settings: dict):
         """Test that there are no duplicate domains in allowed_domains."""
         if "allowedTools" not in settings:
             pytest.skip("allowedTools not configured yet")

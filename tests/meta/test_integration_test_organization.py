@@ -30,11 +30,12 @@ from typing import List, Set, Tuple
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
-def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
+def find_pytest_markers_in_file(file_path: Path) -> set[str]:
     """
     Extract all pytest markers from a test file using AST parsing.
 
@@ -58,10 +59,9 @@ def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
                         markers.add(decorator.attr)
 
                 # Handle @pytest.mark.integration(...) with args
-                elif isinstance(decorator, ast.Call):
-                    if isinstance(decorator.func, ast.Attribute):
-                        if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
-                            markers.add(decorator.func.attr)
+                elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                    if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
+                        markers.add(decorator.func.attr)
 
         # Check for pytestmark = pytest.mark.integration
         elif isinstance(node, ast.Assign):
@@ -82,7 +82,7 @@ def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
     return markers
 
 
-def find_all_test_files(root: Path, pattern: str = "test_*.py") -> List[Path]:
+def find_all_test_files(root: Path, pattern: str = "test_*.py") -> list[Path]:
     """Find all test files matching pattern recursively."""
     return sorted(root.rglob(pattern))
 
@@ -117,7 +117,7 @@ class TestIntegrationTestOrganization:
         all_test_files = find_all_test_files(tests_dir)
 
         # Find files with integration marker outside tests/integration/
-        misplaced_integration_tests: List[Tuple[Path, str]] = []
+        misplaced_integration_tests: list[tuple[Path, str]] = []
 
         for test_file in all_test_files:
             # Skip __init__.py files
@@ -155,7 +155,7 @@ class TestIntegrationTestOrganization:
             error_msg += "\nMove these tests to tests/integration/ with:\n"
             error_msg += "  python scripts/migrate_integration_tests.py\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_all_integration_directory_files_have_integration_marker(self):
         """
@@ -173,7 +173,7 @@ class TestIntegrationTestOrganization:
         integration_files = find_all_test_files(integration_dir)
 
         # Check each file has integration marker
-        missing_marker: List[str] = []
+        missing_marker: list[str] = []
 
         for test_file in integration_files:
             # Skip __init__.py files
@@ -194,7 +194,7 @@ class TestIntegrationTestOrganization:
 
             error_msg += "\nAdd @pytest.mark.integration to these files.\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_no_integration_tests_in_unit_directory(self):
         """
@@ -212,7 +212,7 @@ class TestIntegrationTestOrganization:
         unit_files = find_all_test_files(unit_dir)
 
         # Check for integration marker
-        integration_in_unit: List[str] = []
+        integration_in_unit: list[str] = []
 
         for test_file in unit_files:
             if test_file.name == "__init__.py":
@@ -232,7 +232,7 @@ class TestIntegrationTestOrganization:
 
             error_msg += "\nMove to tests/integration/ or remove integration marker.\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_no_integration_tests_in_root_tests_directory(self):
         """
@@ -247,7 +247,7 @@ class TestIntegrationTestOrganization:
         root_test_files = sorted(tests_dir.glob("test_*.py"))
 
         # Check for integration marker
-        integration_in_root: List[str] = []
+        integration_in_root: list[str] = []
 
         for test_file in root_test_files:
             if test_file.name == "__init__.py":
@@ -267,7 +267,7 @@ class TestIntegrationTestOrganization:
 
             error_msg += "\nMove to tests/integration/.\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_integration_directory_exists(self):
         """

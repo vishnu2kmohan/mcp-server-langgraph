@@ -15,6 +15,7 @@ import pytest
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+
 pytestmark = pytest.mark.unit
 
 

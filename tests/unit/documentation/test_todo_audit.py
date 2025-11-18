@@ -16,6 +16,7 @@ import pytest
 
 from scripts.validators.todo_audit import AuditResult, TodoAuditor, TodoMarker
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -183,7 +184,7 @@ Line 5
 
         assert len(result.markers) == 3
         # Should have markers from different files
-        unique_files = set(m.file_path for m in result.markers)
+        unique_files = {m.file_path for m in result.markers}
         assert len(unique_files) == 3
 
     def test_statistics_are_accurate(self, temp_docs_dir):

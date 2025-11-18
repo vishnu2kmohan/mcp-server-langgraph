@@ -16,6 +16,7 @@ from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionServi
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 
+
 # ==================== Test Fixtures ====================
 
 
@@ -347,13 +348,13 @@ class TestGDPREndpoints:
         mock_gdpr_storage = AsyncMock(spec=GDPRStorage)
 
         # Mock nested storage attributes (user_profiles, preferences, etc.)
-        mock_gdpr_storage.user_profiles = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.user_profiles = AsyncMock()  # async-mock-config
         mock_gdpr_storage.user_profiles.get.return_value = None  # Return None, handler will create default
 
-        mock_gdpr_storage.preferences = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.preferences = AsyncMock()  # async-mock-config
         mock_gdpr_storage.preferences.get.return_value = None  # Return None, handler will return empty dict
 
-        mock_gdpr_storage.conversations = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.conversations = AsyncMock()  # async-mock-config
         mock_gdpr_storage.conversations.list.return_value = []
 
         # Mock consents storage
@@ -369,30 +370,30 @@ class TestGDPREndpoints:
             user_agent=None,
         )
 
-        mock_gdpr_storage.consents = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.consents = AsyncMock()  # async-mock-config
         mock_gdpr_storage.consents.create.return_value = None
         mock_gdpr_storage.consents.get_user_consents.return_value = [mock_consent]
         mock_gdpr_storage.consents.get_latest_consent.return_value = mock_consent
         mock_gdpr_storage.consents.delete_user_consents.return_value = 1
 
         # Mock audit logs
-        mock_gdpr_storage.audit_logs = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.audit_logs = AsyncMock()  # async-mock-config
         mock_gdpr_storage.audit_logs.log.return_value = "deletion_test_123"  # Returns the audit record ID
         mock_gdpr_storage.audit_logs.create.return_value = "deletion_test_123"  # Also mock create for consistency
         mock_gdpr_storage.audit_logs.anonymize_user_logs.return_value = 0
 
         # Mock preferences deletion
-        mock_gdpr_storage.preferences = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.preferences = AsyncMock()  # async-mock-config
         mock_gdpr_storage.preferences.get.return_value = None
         mock_gdpr_storage.preferences.delete.return_value = 1
 
         # Mock conversations
-        mock_gdpr_storage.conversations = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.conversations = AsyncMock()  # async-mock-config
         mock_gdpr_storage.conversations.list.return_value = []
         mock_gdpr_storage.conversations.delete_user_conversations.return_value = 0
 
         # Mock user profiles
-        mock_gdpr_storage.user_profiles = AsyncMock()  # noqa: async-mock-config
+        mock_gdpr_storage.user_profiles = AsyncMock()  # async-mock-config
         mock_gdpr_storage.user_profiles.get.return_value = None
         mock_gdpr_storage.user_profiles.delete.return_value = None
 

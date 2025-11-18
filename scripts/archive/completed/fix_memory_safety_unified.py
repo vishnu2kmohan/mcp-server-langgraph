@@ -24,7 +24,7 @@ def fix_file(file_path: Path) -> bool:
         True if changes were made, False otherwise
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         # Parse AST to analyze structure
@@ -117,9 +117,7 @@ def fix_file(file_path: Path) -> bool:
 
             # Adjust for gc import we may have added
             if not has_gc_import:
-                if last_import_node and class_node.lineno > last_import_node.end_lineno:
-                    class_line_idx += 1
-                elif not last_import_node:
+                if last_import_node and class_node.lineno > last_import_node.end_lineno or not last_import_node:
                     class_line_idx += 1
 
             # Add xdist_group marker if missing
@@ -145,16 +143,14 @@ def fix_file(file_path: Path) -> bool:
                         if line.count(quote) >= 2:
                             insert_idx += 1
                             break
-                        else:
-                            insert_idx += 1
-                            while insert_idx < len(lines):
-                                if quote in lines[insert_idx]:
-                                    insert_idx += 1
-                                    break
+                        insert_idx += 1
+                        while insert_idx < len(lines):
+                            if quote in lines[insert_idx]:
                                 insert_idx += 1
-                            break
-                    else:
+                                break
+                            insert_idx += 1
                         break
+                    break
 
                 # Get class indentation
                 class_indent = len(lines[class_line_idx]) - len(lines[class_line_idx].lstrip())
@@ -185,7 +181,7 @@ def fix_file(file_path: Path) -> bool:
         return False
 
 
-def find_test_files(base_dir: str = "tests") -> List[Path]:
+def find_test_files(base_dir: str = "tests") -> list[Path]:
     """Find all test files under the base directory."""
     base_path = Path(base_dir)
     if not base_path.exists():

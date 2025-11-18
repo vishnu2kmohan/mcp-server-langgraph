@@ -124,7 +124,7 @@ async def setup_realm(server_url: str, admin_username: str, admin_password: str,
 
 async def setup_client(
     server_url: str, admin_username: str, admin_password: str, realm_name: str, client_id: str
-) -> Optional[str]:
+) -> str | None:
     """
     Create Keycloak client
 

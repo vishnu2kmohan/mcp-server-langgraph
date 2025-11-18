@@ -15,6 +15,7 @@ from mcp_server_langgraph.core.agent import AgentState, _create_checkpointer, cr
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+
 # Try importing RedisSaver
 try:
     from langgraph.checkpoint.redis import RedisSaver
@@ -79,7 +80,7 @@ class TestMemoryCheckpointer:
         """Test conversation state is preserved within same graph instance"""
         # Mock LLM to avoid actual API calls
         mock_llm = AsyncMock(spec=LLMFactory)
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "memory")
@@ -123,7 +124,7 @@ class TestMemoryCheckpointer:
         """Test different thread_ids have isolated conversation state"""
         # Mock LLM to avoid actual API calls
         mock_llm = AsyncMock(spec=LLMFactory)
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "memory")
@@ -178,7 +179,7 @@ class TestRedisCheckpointer:
         """
         # Mock LLM to avoid actual API calls
         mock_llm = AsyncMock(spec=LLMFactory)
-        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # noqa: async-mock-config
+        mock_llm.ainvoke = AsyncMock(return_value=AIMessage(content="Test response"))  # async-mock-config
 
         # Use monkeypatch for automatic cleanup
         monkeypatch.setattr(settings, "checkpoint_backend", "redis")

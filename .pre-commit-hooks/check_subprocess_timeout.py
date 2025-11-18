@@ -19,7 +19,6 @@ Exit codes:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 class SubprocessTimeoutChecker(ast.NodeVisitor):
@@ -27,17 +26,21 @@ class SubprocessTimeoutChecker(ast.NodeVisitor):
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.violations: List[Tuple[int, str]] = []
+        self.violations: list[tuple[int, str]] = []
 
-    def visit_Call(self, node: ast.Call) -> None:
+    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
         """Check if this is a subprocess.run() call without timeout"""
         # Check if this is a subprocess.run() call
         is_subprocess_run = False
 
         # Pattern 1: subprocess.run(...)
-        if isinstance(node.func, ast.Attribute):
-            if node.func.attr == "run" and isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess":
-                is_subprocess_run = True
+        if (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr == "run"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "subprocess"
+        ):
+            is_subprocess_run = True
 
         if is_subprocess_run:
             # Check if timeout parameter is present
@@ -60,7 +63,7 @@ class SubprocessTimeoutChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def check_file(filepath: Path) -> List[str]:
+def check_file(filepath: Path) -> list[str]:
     """
     Check a single Python file for subprocess.run() calls without timeout
 
@@ -88,7 +91,7 @@ def check_file(filepath: Path) -> List[str]:
         return []
 
 
-def main(argv: List[str] = None) -> int:
+def main(argv: list[str] = None) -> int:
     """
     Main entry point for pre-commit hook
 

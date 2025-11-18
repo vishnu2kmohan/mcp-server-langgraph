@@ -21,6 +21,7 @@ from typing import Dict, List, Optional
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (infrastructure validation)
 pytestmark = pytest.mark.unit
 
@@ -44,7 +45,7 @@ class TestCIWorkflowTerraformSetup:
         return Path(".github/workflows/ci.yaml")
 
     @pytest.fixture
-    def ci_workflow(self, ci_workflow_path: Path) -> Dict:
+    def ci_workflow(self, ci_workflow_path: Path) -> dict:
         """Parse CI workflow YAML."""
         assert ci_workflow_path.exists(), f"Missing {ci_workflow_path}"
         with open(ci_workflow_path) as f:
@@ -56,13 +57,13 @@ class TestCIWorkflowTerraformSetup:
         return Path(".pre-commit-config.yaml")
 
     @pytest.fixture
-    def precommit_config(self, precommit_config_path: Path) -> Dict:
+    def precommit_config(self, precommit_config_path: Path) -> dict:
         """Parse pre-commit config YAML."""
         assert precommit_config_path.exists(), f"Missing {precommit_config_path}"
         with open(precommit_config_path) as f:
             return yaml.safe_load(f)
 
-    def test_precommit_hooks_require_terraform(self, precommit_config: Dict):
+    def test_precommit_hooks_require_terraform(self, precommit_config: dict):
         """
         Verify that pre-commit config includes Terraform hooks.
 
@@ -75,18 +76,18 @@ class TestCIWorkflowTerraformSetup:
             "No Terraform pre-commit hooks found. " "If Terraform hooks exist, CI must install Terraform."
         )
 
-    def test_ci_precommit_job_exists(self, ci_workflow: Dict):
+    def test_ci_precommit_job_exists(self, ci_workflow: dict):
         """
         Validate that CI workflow has a pre-commit job.
         """
         jobs = ci_workflow.get("jobs", {})
         precommit_jobs = [
-            job_name for job_name in jobs.keys() if "pre-commit" in job_name.lower() or "precommit" in job_name.lower()
+            job_name for job_name in jobs if "pre-commit" in job_name.lower() or "precommit" in job_name.lower()
         ]
 
         assert len(precommit_jobs) > 0, "No pre-commit job found in CI workflow. " f"Available jobs: {', '.join(jobs.keys())}"
 
-    def test_ci_precommit_job_installs_terraform(self, ci_workflow: Dict):
+    def test_ci_precommit_job_installs_terraform(self, ci_workflow: dict):
         """
         Validate that pre-commit job installs Terraform.
 
@@ -116,7 +117,7 @@ class TestCIWorkflowTerraformSetup:
             "      terraform_version: '1.6.6'"
         )
 
-    def test_terraform_setup_before_precommit_run(self, ci_workflow: Dict):
+    def test_terraform_setup_before_precommit_run(self, ci_workflow: dict):
         """
         Validate that Terraform setup occurs before pre-commit run.
 
@@ -149,7 +150,7 @@ class TestCIWorkflowTerraformSetup:
                 f"pre-commit run (step {precommit_run_index})"
             )
 
-    def test_terraform_version_consistency(self, ci_workflow: Dict):
+    def test_terraform_version_consistency(self, ci_workflow: dict):
         """
         Validate that Terraform version is consistent across workflows.
 
@@ -192,14 +193,14 @@ class TestDeploymentValidationWorkflow:
         return Path(".github/workflows/deployment-validation.yml")
 
     @pytest.fixture
-    def deployment_validation_workflow(self, deployment_validation_workflow_path: Path) -> Dict:
+    def deployment_validation_workflow(self, deployment_validation_workflow_path: Path) -> dict:
         """Parse deployment validation workflow YAML."""
         if not deployment_validation_workflow_path.exists():
             pytest.skip(f"Missing {deployment_validation_workflow_path}")
         with open(deployment_validation_workflow_path) as f:
             return yaml.safe_load(f)
 
-    def test_helm_dependency_update_before_lint(self, deployment_validation_workflow: Dict):
+    def test_helm_dependency_update_before_lint(self, deployment_validation_workflow: dict):
         """
         Validate that helm dependency update runs before helm lint/template.
 
@@ -246,7 +247,7 @@ class TestDeploymentValidationWorkflow:
                         f"before helm template (step {helm_template_index})"
                     )
 
-    def test_kubeconform_has_verbose_on_failure(self, deployment_validation_workflow: Dict):
+    def test_kubeconform_has_verbose_on_failure(self, deployment_validation_workflow: dict):
         """
         Validate that kubeconform re-runs with verbose output on failure.
 
@@ -287,7 +288,7 @@ class TestDeploymentValidationWorkflow:
                 "  fi"
             )
 
-    def test_kubeconform_uses_pipefail(self, deployment_validation_workflow: Dict):
+    def test_kubeconform_uses_pipefail(self, deployment_validation_workflow: dict):
         """
         Validate that kubeconform steps use 'set -o pipefail'.
 
@@ -329,14 +330,14 @@ class TestWorkflowPerformanceOptimizations:
         return Path(".github/workflows/coverage-trend.yaml")
 
     @pytest.fixture
-    def coverage_trend_workflow(self, coverage_trend_workflow_path: Path) -> Optional[Dict]:
+    def coverage_trend_workflow(self, coverage_trend_workflow_path: Path) -> dict | None:
         """Parse coverage trend workflow YAML."""
         if not coverage_trend_workflow_path.exists():
             return None
         with open(coverage_trend_workflow_path) as f:
             return yaml.safe_load(f)
 
-    def test_download_artifact_has_continue_on_error(self, coverage_trend_workflow: Optional[Dict]):
+    def test_download_artifact_has_continue_on_error(self, coverage_trend_workflow: dict | None):
         """
         Validate that download-artifact has continue-on-error or conditional.
 
@@ -411,7 +412,7 @@ class TestStagingDeployWorkflow:
         return Path(".github/workflows/deploy-staging-gke.yaml")
 
     @pytest.fixture
-    def staging_deploy_workflow(self, staging_deploy_workflow_path: Path) -> Optional[Dict]:
+    def staging_deploy_workflow(self, staging_deploy_workflow_path: Path) -> dict | None:
         """Parse staging deploy workflow YAML."""
         if not staging_deploy_workflow_path.exists():
             return None
@@ -423,7 +424,7 @@ class TestStagingDeployWorkflow:
         """Path to staging .trivyignore file."""
         return Path("deployments/overlays/staging-gke/.trivyignore")
 
-    def test_trivy_scan_uses_trivyignores(self, staging_deploy_workflow: Optional[Dict]):
+    def test_trivy_scan_uses_trivyignores(self, staging_deploy_workflow: dict | None):
         """
         Validate that Trivy scan uses .trivyignore file.
 

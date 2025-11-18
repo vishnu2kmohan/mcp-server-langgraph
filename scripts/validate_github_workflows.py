@@ -42,8 +42,8 @@ class WorkflowValidator:
 
     def __init__(self, workflow_dir: Path):
         self.workflow_dir = workflow_dir
-        self.errors: List[Dict] = []
-        self.warnings: List[Dict] = []
+        self.errors: list[dict] = []
+        self.warnings: list[dict] = []
 
     def validate_all(self) -> bool:
         """Validate all workflow files in the directory."""
@@ -65,7 +65,7 @@ class WorkflowValidator:
         # print(f"Checking {workflow_file.name}...")
 
         try:
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
                 workflow = yaml.safe_load(content)
         except yaml.YAMLError as e:
@@ -88,7 +88,7 @@ class WorkflowValidator:
         for context_name, pattern in self.CONTEXT_PATTERNS.items():
             self._check_context_usage(workflow_file, content, context_name, pattern, triggers)
 
-    def _get_triggers(self, workflow: Dict) -> Set[str]:
+    def _get_triggers(self, workflow: dict) -> set[str]:
         """Extract enabled triggers from workflow."""
         triggers = set()
 
@@ -120,7 +120,7 @@ class WorkflowValidator:
         return triggers
 
     def _check_context_usage(
-        self, workflow_file: Path, content: str, context_name: str, pattern: re.Pattern, triggers: Set[str]
+        self, workflow_file: Path, content: str, context_name: str, pattern: re.Pattern, triggers: set[str]
     ) -> None:
         """Check if a context is used but the corresponding trigger is not enabled."""
         matches = pattern.findall(content)

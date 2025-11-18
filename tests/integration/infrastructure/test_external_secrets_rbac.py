@@ -25,7 +25,7 @@ import pytest
 
 
 # Helper functions for kubectl commands
-def run_kubectl(args: List[str], namespace: Optional[str] = None, check: bool = True) -> Dict[str, Any]:
+def run_kubectl(args: list[str], namespace: str | None = None, check: bool = True) -> dict[str, Any]:
     """
     Run kubectl command and return parsed output.
 
@@ -60,7 +60,7 @@ def run_kubectl(args: List[str], namespace: Optional[str] = None, check: bool = 
         return {"success": False, "output": "", "error": "Command timed out", "returncode": -1}
 
 
-def run_gcloud(args: List[str], check: bool = True) -> Dict[str, Any]:
+def run_gcloud(args: list[str], check: bool = True) -> dict[str, Any]:
     """
     Run gcloud command and return parsed output.
 

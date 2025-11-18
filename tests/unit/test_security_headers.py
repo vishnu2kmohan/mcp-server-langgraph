@@ -10,6 +10,7 @@ import pytest
 
 from mcp_server_langgraph.core.security import sanitize_header_value
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

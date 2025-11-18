@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Add scripts directory to path - environment-agnostic
 _scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts"
 sys.path.insert(0, str(_scripts_dir))
@@ -26,6 +27,7 @@ from validators.frontmatter_validator import (  # noqa: E402
     MissingFrontmatterError,
     MissingRequiredFieldError,
 )
+
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

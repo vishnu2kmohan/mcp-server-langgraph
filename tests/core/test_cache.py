@@ -30,6 +30,7 @@ from mcp_server_langgraph.core.cache import (
     get_cache,
 )
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -84,6 +85,7 @@ def cache_service_with_mock_redis():
         assert stats["l2_misses"] == 0
         assert stats["sets"] == 0
         assert stats["deletes"] == 0
+    return None
 
 
 @pytest.mark.xdist_group(name="cache_tests")
@@ -551,9 +553,7 @@ class TestCacheInvalidate:
     def test_cache_invalidate_pattern(self, cache_service_with_mock_redis):
         """Test cache_invalidate with pattern"""
         # Note: get_cache() is NOT async (regular function), so we don't use AsyncMock
-        with patch(
-            "mcp_server_langgraph.core.cache.get_cache", return_value=cache_service_with_mock_redis
-        ):  # noqa: async-mock
+        with patch("mcp_server_langgraph.core.cache.get_cache", return_value=cache_service_with_mock_redis):  # async-mock
             cache_service_with_mock_redis.mock_redis.keys.return_value = [b"user:123:key1"]
 
             cache_invalidate("user:123:*")

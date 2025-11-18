@@ -20,6 +20,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -438,7 +439,7 @@ class TestServiceMeshConfig:
         if not istio_config.exists():
             pytest.skip("Istio config not found")
 
-        with open(istio_config, "r") as f:
+        with open(istio_config) as f:
             content = f.read()
 
         # Parse YAML

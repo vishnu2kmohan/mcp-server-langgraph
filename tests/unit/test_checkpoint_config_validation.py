@@ -20,6 +20,7 @@ from mcp_server_langgraph.core.checkpoint_validator import (
 )
 from mcp_server_langgraph.core.config import Settings
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

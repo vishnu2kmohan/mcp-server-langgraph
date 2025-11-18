@@ -185,8 +185,7 @@ class TestRetryWithSpecificExceptions:
             call_count += 1
             if error_type == "value":
                 raise ValueError("Retry this")
-            else:
-                raise RuntimeError("Don't retry this")
+            raise RuntimeError("Don't retry this")
 
         # ValueError should be retried
         call_count = 0
@@ -209,10 +208,9 @@ class TestRetryWithSpecificExceptions:
         async def multi_exception_func(error_type):
             if error_type == "value":
                 raise ValueError("Retry this")
-            elif error_type == "runtime":
+            if error_type == "runtime":
                 raise RuntimeError("Retry this too")
-            else:
-                raise TypeError("Don't retry this")
+            raise TypeError("Don't retry this")
 
         # Both ValueError and RuntimeError should be retried
         with pytest.raises(RetryExhaustedError):

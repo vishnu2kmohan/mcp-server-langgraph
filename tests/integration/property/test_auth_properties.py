@@ -379,9 +379,7 @@ class TestPermissionInheritance:
 
             async def mock_check(user, relation, object, context=None):
                 # Owner has all permissions
-                if user == f"user:{owner}" and object == resource:
-                    return True
-                return False
+                return bool(user == f"user:{owner}" and object == resource)
 
             mock_openfga.check_permission = mock_check
 

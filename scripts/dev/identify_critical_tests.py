@@ -33,6 +33,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
+
 # Test categories to prioritize for critical marking
 CRITICAL_PATTERNS = {
     "auth": r"(auth|login|permission|access|token|credential|keycloak)",
@@ -56,7 +57,7 @@ CRITICAL_TEST_FILES = [
 ]
 
 
-def collect_all_unit_tests() -> List[str]:
+def collect_all_unit_tests() -> list[str]:
     """Collect all unit test IDs."""
     result = subprocess.run(
         ["pytest", "-m", "unit and not llm", "tests/", "--collect-only", "-q"],
@@ -74,9 +75,9 @@ def collect_all_unit_tests() -> List[str]:
     return tests
 
 
-def categorize_tests(tests: List[str]) -> Dict[str, List[str]]:
+def categorize_tests(tests: list[str]) -> dict[str, list[str]]:
     """Categorize tests by type."""
-    categories = {category: [] for category in CRITICAL_PATTERNS.keys()}
+    categories = {category: [] for category in CRITICAL_PATTERNS}
     categories["other"] = []
 
     for test in tests:
@@ -147,7 +148,7 @@ def score_test_priority(test_id: str) -> int:
     return score
 
 
-def select_critical_tests(tests: List[str], target_count: int = 200) -> List[str]:
+def select_critical_tests(tests: list[str], target_count: int = 200) -> list[str]:
     """Select top N critical tests based on scoring."""
     scored_tests = [(test, score_test_priority(test)) for test in tests]
     scored_tests.sort(key=lambda x: x[1], reverse=True)
@@ -158,7 +159,7 @@ def select_critical_tests(tests: List[str], target_count: int = 200) -> List[str
     return critical
 
 
-def generate_report(all_tests: List[str], critical_tests: List[str]) -> str:
+def generate_report(all_tests: list[str], critical_tests: list[str]) -> str:
     """Generate analysis report."""
     categories = categorize_tests(critical_tests)
 

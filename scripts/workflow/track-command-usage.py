@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
+
 # Time savings estimates (in minutes) for each command
 COMMAND_SAVINGS = {
     # Existing commands (v2.0)
@@ -67,7 +68,7 @@ class CommandTracker:
         self.usage_log = self.analytics_dir / "command-usage.jsonl"
         self.summary_file = self.analytics_dir / "usage-summary.json"
 
-    def log_command(self, command: str, duration_seconds: Optional[int] = None):
+    def log_command(self, command: str, duration_seconds: int | None = None):
         """Log a command usage."""
         entry = {
             "timestamp": datetime.now().isoformat(),
@@ -82,19 +83,19 @@ class CommandTracker:
 
         print(f"✅ Logged: {command} (saves ~{COMMAND_SAVINGS.get(command, 0)} min)")
 
-    def load_usage_log(self) -> List[Dict]:
+    def load_usage_log(self) -> list[dict]:
         """Load all usage entries."""
         if not self.usage_log.exists():
             return []
 
         entries = []
-        with open(self.usage_log, "r") as f:
+        with open(self.usage_log) as f:
             for line in f:
                 if line.strip():
                     entries.append(json.loads(line))
         return entries
 
-    def generate_report(self, days: int = 30) -> Dict:
+    def generate_report(self, days: int = 30) -> dict:
         """Generate usage report for last N days."""
         entries = self.load_usage_log()
         cutoff = datetime.now() - timedelta(days=days)
@@ -154,7 +155,7 @@ class CommandTracker:
 
         return report
 
-    def calculate_roi(self) -> Dict:
+    def calculate_roi(self) -> dict:
         """Calculate ROI of workflow optimization."""
         entries = self.load_usage_log()
 

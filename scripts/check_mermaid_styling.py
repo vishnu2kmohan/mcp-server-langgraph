@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+
 # ColorBrewer2 Set3 palette hex codes
 COLORBREWER2_SET3_COLORS = {
     "#8dd3c7",
@@ -49,7 +50,7 @@ COLORBREWER2_STROKE_COLORS = {
 REQUIRED_COMMENT_PATTERN = r"%% ColorBrewer2 Set3 palette"
 
 
-def extract_mermaid_blocks(content: str) -> List[Tuple[int, str]]:
+def extract_mermaid_blocks(content: str) -> list[tuple[int, str]]:
     """Extract all Mermaid code blocks with their starting line numbers."""
     blocks = []
     lines = content.split("\n")
@@ -112,7 +113,7 @@ def has_sequence_theme(block: str) -> bool:
     return "%%{init:" in block and any(color.lower() in block.lower() for color in COLORBREWER2_SET3_COLORS)
 
 
-def check_file(file_path: Path) -> List[str]:
+def check_file(file_path: Path) -> list[str]:
     """Check a single file for Mermaid diagram styling issues."""
     issues = []
 

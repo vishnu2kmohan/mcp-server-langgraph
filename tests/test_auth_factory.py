@@ -15,6 +15,7 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSession
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, KeycloakUserProvider
 from tests.conftest import get_user_id
 
+
 # ============================================================================
 # Fixtures
 # ============================================================================

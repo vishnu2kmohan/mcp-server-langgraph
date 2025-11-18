@@ -4,6 +4,7 @@
 import sys
 from pathlib import Path
 
+
 try:
     import libcst as cst
 except ImportError:
@@ -54,9 +55,9 @@ class ShortTimeoutFixer(cst.CSTTransformer):
 def fix_file(file_path: Path) -> int:
     """Fix short timeouts in a single file."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source_code = f.read()
-    except (UnicodeDecodeError, IOError) as e:
+    except (OSError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {file_path}: {e}")
         return 0
 

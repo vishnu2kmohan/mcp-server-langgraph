@@ -20,6 +20,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 
@@ -409,10 +410,9 @@ def test_overlay_namespaces_have_patches():
         # Check if namespace is patched
         has_namespace_patch = False
         for patch in patches:
-            if isinstance(patch, dict):
-                if patch.get("path") == "namespace.yaml":
-                    has_namespace_patch = True
-                    break
+            if isinstance(patch, dict) and patch.get("path") == "namespace.yaml":
+                has_namespace_patch = True
+                break
 
         # Either should be true (resources or patches)
         assert has_namespace_resource or has_namespace_patch, (
@@ -516,7 +516,7 @@ def test_base_service_no_cloud_specific_annotations():
             continue
         annotations = service.get("metadata", {}).get("annotations", {})
 
-        for key in annotations.keys():
+        for key in annotations:
             for pattern in cloud_annotation_patterns:
                 assert not re.match(pattern, key), (
                     f"Base service has cloud-specific annotation: {key}\n"

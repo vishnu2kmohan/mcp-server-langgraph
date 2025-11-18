@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 
-def find_code_blocks_without_lang(content: str, filepath: Path) -> List[Tuple[int, str]]:
+def find_code_blocks_without_lang(content: str, filepath: Path) -> list[tuple[int, str]]:
     """
     Find code blocks without language tags.
 
@@ -65,25 +65,24 @@ def detect_language_from_content(preview: str) -> str:
     # Common patterns
     if any(x in preview for x in ["import ", "from ", "def ", "class ", "if __name__"]):
         return "python"
-    elif any(x in preview for x in ["const ", "let ", "function ", "=>", "import {"]):
+    if any(x in preview for x in ["const ", "let ", "function ", "=>", "import {"]):
         return "javascript"
-    elif any(x in preview for x in ["#!/bin/bash", "#!/bin/sh", "export ", "echo "]):
+    if any(x in preview for x in ["#!/bin/bash", "#!/bin/sh", "export ", "echo "]) or any(
+        x in preview for x in ["kubectl ", "docker ", "helm ", "gcloud "]
+    ):
         return "bash"
-    elif any(x in preview for x in ["kubectl ", "docker ", "helm ", "gcloud "]):
-        return "bash"
-    elif "{" in preview and ":" in preview and '"' in preview:
+    if "{" in preview and ":" in preview and '"' in preview:
         return "json"
-    elif "---" in preview and ":" in preview:
+    if "---" in preview and ":" in preview:
         return "yaml"
-    elif preview.strip().startswith("SELECT") or preview.strip().startswith("INSERT"):
+    if preview.strip().startswith("SELECT") or preview.strip().startswith("INSERT"):
         return "sql"
-    elif "curl " in preview or "http" in preview.lower():
+    if "curl " in preview or "http" in preview.lower():
         return "bash"
-    else:
-        return "text"
+    return "text"
 
 
-def analyze_file(filepath: Path) -> Dict:
+def analyze_file(filepath: Path) -> dict:
     """
     Analyze a single file for missing language tags.
 

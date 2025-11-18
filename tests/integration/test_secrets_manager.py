@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+
 # Check if infisical-python is available
 try:
     from infisical_client import InfisicalClient  # noqa: F401

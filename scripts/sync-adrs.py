@@ -31,7 +31,7 @@ class Colors:
     RESET = "\033[0m"
 
 
-def extract_title_and_date(content: str) -> Tuple[str, str]:
+def extract_title_and_date(content: str) -> tuple[str, str]:
     """
     Extract title and date from ADR content.
 
@@ -109,7 +109,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     dest_file = Path(f"docs/architecture/adr-{source_file.name.replace('.md', '.mdx')}")
 
     # Read source
-    with open(source_file, "r", encoding="utf-8") as f:
+    with open(source_file, encoding="utf-8") as f:
         source_content = f.read()
 
     # Convert to MDX
@@ -118,7 +118,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     # Check if update needed
     needs_update = True
     if dest_file.exists():
-        with open(dest_file, "r", encoding="utf-8") as f:
+        with open(dest_file, encoding="utf-8") as f:
             existing_content = f.read()
 
         # Extract body (skip frontmatter) for comparison
@@ -137,12 +137,11 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
                 f.write(mdx_content)
             print(f"{Colors.GREEN}✓ Synced: {source_file.name} → {dest_file.name}{Colors.RESET}")
         return True
-    else:
-        print(f"{Colors.BLUE}○ Up to date: {dest_file.name}{Colors.RESET}")
-        return False
+    print(f"{Colors.BLUE}○ Up to date: {dest_file.name}{Colors.RESET}")
+    return False
 
 
-def sync_all_adrs(dry_run: bool = False) -> Dict[str, int]:
+def sync_all_adrs(dry_run: bool = False) -> dict[str, int]:
     """
     Sync all ADRs from adr/ to docs/architecture/
 
@@ -214,10 +213,10 @@ def check_sync_status() -> bool:
             continue
 
         # Read both files
-        with open(source_file, "r", encoding="utf-8") as f:
+        with open(source_file, encoding="utf-8") as f:
             source_content = f.read()
 
-        with open(dest_file, "r", encoding="utf-8") as f:
+        with open(dest_file, encoding="utf-8") as f:
             dest_content = f.read()
 
         # Extract body for comparison
@@ -233,9 +232,8 @@ def check_sync_status() -> bool:
         print(f"\n{Colors.YELLOW}{len(out_of_sync)} ADR(s) out of sync{Colors.RESET}")
         print(f"\nRun {Colors.BOLD}python scripts/sync-adrs.py{Colors.RESET} to sync")
         return False
-    else:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}✓ All ADRs are in sync!{Colors.RESET}")
-        return True
+    print(f"\n{Colors.GREEN}{Colors.BOLD}✓ All ADRs are in sync!{Colors.RESET}")
+    return True
 
 
 def main():

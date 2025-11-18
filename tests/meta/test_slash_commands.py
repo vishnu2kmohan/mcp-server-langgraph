@@ -22,6 +22,7 @@ from typing import Dict, List, Set
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -45,7 +46,7 @@ class TestSlashCommands:
         return project_root / ".claude" / "commands"
 
     @pytest.fixture
-    def command_files(self, commands_dir: Path) -> List[Path]:
+    def command_files(self, commands_dir: Path) -> list[Path]:
         """Get all command files."""
         if not commands_dir.exists():
             pytest.skip("commands directory does not exist (should exist already)")
@@ -56,7 +57,7 @@ class TestSlashCommands:
         """Get the Makefile."""
         return project_root / "Makefile"
 
-    def test_all_commands_have_heading(self, command_files: List[Path]):
+    def test_all_commands_have_heading(self, command_files: list[Path]):
         """Test that all slash commands start with a markdown heading."""
         if not command_files:
             pytest.skip("No command files found")
@@ -74,7 +75,7 @@ class TestSlashCommands:
             f"Commands without markdown heading: {commands_without_heading}. " f"Each command should start with # Title"
         )
 
-    def test_all_commands_have_substantial_content(self, command_files: List[Path]):
+    def test_all_commands_have_substantial_content(self, command_files: list[Path]):
         """Test that all commands have substantial content (> 100 chars)."""
         if not command_files:
             pytest.skip("No command files found")
@@ -94,7 +95,7 @@ class TestSlashCommands:
             f"Commands should have clear descriptions and instructions."
         )
 
-    def test_no_duplicate_command_names(self, command_files: List[Path]):
+    def test_no_duplicate_command_names(self, command_files: list[Path]):
         """Test that there are no duplicate command names."""
         if not command_files:
             pytest.skip("No command files found")
@@ -110,7 +111,7 @@ class TestSlashCommands:
 
         assert len(duplicates) == 0, f"Duplicate command names found: {duplicates}"
 
-    def test_make_targets_referenced_exist(self, command_files: List[Path], makefile: Path):
+    def test_make_targets_referenced_exist(self, command_files: list[Path], makefile: Path):
         """Test that make targets referenced in commands actually exist."""
         if not command_files:
             pytest.skip("No command files found")
@@ -145,7 +146,7 @@ class TestSlashCommands:
             f"Update commands or add missing targets to Makefile."
         )
 
-    def test_commands_use_valid_bash_syntax(self, command_files: List[Path]):
+    def test_commands_use_valid_bash_syntax(self, command_files: list[Path]):
         """Test that bash code blocks in commands have valid syntax."""
         if not command_files:
             pytest.skip("No command files found")
@@ -194,7 +195,7 @@ class TestSlashCommands:
             f"Missing recommended commands: {missing_commands}. " f"Create them in .claude/commands/"
         )
 
-    def test_commands_have_consistent_format(self, command_files: List[Path]):
+    def test_commands_have_consistent_format(self, command_files: list[Path]):
         """Test that commands follow a consistent format."""
         if not command_files:
             pytest.skip("No command files found")
@@ -260,7 +261,7 @@ class TestSlashCommands:
 
         assert len(missing_types) == 0, f"verify-tests.md should run {missing_types} tests"
 
-    def test_commands_avoid_dangerous_operations(self, command_files: List[Path]):
+    def test_commands_avoid_dangerous_operations(self, command_files: list[Path]):
         """Test that commands don't include dangerous operations."""
         if not command_files:
             pytest.skip("No command files found")

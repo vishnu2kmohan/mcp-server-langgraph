@@ -21,6 +21,7 @@ from typing import Any, Dict
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 # Define project root relative to test file
@@ -37,9 +38,9 @@ class TestCriticalNetworkPolicyIssues:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     def test_networkpolicy_uses_standard_namespace_labels(self):
@@ -189,9 +190,9 @@ class TestCriticalTopologySpreadIssues:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     def test_deployment_zone_spreading_allows_single_zone(self):
@@ -276,7 +277,7 @@ class TestCriticalSecretIssues:
 
     def _load_yaml_file(self, file_path: Path) -> Any:
         """Load YAML file and return parsed content."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     def test_secret_placeholders_not_in_base_kustomization(self):
@@ -383,9 +384,9 @@ class TestCriticalNamespaceIssues:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load YAML file and return parsed content."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     def test_production_gke_namespace_consistency(self):
@@ -414,7 +415,7 @@ class TestCriticalNamespaceIssues:
         # Check network-policy.yaml
         if network_policy_path.exists():
             # NetworkPolicy file may contain multiple documents
-            with open(network_policy_path, "r") as f:
+            with open(network_policy_path) as f:
                 docs = yaml.safe_load_all(f)
                 for doc_idx, doc in enumerate(docs):
                     if doc and "metadata" in doc:
@@ -432,7 +433,7 @@ class TestCriticalNamespaceIssues:
 
         # Check resource-quotas.yaml
         if resource_quotas_path.exists():
-            with open(resource_quotas_path, "r") as f:
+            with open(resource_quotas_path) as f:
                 docs = yaml.safe_load_all(f)
                 for doc_idx, doc in enumerate(docs):
                     if doc and "metadata" in doc:

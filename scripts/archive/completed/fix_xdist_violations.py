@@ -13,7 +13,7 @@ from pathlib import Path
 
 def add_xdist_marker_and_teardown(file_path):
     """Add xdist_group marker and teardown_method to test classes."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         content = f.read()
 
     original_content = content
@@ -89,19 +89,17 @@ def add_xdist_marker_and_teardown(file_path):
                             # Single line docstring
                             insert_idx += 1
                             break
-                        else:
-                            # Find end of docstring
-                            quote = '"""' if '"""' in check_line else "'''"
-                            insert_idx += 1
-                            while insert_idx < len(lines):
-                                if quote in lines[insert_idx]:
-                                    insert_idx += 1
-                                    break
+                        # Find end of docstring
+                        quote = '"""' if '"""' in check_line else "'''"
+                        insert_idx += 1
+                        while insert_idx < len(lines):
+                            if quote in lines[insert_idx]:
                                 insert_idx += 1
-                            break
-                    else:
-                        # Not a docstring, insert here
+                                break
+                            insert_idx += 1
                         break
+                    # Not a docstring, insert here
+                    break
 
                 # Create teardown_method
                 method_indent = " " * (indent + 4)

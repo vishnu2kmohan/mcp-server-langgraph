@@ -12,6 +12,7 @@ from typing import List, Tuple
 
 import pytest
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
@@ -37,7 +38,7 @@ class TestDocumentationReferences:
         gc.collect()
 
     @pytest.fixture
-    def documentation_files(self) -> List[Path]:
+    def documentation_files(self) -> list[Path]:
         """Get all documentation files (markdown and MDX)."""
         repo_root = Path(__file__).parent.parent.parent
         doc_files = []
@@ -55,7 +56,7 @@ class TestDocumentationReferences:
 
         return sorted(doc_files)
 
-    def _find_script_references(self, file_path: Path) -> List[Tuple[int, str, str]]:
+    def _find_script_references(self, file_path: Path) -> list[tuple[int, str, str]]:
         """Find all script references in a file.
 
         Returns:
@@ -64,15 +65,15 @@ class TestDocumentationReferences:
         references = []
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
-        except (UnicodeDecodeError, IOError):
+        except (OSError, UnicodeDecodeError):
             # Skip binary or unreadable files
             return references
 
         for line_num, line in enumerate(lines, start=1):
             # Check for obsolete script references
-            for obsolete_script in OBSOLETE_SCRIPTS.keys():
+            for obsolete_script in OBSOLETE_SCRIPTS:
                 if obsolete_script in line:
                     references.append((line_num, obsolete_script, line.strip()))
 
@@ -138,7 +139,7 @@ class TestDocumentationReferences:
         if not doc_path.exists():
             pytest.skip("PYTEST_XDIST_PREVENTION.md not found")
 
-        with open(doc_path, "r", encoding="utf-8") as f:
+        with open(doc_path, encoding="utf-8") as f:
             content = f.read()
 
         # Should reference current script
@@ -148,7 +149,7 @@ class TestDocumentationReferences:
         )
 
         # Should NOT reference obsolete scripts
-        for obsolete_script in OBSOLETE_SCRIPTS.keys():
+        for obsolete_script in OBSOLETE_SCRIPTS:
             assert obsolete_script not in content, (
                 f"PYTEST_XDIST_PREVENTION.md should not reference obsolete script: {obsolete_script}\n"
                 f"Replace with: {OBSOLETE_SCRIPTS[obsolete_script]}"
@@ -161,7 +162,7 @@ class TestDocumentationReferences:
         if not report_path.exists():
             pytest.skip("PYTEST_XDIST_STATE_POLLUTION_SCAN_REPORT.md not found")
 
-        with open(report_path, "r", encoding="utf-8") as f:
+        with open(report_path, encoding="utf-8") as f:
             content = f.read()
 
         # Should reference current script
@@ -171,7 +172,7 @@ class TestDocumentationReferences:
         )
 
         # Should NOT reference obsolete scripts
-        for obsolete_script in OBSOLETE_SCRIPTS.keys():
+        for obsolete_script in OBSOLETE_SCRIPTS:
             assert obsolete_script not in content, (
                 f"PYTEST_XDIST_STATE_POLLUTION_SCAN_REPORT.md should not reference obsolete script: {obsolete_script}\n"
                 f"Replace with: {OBSOLETE_SCRIPTS[obsolete_script]}"
@@ -197,9 +198,9 @@ class TestDocumentationReferences:
 
         for doc_file in documentation_files:
             try:
-                with open(doc_file, "r", encoding="utf-8") as f:
+                with open(doc_file, encoding="utf-8") as f:
                     content = f.read()
-            except (UnicodeDecodeError, IOError):
+            except (OSError, UnicodeDecodeError):
                 continue
 
             # Check markdown links
@@ -263,10 +264,4 @@ class TestDocumentationReferences:
         # TODO: Fix remaining documentation cross-references
         # Threshold set to 500 to allow builds while docs are being fixed
         if len(broken_links) > 500:
-            assert False, (
-                f"Found {len(broken_links)} broken documentation cross-references:\n"
-                + "\n".join(f"  - {link}" for link in broken_links[:20])
-                + (f"\n  ... and {len(broken_links) - 20} more" if len(broken_links) > 20 else "")
-                + "\n\n"
-                "Fix broken links or update documentation structure."
-            )
+            raise AssertionError(f"Found {len(broken_links)} broken documentation cross-references:\n" + "\n".join(f"  - {link}" for link in broken_links[:20]) + (f"\n  ... and {len(broken_links) - 20} more" if len(broken_links) > 20 else "") + "\n\n" "Fix broken links or update documentation structure.")

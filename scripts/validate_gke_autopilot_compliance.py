@@ -41,8 +41,8 @@ class GKEAutopilotValidator:
 
     def __init__(self, overlay_path: str):
         self.overlay_path = Path(overlay_path)
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
 
     def parse_cpu(self, cpu_str: str) -> float:
         """Parse CPU string to millicores"""
@@ -75,7 +75,7 @@ class GKEAutopilotValidator:
         # Assume bytes if no unit
         return float(mem_str) / (1024 * 1024)
 
-    def build_kustomize(self) -> List[Dict[str, Any]]:
+    def build_kustomize(self) -> list[dict[str, Any]]:
         """Build kustomize overlay and return parsed manifests"""
         try:
             result = subprocess.run(
@@ -131,7 +131,7 @@ class GKEAutopilotValidator:
                 f"(request: {request}, limit: {limit})"
             )
 
-    def validate_env_vars(self, deployment_name: str, container_name: str, env_vars: List[Dict[str, Any]]) -> None:
+    def validate_env_vars(self, deployment_name: str, container_name: str, env_vars: list[dict[str, Any]]) -> None:
         """Validate environment variables don't have conflicting sources"""
         for env in env_vars:
             name = env.get("name", "unknown")
@@ -160,7 +160,7 @@ class GKEAutopilotValidator:
                     )
 
     def validate_readonly_filesystem(
-        self, deployment_name: str, container_name: str, security_context: Dict[str, Any], volume_mounts: List[Dict[str, Any]]
+        self, deployment_name: str, container_name: str, security_context: dict[str, Any], volume_mounts: list[dict[str, Any]]
     ) -> None:
         """Validate readOnlyRootFilesystem has appropriate volume mounts"""
         readonly_fs = security_context.get("readOnlyRootFilesystem", False)
@@ -178,7 +178,7 @@ class GKEAutopilotValidator:
                     f"but missing recommended mounts: {missing_mounts}"
                 )
 
-    def validate_deployment(self, manifest: Dict[str, Any]) -> None:
+    def validate_deployment(self, manifest: dict[str, Any]) -> None:
         """Validate a Deployment manifest"""
         kind = manifest.get("kind")
         if kind not in ["Deployment", "StatefulSet", "DaemonSet"]:

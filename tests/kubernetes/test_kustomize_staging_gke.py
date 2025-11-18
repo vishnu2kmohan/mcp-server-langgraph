@@ -27,6 +27,7 @@ from typing import Any
 import pytest
 import yaml
 
+
 # Define project root relative to test file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 STAGING_GKE_OVERLAY = PROJECT_ROOT / "deployments" / "overlays" / "staging-gke"

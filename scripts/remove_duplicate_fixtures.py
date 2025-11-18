@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 
-def find_fixture_definition(file_path: Path, fixture_name: str = "init_test_observability") -> Tuple[int, int]:
+def find_fixture_definition(file_path: Path, fixture_name: str = "init_test_observability") -> tuple[int, int]:
     """
     Find the line range of a fixture definition in a file.
 
@@ -20,7 +20,7 @@ def find_fixture_definition(file_path: Path, fixture_name: str = "init_test_obse
         Tuple of (start_line, end_line) or (0, 0) if not found
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
             tree = ast.parse(content, filename=str(file_path))
     except SyntaxError:
@@ -69,7 +69,7 @@ def remove_fixture_from_file(file_path: Path, fixture_name: str = "init_test_obs
         return False
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         # Remove the fixture lines

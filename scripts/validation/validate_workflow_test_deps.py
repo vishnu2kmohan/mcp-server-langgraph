@@ -30,7 +30,7 @@ from typing import Dict, List, Set
 import yaml
 
 
-def get_workflow_files(workflow_path: Path = None) -> List[Path]:
+def get_workflow_files(workflow_path: Path = None) -> list[Path]:
     """
     Get all GitHub Actions workflow files to validate.
 
@@ -47,7 +47,7 @@ def get_workflow_files(workflow_path: Path = None) -> List[Path]:
     return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
 
-def extract_extras_from_workflow(workflow_content: dict) -> Set[str]:
+def extract_extras_from_workflow(workflow_content: dict) -> set[str]:
     """
     Extract the extras being installed in a workflow.
 
@@ -115,7 +115,7 @@ def check_if_runs_tests(workflow_content: dict) -> bool:
     return uses_setup_deps and runs_pytest
 
 
-def get_required_extras_for_tests() -> Set[str]:
+def get_required_extras_for_tests() -> set[str]:
     """
     Get the minimum set of extras required to run tests.
 
@@ -130,7 +130,7 @@ def get_required_extras_for_tests() -> Set[str]:
     return {"dev"}  # Minimum required for running tests
 
 
-def validate_workflow(workflow_path: Path) -> List[str]:
+def validate_workflow(workflow_path: Path) -> list[str]:
     """
     Validate a single workflow file.
 

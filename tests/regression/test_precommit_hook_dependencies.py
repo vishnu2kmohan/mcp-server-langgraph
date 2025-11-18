@@ -32,6 +32,7 @@ from typing import Dict, List, Set
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -42,7 +43,7 @@ except ImportError:
     yaml = None
 
 
-def load_precommit_config() -> Dict:
+def load_precommit_config() -> dict:
     """Load .pre-commit-config.yaml configuration."""
     config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
     if not config_path.exists():
@@ -55,7 +56,7 @@ def load_precommit_config() -> Dict:
         return yaml.safe_load(f)
 
 
-def extract_imports_from_python_file(file_path: Path) -> Set[str]:
+def extract_imports_from_python_file(file_path: Path) -> set[str]:
     """
     Extract all import statements from a Python file.
 
@@ -72,10 +73,9 @@ def extract_imports_from_python_file(file_path: Path) -> Set[str]:
                 for alias in node.names:
                     # import foo.bar -> foo
                     imports.add(alias.name.split(".")[0])
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    # from foo.bar import baz -> foo
-                    imports.add(node.module.split(".")[0])
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                # from foo.bar import baz -> foo
+                imports.add(node.module.split(".")[0])
 
         return imports
     except Exception:
@@ -430,10 +430,9 @@ class TestPreCommitHookConfiguration:
 
         for repo in config.get("repos", []):
             for hook in repo.get("hooks", []):
-                if hook.get("language") == "python":
-                    if "pass_filenames" not in hook:
-                        # This is informational, not a hard requirement
-                        pass  # Could add to a recommendations list if needed
+                if hook.get("language") == "python" and "pass_filenames" not in hook:
+                    # This is informational, not a hard requirement
+                    pass  # Could add to a recommendations list if needed
 
 
 def test_precommit_config_exists():

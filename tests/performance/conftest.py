@@ -7,7 +7,8 @@ Provides enhanced pytest-benchmark fixtures for percentile-based performance ass
 import asyncio
 import inspect
 import time
-from typing import Callable, List
+from collections.abc import Callable
+from typing import List
 
 import pytest
 
@@ -33,7 +34,7 @@ class PercentileBenchmark:
     def __init__(self, benchmark):
         """Initialize with pytest-benchmark fixture"""
         self._benchmark = benchmark
-        self._times: List[float] = []
+        self._times: list[float] = []
 
     def __call__(self, func: Callable, *args, **kwargs):
         """

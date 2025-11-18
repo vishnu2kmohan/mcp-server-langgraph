@@ -20,6 +20,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -90,7 +91,7 @@ class TestServiceAccountSeparation:
 
         for component in expected_separate_components:
             # Find workloads for this component
-            component_workloads = [w for w in workload_to_sa.keys() if component in w.lower()]
+            component_workloads = [w for w in workload_to_sa if component in w.lower()]
 
             if not component_workloads:
                 continue  # Component not deployed
@@ -332,7 +333,7 @@ class TestRBACConfiguration:
         if violations:
             import warnings
 
-            warnings.warn("Potentially overly permissive RBAC rules (consider restricting):\n" + "\n".join(violations))
+            warnings.warn("Potentially overly permissive RBAC rules (consider restricting):\n" + "\n".join(violations), stacklevel=2)
 
     def test_role_bindings_reference_existing_service_accounts(self, base_resources):
         """

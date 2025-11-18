@@ -138,10 +138,10 @@ class TestAPIKeyIndexedLookup:
             result = await manager.validate_and_get_user("nonexistent-key-123")
         assert result is None
         assert any(
-            ("cache miss" in record.message.lower() and "enumeration" in record.message.lower() for record in caplog.records)
+            "cache miss" in record.message.lower() and "enumeration" in record.message.lower() for record in caplog.records
         ), "Should log warning about cache miss triggering enumeration"
         assert any(
-            ("redis cache" in record.message.lower() or "adr-0034" in record.message.lower() for record in caplog.records)
+            "redis cache" in record.message.lower() or "adr-0034" in record.message.lower() for record in caplog.records
         ), "Should document Redis cache mitigation (ADR-0034)"
 
     @pytest.mark.asyncio
@@ -267,4 +267,4 @@ class TestAPIKeyHashStorage:
         mock_keycloak.update_user_attributes.assert_called()
         call_args = mock_keycloak.update_user_attributes.call_args[0][1]
         remaining_keys = call_args.get("apiKeys", [])
-        assert not any(("key:id2:" in key for key in remaining_keys)), "Revoked key should be removed from apiKeys"
+        assert not any("key:id2:" in key for key in remaining_keys), "Revoked key should be removed from apiKeys"

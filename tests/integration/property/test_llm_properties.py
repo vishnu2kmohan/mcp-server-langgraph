@@ -12,6 +12,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+
 # Hypothesis strategies
 valid_providers = st.sampled_from(["anthropic", "openai", "google", "gemini", "azure", "bedrock", "ollama"])
 

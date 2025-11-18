@@ -146,7 +146,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    def _find_unmarked_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+    def _find_unmarked_integration_tests(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests that use infrastructure but lack @pytest.mark.integration
 
@@ -178,7 +178,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -214,16 +214,14 @@ class TestMarkerConsistency:
                     and decorator.attr == marker_name
                 ):
                     return True
-            elif isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    if (
-                        isinstance(decorator.func.value, ast.Attribute)
-                        and isinstance(decorator.func.value.value, ast.Name)
-                        and decorator.func.value.value.id == "pytest"
-                        and decorator.func.value.attr == "mark"
-                        and decorator.func.attr == marker_name
-                    ):
-                        return True
+            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                isinstance(decorator.func.value, ast.Attribute)
+                and isinstance(decorator.func.value.value, ast.Name)
+                and decorator.func.value.value.id == "pytest"
+                and decorator.func.value.attr == "mark"
+                and decorator.func.attr == marker_name
+            ):
+                return True
         return False
 
     def _detect_infrastructure_usage(
@@ -256,7 +254,7 @@ class TestMarkerConsistency:
 
         return ""
 
-    def _find_conflicting_markers(self, marker_pairs: List[Tuple[str, str]]) -> List[Tuple[str, str, Set[str]]]:
+    def _find_conflicting_markers(self, marker_pairs: list[tuple[str, str]]) -> list[tuple[str, str, set[str]]]:
         """
         Find test classes with conflicting pytest markers
 
@@ -275,7 +273,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read(), filename=str(test_file))
 
                 for node in ast.walk(tree):
@@ -295,7 +293,7 @@ class TestMarkerConsistency:
 
         return conflicts
 
-    def _extract_markers_from_class(self, class_node: ast.ClassDef) -> Set[str]:
+    def _extract_markers_from_class(self, class_node: ast.ClassDef) -> set[str]:
         """
         Extract pytest marker names from a test class
 
@@ -340,7 +338,7 @@ class TestMarkerConsistency:
                 return decorator.attr
         return ""
 
-    def _find_hard_skips_in_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+    def _find_hard_skips_in_integration_tests(self) -> list[tuple[str, str, int, str]]:
         """
         Find integration tests using hard @pytest.mark.skip instead of conditional skips
 
@@ -355,7 +353,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -395,7 +393,7 @@ class TestMarkerConsistency:
 
         return violations
 
-    def _find_skip_markers_for_unimplemented_features(self) -> List[Tuple[str, str, int, str]]:
+    def _find_skip_markers_for_unimplemented_features(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests using @pytest.mark.skip for unimplemented features
 
@@ -420,7 +418,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -453,20 +451,17 @@ class TestMarkerConsistency:
             Skip reason string or empty string if not a skip marker
         """
         # Handle @pytest.mark.skip(reason="...")
-        if isinstance(decorator, ast.Call):
-            if isinstance(decorator.func, ast.Attribute):
-                if (
-                    isinstance(decorator.func.value, ast.Attribute)
-                    and isinstance(decorator.func.value.value, ast.Name)
-                    and decorator.func.value.value.id == "pytest"
-                    and decorator.func.value.attr == "mark"
-                    and decorator.func.attr == "skip"
-                ):
-                    # Extract reason from keyword arguments
-                    for keyword in decorator.keywords:
-                        if keyword.arg == "reason":
-                            if isinstance(keyword.value, ast.Constant):
-                                return keyword.value.value
+        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+            isinstance(decorator.func.value, ast.Attribute)
+            and isinstance(decorator.func.value.value, ast.Name)
+            and decorator.func.value.value.id == "pytest"
+            and decorator.func.value.attr == "mark"
+            and decorator.func.attr == "skip"
+        ):
+            # Extract reason from keyword arguments
+            for keyword in decorator.keywords:
+                if keyword.arg == "reason" and isinstance(keyword.value, ast.Constant):
+                    return keyword.value.value
                             # Note: ast.Str removed - deprecated since Python 3.8, removed in Python 3.14
                             # All string constants are now ast.Constant nodes
 
@@ -507,7 +502,7 @@ class TestImportGuards:
 
             # Read file content
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     lines = content.split("\n")
 
@@ -571,7 +566,7 @@ class TestInfrastructureFixtures:
         """
         conftest_path = Path(__file__).parent.parent / "conftest.py"
 
-        with open(conftest_path, "r", encoding="utf-8") as f:
+        with open(conftest_path, encoding="utf-8") as f:
             content = f.read()
 
         # Check that pytest.fail is NOT used in infrastructure health checks
@@ -641,7 +636,7 @@ class TestCLIToolGuards:
             )
             pytest.fail(error_msg)
 
-    def _find_unguarded_cli_tool_usage(self) -> List[Tuple[str, str, int, str]]:
+    def _find_unguarded_cli_tool_usage(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests that invoke CLI tools without proper guards.
 
@@ -663,7 +658,7 @@ class TestCLIToolGuards:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -740,17 +735,15 @@ class TestCLIToolGuards:
         """
         for decorator in func_node.decorator_list:
             # Check for @pytest.mark.skipif(...)
-            if isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Attribute):
-                    if (
-                        isinstance(decorator.func.value, ast.Attribute)
-                        and isinstance(decorator.func.value.value, ast.Name)
-                        and decorator.func.value.value.id == "pytest"
-                        and decorator.func.value.attr == "mark"
-                        and decorator.func.attr == "skipif"
-                    ):
-                        # Found skipif decorator
-                        return True
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                isinstance(decorator.func.value, ast.Attribute)
+                and isinstance(decorator.func.value.value, ast.Name)
+                and decorator.func.value.value.id == "pytest"
+                and decorator.func.value.attr == "mark"
+                and decorator.func.attr == "skipif"
+            ):
+                # Found skipif decorator
+                return True
 
         return False
 
@@ -795,25 +788,24 @@ class TestCLIToolGuards:
                 if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
                     if isinstance(test.operand, ast.Call):
                         # Check if it's shutil.which call
-                        if isinstance(test.operand.func, ast.Attribute):
-                            if (
-                                isinstance(test.operand.func.value, ast.Name)
-                                and test.operand.func.value.id == "shutil"
-                                and test.operand.func.attr == "which"
-                            ):
-                                # Check if first argument is the CLI tool
-                                if test.operand.args and isinstance(test.operand.args[0], ast.Constant):
-                                    if test.operand.args[0].value == cli_tool:
-                                        # Found the check, now verify it calls pytest.skip
-                                        for stmt in node.body:
-                                            if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
-                                                if isinstance(stmt.value.func, ast.Attribute):
-                                                    if (
-                                                        isinstance(stmt.value.func.value, ast.Name)
-                                                        and stmt.value.func.value.id == "pytest"
-                                                        and stmt.value.func.attr == "skip"
-                                                    ):
-                                                        return True
+                        if isinstance(test.operand.func, ast.Attribute) and (
+                            isinstance(test.operand.func.value, ast.Name)
+                            and test.operand.func.value.id == "shutil"
+                            and test.operand.func.attr == "which"
+                        ):
+                            # Check if first argument is the CLI tool
+                            if test.operand.args and isinstance(test.operand.args[0], ast.Constant):
+                                if test.operand.args[0].value == cli_tool:
+                                    # Found the check, now verify it calls pytest.skip
+                                    for stmt in node.body:
+                                        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+                                            if isinstance(stmt.value.func, ast.Attribute):
+                                                if (
+                                                    isinstance(stmt.value.func.value, ast.Name)
+                                                    and stmt.value.func.value.id == "pytest"
+                                                    and stmt.value.func.attr == "skip"
+                                                ):
+                                                    return True
         return False
 
     def _has_class_marker(self, func_node: ast.FunctionDef, tree: ast.Module, expected_marker: str) -> bool:

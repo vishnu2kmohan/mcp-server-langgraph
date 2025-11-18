@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List
 
+
 # ANSI color codes
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -27,10 +28,10 @@ BOLD = "\033[1m"
 
 class ValidationResult:
     def __init__(self):
-        self.passed: List[str] = []
-        self.failed: List[str] = []
-        self.warnings: List[str] = []
-        self.info: List[str] = []
+        self.passed: list[str] = []
+        self.failed: list[str] = []
+        self.warnings: list[str] = []
+        self.info: list[str] = []
 
     def add_pass(self, message: str):
         self.passed.append(message)
@@ -48,7 +49,7 @@ class ValidationResult:
         self.info.append(message)
         print(f"{BLUE}ℹ{RESET} {message}")
 
-    def summary(self) -> Dict[str, int]:
+    def summary(self) -> dict[str, int]:
         return {
             "passed": len(self.passed),
             "failed": len(self.failed),
@@ -133,7 +134,7 @@ def check_secrets_configuration(result: ValidationResult) -> None:
         (r"secret.*=.*['\"]secret", "Default secret detected"),
     ]
 
-    python_files = list(Path(".").glob("**/*.py"))
+    python_files = list(Path().glob("**/*.py"))
     python_files = [f for f in python_files if "venv" not in str(f) and "test" not in str(f)]
 
     found_issues = False

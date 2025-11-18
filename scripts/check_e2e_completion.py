@@ -13,6 +13,7 @@ import re
 import sys
 from pathlib import Path
 
+
 REPO_ROOT = Path(__file__).parent.parent
 E2E_TEST_FILE = REPO_ROOT / "tests" / "e2e" / "test_full_user_journey.py"
 

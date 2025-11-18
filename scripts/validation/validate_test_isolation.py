@@ -30,8 +30,8 @@ class TestIsolationValidator(ast.NodeVisitor):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.violations: List[Tuple[int, str, str]] = []
-        self.warnings: List[Tuple[int, str, str]] = []
+        self.violations: list[tuple[int, str, str]] = []
+        self.warnings: list[tuple[int, str, str]] = []
         self.current_class = None
         self.current_function = None
         self.has_xdist_group_marker = False
@@ -182,7 +182,7 @@ class TestIsolationValidator(ast.NodeVisitor):
         return False
 
 
-def validate_file(file_path: Path) -> Tuple[List, List]:
+def validate_file(file_path: Path) -> tuple[list, list]:
     """Validate a single test file"""
     try:
         with open(file_path) as f:
@@ -239,14 +239,13 @@ def validate_test_files(test_dir: Path) -> int:
         print(f"⚠️  Found {total_warnings} warning(s)")
         print("\nSee tests/PYTEST_XDIST_BEST_PRACTICES.md for guidance")
         return 1
-    elif total_warnings > 0:
+    if total_warnings > 0:
         print(f"⚠️  Found {total_warnings} warning(s) in {len(files_with_issues)} file(s)")
         print("✅ No critical violations found")
         print("\nConsider addressing warnings for better pytest-xdist compatibility")
         return 0
-    else:
-        print("✅ All test files follow pytest-xdist best practices!")
-        return 0
+    print("✅ All test files follow pytest-xdist best practices!")
+    return 0
 
 
 def main():

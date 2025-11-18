@@ -41,17 +41,16 @@ def check_keycloak_admin_credentials_wired() -> list[str]:
     content = dependencies_file.read_text()
 
     # Check that KeycloakConfig initialization includes admin credentials
-    if "KeycloakConfig(" in content:
-        if "admin_username=" not in content:
-            errors.append(
-                "❌ CRITICAL: Keycloak admin_username not wired in dependencies.py\n"
-                "   Fix: Add 'admin_username=settings.keycloak_admin_username' to KeycloakConfig()"
-            )
-        if "admin_password=" not in content:
-            errors.append(
-                "❌ CRITICAL: Keycloak admin_password not wired in dependencies.py\n"
-                "   Fix: Add 'admin_password=settings.keycloak_admin_password' to KeycloakConfig()"
-            )
+    if "KeycloakConfig(" in content and "admin_username=" not in content:
+        errors.append(
+            "❌ CRITICAL: Keycloak admin_username not wired in dependencies.py\n"
+            "   Fix: Add 'admin_username=settings.keycloak_admin_username' to KeycloakConfig()"
+        )
+    if "KeycloakConfig(" in content and "admin_password=" not in content:
+        errors.append(
+            "❌ CRITICAL: Keycloak admin_password not wired in dependencies.py\n"
+            "   Fix: Add 'admin_password=settings.keycloak_admin_password' to KeycloakConfig()"
+        )
 
     return errors
 
@@ -71,20 +70,22 @@ def check_openfga_returns_optional() -> list[str]:
     content = dependencies_file.read_text()
 
     # Check function signature - accept both Optional[OpenFGAClient] and OpenFGAClient | None
-    if "def get_openfga_client()" in content:
-        if "Optional[OpenFGAClient]" not in content and "OpenFGAClient | None" not in content:
-            errors.append(
-                "❌ CRITICAL: get_openfga_client must return Optional[OpenFGAClient]\n"
-                "   Fix: Change return type to 'Optional[OpenFGAClient]'"
-            )
+    if (
+        "def get_openfga_client()" in content
+        and "Optional[OpenFGAClient]" not in content
+        and "OpenFGAClient | None" not in content
+    ):
+        errors.append(
+            "❌ CRITICAL: get_openfga_client must return Optional[OpenFGAClient]\n"
+            "   Fix: Change return type to 'Optional[OpenFGAClient]'"
+        )
 
-        # Check for validation logic
-        if "store_id" in content and "model_id" in content:
-            if "return None" not in content:
-                errors.append(
-                    "⚠️  WARNING: get_openfga_client should return None when config incomplete\n"
-                    "   Recommendation: Add validation that returns None when store_id or model_id missing"
-                )
+    # Check for validation logic
+    if "store_id" in content and "model_id" in content and "return None" not in content:
+        errors.append(
+            "⚠️  WARNING: get_openfga_client should return None when config incomplete\n"
+            "   Recommendation: Add validation that returns None when store_id or model_id missing"
+        )
 
     return errors
 
@@ -104,23 +105,23 @@ def check_service_principal_accepts_optional_openfga() -> list[str]:
     content = sp_file.read_text()
 
     # Check constructor signature - accept both Optional[OpenFGAClient] and OpenFGAClient | None
-    if "def __init__" in content and "openfga_client" in content:
-        if "Optional[OpenFGAClient]" not in content and "OpenFGAClient | None" not in content:
-            errors.append(
-                "❌ CRITICAL: ServicePrincipalManager.__init__ must accept Optional[OpenFGAClient]\n"
-                "   Fix: Change parameter type to 'openfga_client: Optional[OpenFGAClient]'"
-            )
+    if (
+        "def __init__" in content
+        and "openfga_client" in content
+        and "Optional[OpenFGAClient]" not in content
+        and "OpenFGAClient | None" not in content
+    ):
+        errors.append(
+            "❌ CRITICAL: ServicePrincipalManager.__init__ must accept Optional[OpenFGAClient]\n"
+            "   Fix: Change parameter type to 'openfga_client: Optional[OpenFGAClient]'"
+        )
 
-        # Check for guards
-        if (
-            "_sync_to_openfga" in content
-            and "if self.openfga is None" not in content
-            and "if not self.openfga" not in content
-        ):
-            errors.append(
-                "⚠️  WARNING: _sync_to_openfga should guard against None OpenFGA\n"
-                "   Recommendation: Add 'if self.openfga is None: return' at start of method"
-            )
+    # Check for guards
+    if "_sync_to_openfga" in content and "if self.openfga is None" not in content and "if not self.openfga" not in content:
+        errors.append(
+            "⚠️  WARNING: _sync_to_openfga should guard against None OpenFGA\n"
+            "   Recommendation: Add 'if self.openfga is None: return' at start of method"
+        )
 
     return errors
 
@@ -140,19 +141,22 @@ def check_cache_uses_redis_from_url() -> list[str]:
     content = cache_file.read_text()
 
     # Check CacheService.__init__ signature
-    if "class CacheService" in content and "def __init__" in content:
-        if "redis_password" not in content or "redis_ssl" not in content:
-            errors.append(
-                "❌ CRITICAL: CacheService.__init__ must accept redis_password and redis_ssl\n"
-                "   Fix: Add 'redis_password: Optional[str]' and 'redis_ssl: bool' parameters"
-            )
+    if (
+        "class CacheService" in content
+        and "def __init__" in content
+        and ("redis_password" not in content or "redis_ssl" not in content)
+    ):
+        errors.append(
+            "❌ CRITICAL: CacheService.__init__ must accept redis_password and redis_ssl\n"
+            "   Fix: Add 'redis_password: Optional[str]' and 'redis_ssl: bool' parameters"
+        )
 
-        # Check for from_url pattern
-        if "redis.from_url" not in content and "redis.Redis(" in content:
-            errors.append(
-                "⚠️  WARNING: CacheService should use redis.from_url() not redis.Redis()\n"
-                "   Recommendation: Use 'redis.from_url(url, password=..., ssl=...)' pattern"
-            )
+    # Check for from_url pattern
+    if "redis.from_url" not in content and "redis.Redis(" in content:
+        errors.append(
+            "⚠️  WARNING: CacheService should use redis.from_url() not redis.Redis()\n"
+            "   Recommendation: Use 'redis.from_url(url, password=..., ssl=...)' pattern"
+        )
 
     return errors
 

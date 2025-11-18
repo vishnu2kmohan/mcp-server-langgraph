@@ -28,6 +28,7 @@ import pytest
 
 from tests.conftest import get_user_id
 
+
 # This import will fail until we create the module (RED phase)
 try:
     from tests.helpers.async_mock_helpers import configured_async_mock, configured_async_mock_deny, configured_async_mock_raise

@@ -215,7 +215,7 @@ class TestOpenAPIInclusion:
 
         # Count total operations (GET, POST, PUT, DELETE, PATCH across all paths)
         total_operations = sum(
-            len([m for m in methods.keys() if m in ["get", "post", "put", "delete", "patch"]]) for methods in paths.values()
+            len([m for m in methods if m in ["get", "post", "put", "delete", "patch"]]) for methods in paths.values()
         )
 
         # We should have at least:

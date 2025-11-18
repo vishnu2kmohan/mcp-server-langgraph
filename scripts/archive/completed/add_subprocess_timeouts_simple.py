@@ -15,9 +15,9 @@ def add_timeout_to_file(file_path: Path) -> int:
         Number of modifications made
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
         return 0
 
     modifications = 0

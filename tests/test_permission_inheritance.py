@@ -12,6 +12,7 @@ import pytest
 
 from mcp_server_langgraph.auth.openfga import check_permission
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -307,9 +308,7 @@ class TestPermissionInheritanceLogging:
         async def check_side_effect(user, relation, object):
             if user == service_id:
                 return False
-            if user == associated_user:
-                return True
-            return False
+            return user == associated_user
 
         mock_openfga_client.check_permission.side_effect = check_side_effect
         mock_openfga_client.list_objects.return_value = [associated_user]
@@ -349,9 +348,7 @@ class TestPermissionInheritanceCaching:
         associated_user = "user:alice"
 
         async def check_side_effect(user, relation, object):
-            if user == associated_user:
-                return True
-            return False
+            return user == associated_user
 
         mock_openfga_client.check_permission.side_effect = check_side_effect
         mock_openfga_client.list_objects.return_value = [associated_user]

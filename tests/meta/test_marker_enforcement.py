@@ -28,15 +28,16 @@ from typing import Set
 
 import pytest
 
+
 # Test files that are intentionally exempt from marker requirements
 # Each entry must have a documented reason
-MARKER_EXEMPT_FILES: Set[str] = {
+MARKER_EXEMPT_FILES: set[str] = {
     # Add exempt files here with justification comments
     # Example: "tests/examples/demo.py",  # Educational example, not executed in CI
 }
 
 # Critical guard-rail tests that must have both 'unit' AND 'meta' markers
-CRITICAL_GUARD_RAIL_TESTS: Set[str] = {
+CRITICAL_GUARD_RAIL_TESTS: set[str] = {
     "tests/test_gitignore_validation.py",
     "tests/test_documentation_integrity.py",
     "tests/test_workflow_security.py",
@@ -46,7 +47,7 @@ CRITICAL_GUARD_RAIL_TESTS: Set[str] = {
 
 # Meta test classes that must have xdist_group markers (OpenAI Codex Finding #5)
 # These classes perform repository-wide operations and need isolation
-META_TEST_CLASSES_REQUIRING_XDIST_GROUP: Set[tuple[str, str]] = {
+META_TEST_CLASSES_REQUIRING_XDIST_GROUP: set[tuple[str, str]] = {
     ("tests/meta/test_slash_commands.py", "TestCommandDocumentation"),
     ("tests/meta/test_claude_settings_schema.py", "TestSettingsLocalExclusion"),
     ("tests/meta/test_migration_checklists.py", "TestTypeSafetyChecklist"),
@@ -70,7 +71,7 @@ class TestMarkerEnforcement:
         test_files.extend(tests_dir.rglob("*_test.py"))
         return sorted(set(test_files))
 
-    def _extract_markers_from_file(self, file_path: Path) -> Set[str]:
+    def _extract_markers_from_file(self, file_path: Path) -> set[str]:
         """
         Extract pytest markers from a test file.
 
@@ -82,7 +83,7 @@ class TestMarkerEnforcement:
         markers = set()
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(file_path))
         except SyntaxError:
             # If file has syntax errors, pytest won't collect it anyway
@@ -112,10 +113,9 @@ class TestMarkerEnforcement:
                         if isinstance(decorator.value, ast.Attribute) and decorator.value.attr == "mark":
                             markers.add(decorator.attr)
                     # @pytest.mark.unit(...)
-                    elif isinstance(decorator, ast.Call):
-                        if isinstance(decorator.func, ast.Attribute):
-                            if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
-                                markers.add(decorator.func.attr)
+                    elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                        if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
+                            markers.add(decorator.func.attr)
 
         return markers
 
@@ -156,8 +156,8 @@ class TestMarkerEnforcement:
             "Found {} test files without required markers.\n\n"
             "Files must have at least one marker from: {}\n\n"
             "Unmarked files:\n"
-            + "\n".join("  - {}".format(f) for f in unmarked_files[:20])
-            + ("\n  ... and {} more".format(len(unmarked_files) - 20) if len(unmarked_files) > 20 else "")
+            + "\n".join(f"  - {f}" for f in unmarked_files[:20])
+            + (f"\n  ... and {len(unmarked_files) - 20} more" if len(unmarked_files) > 20 else "")
             + "\n\n"
             "CI filter: pytest -n auto -m 'unit and not llm'\n"
             "Tests without markers are INVISIBLE to CI!\n\n"
@@ -202,7 +202,7 @@ class TestMarkerEnforcement:
 
         assert not missing_meta, (
             "Critical guard-rail tests must have both 'unit' AND 'meta' markers.\n\n"
-            "Files with missing markers:\n" + "\n".join("  - {}".format(f) for f in missing_meta) + "\n\n"
+            "Files with missing markers:\n" + "\n".join(f"  - {f}" for f in missing_meta) + "\n\n"
             "Add markers using:\n"
             "  pytestmark = [pytest.mark.unit, pytest.mark.meta]\n"
         )
@@ -233,7 +233,7 @@ class TestMarkerEnforcement:
 
             # Parse file and find the class
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read(), filename=str(test_file))
             except SyntaxError:
                 violations.append(f"{test_file_path}::{class_name} (SYNTAX ERROR)")
@@ -254,22 +254,20 @@ class TestMarkerEnforcement:
             has_xdist_group = False
             for decorator in class_node.decorator_list:
                 # @pytest.mark.xdist_group(name="...")
-                if isinstance(decorator, ast.Call):
-                    if isinstance(decorator.func, ast.Attribute):
-                        if (
-                            isinstance(decorator.func.value, ast.Attribute)
-                            and decorator.func.value.attr == "mark"
-                            and decorator.func.attr == "xdist_group"
-                        ):
-                            has_xdist_group = True
-                            break
+                if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr == "xdist_group"
+                ):
+                    has_xdist_group = True
+                    break
 
             if not has_xdist_group:
                 violations.append(f"{test_file_path}::{class_name}")
 
         assert not violations, (
             "Meta test classes must have @pytest.mark.xdist_group marker.\n\n"
-            "Classes missing xdist_group:\n" + "\n".join("  - {}".format(v) for v in violations) + "\n\n"
+            "Classes missing xdist_group:\n" + "\n".join(f"  - {v}" for v in violations) + "\n\n"
             "Add marker using:\n"
             "  @pytest.mark.xdist_group(name='meta_<descriptive_name>')\n"
             "  class TestClassName:\n"

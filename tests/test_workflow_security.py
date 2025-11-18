@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Mark this as both unit and meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -99,15 +100,13 @@ def _job_uses_gcp_auth(job_config):
 
         # Check for GCP secrets in environment variables
         env = step.get("env", {})
-        if isinstance(env, dict):
-            if any(isinstance(v, str) and "secrets.GCP" in v for v in env.values()):
-                return True
+        if isinstance(env, dict) and any(isinstance(v, str) and "secrets.GCP" in v for v in env.values()):
+            return True
 
         # Check for actual kubectl/gcloud commands (not grep patterns)
         run = step.get("run", "")
-        if isinstance(run, str):
-            if ("gcloud " in run or "kubectl " in run) and "grep" not in run:
-                return True
+        if isinstance(run, str) and ("gcloud " in run or "kubectl " in run) and "grep" not in run:
+            return True
 
     return False
 
@@ -164,7 +163,7 @@ def test_fork_protection_on_deployment_jobs(workflow_file):
         known_exceptions = ["pre-deployment-checks", "deployment-summary", "validate-"]
         filtered_errors = [e for e in errors if not any(exc in e for exc in known_exceptions)]
         if filtered_errors:
-            assert False, "\n\n".join(filtered_errors)
+            raise AssertionError("\n\n".join(filtered_errors))
 
 
 @pytest.mark.parametrize("workflow_file", get_workflow_files(), ids=lambda f: f.name)

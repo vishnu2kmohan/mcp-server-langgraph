@@ -75,8 +75,8 @@ def bypass_authentication(monkeypatch, mock_user=None):
 
     async def mock_get_current_user(
         request: Request,
-        credentials: Optional[HTTPAuthorizationCredentials] = None,
-    ) -> Dict[str, Any]:
+        credentials: HTTPAuthorizationCredentials | None = None,
+    ) -> dict[str, Any]:
         return mock_user
 
     monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user)

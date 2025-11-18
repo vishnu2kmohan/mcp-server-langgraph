@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -51,7 +52,7 @@ class TestPropertyTestQuality:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -102,7 +103,7 @@ class TestPropertyTestQuality:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -157,26 +158,24 @@ class TestPropertyTestQuality:
                 return True
 
             # pytest.fail() calls
-            if isinstance(node, ast.Call):
-                if isinstance(node.func, ast.Attribute):
-                    if isinstance(node.func.value, ast.Name) and node.func.value.id == "pytest" and node.func.attr == "fail":
-                        return True
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                if isinstance(node.func.value, ast.Name) and node.func.value.id == "pytest" and node.func.attr == "fail":
+                    return True
 
-                    # Mock assertions (assert_called, assert_not_called, etc.)
-                    if node.func.attr.startswith("assert_"):
-                        return True
+                # Mock assertions (assert_called, assert_not_called, etc.)
+                if node.func.attr.startswith("assert_"):
+                    return True
 
             # pytest.raises() context managers
             if isinstance(node, ast.With):
                 for item in node.items:
                     if isinstance(item.context_expr, ast.Call):
-                        if isinstance(item.context_expr.func, ast.Attribute):
-                            if (
-                                isinstance(item.context_expr.func.value, ast.Name)
-                                and item.context_expr.func.value.id == "pytest"
-                                and item.context_expr.func.attr == "raises"
-                            ):
-                                return True
+                        if isinstance(item.context_expr.func, ast.Attribute) and (
+                            isinstance(item.context_expr.func.value, ast.Name)
+                            and item.context_expr.func.value.id == "pytest"
+                            and item.context_expr.func.attr == "raises"
+                        ):
+                            return True
 
         return False
 
@@ -202,7 +201,7 @@ class TestPropertyTestNaming:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)

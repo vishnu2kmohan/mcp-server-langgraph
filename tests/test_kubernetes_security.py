@@ -17,6 +17,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -50,11 +51,11 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 # Handle multi-document YAML (with ---)
                 patches = list(yaml.safe_load_all(f))
 
-            for doc_idx, patch in enumerate(patches):
+            for _doc_idx, patch in enumerate(patches):
                 if not patch:  # Skip empty documents
                     continue
 
@@ -90,7 +91,7 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 patches = list(yaml.safe_load_all(f))
 
             for patch in patches:
@@ -133,7 +134,7 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 patches = list(yaml.safe_load_all(f))
 
             for patch in patches:
@@ -261,7 +262,7 @@ class TestRedisExternalNameService:
         if not redis_service_file.exists():
             pytest.skip("Redis service patch not found")
 
-        with open(redis_service_file, "r") as f:
+        with open(redis_service_file) as f:
             patches = list(yaml.safe_load_all(f))
 
         for patch in patches:

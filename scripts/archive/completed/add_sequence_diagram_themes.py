@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+
 # Standard ColorBrewer2 theme for sequence diagrams
 SEQUENCE_THEME = (
     "%%{init: {'theme':'base', 'themeVariables': { "
@@ -18,7 +19,7 @@ SEQUENCE_THEME = (
 )
 
 
-def add_theme_to_sequence_diagrams(content: str) -> Tuple[str, bool]:
+def add_theme_to_sequence_diagrams(content: str) -> tuple[str, bool]:
     """
     Add theme initialization to sequence diagrams missing it.
 

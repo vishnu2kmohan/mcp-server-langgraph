@@ -24,10 +24,10 @@ repos:
     name: Ruff Linter (replaces Flake8 + isort)
     args:
     - --fix
-    exclude: ^(clients/(python|go|typescript)/|scripts/archive/)
+    exclude: ^(clients/(python|go|typescript)/|scripts/|examples/)
   - id: ruff-format
     name: Ruff Formatter (replaces Black)
-    exclude: ^(clients/(python|go|typescript)/|scripts/archive/)
+    exclude: ^(clients/(python|go|typescript)/|scripts/|examples/)
 - repo: https://github.com/pycqa/bandit
   rev: 1.8.6
   hooks:

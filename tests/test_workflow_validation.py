@@ -14,6 +14,7 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -33,16 +34,16 @@ class TestWorkflowValidation:
         return repo_root / ".github" / "workflows"
 
     @pytest.fixture
-    def workflow_files(self, workflows_dir: Path) -> List[Path]:
+    def workflow_files(self, workflows_dir: Path) -> list[Path]:
         """Get all workflow YAML files."""
         return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
     @pytest.fixture
-    def parsed_workflows(self, workflow_files: List[Path]) -> Dict[str, Dict[str, Any]]:
+    def parsed_workflows(self, workflow_files: list[Path]) -> dict[str, dict[str, Any]]:
         """Parse all workflow files."""
         workflows = {}
         for workflow_file in workflow_files:
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 workflows[workflow_file.name] = yaml.safe_load(f)
         return workflows
 
@@ -59,7 +60,7 @@ class TestWorkflowValidation:
         ci_workflow_path = workflows_dir / "ci.yaml"
         assert ci_workflow_path.exists(), "ci.yaml workflow not found"
 
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             ci_workflow = yaml.safe_load(f)
 
         # Find the coverage-merge job
@@ -105,7 +106,7 @@ class TestWorkflowValidation:
             "operations can fail if artifact is missing. Add: if [ -f file ]; then cp ...; fi"
         )
 
-    def test_download_artifact_patterns(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+    def test_download_artifact_patterns(self, parsed_workflows: dict[str, dict[str, Any]]):
         """
         Test that download-artifact steps with continue-on-error have safe subsequent operations.
 
@@ -122,7 +123,6 @@ class TestWorkflowValidation:
                 for i, step in enumerate(steps):
                     # Check if this is a download-artifact with continue-on-error
                     if step.get("uses", "").startswith("actions/download-artifact") and step.get("continue-on-error") is True:
-
                         # Look at next few steps for file operations without checks
                         artifact_name = step.get("with", {}).get("name", "unknown")
                         path = step.get("with", {}).get("path", "")
@@ -158,7 +158,7 @@ class TestWorkflowValidation:
                 )
             pytest.fail(error_msg)
 
-    def test_gcp_auth_steps_have_secret_validation(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+    def test_gcp_auth_steps_have_secret_validation(self, parsed_workflows: dict[str, dict[str, Any]]):
         """
         Test that GCP authentication steps include secret availability checks.
 
@@ -221,7 +221,7 @@ class TestWorkflowValidation:
                 )
             pytest.fail(error_msg)
 
-    def test_success_summaries_have_status_conditionals(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+    def test_success_summaries_have_status_conditionals(self, parsed_workflows: dict[str, dict[str, Any]]):
         """
         Test that success summary steps include status conditionals.
 
@@ -290,7 +290,7 @@ class TestWorkflowValidation:
                 )
             print(warning_msg)
 
-    def test_docker_build_actions_are_consistent(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+    def test_docker_build_actions_are_consistent(self, parsed_workflows: dict[str, dict[str, Any]]):
         """
         Test that Docker build actions use consistent versions across all workflows.
 
@@ -323,17 +323,16 @@ class TestWorkflowValidation:
                             "docker/build-push-action",
                             "docker/setup-qemu-action",
                         ]
-                    ):
-                        if "@" in uses:
-                            action, version = uses.rsplit("@", 1)
+                    ) and "@" in uses:
+                        action, version = uses.rsplit("@", 1)
 
-                            if action not in docker_actions_used:
-                                docker_actions_used[action] = {}
+                        if action not in docker_actions_used:
+                            docker_actions_used[action] = {}
 
-                            if version not in docker_actions_used[action]:
-                                docker_actions_used[action][version] = []
+                        if version not in docker_actions_used[action]:
+                            docker_actions_used[action][version] = []
 
-                            docker_actions_used[action][version].append(f"{workflow_name}::{job_name}")
+                        docker_actions_used[action][version].append(f"{workflow_name}::{job_name}")
 
         # Check for version inconsistencies
         issues_found = []
@@ -363,7 +362,7 @@ class TestWorkflowValidation:
                 )
             pytest.fail(error_msg)
 
-    def test_action_versions_are_valid(self, parsed_workflows: Dict[str, Dict[str, Any]]):
+    def test_action_versions_are_valid(self, parsed_workflows: dict[str, dict[str, Any]]):
         """
         Test that all GitHub Actions use valid version tags.
 
@@ -404,19 +403,18 @@ class TestWorkflowValidation:
                     action, version = uses.rsplit("@", 1)
 
                     # Check if this is a tracked action
-                    if action in known_valid_versions:
-                        if version not in known_valid_versions[action]:
-                            # This is a known action using an undocumented version
-                            # Could be valid but needs verification
-                            invalid_versions.append(
-                                {
-                                    "workflow": workflow_name,
-                                    "job": job_name,
-                                    "action": action,
-                                    "version": version,
-                                    "known_valid": known_valid_versions[action],
-                                }
-                            )
+                    if action in known_valid_versions and version not in known_valid_versions[action]:
+                        # This is a known action using an undocumented version
+                        # Could be valid but needs verification
+                        invalid_versions.append(
+                            {
+                                "workflow": workflow_name,
+                                "job": job_name,
+                                "action": action,
+                                "version": version,
+                                "known_valid": known_valid_versions[action],
+                            }
+                        )
 
         # This test documents valid versions, not enforces them strictly
         # because new versions are released regularly

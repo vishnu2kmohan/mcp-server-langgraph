@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 
-def extract_final_test_stage(dockerfile_content: str) -> Optional[str]:
+def extract_final_test_stage(dockerfile_content: str) -> str | None:
     """
     Extract the final-test stage from Dockerfile.
 
@@ -45,7 +45,7 @@ def extract_final_test_stage(dockerfile_content: str) -> Optional[str]:
     return match.group(1)
 
 
-def extract_copy_commands(stage_content: str) -> List[str]:
+def extract_copy_commands(stage_content: str) -> list[str]:
     """
     Extract all COPY commands from Dockerfile stage content.
 
@@ -63,7 +63,7 @@ def extract_copy_commands(stage_content: str) -> List[str]:
     return copy_commands
 
 
-def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
+def validate_required_directories(copy_commands: list[str]) -> str | None:
     """
     Validate required directories are copied.
 
@@ -85,7 +85,7 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     }
 
     for cmd in copy_commands:
-        for item in required_items.keys():
+        for item in required_items:
             if item in cmd:
                 required_items[item] = True
 
@@ -97,7 +97,7 @@ def validate_required_directories(copy_commands: List[str]) -> Optional[str]:
     return None  # Success
 
 
-def validate_excluded_directories(copy_commands: List[str]) -> Optional[str]:
+def validate_excluded_directories(copy_commands: list[str]) -> str | None:
     """
     Validate that excluded directories are NOT copied.
 

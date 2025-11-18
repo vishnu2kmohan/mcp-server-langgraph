@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+
 # Sleep duration thresholds (seconds)
 UNIT_TEST_MAX_SLEEP = 0.5
 INTEGRATION_TEST_MAX_SLEEP = 2.0
@@ -60,7 +61,7 @@ def is_unit_test(file_path: str, content: str) -> bool:
     return False
 
 
-def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
+def check_file(content: str, file_path: str, is_unit: bool = True) -> list[str]:
     """
     Check file for sleep duration violations.
 
@@ -107,7 +108,7 @@ def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
     return violations
 
 
-def check_test_files(file_paths: List[str]) -> List[str]:
+def check_test_files(file_paths: list[str]) -> list[str]:
     """
     Check multiple test files for sleep violations.
 
@@ -126,7 +127,7 @@ def check_test_files(file_paths: List[str]) -> List[str]:
         if not file_path.endswith(".py"):
             continue
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         is_unit = is_unit_test(file_path, content)
@@ -136,7 +137,7 @@ def check_test_files(file_paths: List[str]) -> List[str]:
     return all_violations
 
 
-def find_test_files(directory: str) -> List[str]:
+def find_test_files(directory: str) -> list[str]:
     """
     Recursively find all test files in directory.
 
@@ -207,9 +208,8 @@ def main():
             print()
         print(f"\nTotal violations: {len(violations)}")
         return 1
-    else:
-        print(f"✅ All {len(test_files)} test files passed sleep duration checks")
-        return 0
+    print(f"✅ All {len(test_files)} test files passed sleep duration checks")
+    return 0
 
 
 if __name__ == "__main__":

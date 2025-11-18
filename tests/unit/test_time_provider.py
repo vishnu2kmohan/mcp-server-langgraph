@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

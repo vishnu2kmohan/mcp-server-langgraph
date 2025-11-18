@@ -42,6 +42,7 @@ from langgraph.graph import StateGraph
 from mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
 from mcp_server_langgraph.patterns.swarm import Swarm, SwarmState
 
+
 # Module-level marker: Regression prevention tests (unit tests)
 pytestmark = pytest.mark.unit
 
@@ -74,7 +75,7 @@ class TestLangGraphReturnTypes:
 
         graph = StateGraph(SimpleState)
 
-        def update_value(state: SimpleState) -> Dict[str, Any]:
+        def update_value(state: SimpleState) -> dict[str, Any]:
             return {"value": "updated"}
 
         graph.add_node("update", update_value)
@@ -286,8 +287,7 @@ class TestBackwardCompatibilityPatterns:
             """
             if isinstance(state, dict):
                 return state[field]
-            else:
-                return getattr(state, field)
+            return getattr(state, field)
 
         # Test with dict (LangGraph 1.0.3+)
         def simple_agent(task: str) -> str:

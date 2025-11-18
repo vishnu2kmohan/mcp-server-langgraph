@@ -19,6 +19,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -249,7 +250,7 @@ class TestNetworkPolicySelectors:
         if warnings:
             import warnings as warn_module
 
-            warn_module.warn("Potentially overly permissive NetworkPolicy selectors:\n" + "\n".join(warnings))
+            warn_module.warn("Potentially overly permissive NetworkPolicy selectors:\n" + "\n".join(warnings), stacklevel=2)
 
 
 @pytest.mark.xdist_group(name="testnetworkpolicycomments")
@@ -272,7 +273,7 @@ class TestNetworkPolicyComments:
         if not staging_netpol.exists():
             pytest.skip("Staging network policy file not found")
 
-        with open(staging_netpol, "r") as f:
+        with open(staging_netpol) as f:
             content = f.read()
 
         # Check for comments near port specifications

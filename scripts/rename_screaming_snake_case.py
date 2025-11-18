@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
+
 # Files that should keep SCREAMING_SNAKE_CASE (conventional names)
 KEEP_AS_IS = {
     "README.md",
@@ -30,7 +31,7 @@ def to_kebab_case(name: str) -> str:
     return name.replace("_", "-").lower()
 
 
-def find_screaming_snake_files(directories: List[Path]) -> List[Path]:
+def find_screaming_snake_files(directories: list[Path]) -> list[Path]:
     """Find all SCREAMING_SNAKE_CASE markdown files."""
     files = []
     for directory in directories:
@@ -47,7 +48,7 @@ def find_screaming_snake_files(directories: List[Path]) -> List[Path]:
     return files
 
 
-def rename_file(file_path: Path, dry_run: bool = False) -> Tuple[bool, str]:
+def rename_file(file_path: Path, dry_run: bool = False) -> tuple[bool, str]:
     """
     Rename a file using git mv.
 

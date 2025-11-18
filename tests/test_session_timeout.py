@@ -146,7 +146,9 @@ class TestSessionTimeoutMiddleware:
         mock_session_store.sessions[session_id] = old_session
 
         middleware = SessionTimeoutMiddleware(
-            app=app, timeout_seconds=600, session_store=mock_session_store  # 10 minute timeout
+            app=app,
+            timeout_seconds=600,
+            session_store=mock_session_store,  # 10 minute timeout
         )
 
         # Mock request with old session

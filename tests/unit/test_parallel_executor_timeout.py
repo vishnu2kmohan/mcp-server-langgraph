@@ -14,6 +14,7 @@ import pytest
 
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -65,8 +66,7 @@ class TestParallelExecutorTimeouts:
             if name == "hung":
                 await asyncio.sleep(0.3)  # Hangs for 0.3 seconds (exceeds 0.05s timeout)
                 return "should timeout"
-            else:
-                return f"result_{name}"
+            return f"result_{name}"
 
         invocations = [
             ToolInvocation(tool_name="hung", arguments={}, invocation_id="inv1"),

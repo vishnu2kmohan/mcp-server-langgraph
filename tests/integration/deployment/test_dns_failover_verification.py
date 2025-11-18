@@ -24,6 +24,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 

@@ -18,6 +18,7 @@ from typing import Set
 
 import pytest
 
+
 # Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
 try:
     import tomllib
@@ -25,7 +26,7 @@ except ImportError:
     import tomli as tomllib
 
 
-def get_registered_markers() -> Set[str]:
+def get_registered_markers() -> set[str]:
     """
     Extract all registered markers from pyproject.toml
 
@@ -49,7 +50,7 @@ def get_registered_markers() -> Set[str]:
     return marker_names
 
 
-def get_used_markers() -> Set[str]:
+def get_used_markers() -> set[str]:
     """
     Scan all test files for @pytest.mark.* usage
 
@@ -83,13 +84,12 @@ def get_used_markers() -> Set[str]:
                         # Handle @pytest.mark.foo()
                         elif isinstance(decorator, ast.Call):
                             func = decorator.func
-                            if isinstance(func, ast.Attribute):
-                                if (
-                                    isinstance(func.value, ast.Attribute)
-                                    and getattr(func.value.value, "id", None) == "pytest"
-                                    and func.value.attr == "mark"
-                                ):
-                                    marker_names.add(func.attr)
+                            if isinstance(func, ast.Attribute) and (
+                                isinstance(func.value, ast.Attribute)
+                                and getattr(func.value.value, "id", None) == "pytest"
+                                and func.value.attr == "mark"
+                            ):
+                                marker_names.add(func.attr)
 
         except Exception as e:
             # Log but don't fail on individual file parsing errors

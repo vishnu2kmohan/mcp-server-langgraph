@@ -96,7 +96,7 @@ class TestCircuitBreakerStateTransitions:
             raise ValueError("Test error")
 
         # Trigger failures
-        for i in range(3):
+        for _i in range(3):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -114,7 +114,7 @@ class TestCircuitBreakerStateTransitions:
             raise ValueError("Test error")
 
         # Trigger failures to open circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -134,7 +134,7 @@ class TestCircuitBreakerStateTransitions:
             raise ValueError("Test error")
 
         # Open the circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -171,7 +171,7 @@ class TestCircuitBreakerWithFallback:
             raise ValueError("Test error")
 
         # Open the circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -190,7 +190,7 @@ class TestCircuitBreakerWithFallback:
             raise ValueError("Test error")
 
         # Open circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -256,7 +256,7 @@ class TestCircuitBreakerReset:
             raise ValueError("Test error")
 
         # Open circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -311,7 +311,7 @@ class TestCircuitBreakerEdgeCases:
             raise ValueError("Test error")
 
         # Open circuit
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await failing_func()
 
@@ -339,7 +339,7 @@ class TestCircuitBreakerEdgeCases:
             return "success"
 
         # Open circuit with 2 failures
-        for i in range(2):
+        for _i in range(2):
             with pytest.raises(ValueError):
                 await sometimes_failing_func()
 
@@ -367,13 +367,12 @@ class TestCircuitBreakerEdgeCases:
             call_count += 1
             if call_count == 1:
                 raise ValueError("Error 1")
-            elif call_count == 2:
+            if call_count == 2:
                 raise RuntimeError("Error 2")
-            else:
-                raise TypeError("Error 3")
+            raise TypeError("Error 3")
 
         # All exception types should count toward failure limit
-        for i in range(3):
+        for _i in range(3):
             with pytest.raises(Exception):
                 await multi_exception_func()
 

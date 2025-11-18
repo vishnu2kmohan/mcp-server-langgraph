@@ -30,7 +30,7 @@ def process_file(file_path: str, group_name: str) -> bool:
         return False
 
     # Read file
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     modified = False
@@ -110,9 +110,8 @@ def process_file(file_path: str, group_name: str) -> bool:
             f.writelines(lines)
         print(f"✓ Updated: {file_path}")
         return True
-    else:
-        print(f"  Skipped (no changes needed): {file_path}")
-        return False
+    print(f"  Skipped (no changes needed): {file_path}")
+    return False
 
 
 def main():

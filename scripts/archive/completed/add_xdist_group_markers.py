@@ -41,34 +41,33 @@ def determine_group_name(file_path: Path) -> str:
     # Map directory patterns to group names
     if "/api/" in path_str:
         return "api_tests"
-    elif "/security/" in path_str:
+    if "/security/" in path_str:
         return "security_tests"
-    elif "/integration/" in path_str:
+    if "/integration/" in path_str:
         return "integration_tests"
-    elif "/e2e/" in path_str:
+    if "/e2e/" in path_str:
         return "e2e_tests"
-    elif "/deployment/" in path_str:
+    if "/deployment/" in path_str:
         return "deployment_tests"
-    elif "/resilience/" in path_str:
+    if "/resilience/" in path_str:
         return "resilience_tests"
-    elif "/meta/" in path_str:
+    if "/meta/" in path_str:
         return "meta_tests"
-    elif "/builder/" in path_str:
+    if "/builder/" in path_str:
         return "builder_tests"
-    elif "/core/" in path_str:
+    if "/core/" in path_str:
         return "core_tests"
-    elif "/kubernetes/" in path_str:
+    if "/kubernetes/" in path_str:
         return "kubernetes_tests"
-    elif "/infrastructure/" in path_str:
+    if "/infrastructure/" in path_str:
         return "infrastructure_tests"
-    elif "/unit/" in path_str:
+    if "/unit/" in path_str:
         # Use filename-based group for unit tests (more granular)
         filename = file_path.stem
         return f"unit_{filename}"
-    else:
-        # Default: use filename
-        filename = file_path.stem
-        return f"test_{filename}"
+    # Default: use filename
+    filename = file_path.stem
+    return f"test_{filename}"
 
 
 def needs_xdist_group(class_def: str) -> bool:
@@ -92,7 +91,7 @@ def needs_xdist_group(class_def: str) -> bool:
     return True
 
 
-def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> Tuple[bool, int]:
+def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> tuple[bool, int]:
     """
     Add xdist_group markers to test classes in a file.
 
@@ -160,17 +159,16 @@ def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> Tuple[bo
     if dry_run:
         print(f"🔍 Would modify {file_path}: {classes_updated} classes")
         return True, classes_updated
-    else:
-        try:
-            file_path.write_text(modified_content, encoding="utf-8")
-            print(f"✅ Modified {file_path}: {classes_updated} classes")
-            return True, classes_updated
-        except Exception as e:
-            print(f"❌ Error writing {file_path}: {e}", file=sys.stderr)
-            return False, 0
+    try:
+        file_path.write_text(modified_content, encoding="utf-8")
+        print(f"✅ Modified {file_path}: {classes_updated} classes")
+        return True, classes_updated
+    except Exception as e:
+        print(f"❌ Error writing {file_path}: {e}", file=sys.stderr)
+        return False, 0
 
 
-def find_test_files_needing_markers(repo_root: Path) -> List[Path]:
+def find_test_files_needing_markers(repo_root: Path) -> list[Path]:
     """
     Find all test files that need xdist_group markers.
 
@@ -227,9 +225,8 @@ def main() -> int:
             else:
                 print(f"\n✅ Successfully updated {classes_updated} classes in {args.file}")
             return 0
-        else:
-            print(f"\nℹ️  No changes needed for {args.file}")
-            return 0
+        print(f"\nℹ️  No changes needed for {args.file}")
+        return 0
 
     # Process all test files
     test_files = find_test_files_needing_markers(repo_root)

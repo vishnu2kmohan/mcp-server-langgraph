@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -52,7 +53,7 @@ class TestContextManagerTestQuality:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file tests context managers
@@ -132,7 +133,7 @@ class TestContextManagerTestQuality:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file has cleanup-related functions
@@ -221,7 +222,7 @@ class TestContextManagerNaming:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             if "__enter__" not in source and "__exit__" not in source:

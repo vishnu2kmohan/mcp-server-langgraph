@@ -27,7 +27,7 @@ class Colors:
     RESET = "\033[0m"
 
 
-def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List[Dict]:
+def find_broken_links(root_dir: str, exclude_patterns: list[str] = None) -> list[dict]:
     """
     Find broken internal links in markdown files.
 
@@ -65,7 +65,7 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
         total_files += 1
 
         try:
-            with open(md_file, "r", encoding="utf-8") as f:
+            with open(md_file, encoding="utf-8") as f:
                 content = f.read()
 
             # Find markdown links [text](path)
@@ -110,7 +110,7 @@ def find_broken_links(root_dir: str, exclude_patterns: List[str] = None) -> List
     return broken_links, total_files
 
 
-def categorize_links(broken_links: List[Dict]) -> Dict[str, List[Dict]]:
+def categorize_links(broken_links: list[dict]) -> dict[str, list[dict]]:
     """Categorize broken links by file location"""
     categories = {"active_docs": [], "github": [], "adr": [], "reports": [], "other": []}
 
@@ -119,7 +119,7 @@ def categorize_links(broken_links: List[Dict]) -> Dict[str, List[Dict]]:
 
         if "archive" in file_path:
             continue  # Skip archived docs
-        elif file_path.startswith("docs/"):
+        if file_path.startswith("docs/"):
             categories["active_docs"].append(link)
         elif file_path.startswith(".github/"):
             categories["github"].append(link)
@@ -133,7 +133,7 @@ def categorize_links(broken_links: List[Dict]) -> Dict[str, List[Dict]]:
     return categories
 
 
-def print_summary(broken_links: List[Dict], total_files: int):
+def print_summary(broken_links: list[dict], total_files: int):
     """Print a summary of broken links"""
     print(f"\n{Colors.BOLD}{'=' * 70}{Colors.RESET}")
     print(f"{Colors.BOLD}Documentation Link Check Summary{Colors.RESET}")

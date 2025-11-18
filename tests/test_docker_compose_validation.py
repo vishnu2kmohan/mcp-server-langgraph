@@ -22,6 +22,7 @@ from typing import Any, Dict, List
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -29,7 +30,7 @@ pytestmark = pytest.mark.unit
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
-def find_docker_compose_files() -> List[Path]:
+def find_docker_compose_files() -> list[Path]:
     """Find all docker-compose files in the project."""
     compose_files = []
 
@@ -48,13 +49,13 @@ def find_docker_compose_files() -> List[Path]:
     return sorted(set(compose_files))
 
 
-def parse_docker_compose(file_path: Path) -> Dict[str, Any]:
+def parse_docker_compose(file_path: Path) -> dict[str, Any]:
     """Parse a docker-compose file and return its contents."""
     with open(file_path) as f:
         return yaml.safe_load(f)
 
 
-def extract_health_check_command(health_check: Dict[str, Any]) -> List[str]:
+def extract_health_check_command(health_check: dict[str, Any]) -> list[str]:
     """Extract the command from a health check configuration."""
     if not health_check:
         return []
@@ -72,7 +73,7 @@ def extract_health_check_command(health_check: Dict[str, Any]) -> List[str]:
             # For CMD-SHELL, split the shell command string into tokens
             return " ".join(parts[1:]).split()
         return parts
-    elif isinstance(test, list):
+    if isinstance(test, list):
         # List format
         if test and test[0] in ["CMD", "CMD-SHELL"]:
             # For CMD-SHELL with list format, parse the shell command string
@@ -182,7 +183,7 @@ class TestDockerComposeHealthChecks:
                 + "\n\nThese are warnings only. Services may have these commands in their images."
                 + "\nThe test_image_specific_health_check_requirements test enforces known requirements."
             )
-            warnings.warn(warning_msg, UserWarning)
+            warnings.warn(warning_msg, UserWarning, stacklevel=2)
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
     def test_image_specific_health_check_requirements(self, compose_file: Path):

@@ -11,6 +11,7 @@ import gc
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -27,7 +28,7 @@ class TestTopologySpreadConstraints:
         """Test base deployment has topologySpreadConstraints defined."""
         # RED: Will fail initially
 
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -36,7 +37,7 @@ class TestTopologySpreadConstraints:
 
     def test_topology_spread_uses_zone_distribution(self):
         """Test topology spread constraints use zone topology key."""
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -54,7 +55,7 @@ class TestTopologySpreadConstraints:
         availability zones. Hostname-based spreading can have higher maxSkew values
         to allow more flexibility in node placement.
         """
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -74,7 +75,7 @@ class TestTopologySpreadConstraints:
 
     def test_topology_spread_has_label_selector(self):
         """Test topology spread has proper label selector."""
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -86,7 +87,7 @@ class TestTopologySpreadConstraints:
 
     def test_helm_chart_has_topology_spread_constraints(self):
         """Test Helm chart deployment template has topology spread."""
-        with open("deployments/helm/mcp-server-langgraph/templates/deployment.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/templates/deployment.yaml") as f:
             content = f.read()
 
         # Should have topologySpreadConstraints section
@@ -94,7 +95,7 @@ class TestTopologySpreadConstraints:
 
     def test_helm_values_allows_topology_spread_configuration(self):
         """Test Helm values.yaml has topology spread configuration."""
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         # Should have topologySpreadConstraints configuration
@@ -115,7 +116,7 @@ class TestPodAntiAffinity:
         """Test deployment uses required anti-affinity for production."""
         # RED: Currently uses preferred, should use required
 
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -126,7 +127,7 @@ class TestPodAntiAffinity:
 
     def test_anti_affinity_uses_zone_topology(self):
         """Test anti-affinity uses zone topology key."""
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -158,7 +159,7 @@ class TestMultiZoneSupport:
 
     def test_terraform_gke_uses_multiple_zones(self):
         """Test GKE Terraform module uses multiple zones."""
-        with open("terraform/modules/gke-autopilot/main.tf", "r") as f:
+        with open("terraform/modules/gke-autopilot/main.tf") as f:
             content = f.read()
 
         # GKE Autopilot automatically uses all zones in region
@@ -167,7 +168,7 @@ class TestMultiZoneSupport:
 
     def test_terraform_eks_uses_multiple_azs(self):
         """Test EKS Terraform module uses multiple AZs."""
-        with open("terraform/modules/eks/main.tf", "r") as f:
+        with open("terraform/modules/eks/main.tf") as f:
             content = f.read()
 
         # Should reference multiple subnet_ids (which span AZs)
@@ -190,7 +191,7 @@ class TestMultiZoneSupport:
         """Test stateful services (Redis, PostgreSQL) have topology spread."""
         # This ensures dependencies are also HA
 
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         # Check Redis configuration

@@ -93,10 +93,9 @@ class TestLitellmCleanupWarnings:
             litellm_warnings = [
                 w for w in runtime_warnings if "close_litellm_async_clients" in str(w.message) or "coroutine" in str(w.message)
             ]
-            assert (
-                len(litellm_warnings) == 0
-            ), f"Expected no litellm cleanup warnings, but got {len(litellm_warnings)}:\n" + "\n".join(
-                (f"  - {w.message}" for w in litellm_warnings)
+            assert len(litellm_warnings) == 0, (
+                f"Expected no litellm cleanup warnings, but got {len(litellm_warnings)}:\n"
+                + "\n".join(f"  - {w.message}" for w in litellm_warnings)
             )
 
     def test_litellm_sync_completion_cleanup_no_warning(self):

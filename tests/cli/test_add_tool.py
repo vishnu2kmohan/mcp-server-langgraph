@@ -18,6 +18,7 @@ import pytest
 
 from mcp_server_langgraph.cli.add_tool import TOOL_TEMPLATE, generate_tool
 
+
 # ==============================================================================
 # Test generate_tool Function
 # ==============================================================================

@@ -13,6 +13,7 @@ import atexit  # noqa: E402
 # Monkey-patch litellm's atexit registration to prevent RuntimeWarnings
 import sys  # noqa: E402
 
+
 # Store original atexit.register
 _original_atexit_register = atexit.register
 _litellm_handlers = []
@@ -51,13 +52,14 @@ import os  # noqa: E402
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
+from collections.abc import AsyncGenerator, Generator  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
-from typing import AsyncGenerator, Generator  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
 from tests.constants import TEST_JWT_SECRET  # noqa: E402
+
 
 # Guard optional dev dependencies - may not be installed in all environments
 try:
@@ -81,6 +83,7 @@ from opentelemetry import trace  # noqa: E402
 from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor  # noqa: E402
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter  # noqa: E402
+
 
 # Set minimal test environment variables
 # With container pattern, we no longer need to set all these before imports!
@@ -241,9 +244,8 @@ def pytest_collection_modifyitems(config, items):
 
     for item in items:
         for marker_name, (tool_name, skip_reason) in cli_tools.items():
-            if marker_name in item.keywords:
-                if not shutil.which(tool_name):
-                    item.add_marker(pytest.mark.skip(reason=skip_reason))
+            if marker_name in item.keywords and not shutil.which(tool_name):
+                item.add_marker(pytest.mark.skip(reason=skip_reason))
 
 
 # ==============================================================================
@@ -484,7 +486,7 @@ def _wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
             sock.close()
             if result == 0:
                 return True
-        except socket.error:
+        except OSError:
             pass
         time.sleep(0.5)
     return False
@@ -895,6 +897,7 @@ def isolated_environment(monkeypatch):
     def _isolated_env(self, isolated_environment):
         # All tests in this class get isolated environment
         return isolated_environment
+
 
     class TestEnvSensitive:
         def test_one(self, isolated_environment):
@@ -1438,7 +1441,7 @@ async def postgres_connection_clean(postgres_connection_real):
         # Log but don't fail - some tests may not need the schema
         import warnings
 
-        warnings.warn(f"Failed to create worker schema {schema_name}: {e}")
+        warnings.warn(f"Failed to create worker schema {schema_name}: {e}", stacklevel=2)
 
     yield postgres_connection_real
 
@@ -1496,7 +1499,7 @@ async def redis_client_clean(redis_client_real):
         # Log but don't fail - some tests may not need Redis
         import warnings
 
-        warnings.warn(f"Failed to select Redis DB {db_index} for worker {worker_id}: {e}")
+        warnings.warn(f"Failed to select Redis DB {db_index} for worker {worker_id}: {e}", stacklevel=2)
 
     yield redis_client_real
 

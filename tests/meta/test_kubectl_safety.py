@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -54,7 +55,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file uses kubectl
@@ -142,7 +143,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file uses kubectl
@@ -152,7 +153,7 @@ class TestKubectlSafetyEnforcement:
             tree = ast.parse(source)
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
+                if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
                     if isinstance(node, ast.FunctionDef) and not node.name.startswith("test_"):
                         continue
 
@@ -214,7 +215,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             if "kubectl" not in source:
@@ -268,7 +269,7 @@ class TestKubectlTestNaming:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             if "kubectl" not in source:

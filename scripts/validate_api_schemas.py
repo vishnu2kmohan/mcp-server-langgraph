@@ -22,17 +22,17 @@ class APISchemaValidator(ast.NodeVisitor):
     """AST visitor to validate API schemas match implementations."""
 
     def __init__(self):
-        self.issues: List[Dict[str, Any]] = []
+        self.issues: list[dict[str, Any]] = []
         self.current_file = ""
-        self.response_models: Dict[str, Set[str]] = {}
-        self.return_statements: Dict[str, Set[str]] = {}
+        self.response_models: dict[str, set[str]] = {}
+        self.return_statements: dict[str, set[str]] = {}
 
     def check_file(self, filepath: Path) -> None:
         """Check a single Python file for schema violations."""
         self.current_file = str(filepath)
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(filepath))
                 self.visit(tree)
         except SyntaxError as e:

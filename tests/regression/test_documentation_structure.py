@@ -20,6 +20,7 @@ from typing import Dict, List, Set
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -140,7 +141,7 @@ class TestDocumentationNavigation:
             + "\n\nRemove duplicate entries from docs/docs.json."
         )
 
-    def _extract_navigation_pages(self, nav_obj: Dict, return_list: bool = False):
+    def _extract_navigation_pages(self, nav_obj: dict, return_list: bool = False):
         """Extract all page references from navigation object."""
         pages = []
 
@@ -161,8 +162,7 @@ class TestDocumentationNavigation:
         # Return as list or set based on parameter
         if return_list:
             return pages
-        else:
-            return set(pages)
+        return set(pages)
 
 
 @pytest.mark.xdist_group(name="testadrnumbering")

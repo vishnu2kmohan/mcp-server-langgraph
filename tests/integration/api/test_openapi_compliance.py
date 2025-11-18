@@ -146,9 +146,8 @@ class TestSchemaDefinitions:
         objects_without_properties = []
 
         for schema_name, schema_def in schemas.items():
-            if schema_def.get("type") == "object":
-                if "properties" not in schema_def and "$ref" not in schema_def:
-                    objects_without_properties.append(schema_name)
+            if schema_def.get("type") == "object" and "properties" not in schema_def and "$ref" not in schema_def:
+                objects_without_properties.append(schema_name)
 
         # Allow some flexibility for generic objects
         if len(objects_without_properties) > 5:
@@ -387,8 +386,8 @@ class TestSecuritySchemes:
         paths = openapi_schema.get("paths", {})
         uses_security = False
 
-        for path, methods in paths.items():
-            for method, operation in methods.items():
+        for _path, methods in paths.items():
+            for _method, operation in methods.items():
                 if "security" in operation:
                     uses_security = True
                     break
@@ -403,7 +402,7 @@ class TestSecuritySchemes:
         # Endpoints that should be protected
         protected_patterns = ["/mcp", "/tools", "/resources"]
 
-        for path in paths.keys():
+        for path in paths:
             for pattern in protected_patterns:
                 if pattern in path:
                     # Should have security or be documented

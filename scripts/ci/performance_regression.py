@@ -26,13 +26,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+
 try:
     import requests
 except ImportError:
     requests = None
 
 
-def establish_baseline(benchmarks: List[Dict]) -> Dict:
+def establish_baseline(benchmarks: list[dict]) -> dict:
     """
     Establish performance baseline from benchmark results using median
 
@@ -84,7 +85,7 @@ def establish_baseline(benchmarks: List[Dict]) -> Dict:
     return baseline
 
 
-def load_baseline(baseline_file: Path) -> Dict:
+def load_baseline(baseline_file: Path) -> dict:
     """Load baseline from JSON file"""
     if not baseline_file.exists():
         return {}
@@ -95,7 +96,7 @@ def load_baseline(baseline_file: Path) -> Dict:
         return {}
 
 
-def detect_regression(baseline: Dict, current: Dict, threshold_percent: float = 50.0) -> Dict:
+def detect_regression(baseline: dict, current: dict, threshold_percent: float = 50.0) -> dict:
     """
     Detect performance regression
 
@@ -129,7 +130,7 @@ def detect_regression(baseline: Dict, current: Dict, threshold_percent: float = 
     return {"has_regression": False}
 
 
-def detect_all_regressions(baseline: Dict, current: Dict, threshold_percent: float = 50.0) -> List[Dict]:
+def detect_all_regressions(baseline: dict, current: dict, threshold_percent: float = 50.0) -> list[dict]:
     """Detect all performance regressions across all metrics"""
     regressions = []
 
@@ -157,7 +158,7 @@ def detect_all_regressions(baseline: Dict, current: Dict, threshold_percent: flo
     return regressions
 
 
-def run_benchmark(endpoint: str, base_url: str) -> Dict:
+def run_benchmark(endpoint: str, base_url: str) -> dict:
     """Run single endpoint benchmark"""
     if not requests:
         raise ImportError("requests library required for benchmarking")
@@ -188,7 +189,7 @@ def run_benchmark(endpoint: str, base_url: str) -> Dict:
     }
 
 
-def run_api_benchmarks(base_url: str, endpoints: List[str]) -> List[Dict]:
+def run_api_benchmarks(base_url: str, endpoints: list[str]) -> list[dict]:
     """Run benchmarks for multiple API endpoints"""
     results = []
 
@@ -200,7 +201,7 @@ def run_api_benchmarks(base_url: str, endpoints: List[str]) -> List[Dict]:
     return results
 
 
-def calculate_percentiles(measurements: List[float]) -> Dict:
+def calculate_percentiles(measurements: list[float]) -> dict:
     """Calculate response time percentiles (p50, p95, p99)"""
     if not measurements:
         return {}
@@ -217,7 +218,7 @@ def calculate_percentiles(measurements: List[float]) -> Dict:
     }
 
 
-def generate_regression_report(regressions: List[Dict]) -> str:
+def generate_regression_report(regressions: list[dict]) -> str:
     """Generate markdown report for regressions"""
     if not regressions:
         return "✅ No performance regressions detected"
@@ -250,7 +251,7 @@ def generate_regression_report(regressions: List[Dict]) -> str:
     return report
 
 
-def create_regression_issue(regression: Dict) -> str:
+def create_regression_issue(regression: dict) -> str:
     """Create GitHub issue body for regression"""
     metric_name = regression["metric"].replace("_", " ").title()
     degradation = regression["degradation_percent"]
@@ -305,7 +306,7 @@ _This issue was automatically created by the performance regression detection wo
     return body
 
 
-def should_update_baseline(baseline: Dict, current: Dict, improvement_threshold: float = 20.0) -> bool:
+def should_update_baseline(baseline: dict, current: dict, improvement_threshold: float = 20.0) -> bool:
     """
     Determine if baseline should be updated after performance improvement
 
@@ -333,7 +334,7 @@ def should_update_baseline(baseline: Dict, current: Dict, improvement_threshold:
     return False
 
 
-def save_baseline(baseline: Dict, baseline_file: Path):
+def save_baseline(baseline: dict, baseline_file: Path):
     """Save baseline to JSON file"""
     baseline_file.parent.mkdir(parents=True, exist_ok=True)
 

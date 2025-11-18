@@ -13,6 +13,7 @@ import pytest
 from mcp_server_langgraph.core.security import sanitize_for_logging
 from tests.conftest import get_user_id
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

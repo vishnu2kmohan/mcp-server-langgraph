@@ -210,7 +210,7 @@ class TestListTools:
         assert "conversation_get" in tool_names
         assert "conversation_search" in tool_names
         assert "search_tools" in tool_names
-        agent_chat_tool = next((t for t in tools if t.name == "agent_chat"))
+        agent_chat_tool = next(t for t in tools if t.name == "agent_chat")
         assert "inputSchema" in agent_chat_tool.model_dump()
         assert "message" in str(agent_chat_tool.inputSchema)
         assert "token" in str(agent_chat_tool.inputSchema)

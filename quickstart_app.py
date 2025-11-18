@@ -29,6 +29,7 @@ Usage:
 
 from mcp_server_langgraph.presets import QuickStart
 
+
 # Create quick-start agent
 agent = QuickStart.create_app(
     name="MCP Server QuickStart",

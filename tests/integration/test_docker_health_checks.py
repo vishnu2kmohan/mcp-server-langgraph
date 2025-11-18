@@ -26,6 +26,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -69,7 +70,7 @@ def run_docker_compose(
     compose_file: Path,
     *args: str,
     timeout: int = 30,
-    env: Optional[dict] = None,
+    env: dict | None = None,
 ) -> subprocess.CompletedProcess:
     """Run a docker-compose command."""
     cmd = ["docker", "compose", "-f", str(compose_file)] + list(args)

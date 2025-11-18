@@ -62,9 +62,9 @@ class ValidationResult:
     """Result of navigation validation."""
 
     is_valid: bool
-    errors: List[NavigationError] = field(default_factory=list)
-    warnings: List[Exception] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    errors: list[NavigationError] = field(default_factory=list)
+    warnings: list[Exception] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -103,9 +103,9 @@ class NavigationValidator:
         Returns:
             ValidationResult with errors, warnings, and statistics
         """
-        errors: List[NavigationError] = []
-        warnings: List[Exception] = []
-        stats: Dict[str, int] = {}
+        errors: list[NavigationError] = []
+        warnings: list[Exception] = []
+        stats: dict[str, int] = {}
 
         # Load docs.json
         try:
@@ -148,18 +148,18 @@ class NavigationValidator:
             stats=stats,
         )
 
-    def _load_docs_json(self) -> Dict:
+    def _load_docs_json(self) -> dict:
         """Load and parse docs.json."""
         if not self.docs_json_path.exists():
             raise InvalidJSONError(f"docs.json not found at {self.docs_json_path}")
 
         try:
-            with open(self.docs_json_path, "r") as f:
+            with open(self.docs_json_path) as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             raise InvalidJSONError(f"Invalid JSON in docs.json: {e}")
 
-    def _get_all_referenced_pages(self, docs_json: Dict) -> List[str]:
+    def _get_all_referenced_pages(self, docs_json: dict) -> list[str]:
         """Extract all page references from docs.json navigation."""
         pages = []
 
@@ -174,7 +174,7 @@ class NavigationValidator:
 
         return pages
 
-    def _get_all_mdx_files(self) -> Set[Path]:
+    def _get_all_mdx_files(self) -> set[Path]:
         """Get all MDX files in docs directory, excluding templates."""
         mdx_files = set()
 
@@ -188,7 +188,7 @@ class NavigationValidator:
 
         return mdx_files
 
-    def _find_missing_files(self, referenced_pages: List[str]) -> List[str]:
+    def _find_missing_files(self, referenced_pages: list[str]) -> list[str]:
         """Find files referenced in navigation that don't exist."""
         missing = []
 
@@ -199,7 +199,7 @@ class NavigationValidator:
 
         return missing
 
-    def _find_orphaned_files(self, all_mdx_files: Set[Path], referenced_pages: List[str]) -> List[str]:
+    def _find_orphaned_files(self, all_mdx_files: set[Path], referenced_pages: list[str]) -> list[str]:
         """Find MDX files not referenced in navigation."""
         # Convert referenced pages to absolute paths
         referenced_paths = set()
@@ -220,7 +220,7 @@ class NavigationValidator:
 
         return orphaned
 
-    def _find_duplicates(self, pages: List[str]) -> List[str]:
+    def _find_duplicates(self, pages: list[str]) -> list[str]:
         """Find duplicate page references."""
         seen = set()
         duplicates = []

@@ -40,8 +40,8 @@ class SkippedTest:
     line_number: int
     skip_type: str  # 'skip' or 'skipif'
     reason: str
-    github_issue: Optional[str] = None
-    condition: Optional[str] = None
+    github_issue: str | None = None
+    condition: str | None = None
 
     def to_dict(self):
         return asdict(self)
@@ -52,9 +52,9 @@ class SkippedTestExtractor:
 
     def __init__(self, tests_dir: Path):
         self.tests_dir = tests_dir
-        self.skipped_tests: List[SkippedTest] = []
+        self.skipped_tests: list[SkippedTest] = []
 
-    def extract_all(self) -> List[SkippedTest]:
+    def extract_all(self) -> list[SkippedTest]:
         """Extract all skipped tests from test directory"""
         test_files = list(self.tests_dir.rglob("test_*.py"))
 
@@ -66,7 +66,7 @@ class SkippedTestExtractor:
     def _extract_from_file(self, file_path: Path):
         """Extract skipped tests from a single file"""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content, filename=str(file_path))
@@ -86,7 +86,7 @@ class SkippedTestExtractor:
         except Exception as e:
             print(f"Warning: Could not parse {file_path}: {e}", file=sys.stderr)
 
-    def _extract_skip_decorator(self, node) -> Optional[Dict]:
+    def _extract_skip_decorator(self, node) -> dict | None:
         """Extract skip decorator information from a test function"""
         for decorator in node.decorator_list:
             # Handle @pytest.mark.skip
@@ -96,7 +96,7 @@ class SkippedTestExtractor:
                 return {"skip_type": "skip", "reason": reason or "No reason provided", "github_issue": github_issue}
 
             # Handle @pytest.mark.skipif
-            elif self._is_skip_decorator(decorator, "skipif"):
+            if self._is_skip_decorator(decorator, "skipif"):
                 condition = self._extract_condition(decorator)
                 reason = self._extract_reason(decorator)
                 github_issue = self._extract_github_issue(reason)
@@ -121,7 +121,7 @@ class SkippedTestExtractor:
                     return True
         return False
 
-    def _extract_reason(self, decorator) -> Optional[str]:
+    def _extract_reason(self, decorator) -> str | None:
         """Extract reason from skip decorator"""
         if isinstance(decorator, ast.Call):
             # Check keyword arguments
@@ -137,7 +137,7 @@ class SkippedTestExtractor:
 
         return None
 
-    def _extract_condition(self, decorator) -> Optional[str]:
+    def _extract_condition(self, decorator) -> str | None:
         """Extract condition from skipif decorator"""
         if isinstance(decorator, ast.Call) and decorator.args:
             try:
@@ -146,7 +146,7 @@ class SkippedTestExtractor:
                 return str(decorator.args[0])
         return None
 
-    def _extract_github_issue(self, reason: Optional[str]) -> Optional[str]:
+    def _extract_github_issue(self, reason: str | None) -> str | None:
         """Extract GitHub issue reference from reason string"""
         if not reason:
             return None
@@ -165,7 +165,7 @@ class SkippedTestExtractor:
 class SkippedTestReporter:
     """Generate reports for skipped tests"""
 
-    def __init__(self, skipped_tests: List[SkippedTest]):
+    def __init__(self, skipped_tests: list[SkippedTest]):
         self.skipped_tests = skipped_tests
 
     def generate_summary(self) -> str:

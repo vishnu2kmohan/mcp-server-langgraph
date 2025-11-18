@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Module-level marker: All tests in this file are unit tests
 pytestmark = pytest.mark.unit
 
@@ -89,15 +90,14 @@ def test_docker_compose_uses_correct_jwt_secret():
                             f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
                         )
                         test_service = service_name
-            elif isinstance(env_vars, dict):
-                if "JWT_SECRET_KEY" in env_vars:
-                    jwt_secret = env_vars["JWT_SECRET_KEY"]
-                    assert jwt_secret == constants.TEST_JWT_SECRET, (
-                        f"docker-compose.test.yml service '{service_name}' uses "
-                        f"JWT_SECRET_KEY='{jwt_secret}', but tests/constants.py defines "
-                        f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
-                    )
-                    test_service = service_name
+            elif isinstance(env_vars, dict) and "JWT_SECRET_KEY" in env_vars:
+                jwt_secret = env_vars["JWT_SECRET_KEY"]
+                assert jwt_secret == constants.TEST_JWT_SECRET, (
+                    f"docker-compose.test.yml service '{service_name}' uses "
+                    f"JWT_SECRET_KEY='{jwt_secret}', but tests/constants.py defines "
+                    f"TEST_JWT_SECRET='{constants.TEST_JWT_SECRET}'. These must match."
+                )
+                test_service = service_name
 
     # Verify we found at least one test service with JWT config
     if test_service is None:

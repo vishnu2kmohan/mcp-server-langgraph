@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+
 # Docker is an optional dependency - skip tests if not available
 try:
     from docker.errors import ImageNotFound, NotFound
@@ -27,6 +28,7 @@ except ImportError:
 from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import SandboxError
+
 
 pytestmark = pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not installed")
 

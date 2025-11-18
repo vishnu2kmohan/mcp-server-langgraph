@@ -28,6 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+
 # Patterns that indicate potential time bombs
 TIME_BOMB_PATTERNS = [
     # Future model names
@@ -78,14 +79,14 @@ ALLOWED_PATTERNS = [
 ]
 
 
-def check_file(filepath: Path) -> List[Dict[str, Any]]:
+def check_file(filepath: Path) -> list[dict[str, Any]]:
     """Check a single test file for time bombs."""
     issues = []
     current_year = datetime.now().year
     max_safe_year = current_year + 25  # Allow up to 25 years (reasonable for certs/tokens)
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
             lines = content.split("\n")
 

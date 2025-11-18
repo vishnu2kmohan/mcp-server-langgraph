@@ -9,8 +9,8 @@ Tests cover OWASP A03:2021 - Injection attacks on database queries.
 """
 
 import gc
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest
@@ -21,6 +21,7 @@ from mcp_server_langgraph.compliance.gdpr.postgres_storage import (
     PostgresUserProfileStore,
 )
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, Conversation, UserProfile
+
 
 # NOTE: Using db_pool_gdpr fixture from conftest.py instead of local db_pool
 # The db_pool_gdpr fixture properly depends on integration_test_env which starts

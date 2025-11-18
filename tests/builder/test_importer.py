@@ -22,6 +22,7 @@ import pytest
 from mcp_server_langgraph.builder.importer import import_from_code, import_from_file, validate_import
 from mcp_server_langgraph.builder.workflow import WorkflowBuilder
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -221,7 +222,7 @@ def test_import_from_code_with_force_layout_spreads_nodes(sample_langgraph_code)
     # Assert
     positions = [node["position"] for node in workflow["nodes"]]
     # Nodes should have different positions
-    unique_positions = set((p["x"], p["y"]) for p in positions)
+    unique_positions = {(p["x"], p["y"]) for p in positions}
     assert len(unique_positions) == len(positions), "Force layout should spread nodes"
 
 

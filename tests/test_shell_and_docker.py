@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
@@ -112,7 +113,7 @@ class TestDockerComposeHealthChecks:
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
 
-        with open(compose_file, "r") as f:
+        with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         keycloak_service = compose_config.get("services", {}).get("keycloak-test")
@@ -147,7 +148,7 @@ class TestDockerComposeHealthChecks:
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
 
-        with open(compose_file, "r") as f:
+        with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         qdrant_service = compose_config.get("services", {}).get("qdrant-test")
@@ -173,7 +174,7 @@ class TestDockerComposeHealthChecks:
         if not compose_file.exists():
             pytest.skip("docker-compose.test.yml not found")
 
-        with open(compose_file, "r") as f:
+        with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         services_with_healthchecks = []

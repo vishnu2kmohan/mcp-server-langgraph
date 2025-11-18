@@ -65,7 +65,7 @@ class TestDockerTestImageAssets:
 
         Validation: scripts/validate_docker_image_contents.py enforces this at pre-commit.
         """
-        with open(dockerfile_path, "r") as f:
+        with open(dockerfile_path) as f:
             dockerfile_content = f.read()
 
         # Find the final-test stage
@@ -115,7 +115,7 @@ class TestDockerTestImageAssets:
 
         Validation: scripts/validate_docker_image_contents.py enforces this at pre-commit.
         """
-        with open(dockerfile_path, "r") as f:
+        with open(dockerfile_path) as f:
             dockerfile_content = f.read()
 
         # Find the final-test stage
@@ -157,7 +157,7 @@ class TestDockerTestImageAssets:
         pyproject_path = project_root / "pyproject.toml"
         assert pyproject_path.exists(), f"pyproject.toml not found at {pyproject_path}"
 
-        with open(pyproject_path, "r") as f:
+        with open(pyproject_path) as f:
             pyproject_content = f.read()
 
         # Check for pythonpath configuration

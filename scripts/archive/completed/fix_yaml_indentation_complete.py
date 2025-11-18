@@ -45,9 +45,8 @@ def calculate_expected_indent(lines, line_idx):
             if is_list_item:
                 # List items should be indented 2 more than parent
                 return prev_indent + 2, True, prev_indent
-            else:
-                # Regular keys should also be indented 2 more than parent
-                return prev_indent + 2, False, prev_indent
+            # Regular keys should also be indented 2 more than parent
+            return prev_indent + 2, False, prev_indent
 
         # If previous line is a list item at the same or less indent
         if prev_line.startswith("- "):
@@ -112,7 +111,7 @@ def fix_yaml_file(file_path: Path) -> bool:
     print(f"Processing: {file_path}")
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             original_content = f.read()
 
         fixed_content = fix_yaml_indentation(original_content)
@@ -122,9 +121,8 @@ def fix_yaml_file(file_path: Path) -> bool:
                 f.write(fixed_content)
             print(f"  ✅ Fixed")
             return True
-        else:
-            print(f"  ℹ️  No changes needed")
-            return False
+        print(f"  ℹ️  No changes needed")
+        return False
 
     except Exception as e:
         print(f"  ❌ Error: {e}")

@@ -67,7 +67,7 @@ def fix_yaml_file(file_path: Path) -> bool:
     print(f"Processing: {file_path}")
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             original_content = f.read()
 
         fixed_content = fix_list_indentation(original_content)
@@ -77,9 +77,8 @@ def fix_yaml_file(file_path: Path) -> bool:
                 f.write(fixed_content)
             print(f"  ✅ Fixed")
             return True
-        else:
-            print(f"  ℹ️  No changes needed")
-            return False
+        print(f"  ℹ️  No changes needed")
+        return False
 
     except Exception as e:
         print(f"  ❌ Error: {e}")

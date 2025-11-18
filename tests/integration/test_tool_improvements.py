@@ -19,6 +19,7 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 from tests.conftest import get_user_id
 
+
 # Mark as integration test to ensure it runs in CI (Integration test)
 pytestmark = pytest.mark.integration
 # Test authentication token (valid JWT format for testing)

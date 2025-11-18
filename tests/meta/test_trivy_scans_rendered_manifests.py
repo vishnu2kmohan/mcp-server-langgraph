@@ -22,6 +22,7 @@ import yaml
 
 from tests.conftest import requires_tool
 
+
 # Mark as unit+meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -54,7 +55,7 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     trivy_step = None
     kustomize_render_step = None
 
-    for job_name, job_config in jobs.items():
+    for _job_name, job_config in jobs.items():
         steps = job_config.get("steps", [])
         for step in steps:
             step_name = step.get("name", "").lower()
@@ -219,7 +220,7 @@ def test_workflow_step_order_is_correct():
 
     jobs = workflow_yaml.get("jobs", {})
 
-    for job_name, job_config in jobs.items():
+    for _job_name, job_config in jobs.items():
         steps = job_config.get("steps", [])
 
         kustomize_index = None

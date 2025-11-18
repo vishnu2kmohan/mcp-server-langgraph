@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+
 # Use shared circuit breaker config from conftest.py
 # Mark as llm tests (expensive, require API keys, skipped in CI)
 pytestmark = [

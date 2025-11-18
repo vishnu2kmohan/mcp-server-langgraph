@@ -13,6 +13,7 @@ from typing import List, Tuple
 
 import pytest
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
@@ -25,7 +26,7 @@ class TestSubprocessSafety:
         gc.collect()
 
     @pytest.fixture
-    def test_files(self) -> List[Path]:
+    def test_files(self) -> list[Path]:
         """Get all Python test files in the tests/ directory."""
         tests_dir = Path(__file__).parent.parent
         test_files = list(tests_dir.rglob("test_*.py"))
@@ -35,13 +36,13 @@ class TestSubprocessSafety:
 
         return test_files
 
-    def _find_subprocess_calls(self, file_path: Path) -> List[Tuple[int, str, dict]]:
+    def _find_subprocess_calls(self, file_path: Path) -> list[tuple[int, str, dict]]:
         """Parse file and find all subprocess.run() calls.
 
         Returns:
             List of tuples: (line_number, function_name, keyword_args_dict)
         """
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             try:
                 tree = ast.parse(f.read(), filename=str(file_path))
             except SyntaxError:
@@ -56,13 +57,12 @@ class TestSubprocessSafety:
                 is_subprocess_run = False
 
                 # Handle subprocess.run()
-                if isinstance(node.func, ast.Attribute):
-                    if (
-                        node.func.attr == "run"
-                        and isinstance(node.func.value, ast.Name)
-                        and node.func.value.id == "subprocess"
-                    ):
-                        is_subprocess_run = True
+                if isinstance(node.func, ast.Attribute) and (
+                    node.func.attr == "run"
+                    and isinstance(node.func.value, ast.Name)
+                    and node.func.value.id == "subprocess"
+                ):
+                    is_subprocess_run = True
 
                 if is_subprocess_run:
                     # Extract keyword arguments
@@ -163,7 +163,7 @@ class TestSubprocessSafety:
         if not helper_path.exists():
             pytest.skip("Subprocess helper module doesn't exist yet")
 
-        with open(helper_path, "r") as f:
+        with open(helper_path) as f:
             content = f.read()
 
         # Parse and find run_cli_tool function
@@ -187,7 +187,7 @@ class TestSubprocessSafety:
         if not helper_path.exists():
             pytest.skip("Subprocess helper module doesn't exist yet")
 
-        with open(helper_path, "r") as f:
+        with open(helper_path) as f:
             content = f.read()
 
         # Parse and find run_cli_tool function

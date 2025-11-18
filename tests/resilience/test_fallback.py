@@ -221,8 +221,7 @@ class TestFallbackWithSpecificExceptions:
         async def func(error_type):
             if error_type == "value":
                 raise ValueError("Catch this")
-            else:
-                raise RuntimeError("Don't catch this")
+            raise RuntimeError("Don't catch this")
 
         # ValueError should use fallback
         result = await func("value")

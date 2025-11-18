@@ -27,6 +27,7 @@ import pytest
 
 from mcp_server_langgraph.builder.workflow import WorkflowBuilder
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 # ==============================================================================

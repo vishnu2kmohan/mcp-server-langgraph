@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 
-def check_file(file_path: Path) -> List[Tuple[int, str]]:
+def check_file(file_path: Path) -> list[tuple[int, str]]:
     """
     Check a test file for direct os.environ mutations.
 

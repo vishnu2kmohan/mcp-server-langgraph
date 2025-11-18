@@ -17,6 +17,7 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
+
 # Mark this as both unit and meta test to ensure it runs in CI
 # Note: Individual tests may be skipped if validation module not available
 pytestmark = [pytest.mark.unit, pytest.mark.meta]

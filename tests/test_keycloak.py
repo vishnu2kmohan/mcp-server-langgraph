@@ -12,6 +12,7 @@ import pytest
 
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+
 httpx = pytest.importorskip("httpx", reason="httpx required for Keycloak tests")
 import jwt  # noqa: E402
 from cryptography.hazmat.primitives import serialization  # noqa: E402
@@ -547,8 +548,7 @@ class TestKeycloakPrivateMethods:
             async def mock_get(url, headers):
                 if "clients" in url and "role-mappings" not in url:
                     return clients_response
-                else:
-                    return roles_response
+                return roles_response
 
             mock_client.return_value.__aenter__.return_value.get = AsyncMock(side_effect=mock_get)
             client_roles = await client._get_user_client_roles("user-id-123", "admin-token")

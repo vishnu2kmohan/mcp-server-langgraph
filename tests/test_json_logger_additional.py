@@ -17,6 +17,7 @@ import pytest
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, setup_json_logging
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

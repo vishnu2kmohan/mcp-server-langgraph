@@ -1,8 +1,10 @@
 import gc
 import os
 
+
 "\nIntegration tests for Anthropic Best Practices Enhancements\n\nTests all enhancements working together:\n1. Just-in-Time Context Loading (Dynamic Context Loader)\n2. Parallel Tool Execution\n3. Enhanced Structured Note-Taking (LLM Extraction)\n4. Full agentic loop integration\n\nRequires:\n- Qdrant running (for dynamic context)\n- Redis running (for checkpointing)\n- LLM configured (for extraction and agent)\n"
 import asyncio
+import contextlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -89,17 +91,15 @@ class TestDynamicContextIntegration:
                 query="How do I write asynchronous code in Python?", top_k=2, min_score=0.5
             )
             assert len(python_results) >= 1
-            assert any((r.ref_id == "python_async" for r in python_results))
+            assert any(r.ref_id == "python_async" for r in python_results)
             loaded = await loader.load_batch(python_results, max_tokens=1000)
             assert len(loaded) >= 1
             async_ctx = next((c for c in loaded if c.ref_id == "python_async"), None)
             assert async_ctx is not None
             assert "asyncio" in async_ctx.content
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 qdrant_client.delete_collection("test_integration_contexts")
-            except Exception:
-                pass
 
     @pytest.mark.asyncio
     async def test_progressive_discovery(self, qdrant_client):
@@ -137,10 +137,8 @@ class TestDynamicContextIntegration:
             round3 = await loader.semantic_search("transformer attention mechanism", top_k=1)
             assert len(round3) >= 1
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 qdrant_client.delete_collection("test_integration_progressive")
-            except Exception:
-                pass
 
 
 @pytest.mark.integration
@@ -199,7 +197,7 @@ class TestParallelExecutionIntegration:
         ]
         results = await executor.execute_parallel(invocations, simulated_tool_executor)
         assert len(results) == 5
-        assert all((r.error is None for r in results))
+        assert all(r.error is None for r in results)
         user_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_user"))
         orders_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_orders"))
         assert abs(user_start - orders_start) < 0.05
@@ -431,7 +429,7 @@ class TestEndToEndWorkflow:
         ]
         results = await executor.execute_parallel(invocations, mock_tool)
         assert len(results) == 3
-        assert all((r.success for r in results))
+        assert all(r.success for r in results)
         print("\n✅ End-to-end workflow test passed:")
         print("  - Dynamic context loading: ✓")
         print("  - LLM extraction: ✓")

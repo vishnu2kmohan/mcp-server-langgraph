@@ -44,7 +44,7 @@ class Colors:
 class ADRMetadata:
     """Metadata extracted from an ADR file."""
 
-    def __init__(self, number: int, filename: str, title: str, status: str, date: str, tags: List[str]):
+    def __init__(self, number: int, filename: str, title: str, status: str, date: str, tags: list[str]):
         self.number = number
         self.filename = filename
         self.title = title
@@ -108,7 +108,7 @@ def extract_adr_metadata(file_path: Path) -> ADRMetadata:
     )
 
 
-def categorize_adrs(adrs: List[ADRMetadata]) -> Dict[str, List[ADRMetadata]]:
+def categorize_adrs(adrs: list[ADRMetadata]) -> dict[str, list[ADRMetadata]]:
     """
     Categorize ADRs by topic based on tags and titles.
 
@@ -174,7 +174,7 @@ def categorize_adrs(adrs: List[ADRMetadata]) -> Dict[str, List[ADRMetadata]]:
     return {cat: adrs for cat, adrs in categories.items() if adrs}
 
 
-def generate_readme_content(adrs: List[ADRMetadata]) -> str:
+def generate_readme_content(adrs: list[ADRMetadata]) -> str:
     """
     Generate README.md content with ADR index.
 
@@ -285,7 +285,7 @@ python scripts/generate_adr_index.py --check
     return content
 
 
-def find_all_adrs() -> List[ADRMetadata]:
+def find_all_adrs() -> list[ADRMetadata]:
     """
     Find and parse all ADR files.
 
@@ -313,7 +313,7 @@ def find_all_adrs() -> List[ADRMetadata]:
     return sorted(adrs, key=lambda x: x.number)
 
 
-def validate_adr_numbering(adrs: List[ADRMetadata]) -> List[str]:
+def validate_adr_numbering(adrs: list[ADRMetadata]) -> list[str]:
     """
     Validate ADR numbering for duplicates and gaps.
 
@@ -431,10 +431,9 @@ def check_index_up_to_date() -> bool:
         if current_content.strip() == expected_content.strip():
             print(f"{Colors.GREEN}✓ ADR index is up-to-date{Colors.RESET}")
             return True
-        else:
-            print(f"{Colors.YELLOW}⚠ ADR index is out of date{Colors.RESET}")
-            print(f"\nRun: {Colors.BOLD}python scripts/generate_adr_index.py{Colors.RESET}")
-            return False
+        print(f"{Colors.YELLOW}⚠ ADR index is out of date{Colors.RESET}")
+        print(f"\nRun: {Colors.BOLD}python scripts/generate_adr_index.py{Colors.RESET}")
+        return False
 
     except Exception as e:
         print(f"{Colors.RED}✗ Error: {e}{Colors.RESET}")

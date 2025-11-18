@@ -38,10 +38,10 @@ class MemorySafetyFixer(ast.NodeVisitor):
         self.file_path = file_path
         self.content = content
         self.lines = content.splitlines(keepends=True)
-        self.changes: List[tuple] = []  # (line_number, action, data)
-        self.current_class: Optional[str] = None
-        self.current_class_line: Optional[int] = None
-        self.current_class_methods: Set[str] = set()
+        self.changes: list[tuple] = []  # (line_number, action, data)
+        self.current_class: str | None = None
+        self.current_class_line: int | None = None
+        self.current_class_methods: set[str] = set()
         self.class_uses_mocks = False
         self.has_gc_import = False
 
@@ -160,7 +160,7 @@ def fix_file(file_path: str) -> bool:
         True if changes were made, False otherwise
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content, filename=file_path)
@@ -234,7 +234,7 @@ def fix_file(file_path: str) -> bool:
         return False
 
 
-def find_test_files(base_dir: str = "tests") -> List[str]:
+def find_test_files(base_dir: str = "tests") -> list[str]:
     """Find all test files under the base directory."""
     test_files = []
     base_path = Path(base_dir)

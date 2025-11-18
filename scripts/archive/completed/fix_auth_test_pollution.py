@@ -11,10 +11,10 @@ from pathlib import Path
 from typing import List, Tuple
 
 
-def find_auth_test_classes_missing_setup(file_path: Path) -> List[Tuple[str, int]]:
+def find_auth_test_classes_missing_setup(file_path: Path) -> list[tuple[str, int]]:
     """Find auth test classes missing setup_method."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content, filename=str(file_path))
@@ -51,7 +51,7 @@ def find_auth_test_classes_missing_setup(file_path: Path) -> List[Tuple[str, int
 def add_setup_method(file_path: Path, class_name: str, class_lineno: int) -> bool:
     """Add setup_method to a test class."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         # Find the class definition line

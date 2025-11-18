@@ -9,9 +9,10 @@ TDD: These tests are written FIRST (RED phase) before implementing poll_until().
 
 import gc
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
+
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

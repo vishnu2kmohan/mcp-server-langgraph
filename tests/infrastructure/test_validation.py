@@ -11,6 +11,7 @@ import os
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (infrastructure validation)
 pytestmark = pytest.mark.unit
 
@@ -34,7 +35,7 @@ class TestPhase1Validation:
         assert os.path.exists(f"{module_path}/versions.tf")
 
         # Check main.tf has required resources
-        with open(f"{module_path}/main.tf", "r") as f:
+        with open(f"{module_path}/main.tf") as f:
             content = f.read()
             assert "azurerm_postgresql_flexible_server" in content
             assert "high_availability" in content
@@ -43,7 +44,7 @@ class TestPhase1Validation:
 
     def test_helm_external_database_configuration(self):
         """Test Helm chart has external database configuration."""
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         postgres = values.get("postgresql", {})
@@ -55,7 +56,7 @@ class TestPhase1Validation:
 
     def test_topology_spread_constraints_in_base(self):
         """Test topology spread constraints in base deployment."""
-        with open("deployments/base/deployment.yaml", "r") as f:
+        with open("deployments/base/deployment.yaml") as f:
             deployment = yaml.safe_load(f)
 
         spec = deployment["spec"]["template"]["spec"]
@@ -71,7 +72,7 @@ class TestPhase1Validation:
 
     def test_topology_spread_in_helm_values(self):
         """Test topology spread constraints in Helm values."""
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         assert "topologySpreadConstraints" in values
@@ -87,7 +88,7 @@ class TestPhase1Validation:
 
     def test_velero_backup_schedules(self):
         """Test Velero backup schedules are configured."""
-        with open("deployments/backup/backup-schedule.yaml", "r") as f:
+        with open("deployments/backup/backup-schedule.yaml") as f:
             docs = list(yaml.safe_load_all(f))
 
         # Should have daily, weekly, monthly schedules
@@ -105,7 +106,7 @@ class TestPhase2Validation:
 
     def test_istio_enabled_in_helm_values(self):
         """Test Istio service mesh is enabled in Helm values."""
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         assert values["serviceMesh"]["enabled"] is True
@@ -115,7 +116,7 @@ class TestPhase2Validation:
 
     def test_istio_config_has_mtls_strict(self):
         """Test Istio configuration has mTLS STRICT mode."""
-        with open("deployments/service-mesh/istio/istio-config.yaml", "r") as f:
+        with open("deployments/service-mesh/istio/istio-config.yaml") as f:
             docs = list(yaml.safe_load_all(f))
 
         # Find PeerAuthentication
@@ -124,7 +125,7 @@ class TestPhase2Validation:
 
     def test_pod_security_standards_in_namespace(self):
         """Test Pod Security Standards are enforced."""
-        with open("deployments/base/namespace.yaml", "r") as f:
+        with open("deployments/base/namespace.yaml") as f:
             namespace = yaml.safe_load(f)
 
         labels = namespace["metadata"]["labels"]
@@ -134,7 +135,7 @@ class TestPhase2Validation:
 
     def test_istio_injection_enabled_in_namespace(self):
         """Test Istio injection is enabled in namespace."""
-        with open("deployments/base/namespace.yaml", "r") as f:
+        with open("deployments/base/namespace.yaml") as f:
             namespace = yaml.safe_load(f)
 
         labels = namespace["metadata"]["labels"]
@@ -157,7 +158,7 @@ class TestPhase2Validation:
         ]
 
         for policy_file in policies:
-            with open(policy_file, "r") as f:
+            with open(policy_file) as f:
                 policy = yaml.safe_load(f)
 
             assert "Ingress" in policy["spec"]["policyTypes"]
@@ -178,7 +179,7 @@ class TestPhase3Validation:
         """Test Loki stack configuration exists."""
         assert os.path.exists("deployments/monitoring/loki-stack-values.yaml")
 
-        with open("deployments/monitoring/loki-stack-values.yaml", "r") as f:
+        with open("deployments/monitoring/loki-stack-values.yaml") as f:
             values = yaml.safe_load(f)
 
         assert values["loki"]["enabled"] is True
@@ -187,7 +188,7 @@ class TestPhase3Validation:
 
     def test_loki_retention_configured(self):
         """Test Loki has 30-day retention."""
-        with open("deployments/monitoring/loki-stack-values.yaml", "r") as f:
+        with open("deployments/monitoring/loki-stack-values.yaml") as f:
             values = yaml.safe_load(f)
 
         retention = values["loki"]["config"]["chunk_store_config"]["max_look_back_period"]
@@ -197,7 +198,7 @@ class TestPhase3Validation:
         """Test ResourceQuota configuration exists."""
         assert os.path.exists("deployments/base/resourcequota.yaml")
 
-        with open("deployments/base/resourcequota.yaml", "r") as f:
+        with open("deployments/base/resourcequota.yaml") as f:
             docs = list(yaml.safe_load_all(f))
 
         quotas = [d for d in docs if d.get("kind") == "ResourceQuota"]
@@ -207,7 +208,7 @@ class TestPhase3Validation:
         """Test LimitRange configuration exists."""
         assert os.path.exists("deployments/base/limitrange.yaml")
 
-        with open("deployments/base/limitrange.yaml", "r") as f:
+        with open("deployments/base/limitrange.yaml") as f:
             limitrange = yaml.safe_load(f)
 
         assert limitrange["kind"] == "LimitRange"
@@ -215,7 +216,7 @@ class TestPhase3Validation:
 
     def test_resource_quota_has_cpu_memory_limits(self):
         """Test ResourceQuota has CPU and memory limits."""
-        with open("deployments/base/resourcequota.yaml", "r") as f:
+        with open("deployments/base/resourcequota.yaml") as f:
             docs = list(yaml.safe_load_all(f))
 
         quota = [d for d in docs if d.get("kind") == "ResourceQuota"][0]
@@ -230,7 +231,7 @@ class TestPhase3Validation:
         """Test Kubecost configuration exists."""
         assert os.path.exists("deployments/monitoring/kubecost-values.yaml")
 
-        with open("deployments/monitoring/kubecost-values.yaml", "r") as f:
+        with open("deployments/monitoring/kubecost-values.yaml") as f:
             values = yaml.safe_load(f)
 
         assert "kubecostProductConfigs" in values
@@ -238,7 +239,7 @@ class TestPhase3Validation:
 
     def test_kubecost_cloud_cost_enabled(self):
         """Test Kubecost has cloud cost monitoring enabled."""
-        with open("deployments/monitoring/kubecost-values.yaml", "r") as f:
+        with open("deployments/monitoring/kubecost-values.yaml") as f:
             values = yaml.safe_load(f)
 
         assert values.get("awsCloudCost", {}).get("enabled") is True
@@ -264,7 +265,7 @@ class TestPhase4Validation:
 
     def test_karpenter_iam_roles_configured(self):
         """Test Karpenter IAM roles are configured."""
-        with open("terraform/modules/karpenter/main.tf", "r") as f:
+        with open("terraform/modules/karpenter/main.tf") as f:
             content = f.read()
 
         assert "aws_iam_role" in content
@@ -275,7 +276,7 @@ class TestPhase4Validation:
         """Test Karpenter provisioner configurations exist."""
         assert os.path.exists("deployments/karpenter/provisioner-default.yaml")
 
-        with open("deployments/karpenter/provisioner-default.yaml", "r") as f:
+        with open("deployments/karpenter/provisioner-default.yaml") as f:
             docs = list(yaml.safe_load_all(f))
 
         provisioners = [d for d in docs if d.get("kind") == "Provisioner"]
@@ -283,7 +284,7 @@ class TestPhase4Validation:
 
     def test_karpenter_spot_interruption_handling(self):
         """Test Karpenter has spot interruption handling."""
-        with open("terraform/modules/karpenter/main.tf", "r") as f:
+        with open("terraform/modules/karpenter/main.tf") as f:
             content = f.read()
 
         assert "aws_sqs_queue" in content
@@ -305,7 +306,7 @@ class TestPhase4Validation:
         ]
 
         for vpa_file, expected_mode in vpa_files:
-            with open(vpa_file, "r") as f:
+            with open(vpa_file) as f:
                 vpa = yaml.safe_load(f)
 
             assert vpa["kind"] == "VerticalPodAutoscaler"
@@ -313,7 +314,7 @@ class TestPhase4Validation:
 
     def test_vpa_resource_constraints(self):
         """Test VPA has min/max resource constraints."""
-        with open("deployments/base/postgres-vpa.yaml", "r") as f:
+        with open("deployments/base/postgres-vpa.yaml") as f:
             vpa = yaml.safe_load(f)
 
         policy = vpa["spec"]["resourcePolicy"]["containerPolicies"][0]
@@ -389,7 +390,7 @@ class TestYAMLSyntax:
         errors = []
         for yaml_file in yaml_files:
             try:
-                with open(yaml_file, "r") as f:
+                with open(yaml_file) as f:
                     # Try to load all documents
                     list(yaml.safe_load_all(f))
             except yaml.YAMLError as e:

@@ -19,7 +19,7 @@ from tests.conftest import get_user_id
 
 
 @pytest.fixture
-def mock_auth_user() -> Dict[str, Any]:
+def mock_auth_user() -> dict[str, Any]:
     """Mock authenticated user for testing."""
     user_id = get_user_id("alice")
     return {

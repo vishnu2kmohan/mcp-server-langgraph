@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
@@ -29,7 +30,7 @@ class TestMypyEnforcement:
         config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
         assert config_path.exists(), "Pre-commit config not found"
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
 
         return config
@@ -53,7 +54,7 @@ class TestMypyEnforcement:
         """Verify mypy hook is active (not commented out in YAML)."""
         config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             content = f.read()
 
         # Check for common comment patterns around mypy
@@ -165,7 +166,7 @@ class TestMypyEnforcement:
         }
 
         # Check if at least one recommended flag is present
-        has_recommended_flag = any(flag in args for flag in recommended_flags.keys())
+        has_recommended_flag = any(flag in args for flag in recommended_flags)
 
         # This is informational - we document if recommended flags are missing
         if not has_recommended_flag:
@@ -202,7 +203,7 @@ class TestMypyEnforcement:
         """Verify comment in pre-commit config reflects reality (enabled, not disabled)."""
         config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             content = f.read()
 
         # Look for mypy section

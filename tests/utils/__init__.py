@@ -22,6 +22,7 @@ from tests.utils.worker_utils import (
     worker_tmp_path,
 )
 
+
 __all__ = [
     # Docker utilities
     "TestEnvironment",

@@ -37,6 +37,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

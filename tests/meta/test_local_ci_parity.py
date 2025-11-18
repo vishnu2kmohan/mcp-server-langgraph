@@ -21,6 +21,7 @@ from typing import List, Set
 import pytest
 import yaml
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 # ══════════════════════════════════════════════════════════════════════════════
@@ -115,12 +116,12 @@ def shared_precommit_config(shared_repo_root: Path) -> dict:
             "Please restore .pre-commit-config.yaml from repository.\n"
         )
 
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
 @pytest.fixture(scope="module")
-def shared_pre_push_hooks(shared_precommit_config: dict) -> List[dict]:
+def shared_pre_push_hooks(shared_precommit_config: dict) -> list[dict]:
     """
     Extract all hooks configured for pre-push stage.
 
@@ -135,7 +136,7 @@ def shared_pre_push_hooks(shared_precommit_config: dict) -> List[dict]:
     return pre_push_hooks
 
 
-def find_hook_by_id(hooks: List[dict], hook_id: str) -> dict:
+def find_hook_by_id(hooks: list[dict], hook_id: str) -> dict:
     """Find a hook by its ID."""
     for hook in hooks:
         if hook.get("id") == hook_id:
@@ -187,7 +188,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_is_bash_script(self, pre_push_hook_path: Path):
         """Test that pre-push hook is a bash script."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             first_line = f.readline().strip()
 
         assert first_line in [
@@ -199,7 +200,7 @@ class TestPrePushHookConfiguration:
         """Test that pre-push hook validates lockfile."""
         # Pre-commit hooks are defined in .pre-commit-config.yaml, not the generated script
         config_path = repo_root / ".pre-commit-config.yaml"
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             content = f.read()
 
         assert "uv lock --check" in content, (
@@ -209,7 +210,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_validates_workflows(self, pre_push_hook_path: Path):
         """Test that pre-push hook validates GitHub workflows."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         required_workflow_tests = [
@@ -227,7 +228,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_runs_mypy(self, pre_push_hook_path: Path):
         """Test that pre-push hook runs MyPy type checking."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         assert "mypy src/mcp_server_langgraph" in content, (
@@ -239,7 +240,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_runs_precommit_all_files(self, pre_push_hook_path: Path):
         """Test that pre-push hook runs pre-commit on ALL files."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         assert "pre-commit run --all-files" in content, (
@@ -248,7 +249,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_runs_property_tests_with_ci_profile(self, pre_push_hook_path: Path):
         """Test that pre-push hook runs property tests with CI profile."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         assert "HYPOTHESIS_PROFILE=ci" in content, (
@@ -260,7 +261,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_has_clear_phases(self, pre_push_hook_path: Path):
         """Test that pre-push hook has clearly defined validation phases."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         expected_phases = [
@@ -275,7 +276,7 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_provides_helpful_error_messages(self, pre_push_hook_path: Path):
         """Test that pre-push hook provides helpful troubleshooting info."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             content = f.read()
 
         # Should mention how to bypass (for emergencies)
@@ -304,7 +305,7 @@ class TestMakefileValidationTarget:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_validate_pre_push_target_exists(self, makefile_content: str):
@@ -428,7 +429,7 @@ class TestLocalCIParity:
     @pytest.fixture
     def ci_workflow(self, ci_workflow_path: Path) -> dict:
         """Load CI workflow YAML."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return yaml.safe_load(f)
 
     @pytest.fixture
@@ -452,7 +453,7 @@ class TestLocalCIParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     def test_lockfile_validation_matches_ci(self, ci_workflow: dict, pre_push_content: str):
@@ -524,14 +525,14 @@ class TestCIGapPrevention:
         """Test that CI workflow has comprehensive validation."""
         ci_path = repo_root / ".github" / "workflows" / "ci.yaml"
 
-        with open(ci_path, "r") as f:
+        with open(ci_path) as f:
             ci_content = yaml.safe_load(f)
 
         jobs = ci_content.get("jobs", {})
 
         # Should have pre-commit or validation job
         validation_jobs = [
-            job for job in jobs.keys() if any(keyword in job.lower() for keyword in ["pre-commit", "validate", "lint"])
+            job for job in jobs if any(keyword in job.lower() for keyword in ["pre-commit", "validate", "lint"])
         ]
 
         assert validation_jobs, "CI workflow should have validation/pre-commit/lint job"
@@ -540,7 +541,7 @@ class TestCIGapPrevention:
         """Test that CONTRIBUTING.md documents validate-pre-push."""
         contributing_path = repo_root / "CONTRIBUTING.md"
 
-        with open(contributing_path, "r") as f:
+        with open(contributing_path) as f:
             content = f.read()
 
         assert "validate-pre-push" in content, "CONTRIBUTING.md should document validate-pre-push requirement"
@@ -552,7 +553,7 @@ class TestCIGapPrevention:
         readme_path = repo_root / "README.md"
 
         if readme_path.exists():
-            with open(readme_path, "r") as f:
+            with open(readme_path) as f:
                 content = f.read()
 
             # Should mention validation or testing before push
@@ -593,7 +594,7 @@ class TestPytestXdistParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -604,7 +605,7 @@ class TestPytestXdistParity:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_unit_tests_use_pytest_xdist_n_auto(self, pre_push_content: str):
@@ -744,7 +745,7 @@ class TestOtelSdkDisabledParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -755,7 +756,7 @@ class TestOtelSdkDisabledParity:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_unit_tests_set_otel_sdk_disabled(self, pre_push_content: str):
@@ -869,7 +870,7 @@ class TestApiMcpTestSuiteParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -880,7 +881,7 @@ class TestApiMcpTestSuiteParity:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_api_endpoint_tests_run_locally(self, pre_push_content: str):
@@ -978,7 +979,7 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -989,7 +990,7 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     def test_makefile_includes_unit_tests(self, makefile_content: str):
@@ -1153,7 +1154,7 @@ class TestActionlintHookStrictness:
     @pytest.fixture
     def pre_commit_config_content(self, pre_commit_config_path: Path) -> str:
         """Read pre-commit config content."""
-        with open(pre_commit_config_path, "r") as f:
+        with open(pre_commit_config_path) as f:
             return f.read()
 
     def test_actionlint_hook_has_no_bypass(self, pre_commit_config_content: str):
@@ -1242,7 +1243,7 @@ class TestMyPyBlockingParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -1253,7 +1254,7 @@ class TestMyPyBlockingParity:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_mypy_is_blocking_locally(self, pre_push_content: str):
@@ -1383,7 +1384,7 @@ class TestIsolationValidationStrictness:
     @pytest.fixture
     def validation_script_content(self, validation_script_path: Path) -> str:
         """Read validation script content."""
-        with open(validation_script_path, "r") as f:
+        with open(validation_script_path) as f:
             return f.read()
 
     def test_missing_xdist_group_is_error_not_warning(self, validation_script_content: str):
@@ -1480,7 +1481,7 @@ class TestMakefileDependencyExtras:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -1491,7 +1492,7 @@ class TestMakefileDependencyExtras:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_install_dev_includes_dev_extra(self, makefile_content: str):
@@ -1604,7 +1605,7 @@ class TestPrePushDependencyValidation:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -1615,7 +1616,7 @@ class TestPrePushDependencyValidation:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_pre_push_includes_uv_pip_check(self, pre_push_content: str):
@@ -1699,7 +1700,7 @@ class TestPreCommitHookStageFlag:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_validate_pre_push_uses_hook_stage_push(self, makefile_content: str):
@@ -1787,7 +1788,7 @@ class TestContractTestMarkerParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -1798,7 +1799,7 @@ class TestContractTestMarkerParity:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -1809,7 +1810,7 @@ class TestContractTestMarkerParity:
     @pytest.fixture
     def ci_workflow_content(self, ci_workflow_path: Path) -> str:
         """Read CI workflow content."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return f.read()
 
     def test_pre_push_uses_same_marker_as_ci(self, pre_push_content: str, ci_workflow_content: str):
@@ -2003,7 +2004,7 @@ class TestCIPushStageValidatorsJob:
     @pytest.fixture
     def ci_workflow(self, ci_workflow_path: Path) -> dict:
         """Load CI workflow YAML."""
-        with open(ci_workflow_path, "r") as f:
+        with open(ci_workflow_path) as f:
             return yaml.safe_load(f)
 
     def test_ci_has_push_stage_validators_job(self, ci_workflow: dict):
@@ -2119,7 +2120,7 @@ class TestPostCommitHookTemplate:
     @pytest.fixture
     def script_content(self, script_path: Path) -> str:
         """Read script content."""
-        with open(script_path, "r") as f:
+        with open(script_path) as f:
             return f.read()
 
     def test_hook_template_uses_uv_run_python(self, script_content: str):
@@ -2217,7 +2218,7 @@ class TestHypothesisProfileParity:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     def test_unit_tests_set_hypothesis_profile_ci(self, pre_push_content: str):
@@ -2341,7 +2342,7 @@ class TestPrePushEnvironmentSanityChecks:
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
         """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+        with open(pre_push_hook_path) as f:
             return f.read()
 
     def test_pre_push_checks_venv_exists(self, pre_push_content: str):
@@ -2481,7 +2482,7 @@ class TestRegressionPrevention:
         """Meta-test: Ensure this test file itself runs in CI."""
         ci_path = repo_root / ".github" / "workflows" / "ci.yaml"
 
-        with open(ci_path, "r") as f:
+        with open(ci_path) as f:
             ci_content = f.read()
 
         # This test file should be covered by pytest runs in CI
@@ -2498,7 +2499,7 @@ class TestRegressionPrevention:
 
         contributing_path = repo_root / "CONTRIBUTING.md"
 
-        with open(contributing_path, "r") as f:
+        with open(contributing_path) as f:
             content = f.read()
 
         # Should document hook setup
@@ -2511,7 +2512,7 @@ class TestRegressionPrevention:
         """Test that minimum required validation steps are documented."""
         contributing_path = repo_root / "CONTRIBUTING.md"
 
-        with open(contributing_path, "r") as f:
+        with open(contributing_path) as f:
             content = f.read()
 
         # Key validation steps that must be documented

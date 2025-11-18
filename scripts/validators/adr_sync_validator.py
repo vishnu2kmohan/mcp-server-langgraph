@@ -26,12 +26,12 @@ class SyncResult:
     """Result of ADR synchronization check."""
 
     is_synced: bool
-    source_adrs: Set[str] = field(default_factory=set)
-    docs_adrs: Set[str] = field(default_factory=set)
-    missing_in_docs: Set[str] = field(default_factory=set)
-    missing_in_source: Set[str] = field(default_factory=set)
-    uppercase_filenames: List[Path] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    source_adrs: set[str] = field(default_factory=set)
+    docs_adrs: set[str] = field(default_factory=set)
+    missing_in_docs: set[str] = field(default_factory=set)
+    missing_in_source: set[str] = field(default_factory=set)
+    uppercase_filenames: list[Path] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -93,7 +93,7 @@ class AdrSyncValidator:
             stats=stats,
         )
 
-    def _find_adrs(self, directory: Path, extension: str) -> Set[str]:
+    def _find_adrs(self, directory: Path, extension: str) -> set[str]:
         """
         Find all ADR files in directory.
 
@@ -117,7 +117,7 @@ class AdrSyncValidator:
 
         return adrs
 
-    def _find_uppercase_filenames(self) -> List[Path]:
+    def _find_uppercase_filenames(self) -> list[Path]:
         """
         Find ADR files with uppercase naming (ADR-* instead of adr-*).
 

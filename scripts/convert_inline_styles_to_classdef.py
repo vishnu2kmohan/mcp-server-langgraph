@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 
-def extract_inline_styles(content: str) -> List[Tuple[str, str]]:
+def extract_inline_styles(content: str) -> list[tuple[str, str]]:
     """
     Extract inline style statements from Mermaid diagram.
 
@@ -39,7 +39,7 @@ def extract_inline_styles(content: str) -> List[Tuple[str, str]]:
     return styles
 
 
-def group_styles_by_pattern(styles: List[Tuple[str, str]]) -> Dict[str, List[str]]:
+def group_styles_by_pattern(styles: list[tuple[str, str]]) -> dict[str, list[str]]:
     """
     Group nodes by their style pattern.
 
@@ -52,7 +52,7 @@ def group_styles_by_pattern(styles: List[Tuple[str, str]]) -> Dict[str, List[str
     return dict(grouped)
 
 
-def generate_classdef_section(grouped_styles: Dict[str, List[str]]) -> str:
+def generate_classdef_section(grouped_styles: dict[str, list[str]]) -> str:
     """
     Generate classDef declarations and class assignments.
 
@@ -137,7 +137,7 @@ def process_file(file_path: Path, dry_run: bool = False) -> bool:
             file_path.write_text(content, encoding="utf-8")
             print(f"✅ Converted: {file_path}")
             return True
-        elif modified:
+        if modified:
             print(f"🔍 Would convert: {file_path}")
             return True
 

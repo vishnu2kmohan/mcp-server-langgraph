@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 
-def parse_bandit_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def parse_bandit_report(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse Bandit JSON report and extract findings."""
     findings = []
 
@@ -32,7 +32,7 @@ def parse_bandit_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return findings
 
 
-def parse_safety_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def parse_safety_report(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse Safety JSON report and extract vulnerabilities."""
     findings = []
 
@@ -50,7 +50,7 @@ def parse_safety_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return findings
 
 
-def parse_pip_audit_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def parse_pip_audit_report(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Parse pip-audit JSON report and extract vulnerabilities."""
     findings = []
 
@@ -72,7 +72,7 @@ def parse_pip_audit_report(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     return findings
 
 
-def categorize_by_severity(findings: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+def categorize_by_severity(findings: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """Group findings by severity level."""
     categorized = {"CRITICAL": [], "HIGH": [], "MEDIUM": [], "LOW": []}
 
@@ -84,7 +84,7 @@ def categorize_by_severity(findings: List[Dict[str, Any]]) -> Dict[str, List[Dic
     return categorized
 
 
-def format_markdown_report(findings: Dict[str, Any]) -> str:
+def format_markdown_report(findings: dict[str, Any]) -> str:
     """Format findings into a comprehensive markdown report."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -228,7 +228,7 @@ def generate_report(output_dir: Path) -> Path:
             with open(bandit_file) as f:
                 bandit_data = json.load(f)
                 bandit_findings = parse_bandit_report(bandit_data)
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Warning: Could not parse Bandit report: {e}")
 
     # Parse Safety report
@@ -237,7 +237,7 @@ def generate_report(output_dir: Path) -> Path:
             with open(safety_file) as f:
                 safety_data = json.load(f)
                 safety_findings = parse_safety_report(safety_data)
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Warning: Could not parse Safety report: {e}")
 
     # Parse pip-audit report
@@ -246,7 +246,7 @@ def generate_report(output_dir: Path) -> Path:
             with open(pip_audit_file) as f:
                 pip_audit_data = json.load(f)
                 pip_audit_findings = parse_pip_audit_report(pip_audit_data)
-        except (json.JSONDecodeError, IOError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Warning: Could not parse pip-audit report: {e}")
 
     # Calculate summary

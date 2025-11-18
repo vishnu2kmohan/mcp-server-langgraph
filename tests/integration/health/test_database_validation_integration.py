@@ -222,7 +222,7 @@ class TestDatabaseValidationFailureCases:
         assert len(result.errors) > 0
 
         # All databases should fail to validate
-        for db_name, db_result in result.databases.items():
+        for _db_name, db_result in result.databases.items():
             assert not db_result.exists
             assert not db_result.is_valid
             assert len(db_result.errors) > 0
@@ -245,7 +245,7 @@ class TestDatabaseValidationFailureCases:
         assert len(result.errors) > 0
 
         # All databases should fail to validate
-        for db_name, db_result in result.databases.items():
+        for _db_name, db_result in result.databases.items():
             assert not db_result.exists
             assert not db_result.is_valid
             assert len(db_result.errors) > 0

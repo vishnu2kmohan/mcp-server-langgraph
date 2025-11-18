@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
 # Define project root relative to test file
@@ -63,7 +64,7 @@ class TestServiceAccountAnnotations:
     def _load_yaml_file(self, file_path: Path):
         """Load YAML file and return all documents."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 # Load all YAML documents in the file
                 return list(yaml.safe_load_all(f))
         except Exception as e:

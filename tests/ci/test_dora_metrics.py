@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 

@@ -28,8 +28,10 @@ Reference: Codex finding - pytest addopts compatibility validation
 """
 
 import sys
-import tomllib
 from pathlib import Path
+
+import tomllib
+
 
 # Map pytest flags to required plugin packages
 # Flag → Required package name (as in pyproject.toml dependencies)

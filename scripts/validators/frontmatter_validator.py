@@ -72,9 +72,9 @@ class ValidationResult:
     """Result of frontmatter validation."""
 
     is_valid: bool
-    errors: List[FrontmatterError] = field(default_factory=list)
-    warnings: List[Exception] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    errors: list[FrontmatterError] = field(default_factory=list)
+    warnings: list[Exception] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -121,8 +121,8 @@ class FrontmatterValidator:
         Returns:
             ValidationResult with errors and statistics
         """
-        errors: List[FrontmatterError] = []
-        stats: Dict[str, int] = {
+        errors: list[FrontmatterError] = []
+        stats: dict[str, int] = {
             "total_files": 0,
             "valid_frontmatter": 0,
             "invalid_frontmatter": 0,
@@ -152,7 +152,7 @@ class FrontmatterValidator:
             stats=stats,
         )
 
-    def _find_mdx_files(self) -> Set[Path]:
+    def _find_mdx_files(self) -> set[Path]:
         """Find all MDX files, excluding specified directories."""
         files = set()
 
@@ -166,7 +166,7 @@ class FrontmatterValidator:
 
         return files
 
-    def _validate_file(self, file_path: Path, relative_path: str) -> List[FrontmatterError]:
+    def _validate_file(self, file_path: Path, relative_path: str) -> list[FrontmatterError]:
         """
         Validate frontmatter in a single file.
 
@@ -208,10 +208,10 @@ class FrontmatterValidator:
 
         # Validate required fields
         for field_name in self.REQUIRED_FIELDS:
-            if field_name not in frontmatter:
-                errors.append(MissingRequiredFieldError(relative_path, field_name))
-            elif not frontmatter[field_name] or (
-                isinstance(frontmatter[field_name], str) and not frontmatter[field_name].strip()
+            if (
+                field_name not in frontmatter
+                or not frontmatter[field_name]
+                or (isinstance(frontmatter[field_name], str) and not frontmatter[field_name].strip())
             ):
                 errors.append(MissingRequiredFieldError(relative_path, field_name))
 

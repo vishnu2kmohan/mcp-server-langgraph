@@ -36,8 +36,8 @@ class TodoMarker:
 class AuditResult:
     """Result of TODO/FIXME audit."""
 
-    markers: List[TodoMarker] = field(default_factory=list)
-    stats: Dict[str, any] = field(default_factory=dict)
+    markers: list[TodoMarker] = field(default_factory=list)
+    stats: dict[str, any] = field(default_factory=dict)
 
 
 class TodoAuditor:
@@ -73,8 +73,8 @@ class TodoAuditor:
         Returns:
             AuditResult with markers and statistics
         """
-        markers: List[TodoMarker] = []
-        stats: Dict[str, any] = {
+        markers: list[TodoMarker] = []
+        stats: dict[str, any] = {
             "total_files": 0,
             "total_markers": 0,
             "by_type": {"TODO": 0, "FIXME": 0, "XXX": 0},
@@ -100,7 +100,7 @@ class TodoAuditor:
 
         return AuditResult(markers=markers, stats=stats)
 
-    def _find_documentation_files(self) -> Set[Path]:
+    def _find_documentation_files(self) -> set[Path]:
         """Find all documentation files (MDX and MD)."""
         files = set()
 
@@ -124,7 +124,7 @@ class TodoAuditor:
                 return False
         return True
 
-    def _audit_file(self, file_path: Path, relative_path: str) -> List[TodoMarker]:
+    def _audit_file(self, file_path: Path, relative_path: str) -> list[TodoMarker]:
         """Audit a single file for markers."""
         markers = []
 
@@ -189,7 +189,7 @@ class TodoAuditor:
             print(f"\n📝 Markers Found:")
 
             # Group by file
-            by_file: Dict[str, List[TodoMarker]] = {}
+            by_file: dict[str, list[TodoMarker]] = {}
             for marker in result.markers:
                 if marker.file_path not in by_file:
                     by_file[marker.file_path] = []

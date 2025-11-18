@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
@@ -692,10 +693,9 @@ class TestXdistGroupCoverage:
                             markers.add(decorator.attr)
 
                     # Handle @pytest.mark.integration(...) with args
-                    elif isinstance(decorator, ast.Call):
-                        if isinstance(decorator.func, ast.Attribute):
-                            if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
-                                markers.add(decorator.func.attr)
+                    elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                        if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
+                            markers.add(decorator.func.attr)
 
             # Check for pytestmark = pytest.mark.integration
             elif isinstance(node, ast.Assign):
@@ -795,7 +795,7 @@ class TestXdistGroupCoverage:
             error_msg += "\n"
             error_msg += f"TARGET: 100% coverage (currently: {100 - (len(missing_xdist_group) / max(1, len([f for f in all_test_files if 'integration' in self._find_pytest_markers_in_file(f)])) * 100):.1f}%)\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_xdist_group_markers_have_teardown_method(self):
         """
@@ -859,7 +859,7 @@ class TestXdistGroupCoverage:
             error_msg += "\n"
             error_msg += "See: MEMORY_SAFETY_GUIDELINES.md\n"
 
-            assert False, error_msg
+            raise AssertionError(error_msg)
 
     def test_integration_tests_xdist_group_coverage_percentage(self):
         """

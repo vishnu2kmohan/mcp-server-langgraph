@@ -137,7 +137,7 @@ def validate_production_auth_config(settings_obj: Settings) -> None:
 
 def get_service_principal_manager(
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-    openfga: OpenFGAClient = Depends(get_openfga_client),
+    openfga: OpenFGAClient | None = Depends(get_openfga_client),
 ) -> ServicePrincipalManager:
     """
     Get ServicePrincipalManager instance

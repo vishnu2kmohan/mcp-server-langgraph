@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from mcp_server_langgraph.mcp.server_streamable import ChatInput, SearchConversationsInput
 from tests.conftest import get_user_id
 
+
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
