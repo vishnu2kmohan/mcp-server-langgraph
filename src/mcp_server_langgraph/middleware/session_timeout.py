@@ -168,7 +168,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
             algorithm = settings.jwt_algorithm
             if algorithm.startswith(("RS", "ES", "PS")):
                 # Asymmetric algorithm - use public key for verification
-                key = settings.jwt_public_key or ""  # type: ignore[attr-defined]
+                key = settings.jwt_public_key or ""
             else:
                 # Symmetric algorithm - use secret key
                 key = str(settings.jwt_secret_key) if settings.jwt_secret_key else ""

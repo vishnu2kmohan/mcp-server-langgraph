@@ -273,7 +273,7 @@ def circuit_breaker(  # noqa: C901
                         # Success - handle via state machine
                         with breaker._lock:
                             breaker._state_storage.increment_counter()
-                            for listener in breaker.listeners:  # type: ignore[assignment]
+                            for listener in breaker.listeners:
                                 listener.success(breaker)
                             breaker.state.on_success()
 
@@ -291,7 +291,7 @@ def circuit_breaker(  # noqa: C901
                                         f"state={breaker.state.name}"
                                     )
                                     breaker._inc_counter()
-                                    for listener in breaker.listeners:  # type: ignore[assignment]
+                                    for listener in breaker.listeners:
                                         listener.failure(breaker, e)
                                     breaker.state.on_failure(e)
                                     logger.debug(
@@ -305,7 +305,7 @@ def circuit_breaker(  # noqa: C901
                                         f"treating as success"
                                     )
                                     breaker._state_storage.increment_counter()
-                                    for listener in breaker.listeners:  # type: ignore[assignment]
+                                    for listener in breaker.listeners:
                                         listener.success(breaker)
                                     breaker.state.on_success()
                         except pybreaker.CircuitBreakerError:

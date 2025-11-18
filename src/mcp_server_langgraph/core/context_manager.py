@@ -250,7 +250,7 @@ Focus on high-signal information that maintains conversation context.
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
 
-                return summary  # type: ignore[return-value]
+                return summary
 
             except Exception as e:
                 logger.error(f"Summarization failed: {e}", exc_info=True)

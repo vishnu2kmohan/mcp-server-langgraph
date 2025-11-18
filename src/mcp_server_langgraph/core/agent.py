@@ -154,7 +154,7 @@ def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpoin
 
             # Store context manager reference for proper cleanup on shutdown
             # This prevents resource leaks (Redis connections, file descriptors)
-            checkpointer.__context_manager__ = checkpointer_ctx  # type: ignore[attr-defined]
+            checkpointer.__context_manager__ = checkpointer_ctx
 
             logger.info("Redis checkpointer initialized successfully")
             return checkpointer
@@ -201,7 +201,7 @@ def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpoi
     return _create_checkpointer(settings_to_use=settings_override)
 
 
-def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:  # type: ignore[type-arg]
+def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
     """
     Clean up checkpointer resources on application shutdown.
 

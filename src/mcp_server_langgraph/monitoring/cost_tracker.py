@@ -124,13 +124,13 @@ except ImportError:
             self.parent._values[self.label_values] += amount
 
     # Mock Prometheus metrics (fallback when prometheus_client not installed)
-    llm_token_usage = MockPrometheusCounter(  # type: ignore[assignment]  # Mock has compatible interface
+    llm_token_usage = MockPrometheusCounter(  # Mock has compatible interface
         name="llm_token_usage_total",
         description="Total tokens used by LLM calls",
         labelnames=["provider", "model", "token_type"],
     )
 
-    llm_cost = MockPrometheusCounter(  # type: ignore[assignment]  # Mock has compatible interface
+    llm_cost = MockPrometheusCounter(  # Mock has compatible interface
         name="llm_cost_usd_total",
         description="Total estimated cost in USD",
         labelnames=["provider", "model"],

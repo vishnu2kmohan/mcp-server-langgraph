@@ -220,7 +220,7 @@ def retry_with_backoff(  # noqa: C901
 
                 try:
                     # Execute with retry
-                    async for attempt in AsyncRetrying(**retry_kwargs):  # type: ignore[arg-type]
+                    async for attempt in AsyncRetrying(**retry_kwargs):
                         with attempt:
                             result: T = await func(*args, **kwargs)  # type: ignore[misc]
                             span.set_attribute("retry.success", True)
@@ -274,7 +274,7 @@ def retry_with_backoff(  # noqa: C901
                 retry_kwargs["retry"] = retry_if_exception_type(retry_on)
 
             try:
-                for attempt in Retrying(**retry_kwargs):  # type: ignore[arg-type]
+                for attempt in Retrying(**retry_kwargs):
                     with attempt:
                         return func(*args, **kwargs)
             except RetryError as e:

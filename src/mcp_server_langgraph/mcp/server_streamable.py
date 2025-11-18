@@ -186,7 +186,7 @@ try:
     app.state.limiter = limiter
 
     # Register custom exception handler for rate limit exceeded
-    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
     _module_logger.info(
         "Rate limiting enabled - strategy: fixed-window, tiers: anonymous/free/standard/premium/enterprise, fail_open: True"
@@ -336,7 +336,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]  # MCP library decorator lacks type stubs
+        @self.server.list_tools()  # MCP library decorator lacks type stubs
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -537,7 +537,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]  # MCP library decorator lacks type stubs
+        @self.server.list_resources()  # MCP library decorator lacks type stubs
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -1521,7 +1521,7 @@ def custom_openapi() -> dict[str, Any]:
 
 
 # Apply custom OpenAPI schema
-app.openapi = custom_openapi  # type: ignore[method-assign]
+app.openapi = custom_openapi
 
 
 def main() -> None:
