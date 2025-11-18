@@ -13,9 +13,11 @@ Following TDD principles to prevent future regressions.
 """
 
 import gc
+from unittest.mock import AsyncMock
 
 import pytest
 
+from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from tests.conftest import get_user_id
 
 
@@ -134,8 +136,8 @@ class TestEndToEndDependencyWiring:
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         # Arrange: Mock Keycloak, None OpenFGA
-        mock_keycloak = AsyncMock()
-        mock_keycloak.create_client = AsyncMock()
+        mock_keycloak = AsyncMock(spec=KeycloakClient)
+        mock_keycloak.create_client = AsyncMock()  # Explicit method configuration
 
         manager = ServicePrincipalManager(
             keycloak_client=mock_keycloak,

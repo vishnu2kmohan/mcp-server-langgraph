@@ -17,9 +17,12 @@ Following TDD:
 """
 
 import gc
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
+
+from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
 
 @pytest.mark.xdist_group(name="app_startup_integration_tests")
@@ -142,7 +145,7 @@ class TestFastAPIStartupValidation:
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         # Arrange: Create manager with None OpenFGA
-        mock_keycloak = AsyncMock()
+        mock_keycloak = AsyncMock(spec=KeycloakClient)
         manager = ServicePrincipalManager(
             keycloak_client=mock_keycloak,
             openfga_client=None,  # Disabled OpenFGA
@@ -446,7 +449,7 @@ class TestRegressionPrevention:
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         # Act: Create with None OpenFGA
-        mock_keycloak = AsyncMock()
+        mock_keycloak = AsyncMock(spec=KeycloakClient)
         manager = ServicePrincipalManager(
             keycloak_client=mock_keycloak,
             openfga_client=None,  # Must accept None
