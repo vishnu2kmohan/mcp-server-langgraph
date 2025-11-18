@@ -1,3 +1,10 @@
+---
+title: "Icon Selection Guide"
+description: "Comprehensive icon standards for Mintlify documentation with Font Awesome and Lucide icon libraries and semantic usage guidelines"
+icon: "icons"
+contentType: "reference"
+---
+
 # Mintlify Icon Style Guide
 
 This guide defines the standard icon conventions for MCP Server LangGraph documentation. Consistent icon usage improves navigation and visual organization.
@@ -42,10 +49,11 @@ Mintlify supports both **Font Awesome** and **Lucide** icon libraries.
 title: 1. Multi-Provider LLM Support via LiteLLM
 description: 'Architecture decision for LLM provider abstraction'
 icon: 'file-lines'
+contentType: 'reference'
 ---
 ```
 
-**Files**: 39 ADR documents (adr-0001 through adr-0039)
+**Files**: All ADR documents (adr-0001 through adr-0059)
 
 ---
 
@@ -63,6 +71,7 @@ icon: 'file-lines'
 title: Deployment Overview
 description: 'Deploy MCP Server with LangGraph to production'
 icon: 'rocket'
+contentType: 'guide'
 ---
 ```
 
@@ -92,6 +101,7 @@ icon: 'rocket'
 title: Kubernetes Deployment
 description: 'Deploy MCP Server with LangGraph on Kubernetes'
 icon: 'dharmachakra'
+contentType: 'how-to'
 ---
 ```
 
@@ -101,6 +111,9 @@ icon: 'dharmachakra'
 - `deployment/kubernetes/gke.mdx`
 - `deployment/kubernetes/eks.mdx`
 - `deployment/kubernetes/aks.mdx`
+- `kubernetes/configmap-best-practices.mdx`
+- `kubernetes/keycloak-readonly-filesystem.mdx`
+- `kubernetes/pod-crash-resolution-2025-11-12.mdx`
 
 ---
 
@@ -118,11 +131,13 @@ icon: 'dharmachakra'
 title: Docker Compose
 description: 'Local development and testing with Docker Compose'
 icon: 'docker'
+contentType: 'how-to'
 ---
 ```
 
 **Files**:
 - `deployment/docker.mdx`
+- `infrastructure/docker-healthcheck-patterns.mdx`
 
 ---
 
@@ -140,6 +155,7 @@ icon: 'docker'
 title: Helm Deployment
 description: 'Deploy MCP Server using Helm charts for simplified management'
 icon: 'cubes'
+contentType: 'how-to'
 ---
 ```
 
@@ -162,6 +178,7 @@ icon: 'cubes'
 title: Google Cloud Run
 description: 'Deploy to Google Cloud Run for serverless GCP deployment'
 icon: 'google'
+contentType: 'how-to'
 ---
 ```
 
@@ -170,6 +187,7 @@ icon: 'google'
 title: Vertex AI with Workload Identity
 description: 'Configure Vertex AI using Workload Identity Federation on GKE for keyless authentication'
 icon: 'google'
+contentType: 'guide'
 ---
 ```
 
@@ -183,7 +201,7 @@ icon: 'google'
 
 ### 7. Security & Authentication
 
-**Icon**: `shield-halved` (Font Awesome)
+**Icon**: `shield-halved` (Font Awesome) or `shield`
 
 **Rationale**: Represents security, protection, and access control. Font Awesome provides better shield variants.
 
@@ -195,6 +213,7 @@ icon: 'google'
 title: Kong API Gateway
 description: 'Deploy Kong Gateway for advanced API management, rate limiting, and security'
 icon: 'shield-halved'
+contentType: 'guide'
 ---
 ```
 
@@ -203,6 +222,7 @@ icon: 'shield-halved'
 title: Keycloak JWT Authentication Deployment Guide
 description: 'Complete deployment guide for the Keycloak-centric authentication architecture'
 icon: 'shield-halved'
+contentType: 'how-to'
 ---
 ```
 
@@ -234,6 +254,7 @@ icon: 'shield-halved'
 title: Monitoring & Observability
 description: 'Comprehensive monitoring, metrics, and observability setup'
 icon: 'chart-line'
+contentType: 'guide'
 ---
 ```
 
@@ -261,6 +282,7 @@ icon: 'chart-line'
 title: Log Aggregation
 description: 'Multi-platform log aggregation with structured JSON logging'
 icon: 'database'
+contentType: 'guide'
 ---
 ```
 
@@ -283,6 +305,7 @@ icon: 'database'
 title: Auto-Scaling
 description: 'Configure horizontal and vertical scaling for production workloads'
 icon: 'arrow-up-right-dots'
+contentType: 'how-to'
 ---
 ```
 
@@ -305,6 +328,7 @@ icon: 'arrow-up-right-dots'
 title: Disaster Recovery
 description: 'Backup, restore, and failover strategies for production resilience'
 icon: 'life-ring'
+contentType: 'guide'
 ---
 ```
 
@@ -327,6 +351,7 @@ icon: 'life-ring'
 title: Production Checklist
 description: 'Pre-deployment verification for production environments'
 icon: 'clipboard-check'
+contentType: 'reference'
 ---
 ```
 
@@ -349,6 +374,7 @@ icon: 'clipboard-check'
 title: Version History
 description: 'Complete release history and version comparison'
 icon: 'tag'
+contentType: 'reference'
 ---
 ```
 
@@ -372,11 +398,15 @@ icon: 'tag'
 title: Development Guide
 description: 'Local development setup and workflow'
 icon: 'code'
+contentType: 'guide'
 ---
 ```
 
 **Files**:
-- `reference/development/*.mdx`
+- `development/commands.mdx`
+- `development/validation-strategy.mdx`
+- `development/workflows.mdx`
+- `development/workflow-diagram.mdx`
 - API reference documentation
 
 ---
@@ -385,7 +415,7 @@ icon: 'code'
 
 **Icon**: `rocket` or `book-open`
 
-**Rationale**: `rocket` for quickstart/deployment, `book-open` for guides.
+**Rationale**: `rocket` for quickstart/deployment, `book-open` for guides and documentation.
 
 **Usage**: Quickstart guides, tutorials, how-to documentation
 
@@ -395,12 +425,23 @@ icon: 'code'
 title: Quick Start
 description: 'Get started with MCP Server LangGraph in 5 minutes'
 icon: 'rocket'
+contentType: 'tutorial'
+---
+```
+
+```yaml
+---
+title: Documentation Authoring Guide
+description: 'Complete guide for contributing to documentation'
+icon: 'book-open'
+contentType: 'guide'
 ---
 ```
 
 **Files**:
 - `getting-started/*`
 - `guides/*`
+- `references/documentation-authoring-guide.mdx`
 
 ---
 
@@ -410,29 +451,36 @@ icon: 'rocket'
 
 ```yaml
 ---
-title: Document Title Here
-description: 'Brief description of the document content'
-icon: 'icon-name'
+title: "Document Title Here"
+description: "Brief description of the document content"
+icon: "icon-name"
+contentType: "explanation|reference|tutorial|how-to|guide"
 ---
 ```
 
 ### Standards
 
 1. **Title**:
-   - No quotes
+   - Double quotes `"..."`
    - Title Case capitalization
    - Clear and descriptive
 
 2. **Description**:
-   - Single quotes `'...'`
+   - Double quotes `"..."`
    - No ending period
    - 1-2 sentences max
    - Descriptive but concise
+   - 140-160 characters recommended for SEO
 
 3. **Icon**:
-   - Single quotes `'icon-name'`
+   - Double quotes `"icon-name"`
    - Font Awesome icon names (without `fa-` prefix)
    - Must be from approved icon set
+   - Use lowercase
+
+4. **contentType** (required):
+   - One of: `explanation`, `reference`, `tutorial`, `how-to`, `guide`
+   - See [Documentation Authoring Guide](/references/documentation-authoring-guide) for definitions
 
 ---
 
@@ -448,7 +496,7 @@ Is it deployment-related?
 │        ├─ General/Multi-platform → 'rocket'
 │        ├─ Kubernetes → 'dharmachakra'
 │        ├─ Docker → 'docker'
-│        ├─ Helm → 'helm'
+│        ├─ Helm → 'cubes'
 │        ├─ GCP → 'google'
 │        ├─ AWS → 'aws'
 │        └─ Azure → 'microsoft'
@@ -478,6 +526,10 @@ Is it a release/version?
 
 Is it development/code reference?
 ├─ YES → 'code'
+└─ NO  → Continue
+
+Is it documentation/authoring?
+├─ YES → 'book-open'
 └─ NO  → Use judgment or consult team
 ```
 
@@ -489,30 +541,39 @@ Is it development/code reference?
 - Use inconsistent icons for the same category
 - Mix icon families within related docs
 - Use obscure or ambiguous icons
-- Use quoted titles in frontmatter
-- Use double quotes for descriptions
+- Forget to add `contentType` to frontmatter
+- Use UPPERCASE file names
 
-- ✅ **Do**:
+✅ **Do**:
 - Follow category conventions
 - Use semantic, meaningful icons
 - Maintain consistency within directories
-- Use unquoted titles
-- Use single quotes for descriptions
+- Include all required frontmatter fields
+- Use lowercase kebab-case for file names
 
 ---
 
 ## Validation
 
-Use the validation script to check icon consistency:
+### Automated Validation
 
+Primary validator (runs on pre-push):
 ```bash
-python3 scripts/validate_mintlify_docs.py
+cd docs
+npx mintlify broken-links
 ```
 
-The script will flag:
-- Missing icons
-- Inconsistent icon usage within categories
-- Frontmatter format issues
+This validates:
+- Frontmatter presence and completeness
+- Icon validity
+- Navigation consistency
+
+### Manual Validation
+
+Check frontmatter compliance:
+```bash
+python scripts/validators/frontmatter_validator.py --docs-dir docs
+```
 
 ---
 
@@ -548,9 +609,12 @@ Mintlify uses Font Awesome icons. Common useful icons:
 **Navigation**:
 - `arrow-right`, `arrow-left`, `arrow-up`, `arrow-down`
 
+**Documentation**:
+- `book`, `book-open`, `file-lines`, `icons`
+
 Full icon list: https://fontawesome.com/icons
 
 ---
 
-**Last Updated**: 2025-10-31
-**Version**: 1.0.0
+**Last Updated**: 2025-11-17 (Converted to public .mdx documentation)
+**Version**: 2.0.0

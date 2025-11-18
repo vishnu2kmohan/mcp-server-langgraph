@@ -1307,9 +1307,9 @@ async def postgres_connection_real(integration_test_env):
     conn = await asyncpg.connect(
         host=os.getenv("POSTGRES_HOST", "localhost"),
         port=int(os.getenv("POSTGRES_PORT", "9432")),
-        database=os.getenv("POSTGRES_DB", "testdb"),
+        database=os.getenv("POSTGRES_DB", "gdpr_test"),
         user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "test"),
+        password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
     )
 
     yield conn

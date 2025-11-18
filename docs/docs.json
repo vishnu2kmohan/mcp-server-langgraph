@@ -89,6 +89,8 @@
             "pages": [
               "references/sources",
               "references/mermaid-guide",
+              "references/documentation-authoring-guide",
+              "references/icon-selection-guide",
               "reference/environment-variables",
               "reference/setup-scripts",
               "reference/configuration-files",

@@ -695,7 +695,8 @@ class PostgresAuditLogStore(AuditLogStore):
                 entry.action,
                 entry.resource_type,
                 entry.resource_id,
-                entry.timestamp,
+                # Convert ISO string timestamp to datetime object for asyncpg
+                datetime.fromisoformat(entry.timestamp.replace("Z", "+00:00")),
                 entry.ip_address,
                 entry.user_agent,
                 json.dumps(entry.metadata),

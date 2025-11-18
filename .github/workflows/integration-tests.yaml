@@ -210,7 +210,17 @@ jobs:
         # -v --tb=short: Verbose with short tracebacks
         # --cov: Generate coverage report for this split
         # Note: Integration tests run in isolation (split), coverage threshold set to 0 (overrides pyproject.toml's 66%)
-        TESTING=true OTEL_SDK_DISABLED=true POSTGRES_DB=gdpr_test pytest \
+        #
+        # IMPORTANT: Set all PostgreSQL connection parameters explicitly (must match docker-compose.test.yml)
+        # This prevents connection failures and makes configuration explicit (Cloud-Native best practice)
+        TESTING=true \
+        OTEL_SDK_DISABLED=true \
+        POSTGRES_HOST=localhost \
+        POSTGRES_PORT=9432 \
+        POSTGRES_DB=gdpr_test \
+        POSTGRES_USER=postgres \
+        POSTGRES_PASSWORD=postgres \
+        pytest \
           --splits 4 \
           --group ${{ matrix.split-group }} \
           -m integration \

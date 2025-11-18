@@ -1,6 +1,13 @@
+---
+title: "Documentation Authoring Guide"
+description: "Complete guide for contributing to MCP Server LangGraph documentation including Mintlify standards, file formats, and best practices"
+icon: "book-open"
+contentType: "guide"
+---
+
 # Documentation Authoring Guide
 
-**Last Updated**: 2025-11-04
+**Last Updated**: 2025-11-17
 **Purpose**: Establish clear documentation standards and prevent content drift
 
 ---
@@ -15,9 +22,11 @@
 
 ## File Format Policy
 
-### ✅ USE .mdx for User-Facing Documentation
+### ✅ USE .mdx for All Documentation in docs/
 
 **Location**: `docs/**/*.mdx` (registered in `docs/docs.json`)
+
+**Policy**: The `docs/` directory is **exclusively for Mintlify .mdx files**. No `.md` files allowed.
 
 **When to use**:
 - Getting started guides
@@ -27,6 +36,7 @@
 - Tutorials and examples
 - Troubleshooting guides
 - Security and compliance docs
+- Contributor documentation (this guide!)
 
 **Requirements**:
 1. **Frontmatter** (required):
@@ -35,7 +45,8 @@
    title: "Page Title"
    sidebarTitle: "Short Title"  # optional, for sidebar
    description: "SEO-friendly description (140-160 chars recommended)"
-   icon: "lucide-icon-name"  # See ICON_GUIDE.md
+   icon: "lucide-icon-name"  # See Icon Selection Guide
+   contentType: "explanation|reference|tutorial|how-to|guide"
    ---
    ```
 
@@ -54,20 +65,25 @@
    - Escape `>` as `&gt;` in tables and text
    - Escape `&` as `&amp;` if not part of HTML entity
 
+5. **File Naming** (required):
+   - Use lowercase kebab-case: `my-guide-name.mdx`
+   - NOT UPPERCASE: `MY_GUIDE_NAME.mdx`
+   - NOT snake_case: `my_guide_name.mdx`
+   - NOT camelCase: `myGuideName.mdx`
+
 ---
 
-### ⚠️ USE .md ONLY for Internal/Operational Files
+### ⚠️ .md Files Allowed ONLY Outside docs/
 
-**Allowed .md files**:
-- `docs/reference/*.md` - Internal contributor documentation
-- `docs/ci-cd/badges.md` - Operational status badges
-- `docs/architecture/infrastructure-layer.md` - Internal implementation notes
-- Root-level files: `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`
+**Allowed .md files** (outside `docs/` directory):
+- Root-level files: `README.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`
+- `docs-internal/*.md` - Internal contributor documentation
+- Development notes, research, scratch files
 
 **NOT allowed**:
+- Any .md files in `docs/` directory
 - User-facing guides in .md format
 - Duplicates of .mdx files
-- Documentation that should be in Mintlify
 
 ---
 
@@ -75,11 +91,6 @@
 
 ```
 docs/
-├── .mintlify/              # Mintlify configuration and guides
-│   ├── AUTHORING_GUIDE.md  # This file
-│   ├── ICON_GUIDE.md       # Icon reference
-│   └── templates/          # Document templates
-│
 ├── getting-started/        # New user onboarding
 ├── guides/                 # Task-oriented tutorials
 ├── api-reference/          # API documentation
@@ -93,8 +104,11 @@ docs/
 ├── security/               # Security documentation
 ├── comparisons/            # Framework comparisons
 ├── advanced/               # Advanced topics
+├── references/             # Reference documentation
+│   ├── documentation-authoring-guide.mdx  # This file
+│   ├── icon-selection-guide.mdx           # Icon reference
+│   └── mermaid-guide.mdx                  # Diagram standards
 │
-├── reference/              # Internal contributor docs (.md)
 └── docs.json               # Mintlify navigation config
 ```
 
@@ -131,11 +145,29 @@ This guide explains...
 title: "My Guide"
 description: "Brief description"
 icon: "book"
+contentType: "guide"
 ---
 
 # My Guide
 
 This guide explains...
+```
+
+---
+
+### ❌ DON'T: Use UPPERCASE File Names
+
+```
+❌ docs/deployment/MY_GUIDE.mdx
+❌ docs/security/SECURITY_POLICY.mdx
+```
+
+**Why**: Violates Mintlify best practices, inconsistent URLs
+
+**Fix**: Use lowercase kebab-case
+```
+✅ docs/deployment/my-guide.mdx
+✅ docs/security/security-policy.mdx
 ```
 
 ---
@@ -194,17 +226,17 @@ Even if the file exists, it won't be accessible unless it's in `docs.json`:
 User guide? → docs/guides/your-guide.mdx
 API docs? → docs/api-reference/your-endpoint.mdx
 Deployment? → docs/deployment/your-topic.mdx
-Internal? → docs/reference/your-notes.md
+Reference? → docs/references/your-reference.mdx
 ```
 
 ### Step 2: Use a Template
 
 ```bash
 # Copy appropriate template
-cp docs/.mintlify/templates/guide-template.mdx docs/guides/my-guide.mdx
+cp docs-templates-mintlify/guide-template.mdx docs/guides/my-guide.mdx
 ```
 
-Available templates:
+Available templates (in `docs-templates-mintlify/`):
 - `adr-template.mdx` - Architecture Decision Records
 - `guide-template.mdx` - How-to guides
 - `deployment-template.mdx` - Deployment guides
@@ -217,7 +249,8 @@ Available templates:
 title: "Clear, Descriptive Title"
 sidebarTitle: "Short Title"  # Optional, for long titles
 description: "What this page helps users accomplish"
-icon: "appropriate-lucide-icon"  # See ICON_GUIDE.md
+icon: "appropriate-lucide-icon"  # See Icon Selection Guide
+contentType: "explanation|reference|tutorial|how-to|guide"
 ---
 ```
 
@@ -236,7 +269,7 @@ icon: "appropriate-lucide-icon"  # See ICON_GUIDE.md
   "group": "Your Group",
   "pages": [
     "path/to/existing",
-    "path/to/your-new-doc"  // ← Add here
+    "path/to/your-new-doc"  // ← Add here (lowercase, no extension)
   ]
 }
 ```
@@ -246,7 +279,7 @@ icon: "appropriate-lucide-icon"  # See ICON_GUIDE.md
 ```bash
 cd docs
 
-# Check for broken links
+# Check for broken links (PRIMARY validator)
 mintlify broken-links
 
 # Preview locally
@@ -264,9 +297,10 @@ When converting .md to .mdx:
 3. ✅ **Preserve all content** exactly as-is
 4. ✅ **Fix any `<`/`>` escaping** issues in tables
 5. ✅ **Update internal links** to Mintlify format
-6. ✅ **Register in docs.json** at appropriate location
-7. ✅ **Delete the original** `.md` file
-8. ✅ **Run validation**: `mintlify broken-links`
+6. ✅ **Use lowercase kebab-case** for filename
+7. ✅ **Register in docs.json** at appropriate location
+8. ✅ **Delete the original** `.md` file
+9. ✅ **Run validation**: `mintlify broken-links`
 
 ---
 
@@ -277,6 +311,7 @@ When converting .md to .mdx:
 ```mdx
 ✅ [Getting Started](/getting-started/introduction)
 ✅ [API Reference](/api-reference/sdk-quickstart)
+✅ [Icon Guide](/references/icon-selection-guide)
 ❌ [Getting Started](../getting-started/introduction.md)
 ❌ [Getting Started](./getting-started/introduction.mdx)
 ```
@@ -299,7 +334,7 @@ When converting .md to .mdx:
 
 ## Icon Selection
 
-See [`ICON_GUIDE.md`](./ICON_GUIDE.md) for comprehensive icon reference.
+See [Icon Selection Guide](/references/icon-selection-guide) for comprehensive icon reference.
 
 **Common icons**:
 - `rocket` - Getting started, quickstart
@@ -310,6 +345,7 @@ See [`ICON_GUIDE.md`](./ICON_GUIDE.md) for comprehensive icon reference.
 - `chart-line` - Metrics, observability
 - `infinity` - CI/CD
 - `cloud` - Cloud providers
+- `book-open` - Documentation, authoring
 
 ---
 
@@ -341,7 +377,7 @@ This installs development dependencies and runs unit tests.
 
 ### Screenshots/Diagrams
 
-- **Prefer Mermaid** for diagrams (see `MERMAID_OPTIMIZATION_GUIDE.md`)
+- **Prefer Mermaid** for diagrams (see [Mermaid Guide](/references/mermaid-guide))
 - **Optimize images**: Compress before committing
 - **Add alt text**: For accessibility
 
@@ -351,7 +387,8 @@ This installs development dependencies and runs unit tests.
 
 Before committing documentation changes:
 
-- [ ] Frontmatter complete and accurate
+- [ ] Frontmatter complete and accurate (including contentType)
+- [ ] File name is lowercase kebab-case
 - [ ] Added to `docs.json` navigation
 - [ ] All `<` and `>` escaped in tables
 - [ ] Internal links use Mintlify format (`/path/to/page`)
@@ -362,13 +399,50 @@ Before committing documentation changes:
 
 ---
 
+## Validation
+
+### Pre-commit Hooks
+
+The following validations run automatically:
+
+**Pre-commit stage** (local):
+- Frontmatter quote style check
+- File naming conventions (lowercase)
+- ADR synchronization
+
+**Pre-push stage** (local + CI):
+- **`mintlify broken-links`** - PRIMARY validator
+  - Checks: frontmatter, links, navigation, syntax, images
+  - Duration: ~8-12 seconds
+  - This is the single source of truth for docs validation
+
+### Manual Validation
+
+```bash
+# Run all validations
+make docs-validate
+
+# Run Mintlify validator only
+make docs-validate-mintlify
+
+# Validate frontmatter
+python scripts/validators/frontmatter_validator.py --docs-dir docs
+
+# Fix MDX syntax errors
+python scripts/fix_mdx_syntax.py --all
+```
+
+---
+
 ## Troubleshooting
 
 ### "Syntax error - Unable to parse"
 
-**Cause**: Unescaped `<` or `>` characters
+**Cause**: Unescaped `<` or `>` characters, or code blocks missing language tags
 
-**Fix**: Replace with `&lt;` or `&gt;`
+**Fix**:
+- Replace `<` with `&lt;` and `>` with `&gt;`
+- Add language tags to code blocks: ` ```python` instead of ` ``` `
 
 ### "Page not found" in Mintlify
 
@@ -384,6 +458,12 @@ Before committing documentation changes:
 - Use `/path/to/page` format (no extension)
 - Verify target page exists and is in `docs.json`
 
+### "Could not parse import/exports with acorn"
+
+**Cause**: Code block containing `import` statement doesn't have language tag
+
+**Fix**: Add `python`, `javascript`, or appropriate language tag to code block
+
 ---
 
 ## Maintenance
@@ -393,7 +473,7 @@ Before committing documentation changes:
 - Check `mintlify broken-links` output
 
 ### Monthly
-- Audit for orphaned .md files
+- Audit for orphaned .md files (should be ZERO in `docs/`)
 - Review docs.json for logical organization
 - Update this guide as patterns emerge
 
@@ -401,12 +481,12 @@ Before committing documentation changes:
 
 ## Getting Help
 
-- **Icon reference**: See [`.mintlify/ICON_GUIDE.md`](./ICON_GUIDE.md)
-- **Mermaid diagrams**: See [`.mintlify/MERMAID_OPTIMIZATION_GUIDE.md`](./MERMAID_OPTIMIZATION_GUIDE.md)
-- **Templates**: See [`.mintlify/templates/`](./templates/)
+- **Icon reference**: [Icon Selection Guide](/references/icon-selection-guide)
+- **Mermaid diagrams**: [Mermaid Guide](/references/mermaid-guide)
+- **Templates**: `docs-templates-mintlify/` directory
 - **Mintlify docs**: https://mintlify.com/docs
 - **Questions?**: Open issue with label `documentation`
 
 ---
 
-**Remember**: User-facing documentation belongs in .mdx files registered in docs.json. Everything else is an exception that should be justified.
+**Remember**: All user-facing documentation belongs in .mdx files registered in docs.json. The `docs/` directory is exclusively for Mintlify .mdx files - no exceptions.
