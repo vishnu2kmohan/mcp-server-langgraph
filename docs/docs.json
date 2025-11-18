@@ -409,10 +409,10 @@
               "architecture/adr-0053-ci-cd-failure-prevention-framework",
               "architecture/adr-0054-pod-failure-prevention-framework",
               "architecture/adr-0055-diagram-visualization-standards",
-              "architecture/adr-0056-database-architecture-and-naming-convention",
-              "architecture/adr-0057-asyncmock-configuration-prevention",
-              "architecture/adr-0058-circuit-breaker-decorator-closure-isolation",
-              "architecture/adr-0059-pytest-xdist-state-pollution-prevention"
+              "architecture/adr-0056-asyncmock-configuration-prevention",
+              "architecture/adr-0057-circuit-breaker-decorator-closure-isolation",
+              "architecture/adr-0058-pytest-xdist-state-pollution-prevention",
+              "architecture/adr-0060-database-architecture-and-naming-convention"
             ]
           },
           {
