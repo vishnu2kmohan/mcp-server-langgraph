@@ -7,6 +7,7 @@ Tests knowledge base and web search functionality.
 import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
@@ -183,7 +184,7 @@ class TestWebSearch:
         mock_settings.serper_api_key = None
 
         # Mock Tavily API response
-        mock_response = AsyncMock()
+        mock_response = AsyncMock(spec=httpx.Response)
         mock_response.status_code = 200
         mock_response.json = AsyncMock(
             return_value={
@@ -196,7 +197,7 @@ class TestWebSearch:
         mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -227,7 +228,7 @@ class TestWebSearch:
         mock_settings.serper_api_key = "test-serper-key"
 
         # Mock Serper API response
-        mock_response = AsyncMock()
+        mock_response = AsyncMock(spec=httpx.Response)
         mock_response.status_code = 200
         mock_response.json = AsyncMock(
             return_value={
@@ -240,7 +241,7 @@ class TestWebSearch:
         mock_response.raise_for_status = Mock()  # Sync method, not async
 
         # Mock client context manager
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post = AsyncMock(return_value=mock_response)
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -268,7 +269,7 @@ class TestWebSearch:
         mock_settings.tavily_api_key = "test-tavily-key"
 
         # Mock network error
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post.side_effect = Exception("Network timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -289,11 +290,11 @@ class TestWebSearch:
         mock_settings.serper_api_key = "test-serper-key"
 
         # Mock API error response
-        mock_response = AsyncMock()
+        mock_response = AsyncMock(spec=httpx.Response)
         mock_response.status_code = 429  # Rate limit
         mock_response.raise_for_status = Mock(side_effect=Exception("Rate limit exceeded"))
 
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -310,12 +311,12 @@ class TestWebSearch:
         mock_settings.tavily_api_key = "test-tavily-key"
 
         # Mock invalid response (missing 'results' key)
-        mock_response = AsyncMock()
+        mock_response = AsyncMock(spec=httpx.Response)
         mock_response.status_code = 200
         mock_response.json.return_value = {"error": "Invalid API key"}
         mock_response.raise_for_status = MagicMock()
 
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post.return_value = mock_response
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
@@ -335,7 +336,7 @@ class TestWebSearch:
         mock_settings.tavily_api_key = "test-tavily-key"
 
         # Mock timeout error
-        mock_client_instance = AsyncMock()
+        mock_client_instance = AsyncMock(spec=httpx.AsyncClient)
         mock_client_instance.post.side_effect = httpx.TimeoutException("Request timeout")
         mock_async_client.return_value.__aenter__.return_value = mock_client_instance
 
