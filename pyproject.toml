@@ -377,7 +377,7 @@ module = [
 disallow_untyped_calls = true
 strict = true
 
-[tool.pytest]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
 norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__"]
