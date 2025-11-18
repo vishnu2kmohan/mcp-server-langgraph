@@ -19,6 +19,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
+
 # Conditional imports for OTLP exporters (optional dependencies)
 try:
     from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter as OTLPMetricExporterGRPC
@@ -41,6 +42,7 @@ except ImportError:
     OTLPSpanExporterHTTP = None
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
+
 
 # Configuration
 SERVICE_NAME = "mcp-server-langgraph"

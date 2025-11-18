@@ -12,13 +12,14 @@ Supports:
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from mcp_server_langgraph.auth.keycloak import KeycloakUser
 from mcp_server_langgraph.observability.telemetry import logger
+
 
 # ============================================================================
 # Pydantic Models for Type-Safe Role Mapping Configuration
@@ -43,12 +44,12 @@ class OpenFGATuple(BaseModel):
         json_schema_extra={"example": {"user": "user:alice", "relation": "member", "object": "workspace:engineering"}},
     )
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump()
 
     @classmethod
-    def from_dict(cls, data: Dict[str, str]) -> "OpenFGATuple":
+    def from_dict(cls, data: dict[str, str]) -> "OpenFGATuple":
         """Create OpenFGATuple from dictionary"""
         return cls(**data)
 
@@ -105,7 +106,7 @@ class ConditionalMappingConfig(BaseModel):
     """
 
     condition: ConditionConfig = Field(..., description="Condition to evaluate")
-    openfga_tuples: List[Dict[str, str]] = Field(..., description="Tuples to create if condition is met")
+    openfga_tuples: list[dict[str, str]] = Field(..., description="Tuples to create if condition is met")
 
     model_config = ConfigDict(frozen=False, validate_assignment=True)
 
@@ -113,14 +114,14 @@ class ConditionalMappingConfig(BaseModel):
 class MappingRule:
     """Base class for mapping rules"""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
 
     def applies_to(self, user: KeycloakUser) -> bool:
         """Check if this rule applies to the user"""
         raise NotImplementedError
 
-    def generate_tuples(self, user: KeycloakUser) -> List[Dict[str, str]]:
+    def generate_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """Generate OpenFGA tuples for this rule"""
         raise NotImplementedError
 
@@ -128,7 +129,7 @@ class MappingRule:
 class SimpleRoleMapping(MappingRule):
     """Simple 1:1 role to tuple mapping"""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = SimpleRoleMappingConfig(**config)
@@ -141,14 +142,10 @@ class SimpleRoleMapping(MappingRule):
         """Check if user has the role"""
         if self.is_realm_role:
             return self.keycloak_role in user.realm_roles
-        else:
-            # Check client roles
-            for client_roles in user.client_roles.values():
-                if self.keycloak_role in client_roles:
-                    return True
-            return False
+        # Check client roles
+        return any(self.keycloak_role in client_roles for client_roles in user.client_roles.values())
 
-    def generate_tuples(self, user: KeycloakUser) -> List[Dict[str, str]]:
+    def generate_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """Generate tuple if role matches"""
         if not self.applies_to(user):
             return []
@@ -161,7 +158,7 @@ class SimpleRoleMapping(MappingRule):
 class GroupMapping(MappingRule):
     """Pattern-based group mapping with regex"""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = GroupMappingConfig(**config)
@@ -173,7 +170,7 @@ class GroupMapping(MappingRule):
         """Check if user has any matching groups"""
         return any(self.pattern.match(group) for group in user.groups)
 
-    def generate_tuples(self, user: KeycloakUser) -> List[Dict[str, str]]:
+    def generate_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """Generate tuples for all matching groups"""
         tuples = []
 
@@ -196,7 +193,7 @@ class GroupMapping(MappingRule):
 class ConditionalMapping(MappingRule):
     """Conditional mapping based on user attributes"""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
         # Validate and store config as Pydantic model
         self.mapping_config = ConditionalMappingConfig(**config)
@@ -223,19 +220,18 @@ class ConditionalMapping(MappingRule):
         # Apply operator (already validated by Pydantic)
         if self.operator == "==":
             return attr_value == self.value  # type: ignore[no-any-return]
-        elif self.operator == "!=":
+        if self.operator == "!=":
             return attr_value != self.value  # type: ignore[no-any-return]
-        elif self.operator == "in":
+        if self.operator == "in":
             return attr_value in self.value
-        elif self.operator == ">=":
+        if self.operator == ">=":
             return float(attr_value) >= float(self.value)
-        elif self.operator == "<=":
+        if self.operator == "<=":
             return float(attr_value) <= float(self.value)
-        else:
-            logger.warning(f"Unknown operator: {self.operator}")
-            return False
+        logger.warning(f"Unknown operator: {self.operator}")
+        return False
 
-    def generate_tuples(self, user: KeycloakUser) -> List[Dict[str, str]]:
+    def generate_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """Generate tuples if condition is met"""
         if not self.applies_to(user):
             return []
@@ -257,7 +253,7 @@ class RoleMapper:
     OpenFGA tuples from Keycloak user data.
     """
 
-    def __init__(self, config_path: Optional[str] = None, config_dict: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config_path: str | None = None, config_dict: dict[str, Any] | None = None) -> None:
         """
         Initialize role mapper
 
@@ -265,8 +261,8 @@ class RoleMapper:
             config_path: Path to YAML configuration file
             config_dict: Configuration dictionary (alternative to file)
         """
-        self.rules: List[MappingRule] = []
-        self.hierarchies: Dict[str, List[str]] = {}
+        self.rules: list[MappingRule] = []
+        self.hierarchies: dict[str, list[str]] = {}
 
         # Load configuration
         if config_path:
@@ -289,7 +285,7 @@ class RoleMapper:
             return
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 config = yaml.safe_load(f)
 
             self.load_from_dict(config)
@@ -299,7 +295,7 @@ class RoleMapper:
             logger.error(f"Failed to load role mapping config: {e}", exc_info=True)
             self._load_default_config()
 
-    def load_from_dict(self, config: Dict[str, Any]) -> None:
+    def load_from_dict(self, config: dict[str, Any]) -> None:
         """Load configuration from dictionary"""
         self.rules = []
 
@@ -340,7 +336,7 @@ class RoleMapper:
         self.load_from_dict(default_config)
         logger.info("Using default role mapping configuration")
 
-    async def map_user_to_tuples(self, user: KeycloakUser) -> List[Dict[str, str]]:
+    async def map_user_to_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """
         Map Keycloak user to OpenFGA tuples
 
@@ -351,7 +347,7 @@ class RoleMapper:
             List of OpenFGA tuples
         """
         tuples = []
-        seen_tuples: Set[tuple[str, ...]] = set()  # Deduplicate
+        seen_tuples: set[tuple[str, ...]] = set()  # Deduplicate
 
         # Apply all mapping rules
         for rule in self.rules:
@@ -375,7 +371,7 @@ class RoleMapper:
 
         return tuples
 
-    def _apply_hierarchies(self, user: KeycloakUser, tuples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    def _apply_hierarchies(self, user: KeycloakUser, tuples: list[dict[str, str]]) -> list[dict[str, str]]:
         """Apply role hierarchies to expand tuples"""
         if not self.hierarchies:
             return tuples
@@ -412,7 +408,7 @@ class RoleMapper:
         self.rules.append(rule)
         logger.info(f"Added new mapping rule: {type(rule).__name__}")
 
-    def validate_config(self) -> List[str]:
+    def validate_config(self) -> list[str]:
         """
         Validate configuration
 

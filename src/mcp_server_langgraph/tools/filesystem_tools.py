@@ -13,6 +13,7 @@ from pydantic import Field
 
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
+
 # Maximum file size to read (1MB for safety)
 MAX_FILE_SIZE = 1024 * 1024
 
@@ -104,7 +105,7 @@ def read_file(
             return f"Error: File too large ({file_size} bytes). Maximum: {MAX_FILE_SIZE} bytes"
 
         # Read file (up to max_bytes)
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             content = f.read(max_bytes)
 
         truncated = len(content) >= max_bytes

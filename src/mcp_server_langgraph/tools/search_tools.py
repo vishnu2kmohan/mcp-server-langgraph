@@ -63,7 +63,7 @@ See: docs/advanced/dynamic-context.md"""
 
             results_text = f"""Knowledge base search: "{query}"
 
-Connected to Qdrant at {settings.qdrant_url}:{getattr(settings, 'qdrant_port', 6333)}
+Connected to Qdrant at {settings.qdrant_url}:{getattr(settings, "qdrant_port", 6333)}
 Collection: {collection_name}
 
 Note: Semantic search requires embeddings and indexed documents.

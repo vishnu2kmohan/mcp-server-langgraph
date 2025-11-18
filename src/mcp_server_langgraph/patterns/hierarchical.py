@@ -33,7 +33,8 @@ Example:
     result = hierarchy.invoke({"project": "Build AI feature"})
 """
 
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
@@ -44,11 +45,11 @@ class HierarchicalState(BaseModel):
 
     project: str = Field(description="The project or task")
     ceo_decision: str = Field(default="", description="Top-level strategic decision")
-    manager_assignments: Dict[str, str] = Field(default_factory=dict, description="Tasks assigned to each manager")
-    worker_results: Dict[str, List[Any]] = Field(default_factory=dict, description="Results from workers by manager")
-    manager_reports: Dict[str, str] = Field(default_factory=dict, description="Manager summary reports")
+    manager_assignments: dict[str, str] = Field(default_factory=dict, description="Tasks assigned to each manager")
+    worker_results: dict[str, list[Any]] = Field(default_factory=dict, description="Results from workers by manager")
+    manager_reports: dict[str, str] = Field(default_factory=dict, description="Manager summary reports")
     final_report: str = Field(default="", description="Final consolidated report")
-    execution_path: List[str] = Field(default_factory=list, description="Execution path through hierarchy")
+    execution_path: list[str] = Field(default_factory=list, description="Execution path through hierarchy")
 
 
 class HierarchicalCoordinator:
@@ -61,8 +62,8 @@ class HierarchicalCoordinator:
     def __init__(
         self,
         ceo_agent: Callable[[str], str],
-        managers: Dict[str, Callable[[str], str]],
-        workers: Dict[str, List[Callable[[str], Any]]],
+        managers: dict[str, Callable[[str], str]],
+        workers: dict[str, list[Callable[[str], Any]]],
         delegation_strategy: str = "balanced",
     ):
         """
@@ -80,7 +81,7 @@ class HierarchicalCoordinator:
         self.managers = managers
         self.workers = workers
         self.delegation_strategy = delegation_strategy
-        self._graph: Optional[StateGraph[HierarchicalState]] = None
+        self._graph: StateGraph[HierarchicalState] | None = None
 
     def _ceo_node(self, state: HierarchicalState) -> HierarchicalState:
         """
@@ -102,7 +103,7 @@ class HierarchicalCoordinator:
                 state.manager_assignments[manager_name] = f"Handle aspect of '{state.project}' - assigned by CEO"
         else:
             # Specialized delegation (in production, use LLM)
-            for manager_name in self.managers.keys():
+            for manager_name in self.managers:
                 state.manager_assignments[manager_name] = f"Specialized task for {manager_name} regarding '{state.project}'"
 
         return state
@@ -174,7 +175,7 @@ class HierarchicalCoordinator:
         report_parts.append("## Execution Summary\n")
 
         # Add all manager reports
-        for manager_name, report in state.manager_reports.items():
+        for _manager_name, report in state.manager_reports.items():
             report_parts.append(f"\n### {report}\n")
 
         # Add execution path
@@ -211,11 +212,11 @@ class HierarchicalCoordinator:
         graph.set_entry_point("ceo")
 
         # CEO delegates to all managers
-        for manager_name in self.managers.keys():
+        for manager_name in self.managers:
             graph.add_edge("ceo", f"manager_{manager_name}")
 
         # All managers report to consolidation
-        for manager_name in self.managers.keys():
+        for manager_name in self.managers:
             graph.add_edge(f"manager_{manager_name}", "consolidate")
 
         # Consolidation is the end
@@ -238,7 +239,7 @@ class HierarchicalCoordinator:
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, project: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def invoke(self, project: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute the hierarchical pattern.
 

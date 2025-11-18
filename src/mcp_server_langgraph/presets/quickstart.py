@@ -18,7 +18,7 @@ Example:
     >>> print(result)
 """
 
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph
@@ -29,11 +29,11 @@ class QuickStartConfig(BaseModel):
     """Configuration for QuickStart preset."""
 
     name: str = Field(description="Agent name")
-    tools: List[str] = Field(default_factory=list, description="List of tool names to include")
+    tools: list[str] = Field(default_factory=list, description="List of tool names to include")
     llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = Field(
         default="gemini-flash", description="LLM model to use"
     )
-    system_prompt: Optional[str] = Field(default=None, description="Custom system prompt")
+    system_prompt: str | None = Field(default=None, description="Custom system prompt")
     temperature: float = Field(default=0.7, description="LLM temperature (0.0-1.0)")
 
 
@@ -54,8 +54,8 @@ class QuickStartAgent:
         """
         self.config = config
         self.checkpointer = MemorySaver()
-        self._graph: Optional[StateGraph[Any]] = None
-        self._compiled_agent: Optional[Any] = None
+        self._graph: StateGraph[Any] | None = None
+        self._compiled_agent: Any | None = None
 
     def _build_graph(self) -> StateGraph[Any]:
         """Build the agent graph with specified tools."""
@@ -65,10 +65,10 @@ class QuickStartAgent:
         class AgentState(TypedDict):
             """State for quick-start agent."""
 
-            messages: Annotated[List[str], "Conversation messages"]
+            messages: Annotated[list[str], "Conversation messages"]
             query: str
             response: str
-            context: Dict[str, Any]
+            context: dict[str, Any]
 
         # Create graph
         graph = StateGraph(AgentState)
@@ -143,13 +143,12 @@ class QuickStartAgent:
         """
         agent = self.compile()
 
-        for chunk in agent.stream(
+        yield from agent.stream(
             {"query": query, "messages": [], "response": "", "context": {}},
             config={"configurable": {"thread_id": thread_id}},
-        ):
-            yield chunk
+        )
 
-    def get_history(self, thread_id: str = "default") -> List[str]:
+    def get_history(self, thread_id: str = "default") -> list[str]:
         """
         Get conversation history.
 
@@ -180,9 +179,9 @@ class QuickStart:
     @staticmethod
     def create(
         name: str,
-        tools: Optional[List[str]] = None,
+        tools: list[str] | None = None,
         llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = "gemini-flash",
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
     ) -> QuickStartAgent:
         """
@@ -199,11 +198,7 @@ class QuickStart:
             QuickStartAgent instance
 
         Example:
-            >>> agent = QuickStart.create(
-            ...     "Research Agent",
-            ...     tools=["search"],
-            ...     llm="gemini-flash"
-            ... )
+            >>> agent = QuickStart.create("Research Agent", tools=["search"], llm="gemini-flash")
             >>> result = agent.chat("Tell me about LangGraph")
             >>> print(result)
         """
@@ -220,7 +215,7 @@ class QuickStart:
     @staticmethod
     def create_app(
         name: str,
-        tools: Optional[List[str]] = None,
+        tools: list[str] | None = None,
         llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = "gemini-flash",
         port: int = 8000,
     ) -> Any:
@@ -247,7 +242,7 @@ class QuickStart:
         agent = QuickStart.create(name, tools, llm)
 
         @app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-        def root() -> Dict[str, Any]:
+        def root() -> dict[str, Any]:
             """Health check."""
             return {
                 "status": "healthy",
@@ -257,13 +252,13 @@ class QuickStart:
             }
 
         @app.post("/chat")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-        def chat(query: str, thread_id: str = "default") -> Dict[str, str]:
+        def chat(query: str, thread_id: str = "default") -> dict[str, str]:
             """Chat with the agent."""
             response = agent.chat(query, thread_id)
             return {"query": query, "response": response, "thread_id": thread_id}
 
         @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-        def health() -> Dict[str, str]:
+        def health() -> dict[str, str]:
             """Health check endpoint."""
             return {"status": "healthy", "preset": "quickstart"}
 

@@ -11,24 +11,26 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+
 # Docker is an optional dependency - gracefully handle missing docker package
 try:
+    import docker
     from docker.errors import ImageNotFound, NotFound
     from docker.models.containers import Container
-
-    import docker
 
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
     if TYPE_CHECKING:
+        import docker
         from docker.errors import ImageNotFound, NotFound
         from docker.models.containers import Container
 
-        import docker
+import contextlib
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +76,7 @@ class DockerSandbox(Sandbox):
 
         # Check if docker package is available
         if not DOCKER_AVAILABLE:
-            raise SandboxError("Docker package not installed. " "Install it with: pip install docker or uv add docker")
+            raise SandboxError("Docker package not installed. Install it with: pip install docker or uv add docker")
 
         self.image = image
         self.socket_path = socket_path
@@ -198,21 +200,20 @@ class DockerSandbox(Sandbox):
                     timed_out=True,
                     error_message=f"Timeout after {self.limits.timeout_seconds}s",
                 )
-            elif exit_code == 0:
+            if exit_code == 0:
                 return self._create_success_result(
                     stdout=stdout,
                     stderr=stderr,
                     execution_time=execution_time,
                     memory_used_mb=memory_used_mb,
                 )
-            else:
-                return self._create_failure_result(
-                    stdout=stdout,
-                    stderr=stderr,
-                    exit_code=exit_code,
-                    execution_time=execution_time,
-                    error_message=f"Process exited with code {exit_code}",
-                )
+            return self._create_failure_result(
+                stdout=stdout,
+                stderr=stderr,
+                exit_code=exit_code,
+                execution_time=execution_time,
+                error_message=f"Process exited with code {exit_code}",
+            )
 
         except Exception as e:
             execution_time = self._measure_time(start_time)
@@ -283,9 +284,9 @@ class DockerSandbox(Sandbox):
         """
         if self.limits.network_mode == "none":
             return "none"
-        elif self.limits.network_mode == "unrestricted":
+        if self.limits.network_mode == "unrestricted":
             return "bridge"  # Default Docker network
-        elif self.limits.network_mode == "allowlist":
+        if self.limits.network_mode == "allowlist":
             # SECURITY FIX (OpenAI Codex Finding #3): Network allowlist mode is NOT fully implemented!
             # FAIL CLOSED: Always return "none" until proper allowlist filtering is implemented.
             #
@@ -303,6 +304,7 @@ class DockerSandbox(Sandbox):
                 "To enable network access, use network_mode='unrestricted' explicitly."
             )
             return "none"  # Fail closed - deny all network access for security
+        return None
 
     def _cleanup_container(self, container: Container) -> None:
         """
@@ -321,10 +323,8 @@ class DockerSandbox(Sandbox):
                 pass  # Already removed
             except Exception:
                 # Force kill if stop fails
-                try:
+                with contextlib.suppress(Exception):
                     container.kill()
-                except Exception:
-                    pass
 
             # Remove container
             try:

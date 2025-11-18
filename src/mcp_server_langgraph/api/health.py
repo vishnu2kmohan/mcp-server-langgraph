@@ -7,13 +7,12 @@ systems are properly initialized before the app accepts requests.
 This module prevents the classes of issues found in OpenAI Codex audit from recurring.
 """
 
-from typing import Dict, List
-
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
+
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])
 
@@ -22,9 +21,9 @@ class HealthCheckResult(BaseModel):
     """Health check result model"""
 
     status: str
-    checks: Dict[str, bool]
-    errors: List[str]
-    warnings: List[str]
+    checks: dict[str, bool]
+    errors: list[str]
+    warnings: list[str]
 
 
 class SystemValidationError(Exception):
@@ -121,9 +120,8 @@ def validate_docker_sandbox_security() -> tuple[bool, str]:
     warnings = []
 
     # Check if network allowlist is being used (not fully implemented)
-    if hasattr(settings, "sandbox_network_mode"):
-        if settings.sandbox_network_mode == "allowlist":
-            warnings.append("Network allowlist mode is not fully implemented - using unrestricted bridge network")
+    if hasattr(settings, "sandbox_network_mode") and settings.sandbox_network_mode == "allowlist":
+        warnings.append("Network allowlist mode is not fully implemented - using unrestricted bridge network")
 
     if warnings:
         return True, f"Docker sandbox warnings: {', '.join(warnings)}"
@@ -195,17 +193,12 @@ async def health_check() -> HealthCheckResult:
 
     Example:
         ```
-        GET /api/v1/health
+        GET / api / v1 / health
         {
             "status": "healthy",
-            "checks": {
-                "observability": true,
-                "session_store": true,
-                "api_key_cache": true,
-                "docker_sandbox": true
-            },
+            "checks": {"observability": true, "session_store": true, "api_key_cache": true, "docker_sandbox": true},
             "errors": [],
-            "warnings": []
+            "warnings": [],
         }
         ```
     """

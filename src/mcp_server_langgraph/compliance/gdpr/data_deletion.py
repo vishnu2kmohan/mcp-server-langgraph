@@ -3,7 +3,6 @@ GDPR Data Deletion Service - Article 17 (Right to Erasure)
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -25,8 +24,8 @@ class DeletionResult(BaseModel):
     deletion_timestamp: str = Field(..., description="ISO timestamp of deletion")
     deleted_items: dict[str, int] = Field(default_factory=dict, description="Count of items deleted by type")
     anonymized_items: dict[str, int] = Field(default_factory=dict, description="Count of items anonymized")
-    errors: List[str] = Field(default_factory=list, description="Any errors encountered")
-    audit_record_id: Optional[str] = Field(None, description="Anonymized audit record ID")
+    errors: list[str] = Field(default_factory=list, description="Any errors encountered")
+    audit_record_id: str | None = Field(None, description="Anonymized audit record ID")
 
 
 class DataDeletionService:
@@ -46,9 +45,9 @@ class DataDeletionService:
 
     def __init__(
         self,
-        session_store: Optional[SessionStore] = None,
-        gdpr_storage: Optional[GDPRStorage] = None,
-        openfga_client: Optional[OpenFGAClient] = None,
+        session_store: SessionStore | None = None,
+        gdpr_storage: GDPRStorage | None = None,
+        openfga_client: OpenFGAClient | None = None,
     ):
         """
         Initialize data deletion service
@@ -83,7 +82,12 @@ class DataDeletionService:
             logger.error(error_msg, exc_info=True)
 
     async def _safe_anonymize(  # type: ignore[no-untyped-def]
-        self, operation_name: str, anonymize_func, user_id: str, anonymized_items: dict, errors: list  # type: ignore[type-arg]
+        self,
+        operation_name: str,
+        anonymize_func,
+        user_id: str,
+        anonymized_items: dict,
+        errors: list,  # type: ignore[type-arg]
     ) -> None:
         """
         Safely execute an anonymization operation with error handling
@@ -297,7 +301,7 @@ class DataDeletionService:
         username: str,
         reason: str,
         deleted_items: dict[str, int],
-        errors: List[str],
+        errors: list[str],
     ) -> str:
         """
         Create audit record for deletion (anonymized)

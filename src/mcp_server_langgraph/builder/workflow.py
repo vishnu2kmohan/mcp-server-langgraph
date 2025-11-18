@@ -29,7 +29,7 @@ Example:
     builder.save_code("agent.py")
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .codegen import CodeGenerator, EdgeDefinition, NodeDefinition, WorkflowDefinition
 
@@ -51,13 +51,13 @@ class WorkflowBuilder:
         """
         self.name = name
         self.description = description
-        self.nodes: List[NodeDefinition] = []
-        self.edges: List[EdgeDefinition] = []
-        self.entry_point: Optional[str] = None
-        self.state_schema: Dict[str, str] = {}
+        self.nodes: list[NodeDefinition] = []
+        self.edges: list[EdgeDefinition] = []
+        self.entry_point: str | None = None
+        self.state_schema: dict[str, str] = {}
 
     def add_node(
-        self, node_id: str, node_type: str = "custom", config: Optional[Dict[str, Any]] = None, label: str = ""
+        self, node_id: str, node_type: str = "custom", config: dict[str, Any] | None = None, label: str = ""
     ) -> "WorkflowBuilder":
         """
         Add a node to the workflow.
@@ -84,7 +84,7 @@ class WorkflowBuilder:
 
         return self
 
-    def add_edge(self, from_node: str, to_node: str, condition: Optional[str] = None, label: str = "") -> "WorkflowBuilder":
+    def add_edge(self, from_node: str, to_node: str, condition: str | None = None, label: str = "") -> "WorkflowBuilder":
         """
         Add an edge between nodes.
 
@@ -206,7 +206,7 @@ class WorkflowBuilder:
         with open(output_path, "w") as f:
             f.write(code)
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         """
         Export workflow to JSON for visual builder.
 
@@ -221,7 +221,7 @@ class WorkflowBuilder:
         return workflow.model_dump()
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any]) -> "WorkflowBuilder":
+    def from_json(cls, data: dict[str, Any]) -> "WorkflowBuilder":
         """
         Create builder from JSON (from visual builder).
 

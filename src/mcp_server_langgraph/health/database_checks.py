@@ -18,7 +18,6 @@ References:
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 import asyncpg
 
@@ -40,7 +39,7 @@ class DatabaseInfo:
 
     name: str
     purpose: str
-    required_tables: List[str]
+    required_tables: list[str]
     managed_by: str  # "migrations" or service name (e.g., "openfga", "keycloak")
 
 
@@ -72,7 +71,7 @@ class DatabaseValidator:
         port: int,
         user: str,
         password: str,
-        environment: Optional[Environment] = None,
+        environment: Environment | None = None,
     ):
         """
         Initialize database validator.
@@ -120,7 +119,7 @@ class DatabaseValidator:
         # Default to development
         return Environment.DEV
 
-    def get_expected_databases(self) -> Dict[str, DatabaseInfo]:
+    def get_expected_databases(self) -> dict[str, DatabaseInfo]:
         """
         Get expected databases based on environment.
 
@@ -306,7 +305,7 @@ class DatabaseValidator:
         all_warnings = []
         all_valid = True
 
-        for db_name, result in database_results.items():
+        for _db_name, result in database_results.items():
             all_errors.extend(result.errors)
             all_warnings.extend(result.warnings)
             if not result.is_valid:
@@ -328,8 +327,8 @@ class DatabaseValidationResult:
     database_name: str
     exists: bool
     tables_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
     @property
     def is_valid(self) -> bool:
@@ -342,10 +341,10 @@ class ValidationResult:
     """Overall validation result for all databases"""
 
     environment: Environment
-    databases: Dict[str, DatabaseValidationResult]
+    databases: dict[str, DatabaseValidationResult]
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization"""

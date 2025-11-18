@@ -13,11 +13,7 @@ Features:
 Example:
     >>> from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor
     >>> monitor = BudgetMonitor()
-    >>> await monitor.create_budget(
-    ...     name="Development Team Monthly",
-    ...     limit_usd=1000.00,
-    ...     period="monthly"
-    ... )
+    >>> await monitor.create_budget(name="Development Team Monthly", limit_usd=1000.00, period="monthly")
     >>> await monitor.check_budget("budget_001")
 """
 
@@ -29,10 +25,11 @@ from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
+
 
 if TYPE_CHECKING:
     from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
@@ -75,13 +72,13 @@ class Budget(BaseModel):
     limit_usd: Decimal = Field(description="Budget limit in USD", gt=0)
     period: BudgetPeriod = Field(description="Budget period")
     start_date: datetime = Field(description="Budget start date")
-    end_date: Optional[datetime] = Field(default=None, description="Budget end date (optional)")
-    alert_thresholds: List[Decimal] = Field(
+    end_date: datetime | None = Field(default=None, description="Budget end date (optional)")
+    alert_thresholds: list[Decimal] = Field(
         default=[Decimal("0.75"), Decimal("0.90")],
         description="Alert thresholds as percentages (e.g., 0.75 = 75%)",
     )
     enabled: bool = Field(default=True, description="Whether budget monitoring is enabled")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict()
 
@@ -91,12 +88,12 @@ class Budget(BaseModel):
         return str(value)
 
     @field_serializer("alert_thresholds")
-    def serialize_thresholds(self, value: List[Decimal]) -> List[str]:
+    def serialize_thresholds(self, value: list[Decimal]) -> list[str]:
         """Serialize list of Decimals as strings for JSON compatibility."""
         return [str(v) for v in value]
 
     @field_serializer("start_date", "end_date")
-    def serialize_dates(self, value: Optional[datetime]) -> Optional[str]:
+    def serialize_dates(self, value: datetime | None) -> str | None:
         """Serialize datetime as ISO 8601 string."""
         return value.isoformat() if value else None
 
@@ -114,12 +111,12 @@ class BudgetStatus(BaseModel):
     period_end: datetime
     is_exceeded: bool
     days_remaining: int
-    projected_end_of_period_spend: Optional[Decimal] = None
+    projected_end_of_period_spend: Decimal | None = None
 
     model_config = ConfigDict()
 
     @field_serializer("limit_usd", "spent_usd", "remaining_usd", "utilization", "projected_end_of_period_spend")
-    def serialize_decimals(self, value: Optional[Decimal]) -> Optional[str]:
+    def serialize_decimals(self, value: Decimal | None) -> str | None:
         """Serialize Decimal as string for JSON compatibility."""
         return str(value) if value is not None else None
 
@@ -174,13 +171,13 @@ class BudgetMonitor:
     def __init__(
         self,
         cost_collector: Optional["CostMetricsCollector"] = None,
-        smtp_host: Optional[str] = None,
+        smtp_host: str | None = None,
         smtp_port: int = 587,
-        smtp_username: Optional[str] = None,
-        smtp_password: Optional[str] = None,
-        email_from: Optional[str] = None,
-        email_to: Optional[List[str]] = None,
-        webhook_url: Optional[str] = None,
+        smtp_username: str | None = None,
+        smtp_password: str | None = None,
+        email_from: str | None = None,
+        email_to: list[str] | None = None,
+        webhook_url: str | None = None,
     ) -> None:
         """
         Initialize budget monitor.
@@ -197,9 +194,9 @@ class BudgetMonitor:
         """
         from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
 
-        self._budgets: Dict[str, Budget] = {}
-        self._alerts: List[BudgetAlert] = []
-        self._alerted_thresholds: Dict[str, set[Decimal]] = {}
+        self._budgets: dict[str, Budget] = {}
+        self._alerts: list[BudgetAlert] = []
+        self._alerted_thresholds: dict[str, set[Decimal]] = {}
         self._lock = asyncio.Lock()
         self._cost_collector = cost_collector or CostMetricsCollector()
 
@@ -218,8 +215,8 @@ class BudgetMonitor:
         name: str,
         limit_usd: Decimal,
         period: BudgetPeriod,
-        start_date: Optional[datetime] = None,
-        alert_thresholds: Optional[List[Decimal]] = None,
+        start_date: datetime | None = None,
+        alert_thresholds: list[Decimal] | None = None,
     ) -> Budget:
         """
         Create a new budget.
@@ -240,7 +237,7 @@ class BudgetMonitor:
             ...     id="dev_team_monthly",
             ...     name="Development Team - Monthly",
             ...     limit_usd=Decimal("1000.00"),
-            ...     period=BudgetPeriod.MONTHLY
+            ...     period=BudgetPeriod.MONTHLY,
             ... )
         """
         if start_date is None:
@@ -262,7 +259,7 @@ class BudgetMonitor:
         logger.info(f"Created budget: {name} (${limit_usd} {period})")
         return budget
 
-    async def get_budget(self, budget_id: str) -> Optional[Budget]:
+    async def get_budget(self, budget_id: str) -> Budget | None:
         """Get budget by ID."""
         async with self._lock:
             return self._budgets.get(budget_id)
@@ -308,7 +305,7 @@ class BudgetMonitor:
 
         return total_cost
 
-    async def get_budget_status(self, budget_id: str) -> Optional[BudgetStatus]:
+    async def get_budget_status(self, budget_id: str) -> BudgetStatus | None:
         """
         Get current budget status.
 
@@ -357,7 +354,7 @@ class BudgetMonitor:
             projected_end_of_period_spend=projected_spend,
         )
 
-    async def check_budget(self, budget_id: str) -> Optional[BudgetAlert]:
+    async def check_budget(self, budget_id: str) -> BudgetAlert | None:
         """
         Check budget and trigger alerts if thresholds exceeded.
 
@@ -513,7 +510,7 @@ class BudgetMonitor:
         html_body = f"""
         <html>
           <body>
-            <h2 style="color: {'red' if level == 'critical' else 'orange'};">Budget Alert</h2>
+            <h2 style="color: {"red" if level == "critical" else "orange"};">Budget Alert</h2>
             <p><strong>Level:</strong> {level.upper()}</p>
             <p><strong>Budget ID:</strong> {budget_id}</p>
             <p><strong>Utilization:</strong> {utilization:.1f}%</p>
@@ -635,15 +632,15 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
         """Calculate end date for budget period."""
         if period == BudgetPeriod.DAILY:
             return start_date + timedelta(days=1)
-        elif period == BudgetPeriod.WEEKLY:
+        if period == BudgetPeriod.WEEKLY:
             return start_date + timedelta(weeks=1)
-        elif period == BudgetPeriod.MONTHLY:
+        if period == BudgetPeriod.MONTHLY:
             # Add one month (approximate)
             return start_date + timedelta(days=30)
-        elif period == BudgetPeriod.QUARTERLY:
+        if period == BudgetPeriod.QUARTERLY:
             return start_date + timedelta(days=90)
-        else:  # BudgetPeriod.YEARLY
-            return start_date + timedelta(days=365)
+        # BudgetPeriod.YEARLY
+        return start_date + timedelta(days=365)
 
     async def reset_budget(self, budget_id: str) -> None:
         """
@@ -660,16 +657,16 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 
         logger.info(f"Reset budget: {budget_id}")
 
-    async def get_all_budgets(self) -> List[Budget]:
+    async def get_all_budgets(self) -> list[Budget]:
         """Get all budgets."""
         async with self._lock:
             return list(self._budgets.values())
 
     async def get_alerts(
         self,
-        budget_id: Optional[str] = None,
-        acknowledged: Optional[bool] = None,
-    ) -> List[BudgetAlert]:
+        budget_id: str | None = None,
+        acknowledged: bool | None = None,
+    ) -> list[BudgetAlert]:
         """
         Get budget alerts with optional filtering.
 
@@ -696,7 +693,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
 # Singleton Instance
 # ==============================================================================
 
-_monitor_instance: Optional[BudgetMonitor] = None
+_monitor_instance: BudgetMonitor | None = None
 
 
 def get_budget_monitor() -> BudgetMonitor:

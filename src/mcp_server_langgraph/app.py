@@ -13,8 +13,6 @@ Usage:
     uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
 """
 
-from typing import Optional
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,7 +24,7 @@ from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
-def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
+def create_app(settings_override: Settings | None = None) -> FastAPI:
     """
     Create and configure the FastAPI application.
 

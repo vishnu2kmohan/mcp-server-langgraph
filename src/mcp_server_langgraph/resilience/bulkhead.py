@@ -10,12 +10,14 @@ See ADR-0026 for design rationale.
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
 from mcp_server_langgraph.observability.telemetry import bulkhead_active_operations_gauge, bulkhead_rejected_counter
 from mcp_server_langgraph.resilience.config import get_resilience_config
+
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -52,10 +54,10 @@ class BulkheadConfig:
 
 
 # Global semaphores for resource types
-_bulkhead_semaphores: Dict[str, asyncio.Semaphore] = {}
+_bulkhead_semaphores: dict[str, asyncio.Semaphore] = {}
 
 
-def get_bulkhead(resource_type: str, limit: Optional[int] = None) -> asyncio.Semaphore:
+def get_bulkhead(resource_type: str, limit: int | None = None) -> asyncio.Semaphore:
     """
     Get or create a bulkhead semaphore for a resource type.
 
@@ -88,7 +90,7 @@ def get_bulkhead(resource_type: str, limit: Optional[int] = None) -> asyncio.Sem
 
 def with_bulkhead(
     resource_type: str,
-    limit: Optional[int] = None,
+    limit: int | None = None,
     wait: bool = True,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
@@ -227,7 +229,7 @@ class BulkheadContext:
     def __init__(
         self,
         resource_type: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         wait: bool = True,
     ):
         self.resource_type = resource_type
@@ -262,10 +264,10 @@ class BulkheadContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb: Any) -> None:  # type: ignore[no-untyped-def]
         """Release bulkhead slot"""
         self.semaphore.release()
-        return None  # Don't suppress exceptions
+        return  # Don't suppress exceptions
 
 
-def get_bulkhead_stats(resource_type: Optional[str] = None) -> Dict[str, Dict[str, int]]:
+def get_bulkhead_stats(resource_type: str | None = None) -> dict[str, dict[str, int]]:
     """
     Get statistics for bulkheads.
 

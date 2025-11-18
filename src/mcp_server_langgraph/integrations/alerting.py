@@ -29,12 +29,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +71,8 @@ class Alert:
     category: AlertCategory
     source: str  # Component that generated the alert
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    dedupe_key: Optional[str] = None  # For deduplication
+    metadata: dict[str, Any] = field(default_factory=dict)
+    dedupe_key: str | None = None  # For deduplication
     alert_id: str = field(
         default_factory=lambda: hashlib.md5(str(datetime.now(timezone.utc)).encode(), usedforsecurity=False).hexdigest()[:16]
     )  # nosec B324
@@ -84,7 +85,7 @@ class Alert:
             content = f"{self.title}:{self.source}:{self.category}"
             self.dedupe_key = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()  # nosec B324
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "title": self.title,
@@ -121,7 +122,7 @@ class PagerDutyProvider(AlertProvider):
     def __init__(
         self,
         integration_key: str,
-        severity_mapping: Optional[Dict[str, str]] = None,
+        severity_mapping: dict[str, str] | None = None,
     ):
         self.integration_key = integration_key
         self.api_url = "https://events.pagerduty.com/v2/enqueue"
@@ -182,8 +183,8 @@ class SlackProvider(AlertProvider):
     def __init__(
         self,
         webhook_url: str,
-        channel: Optional[str] = None,
-        mention_on_critical: Optional[str] = None,
+        channel: str | None = None,
+        mention_on_critical: str | None = None,
     ):
         self.webhook_url = webhook_url
         self.channel = channel
@@ -270,9 +271,9 @@ class EmailProvider(AlertProvider):
     def __init__(
         self,
         provider_type: str,  # "sendgrid" or "ses"
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         from_email: str = "alerts@example.com",
-        to_emails: Optional[List[str]] = None,
+        to_emails: list[str] | None = None,
     ):
         self.provider_type = provider_type
         self.api_key = api_key
@@ -292,11 +293,10 @@ class EmailProvider(AlertProvider):
 
             if self.provider_type == "sendgrid":
                 return await self._send_via_sendgrid(subject, body)
-            elif self.provider_type == "ses":
+            if self.provider_type == "ses":
                 return await self._send_via_ses(subject, body)
-            else:
-                logger.error(f"Unknown email provider: {self.provider_type}")
-                return False
+            logger.error(f"Unknown email provider: {self.provider_type}")
+            return False
 
         except Exception as e:
             logger.error(f"Failed to send email alert: {e}", exc_info=True)
@@ -319,14 +319,14 @@ class EmailProvider(AlertProvider):
         return f"""
         <html>
         <body style="font-family: Arial, sans-serif;">
-            <div style="border-left: 4px solid {severity_color.get(alert.severity, '#808080')}; padding-left: 12px;">
+            <div style="border-left: 4px solid {severity_color.get(alert.severity, "#808080")}; padding-left: 12px;">
                 <h2 style="color: {severity_color.get(alert.severity)};">{alert.title}</h2>
                 <p>{alert.description}</p>
                 <table style="margin-top: 20px;">
                     <tr><td><strong>Severity</strong></td><td>{alert.severity.value.upper()}</td></tr>
                     <tr><td><strong>Category</strong></td><td>{alert.category.value}</td></tr>
                     <tr><td><strong>Source</strong></td><td>{alert.source}</td></tr>
-                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}</td></tr>
+                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}</td></tr>
                     {metadata_rows}
                 </table>
             </div>
@@ -371,8 +371,8 @@ class AlertingConfig(BaseModel):
     """Alerting configuration"""
 
     enabled: bool = Field(default=True, description="Enable alerting system")
-    providers: Dict[str, Dict[str, Any]] = Field(default_factory=dict, description="Provider configurations")
-    routing_rules: List[Dict[str, Any]] = Field(default_factory=list, description="Alert routing rules")
+    providers: dict[str, dict[str, Any]] = Field(default_factory=dict, description="Provider configurations")
+    routing_rules: list[dict[str, Any]] = Field(default_factory=list, description="Alert routing rules")
     deduplication_window: int = Field(default=300, description="Deduplication window in seconds")
 
 
@@ -396,11 +396,11 @@ class AlertingService:
         await alerting.close()
     """
 
-    def __init__(self, config: Optional[AlertingConfig] = None) -> None:
+    def __init__(self, config: AlertingConfig | None = None) -> None:
         self.config = config or self._load_config_from_settings()
-        self.providers: List[AlertProvider] = []
-        self.alert_history: List[Alert] = []
-        self.dedupe_cache: Dict[str, datetime] = {}
+        self.providers: list[AlertProvider] = []
+        self.alert_history: list[Alert] = []
+        self.dedupe_cache: dict[str, datetime] = {}
         self._initialized = False
 
     def _load_config_from_settings(self) -> AlertingConfig:
@@ -479,7 +479,7 @@ class AlertingService:
         self._initialized = True
         logger.info(f"Alerting service initialized with {len(self.providers)} providers")
 
-    async def send_alert(self, alert: Alert) -> Dict[str, bool]:
+    async def send_alert(self, alert: Alert) -> dict[str, bool]:
         """
         Send alert to all configured providers.
 
@@ -539,11 +539,11 @@ class AlertingService:
 
         return datetime.now(timezone.utc) - last_sent < window
 
-    def get_alert_history(self, limit: int = 100) -> List[Alert]:
+    def get_alert_history(self, limit: int = 100) -> list[Alert]:
         """Get recent alert history"""
         return self.alert_history[-limit:]
 
-    def get_alert_statistics(self) -> Dict[str, Any]:
+    def get_alert_statistics(self) -> dict[str, Any]:
         """Get alerting statistics"""
         if not self.alert_history:
             return {"total_alerts": 0}
@@ -572,7 +572,7 @@ class AlertingService:
 
 
 # Global alerting service instance
-_alerting_service: Optional[AlertingService] = None
+_alerting_service: AlertingService | None = None
 
 
 async def get_alerting_service() -> AlertingService:
@@ -592,8 +592,8 @@ async def send_alert(
     severity: AlertSeverity,
     category: AlertCategory,
     source: str,
-    metadata: Optional[Dict[str, Any]] = None,
-) -> Dict[str, bool]:
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, bool]:
     """
     Convenience function to send an alert.
 

@@ -5,7 +5,8 @@ Generates agent files from templates.
 """
 
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import Literal
+
 
 AgentTemplate = Literal["basic", "research", "customer-support", "code-review", "data-analyst"]
 
@@ -164,7 +165,7 @@ support_agent = graph.compile()
 }
 
 
-def generate_agent(name: str, template: AgentTemplate = "basic", tools: Optional[List[str]] = None) -> None:
+def generate_agent(name: str, template: AgentTemplate = "basic", tools: list[str] | None = None) -> None:
     """
     Generate an agent file from a template.
 

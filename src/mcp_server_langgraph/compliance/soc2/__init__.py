@@ -9,6 +9,7 @@ Provides evidence collection and audit logging for SOC2 compliance:
 
 from mcp_server_langgraph.compliance.soc2.evidence import EvidenceCollector
 
+
 __all__ = [
     "EvidenceCollector",
 ]

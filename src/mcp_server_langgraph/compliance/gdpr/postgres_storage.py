@@ -22,7 +22,7 @@ Design: Pure PostgreSQL (not hybrid) for:
 
 import json
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import asyncpg
 
@@ -38,6 +38,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
     UserProfile,
     UserProfileStore,
 )
+
 
 # ============================================================================
 # PostgreSQL User Profile Store
@@ -95,7 +96,7 @@ class PostgresUserProfileStore(UserProfileStore):
             # User already exists
             return False
 
-    async def get(self, user_id: str) -> Optional[UserProfile]:
+    async def get(self, user_id: str) -> UserProfile | None:
         """
         Get user profile by ID (GDPR Article 15 - Right to access)
 
@@ -128,7 +129,7 @@ class PostgresUserProfileStore(UserProfileStore):
                 metadata=json.loads(row["metadata"]) if row["metadata"] else {},
             )
 
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         """
         Update user profile
 
@@ -170,7 +171,7 @@ class PostgresUserProfileStore(UserProfileStore):
         # SET clause is built from validated field names, values are passed as parameters
         query = f"""
             UPDATE user_profiles
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE user_id = ${param_num}
         """  # nosec B608 - See security comment above
 
@@ -227,7 +228,7 @@ class PostgresPreferencesStore(PreferencesStore):
         """
         self.pool = pool
 
-    async def get(self, user_id: str) -> Optional[UserPreferences]:
+    async def get(self, user_id: str) -> UserPreferences | None:
         """Get user preferences"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -248,7 +249,7 @@ class PostgresPreferencesStore(PreferencesStore):
                 updated_at=row["updated_at"].isoformat().replace("+00:00", "Z"),
             )
 
-    async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
+    async def set(self, user_id: str, preferences: dict[str, Any]) -> bool:
         """
         Set user preferences (UPSERT - insert or replace)
 
@@ -277,7 +278,7 @@ class PostgresPreferencesStore(PreferencesStore):
             )
             return True
 
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         """
         Update specific preferences (merge with existing)
 
@@ -363,7 +364,7 @@ class PostgresConsentStore(ConsentStore):
             )
             return record.consent_id
 
-    async def get_user_consents(self, user_id: str) -> List[ConsentRecord]:
+    async def get_user_consents(self, user_id: str) -> list[ConsentRecord]:
         """
         Get all consent records for a user (entire audit trail)
 
@@ -398,7 +399,7 @@ class PostgresConsentStore(ConsentStore):
                 for row in rows
             ]
 
-    async def get_latest_consent(self, user_id: str, consent_type: str) -> Optional[ConsentRecord]:
+    async def get_latest_consent(self, user_id: str, consent_type: str) -> ConsentRecord | None:
         """
         Get the latest consent record for a specific type
 
@@ -501,7 +502,7 @@ class PostgresConversationStore(ConversationStore):
             )
             return conversation.conversation_id
 
-    async def get(self, conversation_id: str) -> Optional[Conversation]:
+    async def get(self, conversation_id: str) -> Conversation | None:
         """Get conversation by ID"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -527,7 +528,7 @@ class PostgresConversationStore(ConversationStore):
                 metadata=json.loads(row["metadata"]) if row["metadata"] else {},
             )
 
-    async def list_user_conversations(self, user_id: str, archived: Optional[bool] = None) -> List[Conversation]:
+    async def list_user_conversations(self, user_id: str, archived: bool | None = None) -> list[Conversation]:
         """
         List all conversations for a user
 
@@ -545,7 +546,7 @@ class PostgresConversationStore(ConversationStore):
                 WHERE user_id = $1
                 ORDER BY last_message_at DESC NULLS LAST
             """
-            params: List[Union[str, bool]] = [user_id]
+            params: list[str | bool] = [user_id]
         else:
             query = """
                 SELECT conversation_id, user_id, title, messages, created_at, last_message_at, archived, metadata
@@ -572,7 +573,7 @@ class PostgresConversationStore(ConversationStore):
                 for row in rows
             ]
 
-    async def update(self, conversation_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, conversation_id: str, updates: dict[str, Any]) -> bool:
         """
         Update conversation
 
@@ -613,7 +614,7 @@ class PostgresConversationStore(ConversationStore):
         # Parameterized query, field names validated, values as parameters
         query = f"""
             UPDATE conversations
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE conversation_id = ${param_num}
         """  # nosec B608 - Safe: field names validated (lines 587-595), values parameterized
 
@@ -710,7 +711,7 @@ class PostgresAuditLogStore(AuditLogStore):
             )
             return entry.log_id
 
-    async def get(self, log_id: str) -> Optional[AuditLogEntry]:
+    async def get(self, log_id: str) -> AuditLogEntry | None:
         """Get audit log entry by ID"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -738,8 +739,8 @@ class PostgresAuditLogStore(AuditLogStore):
             )
 
     async def list_user_logs(
-        self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
-    ) -> List[AuditLogEntry]:
+        self, user_id: str, start_date: datetime | None = None, end_date: datetime | None = None, limit: int = 100
+    ) -> list[AuditLogEntry]:
         """
         List audit logs for a user (HIPAA/SOC2 compliance queries)
 
@@ -754,7 +755,7 @@ class PostgresAuditLogStore(AuditLogStore):
         """
         # Build query dynamically based on filters
         conditions = ["user_id = $1"]
-        params: List[Union[str, datetime, int]] = [user_id]
+        params: list[str | datetime | int] = [user_id]
         param_num = 2
 
         if start_date is not None:
@@ -775,7 +776,7 @@ class PostgresAuditLogStore(AuditLogStore):
         query = f"""
             SELECT log_id, user_id, action, resource_type, resource_id, timestamp, ip_address, user_agent, metadata
             FROM audit_logs
-            WHERE {' AND '.join(conditions)}
+            WHERE {" AND ".join(conditions)}
             ORDER BY timestamp DESC
             LIMIT ${param_num}
         """  # nosec B608 - Safe: conditions programmatic (lines 747-759), values parameterized

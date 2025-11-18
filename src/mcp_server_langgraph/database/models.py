@@ -7,11 +7,12 @@ with PostgreSQL persistence and automatic retention policies.
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sqlalchemy import JSON, DateTime, Index, Integer, Numeric, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column
+
 
 Base = declarative_base()
 
@@ -106,14 +107,14 @@ class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
     )
 
     # Optional categorization
-    feature: Mapped[Optional[str]] = mapped_column(
+    feature: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
         doc="Feature name (e.g., 'chat', 'summarization', 'context_compaction')",
     )
 
     # Metadata (stored as JSON)
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata",  # Column name in DB
         JSON,
         nullable=True,
@@ -136,7 +137,7 @@ class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
             f"cost=${self.estimated_cost_usd})>"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert record to dictionary."""
         return {
             "id": self.id,

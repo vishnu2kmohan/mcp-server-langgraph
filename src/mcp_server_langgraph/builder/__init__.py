@@ -36,4 +36,5 @@ Example:
 from .codegen.generator import CodeGenerator, WorkflowDefinition
 from .workflow import WorkflowBuilder
 
+
 __all__ = ["WorkflowBuilder", "CodeGenerator", "WorkflowDefinition"]

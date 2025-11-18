@@ -12,7 +12,7 @@ Enhanced with resilience patterns (ADR-0026):
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
@@ -34,12 +34,12 @@ class LLMFactory:
         self,
         provider: str = "anthropic",
         model_name: str = "claude-3-5-sonnet-20241022",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         timeout: int = 60,
         enable_fallback: bool = True,
-        fallback_models: Optional[list[str]] = None,
+        fallback_models: list[str] | None = None,
         **kwargs,
     ):
         """
@@ -236,7 +236,7 @@ class LLMFactory:
                         f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
                     )
 
-    def _format_messages(self, messages: list[BaseMessage]) -> list[Dict[str, str]]:
+    def _format_messages(self, messages: list[BaseMessage]) -> list[dict[str, str]]:
         """
         Convert LangChain messages to LiteLLM format
 
@@ -405,37 +405,36 @@ class LLMFactory:
                         metadata={"model": self.model_name, "provider": self.provider},
                         cause=e,
                     )
-                elif "timeout" in error_msg or "timed out" in error_msg:
+                if "timeout" in error_msg or "timed out" in error_msg:
                     raise LLMTimeoutError(
                         message=f"LLM request timed out: {e}",
                         metadata={"model": self.model_name, "provider": self.provider, "timeout": self.timeout},
                         cause=e,
                     )
-                elif "model not found" in error_msg or "404" in error_msg:
+                if "model not found" in error_msg or "404" in error_msg:
                     raise LLMModelNotFoundError(
                         message=f"LLM model not found: {e}",
                         metadata={"model": self.model_name, "provider": self.provider},
                         cause=e,
                     )
-                else:
-                    logger.error(
-                        f"Async LLM invocation failed: {e}",
-                        extra={"model": self.model_name, "provider": self.provider},
-                        exc_info=True,
-                    )
+                logger.error(
+                    f"Async LLM invocation failed: {e}",
+                    extra={"model": self.model_name, "provider": self.provider},
+                    exc_info=True,
+                )
 
-                    metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
-                    span.record_exception(e)
+                metrics.failed_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
+                span.record_exception(e)
 
-                    # Try fallback if enabled
-                    if self.enable_fallback and self.fallback_models:
-                        return await self._try_fallback_async(messages, **kwargs)
+                # Try fallback if enabled
+                if self.enable_fallback and self.fallback_models:
+                    return await self._try_fallback_async(messages, **kwargs)
 
-                    raise LLMProviderError(
-                        message=f"LLM provider error: {e}",
-                        metadata={"model": self.model_name, "provider": self.provider},
-                        cause=e,
-                    )
+                raise LLMProviderError(
+                    message=f"LLM provider error: {e}",
+                    metadata={"model": self.model_name, "provider": self.provider},
+                    cause=e,
+                )
 
     def _try_fallback(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models if primary fails"""

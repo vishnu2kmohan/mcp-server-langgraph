@@ -14,4 +14,5 @@ from .hierarchical import HierarchicalCoordinator
 from .supervisor import Supervisor
 from .swarm import Swarm
 
+
 __all__ = ["Supervisor", "Swarm", "HierarchicalCoordinator"]

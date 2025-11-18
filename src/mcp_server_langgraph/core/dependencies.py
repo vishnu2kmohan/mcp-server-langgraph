@@ -4,7 +4,7 @@ FastAPI Dependencies
 Provides dependency injection for commonly used services.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Depends
 
@@ -14,11 +14,12 @@ from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 from mcp_server_langgraph.core.config import Settings, settings
 
+
 # Singleton instances (will be initialized on first use)
-_keycloak_client: Optional[KeycloakClient] = None
-_openfga_client: Optional[OpenFGAClient] = None
-_service_principal_manager: Optional[ServicePrincipalManager] = None
-_api_key_manager: Optional[APIKeyManager] = None
+_keycloak_client: KeycloakClient | None = None
+_openfga_client: OpenFGAClient | None = None
+_service_principal_manager: ServicePrincipalManager | None = None
+_api_key_manager: APIKeyManager | None = None
 
 
 def get_keycloak_client() -> KeycloakClient:
@@ -41,7 +42,7 @@ def get_keycloak_client() -> KeycloakClient:
     return _keycloak_client
 
 
-def get_openfga_client() -> Optional[OpenFGAClient]:
+def get_openfga_client() -> OpenFGAClient | None:
     """
     Get OpenFGA client instance (singleton)
 
@@ -183,7 +184,7 @@ def get_api_key_manager(
         #   - redis_url: Redis connection URL
         #   - redis_password: Redis password (optional)
         #   - redis_ssl: Use SSL for Redis connection (default: False)
-        redis_client: Optional[Any] = None
+        redis_client: Any | None = None
         if settings.api_key_cache_enabled and settings.redis_url:
             try:
                 from urllib.parse import urlparse, urlunparse

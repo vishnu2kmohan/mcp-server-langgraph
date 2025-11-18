@@ -9,4 +9,5 @@ Pre-configured setups for different use cases:
 
 from .quickstart import QuickStart
 
+
 __all__ = ["QuickStart"]

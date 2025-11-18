@@ -12,7 +12,7 @@ import base64
 import time
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 from cryptography.fernet import Fernet
 from langchain_core.embeddings import Embeddings
@@ -29,8 +29,8 @@ from mcp_server_langgraph.utils.response_optimizer import count_tokens
 def _create_embeddings(
     provider: str,
     model_name: str,
-    google_api_key: Optional[str] = None,
-    task_type: Optional[str] = None,
+    google_api_key: str | None = None,
+    task_type: str | None = None,
 ) -> Embeddings:
     """
     Create embeddings instance based on provider.
@@ -57,7 +57,7 @@ def _create_embeddings(
             )
 
         if not google_api_key:
-            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. " "Set via environment variable or Infisical.")
+            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical.")
 
         # Create Google embeddings with task type optimization
         from pydantic import SecretStr
@@ -75,7 +75,7 @@ def _create_embeddings(
 
         return embeddings
 
-    elif provider == "local":
+    if provider == "local":
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -111,7 +111,7 @@ def _create_embeddings(
             )
 
     else:
-        raise ValueError(f"Unsupported embedding provider: {provider}. " f"Supported providers: 'google', 'local'")
+        raise ValueError(f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'")
 
 
 class ContextReference(BaseModel):
@@ -194,7 +194,7 @@ class DynamicContextLoader:
         self.enable_auto_deletion = settings.enable_auto_deletion
 
         # Initialize encryption if enabled
-        self.cipher: Optional[Fernet] = None
+        self.cipher: Fernet | None = None
         if self.enable_encryption:
             if not settings.context_encryption_key:
                 raise ValueError(
@@ -614,9 +614,7 @@ class DynamicContextLoader:
 
         for ctx in loaded_contexts:
             message = SystemMessage(
-                content=f'<context type="{ctx.reference.ref_type}" id="{ctx.reference.ref_id}">\n'
-                f"{ctx.content}\n"
-                f"</context>"
+                content=f'<context type="{ctx.reference.ref_type}" id="{ctx.reference.ref_id}">\n{ctx.content}\n</context>'
             )
             messages.append(message)
 

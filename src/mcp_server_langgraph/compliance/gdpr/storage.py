@@ -16,11 +16,13 @@ Implementations can be backed by:
 - In-memory (for testing)
 """
 
+import contextlib
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
 
 # ============================================================================
 # Data Models
@@ -33,10 +35,10 @@ class UserProfile(BaseModel):
     user_id: str = Field(..., description="Unique user identifier")
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email address")
-    full_name: Optional[str] = Field(None, description="Full name")
+    full_name: str | None = Field(None, description="Full name")
     created_at: str = Field(..., description="Account creation timestamp (ISO format)")
     last_updated: str = Field(..., description="Last update timestamp (ISO format)")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional profile data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional profile data")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -58,12 +60,12 @@ class Conversation(BaseModel):
 
     conversation_id: str = Field(..., description="Unique conversation identifier")
     user_id: str = Field(..., description="User who owns this conversation")
-    title: Optional[str] = Field(None, description="Conversation title")
-    messages: List[Dict[str, Any]] = Field(default_factory=list, description="List of messages")
+    title: str | None = Field(None, description="Conversation title")
+    messages: list[dict[str, Any]] = Field(default_factory=list, description="List of messages")
     created_at: str = Field(..., description="Creation timestamp (ISO format)")
     last_message_at: str = Field(..., description="Last message timestamp (ISO format)")
     archived: bool = Field(default=False, description="Whether conversation is archived")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -85,7 +87,7 @@ class UserPreferences(BaseModel):
     """User preferences data model"""
 
     user_id: str = Field(..., description="User identifier")
-    preferences: Dict[str, Any] = Field(default_factory=dict, description="User preferences")
+    preferences: dict[str, Any] = Field(default_factory=dict, description="User preferences")
     updated_at: str = Field(..., description="Last update timestamp (ISO format)")
 
     model_config = ConfigDict(
@@ -106,11 +108,11 @@ class AuditLogEntry(BaseModel):
     user_id: str = Field(..., description="User who performed the action")
     action: str = Field(..., description="Action performed")
     resource_type: str = Field(..., description="Type of resource affected")
-    resource_id: Optional[str] = Field(None, description="Identifier of resource affected")
+    resource_id: str | None = Field(None, description="Identifier of resource affected")
     timestamp: str = Field(..., description="Action timestamp (ISO format)")
-    ip_address: Optional[str] = Field(None, description="IP address of request")
-    user_agent: Optional[str] = Field(None, description="User agent string")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    ip_address: str | None = Field(None, description="IP address of request")
+    user_agent: str | None = Field(None, description="User agent string")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional context")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -137,9 +139,9 @@ class ConsentRecord(BaseModel):
     consent_type: str = Field(..., description="Type of consent (analytics, marketing, etc.)")
     granted: bool = Field(..., description="Whether consent is granted")
     timestamp: str = Field(..., description="Consent timestamp (ISO format)")
-    ip_address: Optional[str] = Field(None, description="IP address when consent was given")
-    user_agent: Optional[str] = Field(None, description="User agent when consent was given")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    ip_address: str | None = Field(None, description="IP address when consent was given")
+    user_agent: str | None = Field(None, description="User agent when consent was given")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional context")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -170,11 +172,11 @@ class UserProfileStore(ABC):
         """Create a new user profile"""
 
     @abstractmethod
-    async def get(self, user_id: str) -> Optional[UserProfile]:
+    async def get(self, user_id: str) -> UserProfile | None:
         """Get user profile by ID"""
 
     @abstractmethod
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         """Update user profile"""
 
     @abstractmethod
@@ -190,15 +192,15 @@ class ConversationStore(ABC):
         """Create a new conversation and return its ID"""
 
     @abstractmethod
-    async def get(self, conversation_id: str) -> Optional[Conversation]:
+    async def get(self, conversation_id: str) -> Conversation | None:
         """Get conversation by ID"""
 
     @abstractmethod
-    async def list_user_conversations(self, user_id: str, archived: Optional[bool] = None) -> List[Conversation]:
+    async def list_user_conversations(self, user_id: str, archived: bool | None = None) -> list[Conversation]:
         """List all conversations for a user"""
 
     @abstractmethod
-    async def update(self, conversation_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, conversation_id: str, updates: dict[str, Any]) -> bool:
         """Update conversation"""
 
     @abstractmethod
@@ -214,15 +216,15 @@ class PreferencesStore(ABC):
     """Abstract interface for user preferences storage"""
 
     @abstractmethod
-    async def get(self, user_id: str) -> Optional[UserPreferences]:
+    async def get(self, user_id: str) -> UserPreferences | None:
         """Get user preferences"""
 
     @abstractmethod
-    async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
+    async def set(self, user_id: str, preferences: dict[str, Any]) -> bool:
         """Set user preferences"""
 
     @abstractmethod
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         """Update specific preferences"""
 
     @abstractmethod
@@ -238,13 +240,13 @@ class AuditLogStore(ABC):
         """Log an audit entry and return its ID"""
 
     @abstractmethod
-    async def get(self, log_id: str) -> Optional[AuditLogEntry]:
+    async def get(self, log_id: str) -> AuditLogEntry | None:
         """Get audit log entry by ID"""
 
     @abstractmethod
     async def list_user_logs(
-        self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
-    ) -> List[AuditLogEntry]:
+        self, user_id: str, start_date: datetime | None = None, end_date: datetime | None = None, limit: int = 100
+    ) -> list[AuditLogEntry]:
         """List audit logs for a user"""
 
     @abstractmethod
@@ -260,11 +262,11 @@ class ConsentStore(ABC):
         """Create a consent record and return its ID"""
 
     @abstractmethod
-    async def get_user_consents(self, user_id: str) -> List[ConsentRecord]:
+    async def get_user_consents(self, user_id: str) -> list[ConsentRecord]:
         """Get all consent records for a user"""
 
     @abstractmethod
-    async def get_latest_consent(self, user_id: str, consent_type: str) -> Optional[ConsentRecord]:
+    async def get_latest_consent(self, user_id: str, consent_type: str) -> ConsentRecord | None:
         """Get the latest consent record for a specific type"""
 
     @abstractmethod
@@ -281,7 +283,7 @@ class InMemoryUserProfileStore(UserProfileStore):
     """In-memory implementation of user profile storage"""
 
     def __init__(self) -> None:
-        self.profiles: Dict[str, UserProfile] = {}
+        self.profiles: dict[str, UserProfile] = {}
 
     async def create(self, profile: UserProfile) -> bool:
         if profile.user_id in self.profiles:
@@ -289,10 +291,10 @@ class InMemoryUserProfileStore(UserProfileStore):
         self.profiles[profile.user_id] = profile
         return True
 
-    async def get(self, user_id: str) -> Optional[UserProfile]:
+    async def get(self, user_id: str) -> UserProfile | None:
         return self.profiles.get(user_id)
 
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         if user_id not in self.profiles:
             return False
 
@@ -315,8 +317,8 @@ class InMemoryConversationStore(ConversationStore):
     """In-memory implementation of conversation storage"""
 
     def __init__(self) -> None:
-        self.conversations: Dict[str, Conversation] = {}
-        self.user_conversations: Dict[str, List[str]] = {}
+        self.conversations: dict[str, Conversation] = {}
+        self.user_conversations: dict[str, list[str]] = {}
 
     async def create(self, conversation: Conversation) -> str:
         self.conversations[conversation.conversation_id] = conversation
@@ -327,23 +329,22 @@ class InMemoryConversationStore(ConversationStore):
 
         return conversation.conversation_id
 
-    async def get(self, conversation_id: str) -> Optional[Conversation]:
+    async def get(self, conversation_id: str) -> Conversation | None:
         return self.conversations.get(conversation_id)
 
-    async def list_user_conversations(self, user_id: str, archived: Optional[bool] = None) -> List[Conversation]:
+    async def list_user_conversations(self, user_id: str, archived: bool | None = None) -> list[Conversation]:
         if user_id not in self.user_conversations:
             return []
 
         conversations = []
         for conv_id in self.user_conversations[user_id]:
             conv = self.conversations.get(conv_id)
-            if conv:
-                if archived is None or conv.archived == archived:
-                    conversations.append(conv)
+            if conv and (archived is None or conv.archived == archived):
+                conversations.append(conv)
 
         return conversations
 
-    async def update(self, conversation_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, conversation_id: str, updates: dict[str, Any]) -> bool:
         if conversation_id not in self.conversations:
             return False
 
@@ -358,10 +359,8 @@ class InMemoryConversationStore(ConversationStore):
         if conversation_id in self.conversations:
             conv = self.conversations.pop(conversation_id)
             if conv.user_id in self.user_conversations:
-                try:
+                with contextlib.suppress(ValueError):
                     self.user_conversations[conv.user_id].remove(conversation_id)
-                except ValueError:
-                    pass
             return True
         return False
 
@@ -383,18 +382,18 @@ class InMemoryPreferencesStore(PreferencesStore):
     """In-memory implementation of preferences storage"""
 
     def __init__(self) -> None:
-        self.preferences: Dict[str, UserPreferences] = {}
+        self.preferences: dict[str, UserPreferences] = {}
 
-    async def get(self, user_id: str) -> Optional[UserPreferences]:
+    async def get(self, user_id: str) -> UserPreferences | None:
         return self.preferences.get(user_id)
 
-    async def set(self, user_id: str, preferences: Dict[str, Any]) -> bool:
+    async def set(self, user_id: str, preferences: dict[str, Any]) -> bool:
         self.preferences[user_id] = UserPreferences(
             user_id=user_id, preferences=preferences, updated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         )
         return True
 
-    async def update(self, user_id: str, updates: Dict[str, Any]) -> bool:
+    async def update(self, user_id: str, updates: dict[str, Any]) -> bool:
         if user_id not in self.preferences:
             # Create new preferences if they don't exist
             return await self.set(user_id, updates)
@@ -415,8 +414,8 @@ class InMemoryAuditLogStore(AuditLogStore):
     """In-memory implementation of audit log storage"""
 
     def __init__(self) -> None:
-        self.logs: Dict[str, AuditLogEntry] = {}
-        self.user_logs: Dict[str, List[str]] = {}
+        self.logs: dict[str, AuditLogEntry] = {}
+        self.user_logs: dict[str, list[str]] = {}
 
     async def log(self, entry: AuditLogEntry) -> str:
         self.logs[entry.log_id] = entry
@@ -427,12 +426,12 @@ class InMemoryAuditLogStore(AuditLogStore):
 
         return entry.log_id
 
-    async def get(self, log_id: str) -> Optional[AuditLogEntry]:
+    async def get(self, log_id: str) -> AuditLogEntry | None:
         return self.logs.get(log_id)
 
     async def list_user_logs(
-        self, user_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, limit: int = 100
-    ) -> List[AuditLogEntry]:
+        self, user_id: str, start_date: datetime | None = None, end_date: datetime | None = None, limit: int = 100
+    ) -> list[AuditLogEntry]:
         if user_id not in self.user_logs:
             return []
 
@@ -478,8 +477,8 @@ class InMemoryConsentStore(ConsentStore):
     """In-memory implementation of consent storage"""
 
     def __init__(self) -> None:
-        self.consents: Dict[str, ConsentRecord] = {}
-        self.user_consents: Dict[str, List[str]] = {}
+        self.consents: dict[str, ConsentRecord] = {}
+        self.user_consents: dict[str, list[str]] = {}
 
     async def create(self, record: ConsentRecord) -> str:
         self.consents[record.consent_id] = record
@@ -490,7 +489,7 @@ class InMemoryConsentStore(ConsentStore):
 
         return record.consent_id
 
-    async def get_user_consents(self, user_id: str) -> List[ConsentRecord]:
+    async def get_user_consents(self, user_id: str) -> list[ConsentRecord]:
         if user_id not in self.user_consents:
             return []
 
@@ -502,7 +501,7 @@ class InMemoryConsentStore(ConsentStore):
 
         return consents
 
-    async def get_latest_consent(self, user_id: str, consent_type: str) -> Optional[ConsentRecord]:
+    async def get_latest_consent(self, user_id: str, consent_type: str) -> ConsentRecord | None:
         consents = await self.get_user_consents(user_id)
 
         # Filter by type

@@ -10,8 +10,9 @@ References:
 - https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk
 """
 
+import contextlib
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
@@ -55,7 +56,7 @@ class OutputVerifier:
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
-        criteria: Optional[list[VerificationCriterion]] = None,
+        criteria: list[VerificationCriterion] | None = None,
         quality_threshold: float = 0.7,
         settings=None,
     ):
@@ -90,7 +91,7 @@ class OutputVerifier:
         self,
         response: str,
         user_request: str,
-        conversation_context: Optional[list[BaseMessage]] = None,
+        conversation_context: list[BaseMessage] | None = None,
         verification_mode: Literal["standard", "strict", "lenient"] = "standard",
     ) -> VerificationResult:
         """
@@ -155,7 +156,7 @@ class OutputVerifier:
                 )
 
     def _build_verification_prompt(
-        self, response: str, user_request: str, conversation_context: Optional[list[BaseMessage]] = None
+        self, response: str, user_request: str, conversation_context: list[BaseMessage] | None = None
     ) -> str:
         """
         Build verification prompt using XML structure (Anthropic best practice).
@@ -278,10 +279,8 @@ FEEDBACK:
                 current_section = "scores"
             elif line.startswith("OVERALL:"):
                 current_section = "overall"
-                try:
+                with contextlib.suppress(ValueError, IndexError):
                     overall_score = float(line.split(":")[1].strip())
-                except (ValueError, IndexError):
-                    pass
             elif line.startswith("CRITICAL_ISSUES:"):
                 current_section = "critical"
             elif line.startswith("SUGGESTIONS:"):
@@ -351,12 +350,11 @@ FEEDBACK:
 
         if isinstance(message, HumanMessage):
             return "User"
-        elif isinstance(message, AIMessage):
+        if isinstance(message, AIMessage):
             return "Assistant"
-        elif isinstance(message, SystemMessage):
+        if isinstance(message, SystemMessage):
             return "System"
-        else:
-            return "Message"
+        return "Message"
 
     async def verify_with_rules(self, response: str, rules: dict[str, Any]) -> VerificationResult:
         """
@@ -444,8 +442,8 @@ FEEDBACK:
 async def verify_output(
     response: str,
     user_request: str,
-    conversation_context: Optional[list[BaseMessage]] = None,
-    verifier: Optional[OutputVerifier] = None,
+    conversation_context: list[BaseMessage] | None = None,
+    verifier: OutputVerifier | None = None,
 ) -> VerificationResult:
     """
     Verify agent output (convenience function).

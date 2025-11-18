@@ -142,20 +142,16 @@ async def create_gdpr_storage(
 
     Example:
         >>> # Production (PostgreSQL)
-        >>> storage = await create_gdpr_storage(
-        ...     backend="postgres",
-        ...     postgres_url="postgresql://user:pass@db.example.com:5432/gdpr"
-        ... )
+        >>> storage = await create_gdpr_storage(backend="postgres", postgres_url="postgresql://user:pass@db.example.com:5432/gdpr")
 
         >>> # Development (in-memory)
         >>> storage = await create_gdpr_storage(backend="memory")
     """
     if backend == "postgres":
         return await create_postgres_storage(postgres_url)
-    elif backend == "memory":
+    if backend == "memory":
         return create_memory_storage()
-    else:
-        raise ValueError(f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'.")
+    raise ValueError(f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'.")
 
 
 # Global storage instance (initialized by application startup)
@@ -177,10 +173,7 @@ async def initialize_gdpr_storage(
 
     Example:
         >>> # In main application startup
-        >>> await initialize_gdpr_storage(
-        ...     backend=settings.gdpr_storage_backend,
-        ...     postgres_url=settings.gdpr_postgres_url
-        ... )
+        >>> await initialize_gdpr_storage(backend=settings.gdpr_storage_backend, postgres_url=settings.gdpr_postgres_url)
     """
     global _gdpr_storage
     _gdpr_storage = await create_gdpr_storage(backend, postgres_url)

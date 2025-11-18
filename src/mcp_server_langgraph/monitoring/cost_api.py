@@ -19,13 +19,14 @@ import csv
 import io
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from .budget_monitor import Budget, BudgetPeriod, BudgetStatus, get_budget_monitor
 from .cost_tracker import CostAggregator, get_cost_collector
+
 
 # ==============================================================================
 # FastAPI Application
@@ -51,9 +52,9 @@ class CostSummaryResponse(BaseModel):
     total_cost_usd: str  # Decimal as string
     total_tokens: int
     request_count: int
-    by_model: Dict[str, str]  # Decimal as string
-    by_user: Dict[str, str]  # Decimal as string
-    by_feature: Dict[str, str] = Field(default_factory=dict)
+    by_model: dict[str, str]  # Decimal as string
+    by_user: dict[str, str]  # Decimal as string
+    by_feature: dict[str, str] = Field(default_factory=dict)
 
     model_config = ConfigDict()
 
@@ -75,7 +76,7 @@ class UsageRecordResponse(BaseModel):
     completion_tokens: int
     total_tokens: int
     estimated_cost_usd: str
-    feature: Optional[str] = None
+    feature: str | None = None
 
     model_config = ConfigDict()
 
@@ -92,7 +93,7 @@ class CreateBudgetRequest(BaseModel):
     name: str
     limit_usd: str  # Decimal as string
     period: BudgetPeriod
-    alert_thresholds: Optional[List[str]] = None  # Decimals as strings
+    alert_thresholds: list[str] | None = None  # Decimals as strings
 
 
 class TrendDataPoint(BaseModel):
@@ -114,7 +115,7 @@ class TrendsResponse(BaseModel):
 
     metric: str
     period: str
-    data_points: List[TrendDataPoint]
+    data_points: list[TrendDataPoint]
 
 
 # ==============================================================================
@@ -123,7 +124,7 @@ class TrendsResponse(BaseModel):
 
 
 @app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-def root() -> Dict[str, Any]:
+def root() -> dict[str, Any]:
     """API information."""
     return {
         "name": "Cost Monitoring API",
@@ -141,7 +142,7 @@ def root() -> Dict[str, Any]:
 @app.get("/api/cost/summary", response_model=CostSummaryResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_cost_summary(
     period: str = Query("month", description="Time period (day, week, month)"),
-    group_by: Optional[str] = Query(None, description="Group by dimension (model, user, feature)"),
+    group_by: str | None = Query(None, description="Group by dimension (model, user, feature)"),
 ) -> CostSummaryResponse:
     """
     Get aggregated cost summary.
@@ -203,14 +204,14 @@ async def get_cost_summary(
     )
 
 
-@app.get("/api/cost/usage", response_model=List[UsageRecordResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/api/cost/usage", response_model=list[UsageRecordResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_usage_records(
-    user_id: Optional[str] = Query(None, description="Filter by user ID"),
-    model: Optional[str] = Query(None, description="Filter by model"),
-    start: Optional[datetime] = Query(None, description="Start datetime"),
-    end: Optional[datetime] = Query(None, description="End datetime"),
+    user_id: str | None = Query(None, description="Filter by user ID"),
+    model: str | None = Query(None, description="Filter by model"),
+    start: datetime | None = Query(None, description="Start datetime"),
+    end: datetime | None = Query(None, description="End datetime"),
     limit: int = Query(100, description="Max records to return", ge=1, le=1000),
-) -> List[UsageRecordResponse]:
+) -> list[UsageRecordResponse]:
     """
     Get detailed usage records.
 
@@ -355,7 +356,7 @@ async def get_cost_trends(
     records_in_period = [r for r in all_records if r.timestamp >= period_start]
 
     # Aggregate by day
-    daily_data: Dict[str, Dict[str, Any]] = {}
+    daily_data: dict[str, dict[str, Any]] = {}
 
     for record in records_in_period:
         # Get day key (YYYY-MM-DD)
@@ -465,7 +466,7 @@ async def export_cost_data(
             headers={"Content-Disposition": f'attachment; filename="cost_export_{period}.csv"'},
         )
 
-    elif format == "json":
+    if format == "json":
         # Generate JSON
         import json
 
@@ -491,11 +492,10 @@ async def export_cost_data(
             headers={"Content-Disposition": f'attachment; filename="cost_export_{period}.json"'},
         )
 
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported format: {format}",
-        )
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Unsupported format: {format}",
+    )
 
 
 # ==============================================================================
@@ -504,7 +504,7 @@ async def export_cost_data(
 
 
 @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-def health_check() -> Dict[str, str]:
+def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy", "service": "cost-monitoring-api"}
 

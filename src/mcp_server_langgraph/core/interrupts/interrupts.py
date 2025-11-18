@@ -10,9 +10,10 @@ Supports:
 - Conditional interrupts based on state
 """
 
+from collections.abc import Callable
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -31,9 +32,9 @@ class InterruptConfig(BaseModel):
 
     interrupt_type: InterruptType = Field(description="Type of interrupt")
     node_name: str = Field(description="Node where interrupt occurs")
-    condition: Optional[Callable[[Dict[str, Any]], bool]] = Field(default=None, description="Optional condition function")
-    timeout_seconds: Optional[int] = Field(default=None, description="Timeout in seconds")
-    notification_channels: List[str] = Field(default_factory=list, description="Channels to notify")
+    condition: Callable[[dict[str, Any]], bool] | None = Field(default=None, description="Optional condition function")
+    timeout_seconds: int | None = Field(default=None, description="Timeout in seconds")
+    notification_channels: list[str] = Field(default_factory=list, description="Channels to notify")
     auto_resume: bool = Field(default=False, description="Whether to auto-resume after timeout")
 
 
@@ -46,8 +47,8 @@ class InterruptHandler:
 
     def __init__(self) -> None:
         """Initialize interrupt handler."""
-        self.pending_interrupts: Dict[str, InterruptConfig] = {}
-        self.interrupt_history: List[Dict[str, Any]] = []
+        self.pending_interrupts: dict[str, InterruptConfig] = {}
+        self.interrupt_history: list[dict[str, Any]] = []
 
     def register_interrupt(self, config: InterruptConfig) -> str:
         """
@@ -64,7 +65,7 @@ class InterruptHandler:
 
         return interrupt_id
 
-    def should_interrupt(self, node_name: str, state: Dict[str, Any]) -> bool:
+    def should_interrupt(self, node_name: str, state: dict[str, Any]) -> bool:
         """
         Check if execution should interrupt at this node.
 
@@ -75,7 +76,7 @@ class InterruptHandler:
         Returns:
             True if should interrupt
         """
-        for interrupt_id, config in self.pending_interrupts.items():
+        for _interrupt_id, config in self.pending_interrupts.items():
             if config.node_name == node_name:
                 # Check condition if provided
                 if config.condition:
@@ -84,7 +85,7 @@ class InterruptHandler:
 
         return False
 
-    def handle_interrupt(self, node_name: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_interrupt(self, node_name: str, state: dict[str, Any]) -> dict[str, Any]:
         """
         Handle interrupt at node.
 
@@ -104,7 +105,7 @@ class InterruptHandler:
 
         return state
 
-    def resume(self, interrupt_id: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    def resume(self, interrupt_id: str, state: dict[str, Any]) -> dict[str, Any]:
         """
         Resume execution after interrupt.
 
@@ -143,7 +144,7 @@ def create_interrupt_handler() -> InterruptHandler:
 # ==============================================================================
 
 
-def create_conditional_interrupt(condition: Callable[[Dict[str, Any]], bool], node_name: str) -> InterruptConfig:
+def create_conditional_interrupt(condition: Callable[[dict[str, Any]], bool], node_name: str) -> InterruptConfig:
     """
     Create conditional interrupt that fires based on state.
 

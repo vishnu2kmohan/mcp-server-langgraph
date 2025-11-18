@@ -9,11 +9,13 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
 from mcp_server_langgraph.observability.telemetry import fallback_used_counter
+
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -56,9 +58,9 @@ class DefaultValueFallback(FallbackStrategy):
 class CachedValueFallback(FallbackStrategy):
     """Return cached value on failure"""
 
-    def __init__(self, cache_key_fn: Optional[Callable[..., str]] = None) -> None:
+    def __init__(self, cache_key_fn: Callable[..., str] | None = None) -> None:
         self.cache_key_fn = cache_key_fn or self._default_cache_key
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
     def _default_cache_key(self, *args: Any, **kwargs: Any) -> str:
         """Generate cache key from arguments"""
@@ -90,7 +92,7 @@ class StaleDataFallback(FallbackStrategy):
 
     def __init__(self, max_staleness_seconds: int = 3600) -> None:
         self.max_staleness_seconds = max_staleness_seconds
-        self._cache: Dict[str, tuple[Any, float]] = {}  # value, timestamp
+        self._cache: dict[str, tuple[Any, float]] = {}  # value, timestamp
 
     def cache_value(self, value: Any, key: str) -> None:
         """Cache value with timestamp"""
@@ -98,7 +100,7 @@ class StaleDataFallback(FallbackStrategy):
 
         self._cache[key] = (value, time.time())
 
-    def get_fallback_value(self, *args: Any, **kwargs: Any) -> Optional[Any]:
+    def get_fallback_value(self, *args: Any, **kwargs: Any) -> Any | None:
         """Get stale data if within staleness limit"""
         import time
 
@@ -137,10 +139,10 @@ FALLBACK_STRATEGIES = {
 
 
 def with_fallback(  # noqa: C901
-    fallback: Optional[Any] = None,
-    fallback_fn: Optional[Callable[..., Any]] = None,
-    fallback_strategy: Optional[FallbackStrategy] = None,
-    fallback_on: Optional[tuple[type, ...]] = None,
+    fallback: Any | None = None,
+    fallback_fn: Callable[..., Any] | None = None,
+    fallback_strategy: FallbackStrategy | None = None,
+    fallback_on: tuple[type, ...] | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to provide fallback value when function raises exception.
@@ -230,13 +232,12 @@ def with_fallback(  # noqa: C901
                     # Determine fallback value
                     if fallback is not None:
                         return fallback  # type: ignore[no-any-return]
-                    elif fallback_fn is not None:
+                    if fallback_fn is not None:
                         if asyncio.iscoroutinefunction(fallback_fn):
                             return await fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
-                        else:
-                            return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
-                    else:  # fallback_strategy is not None
-                        return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
+                        return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
+                    # fallback_strategy is not None
+                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -252,18 +253,17 @@ def with_fallback(  # noqa: C901
 
                 if fallback is not None:
                     return fallback  # type: ignore[no-any-return]
-                elif fallback_fn is not None:
+                if fallback_fn is not None:
                     return fallback_fn(*args, **kwargs)  # type: ignore[no-any-return]
-                else:  # fallback_strategy is not None
-                    return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
+                # fallback_strategy is not None
+                return fallback_strategy.get_fallback_value(*args, **kwargs)  # type: ignore[no-any-return,union-attr]
 
         # Return appropriate wrapper
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator
 
@@ -310,11 +310,10 @@ def return_empty_on_error(func: Callable[P, T]) -> Callable[P, T]:
         sig = inspect.signature(func)
         return_type = sig.return_annotation
 
-        if return_type == list or "List" in str(return_type):
+        if return_type is list or "List" in str(return_type):
             return []
-        elif return_type == dict or "Dict" in str(return_type):
+        if return_type is dict or "Dict" in str(return_type):
             return {}
-        else:
-            return None
+        return None
 
     return with_fallback(fallback=determine_empty_value())(func)

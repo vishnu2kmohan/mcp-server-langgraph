@@ -7,25 +7,22 @@ Usage:
     ```python
     from mcp_server_langgraph.api.pagination import PaginationParams, PaginatedResponse
 
+
     @router.get("/items", response_model=PaginatedResponse[Item])
     async def list_items(pagination: PaginationParams = Depends()):
         # Use pagination.offset and pagination.limit for queries
         items = await db.query().offset(pagination.offset).limit(pagination.limit).all()
         total = await db.query().count()
 
-        return create_paginated_response(
-            data=items,
-            total=total,
-            page=pagination.page,
-            page_size=pagination.page_size
-        )
+        return create_paginated_response(data=items, total=total, page=pagination.page, page_size=pagination.page_size)
     ```
 """
 
 import math
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, computed_field, field_validator
+
 
 # Generic type for paginated data
 T = TypeVar("T")
@@ -103,13 +100,13 @@ class PaginationMetadata(BaseModel):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def next_page(self) -> Optional[int]:
+    def next_page(self) -> int | None:
         """Next page number (None if on last page)"""
         return self.page + 1 if self.has_next else None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def prev_page(self) -> Optional[int]:
+    def prev_page(self) -> int | None:
         """Previous page number (None if on first page)"""
         return self.page - 1 if self.has_prev else None
 
@@ -142,7 +139,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         PaginatedResponse[UserResponse] for users
     """
 
-    data: List[T] = Field(description="Array of items for the current page")
+    data: list[T] = Field(description="Array of items for the current page")
     pagination: PaginationMetadata = Field(description="Pagination metadata for navigation")
 
     model_config = {
@@ -166,7 +163,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     }
 
 
-def create_paginated_response(data: List[T], total: int, page: int, page_size: int) -> PaginatedResponse[T]:
+def create_paginated_response(data: list[T], total: int, page: int, page_size: int) -> PaginatedResponse[T]:
     """
     Helper function to create paginated responses
 
@@ -184,12 +181,7 @@ def create_paginated_response(data: List[T], total: int, page: int, page_size: i
         items = await db.query().offset(offset).limit(limit).all()
         total = await db.query().count()
 
-        return create_paginated_response(
-            data=items,
-            total=total,
-            page=page,
-            page_size=page_size
-        )
+        return create_paginated_response(data=items, total=total, page=page, page_size=page_size)
         ```
     """
     total_pages = math.ceil(total / page_size) if total > 0 else 0

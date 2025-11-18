@@ -13,6 +13,7 @@ import litellm
 
 from mcp_server_langgraph.observability.telemetry import logger
 
+
 # Maximum tokens per response (Anthropic recommendation: ~25k tokens)
 MAX_RESPONSE_TOKENS = 25000
 DEFAULT_CONCISE_TOKENS = 500
@@ -169,7 +170,7 @@ class ResponseOptimizer:
             content,
             max_tokens=max_tokens,
             truncation_message=(
-                f"\n\n[Response truncated to {format_type} format. " f"Request 'detailed' format for more information.]"
+                f"\n\n[Response truncated to {format_type} format. Request 'detailed' format for more information.]"
                 if format_type == "concise"
                 else None
             ),
@@ -233,9 +234,8 @@ def count_tokens(text: str, model: str | None = None) -> int:
         # Use model-specific optimizer for accurate counting
         optimizer = ResponseOptimizer(model=model)
         return optimizer.count_tokens(text)
-    else:
-        # Use global optimizer with default model
-        return _optimizer.count_tokens(text)
+    # Use global optimizer with default model
+    return _optimizer.count_tokens(text)
 
 
 def truncate_response(

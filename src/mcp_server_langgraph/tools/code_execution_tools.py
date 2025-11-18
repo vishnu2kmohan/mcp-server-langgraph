@@ -6,7 +6,6 @@ Integrates CodeValidator and Sandbox backends (Docker, Kubernetes).
 """
 
 import logging
-from typing import Optional
 
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -22,6 +21,7 @@ from mcp_server_langgraph.execution import (
     SandboxError,
 )
 
+
 logger = logging.getLogger(__name__)
 
 # Maximum output size to prevent memory exhaustion
@@ -32,7 +32,7 @@ class ExecutePythonInput(BaseModel):
     """Input schema for execute_python tool"""
 
     code: str = Field(description="Python code to execute in sandboxed environment")
-    timeout: Optional[int] = Field(default=None, description="Optional timeout in seconds (overrides default)")
+    timeout: int | None = Field(default=None, description="Optional timeout in seconds (overrides default)")
 
 
 def _is_execution_enabled() -> bool:
@@ -70,15 +70,14 @@ def _get_sandbox() -> Sandbox:
             image=settings.code_execution_docker_image,
             socket_path=settings.code_execution_docker_socket,
         )
-    elif backend == "kubernetes":
+    if backend == "kubernetes":
         return KubernetesSandbox(
             limits=limits,
             namespace=settings.code_execution_k8s_namespace,
             image=settings.code_execution_docker_image,  # Same image for both
             job_ttl=settings.code_execution_k8s_job_ttl,
         )
-    else:
-        raise SandboxError(f"Unsupported backend: {backend}")
+    raise SandboxError(f"Unsupported backend: {backend}")
 
 
 def _truncate_output(text: str, max_size: int = MAX_OUTPUT_SIZE) -> str:
@@ -100,7 +99,7 @@ def _truncate_output(text: str, max_size: int = MAX_OUTPUT_SIZE) -> str:
 
 
 @tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
-def execute_python(code: str, timeout: Optional[int] = None) -> str:
+def execute_python(code: str, timeout: int | None = None) -> str:
     """
     Execute Python code in a secure sandboxed environment.
 
@@ -171,23 +170,21 @@ def execute_python(code: str, timeout: Optional[int] = None) -> str:
 
             return response
 
+        # Execution failed
+        stderr = _truncate_output(result.stderr)
+        exec_time = f"{result.execution_time:.2f}s"
+
+        if result.timed_out:
+            return f"Execution timed out after {exec_time}:\n{stderr}"
+        response = f"Execution failed (exit code {result.exit_code}, took {exec_time}):\n"
+        if stderr:
+            response += f"\nError:\n{stderr}"
+        elif result.error_message:
+            response += f"\nError: {result.error_message}"
         else:
-            # Execution failed
-            stderr = _truncate_output(result.stderr)
-            exec_time = f"{result.execution_time:.2f}s"
+            response += "\n(no error details available)"
 
-            if result.timed_out:
-                return f"Execution timed out after {exec_time}:\n{stderr}"
-            else:
-                response = f"Execution failed (exit code {result.exit_code}, took {exec_time}):\n"
-                if stderr:
-                    response += f"\nError:\n{stderr}"
-                elif result.error_message:
-                    response += f"\nError: {result.error_message}"
-                else:
-                    response += "\n(no error details available)"
-
-                return response
+        return response
 
     except SandboxError as e:
         logger.error(f"Sandbox error: {e}", exc_info=True)

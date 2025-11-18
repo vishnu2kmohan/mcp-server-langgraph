@@ -7,7 +7,7 @@ Ensures compliance with GDPR data minimization and SOC 2 storage requirements.
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -34,7 +34,7 @@ class RetentionResult(BaseModel):
     execution_timestamp: str
     deleted_count: int = 0
     archived_count: int = 0
-    errors: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
     dry_run: bool = False
 
 
@@ -53,9 +53,9 @@ class DataRetentionService:
     def __init__(
         self,
         config_path: str = "config/retention_policies.yaml",
-        session_store: Optional[SessionStore] = None,
-        conversation_store: Optional[ConversationStore] = None,
-        audit_log_store: Optional[AuditLogStore] = None,
+        session_store: SessionStore | None = None,
+        conversation_store: ConversationStore | None = None,
+        audit_log_store: AuditLogStore | None = None,
         dry_run: bool = False,
     ):
         """
@@ -75,14 +75,14 @@ class DataRetentionService:
         self.dry_run = dry_run
         self.config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load retention policies from YAML configuration"""
         try:
             if not self.config_path.exists():
                 logger.warning(f"Retention config not found: {self.config_path}, using defaults")
                 return self._default_config()
 
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
 
             logger.info(f"Loaded retention policies from {self.config_path}")
@@ -92,7 +92,7 @@ class DataRetentionService:
             logger.error(f"Failed to load retention config: {e}", exc_info=True)
             return self._default_config()
 
-    def _default_config(self) -> Dict[str, Any]:
+    def _default_config(self) -> dict[str, Any]:
         """Default retention configuration"""
         return {
             "global": {"enabled": True, "dry_run": False},
@@ -242,7 +242,7 @@ class DataRetentionService:
 
             return result
 
-    async def run_all_cleanups(self) -> List[RetentionResult]:
+    async def run_all_cleanups(self) -> list[RetentionResult]:
         """
         Run all configured retention policies
 
@@ -313,9 +313,8 @@ class DataRetentionService:
             # In dry-run mode, just count inactive sessions without deleting
             inactive_sessions = await self.session_store.get_inactive_sessions(cutoff_date)
             return len(inactive_sessions)
-        else:
-            # Actually delete inactive sessions
-            return await self.session_store.delete_inactive_sessions(cutoff_date)
+        # Actually delete inactive sessions
+        return await self.session_store.delete_inactive_sessions(cutoff_date)
 
     async def _cleanup_old_conversations(self, cutoff_date: datetime) -> int:
         """
@@ -432,7 +431,7 @@ class DataRetentionService:
             logger.error(f"Failed to archive old audit logs: {e}", exc_info=True)
             raise
 
-    def get_retention_summary(self) -> Dict[str, Any]:
+    def get_retention_summary(self) -> dict[str, Any]:
         """
         Get summary of retention policies
 

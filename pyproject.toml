@@ -106,13 +106,11 @@ dev = [
     # Mutation testing
     "mutmut>=3.3.1",
     # Code quality
-    "black>=25.9.0",
-    "flake8>=7.0.0",
+    "ruff>=0.8.0",
     "mypy>=1.18.2",
     "types-PyYAML",
     "types-redis",
     "types-requests",
-    "isort>=7.0.0",
     "bandit>=1.7.6",
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
@@ -266,41 +264,115 @@ Changelog = "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHA
 where = ["src"]
 exclude = ["tests*", "*.tests*", "*.tests"]
 
-[tool.black]
+# Ruff - Replaces Black, isort, and Flake8
+[tool.ruff]
 line-length = 127
-target-version = ["py310", "py311", "py312"]
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | venv
-  | build
-  | dist
-  | __pycache__
-)/
-'''
-
-[tool.isort]
-profile = "black"
-line_length = 127
-skip_gitignore = true
-
-[tool.flake8]
-max-line-length = 127
+target-version = "py310"
+fix = true  # Enable auto-fixing by default
 exclude = [
     ".git",
-    "__pycache__",
     ".venv",
     "venv",
     "build",
     "dist",
+    "__pycache__",
     "htmlcov",
     ".pytest_cache",
     "*.egg-info",
+    ".eggs",
+    ".tox",
+    ".mypy_cache",
+    ".hypothesis",
+    "node_modules",
+    ".mintlify",
+    "clients/python/mcp_server_langgraph_client",
+    "clients/python/mcp_client",
+    "clients/python/test",
+    "clients/python/docs",
 ]
-# Align with black formatting
-extend-ignore = ["E203", "W503", "E501"]
+
+[tool.ruff.lint]
+# Rule categories (following best practices for production Python projects):
+# - E/W: pycodestyle errors and warnings
+# - F: Pyflakes (undefined names, unused imports)
+# - B: flake8-bugbear (common bugs and design problems)
+# - C90: McCabe complexity
+# - I: isort (import sorting)
+# - N: pep8-naming
+# - UP: pyupgrade (modernize Python syntax)
+# - SIM: flake8-simplify (simplification opportunities)
+# - C4: flake8-comprehensions (better comprehensions)
+# - RET: flake8-return (return statement improvements)
+# - ARG: flake8-unused-arguments (unused function parameters)
+# - PTH: flake8-use-pathlib (prefer pathlib over os.path)
+# - D: pydocstyle (docstring conventions) - disabled initially, enable incrementally
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "B",    # flake8-bugbear
+    "C90",  # McCabe complexity
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "RET",  # flake8-return
+    "ARG",  # flake8-unused-arguments
+    "PTH",  # flake8-use-pathlib
+]
+
+# Ignore specific rules that conflict with formatter or are too strict
+ignore = [
+    "E501",    # Line too long (handled by formatter)
+    "RET504",  # Unnecessary assignment before return (can hurt readability)
+    "SIM108",  # Use ternary operator instead of if-else (sometimes clearer as is)
+    "ARG001",  # Unused function argument (common in callbacks/interfaces)
+    "ARG002",  # Unused method argument (common in abstract methods)
+]
+
+# Per-file ignores (migrated from Flake8 + additions for SCIM compliance)
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/*" = ["F401", "F811", "S101", "ARG001", "ARG002"]  # Allow unused args in test fixtures
+"conftest.py" = ["F401", "F811"]
+"*/migrations/*" = ["E501", "F401"]
+"scripts/*" = ["F401", "F541", "E722", "C901", "ARG001"]
+# FastAPI uses Depends() and Query() in default arguments (correct usage, not a bug)
+"src/mcp_server_langgraph/api/*" = ["B008"]
+"src/mcp_server_langgraph/monitoring/cost_api.py" = ["B008"]
+"src/mcp_server_langgraph/auth/middleware.py" = ["B008"]
+"src/mcp_server_langgraph/core/dependencies.py" = ["B008"]
+# SCIM schema uses camelCase field names per RFC 7643 specification
+"src/mcp_server_langgraph/scim/schema.py" = ["N815"]
+"src/mcp_server_langgraph/api/scim.py" = ["N803"]  # SCIM API uses startIndex per spec
+
+# Rules that should not be auto-fixed (require manual review)
+# Don't auto-remove unused imports - they might be intentional re-exports
+unfixable = ["F401"]
+
+# McCabe complexity
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+# Docstring conventions (Google-style)
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Ruff formatter (Black-compatible)
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+
+# isort configuration
+[tool.ruff.lint.isort]
+known-first-party = ["mcp_server_langgraph"]
+force-single-line = false
+force-sort-within-sections = false
+lines-after-imports = 2
 
 [tool.mypy]
 python_version = "3.11"

@@ -7,6 +7,7 @@ Handles creation of new MCP Server projects with different templates.
 from pathlib import Path
 from typing import Literal
 
+
 ProjectTemplate = Literal["quickstart", "production", "enterprise"]
 
 

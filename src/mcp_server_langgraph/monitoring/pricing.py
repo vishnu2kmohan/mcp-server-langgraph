@@ -11,24 +11,19 @@ Pricing is updated monthly based on provider pricing pages:
 
 Example:
     >>> from mcp_server_langgraph.monitoring.pricing import calculate_cost
-    >>> cost = calculate_cost(
-    ...     model="claude-3-5-sonnet-20241022",
-    ...     provider="anthropic",
-    ...     prompt_tokens=1000,
-    ...     completion_tokens=500
-    ... )
+    >>> cost = calculate_cost(model="claude-3-5-sonnet-20241022", provider="anthropic", prompt_tokens=1000, completion_tokens=500)
     >>> print(f"${cost}")
     $0.0105
 """
 
 from decimal import Decimal
-from typing import Dict
+
 
 # ==============================================================================
 # Pricing Table - Updated: 2025-11-02
 # ==============================================================================
 
-PRICING_TABLE: Dict[str, Dict[str, Dict[str, Decimal]]] = {
+PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
     "anthropic": {
         "claude-3-5-sonnet-20241022": {
             "input": Decimal("0.003"),  # $3.00 per 1M tokens
@@ -105,10 +100,7 @@ def calculate_cost(
 
     Example:
         >>> cost = calculate_cost(
-        ...     model="claude-3-5-sonnet-20241022",
-        ...     provider="anthropic",
-        ...     prompt_tokens=1000,
-        ...     completion_tokens=500
+        ...     model="claude-3-5-sonnet-20241022", provider="anthropic", prompt_tokens=1000, completion_tokens=500
         ... )
         >>> cost
         Decimal('0.0105')
@@ -126,7 +118,7 @@ def calculate_cost(
     return input_cost + output_cost
 
 
-def get_all_models() -> Dict[str, list[str]]:
+def get_all_models() -> dict[str, list[str]]:
     """
     Get all available models grouped by provider.
 
@@ -141,7 +133,7 @@ def get_all_models() -> Dict[str, list[str]]:
     return {provider: list(models.keys()) for provider, models in PRICING_TABLE.items()}
 
 
-def get_model_pricing(provider: str, model: str) -> Dict[str, Decimal]:
+def get_model_pricing(provider: str, model: str) -> dict[str, Decimal]:
     """
     Get pricing information for a specific model.
 
@@ -188,10 +180,7 @@ def estimate_cost_from_text(
     Example:
         >>> text = "Explain quantum computing in simple terms."
         >>> cost = estimate_cost_from_text(
-        ...     model="claude-3-5-sonnet-20241022",
-        ...     provider="anthropic",
-        ...     input_text=text,
-        ...     estimated_output_tokens=300
+        ...     model="claude-3-5-sonnet-20241022", provider="anthropic", input_text=text, estimated_output_tokens=300
         ... )
     """
     # Estimate input tokens

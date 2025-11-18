@@ -12,7 +12,7 @@ SOC 2 A1.2 - System Availability Monitoring
 
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -61,7 +61,7 @@ class SLAMeasurement(BaseModel):
     timestamp: str
     period_start: str
     period_end: str
-    breach_details: Optional[Dict[str, Any]] = None
+    breach_details: dict[str, Any] | None = None
 
 
 class SLAReport(BaseModel):
@@ -71,12 +71,12 @@ class SLAReport(BaseModel):
     generated_at: str
     period_start: str
     period_end: str
-    measurements: List[SLAMeasurement] = Field(default_factory=list)
+    measurements: list[SLAMeasurement] = Field(default_factory=list)
     overall_status: SLAStatus
     breaches: int = Field(default=0, description="Number of SLA breaches")
     warnings: int = Field(default=0, description="Number of warnings")
     compliance_score: float = Field(..., ge=0.0, description="Overall SLA compliance score (can exceed 100%)")
-    summary: Dict[str, Any] = Field(default_factory=dict)
+    summary: dict[str, Any] = Field(default_factory=dict)
 
 
 class SLAMonitor:
@@ -87,7 +87,7 @@ class SLAMonitor:
     Provides automated alerting on SLA breaches and trend analysis.
     """
 
-    def __init__(self, sla_targets: Optional[List[SLATarget]] = None) -> None:
+    def __init__(self, sla_targets: list[SLATarget] | None = None) -> None:
         """
         Initialize SLA monitor
 
@@ -101,7 +101,7 @@ class SLAMonitor:
             extra={"target_count": len(self.sla_targets)},
         )
 
-    def _default_sla_targets(self) -> List[SLATarget]:
+    def _default_sla_targets(self) -> list[SLATarget]:
         """
         Get default SLA targets
 
@@ -383,18 +383,15 @@ class SLAMonitor:
             # Higher is better (e.g., uptime)
             if measured_value >= target.target_value:
                 return SLAStatus.MEETING
-            elif measured_value >= target.warning_threshold:
+            if measured_value >= target.warning_threshold:
                 return SLAStatus.AT_RISK
-            else:
-                return SLAStatus.BREACH
-        else:
-            # Lower is better (e.g., response time, error rate)
-            if measured_value <= target.target_value:
-                return SLAStatus.MEETING
-            elif measured_value <= target.warning_threshold:
-                return SLAStatus.AT_RISK
-            else:
-                return SLAStatus.BREACH
+            return SLAStatus.BREACH
+        # Lower is better (e.g., response time, error rate)
+        if measured_value <= target.target_value:
+            return SLAStatus.MEETING
+        if measured_value <= target.warning_threshold:
+            return SLAStatus.AT_RISK
+        return SLAStatus.BREACH
 
     async def generate_sla_report(self, period_days: int = 30) -> SLAReport:
         """
@@ -510,7 +507,7 @@ class SLAMonitor:
 
             return report
 
-    async def _send_sla_alert(self, severity: str, message: str, details: Dict[str, Any]) -> None:
+    async def _send_sla_alert(self, severity: str, message: str, details: dict[str, Any]) -> None:
         """
         Send SLA alert
 
@@ -551,7 +548,7 @@ class SLAMonitor:
 
 
 # Global SLA monitor instance
-_sla_monitor: Optional[SLAMonitor] = None
+_sla_monitor: SLAMonitor | None = None
 
 
 def get_sla_monitor() -> SLAMonitor:

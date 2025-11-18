@@ -442,9 +442,8 @@ jobs:
         echo "- Trailing whitespace removal" >> $GITHUB_STEP_SUMMARY
         echo "- End-of-file fixer" >> $GITHUB_STEP_SUMMARY
         echo "- YAML/JSON/TOML validation" >> $GITHUB_STEP_SUMMARY
-        echo "- Black code formatting" >> $GITHUB_STEP_SUMMARY
-        echo "- isort import sorting" >> $GITHUB_STEP_SUMMARY
-        echo "- flake8 linting" >> $GITHUB_STEP_SUMMARY
+        echo "- Ruff linting (replaces Flake8 + isort)" >> $GITHUB_STEP_SUMMARY
+        echo "- Ruff formatting (replaces Black)" >> $GITHUB_STEP_SUMMARY
         echo "- Bandit security checks" >> $GITHUB_STEP_SUMMARY
         echo "- Gitleaks secret detection" >> $GITHUB_STEP_SUMMARY
         echo "- GitHub Actions workflow validation" >> $GITHUB_STEP_SUMMARY

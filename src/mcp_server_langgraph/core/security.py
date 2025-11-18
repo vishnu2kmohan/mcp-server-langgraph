@@ -72,14 +72,12 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
         sanitized["username"] = "[REDACTED]"
 
     # Truncate long message fields
-    if "message" in sanitized and isinstance(sanitized["message"], str):
-        if len(sanitized["message"]) > max_length:
-            sanitized["message"] = sanitized["message"][:max_length] + "..."
+    if "message" in sanitized and isinstance(sanitized["message"], str) and len(sanitized["message"]) > max_length:
+        sanitized["message"] = sanitized["message"][:max_length] + "..."
 
     # Truncate long query fields
-    if "query" in sanitized and isinstance(sanitized["query"], str):
-        if len(sanitized["query"]) > max_length:
-            sanitized["query"] = sanitized["query"][:max_length] + "..."
+    if "query" in sanitized and isinstance(sanitized["query"], str) and len(sanitized["query"]) > max_length:
+        sanitized["query"] = sanitized["query"][:max_length] + "..."
 
     return sanitized
 

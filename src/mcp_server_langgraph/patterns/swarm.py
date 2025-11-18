@@ -28,13 +28,14 @@ Example:
     result = swarm.invoke({"query": "What is the capital of France?"})
 """
 
-from typing import Annotated, Any, Callable, Dict, List, Literal, Optional
+from collections.abc import Callable
+from typing import Annotated, Any, Literal
 
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
 
-def merge_agent_results(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[str, Any]:
+def merge_agent_results(left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
     """Merge agent results dictionaries for concurrent updates."""
     result = left.copy()
     result.update(right)
@@ -45,12 +46,12 @@ class SwarmState(BaseModel):
     """State for swarm pattern."""
 
     query: str = Field(description="The query/task for all agents")
-    agent_results: Annotated[Dict[str, Any], merge_agent_results] = Field(
+    agent_results: Annotated[dict[str, Any], merge_agent_results] = Field(
         default_factory=dict, description="Results from each agent"
     )
     aggregated_result: str = Field(default="", description="Aggregated final result")
     consensus_score: float = Field(default=0.0, description="Agreement level between agents (0-1)")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class Swarm:
@@ -62,7 +63,7 @@ class Swarm:
 
     def __init__(
         self,
-        agents: Dict[str, Callable[[str], Any]],
+        agents: dict[str, Callable[[str], Any]],
         aggregation_strategy: Literal["consensus", "voting", "synthesis", "concatenate"] = "synthesis",
         min_agreement: float = 0.7,
     ):
@@ -81,11 +82,11 @@ class Swarm:
         self.agents = agents
         self.aggregation_strategy = aggregation_strategy
         self.min_agreement = min_agreement
-        self._graph: Optional[StateGraph[SwarmState]] = None
+        self._graph: StateGraph[SwarmState] | None = None
 
     def _create_agent_wrapper(
         self, agent_name: str, agent_func: Callable[[str], Any]
-    ) -> Callable[[SwarmState], Dict[str, Any]]:
+    ) -> Callable[[SwarmState], dict[str, Any]]:
         """
         Create wrapper for agent execution.
 
@@ -97,7 +98,7 @@ class Swarm:
             Wrapped function that stores result in state
         """
 
-        def agent_node(state: SwarmState) -> Dict[str, Any]:
+        def agent_node(state: SwarmState) -> dict[str, Any]:
             """Execute agent and store result."""
             try:
                 result = agent_func(state.query)
@@ -112,7 +113,7 @@ class Swarm:
 
         return agent_node
 
-    def _calculate_consensus(self, results: List[str]) -> float:
+    def _calculate_consensus(self, results: list[str]) -> float:
         """
         Calculate consensus score between results.
 
@@ -145,7 +146,7 @@ class Swarm:
 
         return sum(similarities) / len(similarities) if similarities else 0.0
 
-    def _aggregate_results(self, state: SwarmState) -> Dict[str, Any]:
+    def _aggregate_results(self, state: SwarmState) -> dict[str, Any]:
         """
         Aggregate results from all agents.
 
@@ -218,11 +219,11 @@ class Swarm:
         graph.add_node("aggregate", self._aggregate_results)
 
         # All agents run in parallel from start
-        for agent_name in self.agents.keys():
+        for agent_name in self.agents:
             graph.add_edge(START, agent_name)
 
         # All agents feed into aggregator
-        for agent_name in self.agents.keys():
+        for agent_name in self.agents:
             graph.add_edge(agent_name, "aggregate")
 
         # Aggregator is the end
@@ -245,7 +246,7 @@ class Swarm:
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, query: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def invoke(self, query: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute the swarm pattern.
 

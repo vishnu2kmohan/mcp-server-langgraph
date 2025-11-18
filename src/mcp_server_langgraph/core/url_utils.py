@@ -130,5 +130,4 @@ def ensure_redis_password_encoded(redis_url: str) -> str:
     # Reconstruct URL
     if username:
         return f"redis://{username}:{encoded_password}@{rest}"
-    else:
-        return f"redis://:{encoded_password}@{rest}"
+    return f"redis://:{encoded_password}@{rest}"

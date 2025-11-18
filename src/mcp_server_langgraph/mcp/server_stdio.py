@@ -216,9 +216,8 @@ class MCPAgentServer:
                 store_id=_settings.openfga_store_id,
                 model_id=_settings.openfga_model_id,
             )
-        else:
-            logger.warning("OpenFGA not configured, authorization will use fallback mode")
-            return None
+        logger.warning("OpenFGA not configured, authorization will use fallback mode")
+        return None
 
     async def list_tools_public(self) -> list[Tool]:
         """
@@ -403,16 +402,15 @@ class MCPAgentServer:
             # Route to appropriate handler (with backward compatibility)
             if name == "agent_chat" or name == "chat":  # Support old name for compatibility
                 return await self._handle_chat(arguments, span, user_id)
-            elif name == "conversation_get" or name == "get_conversation":
+            if name == "conversation_get" or name == "get_conversation":
                 return await self._handle_get_conversation(arguments, span, user_id)
-            elif name == "conversation_search" or name == "list_conversations":
+            if name == "conversation_search" or name == "list_conversations":
                 return await self._handle_search_conversations(arguments, span, user_id)
-            elif name == "search_tools":
+            if name == "search_tools":
                 return await self._handle_search_tools(arguments, span)
-            elif name == "execute_python":
+            if name == "execute_python":
                 return await self._handle_execute_python(arguments, span, user_id)
-            else:
-                raise ValueError(f"Unknown tool: {name}")
+            raise ValueError(f"Unknown tool: {name}")
 
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""

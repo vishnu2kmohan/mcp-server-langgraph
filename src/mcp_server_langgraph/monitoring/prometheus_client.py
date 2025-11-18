@@ -19,12 +19,13 @@ Resolves production TODOs:
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import httpx
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class MetricValue:
     value: float
 
     @classmethod
-    def from_prometheus(cls, data: List[Union[float, str]]) -> "MetricValue":
+    def from_prometheus(cls, data: list[float | str]) -> "MetricValue":
         """Parse from Prometheus response format: [timestamp, value]"""
         return cls(timestamp=datetime.fromtimestamp(data[0]), value=float(data[1]))  # type: ignore[arg-type]
 
@@ -55,14 +56,14 @@ class MetricValue:
 class QueryResult:
     """Result of a Prometheus query"""
 
-    metric: Dict[str, str]  # Label key-value pairs
-    values: List[MetricValue]
+    metric: dict[str, str]  # Label key-value pairs
+    values: list[MetricValue]
 
-    def get_latest_value(self) -> Optional[float]:
+    def get_latest_value(self) -> float | None:
         """Get the most recent value"""
         return self.values[-1].value if self.values else None
 
-    def get_average(self) -> Optional[float]:
+    def get_average(self) -> float | None:
         """Calculate average across all values"""
         if not self.values:
             return None
@@ -93,9 +94,9 @@ class PrometheusClient:
         await client.close()
     """
 
-    def __init__(self, config: Optional[PrometheusConfig] = None) -> None:
+    def __init__(self, config: PrometheusConfig | None = None) -> None:
         self.config = config or self._load_config_from_settings()
-        self.client: Optional[httpx.AsyncClient] = None
+        self.client: httpx.AsyncClient | None = None
         self._initialized = False
 
     def _load_config_from_settings(self) -> PrometheusConfig:
@@ -122,7 +123,7 @@ class PrometheusClient:
             await self.client.aclose()
         logger.info("Prometheus client closed")
 
-    async def query(self, promql: str, time: Optional[datetime] = None) -> List[QueryResult]:
+    async def query(self, promql: str, time: datetime | None = None) -> list[QueryResult]:
         """
         Execute instant query.
 
@@ -163,7 +164,7 @@ class PrometheusClient:
         start: datetime,
         end: datetime,
         step: str = "1m",
-    ) -> List[QueryResult]:
+    ) -> list[QueryResult]:
         """
         Execute range query.
 
@@ -206,7 +207,7 @@ class PrometheusClient:
             logger.error(f"Prometheus range query failed: {e}", exc_info=True, extra={"query": promql})
             raise
 
-    def _parse_query_result(self, result: List[Dict]) -> List[QueryResult]:  # type: ignore[type-arg]
+    def _parse_query_result(self, result: list[dict]) -> list[QueryResult]:  # type: ignore[type-arg]
         """Parse instant query result"""
         parsed = []
         for item in result:
@@ -219,7 +220,7 @@ class PrometheusClient:
 
         return parsed
 
-    def _parse_range_result(self, result: List[Dict]) -> List[QueryResult]:  # type: ignore[type-arg]
+    def _parse_range_result(self, result: list[dict]) -> list[QueryResult]:  # type: ignore[type-arg]
         """Parse range query result"""
         parsed = []
         for item in result:
@@ -308,10 +309,10 @@ class PrometheusClient:
     async def query_percentiles(
         self,
         metric: str,
-        percentiles: Optional[List[int]] = None,
+        percentiles: list[int] | None = None,
         timerange: str = "1h",
-        label_filters: Optional[Dict[str, str]] = None,
-    ) -> Dict[int, float]:
+        label_filters: dict[str, str] | None = None,
+    ) -> dict[int, float]:
         """
         Query metric percentiles (p50, p95, p99, etc.).
 
@@ -442,8 +443,8 @@ class PrometheusClient:
     async def query_custom(
         self,
         promql: str,
-        timerange: Optional[str] = None,
-    ) -> List[QueryResult]:
+        timerange: str | None = None,
+    ) -> list[QueryResult]:
         """
         Execute custom PromQL query.
 
@@ -464,7 +465,7 @@ class PrometheusClient:
         self,
         service: str = "mcp-server-langgraph",
         timerange: str = "30d",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get comprehensive SLA metrics.
 
@@ -495,7 +496,7 @@ class PrometheusClient:
 
 
 # Global Prometheus client instance
-_prometheus_client: Optional[PrometheusClient] = None
+_prometheus_client: PrometheusClient | None = None
 
 
 async def get_prometheus_client() -> PrometheusClient:

@@ -12,10 +12,12 @@ Provides pluggable session storage backends with support for:
 import json
 import secrets
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Mapping, Optional, cast
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 
 try:
     import redis.asyncio as redis
@@ -39,8 +41,8 @@ class SessionData(BaseModel):
     session_id: str = Field(..., description="Unique session identifier", min_length=32)
     user_id: str = Field(..., description="User identifier (e.g., 'user:alice')")
     username: str = Field(..., description="Username")
-    roles: List[str] = Field(default_factory=list, description="User roles")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional session metadata")
+    roles: list[str] = Field(default_factory=list, description="User roles")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional session metadata")
     created_at: str = Field(..., description="Session creation timestamp (ISO format)")
     last_accessed: str = Field(..., description="Last access timestamp (ISO format)")
     expires_at: str = Field(..., description="Expiration timestamp (ISO format)")
@@ -92,12 +94,12 @@ class SessionData(BaseModel):
         except (ValueError, TypeError):
             raise ValueError(f"Timestamp must be in ISO format, got: {v}")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump()
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionData":
+    def from_dict(cls, data: dict[str, Any]) -> "SessionData":
         """Create SessionData from dictionary for backward compatibility"""
         return cls(**data)
 
@@ -110,9 +112,9 @@ class SessionStore(ABC):
         self,
         user_id: str,
         username: str,
-        roles: List[str],
-        metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None,
+        roles: list[str],
+        metadata: dict[str, Any] | None = None,
+        ttl_seconds: int | None = None,
     ) -> str:
         """
         Create a new session
@@ -129,7 +131,7 @@ class SessionStore(ABC):
         """
 
     @abstractmethod
-    async def get(self, session_id: str) -> Optional[SessionData]:
+    async def get(self, session_id: str) -> SessionData | None:
         """
         Get session data
 
@@ -141,7 +143,7 @@ class SessionStore(ABC):
         """
 
     @abstractmethod
-    async def update(self, session_id: str, metadata: Dict[str, Any]) -> bool:
+    async def update(self, session_id: str, metadata: dict[str, Any]) -> bool:
         """
         Update session metadata
 
@@ -154,7 +156,7 @@ class SessionStore(ABC):
         """
 
     @abstractmethod
-    async def refresh(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
+    async def refresh(self, session_id: str, ttl_seconds: int | None = None) -> bool:
         """
         Refresh session expiration
 
@@ -179,7 +181,7 @@ class SessionStore(ABC):
         """
 
     @abstractmethod
-    async def list_user_sessions(self, user_id: str) -> List[SessionData]:
+    async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """
         List all sessions for a user
 
@@ -203,7 +205,7 @@ class SessionStore(ABC):
         """
 
     @abstractmethod
-    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> list[SessionData]:
         """
         Get sessions that haven't been accessed since cutoff date
 
@@ -255,8 +257,8 @@ class InMemorySessionStore(SessionStore):
             sliding_window: Enable sliding expiration
             max_concurrent_sessions: Max sessions per user
         """
-        self.sessions: Dict[str, SessionData] = {}
-        self.user_sessions: Dict[str, List[str]] = {}  # user_id -> [session_ids]
+        self.sessions: dict[str, SessionData] = {}
+        self.user_sessions: dict[str, list[str]] = {}  # user_id -> [session_ids]
         self.default_ttl = default_ttl_seconds
         self.sliding_window = sliding_window
         self.max_concurrent = max_concurrent_sessions
@@ -274,21 +276,20 @@ class InMemorySessionStore(SessionStore):
         self,
         user_id: str,
         username: str,
-        roles: List[str],
-        metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None,
+        roles: list[str],
+        metadata: dict[str, Any] | None = None,
+        ttl_seconds: int | None = None,
     ) -> str:
         """Create new session"""
         with tracer.start_as_current_span("session.create") as span:
             span.set_attribute("user.id", user_id)
 
             # Check concurrent session limit
-            if user_id in self.user_sessions:
-                if len(self.user_sessions[user_id]) >= self.max_concurrent:
-                    # Remove oldest session
-                    oldest_session_id = self.user_sessions[user_id].pop(0)
-                    self.sessions.pop(oldest_session_id, None)
-                    logger.info(f"Removed oldest session for user {user_id} (max concurrent limit reached)")
+            if user_id in self.user_sessions and len(self.user_sessions[user_id]) >= self.max_concurrent:
+                # Remove oldest session
+                oldest_session_id = self.user_sessions[user_id].pop(0)
+                self.sessions.pop(oldest_session_id, None)
+                logger.info(f"Removed oldest session for user {user_id} (max concurrent limit reached)")
 
             # Generate session
             session_id = self._generate_session_id()
@@ -322,7 +323,7 @@ class InMemorySessionStore(SessionStore):
 
             return session_id
 
-    async def get(self, session_id: str) -> Optional[SessionData]:
+    async def get(self, session_id: str) -> SessionData | None:
         """Get session with expiration check"""
         with tracer.start_as_current_span("session.get") as span:
             span.set_attribute("session.id", session_id)
@@ -345,7 +346,7 @@ class InMemorySessionStore(SessionStore):
 
             return session
 
-    async def update(self, session_id: str, metadata: Dict[str, Any]) -> bool:
+    async def update(self, session_id: str, metadata: dict[str, Any]) -> bool:
         """Update session metadata"""
         if session_id not in self.sessions:
             return False
@@ -357,7 +358,7 @@ class InMemorySessionStore(SessionStore):
         logger.info(f"Session metadata updated: {session_id}")
         return True
 
-    async def refresh(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
+    async def refresh(self, session_id: str, ttl_seconds: int | None = None) -> bool:
         """Refresh session expiration"""
         if session_id not in self.sessions:
             return False
@@ -392,7 +393,7 @@ class InMemorySessionStore(SessionStore):
         logger.info(f"Session deleted: {session_id}")
         return True
 
-    async def list_user_sessions(self, user_id: str) -> List[SessionData]:
+    async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """List all active sessions for a user"""
         if user_id not in self.user_sessions:
             return []
@@ -420,7 +421,7 @@ class InMemorySessionStore(SessionStore):
         logger.info(f"Deleted {count} sessions for user {user_id}")
         return count
 
-    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> list[SessionData]:
         """Get sessions that haven't been accessed since cutoff date"""
         inactive_sessions = []
 
@@ -476,8 +477,8 @@ class RedisSessionStore(SessionStore):
         max_concurrent_sessions: int = 5,
         ssl: bool = False,
         decode_responses: bool = True,
-        password: Optional[str] = None,
-        ttl_seconds: Optional[int] = None,
+        password: str | None = None,
+        ttl_seconds: int | None = None,
     ):
         """
         Initialize Redis session store
@@ -530,9 +531,9 @@ class RedisSessionStore(SessionStore):
         self,
         user_id: str,
         username: str,
-        roles: List[str],
-        metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None,
+        roles: list[str],
+        metadata: dict[str, Any] | None = None,
+        ttl_seconds: int | None = None,
     ) -> str:
         """Create new session in Redis"""
         with tracer.start_as_current_span("session.create") as span:
@@ -584,7 +585,7 @@ class RedisSessionStore(SessionStore):
 
             return session_id
 
-    async def get(self, session_id: str) -> Optional[SessionData]:
+    async def get(self, session_id: str) -> SessionData | None:
         """Get session from Redis"""
         with tracer.start_as_current_span("session.get") as span:
             span.set_attribute("session.id", session_id)
@@ -620,7 +621,7 @@ class RedisSessionStore(SessionStore):
 
             return session
 
-    async def update(self, session_id: str, metadata: Dict[str, Any]) -> bool:
+    async def update(self, session_id: str, metadata: dict[str, Any]) -> bool:
         """Update session metadata"""
         session_key = f"session:{session_id}"
         exists = await self.redis.exists(session_key)
@@ -645,7 +646,7 @@ class RedisSessionStore(SessionStore):
         logger.info(f"Session metadata updated in Redis: {session_id}")
         return True
 
-    async def refresh(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
+    async def refresh(self, session_id: str, ttl_seconds: int | None = None) -> bool:
         """Refresh session expiration"""
         session_key = f"session:{session_id}"
         exists = await self.redis.exists(session_key)
@@ -681,7 +682,7 @@ class RedisSessionStore(SessionStore):
         logger.info(f"Session deleted from Redis: {session_id}")
         return bool(deleted)
 
-    async def list_user_sessions(self, user_id: str) -> List[SessionData]:
+    async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """List all active sessions for a user"""
         user_sessions_key = f"user_sessions:{user_id}"
         session_ids = await self.redis.lrange(user_sessions_key, 0, -1)
@@ -714,7 +715,7 @@ class RedisSessionStore(SessionStore):
         logger.info(f"Deleted {count} sessions from Redis for user {user_id}")
         return count
 
-    async def get_inactive_sessions(self, cutoff_date: datetime) -> List[SessionData]:
+    async def get_inactive_sessions(self, cutoff_date: datetime) -> list[SessionData]:
         """Get sessions that haven't been accessed since cutoff date"""
         inactive_sessions = []
 
@@ -762,7 +763,7 @@ class RedisSessionStore(SessionStore):
         return count
 
 
-def create_session_store(backend: str = "memory", redis_url: Optional[str] = None, **kwargs: Any) -> SessionStore:
+def create_session_store(backend: str = "memory", redis_url: str | None = None, **kwargs: Any) -> SessionStore:
     """
     Factory function to create session store
 
@@ -783,7 +784,7 @@ def create_session_store(backend: str = "memory", redis_url: Optional[str] = Non
         logger.info("Creating InMemorySessionStore")
         return InMemorySessionStore(**kwargs)
 
-    elif backend == "redis":
+    if backend == "redis":
         if not redis_url:
             raise ValueError("redis_url required for Redis backend")
 
@@ -795,12 +796,11 @@ def create_session_store(backend: str = "memory", redis_url: Optional[str] = Non
         logger.info("Creating RedisSessionStore")
         return RedisSessionStore(redis_url=redis_url, **kwargs)
 
-    else:
-        raise ValueError(f"Unknown session backend: {backend}. Supported: 'memory', 'redis'")
+    raise ValueError(f"Unknown session backend: {backend}. Supported: 'memory', 'redis'")
 
 
 # Global session store instance
-_session_store: Optional[SessionStore] = None
+_session_store: SessionStore | None = None
 
 
 def get_session_store() -> SessionStore:

@@ -21,7 +21,7 @@ Example:
 """
 
 import ast
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class PythonCodeParser:
@@ -33,7 +33,7 @@ class PythonCodeParser:
 
     def __init__(self) -> None:
         """Initialize parser."""
-        self.ast_tree: Optional[ast.Module] = None
+        self.ast_tree: ast.Module | None = None
 
     def parse_code(self, code: str) -> ast.Module:
         """
@@ -71,14 +71,12 @@ class PythonCodeParser:
             >>> parser = PythonCodeParser()
             >>> tree = parser.parse_file("agent.py")
         """
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             code = f.read()
 
         return self.parse_code(code)
 
-    def find_function_calls(
-        self, tree: Optional[ast.Module] = None, function_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def find_function_calls(self, tree: ast.Module | None = None, function_name: str | None = None) -> list[dict[str, Any]]:
         """
         Find all function calls in AST.
 
@@ -129,7 +127,7 @@ class PythonCodeParser:
 
         return calls
 
-    def find_class_definitions(self, tree: Optional[ast.Module] = None) -> List[Dict[str, Any]]:
+    def find_class_definitions(self, tree: ast.Module | None = None) -> list[dict[str, Any]]:
         """
         Find all class definitions.
 
@@ -166,8 +164,8 @@ class PythonCodeParser:
         return classes
 
     def find_variable_assignments(
-        self, tree: Optional[ast.Module] = None, variable_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, tree: ast.Module | None = None, variable_name: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         Find variable assignments.
 
@@ -219,24 +217,27 @@ class PythonCodeParser:
         """
         if isinstance(node, ast.Constant):
             return node.value
-        elif isinstance(node, ast.Name):
+        if isinstance(node, ast.Name):
             return node.id
-        elif isinstance(node, ast.List):
+        if isinstance(node, ast.List):
             return [self._extract_value(elt) for elt in node.elts]
-        elif isinstance(node, ast.Dict):
-            return {self._extract_value(k): self._extract_value(v) for k, v in zip(node.keys, node.values) if k is not None}
-        elif isinstance(node, ast.Call):
+        if isinstance(node, ast.Dict):
+            return {
+                self._extract_value(k): self._extract_value(v)
+                for k, v in zip(node.keys, node.values, strict=False)
+                if k is not None
+            }
+        if isinstance(node, ast.Call):
             # Return string representation of call
             if isinstance(node.func, ast.Name):
                 return f"{node.func.id}(...)"
-            elif isinstance(node.func, ast.Attribute):
+            if isinstance(node.func, ast.Attribute):
                 return f"{node.func.attr}(...)"
             return "call(...)"
-        else:
-            # Return string representation for complex types
-            return ast.unparse(node) if hasattr(ast, "unparse") else "..."
+        # Return string representation for complex types
+        return ast.unparse(node) if hasattr(ast, "unparse") else "..."
 
-    def get_imports(self, tree: Optional[ast.Module] = None) -> List[str]:
+    def get_imports(self, tree: ast.Module | None = None) -> list[str]:
         """
         Extract all imports from code.
 
@@ -261,9 +262,8 @@ class PythonCodeParser:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.append(alias.name)
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    imports.append(node.module)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imports.append(node.module)
 
         return imports
 

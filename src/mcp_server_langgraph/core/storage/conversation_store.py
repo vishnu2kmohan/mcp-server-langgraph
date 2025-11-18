@@ -8,7 +8,7 @@ Provides a fallback for development environments where OpenFGA isn't running.
 import json
 import time
 from dataclasses import asdict, dataclass
-from typing import Optional
+
 
 try:
     import redis
@@ -32,8 +32,8 @@ class ConversationMetadata:
     created_at: float  # Unix timestamp
     last_activity: float  # Unix timestamp
     message_count: int
-    title: Optional[str] = None
-    tags: Optional[list[str]] = None
+    title: str | None = None
+    tags: list[str] | None = None
 
     def __post_init__(self) -> None:
         if self.tags is None:
@@ -62,7 +62,7 @@ class ConversationStore:
         self.backend = backend.lower()
         self.ttl_seconds = ttl_seconds
         self._memory_store: dict[str, ConversationMetadata] = {}
-        self._redis_client: Optional[Redis[str]] = None
+        self._redis_client: Redis[str] | None = None
 
         if self.backend == "redis":
             if not REDIS_AVAILABLE:
@@ -86,8 +86,8 @@ class ConversationStore:
         thread_id: str,
         user_id: str,
         message_count: int = 1,
-        title: Optional[str] = None,
-        tags: Optional[list[str]] = None,
+        title: str | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """
         Record or update conversation metadata.
@@ -133,7 +133,7 @@ class ConversationStore:
         else:
             self._memory_store[thread_id] = metadata
 
-    async def get_conversation(self, thread_id: str) -> Optional[ConversationMetadata]:
+    async def get_conversation(self, thread_id: str) -> ConversationMetadata | None:
         """
         Get conversation metadata.
 
@@ -150,8 +150,7 @@ class ConversationStore:
                 data_str = data if isinstance(data, str) else (data.decode("utf-8") if hasattr(data, "decode") else str(data))
                 return ConversationMetadata(**json.loads(data_str))
             return None
-        else:
-            return self._memory_store.get(thread_id)
+        return self._memory_store.get(thread_id)
 
     async def list_user_conversations(self, user_id: str, limit: int = 50) -> list[ConversationMetadata]:
         """
@@ -183,11 +182,10 @@ class ConversationStore:
             conversations.sort(key=lambda c: c.last_activity, reverse=True)
             return conversations[:limit]
 
-        else:
-            # In-memory: filter and sort
-            user_conversations = [c for c in self._memory_store.values() if c.user_id == user_id]
-            user_conversations.sort(key=lambda c: c.last_activity, reverse=True)
-            return user_conversations[:limit]
+        # In-memory: filter and sort
+        user_conversations = [c for c in self._memory_store.values() if c.user_id == user_id]
+        user_conversations.sort(key=lambda c: c.last_activity, reverse=True)
+        return user_conversations[:limit]
 
     async def search_conversations(self, user_id: str, query: str, limit: int = 10) -> list[ConversationMetadata]:
         """
@@ -214,11 +212,13 @@ class ConversationStore:
 
         for conv in all_conversations:
             # Search in thread_id and title
-            if query_lower in conv.thread_id.lower():
-                matches.append(conv)
-            elif conv.title and query_lower in conv.title.lower():
-                matches.append(conv)
-            elif conv.tags and any(query_lower in tag.lower() for tag in conv.tags):
+            if (
+                query_lower in conv.thread_id.lower()
+                or conv.title
+                and query_lower in conv.title.lower()
+                or conv.tags
+                and any(query_lower in tag.lower() for tag in conv.tags)
+            ):
                 matches.append(conv)
 
         return matches[:limit]
@@ -237,11 +237,10 @@ class ConversationStore:
             key = self._redis_key(thread_id)
             deleted = self._redis_client.delete(key)
             return int(deleted) > 0
-        else:
-            if thread_id in self._memory_store:
-                del self._memory_store[thread_id]
-                return True
-            return False
+        if thread_id in self._memory_store:
+            del self._memory_store[thread_id]
+            return True
+        return False
 
     async def get_stats(self) -> dict[str, object]:
         """
@@ -254,12 +253,11 @@ class ConversationStore:
             pattern = self._redis_key("*")
             count = sum(1 for _ in self._redis_client.scan_iter(match=pattern, count=100))
             return {"backend": "redis", "conversation_count": count, "ttl_seconds": self.ttl_seconds}
-        else:
-            return {"backend": "memory", "conversation_count": len(self._memory_store), "ttl_seconds": None}
+        return {"backend": "memory", "conversation_count": len(self._memory_store), "ttl_seconds": None}
 
 
 # Singleton instance
-_conversation_store: Optional[ConversationStore] = None
+_conversation_store: ConversationStore | None = None
 
 
 def get_conversation_store(

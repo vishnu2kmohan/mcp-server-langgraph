@@ -9,9 +9,8 @@ Execute comprehensive code quality checks to ensure code passes all lint validat
 make lint-check
 ```
 Runs all lint checks without modifying files:
-- flake8 (syntax errors, code style)
-- black (formatting check)
-- isort (import order check)
+- ruff check (linting - replaces Flake8 + isort)
+- ruff format --check (formatting check - replaces Black)
 - mypy (type checking - **warning-only**, non-blocking during gradual rollout)
 - bandit (security scan)
 
@@ -20,8 +19,8 @@ Runs all lint checks without modifying files:
 make lint-fix
 ```
 Automatically fixes:
-- Code formatting (black)
-- Import order (isort)
+- Linting issues (ruff check --fix)
+- Code formatting (ruff format)
 
 Then run `make lint-check` to verify remaining issues.
 
@@ -33,8 +32,8 @@ make lint-pre-commit
 ```
 Simulates what will run when you commit:
 - Runs on all files (or staged files if available)
-- Auto-fixes black/isort issues
-- Runs flake8, mypy, bandit validation
+- Auto-fixes with Ruff (linting + formatting)
+- Runs mypy, bandit validation
 - Shows exactly what the pre-commit hook will do
 
 ### Test Pre-push Hook
@@ -43,38 +42,36 @@ make lint-pre-push
 ```
 Simulates what will run when you push:
 - Runs on files changed from `origin/main`
-- Comprehensive validation (flake8, black, isort, mypy, bandit)
+- Comprehensive validation (ruff, mypy, bandit)
 - Blocks if any check fails
 
 ## Individual Linters
 
-### Flake8 (Syntax & Style)
+### Ruff (Linting - replaces Flake8 + isort)
 ```bash
-uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+# Check only
+uv run ruff check src/
+
+# Auto-fix
+uv run ruff check --fix src/
 ```
 Catches:
 - Syntax errors
 - Undefined names
 - Import issues
+- Import order violations
+- Code style violations (E, W, F, C90, N rules)
 - Critical code issues
 
-### Black (Code Formatting)
+### Ruff Format (Formatting - replaces Black)
 ```bash
 # Check only
-uv run black --check src/ --line-length=127
+uv run ruff format --check src/
 
 # Auto-fix
-uv run black src/ --line-length=127
+uv run ruff format src/
 ```
-
-### Isort (Import Sorting)
-```bash
-# Check only
-uv run isort --check src/ --profile=black --line-length=127
-
-# Auto-fix
-uv run isort src/ --profile=black --line-length=127
-```
+Black-compatible formatting with 127 character line length.
 
 ### Mypy (Type Checking)
 ```bash
@@ -105,7 +102,7 @@ Installs or reinstalls:
 
 ### "Lint checks failed" - How to fix:
 
-1. **Auto-fixable issues (black/isort)**:
+1. **Auto-fixable issues (ruff)**:
    ```bash
    make lint-fix
    ```
@@ -116,7 +113,7 @@ Installs or reinstalls:
    ```
 
 3. **Fix remaining issues manually**:
-   - **flake8 errors**: Must be fixed (syntax errors, undefined names)
+   - **ruff errors**: Most are auto-fixable, remaining must be fixed manually
    - **bandit errors**: Must be fixed (security issues)
    - **mypy errors**: Optional during gradual rollout (type annotations)
 
@@ -125,7 +122,7 @@ Installs or reinstalls:
    make lint-pre-commit
    ```
 
-**Note**: Only flake8 and bandit errors will block commits/pushes. Mypy errors
+**Note**: Only ruff and bandit errors will block commits/pushes. Mypy errors
 are currently warnings only.
 
 ### Bypass hooks (NOT RECOMMENDED):
@@ -173,7 +170,7 @@ The local lint checks match what CI/CD runs:
 
 After running lint checks, provide:
 - ✅ Checks that passed
-- ❌ Checks that failed with error details (blocking: flake8, bandit)
+- ❌ Checks that failed with error details (blocking: ruff, bandit)
 - ⚠️ Mypy warnings (non-blocking, optional to fix)
 - 🔧 Auto-fix suggestions
 - 📝 File references for manual fixes
@@ -190,6 +187,6 @@ During gradual rollout, mypy type checking is **non-blocking**:
 
 ### What Will Block You
 Only these checks will prevent commits/pushes:
-- **flake8**: Syntax errors, undefined names, critical code issues
+- **ruff check**: Linting errors (syntax, undefined names, imports, code style)
+- **ruff format**: Formatting violations (auto-fixed, just re-stage files)
 - **bandit**: Security vulnerabilities (high/medium severity)
-- **black/isort**: Auto-fixed by pre-commit, just re-stage files

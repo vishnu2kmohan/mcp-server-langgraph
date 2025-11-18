@@ -8,8 +8,6 @@ Supports multiple authentication backends:
 - Custom providers (extensibility)
 """
 
-from typing import Optional
-
 from mcp_server_langgraph.auth.keycloak import KeycloakConfig
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -19,7 +17,7 @@ from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.observability.telemetry import logger
 
 
-def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGAClient] = None) -> UserProvider:
+def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | None = None) -> UserProvider:
     """
     Create UserProvider based on settings configuration (production use)
 
@@ -67,17 +65,17 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
         # Validate JWT secret is configured
         if not settings.jwt_secret_key:
             raise ValueError(
-                "CRITICAL: JWT secret key required for InMemoryUserProvider. " "Set JWT_SECRET_KEY environment variable."
+                "CRITICAL: JWT secret key required for InMemoryUserProvider. Set JWT_SECRET_KEY environment variable."
             )
 
         return InMemoryUserProvider(secret_key=settings.jwt_secret_key, use_password_hashing=settings.use_password_hashing)
 
-    elif provider_type == "keycloak":
+    if provider_type == "keycloak":
         logger.info("Creating KeycloakUserProvider for authentication")
 
         # Validate Keycloak configuration
         if not settings.keycloak_client_secret:
-            raise ValueError("CRITICAL: Keycloak client secret required. " "Set KEYCLOAK_CLIENT_SECRET environment variable.")
+            raise ValueError("CRITICAL: Keycloak client secret required. Set KEYCLOAK_CLIENT_SECRET environment variable.")
 
         if not settings.keycloak_admin_password:
             raise ValueError(
@@ -104,15 +102,14 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
             sync_on_login=True,  # Auto-sync roles to OpenFGA on login
         )
 
-    else:
-        raise ValueError(
-            f"Unknown auth provider: '{provider_type}'. "
-            f"Supported providers: 'inmemory', 'keycloak'. "
-            f"To add custom providers, extend UserProvider and update this factory."
-        )
+    raise ValueError(
+        f"Unknown auth provider: '{provider_type}'. "
+        f"Supported providers: 'inmemory', 'keycloak'. "
+        f"To add custom providers, extend UserProvider and update this factory."
+    )
 
 
-def create_session_store(settings: Settings) -> Optional[SessionStore]:
+def create_session_store(settings: Settings) -> SessionStore | None:
     """
     Create SessionStore based on settings configuration
 
@@ -131,7 +128,7 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
 
     if backend == "memory":
         logger.warning(
-            "Using in-memory session store. Sessions will not persist across restarts. " "For production, use 'redis' backend."
+            "Using in-memory session store. Sessions will not persist across restarts. For production, use 'redis' backend."
         )
         # Import here to avoid circular dependency
         from mcp_server_langgraph.auth.session import InMemorySessionStore
@@ -142,12 +139,12 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
             max_concurrent_sessions=settings.session_max_concurrent,
         )
 
-    elif backend == "redis":
+    if backend == "redis":
         logger.info("Creating Redis session store")
 
         # Validate Redis configuration
         if not settings.redis_url:
-            raise ValueError("CRITICAL: Redis URL required for Redis session store. " "Set REDIS_URL environment variable.")
+            raise ValueError("CRITICAL: Redis URL required for Redis session store. Set REDIS_URL environment variable.")
 
         return RedisSessionStore(
             redis_url=settings.redis_url,
@@ -158,11 +155,10 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
             max_concurrent_sessions=settings.session_max_concurrent,
         )
 
-    else:
-        raise ValueError(f"Unknown session backend: '{backend}'. " f"Supported backends: 'memory', 'redis'.")
+    raise ValueError(f"Unknown session backend: '{backend}'. Supported backends: 'memory', 'redis'.")
 
 
-def create_auth_middleware(settings: Settings, openfga_client: Optional[OpenFGAClient] = None) -> AuthMiddleware:
+def create_auth_middleware(settings: Settings, openfga_client: OpenFGAClient | None = None) -> AuthMiddleware:
     """
     Create AuthMiddleware with configured providers
 

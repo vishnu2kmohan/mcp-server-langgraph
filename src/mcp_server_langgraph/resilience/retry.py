@@ -9,8 +9,9 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Optional, ParamSpec, Type, TypeVar, Union
+from typing import ParamSpec, TypeVar
 
 from opentelemetry import trace
 from tenacity import (
@@ -26,6 +27,7 @@ from tenacity import (
 
 from mcp_server_langgraph.observability.telemetry import retry_attempt_counter, retry_exhausted_counter
 from mcp_server_langgraph.resilience.config import get_resilience_config
+
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -147,10 +149,10 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
 
 
 def retry_with_backoff(  # noqa: C901
-    max_attempts: Optional[int] = None,
-    exponential_base: Optional[float] = None,
-    exponential_max: Optional[float] = None,
-    retry_on: Optional[Union[Type[Exception], tuple[Type[Exception], ...]]] = None,
+    max_attempts: int | None = None,
+    exponential_base: float | None = None,
+    exponential_max: float | None = None,
+    retry_on: type[Exception] | tuple[type[Exception], ...] | None = None,
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
@@ -292,7 +294,6 @@ def retry_with_backoff(  # noqa: C901
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator

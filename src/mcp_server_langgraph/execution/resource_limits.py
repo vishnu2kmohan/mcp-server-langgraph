@@ -161,7 +161,7 @@ class ResourceLimits:
             disk_quota_mb=1024,  # 1GB
             max_processes=10,
             network_mode="unrestricted",  # Full network for development
-            allowed_domains=tuple(),
+            allowed_domains=(),
         )
 
     @classmethod
@@ -187,7 +187,7 @@ class ResourceLimits:
             disk_quota_mb=100,  # 100MB
             max_processes=1,
             network_mode="none",  # SECURITY: Network disabled (allowlist not implemented)
-            allowed_domains=tuple(),  # Reserved for future allowlist implementation
+            allowed_domains=(),  # Reserved for future allowlist implementation
         )
 
     @classmethod
@@ -205,7 +205,7 @@ class ResourceLimits:
             disk_quota_mb=50,  # 50MB
             max_processes=1,
             network_mode="none",  # No network for tests
-            allowed_domains=tuple(),
+            allowed_domains=(),
         )
 
     @classmethod
@@ -223,5 +223,5 @@ class ResourceLimits:
             disk_quota_mb=512,  # 512MB
             max_processes=4,
             network_mode="allowlist",
-            allowed_domains=tuple(),  # Configure per use case
+            allowed_domains=(),  # Configure per use case
         )

@@ -8,13 +8,14 @@ compatible with centralized log aggregation platforms (ELK, Datadog, Splunk, Clo
 import json
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, Optional, Type
+from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
 
+
 # Type annotation for conditional base class
 if TYPE_CHECKING:
-    JsonFormatterBase: Type[logging.Formatter] = logging.Formatter
+    JsonFormatterBase: type[logging.Formatter] = logging.Formatter
 else:
     try:
         from pythonjsonlogger.json import JsonFormatter
@@ -39,12 +40,12 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
 
     def __init__(
         self,
-        fmt: Optional[str] = None,
-        datefmt: Optional[str] = None,
+        fmt: str | None = None,
+        datefmt: str | None = None,
         style: str = "%",
         service_name: str = "mcp-server-langgraph",
         include_hostname: bool = True,
-        indent: Optional[int] = None,
+        indent: int | None = None,
     ):
         """
         Initialize JSON formatter
@@ -64,9 +65,9 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
 
     def add_fields(
         self,
-        log_record: Dict[str, Any],
+        log_record: dict[str, Any],
         record: logging.LogRecord,
-        message_dict: Dict[str, Any],
+        message_dict: dict[str, Any],
     ) -> None:
         """
         Add custom fields to log record
@@ -191,7 +192,7 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
                     if not key.startswith("_"):
                         message_dict[key] = value
 
-        log_record: Dict[str, Any] = {}
+        log_record: dict[str, Any] = {}
         self.add_fields(log_record, record, message_dict)
 
         # Serialize to JSON
@@ -203,7 +204,7 @@ def setup_json_logging(
     level: int = logging.INFO,
     service_name: str = "mcp-server-langgraph",
     include_hostname: bool = True,
-    indent: Optional[int] = None,
+    indent: int | None = None,
 ) -> logging.Logger:
     """
     Configure logger with JSON formatting
@@ -262,13 +263,6 @@ def log_with_context(
         **context: Additional context fields (user_id, ip_address, etc.)
 
     Example:
-        >>> log_with_context(
-        ...     logger,
-        ...     logging.INFO,
-        ...     "User action",
-        ...     user_id="alice",
-        ...     action="login",
-        ...     ip="1.2.3.4"
-        ... )
+        >>> log_with_context(logger, logging.INFO, "User action", user_id="alice", action="login", ip="1.2.3.4")
     """
     logger.log(level, message, extra=context)

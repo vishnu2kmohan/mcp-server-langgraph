@@ -269,9 +269,8 @@ class SecurityVisitor(ast.NodeVisitor):
     def visit_While(self, node: ast.While) -> None:
         """Check while loops for obvious infinite loops"""
         # Detect 'while True:' or 'while 1:'
-        if isinstance(node.test, ast.Constant):
-            if node.test.value is True or node.test.value == 1:
-                self.warnings.append("Infinite loop detected: 'while True' or 'while 1'")
+        if isinstance(node.test, ast.Constant) and (node.test.value is True or node.test.value == 1):
+            self.warnings.append("Infinite loop detected: 'while True' or 'while 1'")
 
         self.generic_visit(node)
 
@@ -279,7 +278,7 @@ class SecurityVisitor(ast.NodeVisitor):
         """Extract function name from call node"""
         if isinstance(node.func, ast.Name):
             return node.func.id
-        elif isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Attribute):
             return node.func.attr
         return None
 

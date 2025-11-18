@@ -8,7 +8,7 @@ Enhanced with resilience patterns (ADR-0026):
 - Bulkhead isolation (50 concurrent auth checks max)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
@@ -27,8 +27,8 @@ class OpenFGAConfig(BaseModel):
     """
 
     api_url: str = Field(default="http://localhost:8080", description="OpenFGA server API URL")
-    store_id: Optional[str] = Field(default=None, description="Authorization store ID")
-    model_id: Optional[str] = Field(default=None, description="Authorization model ID")
+    store_id: str | None = Field(default=None, description="Authorization store ID")
+    model_id: str | None = Field(default=None, description="Authorization model ID")
 
     model_config = ConfigDict(
         frozen=False,
@@ -37,12 +37,12 @@ class OpenFGAConfig(BaseModel):
         json_schema_extra={"example": {"api_url": "http://localhost:8080", "store_id": "01H...", "model_id": "01H..."}},
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "OpenFGAConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "OpenFGAConfig":
         """Create OpenFGAConfig from dictionary"""
         return cls(**data)
 
@@ -57,10 +57,10 @@ class OpenFGAClient:
 
     def __init__(
         self,
-        config: Optional[OpenFGAConfig] = None,
-        api_url: Optional[str] = None,
-        store_id: Optional[str] = None,
-        model_id: Optional[str] = None,
+        config: OpenFGAConfig | None = None,
+        api_url: str | None = None,
+        store_id: str | None = None,
+        model_id: str | None = None,
     ):
         """
         Initialize OpenFGA client
@@ -89,7 +89,7 @@ class OpenFGAClient:
         logger.info("OpenFGA client initialized", extra={"api_url": config.api_url})
 
     def _circuit_breaker_fallback(
-        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+        self, user: str, relation: str, object: str, context: dict[str, Any] | None = None, critical: bool = True
     ) -> bool:
         """
         Circuit breaker fallback for check_permission.
@@ -114,12 +114,11 @@ class OpenFGAClient:
                 extra={"user": user, "relation": relation, "object": object, "critical": critical},
             )
             return False  # Fail-closed for critical resources
-        else:
-            logger.warning(
-                "OpenFGA circuit breaker open: ALLOWING access to non-critical resource",
-                extra={"user": user, "relation": relation, "object": object, "critical": critical},
-            )
-            return True  # Fail-open for non-critical resources
+        logger.warning(
+            "OpenFGA circuit breaker open: ALLOWING access to non-critical resource",
+            extra={"user": user, "relation": relation, "object": object, "critical": critical},
+        )
+        return True  # Fail-open for non-critical resources
 
     @circuit_breaker(
         name="openfga",
@@ -131,7 +130,7 @@ class OpenFGAClient:
     @with_timeout(operation_type="auth")
     @with_bulkhead(resource_type="openfga")
     async def check_permission(
-        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+        self, user: str, relation: str, object: str, context: dict[str, Any] | None = None, critical: bool = True
     ) -> bool:
         """
         Check if user has permission via relationship (with resilience protection).
@@ -194,31 +193,30 @@ class OpenFGAClient:
                         metadata={"user": user, "relation": relation, "object": object},
                         cause=e,
                     )
-                elif "unavailable" in error_msg or "connection" in error_msg:
+                if "unavailable" in error_msg or "connection" in error_msg:
                     raise OpenFGAUnavailableError(
                         message=f"OpenFGA service unavailable: {e}",
                         metadata={"user": user, "relation": relation, "object": object},
                         cause=e,
                     )
-                else:
-                    logger.error(
-                        f"OpenFGA check failed: {e}",
-                        extra={"user": user, "relation": relation, "object": object},
-                        exc_info=True,
-                    )
-                    span.record_exception(e)
-                    metrics.failed_calls.add(1, {"operation": "check_permission"})
+                logger.error(
+                    f"OpenFGA check failed: {e}",
+                    extra={"user": user, "relation": relation, "object": object},
+                    exc_info=True,
+                )
+                span.record_exception(e)
+                metrics.failed_calls.add(1, {"operation": "check_permission"})
 
-                    raise OpenFGAError(
-                        message=f"OpenFGA error: {e}",
-                        metadata={"user": user, "relation": relation, "object": object},
-                        cause=e,
-                    )
+                raise OpenFGAError(
+                    message=f"OpenFGA error: {e}",
+                    metadata={"user": user, "relation": relation, "object": object},
+                    cause=e,
+                )
 
     @circuit_breaker(name="openfga")
     @retry_with_backoff()  # Uses global config (prod: 3 attempts, test: 1 attempt for fast tests)
     @with_timeout(operation_type="auth")
-    async def write_tuples(self, tuples: List[Dict[str, str]]) -> None:
+    async def write_tuples(self, tuples: list[dict[str, str]]) -> None:
         """
         Write relationship tuples to OpenFGA (with resilience protection).
 
@@ -256,7 +254,7 @@ class OpenFGAClient:
                     cause=e,
                 )
 
-    async def delete_tuples(self, tuples: List[Dict[str, str]]) -> None:
+    async def delete_tuples(self, tuples: list[dict[str, str]]) -> None:
         """
         Delete relationship tuples from OpenFGA
 
@@ -315,9 +313,9 @@ class OpenFGAClient:
             return
 
         # Collect all tuples to delete across all relations
-        tuples_to_delete: List[Dict[str, str]] = []
+        tuples_to_delete: list[dict[str, str]] = []
 
-        for relation_name in relations.keys():
+        for relation_name in relations:
             try:
                 # Expand relation to find all users with this permission
                 expansion = await self.expand_relation(relation=relation_name, object=object_id)
@@ -372,7 +370,7 @@ class OpenFGAClient:
                 # Note: Continue with next batch even if one fails
                 # This ensures partial cleanup is better than no cleanup
 
-    async def list_objects(self, user: str, relation: str, object_type: str) -> List[str]:
+    async def list_objects(self, user: str, relation: str, object_type: str) -> list[str]:
         """
         List all objects of a type that user has relation to
 
@@ -401,7 +399,7 @@ class OpenFGAClient:
                 logger.error(f"Failed to list objects: {e}", exc_info=True)
                 raise
 
-    async def expand_relation(self, relation: str, object: str) -> Dict[str, Any]:
+    async def expand_relation(self, relation: str, object: str) -> dict[str, Any]:
         """
         Expand a relation to see all users with access
 
@@ -423,7 +421,7 @@ class OpenFGAClient:
                 raise
 
 
-def _extract_users_from_expansion(expansion: Dict[str, Any]) -> List[str]:
+def _extract_users_from_expansion(expansion: dict[str, Any]) -> list[str]:
     """
     Extract all user IDs from an OpenFGA expansion tree.
 
@@ -443,7 +441,7 @@ def _extract_users_from_expansion(expansion: Dict[str, Any]) -> List[str]:
     if not expansion:
         return []
 
-    users: List[str] = []
+    users: list[str] = []
 
     # Handle leaf nodes (direct user lists)
     if "leaf" in expansion:
@@ -493,7 +491,7 @@ class OpenFGAAuthorizationModel:
     """
 
     @staticmethod
-    def get_model_definition() -> Dict[str, Any]:
+    def get_model_definition() -> dict[str, Any]:
         """
         Get the authorization model definition
 

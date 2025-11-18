@@ -14,14 +14,16 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 import pybreaker
 from opentelemetry import trace
 
 from mcp_server_langgraph.resilience.config import get_resilience_config
+
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -124,14 +126,14 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: 
         """Map pybreaker state to our enum"""
         if state.name == pybreaker.STATE_CLOSED:
             return CircuitBreakerState.CLOSED
-        elif state.name == pybreaker.STATE_OPEN:
+        if state.name == pybreaker.STATE_OPEN:
             return CircuitBreakerState.OPEN
-        else:  # STATE_HALF_OPEN
-            return CircuitBreakerState.HALF_OPEN
+        # STATE_HALF_OPEN
+        return CircuitBreakerState.HALF_OPEN
 
 
 # Global circuit breaker instances
-_circuit_breakers: Dict[str, pybreaker.CircuitBreaker] = {}
+_circuit_breakers: dict[str, pybreaker.CircuitBreaker] = {}
 
 
 def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
@@ -180,9 +182,9 @@ def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
 
 def circuit_breaker(  # noqa: C901
     name: str,
-    fail_max: Optional[int] = None,
-    timeout: Optional[int] = None,
-    fallback: Optional[Callable[..., Any]] = None,
+    fail_max: int | None = None,
+    timeout: int | None = None,
+    fallback: Callable[..., Any] | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to protect a function with a circuit breaker.
@@ -255,16 +257,14 @@ def circuit_breaker(  # noqa: C901
                             logger.info(f"Using fallback for {name}")
                             if asyncio.iscoroutinefunction(fallback):
                                 return await fallback(*args, **kwargs)  # type: ignore[no-any-return]
-                            else:
-                                return fallback(*args, **kwargs)  # type: ignore[no-any-return]
-                        else:
-                            # Raise our custom exception
-                            from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
+                            return fallback(*args, **kwargs)  # type: ignore[no-any-return]
+                        # Raise our custom exception
+                        from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 
-                            raise CircuitBreakerOpenError(
-                                message=f"Circuit breaker open for {name}",
-                                metadata={"service": name, "state": breaker.current_state},
-                            )
+                        raise CircuitBreakerOpenError(
+                            message=f"Circuit breaker open for {name}",
+                            metadata={"service": name, "state": breaker.current_state},
+                        )
 
                     # Call the function
                     try:
@@ -333,21 +333,19 @@ def circuit_breaker(  # noqa: C901
             except pybreaker.CircuitBreakerError as e:
                 if fallback:
                     return fallback(*args, **kwargs)  # type: ignore[no-any-return]
-                else:
-                    from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
+                from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 
-                    raise CircuitBreakerOpenError(
-                        message=f"Circuit breaker open for {name}",
-                        metadata={"service": name},
-                    ) from e
+                raise CircuitBreakerOpenError(
+                    message=f"Circuit breaker open for {name}",
+                    metadata={"service": name},
+                ) from e
 
         # Return appropriate wrapper
         import asyncio
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator
 
@@ -386,7 +384,7 @@ def get_circuit_breaker_state(name: str) -> CircuitBreakerState:
     return CircuitBreakerMetricsListener._map_state(breaker.state)
 
 
-def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:
+def get_all_circuit_breaker_states() -> dict[str, CircuitBreakerState]:
     """
     Get states of all circuit breakers.
 

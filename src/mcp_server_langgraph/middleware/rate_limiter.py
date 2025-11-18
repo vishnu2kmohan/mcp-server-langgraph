@@ -11,7 +11,8 @@ Provides DoS protection with:
 See ADR-0027 for design rationale.
 """
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request
 from slowapi import Limiter
@@ -20,6 +21,7 @@ from slowapi.util import get_remote_address
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger
+
 
 # Rate limit tiers (requests per minute)
 RATE_LIMITS = {
@@ -40,7 +42,7 @@ ENDPOINT_RATE_LIMITS = {
 }
 
 
-def get_user_id_from_jwt(request: Request) -> Optional[str]:
+def get_user_id_from_jwt(request: Request) -> str | None:
     """
     Extract user ID from JWT token in request.
 
@@ -91,11 +93,11 @@ def get_user_tier(request: Request) -> str:
             # Check for premium/enterprise roles
             if "enterprise" in roles:
                 return "enterprise"
-            elif "premium" in roles:
+            if "premium" in roles:
                 return "premium"
-            elif "standard" in roles:
+            if "standard" in roles:
                 return "standard"
-            elif "free" in roles:
+            if "free" in roles:
                 return "free"
             # Fallback to checking tier field
             tier = user.get("tier") or user.get("plan") or "free"

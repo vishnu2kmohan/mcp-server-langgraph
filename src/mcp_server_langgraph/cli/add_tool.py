@@ -6,6 +6,7 @@ Generates tool files with boilerplate code.
 
 from pathlib import Path
 
+
 TOOL_TEMPLATE = """\"\"\"
 {name} Tool
 

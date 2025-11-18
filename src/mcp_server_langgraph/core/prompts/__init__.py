@@ -11,11 +11,10 @@ References:
 - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 """
 
-from typing import Dict, Optional
-
 from mcp_server_langgraph.core.prompts.response_prompt import RESPONSE_SYSTEM_PROMPT
 from mcp_server_langgraph.core.prompts.router_prompt import ROUTER_SYSTEM_PROMPT
 from mcp_server_langgraph.core.prompts.verification_prompt import VERIFICATION_SYSTEM_PROMPT
+
 
 __all__ = [
     "ROUTER_SYSTEM_PROMPT",
@@ -28,7 +27,7 @@ __all__ = [
 
 # Prompt version registry
 # Format: {prompt_name: {version: prompt_string}}
-_PROMPT_VERSIONS: Dict[str, Dict[str, str]] = {
+_PROMPT_VERSIONS: dict[str, dict[str, str]] = {
     "router": {
         "v1": ROUTER_SYSTEM_PROMPT,
         "latest": ROUTER_SYSTEM_PROMPT,
@@ -44,14 +43,14 @@ _PROMPT_VERSIONS: Dict[str, Dict[str, str]] = {
 }
 
 # Current version metadata
-_PROMPT_METADATA: Dict[str, Dict[str, str]] = {
+_PROMPT_METADATA: dict[str, dict[str, str]] = {
     "router": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
     "response": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
     "verification": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
 }
 
 
-def get_prompt(prompt_name: str, version: Optional[str] = None) -> str:
+def get_prompt(prompt_name: str, version: str | None = None) -> str:
     """
     Get a prompt by name with optional versioning.
 

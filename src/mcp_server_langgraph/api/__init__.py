@@ -6,6 +6,7 @@ from .health import router as health_router
 from .scim import router as scim_router
 from .service_principals import router as service_principals_router
 
+
 __all__ = [
     "api_keys_router",
     "gdpr_router",

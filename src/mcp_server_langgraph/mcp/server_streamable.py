@@ -12,8 +12,9 @@ Implements Anthropic's best practices for writing tools for agents:
 
 import json
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Literal, Optional
+from typing import Any, Literal
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -164,7 +165,7 @@ cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True if cors_origins else False,  # Only allow credentials if origins specified
+    allow_credentials=bool(cors_origins),  # Only allow credentials if origins specified
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
@@ -303,9 +304,8 @@ class MCPAgentStreamableServer:
             return OpenFGAClient(
                 api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
             )
-        else:
-            logger.warning("OpenFGA not configured, authorization will use fallback mode")
-            return None
+        logger.warning("OpenFGA not configured, authorization will use fallback mode")
+        return None
 
     async def list_tools_public(self) -> list[Tool]:
         """
@@ -523,16 +523,15 @@ class MCPAgentStreamableServer:
                 # Route to appropriate handler (with backward compatibility)
                 if name == "agent_chat" or name == "chat":  # Support old name for compatibility
                     return await self._handle_chat(arguments, span, user_id)
-                elif name == "conversation_get" or name == "get_conversation":
+                if name == "conversation_get" or name == "get_conversation":
                     return await self._handle_get_conversation(arguments, span, user_id)
-                elif name == "conversation_search" or name == "list_conversations":
+                if name == "conversation_search" or name == "list_conversations":
                     return await self._handle_search_conversations(arguments, span, user_id)
-                elif name == "search_tools":
+                if name == "search_tools":
                     return await self._handle_search_tools(arguments, span)
-                elif name == "execute_python":
+                if name == "execute_python":
                     return await self._handle_execute_python(arguments, span, user_id)
-                else:
-                    raise ValueError(f"Unknown tool: {name}")
+                raise ValueError(f"Unknown tool: {name}")
 
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
@@ -956,7 +955,7 @@ class MCPAgentStreamableServer:
 # - Observability not yet initialized
 # - Test dependency injection
 
-_mcp_server_instance: Optional[MCPAgentStreamableServer] = None
+_mcp_server_instance: MCPAgentStreamableServer | None = None
 
 
 def get_mcp_server() -> MCPAgentStreamableServer:
@@ -1303,7 +1302,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 }
                 return JSONResponse(response)
 
-            elif method == "tools/list":
+            if method == "tools/list":
                 # Use public API instead of private _tool_manager
                 tools = await get_mcp_server().list_tools_public()
                 response = {
@@ -1313,7 +1312,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 }
                 return JSONResponse(response)
 
-            elif method == "tools/call":
+            if method == "tools/call":
                 params = message.get("params", {})
                 tool_name = params.get("name")
                 arguments = params.get("arguments", {})
@@ -1338,10 +1337,9 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                         media_type="application/x-ndjson",
                         headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"},
                     )
-                else:
-                    return JSONResponse(response_data)
+                return JSONResponse(response_data)
 
-            elif method == "resources/list":
+            if method == "resources/list":
                 # Use public API instead of private _resource_manager
                 resources = await get_mcp_server().list_resources_public()
                 response = {
@@ -1351,7 +1349,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 }
                 return JSONResponse(response)
 
-            elif method == "resources/read":
+            if method == "resources/read":
                 params = message.get("params", {})
                 resource_uri = params.get("uri")
 
@@ -1371,8 +1369,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                 }
                 return JSONResponse(response)
 
-            else:
-                raise HTTPException(status_code=400, detail=f"Unknown method: {method}")
+            raise HTTPException(status_code=400, detail=f"Unknown method: {method}")
 
     except PermissionError as e:
         logger.warning(f"Permission denied: {e}")
@@ -1448,6 +1445,7 @@ async def list_resources() -> dict[str, Any]:
 # Include health check routes
 from mcp_server_langgraph.health.checks import app as health_app  # noqa: E402
 
+
 app.mount("/health", health_app)
 
 from mcp_server_langgraph.api.api_keys import router as api_keys_router  # noqa: E402
@@ -1457,6 +1455,7 @@ from mcp_server_langgraph.api.service_principals import router as service_princi
 
 # Include REST API routes
 from mcp_server_langgraph.api.version import router as version_router  # noqa: E402
+
 
 app.include_router(version_router)
 app.include_router(gdpr_router)

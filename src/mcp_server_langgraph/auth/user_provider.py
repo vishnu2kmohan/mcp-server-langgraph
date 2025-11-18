@@ -9,13 +9,14 @@ Enables switching between different user management systems:
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, TypedDict
 
 import jwt
 from pydantic import BaseModel, ConfigDict, Field
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig, sync_user_to_openfga
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+
 
 # Try to import bcrypt for password hashing
 try:
@@ -38,7 +39,7 @@ class UserDBEntry(TypedDict):
     user_id: str
     email: str
     password: str
-    roles: List[str]
+    roles: list[str]
     active: bool
 
 
@@ -52,7 +53,7 @@ class UserData(BaseModel):
     user_id: str = Field(..., description="User identifier (e.g., 'user:alice')")
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email address")
-    roles: List[str] = Field(default_factory=list, description="User roles")
+    roles: list[str] = Field(default_factory=list, description="User roles")
     active: bool = Field(default=True, description="Whether user account is active")
 
     model_config = ConfigDict(
@@ -70,12 +71,12 @@ class UserData(BaseModel):
         },
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump()
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "UserData":
+    def from_dict(cls, data: dict[str, Any]) -> "UserData":
         """Create UserData from dictionary"""
         return cls(**data)
 
@@ -88,16 +89,16 @@ class AuthResponse(BaseModel):
     """
 
     authorized: bool = Field(..., description="Whether authentication was successful")
-    username: Optional[str] = Field(default=None, description="Username if authorized")
-    user_id: Optional[str] = Field(default=None, description="User ID if authorized")
-    email: Optional[str] = Field(default=None, description="Email if authorized")
-    roles: List[str] = Field(default_factory=list, description="User roles if authorized")
-    reason: Optional[str] = Field(default=None, description="Failure reason if not authorized")
-    error: Optional[str] = Field(default=None, description="Error details if not authorized")
+    username: str | None = Field(default=None, description="Username if authorized")
+    user_id: str | None = Field(default=None, description="User ID if authorized")
+    email: str | None = Field(default=None, description="Email if authorized")
+    roles: list[str] = Field(default_factory=list, description="User roles if authorized")
+    reason: str | None = Field(default=None, description="Failure reason if not authorized")
+    error: str | None = Field(default=None, description="Error details if not authorized")
     # Keycloak-specific fields (optional)
-    access_token: Optional[str] = Field(default=None, description="JWT access token (Keycloak)")
-    refresh_token: Optional[str] = Field(default=None, description="JWT refresh token (Keycloak)")
-    expires_in: Optional[int] = Field(default=None, description="Token expiration in seconds (Keycloak)")
+    access_token: str | None = Field(default=None, description="JWT access token (Keycloak)")
+    refresh_token: str | None = Field(default=None, description="JWT refresh token (Keycloak)")
+    expires_in: int | None = Field(default=None, description="Token expiration in seconds (Keycloak)")
 
     model_config = ConfigDict(
         frozen=False,
@@ -119,12 +120,12 @@ class AuthResponse(BaseModel):
         },
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuthResponse":
+    def from_dict(cls, data: dict[str, Any]) -> "AuthResponse":
         """Create AuthResponse from dictionary"""
         return cls(**data)
 
@@ -137,8 +138,8 @@ class TokenVerification(BaseModel):
     """
 
     valid: bool = Field(..., description="Whether token is valid")
-    payload: Optional[Dict[str, Any]] = Field(default=None, description="Token payload if valid")
-    error: Optional[str] = Field(default=None, description="Error message if not valid")
+    payload: dict[str, Any] | None = Field(default=None, description="Token payload if valid")
+    error: str | None = Field(default=None, description="Error message if not valid")
 
     model_config = ConfigDict(
         frozen=False,
@@ -146,12 +147,12 @@ class TokenVerification(BaseModel):
         json_schema_extra={"example": {"valid": True, "payload": {"sub": "user:alice", "exp": 1234567890}, "error": None}},
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TokenVerification":
+    def from_dict(cls, data: dict[str, Any]) -> "TokenVerification":
         """Create TokenVerification from dictionary"""
         return cls(**data)
 
@@ -165,8 +166,8 @@ class PasswordVerification(BaseModel):
     """
 
     valid: bool = Field(..., description="Whether password is valid")
-    user: Optional[Dict[str, Any]] = Field(default=None, description="User data if password valid")
-    error: Optional[str] = Field(default=None, description="Error message if password invalid")
+    user: dict[str, Any] | None = Field(default=None, description="User data if password valid")
+    error: str | None = Field(default=None, description="Error message if password invalid")
 
     model_config = ConfigDict(
         frozen=False,
@@ -180,12 +181,12 @@ class PasswordVerification(BaseModel):
         },
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PasswordVerification":
+    def from_dict(cls, data: dict[str, Any]) -> "PasswordVerification":
         """Create PasswordVerification from dictionary"""
         return cls(**data)
 
@@ -198,7 +199,7 @@ class UserProvider(ABC):
     """
 
     @abstractmethod
-    async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
+    async def authenticate(self, username: str, password: str | None = None) -> AuthResponse:
         """
         Authenticate user by username/password
 
@@ -211,7 +212,7 @@ class UserProvider(ABC):
         """
 
     @abstractmethod
-    async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
+    async def get_user_by_id(self, user_id: str) -> UserData | None:
         """
         Get user by user ID
 
@@ -223,7 +224,7 @@ class UserProvider(ABC):
         """
 
     @abstractmethod
-    async def get_user_by_username(self, username: str) -> Optional[UserData]:
+    async def get_user_by_username(self, username: str) -> UserData | None:
         """
         Get user by username
 
@@ -263,7 +264,7 @@ class UserProvider(ABC):
         """
 
     @abstractmethod
-    async def list_users(self) -> List[UserData]:
+    async def list_users(self) -> list[UserData]:
         """
         List all users (for admin operations)
 
@@ -284,7 +285,7 @@ class InMemoryUserProvider(UserProvider):
     NOT suitable for large-scale production (use KeycloakUserProvider instead).
     """
 
-    def __init__(self, secret_key: Optional[str] = None, use_password_hashing: bool = False) -> None:
+    def __init__(self, secret_key: str | None = None, use_password_hashing: bool = False) -> None:
         """
         Initialize in-memory user provider
 
@@ -324,7 +325,7 @@ class InMemoryUserProvider(UserProvider):
         # SECURITY (OpenAI Codex Finding #2): Start with empty user database
         # No hard-coded credentials. Users must be explicitly created via add_user() or configuration.
         # This prevents CWE-798: Use of Hard-coded Credentials
-        self.users_db: Dict[str, UserDBEntry] = {}
+        self.users_db: dict[str, UserDBEntry] = {}
 
         if self.use_password_hashing:
             logger.info(
@@ -445,7 +446,7 @@ class InMemoryUserProvider(UserProvider):
                 },
             )
 
-    def add_user(self, username: str, password: str, email: str, roles: list[str], user_id: Optional[str] = None) -> None:
+    def add_user(self, username: str, password: str, email: str, roles: list[str], user_id: str | None = None) -> None:
         """
         Add a new user to the in-memory database
 
@@ -485,7 +486,7 @@ class InMemoryUserProvider(UserProvider):
 
         logger.info(f"Added user: {username}", extra={"user_id": generated_user_id, "roles": roles})
 
-    async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
+    async def authenticate(self, username: str, password: str | None = None) -> AuthResponse:
         """
         Authenticate user by username and password
 
@@ -536,7 +537,7 @@ class InMemoryUserProvider(UserProvider):
                 roles=user["roles"],
             )
 
-    async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
+    async def get_user_by_id(self, user_id: str) -> UserData | None:
         """Get user by ID"""
         # Extract username from user_id format "user:username"
         # Also handle worker-safe IDs from pytest-xdist (e.g., "user:test_gw0_alice" → "alice")
@@ -551,7 +552,7 @@ class InMemoryUserProvider(UserProvider):
             username = user_id
         return await self.get_user_by_username(username)
 
-    async def get_user_by_username(self, username: str) -> Optional[UserData]:
+    async def get_user_by_username(self, username: str) -> UserData | None:
         """Get user by username"""
         if username in self.users_db:
             user_data = self.users_db[username]
@@ -577,7 +578,7 @@ class InMemoryUserProvider(UserProvider):
             logger.warning(f"Invalid token: {e}")
             return TokenVerification(valid=False, error="Invalid token")
 
-    async def list_users(self) -> List[UserData]:
+    async def list_users(self) -> list[UserData]:
         """List all users"""
         return [
             UserData(
@@ -634,7 +635,7 @@ class KeycloakUserProvider(UserProvider):
     Uses Keycloak as the identity provider for authentication and user management.
     """
 
-    def __init__(self, config: KeycloakConfig, openfga_client: Optional[Any] = None, sync_on_login: bool = True) -> None:
+    def __init__(self, config: KeycloakConfig, openfga_client: Any | None = None, sync_on_login: bool = True) -> None:
         """
         Initialize Keycloak user provider
 
@@ -653,7 +654,7 @@ class KeycloakUserProvider(UserProvider):
             extra={"realm": config.realm, "client_id": config.client_id, "sync_on_login": sync_on_login},
         )
 
-    async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
+    async def authenticate(self, username: str, password: str | None = None) -> AuthResponse:
         """
         Authenticate user using Keycloak
 
@@ -707,13 +708,13 @@ class KeycloakUserProvider(UserProvider):
                 logger.warning(f"Keycloak authentication failed for {username}: {e}")
                 return AuthResponse(authorized=False, reason="authentication_failed", error=str(e))
 
-    async def get_user_by_id(self, user_id: str) -> Optional[UserData]:
+    async def get_user_by_id(self, user_id: str) -> UserData | None:
         """Get user by ID"""
         # Extract username from user_id format "user:username"
         username = user_id.split(":")[-1] if ":" in user_id else user_id
         return await self.get_user_by_username(username)
 
-    async def get_user_by_username(self, username: str) -> Optional[UserData]:
+    async def get_user_by_username(self, username: str) -> UserData | None:
         """Get user by username from Keycloak"""
         try:
             keycloak_user = await self.client.get_user_by_username(username)
@@ -795,7 +796,7 @@ class KeycloakUserProvider(UserProvider):
                 logger.error(f"Password verification failed for {username}: {e}", exc_info=True)
                 return PasswordVerification(valid=False, error="Password verification failed")
 
-    async def list_users(self) -> List[UserData]:
+    async def list_users(self) -> list[UserData]:
         """
         List users (requires admin permissions)
 
@@ -805,7 +806,7 @@ class KeycloakUserProvider(UserProvider):
         logger.warning("list_users() not fully implemented for KeycloakUserProvider")
         return []
 
-    async def refresh_token(self, refresh_token: str) -> Dict[str, Any]:
+    async def refresh_token(self, refresh_token: str) -> dict[str, Any]:
         """
         Refresh access token
 
@@ -825,9 +826,9 @@ class KeycloakUserProvider(UserProvider):
 
 def create_user_provider(
     provider_type: str = "inmemory",
-    secret_key: Optional[str] = None,
-    keycloak_config: Optional[KeycloakConfig] = None,
-    openfga_client: Optional[Any] = None,
+    secret_key: str | None = None,
+    keycloak_config: KeycloakConfig | None = None,
+    openfga_client: Any | None = None,
 ) -> UserProvider:
     """
     Factory function to create user provider based on explicit parameters (test use)
@@ -859,12 +860,11 @@ def create_user_provider(
         logger.info("Creating InMemoryUserProvider (development mode)")
         return InMemoryUserProvider(secret_key=secret_key or "your-secret-key-change-in-production")
 
-    elif provider_type == "keycloak":
+    if provider_type == "keycloak":
         if not keycloak_config:
             raise ValueError("keycloak_config required for KeycloakUserProvider")
 
         logger.info("Creating KeycloakUserProvider (production mode)")
         return KeycloakUserProvider(config=keycloak_config, openfga_client=openfga_client)
 
-    else:
-        raise ValueError(f"Unknown provider type: {provider_type}. Supported: 'inmemory', 'keycloak'")
+    raise ValueError(f"Unknown provider type: {provider_type}. Supported: 'inmemory', 'keycloak'")

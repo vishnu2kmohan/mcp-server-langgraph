@@ -24,6 +24,7 @@ Example:
 from .approval import ApprovalNode, ApprovalRequired, ApprovalResponse, ApprovalStatus
 from .interrupts import InterruptType, create_interrupt_handler
 
+
 __all__ = [
     "ApprovalNode",
     "ApprovalRequired",

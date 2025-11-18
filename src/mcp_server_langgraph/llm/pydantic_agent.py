@@ -8,10 +8,11 @@ Note: pydantic-ai is an optional dependency. If not installed, this module will 
 ImportError when used. The agent.py module handles this gracefully with PYDANTIC_AI_AVAILABLE flag.
 """
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
+
 
 # Conditional import - pydantic-ai is optional for type-safe responses
 # If not available, agent.py will fall back to standard routing
@@ -34,7 +35,7 @@ class RouterDecision(BaseModel):
 
     action: Literal["use_tools", "respond", "clarify"] = Field(description="Next action to take in the agent workflow")
     reasoning: str = Field(description="Explanation of why this action was chosen")
-    tool_name: Optional[str] = Field(default=None, description="Name of tool to use if action is 'use_tools'")
+    tool_name: str | None = Field(default=None, description="Name of tool to use if action is 'use_tools'")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score for this decision (0-1)")
 
 
@@ -44,7 +45,7 @@ class ToolExecution(BaseModel):
     tool_name: str = Field(description="Name of the executed tool")
     result: str = Field(description="Tool execution result")
     success: bool = Field(description="Whether tool execution succeeded")
-    error_message: Optional[str] = Field(default=None, description="Error message if execution failed")
+    error_message: str | None = Field(default=None, description="Error message if execution failed")
     metadata: dict[str, str] = Field(default_factory=dict, description="Additional metadata about the execution")
 
 
@@ -54,7 +55,7 @@ class AgentResponse(BaseModel):
     content: str = Field(description="The main response content to show to the user")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence in this response (0-1)")
     requires_clarification: bool = Field(default=False, description="Whether the agent needs more information")
-    clarification_question: Optional[str] = Field(default=None, description="Question to ask user if clarification needed")
+    clarification_question: str | None = Field(default=None, description="Question to ask user if clarification needed")
     sources: list[str] = Field(default_factory=list, description="Sources or references used to generate response")
     metadata: dict[str, str] = Field(default_factory=dict, description="Additional response metadata")
 
@@ -67,7 +68,7 @@ class PydanticAIAgentWrapper:
     match expected schemas for improved reliability and debugging.
     """
 
-    def __init__(self, model_name: Optional[str] = None, provider: Optional[str] = None) -> None:
+    def __init__(self, model_name: str | None = None, provider: str | None = None) -> None:
         """
         Initialize Pydantic AI agent wrapper.
 
@@ -137,19 +138,18 @@ class PydanticAIAgentWrapper:
         if self.provider == "google" or self.provider == "gemini":
             # Google Gemini models require google-gla prefix
             return f"google-gla:{self.model_name}"
-        elif self.provider == "anthropic":
+        if self.provider == "anthropic":
             return f"anthropic:{self.model_name}"
-        elif self.provider == "openai":
+        if self.provider == "openai":
             return f"openai:{self.model_name}"
-        else:
-            # Unknown provider: use provider name as prefix
-            logger.warning(
-                f"Unknown provider '{self.provider}', using provider-prefixed format",
-                extra={"model": self.model_name, "provider": self.provider},
-            )
-            return f"{self.provider}:{self.model_name}"
+        # Unknown provider: use provider name as prefix
+        logger.warning(
+            f"Unknown provider '{self.provider}', using provider-prefixed format",
+            extra={"model": self.model_name, "provider": self.provider},
+        )
+        return f"{self.provider}:{self.model_name}"
 
-    async def route_message(self, message: str, context: Optional[dict] = None) -> RouterDecision:  # type: ignore[type-arg]
+    async def route_message(self, message: str, context: dict | None = None) -> RouterDecision:  # type: ignore[type-arg]
         """
         Determine the appropriate action for a user message.
 
@@ -192,7 +192,7 @@ class PydanticAIAgentWrapper:
                 span.record_exception(e)
                 raise
 
-    async def generate_response(self, messages: list[BaseMessage], context: Optional[dict[str, Any]] = None) -> AgentResponse:
+    async def generate_response(self, messages: list[BaseMessage], context: dict[str, Any] | None = None) -> AgentResponse:
         """
         Generate a typed response to user messages.
 
@@ -265,7 +265,7 @@ class PydanticAIAgentWrapper:
 
 
 # Factory function for easy integration
-def create_pydantic_agent(model_name: Optional[str] = None, provider: Optional[str] = None) -> PydanticAIAgentWrapper:
+def create_pydantic_agent(model_name: str | None = None, provider: str | None = None) -> PydanticAIAgentWrapper:
     """
     Create a Pydantic AI agent wrapper.
 

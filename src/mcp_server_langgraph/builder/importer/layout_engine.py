@@ -16,7 +16,7 @@ Example:
 """
 
 import math
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 
 class LayoutEngine:
@@ -55,11 +55,11 @@ class LayoutEngine:
 
     def layout(
         self,
-        nodes: List[Dict[str, Any]],
-        edges: List[Dict[str, str]],
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, str]],
         algorithm: Literal["hierarchical", "force", "grid"] = "hierarchical",
-        entry_point: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        entry_point: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Layout nodes using specified algorithm.
 
@@ -79,16 +79,15 @@ class LayoutEngine:
         """
         if algorithm == "hierarchical":
             return self._hierarchical_layout(nodes, edges, entry_point)
-        elif algorithm == "force":
+        if algorithm == "force":
             return self._force_directed_layout(nodes, edges)
-        elif algorithm == "grid":
+        if algorithm == "grid":
             return self._grid_layout(nodes)
-        else:
-            raise ValueError(f"Unknown layout algorithm: {algorithm}")
+        raise ValueError(f"Unknown layout algorithm: {algorithm}")
 
     def _hierarchical_layout(
-        self, nodes: List[Dict[str, Any]], edges: List[Dict[str, str]], entry_point: Optional[str]
-    ) -> List[Dict[str, Any]]:
+        self, nodes: list[dict[str, Any]], edges: list[dict[str, str]], entry_point: str | None
+    ) -> list[dict[str, Any]]:
         """
         Hierarchical top-down layout.
 
@@ -103,13 +102,13 @@ class LayoutEngine:
             Positioned nodes
         """
         # Build adjacency list
-        adjacency: Dict[str, List[str]] = {node["id"]: [] for node in nodes}
+        adjacency: dict[str, list[str]] = {node["id"]: [] for node in nodes}
         for edge in edges:
             if edge["from"] in adjacency:
                 adjacency[edge["from"]].append(edge["to"])
 
         # Calculate depth for each node (BFS from entry point)
-        depths: Dict[str, int] = {}
+        depths: dict[str, int] = {}
         if entry_point:
             queue = [(entry_point, 0)]
             visited = set()
@@ -134,7 +133,7 @@ class LayoutEngine:
                 depths[node["id"]] = max_depth + 1
 
         # Group nodes by depth (layer)
-        layers: Dict[int, List[str]] = {}
+        layers: dict[int, list[str]] = {}
         for node_id, depth in depths.items():
             if depth not in layers:
                 layers[depth] = []
@@ -174,7 +173,7 @@ class LayoutEngine:
 
         return int(start_x + position * self.spacing_x)
 
-    def _force_directed_layout(self, nodes: List[Dict[str, Any]], edges: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+    def _force_directed_layout(self, nodes: list[dict[str, Any]], edges: list[dict[str, str]]) -> list[dict[str, Any]]:
         """
         Force-directed layout (Fruchterman-Reingold algorithm).
 
@@ -264,7 +263,7 @@ class LayoutEngine:
 
         return nodes
 
-    def _grid_layout(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _grid_layout(self, nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Simple grid layout.
 

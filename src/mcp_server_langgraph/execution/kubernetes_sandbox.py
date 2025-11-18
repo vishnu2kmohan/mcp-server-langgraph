@@ -5,6 +5,7 @@ Provides secure isolated Python code execution using Kubernetes Jobs.
 Supports resource limits, automatic cleanup with TTL, and pod security policies.
 """
 
+import contextlib
 import logging
 import time
 
@@ -13,6 +14,7 @@ from kubernetes.client.rest import ApiException
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
+
 
 logger = logging.getLogger(__name__)
 
@@ -138,20 +140,19 @@ class KubernetesSandbox(Sandbox):
                     timed_out=True,
                     error_message=f"Timeout after {self.limits.timeout_seconds}s",
                 )
-            elif exit_code == 0:
+            if exit_code == 0:
                 return self._create_success_result(
                     stdout=stdout,
                     stderr=stderr,
                     execution_time=execution_time,
                 )
-            else:
-                return self._create_failure_result(
-                    stdout=stdout,
-                    stderr=stderr,
-                    exit_code=exit_code,
-                    execution_time=execution_time,
-                    error_message=f"Process exited with code {exit_code}",
-                )
+            return self._create_failure_result(
+                stdout=stdout,
+                stderr=stderr,
+                exit_code=exit_code,
+                execution_time=execution_time,
+                error_message=f"Process exited with code {exit_code}",
+            )
 
         except Exception as e:
             execution_time = self._measure_time(start_time)
@@ -271,14 +272,12 @@ class KubernetesSandbox(Sandbox):
             elapsed = time.time() - start_time
             if elapsed >= timeout:
                 # Timeout - delete job
-                try:
+                with contextlib.suppress(Exception):
                     self.batch_v1.delete_namespaced_job(
                         name=job_name,
                         namespace=self.namespace,
                         propagation_policy="Background",
                     )
-                except Exception:
-                    pass
                 return True, 124  # Timeout exit code
 
             try:
@@ -287,7 +286,7 @@ class KubernetesSandbox(Sandbox):
 
                 if job.status.succeeded:
                     return False, 0
-                elif job.status.failed:
+                if job.status.failed:
                     return False, 1
 
                 # Job still running, wait and check again
@@ -334,14 +333,12 @@ class KubernetesSandbox(Sandbox):
                 if "Traceback" in logs or "Error" in logs or "RuntimeError" in logs or "SyntaxError" in logs:
                     # Put error output in stderr
                     return "", logs
-                else:
-                    # No recognizable error pattern, but still failed
-                    # Put output in stderr since execution failed
-                    return "", logs
-            else:
-                # Success or timeout - everything is stdout
-                # (timeout errors are handled by the caller)
-                return logs, ""
+                # No recognizable error pattern, but still failed
+                # Put output in stderr since execution failed
+                return "", logs
+            # Success or timeout - everything is stdout
+            # (timeout errors are handled by the caller)
+            return logs, ""
 
         except Exception as e:
             logger.warning(f"Failed to get logs for job {job_name}: {e}")

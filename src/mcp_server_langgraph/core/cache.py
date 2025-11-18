@@ -19,7 +19,8 @@ import asyncio
 import functools
 import hashlib
 import pickle
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar, cast
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar, cast
 from urllib.parse import urlparse, urlunparse
 
 import redis
@@ -27,6 +28,7 @@ from cachetools import TTLCache
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, tracer
+
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -119,9 +121,9 @@ class CacheService:
         self,
         l1_maxsize: int = 1000,
         l1_ttl: int = 60,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
         redis_db: int = 2,
-        redis_password: Optional[str] = None,
+        redis_password: str | None = None,
         redis_ssl: bool = False,
     ):
         """
@@ -153,7 +155,7 @@ class CacheService:
             redis_ssl = getattr(settings, "redis_ssl", False)
 
         # Declare redis with Optional type for proper type checking
-        self.redis: Optional[redis.Redis[bytes]] = None
+        self.redis: redis.Redis[bytes] | None = None
 
         try:
             # Build Redis URL with database number using helper function
@@ -186,7 +188,7 @@ class CacheService:
             self.redis_available = False
 
         # Cache stampede prevention locks
-        self._refresh_locks: Dict[str, asyncio.Lock] = {}
+        self._refresh_locks: dict[str, asyncio.Lock] = {}
 
         # Statistics
         self.stats = {
@@ -198,7 +200,7 @@ class CacheService:
             "deletes": 0,
         }
 
-    def get(self, key: str, level: str = CacheLayer.L2) -> Optional[Any]:
+    def get(self, key: str, level: str = CacheLayer.L2) -> Any | None:
         """
         Get value from cache (L1 → L2 → None).
 
@@ -252,7 +254,7 @@ class CacheService:
         self,
         key: str,
         value: Any,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
         level: str = CacheLayer.L2,
     ):
         """
@@ -304,7 +306,7 @@ class CacheService:
 
         self.stats["deletes"] += 1
 
-    def clear(self, pattern: Optional[str] = None) -> None:
+    def clear(self, pattern: str | None = None) -> None:
         """
         Clear cache (all or by pattern).
 
@@ -335,7 +337,7 @@ class CacheService:
         self,
         key: str,
         fetcher: Callable,  # type: ignore[type-arg]
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> Any:
         """
         Get from cache or fetch with lock (prevents cache stampede).
@@ -446,7 +448,7 @@ class CacheService:
         except Exception:
             pass
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get cache statistics.
 
@@ -487,7 +489,7 @@ class CacheService:
 
 
 # Global cache instance
-_cache_service: Optional[CacheService] = None
+_cache_service: CacheService | None = None
 
 
 def get_cache() -> CacheService:
@@ -507,7 +509,7 @@ def get_cache() -> CacheService:
 
 def cached(
     key_prefix: str,
-    ttl: Optional[int] = None,
+    ttl: int | None = None,
     level: str = CacheLayer.L2,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
@@ -595,8 +597,7 @@ def cached(
         # Return appropriate wrapper
         if asyncio.iscoroutinefunction(func):
             return async_wrapper  # type: ignore[return-value]  # Complex decorator typing
-        else:
-            return sync_wrapper
+        return sync_wrapper
 
     return decorator
 

@@ -5,8 +5,9 @@ Implements automatic logoff after period of inactivity.
 Required for HIPAA compliance when processing PHI.
 """
 
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 
 import jwt
 from fastapi import Request, Response
@@ -36,7 +37,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Sta
         self,
         app: Any,
         timeout_seconds: int = 900,  # 15 minutes default
-        session_store: Optional[SessionStore] = None,
+        session_store: SessionStore | None = None,
     ):
         """
         Initialize session timeout middleware
@@ -149,7 +150,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Sta
             },
         )
 
-    def _decode_jwt_token(self, token: str) -> Optional[dict[str, Any]]:
+    def _decode_jwt_token(self, token: str) -> dict[str, Any] | None:
         """
         Decode JWT token and extract payload
 
@@ -218,7 +219,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Sta
             if payload:
                 # Try multiple possible session ID claim names
                 # Standard claims: 'sid' (session ID), 'jti' (JWT ID), or custom 'session_id'
-                session_id_from_jwt: Optional[str] = payload.get("sid") or payload.get("session_id") or payload.get("jti")
+                session_id_from_jwt: str | None = payload.get("sid") or payload.get("session_id") or payload.get("jti")
 
                 if session_id_from_jwt:
                     return str(session_id_from_jwt)
@@ -260,7 +261,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Sta
 def create_session_timeout_middleware(
     app: Any,
     timeout_minutes: int = 15,
-    session_store: Optional[SessionStore] = None,
+    session_store: SessionStore | None = None,
 ) -> SessionTimeoutMiddleware:
     """
     Create session timeout middleware

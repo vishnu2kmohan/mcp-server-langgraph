@@ -8,12 +8,13 @@ See ADR-0029 for design rationale.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from mcp_server_langgraph.core.exceptions import MCPServerException
+
 
 logger = logging.getLogger(__name__)
 
@@ -134,9 +135,9 @@ def create_error_response(
     error_code: str,
     message: str,
     status_code: int = 500,
-    metadata: Optional[Dict[str, Any]] = None,
-    trace_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    metadata: dict[str, Any] | None = None,
+    trace_id: str | None = None,
+) -> dict[str, Any]:
     """
     Create a standardized error response dictionary.
 

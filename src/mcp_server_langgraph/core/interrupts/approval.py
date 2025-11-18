@@ -30,7 +30,7 @@ Example:
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -55,13 +55,13 @@ class ApprovalRequired(BaseModel):
     node_name: str = Field(description="Node requiring approval")
     action_description: str = Field(description="What action needs approval")
     risk_level: str = Field(default="medium", description="Risk level: low, medium, high, critical")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context for decision")
+    context: dict[str, Any] = Field(default_factory=dict, description="Additional context for decision")
     requested_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When approval was requested"
     )
     requested_by: str = Field(default="system", description="Who/what requested approval")
-    expires_at: Optional[str] = Field(default=None, description="Optional expiration time")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    expires_at: str | None = Field(default=None, description="Optional expiration time")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class ApprovalResponse(BaseModel):
@@ -75,8 +75,8 @@ class ApprovalResponse(BaseModel):
     approved_at: str = Field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When decision was made"
     )
-    reason: Optional[str] = Field(default=None, description="Reason for decision")
-    modifications: Optional[Dict[str, Any]] = Field(default=None, description="Modifications to proposed action")
+    reason: str | None = Field(default=None, description="Reason for decision")
+    modifications: dict[str, Any] | None = Field(default=None, description="Modifications to proposed action")
 
 
 class ApprovalNode:
@@ -92,8 +92,8 @@ class ApprovalNode:
         approval_name: str,
         description: str = "",
         risk_level: str = "medium",
-        auto_approve_timeout: Optional[int] = None,
-        notification_webhook: Optional[str] = None,
+        auto_approve_timeout: int | None = None,
+        notification_webhook: str | None = None,
     ):
         """
         Initialize approval node.
@@ -111,7 +111,7 @@ class ApprovalNode:
         self.auto_approve_timeout = auto_approve_timeout
         self.notification_webhook = notification_webhook
 
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
         """
         Execute approval node.
 
@@ -173,8 +173,8 @@ class ApprovalNode:
 
 def create_approval_workflow(
     graph: Any,
-    approval_points: List[str],
-    notification_webhook: Optional[str] = None,
+    approval_points: list[str],
+    notification_webhook: str | None = None,
 ) -> Any:
     """
     Add approval points to an existing graph.
@@ -213,7 +213,7 @@ def create_approval_workflow(
     return graph
 
 
-def check_approval_status(state: Dict[str, Any], approval_id: str) -> ApprovalStatus:
+def check_approval_status(state: dict[str, Any], approval_id: str) -> ApprovalStatus:
     """
     Check status of an approval request.
 
@@ -238,7 +238,7 @@ def check_approval_status(state: Dict[str, Any], approval_id: str) -> ApprovalSt
     return ApprovalStatus.PENDING
 
 
-def approve_action(state: Dict[str, Any], approval_id: str, approved_by: str, reason: Optional[str] = None) -> Dict[str, Any]:
+def approve_action(state: dict[str, Any], approval_id: str, approved_by: str, reason: str | None = None) -> dict[str, Any]:
     """
     Approve a pending action.
 
@@ -273,7 +273,7 @@ def approve_action(state: Dict[str, Any], approval_id: str, approved_by: str, re
     return state
 
 
-def reject_action(state: Dict[str, Any], approval_id: str, rejected_by: str, reason: str) -> Dict[str, Any]:
+def reject_action(state: dict[str, Any], approval_id: str, rejected_by: str, reason: str) -> dict[str, Any]:
     """
     Reject a pending action.
 

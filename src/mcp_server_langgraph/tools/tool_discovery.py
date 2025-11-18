@@ -7,12 +7,13 @@ for token-efficient tool discovery.
 
 import json
 import logging
-from typing import List, Literal, Optional
+from typing import Literal
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.tools import ALL_TOOLS
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,8 @@ DetailLevel = Literal["minimal", "standard", "full"]
 class SearchToolsInput(BaseModel):
     """Input schema for search_tools"""
 
-    query: Optional[str] = Field(default=None, description="Search query (keyword or category)")
-    category: Optional[str] = Field(
+    query: str | None = Field(default=None, description="Search query (keyword or category)")
+    category: str | None = Field(
         default=None,
         description="Tool category (calculator, search, filesystem, execution)",
     )
@@ -33,29 +34,29 @@ class SearchToolsInput(BaseModel):
     )
 
 
-def _filter_tools_by_category(category: str) -> List[BaseTool]:
+def _filter_tools_by_category(category: str) -> list[BaseTool]:
     """Filter tools by category."""
     category_lower = category.lower()
     if category_lower == "calculator":
         from mcp_server_langgraph.tools import CALCULATOR_TOOLS
 
         return CALCULATOR_TOOLS
-    elif category_lower == "search":
+    if category_lower == "search":
         from mcp_server_langgraph.tools import SEARCH_TOOLS
 
         return SEARCH_TOOLS
-    elif category_lower == "filesystem":
+    if category_lower == "filesystem":
         from mcp_server_langgraph.tools import FILESYSTEM_TOOLS
 
         return FILESYSTEM_TOOLS
-    elif category_lower == "execution":
+    if category_lower == "execution":
         from mcp_server_langgraph.tools import CODE_EXECUTION_TOOLS
 
         return CODE_EXECUTION_TOOLS
     return ALL_TOOLS
 
 
-def _filter_tools_by_query(tools: List[BaseTool], query: str) -> List[BaseTool]:
+def _filter_tools_by_query(tools: list[BaseTool], query: str) -> list[BaseTool]:
     """Filter tools by search query."""
     query_lower = query.lower()
     return [t for t in tools if query_lower in t.name.lower() or query_lower in (t.description or "").lower()]
@@ -105,7 +106,7 @@ def _format_tool_full(t: BaseTool) -> str:
     return result
 
 
-def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
+def _format_tool_results(tools: list[BaseTool], detail_level: str) -> str:
     """Format tool results based on detail level."""
     result = f"Found {len(tools)} tool(s):\n\n"
 
@@ -124,8 +125,8 @@ def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
 
 @tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
 def search_tools(
-    query: Optional[str] = None,
-    category: Optional[str] = None,
+    query: str | None = None,
+    category: str | None = None,
     detail_level: str = "minimal",
 ) -> str:
     """
