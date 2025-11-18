@@ -21,6 +21,7 @@ References:
 import gc
 
 import pytest
+from redis.asyncio import Redis
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
 
@@ -93,7 +94,7 @@ class TestAPIKeyPerformanceMonitoring:
         from unittest.mock import AsyncMock, MagicMock
 
         mock_keycloak = MagicMock()
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(spec=Redis)
 
         manager = APIKeyManager(
             keycloak_client=mock_keycloak,
@@ -123,7 +124,7 @@ class TestAPIKeyCacheMitigation:
         from unittest.mock import AsyncMock, MagicMock
 
         mock_keycloak = MagicMock()
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(spec=Redis)
 
         manager = APIKeyManager(
             keycloak_client=mock_keycloak,
@@ -142,7 +143,7 @@ class TestAPIKeyCacheMitigation:
         from unittest.mock import AsyncMock, MagicMock
 
         mock_keycloak = MagicMock()
-        mock_redis = AsyncMock()
+        mock_redis = AsyncMock(spec=Redis)
 
         manager = APIKeyManager(
             keycloak_client=mock_keycloak,
