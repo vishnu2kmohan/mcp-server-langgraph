@@ -6,6 +6,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from openfga_sdk import OpenFgaClient
 from openfga_sdk.client.models import ClientWriteRequest
 
 
@@ -41,7 +42,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.allowed = True
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -61,7 +62,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.allowed = False
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -77,7 +78,7 @@ class TestOpenFGAClient:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.side_effect = Exception("OpenFGA unavailable")
         mock_sdk_client.return_value = mock_instance
 
@@ -93,7 +94,7 @@ class TestOpenFGAClient:
         """Test writing relationship tuples"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.write.return_value = MagicMock()
         mock_sdk_client.return_value = mock_instance
 
@@ -118,7 +119,7 @@ class TestOpenFGAClient:
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
         from mcp_server_langgraph.core.exceptions import RetryExhaustedError
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.write.side_effect = Exception("Write failed")
         mock_sdk_client.return_value = mock_instance
 
@@ -136,7 +137,7 @@ class TestOpenFGAClient:
         """Test deleting relationship tuples"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.write.return_value = MagicMock()
         mock_sdk_client.return_value = mock_instance
 
@@ -157,7 +158,7 @@ class TestOpenFGAClient:
         """Test delete tuples handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.write.side_effect = Exception("Delete failed")
         mock_sdk_client.return_value = mock_instance
 
@@ -177,7 +178,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.objects = ["tool:chat", "tool:search", "tool:analyze"]
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.list_objects.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -199,7 +200,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.objects = []
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.list_objects.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -215,7 +216,7 @@ class TestOpenFGAClient:
         """Test list objects handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.list_objects.side_effect = Exception("List failed")
         mock_sdk_client.return_value = mock_instance
 
@@ -238,7 +239,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.tree = mock_tree
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.expand.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -258,7 +259,7 @@ class TestOpenFGAClient:
         mock_response = MagicMock()
         mock_response.tree = None
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.expand.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
@@ -274,7 +275,7 @@ class TestOpenFGAClient:
         """Test expand relation handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.expand.side_effect = Exception("Expand failed")
         mock_sdk_client.return_value = mock_instance
 
@@ -377,7 +378,7 @@ class TestOpenFGAUtilityFunctions:
         mock_model_response = MagicMock()
         mock_model_response.authorization_model_id = "test-model-id"
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.create_store.return_value = mock_store_response
         mock_instance.write_authorization_model.return_value = mock_model_response
         mock_sdk_client.return_value = mock_instance
@@ -397,7 +398,7 @@ class TestOpenFGAUtilityFunctions:
         """Test initialize store handles errors"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.create_store.side_effect = Exception("Store creation failed")
         mock_sdk_client.return_value = mock_instance
 
@@ -412,7 +413,7 @@ class TestOpenFGAUtilityFunctions:
         """Test seeding sample data"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient, seed_sample_data
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.write.return_value = MagicMock()
         mock_sdk_client.return_value = mock_instance
 
@@ -536,7 +537,7 @@ class TestOpenFGACircuitBreakerCriticality:
         reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.side_effect = Exception("OpenFGA unavailable")
         mock_sdk_client.return_value = mock_instance
 
@@ -584,7 +585,7 @@ class TestOpenFGACircuitBreakerCriticality:
         reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.side_effect = Exception("OpenFGA unavailable")
         mock_sdk_client.return_value = mock_instance
 
@@ -632,7 +633,7 @@ class TestOpenFGACircuitBreakerCriticality:
         reset_circuit_breaker("openfga")
 
         # Mock OpenFGA to always fail (trigger circuit breaker)
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.side_effect = Exception("OpenFGA unavailable")
         mock_sdk_client.return_value = mock_instance
 
@@ -678,7 +679,7 @@ class TestOpenFGACircuitBreakerCriticality:
         mock_response = MagicMock()
         mock_response.allowed = True
 
-        mock_instance = AsyncMock()
+        mock_instance = AsyncMock(spec=OpenFgaClient)
         mock_instance.check.return_value = mock_response
         mock_sdk_client.return_value = mock_instance
 
