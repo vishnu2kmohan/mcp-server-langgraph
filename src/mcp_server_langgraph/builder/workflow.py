@@ -29,6 +29,7 @@ Example:
     builder.save_code("agent.py")
 """
 
+from pathlib import Path
 from typing import Any
 
 from .codegen import CodeGenerator, EdgeDefinition, NodeDefinition, WorkflowDefinition
@@ -203,7 +204,7 @@ class WorkflowBuilder:
         """
         code = self.export_code()
 
-        with open(output_path, "w") as f:
+        with Path(output_path).open("w") as f:
             f.write(code)
 
     def to_json(self) -> dict[str, Any]:

@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from mcp_server_langgraph.core.exceptions import MCPServerException
+from mcp_server_langgraph.core.exceptions import MCPServerError
 
 
 logger = logging.getLogger(__name__)
@@ -34,8 +34,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         register_exception_handlers(app)
     """
 
-    @app.exception_handler(MCPServerException)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-    async def mcp_exception_handler(request: Request, exc: MCPServerException) -> JSONResponse:
+    @app.exception_handler(MCPServerError)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+    async def mcp_exception_handler(request: Request, exc: MCPServerError) -> JSONResponse:
         """
         Handle MCP server exceptions.
 

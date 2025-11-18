@@ -562,7 +562,7 @@ class MCPAgentStreamableServer:
             except Exception as e:
                 # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
                 logger.error(f"Invalid chat input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
-                raise ValueError(f"Invalid chat input: {e}")
+                raise ValueError(f"Invalid chat input: {e}") from e
 
             message = chat_input.message
             thread_id = chat_input.thread_id or "default"
@@ -801,7 +801,7 @@ class MCPAgentStreamableServer:
             except Exception as e:
                 # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
                 logger.error(f"Invalid search input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
-                raise ValueError(f"Invalid search input: {e}")
+                raise ValueError(f"Invalid search input: {e}") from e
 
             query = search_input.query
             limit = search_input.limit
@@ -1123,7 +1123,7 @@ async def login(request: LoginRequest) -> LoginResponse:
                 expires_in = settings.jwt_expiration_seconds
             except Exception as e:
                 logger.error(f"Failed to create token: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail="Failed to create authentication token")
+                raise HTTPException(status_code=500, detail="Failed to create authentication token") from e
 
         logger.info(
             "Login successful",
@@ -1208,7 +1208,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
                 raise
             except Exception as e:
                 logger.error(f"Token refresh failed: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail="Token refresh failed")
+                raise HTTPException(status_code=500, detail="Token refresh failed") from e
 
         # Handle InMemory token refresh (verify current token and issue new one)
         elif request.current_token:
@@ -1244,7 +1244,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
                 raise
             except Exception as e:
                 logger.error(f"Token refresh failed: {e}", exc_info=True)
-                raise HTTPException(status_code=500, detail="Token refresh failed")
+                raise HTTPException(status_code=500, detail="Token refresh failed") from e
 
         else:
             raise HTTPException(

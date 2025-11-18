@@ -32,6 +32,7 @@ Example:
     print(python_code)
 """
 
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -462,7 +463,7 @@ if __name__ == "__main__":
         """
         code = self.generate(workflow)
 
-        with open(output_path, "w") as f:
+        with Path(output_path).open("w") as f:
             f.write(code)
 
 

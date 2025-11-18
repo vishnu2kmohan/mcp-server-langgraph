@@ -96,7 +96,7 @@ class SaveWorkflowRequest(BaseModel):
             raise ValueError(
                 f"Invalid output path. Must be within allowed directory: {allowed_base}. "
                 f"Use BUILDER_OUTPUT_DIR environment variable to configure safe directory."
-            )
+            ) from None
 
         # Additional checks for common attack patterns
         path_str = str(path)
@@ -260,7 +260,7 @@ async def generate_code(
         return GenerateCodeResponse(code=code, formatted=True, warnings=warnings)
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}") from e
 
 
 @app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -368,9 +368,9 @@ async def save_workflow(
 
     except ValueError as e:
         # Path validation errors
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}") from e
 
 
 @app.get("/api/builder/templates")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -491,9 +491,9 @@ async def import_workflow(
         }
 
     except SyntaxError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {str(e)}") from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}") from e
 
 
 @app.get("/api/builder/node-types")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs

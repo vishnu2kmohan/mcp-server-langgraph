@@ -323,7 +323,7 @@ class ComplianceScheduler:
 
                 # Save report
                 report_file = self.evidence_collector.evidence_dir / f"{report.review_id}.json"
-                with open(report_file, "w") as f:
+                with report_file.open("w") as f:
                     f.write(report.model_dump_json(indent=2))
 
                 logger.info(

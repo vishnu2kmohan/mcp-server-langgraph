@@ -86,7 +86,7 @@ class DockerSandbox(Sandbox):
             # Test connection
             self.client.ping()
         except Exception as e:
-            raise SandboxError(f"Docker not available: {e}")
+            raise SandboxError(f"Docker not available: {e}") from e
 
         # Ensure image exists
         self._ensure_image()
@@ -102,7 +102,7 @@ class DockerSandbox(Sandbox):
                 self.client.images.pull(self.image)
                 logger.info(f"Successfully pulled {self.image}")
             except Exception as e:
-                raise SandboxError(f"Failed to pull Docker image {self.image}: {e}")
+                raise SandboxError(f"Failed to pull Docker image {self.image}: {e}") from e
 
     def execute(self, code: str) -> ExecutionResult:
         """
@@ -223,7 +223,7 @@ class DockerSandbox(Sandbox):
                 self._cleanup_container(container)
 
             logger.error(f"Docker execution failed: {e}", exc_info=True)
-            raise SandboxError(f"Docker execution failed: {e}")
+            raise SandboxError(f"Docker execution failed: {e}") from e
 
     def _create_container(self, code: str) -> Container:
         """
@@ -273,7 +273,7 @@ class DockerSandbox(Sandbox):
 
         except Exception as e:
             logger.error(f"Failed to create Docker container: {e}", exc_info=True)
-            raise SandboxError(f"Failed to create Docker container: {e}")
+            raise SandboxError(f"Failed to create Docker container: {e}") from e
 
     def _get_network_mode(self) -> str:
         """

@@ -112,7 +112,7 @@ async def create_api_key(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.get("/", response_model=list[APIKeyResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -169,7 +169,7 @@ async def rotate_api_key(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -243,4 +243,4 @@ async def validate_api_key(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to issue JWT: {str(e)}",
-        )
+        ) from e

@@ -107,10 +107,14 @@ class TokenValidator:
         """
         with tracer.start_as_current_span("keycloak.get_jwks"):
             # Check cache
-            if not force_refresh and self._jwks_cache and self._jwks_cache_time:
-                if datetime.now(timezone.utc) - self._jwks_cache_time < self._cache_ttl:
-                    logger.debug("Using cached JWKS")
-                    return self._jwks_cache
+            if (
+                not force_refresh
+                and self._jwks_cache
+                and self._jwks_cache_time
+                and datetime.now(timezone.utc) - self._jwks_cache_time < self._cache_ttl
+            ):
+                logger.debug("Using cached JWKS")
+                return self._jwks_cache
 
             # Fetch from Keycloak
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
@@ -384,9 +388,12 @@ class KeycloakClient:
             Admin access token
         """
         # Check if we have a valid cached token
-        if self._admin_token and self._admin_token_expiry:
-            if datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1):
-                return self._admin_token
+        if (
+            self._admin_token
+            and self._admin_token_expiry
+            and datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1)
+        ):
+            return self._admin_token
 
         # Get new admin token
         with tracer.start_as_current_span("keycloak.get_admin_token"):

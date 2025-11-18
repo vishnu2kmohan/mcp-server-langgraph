@@ -82,7 +82,7 @@ class DataRetentionService:
                 logger.warning(f"Retention config not found: {self.config_path}, using defaults")
                 return self._default_config()
 
-            with open(self.config_path) as f:
+            with Path(self.config_path).open() as f:
                 config = yaml.safe_load(f)
 
             logger.info(f"Loaded retention policies from {self.config_path}")

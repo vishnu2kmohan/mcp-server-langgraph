@@ -285,7 +285,7 @@ class RoleMapper:
             return
 
         try:
-            with open(path) as f:
+            with Path(path).open() as f:
                 config = yaml.safe_load(f)
 
             self.load_from_dict(config)

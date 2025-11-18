@@ -8,6 +8,7 @@ See ADR-0026 for design rationale.
 """
 
 import asyncio
+import contextlib
 import functools
 import logging
 from collections.abc import Callable
@@ -160,7 +161,8 @@ def with_bulkhead(
                     )
 
                     # Emit metric
-                    try:
+                    with contextlib.suppress(RuntimeError):
+                        # Observability not initialized (can happen in tests or during shutdown)
                         bulkhead_rejected_counter.add(
                             1,
                             attributes={
@@ -168,9 +170,6 @@ def with_bulkhead(
                                 "function": func.__name__,
                             },
                         )
-                    except RuntimeError:
-                        # Observability not initialized (can happen in tests or during shutdown)
-                        pass
 
                     # Raise our custom exception
                     from mcp_server_langgraph.core.exceptions import BulkheadRejectedError
@@ -192,14 +191,12 @@ def with_bulkhead(
                     # Emit metric for active operations
                     # Get active count safely (since we're inside the semaphore, use the value we calculated earlier)
                     active_count = waiters_count + 1
-                    try:
+                    with contextlib.suppress(RuntimeError):
+                        # Observability not initialized (can happen in tests or during shutdown)
                         bulkhead_active_operations_gauge.set(
                             active_count,
                             attributes={"resource_type": resource_type},
                         )
-                    except RuntimeError:
-                        # Observability not initialized (can happen in tests or during shutdown)
-                        pass
 
                     # Execute function
                     result = await func(*args, **kwargs)  # type: ignore[misc]

@@ -116,16 +116,15 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
                 log_record["trace_flags"] = f"{span_context.trace_flags:02x}"
 
         # Add exception info if present
-        if record.exc_info:
+        if record.exc_info and isinstance(record.exc_info, tuple) and len(record.exc_info) == 3:
             # exc_info can be True (capture current exception) or a tuple (type, value, traceback)
             # When logging.LogRecord is created with exc_info=True, it should auto-capture
             # But in tests, it might just be True. Handle both cases.
-            if isinstance(record.exc_info, tuple) and len(record.exc_info) == 3:
-                log_record["exception"] = {
-                    "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
-                    "message": str(record.exc_info[1]) if record.exc_info[1] else None,
-                    "stacktrace": self.formatException(record.exc_info),
-                }
+            log_record["exception"] = {
+                "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
+                "message": str(record.exc_info[1]) if record.exc_info[1] else None,
+                "stacktrace": self.formatException(record.exc_info),
+            }
             # Note: exc_info=True case is rare and often indicates a logging misconfiguration
             # The tuple case above handles normal exception logging
 
@@ -187,10 +186,9 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
                     "exc_text",
                     "stack_info",
                     "taskName",
-                ]:
+                ] and not key.startswith("_"):
                     # Add custom extra fields
-                    if not key.startswith("_"):
-                        message_dict[key] = value
+                    message_dict[key] = value
 
         log_record: dict[str, Any] = {}
         self.add_fields(log_record, record, message_dict)

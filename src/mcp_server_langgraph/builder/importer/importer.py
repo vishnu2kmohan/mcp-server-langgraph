@@ -24,6 +24,7 @@ Example:
     workflow = import_from_code(python_code_string)
 """
 
+from pathlib import Path
 from typing import Any, Literal
 
 from .graph_extractor import GraphExtractor
@@ -82,7 +83,7 @@ def import_from_file(
         >>> # Load into visual builder
         >>> builder.load_workflow(workflow)
     """
-    with open(file_path) as f:
+    with Path(file_path).open() as f:
         code = f.read()
 
     return import_from_code(code, layout_algorithm)

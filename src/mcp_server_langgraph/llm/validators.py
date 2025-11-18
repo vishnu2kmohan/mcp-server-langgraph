@@ -129,7 +129,7 @@ class LLMValidator:
                         raise ValueError(
                             f"Cannot parse non-JSON content for {model_class.__name__}. "
                             "Model must accept 'content' field or response must be valid JSON."
-                        )
+                        ) from None
 
                 span.set_attribute("validation.success", True)
 

@@ -13,6 +13,8 @@ Usage:
     uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
 """
 
+import contextlib
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -57,7 +59,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         raise RuntimeError(
             "Observability initialization failed! Logger still raises RuntimeError. "
             f"Error: {e}. This is a critical bug - logging will fail throughout the app."
-        )
+        ) from e
 
     app = FastAPI(
         title="MCP Server LangGraph API",
@@ -79,15 +81,13 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        try:
+        with contextlib.suppress(RuntimeError):
+            # Graceful degradation if observability not initialized
             logger.info(f"CORS enabled for origins: {cors_origins}")
-        except RuntimeError:
-            pass  # Graceful degradation if observability not initialized
     else:
-        try:
+        with contextlib.suppress(RuntimeError):
+            # Graceful degradation if observability not initialized
             logger.info("CORS disabled (no allowed origins configured)")
-        except RuntimeError:
-            pass  # Graceful degradation if observability not initialized
 
     # Rate limiting - setup function registers middleware and exception handlers
     setup_rate_limiting(app)
@@ -102,20 +102,18 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
     app.include_router(gdpr_router)
     app.include_router(scim_router)
 
-    try:
+    with contextlib.suppress(RuntimeError):
+        # Graceful degradation if observability not initialized
         logger.info("FastAPI application created with all routers mounted")
-    except RuntimeError:
-        pass  # Graceful degradation if observability not initialized
 
     # Run startup validation to ensure all critical systems initialized correctly
     # This prevents the app from starting if any of the OpenAI Codex findings recur
     try:
         run_startup_validation()
     except Exception as e:
-        try:
+        with contextlib.suppress(RuntimeError):
+            # Graceful degradation if observability not initialized
             logger.critical(f"Startup validation failed: {e}")
-        except RuntimeError:
-            pass  # Graceful degradation if observability not initialized
         raise
 
     return app

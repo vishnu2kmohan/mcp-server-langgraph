@@ -105,7 +105,7 @@ def read_file(
             return f"Error: File too large ({file_size} bytes). Maximum: {MAX_FILE_SIZE} bytes"
 
         # Read file (up to max_bytes)
-        with open(path, encoding="utf-8", errors="replace") as f:
+        with Path(path).open(encoding="utf-8", errors="replace") as f:
             content = f.read(max_bytes)
 
         truncated = len(content) >= max_bytes
@@ -237,22 +237,21 @@ def search_files(
         # Search for files
         matches = []
         for match in path.rglob(pattern):
-            if match.is_file():
+            if match.is_file() and _is_safe_path(str(match)):
                 # Check each match is in a safe location
-                if _is_safe_path(str(match)):
-                    rel_path = match.relative_to(path)
-                    file_size = match.stat().st_size
-                    if file_size < 1024:
-                        size = f"{file_size} B"
-                    elif file_size < 1024 * 1024:
-                        size = f"{file_size / 1024:.1f} KB"
-                    else:
-                        size = f"{file_size / (1024 * 1024):.1f} MB"
+                rel_path = match.relative_to(path)
+                file_size = match.stat().st_size
+                if file_size < 1024:
+                    size = f"{file_size} B"
+                elif file_size < 1024 * 1024:
+                    size = f"{file_size / 1024:.1f} KB"
+                else:
+                    size = f"{file_size / (1024 * 1024):.1f} MB"
 
-                    matches.append(f"  {rel_path} ({size})")
+                matches.append(f"  {rel_path} ({size})")
 
-                    if len(matches) >= max_results:
-                        break
+                if len(matches) >= max_results:
+                    break
 
         result = f"Search: {pattern} in {directory_path}\n"
         result += f"Found: {len(matches)} files\n"

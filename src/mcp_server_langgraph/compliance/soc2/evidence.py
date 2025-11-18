@@ -804,7 +804,7 @@ class EvidenceCollector:
         """Save report to file"""
         report_file = self.evidence_dir / f"{report.report_id}.json"
 
-        with open(report_file, "w") as f:
+        with report_file.open("w") as f:
             f.write(report.model_dump_json(indent=2))
 
         logger.info(f"Saved compliance report: {report_file}")

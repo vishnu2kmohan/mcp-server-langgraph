@@ -79,7 +79,7 @@ class KubernetesSandbox(Sandbox):
             self._verify_namespace()
 
         except Exception as e:
-            raise SandboxError(f"Kubernetes not available: {e}")
+            raise SandboxError(f"Kubernetes not available: {e}") from e
 
     def _verify_namespace(self) -> None:
         """Verify that the namespace exists"""
@@ -87,8 +87,8 @@ class KubernetesSandbox(Sandbox):
             self.core_v1.read_namespace(name=self.namespace)
         except ApiException as e:
             if e.status == 404:
-                raise SandboxError(f"Namespace '{self.namespace}' does not exist")
-            raise SandboxError(f"Failed to verify namespace: {e}")
+                raise SandboxError(f"Namespace '{self.namespace}' does not exist") from e
+            raise SandboxError(f"Failed to verify namespace: {e}") from e
 
     def execute(self, code: str) -> ExecutionResult:
         """
@@ -162,7 +162,7 @@ class KubernetesSandbox(Sandbox):
                 self._cleanup_job(job_name)
 
             logger.error(f"Kubernetes execution failed: {e}", exc_info=True)
-            raise SandboxError(f"Kubernetes execution failed: {e}")
+            raise SandboxError(f"Kubernetes execution failed: {e}") from e
 
     def _create_job(self, code: str) -> str:
         """
@@ -252,7 +252,7 @@ class KubernetesSandbox(Sandbox):
 
         except Exception as e:
             logger.error(f"Failed to create Kubernetes job: {e}", exc_info=True)
-            raise SandboxError(f"Failed to create Kubernetes job: {e}")
+            raise SandboxError(f"Failed to create Kubernetes job: {e}") from e
 
     def _wait_for_job(self, job_name: str, start_time: float) -> tuple[bool, int]:
         """

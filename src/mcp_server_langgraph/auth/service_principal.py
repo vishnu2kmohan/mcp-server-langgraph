@@ -11,6 +11,7 @@ Service principals enable machine-to-machine authentication with two modes:
 See ADR-0033 for architectural decisions.
 """
 
+import contextlib
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -416,10 +417,9 @@ class ServicePrincipalManager:
         try:
             await self.keycloak.delete_client(service_id)
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
+                # May not exist
                 await self.keycloak.delete_user(f"svc_{service_id}")
-            except Exception:
-                pass  # May not exist
 
         # Remove from OpenFGA (if available)
         if self.openfga is not None:

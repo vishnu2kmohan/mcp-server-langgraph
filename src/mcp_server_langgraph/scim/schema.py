@@ -69,7 +69,7 @@ class SCIMGroupMembership(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         # Fix JSON schema to avoid $ref conflicts
-        json_schema_extra=lambda schema, model: schema.update(
+        json_schema_extra=lambda schema, _model: schema.update(
             {"properties": {k if k != "$ref" else "ref": v for k, v in schema.get("properties", {}).items()}}
         ),
     )
@@ -149,7 +149,7 @@ class SCIMMember(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         # Fix JSON schema to avoid $ref conflicts
-        json_schema_extra=lambda schema, model: schema.update(
+        json_schema_extra=lambda schema, _model: schema.update(
             {"properties": {k if k != "$ref" else "ref": v for k, v in schema.get("properties", {}).items()}}
         ),
     )
@@ -237,7 +237,7 @@ def validate_scim_user(data: dict[str, Any]) -> SCIMUser:
     try:
         return SCIMUser(**data)
     except Exception as e:
-        raise ValueError(f"Invalid SCIM user data: {str(e)}")
+        raise ValueError(f"Invalid SCIM user data: {str(e)}") from e
 
 
 def validate_scim_group(data: dict[str, Any]) -> SCIMGroup:
@@ -256,7 +256,7 @@ def validate_scim_group(data: dict[str, Any]) -> SCIMGroup:
     try:
         return SCIMGroup(**data)
     except Exception as e:
-        raise ValueError(f"Invalid SCIM group data: {str(e)}")
+        raise ValueError(f"Invalid SCIM group data: {str(e)}") from e
 
 
 def user_to_keycloak(scim_user: SCIMUser) -> dict[str, Any]:

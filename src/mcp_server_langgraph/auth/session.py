@@ -92,7 +92,7 @@ class SessionData(BaseModel):
             datetime.fromisoformat(normalized)
             return normalized
         except (ValueError, TypeError):
-            raise ValueError(f"Timestamp must be in ISO format, got: {v}")
+            raise ValueError(f"Timestamp must be in ISO format, got: {v}") from None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""

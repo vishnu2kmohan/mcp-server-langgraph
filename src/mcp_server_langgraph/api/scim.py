@@ -208,9 +208,9 @@ async def create_user(
         return response_user
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}") from e
 
 
 @router.get("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -238,7 +238,7 @@ async def get_user(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}") from e
 
 
 @router.put("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -365,7 +365,7 @@ async def delete_user(
 
     except Exception as e:
         # For 204 responses, we must raise HTTPException not return error body
-        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}") from e
 
 
 @router.get("/Users", response_model=SCIMListResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs

@@ -11,6 +11,7 @@ Provides DoS protection with:
 See ADR-0027 for design rationale.
 """
 
+import contextlib
 from collections.abc import Callable
 from typing import Any
 
@@ -240,7 +241,8 @@ async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExc
     # Emit metric
     from mcp_server_langgraph.observability.telemetry import error_counter
 
-    try:
+    with contextlib.suppress(Exception):
+        # Don't let metrics failure break error handling
         error_counter.add(
             1,
             attributes={
@@ -249,8 +251,6 @@ async def custom_rate_limit_exceeded_handler(request: Request, exc: RateLimitExc
                 "endpoint": request.url.path,
             },
         )
-    except Exception:
-        pass  # Don't let metrics failure break error handling
 
     # Log rate limit violation
     logger.warning(
@@ -296,7 +296,8 @@ def setup_rate_limiting(app: Any) -> None:
     # Register custom exception handler
     app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
 
-    try:
+    with contextlib.suppress(RuntimeError):
+        # Observability not initialized yet, skip logging
         logger.info(
             "Rate limiting configured",
             extra={
@@ -305,9 +306,6 @@ def setup_rate_limiting(app: Any) -> None:
                 "tiers": list(RATE_LIMITS.keys()),
             },
         )
-    except RuntimeError:
-        # Observability not initialized yet, skip logging
-        pass
 
 
 # Decorators for endpoint-specific rate limits

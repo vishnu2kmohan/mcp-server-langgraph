@@ -404,19 +404,19 @@ class LLMFactory:
                         message=f"LLM provider rate limit exceeded: {e}",
                         metadata={"model": self.model_name, "provider": self.provider},
                         cause=e,
-                    )
+                    ) from e
                 if "timeout" in error_msg or "timed out" in error_msg:
                     raise LLMTimeoutError(
                         message=f"LLM request timed out: {e}",
                         metadata={"model": self.model_name, "provider": self.provider, "timeout": self.timeout},
                         cause=e,
-                    )
+                    ) from e
                 if "model not found" in error_msg or "404" in error_msg:
                     raise LLMModelNotFoundError(
                         message=f"LLM model not found: {e}",
                         metadata={"model": self.model_name, "provider": self.provider},
                         cause=e,
-                    )
+                    ) from e
                 logger.error(
                     f"Async LLM invocation failed: {e}",
                     extra={"model": self.model_name, "provider": self.provider},
@@ -434,7 +434,7 @@ class LLMFactory:
                     message=f"LLM provider error: {e}",
                     metadata={"model": self.model_name, "provider": self.provider},
                     cause=e,
-                )
+                ) from e
 
     def _try_fallback(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models if primary fails"""

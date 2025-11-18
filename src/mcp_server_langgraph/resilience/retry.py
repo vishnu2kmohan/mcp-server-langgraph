@@ -85,7 +85,7 @@ def should_retry_exception(exception: Exception) -> bool:
         )
 
         # Never retry client errors
-        if isinstance(exception, (ValidationError, AuthorizationError)):
+        if isinstance(exception, (ValidationError, AuthorizationError)):  # noqa: UP038
             return False
 
         # Conditionally retry auth errors (e.g., token refresh)
@@ -112,16 +112,16 @@ def should_retry_exception(exception: Exception) -> bool:
     # Generic logic: retry network errors, timeouts
     import httpx
 
-    if isinstance(exception, (httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError)):
+    if isinstance(exception, (httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError)):  # noqa: UP038
         return True
 
     # Check redis errors if redis is available (optional dependency)
-    if _REDIS_AVAILABLE and _redis_module is not None:
-        if isinstance(exception, (_redis_module.ConnectionError, _redis_module.TimeoutError)):
-            return True
-
-    # Don't retry by default
-    return False
+    # Return condition directly
+    return (
+        _REDIS_AVAILABLE
+        and _redis_module is not None
+        and isinstance(exception, (_redis_module.ConnectionError, _redis_module.TimeoutError))  # noqa: UP038
+    )
 
 
 def log_retry_attempt(retry_state: RetryCallState) -> None:

@@ -31,7 +31,7 @@ class RetryPolicy(str, Enum):
     CONDITIONAL = "conditional"  # Retry with conditions (idempotent operations only)
 
 
-class MCPServerException(Exception):
+class MCPServerError(Exception):
     """
     Base exception for all MCP server errors.
 
@@ -126,7 +126,7 @@ class MCPServerException(Exception):
 # ==============================================================================
 
 
-class ConfigurationError(MCPServerException):
+class ConfigurationError(MCPServerError):
     """Base class for configuration errors"""
 
     default_message = "Configuration error"
@@ -161,7 +161,7 @@ class SecretNotFoundError(ConfigurationError):
 # ==============================================================================
 
 
-class AuthenticationError(MCPServerException):
+class AuthenticationError(MCPServerError):
     """Base class for authentication errors"""
 
     default_message = "Authentication failed"
@@ -218,7 +218,7 @@ class MFARequiredError(AuthenticationError):
 # ==============================================================================
 
 
-class AuthorizationError(MCPServerException):
+class AuthorizationError(MCPServerError):
     """Base class for authorization errors"""
 
     default_message = "Authorization failed"
@@ -264,7 +264,7 @@ class InsufficientPermissionsError(AuthorizationError):
 # ==============================================================================
 
 
-class RateLimitError(MCPServerException):
+class RateLimitError(MCPServerError):
     """Base class for rate limiting errors"""
 
     default_message = "Rate limit exceeded"
@@ -296,7 +296,7 @@ class QuotaExceededError(RateLimitError):
 # ==============================================================================
 
 
-class ValidationError(MCPServerException):
+class ValidationError(MCPServerError):
     """Base class for validation errors"""
 
     default_message = "Validation failed"
@@ -333,7 +333,7 @@ class ConstraintViolationError(ValidationError):
 # ==============================================================================
 
 
-class ExternalServiceError(MCPServerException):
+class ExternalServiceError(MCPServerError):
     """Base class for external service errors"""
 
     default_message = "External service error"
@@ -446,7 +446,7 @@ class KeycloakUnavailableError(KeycloakError):
 # ==============================================================================
 
 
-class ResilienceError(MCPServerException):
+class ResilienceError(MCPServerError):
     """Base class for resilience pattern errors"""
 
     default_message = "Resilience error"
@@ -502,7 +502,7 @@ class BulkheadRejectedError(ResilienceError):
 # ==============================================================================
 
 
-class StorageError(MCPServerException):
+class StorageError(MCPServerError):
     """Base class for storage errors"""
 
     default_message = "Storage error"
@@ -538,7 +538,7 @@ class DataIntegrityError(StorageError):
 # ==============================================================================
 
 
-class ComplianceError(MCPServerException):
+class ComplianceError(MCPServerError):
     """Base class for compliance errors"""
 
     default_message = "Compliance violation"
@@ -573,7 +573,7 @@ class SOC2ViolationError(ComplianceError):
 # ==============================================================================
 
 
-class InternalServerError(MCPServerException):
+class InternalServerError(MCPServerError):
     """Unexpected internal server error"""
 
     default_message = "Internal server error"

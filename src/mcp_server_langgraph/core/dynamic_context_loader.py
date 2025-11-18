@@ -54,7 +54,7 @@ def _create_embeddings(
             raise ImportError(
                 "langchain-google-genai is required for Google embeddings. "
                 "Add 'langchain-google-genai' to pyproject.toml dependencies, then run: uv sync"
-            )
+            ) from None
 
         if not google_api_key:
             raise ValueError("GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical.")
@@ -108,7 +108,7 @@ def _create_embeddings(
             raise ImportError(
                 "sentence-transformers is required for local embeddings. "
                 "Add 'sentence-transformers' to pyproject.toml dependencies, then run: uv sync"
-            )
+            ) from None
 
     else:
         raise ValueError(f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'")
@@ -205,7 +205,7 @@ class DynamicContextLoader:
             try:
                 self.cipher = Fernet(settings.context_encryption_key.encode())
             except Exception as e:
-                raise ValueError(f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()")
+                raise ValueError(f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()") from e
 
         # Initialize Qdrant client
         self.client = QdrantClient(host=self.qdrant_url, port=self.qdrant_port)
@@ -273,7 +273,7 @@ class DynamicContextLoader:
             return decrypted_bytes.decode()
         except Exception as e:
             logger.error(f"Decryption failed: {e}", exc_info=True)
-            raise ValueError(f"Failed to decrypt content: {e}")
+            raise ValueError(f"Failed to decrypt content: {e}") from e
 
     def _calculate_expiry_timestamp(self) -> float:
         """Calculate expiry timestamp based on retention policy."""

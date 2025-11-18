@@ -645,14 +645,14 @@ def get_logger() -> Any:
 
 # Module-level exports with lazy initialization
 # These will raise RuntimeError if accessed before init_observability()
-tracer = type("LazyTracer", (), {"__getattr__": lambda self, name: getattr(get_tracer(), name)})()
+tracer = type("LazyTracer", (), {"__getattr__": lambda _self, name: getattr(get_tracer(), name)})()
 
-meter = type("LazyMeter", (), {"__getattr__": lambda self, name: getattr(get_meter(), name)})()
+meter = type("LazyMeter", (), {"__getattr__": lambda _self, name: getattr(get_meter(), name)})()
 
-logger = type("LazyLogger", (), {"__getattr__": lambda self, name: getattr(get_logger(), name)})()
+logger = type("LazyLogger", (), {"__getattr__": lambda _self, name: getattr(get_logger(), name)})()
 
 # Alias for backward compatibility - provides access to both config and metric instruments
-config = type("LazyConfig", (), {"__getattr__": lambda self, name: getattr(get_config(), name)})()
+config = type("LazyConfig", (), {"__getattr__": lambda _self, name: getattr(get_config(), name)})()
 
 metrics = config  # metrics is an alias for config
 
@@ -698,77 +698,81 @@ circuit_breaker_state_gauge = type(
     "LazyMetric",
     (),
     {
-        "add": lambda self, *args, **kwargs: _safe_metric_operation("circuit_breaker_state_gauge", "add", *args, **kwargs),
-        "set": lambda self, *args, **kwargs: _safe_metric_operation("circuit_breaker_state_gauge", "set", *args, **kwargs),
+        "add": lambda _self, *args, **kwargs: _safe_metric_operation("circuit_breaker_state_gauge", "add", *args, **kwargs),
+        "set": lambda _self, *args, **kwargs: _safe_metric_operation("circuit_breaker_state_gauge", "set", *args, **kwargs),
     },
 )()
 
 circuit_breaker_failure_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("circuit_breaker_failure_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("circuit_breaker_failure_counter", "add", *args, **kwargs)},
 )()
 
 circuit_breaker_success_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("circuit_breaker_success_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("circuit_breaker_success_counter", "add", *args, **kwargs)},
 )()
 
 retry_attempt_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("retry_attempt_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("retry_attempt_counter", "add", *args, **kwargs)},
 )()
 
 retry_exhausted_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("retry_exhausted_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("retry_exhausted_counter", "add", *args, **kwargs)},
 )()
 
 retry_success_after_retry_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("retry_success_after_retry_counter", "add", *args, **kwargs)},
+    {
+        "add": lambda _self, *args, **kwargs: _safe_metric_operation(
+            "retry_success_after_retry_counter", "add", *args, **kwargs
+        )
+    },
 )()
 
 timeout_exceeded_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("timeout_exceeded_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("timeout_exceeded_counter", "add", *args, **kwargs)},
 )()
 
 timeout_duration_histogram = type(
     "LazyMetric",
     (),
-    {"record": lambda self, *args, **kwargs: _safe_metric_operation("timeout_duration_histogram", "record", *args, **kwargs)},
+    {"record": lambda _self, *args, **kwargs: _safe_metric_operation("timeout_duration_histogram", "record", *args, **kwargs)},
 )()
 
 bulkhead_rejected_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("bulkhead_rejected_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("bulkhead_rejected_counter", "add", *args, **kwargs)},
 )()
 
 bulkhead_active_operations_gauge = type(
     "LazyMetric",
     (),
-    {"set": lambda self, *args, **kwargs: _safe_metric_operation("bulkhead_active_operations_gauge", "set", *args, **kwargs)},
+    {"set": lambda _self, *args, **kwargs: _safe_metric_operation("bulkhead_active_operations_gauge", "set", *args, **kwargs)},
 )()
 
 bulkhead_queue_depth_gauge = type(
     "LazyMetric",
     (),
-    {"set": lambda self, *args, **kwargs: _safe_metric_operation("bulkhead_queue_depth_gauge", "set", *args, **kwargs)},
+    {"set": lambda _self, *args, **kwargs: _safe_metric_operation("bulkhead_queue_depth_gauge", "set", *args, **kwargs)},
 )()
 
 fallback_used_counter = type(
     "LazyMetric",
     (),
-    {"add": lambda self, *args, **kwargs: _safe_metric_operation("fallback_used_counter", "add", *args, **kwargs)},
+    {"add": lambda _self, *args, **kwargs: _safe_metric_operation("fallback_used_counter", "add", *args, **kwargs)},
 )()
 
 error_counter = type(
-    "LazyMetric", (), {"add": lambda self, *args, **kwargs: _safe_metric_operation("error_counter", "add", *args, **kwargs)}
+    "LazyMetric", (), {"add": lambda _self, *args, **kwargs: _safe_metric_operation("error_counter", "add", *args, **kwargs)}
 )()

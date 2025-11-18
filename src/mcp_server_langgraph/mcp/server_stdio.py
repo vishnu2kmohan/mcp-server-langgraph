@@ -457,7 +457,7 @@ class MCPAgentServer:
                 chat_input = ChatInput.model_validate(arguments)
             except Exception as e:
                 logger.error(f"Invalid chat input: {e}", extra={"arguments": arguments})
-                raise ValueError(f"Invalid chat input: {e}")
+                raise ValueError(f"Invalid chat input: {e}") from e
 
             message = chat_input.message
             thread_id = chat_input.thread_id or "default"
@@ -697,7 +697,7 @@ class MCPAgentServer:
                 search_input = SearchConversationsInput.model_validate(arguments)
             except Exception as e:
                 logger.error(f"Invalid search input: {e}", extra={"arguments": arguments})
-                raise ValueError(f"Invalid search input: {e}")
+                raise ValueError(f"Invalid search input: {e}") from e
 
             query = search_input.query
             limit = search_input.limit

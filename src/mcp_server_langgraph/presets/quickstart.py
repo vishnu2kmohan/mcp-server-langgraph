@@ -217,7 +217,7 @@ class QuickStart:
         name: str,
         tools: list[str] | None = None,
         llm: Literal["gemini-flash", "gemini-pro", "claude-haiku", "gpt-5-mini"] = "gemini-flash",
-        port: int = 8000,
+        _port: int = 8000,
     ) -> Any:
         """
         Create a FastAPI app with the agent.
@@ -226,14 +226,14 @@ class QuickStart:
             name: Agent name
             tools: List of tools
             llm: LLM model
-            port: Port to run on
+            _port: Port to run on (reserved for future use)
 
         Returns:
             FastAPI application
 
         Example:
             >>> app = QuickStart.create_app("My Agent")
-            >>> # Run with: uvicorn app:app --reload
+            >>> # Run with: uvicorn app:app --reload --port 8000
         """
         from fastapi import FastAPI
 

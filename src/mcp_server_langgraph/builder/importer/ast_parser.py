@@ -21,6 +21,7 @@ Example:
 """
 
 import ast
+from pathlib import Path
 from typing import Any
 
 
@@ -71,7 +72,7 @@ class PythonCodeParser:
             >>> parser = PythonCodeParser()
             >>> tree = parser.parse_file("agent.py")
         """
-        with open(file_path) as f:
+        with Path(file_path).open() as f:
             code = f.read()
 
         return self.parse_code(code)

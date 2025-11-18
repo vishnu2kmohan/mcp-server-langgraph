@@ -206,6 +206,75 @@ def circuit_breaker(  # noqa: C901
             return await openfga_client.check(user, resource)
     """
 
+    def _handle_circuit_open(
+        name: str, fallback: Callable[..., Any] | None, args: tuple[Any, ...], kwargs: dict[str, Any], span: Any
+    ) -> Any:
+        """Handle circuit breaker open state."""
+        import asyncio
+
+        span.set_attribute("circuit_breaker.success", False)
+        span.set_attribute("circuit_breaker.fallback_used", fallback is not None)
+
+        logger.warning(
+            f"Circuit breaker open for {name}, failing fast",
+            extra={"service": name, "fallback": fallback is not None},
+        )
+
+        if fallback:
+            logger.info(f"Using fallback for {name}")
+            if asyncio.iscoroutinefunction(fallback):
+                return fallback(*args, **kwargs)
+            return fallback(*args, **kwargs)
+
+        # Raise our custom exception
+        from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
+
+        raise CircuitBreakerOpenError(
+            message=f"Circuit breaker open for {name}",
+            metadata={"service": name},
+        ) from None
+
+    def _handle_success(breaker: pybreaker.CircuitBreaker, span: Any) -> None:
+        """Handle successful circuit breaker call."""
+        with breaker._lock:
+            breaker._state_storage.increment_counter()
+            for listener in breaker.listeners:
+                listener.success(breaker)
+            breaker.state.on_success()
+        span.set_attribute("circuit_breaker.success", True)
+
+    def _handle_failure(breaker: pybreaker.CircuitBreaker, exception: Exception, span: Any) -> None:
+        """Handle failed circuit breaker call."""
+        try:
+            with breaker._lock:
+                if breaker.is_system_error(exception):
+                    logger.debug(
+                        f"Circuit breaker {breaker.name}: system error {type(exception).__name__}, "
+                        f"counter before={breaker.fail_counter}, fail_max={breaker.fail_max}, "
+                        f"state={breaker.state.name}"
+                    )
+                    breaker._inc_counter()
+                    for listener in breaker.listeners:
+                        listener.failure(breaker, exception)
+                    breaker.state.on_failure(exception)
+                    logger.debug(
+                        f"Circuit breaker {breaker.name}: after on_failure, "
+                        f"counter={breaker.fail_counter}, state={breaker.state.name}"
+                    )
+                else:
+                    # Not a system error, treat as success
+                    logger.debug(
+                        f"Circuit breaker {breaker.name}: non-system error {type(exception).__name__}, " f"treating as success"
+                    )
+                    breaker._state_storage.increment_counter()
+                    for listener in breaker.listeners:
+                        listener.success(breaker)
+                    breaker.state.on_success()
+        except pybreaker.CircuitBreakerError:
+            # Circuit just opened on this failure
+            pass
+        span.set_attribute("circuit_breaker.success", False)
+
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         # Get or create circuit breaker
         breaker = get_circuit_breaker(name)
@@ -229,93 +298,26 @@ def circuit_breaker(  # noqa: C901
                 },
             ) as span:
                 try:
-                    # Wrap the async function in a sync callable for pybreaker
-                    # pybreaker will handle the state transitions
-                    def _sync_wrapper() -> None:
-                        # This won't work directly - we need a different approach
-                        raise RuntimeError("Should not be called directly")
-
-                    # Call before_call to handle state transitions (OPEN -> HALF_OPEN after timeout)
+                    # Call before_call to handle state transitions
                     try:
                         with breaker._lock:
-                            # This will transition to HALF_OPEN if timeout elapsed, or raise if still OPEN
                             breaker.state.before_call(func, *args, **kwargs)
-                            # Also notify listeners
                             for listener in breaker.listeners:
                                 listener.before_call(breaker, func, *args, **kwargs)
                     except pybreaker.CircuitBreakerError:
                         # Circuit is still OPEN (timeout not elapsed)
-                        span.set_attribute("circuit_breaker.success", False)
-                        span.set_attribute("circuit_breaker.fallback_used", fallback is not None)
-
-                        logger.warning(
-                            f"Circuit breaker open for {name}, failing fast",
-                            extra={"service": name, "fallback": fallback is not None},
-                        )
-
-                        if fallback:
-                            logger.info(f"Using fallback for {name}")
-                            if asyncio.iscoroutinefunction(fallback):
-                                return await fallback(*args, **kwargs)  # type: ignore[no-any-return]
-                            return fallback(*args, **kwargs)  # type: ignore[no-any-return]
-                        # Raise our custom exception
-                        from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
-
-                        raise CircuitBreakerOpenError(
-                            message=f"Circuit breaker open for {name}",
-                            metadata={"service": name, "state": breaker.current_state},
-                        )
+                        result = _handle_circuit_open(name, fallback, args, kwargs, span)
+                        if asyncio.iscoroutine(result):
+                            return await result  # type: ignore[no-any-return]
+                        return result  # type: ignore[no-any-return]
 
                     # Call the function
                     try:
                         result: T = await func(*args, **kwargs)  # type: ignore[misc]
-
-                        # Success - handle via state machine
-                        with breaker._lock:
-                            breaker._state_storage.increment_counter()
-                            for listener in breaker.listeners:
-                                listener.success(breaker)
-                            breaker.state.on_success()
-
-                        span.set_attribute("circuit_breaker.success", True)
+                        _handle_success(breaker, span)
                         return result
-
                     except Exception as e:
-                        # Failure - handle via state machine
-                        try:
-                            with breaker._lock:
-                                if breaker.is_system_error(e):
-                                    logger.debug(
-                                        f"Circuit breaker {breaker.name}: system error {type(e).__name__}, "
-                                        f"counter before={breaker.fail_counter}, fail_max={breaker.fail_max}, "
-                                        f"state={breaker.state.name}"
-                                    )
-                                    breaker._inc_counter()
-                                    for listener in breaker.listeners:
-                                        listener.failure(breaker, e)
-                                    breaker.state.on_failure(e)
-                                    logger.debug(
-                                        f"Circuit breaker {breaker.name}: after on_failure, "
-                                        f"counter={breaker.fail_counter}, state={breaker.state.name}"
-                                    )
-                                else:
-                                    # Not a system error, treat as success
-                                    logger.debug(
-                                        f"Circuit breaker {breaker.name}: non-system error {type(e).__name__}, "
-                                        f"treating as success"
-                                    )
-                                    breaker._state_storage.increment_counter()
-                                    for listener in breaker.listeners:
-                                        listener.success(breaker)
-                                    breaker.state.on_success()
-                        except pybreaker.CircuitBreakerError:
-                            # Circuit just opened on this failure
-                            # Don't use fallback here - the circuit opened because of THIS failure
-                            # Fallback is only used when circuit is already open BEFORE the call
-                            pass
-
-                        # Re-raise the original exception
-                        span.set_attribute("circuit_breaker.success", False)
+                        _handle_failure(breaker, e, span)
                         raise
 
                 except pybreaker.CircuitBreakerError as e:  # noqa: F841

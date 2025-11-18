@@ -202,6 +202,136 @@ class AuthMiddleware:
 
             return result
 
+    def _check_fallback_allowed(self, user_id: str, relation: str, resource: str) -> bool:
+        """Check if fallback authorization is allowed."""
+        allow_fallback = getattr(self.settings, "allow_auth_fallback", False) if self.settings else False
+        environment = getattr(self.settings, "environment", "production") if self.settings else "production"
+
+        # Defense in depth: NEVER allow fallback in production
+        if environment == "production":
+            logger.error(
+                "Authorization DENIED: OpenFGA unavailable in production environment. "
+                "Fallback authorization is not permitted in production for security reasons.",
+                extra={
+                    "user_id": user_id,
+                    "relation": relation,
+                    "resource": resource,
+                    "environment": environment,
+                    "allow_auth_fallback": allow_fallback,
+                },
+            )
+            return False
+
+        # Check if fallback is explicitly enabled
+        if not allow_fallback:
+            logger.warning(
+                "Authorization DENIED: OpenFGA unavailable and fallback authorization is disabled. "
+                "Set ALLOW_AUTH_FALLBACK=true to enable role-based fallback in development/test.",
+                extra={
+                    "user_id": user_id,
+                    "relation": relation,
+                    "resource": resource,
+                    "allow_auth_fallback": allow_fallback,
+                    "environment": environment,
+                },
+            )
+            return False
+
+        logger.warning(
+            "OpenFGA not available, using fallback authorization (explicitly enabled)",
+            extra={"allow_auth_fallback": allow_fallback, "environment": environment},
+        )
+        return True
+
+    async def _get_user_roles(self, user_id: str) -> list[str] | None:
+        """Get user roles for fallback authorization."""
+        # Extract username from user_id (handle worker-safe IDs for pytest-xdist)
+        if ":" in user_id:
+            id_part = user_id.split(":", 1)[1]
+            import re
+
+            match = re.match(r"test_gw\d+_(.*)", id_part)
+            username = match.group(1) if match else id_part
+        else:
+            username = user_id
+
+        # Get user data
+        if isinstance(self.user_provider, InMemoryUserProvider):
+            if username not in self.users_db:
+                logger.warning(
+                    "Fallback authorization denied - user not found",
+                    extra={"user_id": user_id, "username": username, "provider": "InMemory"},
+                )
+                return None
+            return self.users_db[username]["roles"]
+
+        # For external providers: Query the provider
+        try:
+            user_data = await self.user_provider.get_user_by_username(username)
+            if not user_data:
+                logger.warning(
+                    "Fallback authorization denied - user not found in provider",
+                    extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
+                )
+                return None
+            logger.info(
+                "Fetched user from provider for fallback authorization",
+                extra={
+                    "user_id": user_id,
+                    "username": username,
+                    "provider": type(self.user_provider).__name__,
+                    "roles": user_data.roles,
+                },
+            )
+            return user_data.roles
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch user from provider for fallback authorization: {e}",
+                extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
+                exc_info=True,
+            )
+            return None
+
+    def _check_conversation_access(self, user_id: str, username: str, thread_id: str, relation: str, resource: str) -> bool:
+        """Check conversation access in fallback mode."""
+        # Allow access to default/unnamed threads
+        if thread_id in ("default", ""):
+            logger.info(
+                "Fallback authorization granted - default conversation",
+                extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+            )
+            return True
+
+        # Check if conversation belongs to this user (format: username_thread)
+        if thread_id.startswith(f"{username}_"):
+            logger.info(
+                "Fallback authorization granted - user-owned conversation",
+                extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+            )
+            return True
+
+        # Also support user:username prefix in thread_id
+        user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
+        if thread_id.startswith(f"{user_id_normalized}_"):
+            logger.info(
+                "Fallback authorization granted - user-owned conversation (normalized)",
+                extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
+            )
+            return True
+
+        # Deny access to conversations not owned by this user
+        logger.warning(
+            "Fallback authorization denied conversation access",
+            extra={
+                "user_id": user_id,
+                "username": username,
+                "thread_id": thread_id,
+                "relation": relation,
+                "reason": "conversation_not_owned_by_user",
+            },
+        )
+        return False
+
     async def authorize(self, user_id: str, relation: str, resource: str, context: dict[str, Any] | None = None) -> bool:
         """
         Check if user is authorized using OpenFGA
@@ -244,109 +374,21 @@ class AuthMiddleware:
                     # Fail closed - deny access on error
                     return False
 
-            # SECURITY CONTROL (OpenAI Codex Finding #1): Check if fallback authorization is allowed
-            # When OpenFGA is not available, check configuration to determine if we should:
-            # 1. Fail closed (deny all access) - secure default for production
-            # 2. Fall back to role-based checks - only if explicitly enabled for dev/test
-
-            allow_fallback = getattr(self.settings, "allow_auth_fallback", False) if self.settings else False
-            environment = getattr(self.settings, "environment", "production") if self.settings else "production"
-
-            # Defense in depth: NEVER allow fallback in production, even if misconfigured
-            if environment == "production":
-                logger.error(
-                    "Authorization DENIED: OpenFGA unavailable in production environment. "
-                    "Fallback authorization is not permitted in production for security reasons.",
-                    extra={
-                        "user_id": user_id,
-                        "relation": relation,
-                        "resource": resource,
-                        "environment": environment,
-                        "allow_auth_fallback": allow_fallback,
-                    },
-                )
+            # Check if fallback authorization is allowed
+            if not self._check_fallback_allowed(user_id, relation, resource):
                 return False
 
-            # Check if fallback is explicitly enabled
-            if not allow_fallback:
-                logger.warning(
-                    "Authorization DENIED: OpenFGA unavailable and fallback authorization is disabled. "
-                    "Set ALLOW_AUTH_FALLBACK=true to enable role-based fallback in development/test.",
-                    extra={
-                        "user_id": user_id,
-                        "relation": relation,
-                        "resource": resource,
-                        "allow_auth_fallback": allow_fallback,
-                        "environment": environment,
-                    },
-                )
+            # Get user roles
+            user_roles = await self._get_user_roles(user_id)
+            if user_roles is None:
                 return False
 
-            # Fallback: simple permission check (only when explicitly allowed in non-production)
-            logger.warning(
-                "OpenFGA not available, using fallback authorization (explicitly enabled)",
-                extra={
-                    "allow_auth_fallback": allow_fallback,
-                    "environment": environment,
-                },
-            )
+            # Extract username for conversation checks
+            username = user_id.split(":", 1)[1] if ":" in user_id else user_id
+            import re
 
-            # Extract username from user_id (handle worker-safe IDs for pytest-xdist)
-            # InMemoryUserProvider is test-only, so this test-specific logic is acceptable
-            # Examples: "user:alice" → "alice", "user:test_gw0_alice" → "alice"
-            if ":" in user_id:
-                id_part = user_id.split(":", 1)[1]  # Remove "user:" prefix
-                # Check if it's a worker-safe ID (format: test_gw\d+_username)
-                import re
-
-                match = re.match(r"test_gw\d+_(.*)", id_part)
-                username = match.group(1) if match else id_part
-            else:
-                username = user_id
-
-            # Get user data - try in-memory first, then query provider
-            user_data = None
-            user_roles = []
-
-            if isinstance(self.user_provider, InMemoryUserProvider):
-                # Fast path: Use in-memory users_db
-                if username not in self.users_db:
-                    logger.warning(
-                        "Fallback authorization denied - user not found",
-                        extra={"user_id": user_id, "username": username, "provider": "InMemory"},
-                    )
-                    return False
-                user = self.users_db[username]
-                user_roles = user["roles"]
-
-            else:
-                # For external providers (Keycloak, etc.): Query the provider
-                try:
-                    user_data = await self.user_provider.get_user_by_username(username)
-                    if not user_data:
-                        logger.warning(
-                            "Fallback authorization denied - user not found in provider",
-                            extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
-                        )
-                        return False
-                    user_roles = user_data.roles
-                    logger.info(
-                        "Fetched user from provider for fallback authorization",
-                        extra={
-                            "user_id": user_id,
-                            "username": username,
-                            "provider": type(self.user_provider).__name__,
-                            "roles": user_roles,
-                        },
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Failed to fetch user from provider for fallback authorization: {e}",
-                        extra={"user_id": user_id, "username": username, "provider": type(self.user_provider).__name__},
-                        exc_info=True,
-                    )
-                    # Fail closed - deny access if we can't verify user
-                    return False
+            match = re.match(r"test_gw\d+_(.*)", username)
+            username = match.group(1) if match else username
 
             # Admin users have access to everything
             if "admin" in user_roles:
@@ -373,51 +415,8 @@ class AuthMiddleware:
                 return authorized
 
             if relation in ("viewer", "editor") and resource.startswith("conversation:"):
-                # SECURITY: Scope conversation access by ownership in fallback mode
-                # Extract thread_id from resource (format: "conversation:thread_id")
                 thread_id = resource.split(":", 1)[1] if ":" in resource else ""
-
-                # Allow access only if:
-                # 1. Thread is the default/unnamed thread
-                # 2. Thread explicitly belongs to this user (prefixed with username)
-                # 3. User is accessing their own user-scoped conversations
-                if thread_id == "default" or thread_id == "":
-                    logger.info(
-                        "Fallback authorization granted - default conversation",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Check if conversation belongs to this user
-                # Format: "conversation:username_thread" or "conversation:user:username_thread"
-                if thread_id.startswith(f"{username}_"):
-                    logger.info(
-                        "Fallback authorization granted - user-owned conversation",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Also support user:username prefix in thread_id
-                user_id_normalized = user_id.split(":")[-1] if ":" in user_id else user_id
-                if thread_id.startswith(f"{user_id_normalized}_"):
-                    logger.info(
-                        "Fallback authorization granted - user-owned conversation (normalized)",
-                        extra={"user_id": user_id, "username": username, "relation": relation, "resource": resource},
-                    )
-                    return True
-
-                # Deny access to conversations not owned by this user
-                logger.warning(
-                    "Fallback authorization denied conversation access",
-                    extra={
-                        "user_id": user_id,
-                        "username": username,
-                        "thread_id": thread_id,
-                        "relation": relation,
-                        "reason": "conversation_not_owned_by_user",
-                    },
-                )
-                return False
+                return self._check_conversation_access(user_id, username, thread_id, relation, resource)
 
             # Default deny
             logger.warning(
@@ -761,9 +760,8 @@ def require_auth(  # type: ignore[no-untyped-def]
                 user_id = auth_result.user_id
 
             # Authorize if relation and resource specified
-            if relation and resource:
-                if not await auth.authorize(user_id, relation, resource):  # type: ignore[arg-type]
-                    raise PermissionError(f"Not authorized: {user_id} cannot {relation} {resource}")
+            if relation and resource and not await auth.authorize(user_id, relation, resource):  # type: ignore[arg-type]
+                raise PermissionError(f"Not authorized: {user_id} cannot {relation} {resource}")
 
             # Add user_id to kwargs if authenticated
             kwargs["user_id"] = user_id

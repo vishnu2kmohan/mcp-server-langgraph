@@ -19,6 +19,7 @@ Example:
 """
 
 import ast
+from pathlib import Path
 from typing import Any
 
 from .ast_parser import PythonCodeParser
@@ -83,7 +84,7 @@ class GraphExtractor:
         Example:
             >>> workflow = extractor.extract_from_file("agent.py")
         """
-        with open(file_path) as f:
+        with Path(file_path).open() as f:
             code = f.read()
 
         return self.extract_from_code(code)

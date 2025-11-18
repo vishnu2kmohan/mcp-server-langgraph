@@ -192,13 +192,13 @@ class OpenFGAClient:
                         message=f"OpenFGA check timed out: {e}",
                         metadata={"user": user, "relation": relation, "object": object},
                         cause=e,
-                    )
+                    ) from e
                 if "unavailable" in error_msg or "connection" in error_msg:
                     raise OpenFGAUnavailableError(
                         message=f"OpenFGA service unavailable: {e}",
                         metadata={"user": user, "relation": relation, "object": object},
                         cause=e,
-                    )
+                    ) from e
                 logger.error(
                     f"OpenFGA check failed: {e}",
                     extra={"user": user, "relation": relation, "object": object},
@@ -211,7 +211,7 @@ class OpenFGAClient:
                     message=f"OpenFGA error: {e}",
                     metadata={"user": user, "relation": relation, "object": object},
                     cause=e,
-                )
+                ) from e
 
     @circuit_breaker(name="openfga")
     @retry_with_backoff()  # Uses global config (prod: 3 attempts, test: 1 attempt for fast tests)
@@ -252,7 +252,7 @@ class OpenFGAClient:
                     message=f"Failed to write tuples: {e}",
                     metadata={"tuple_count": len(tuples)},
                     cause=e,
-                )
+                ) from e
 
     async def delete_tuples(self, tuples: list[dict[str, str]]) -> None:
         """
@@ -421,6 +421,26 @@ class OpenFGAClient:
                 raise
 
 
+def _extract_leaf_users(leaf: dict[str, Any]) -> list[str]:
+    """Extract users from a leaf node."""
+    if isinstance(leaf, dict) and "users" in leaf:
+        user_data = leaf["users"]
+        if isinstance(user_data, dict) and "users" in user_data:
+            user_list = user_data["users"]
+            if isinstance(user_list, list):
+                return user_list
+    return []
+
+
+def _extract_node_users(nodes: list[dict[str, Any]]) -> list[str]:
+    """Extract users from a list of nodes."""
+    users: list[str] = []
+    if isinstance(nodes, list):
+        for node in nodes:
+            users.extend(_extract_users_from_expansion(node))
+    return users
+
+
 def _extract_users_from_expansion(expansion: dict[str, Any]) -> list[str]:
     """
     Extract all user IDs from an OpenFGA expansion tree.
@@ -445,39 +465,26 @@ def _extract_users_from_expansion(expansion: dict[str, Any]) -> list[str]:
 
     # Handle leaf nodes (direct user lists)
     if "leaf" in expansion:
-        leaf = expansion["leaf"]
-        if isinstance(leaf, dict) and "users" in leaf:
-            user_data = leaf["users"]
-            if isinstance(user_data, dict) and "users" in user_data:
-                user_list = user_data["users"]
-                if isinstance(user_list, list):
-                    users.extend(user_list)
+        users.extend(_extract_leaf_users(expansion["leaf"]))
 
     # Handle union nodes (multiple children)
     if "union" in expansion:
         union = expansion["union"]
         if isinstance(union, dict) and "nodes" in union:
-            nodes = union["nodes"]
-            if isinstance(nodes, list):
-                for node in nodes:
-                    users.extend(_extract_users_from_expansion(node))
+            users.extend(_extract_node_users(union["nodes"]))
 
     # Handle intersection nodes (all children must be true)
     if "intersection" in expansion:
         intersection = expansion["intersection"]
         if isinstance(intersection, dict) and "nodes" in intersection:
-            nodes = intersection["nodes"]
-            if isinstance(nodes, list):
-                for node in nodes:
-                    users.extend(_extract_users_from_expansion(node))
+            users.extend(_extract_node_users(intersection["nodes"]))
 
     # Handle difference nodes (exclusion)
     if "difference" in expansion:
         difference = expansion["difference"]
-        if isinstance(difference, dict):
+        if isinstance(difference, dict) and "base" in difference:
             # Base users
-            if "base" in difference:
-                users.extend(_extract_users_from_expansion(difference["base"]))
+            users.extend(_extract_users_from_expansion(difference["base"]))
             # Subtract users are excluded, so we don't add them
 
     return list(set(users))  # Deduplicate

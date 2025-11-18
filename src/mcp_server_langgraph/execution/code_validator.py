@@ -22,7 +22,6 @@ class ValidationResult:
     warnings: list[str] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        "valid" if self.is_valid else "invalid"
         return f"ValidationResult(is_valid={self.is_valid}, errors={len(self.errors)}, warnings={len(self.warnings)})"
 
 
@@ -189,7 +188,7 @@ class SecurityVisitor(ast.NodeVisitor):
         self.errors: list[str] = []
         self.warnings: list[str] = []
 
-    def visit_Import(self, node: ast.Import) -> None:
+    def visit_Import(self, node: ast.Import) -> None:  # noqa: N802
         """Check import statements"""
         for alias in node.names:
             module_name = alias.name
@@ -205,7 +204,7 @@ class SecurityVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:  # noqa: N802
         """Check from ... import statements"""
         if node.module:
             # Check if module is explicitly blocked
@@ -220,7 +219,7 @@ class SecurityVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_Call(self, node: ast.Call) -> None:
+    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
         """Check function calls for dangerous builtins"""
         func_name = self._get_call_name(node)
 
@@ -238,7 +237,7 @@ class SecurityVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_Attribute(self, node: ast.Attribute) -> None:
+    def visit_Attribute(self, node: ast.Attribute) -> None:  # noqa: N802
         """Check attribute access for suspicious patterns"""
         attr_name = node.attr
 
@@ -252,7 +251,7 @@ class SecurityVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_Name(self, node: ast.Name) -> None:
+    def visit_Name(self, node: ast.Name) -> None:  # noqa: N802
         """Check variable/name access for suspicious patterns"""
         name = node.id
 
@@ -266,7 +265,7 @@ class SecurityVisitor(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def visit_While(self, node: ast.While) -> None:
+    def visit_While(self, node: ast.While) -> None:  # noqa: N802
         """Check while loops for obvious infinite loops"""
         # Detect 'while True:' or 'while 1:'
         if isinstance(node.test, ast.Constant) and (node.test.value is True or node.test.value == 1):
