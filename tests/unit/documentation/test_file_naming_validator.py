@@ -19,8 +19,15 @@ from scripts.validators.file_naming_validator import (
 )
 
 
+@pytest.mark.xdist_group(name="file_naming_validator")
 class TestFileNamingValidator:
     """Test file naming convention validation."""
+
+
+    def teardown_method(self):
+        """Force GC to prevent resource leaks in xdist workers"""
+        import gc
+        gc.collect()
 
     def test_lowercase_kebab_case_passes(self):
         """Valid kebab-case filenames should pass."""

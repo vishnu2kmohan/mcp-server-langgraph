@@ -315,15 +315,18 @@ class TestWorkflowValidation:
                         continue
 
                     # Check for Docker-related actions
-                    if any(
-                        action in uses
-                        for action in [
-                            "docker/setup-buildx-action",
-                            "docker/login-action",
-                            "docker/build-push-action",
-                            "docker/setup-qemu-action",
-                        ]
-                    ) and "@" in uses:
+                    if (
+                        any(
+                            action in uses
+                            for action in [
+                                "docker/setup-buildx-action",
+                                "docker/login-action",
+                                "docker/build-push-action",
+                                "docker/setup-qemu-action",
+                            ]
+                        )
+                        and "@" in uses
+                    ):
                         action, version = uses.rsplit("@", 1)
 
                         if action not in docker_actions_used:

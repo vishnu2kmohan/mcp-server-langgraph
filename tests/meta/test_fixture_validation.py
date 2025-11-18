@@ -243,10 +243,14 @@ class TestFixtureDecorators:
                     return True
 
             # @pytest.fixture(...)
-            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                isinstance(decorator.func.value, ast.Name)
-                and decorator.func.value.id == "pytest"
-                and decorator.func.attr == "fixture"
+            elif (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and (
+                    isinstance(decorator.func.value, ast.Name)
+                    and decorator.func.value.id == "pytest"
+                    and decorator.func.attr == "fixture"
+                )
             ):
                 return True
 
@@ -496,12 +500,16 @@ class TestFixtureDecorators:
                     and decorator.attr in ["skip", "xfail", "documentation"]
                 ):
                     return True
-            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                isinstance(decorator.func.value, ast.Attribute)
-                and isinstance(decorator.func.value.value, ast.Name)
-                and decorator.func.value.value.id == "pytest"
-                and decorator.func.value.attr == "mark"
-                and decorator.func.attr in ["skip", "xfail"]
+            elif (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr in ["skip", "xfail"]
+                )
             ):
                 return True
 
@@ -652,10 +660,14 @@ class TestFixtureDecorators:
         """
         for decorator in func_node.decorator_list:
             # Check for @pytest.fixture(scope="session")
-            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                isinstance(decorator.func.value, ast.Name)
-                and decorator.func.value.id == "pytest"
-                and decorator.func.attr == "fixture"
+            if (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and (
+                    isinstance(decorator.func.value, ast.Name)
+                    and decorator.func.value.id == "pytest"
+                    and decorator.func.attr == "fixture"
+                )
             ):
                 # Look for scope keyword argument
                 for keyword in decorator.keywords:

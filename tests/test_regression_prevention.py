@@ -65,15 +65,19 @@ class TestPytestFixtureValidation:
                     for dec in node.decorator_list:
                         # Direct decorator: @pytest.fixture or @fixture
                         if (
-                            isinstance(dec, ast.Name)
-                            and dec.id == "fixture"
-                            or isinstance(dec, ast.Attribute)
-                            and dec.attr == "fixture"
-                        ) or isinstance(dec, ast.Call) and (
-                            isinstance(dec.func, ast.Name)
-                            and dec.func.id == "fixture"
-                            or isinstance(dec.func, ast.Attribute)
-                            and dec.func.attr == "fixture"
+                            (
+                                isinstance(dec, ast.Name)
+                                and dec.id == "fixture"
+                                or isinstance(dec, ast.Attribute)
+                                and dec.attr == "fixture"
+                            )
+                            or isinstance(dec, ast.Call)
+                            and (
+                                isinstance(dec.func, ast.Name)
+                                and dec.func.id == "fixture"
+                                or isinstance(dec.func, ast.Attribute)
+                                and dec.func.attr == "fixture"
+                            )
                         ):
                             has_fixture_decorator = True
 

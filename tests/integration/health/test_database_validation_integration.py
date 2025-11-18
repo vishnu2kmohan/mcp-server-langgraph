@@ -24,9 +24,15 @@ from mcp_server_langgraph.health.database_checks import DatabaseValidator, Envir
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-@pytest.mark.xdist_group(name="testdatabasevalidationintegration")
+@pytest.mark.xdist_group(name="database_validation")
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
+
+
+    def teardown_method(self):
+        """Force GC to prevent resource leaks in xdist workers"""
+        import gc
+        gc.collect()
 
     @pytest.fixture(autouse=True)
     def setup_test_environment(self, monkeypatch):
@@ -198,8 +204,14 @@ class TestDatabaseValidationIntegration:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="database_validation")
 class TestDatabaseValidationFailureCases:
     """Integration tests for validation failure scenarios"""
+
+    def teardown_method(self):
+        """Force GC to prevent resource leaks in xdist workers"""
+        import gc
+        gc.collect()
 
     @pytest.fixture(autouse=True)
     def setup_test_environment(self, monkeypatch):

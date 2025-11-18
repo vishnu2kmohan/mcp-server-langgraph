@@ -333,7 +333,9 @@ class TestRBACConfiguration:
         if violations:
             import warnings
 
-            warnings.warn("Potentially overly permissive RBAC rules (consider restricting):\n" + "\n".join(violations), stacklevel=2)
+            warnings.warn(
+                "Potentially overly permissive RBAC rules (consider restricting):\n" + "\n".join(violations), stacklevel=2
+            )
 
     def test_role_bindings_reference_existing_service_accounts(self, base_resources):
         """

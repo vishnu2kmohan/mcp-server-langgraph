@@ -254,10 +254,14 @@ class TestMarkerEnforcement:
             has_xdist_group = False
             for decorator in class_node.decorator_list:
                 # @pytest.mark.xdist_group(name="...")
-                if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                    isinstance(decorator.func.value, ast.Attribute)
-                    and decorator.func.value.attr == "mark"
-                    and decorator.func.attr == "xdist_group"
+                if (
+                    isinstance(decorator, ast.Call)
+                    and isinstance(decorator.func, ast.Attribute)
+                    and (
+                        isinstance(decorator.func.value, ast.Attribute)
+                        and decorator.func.value.attr == "mark"
+                        and decorator.func.attr == "xdist_group"
+                    )
                 ):
                     has_xdist_group = True
                     break

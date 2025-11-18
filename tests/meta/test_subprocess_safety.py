@@ -58,9 +58,7 @@ class TestSubprocessSafety:
 
                 # Handle subprocess.run()
                 if isinstance(node.func, ast.Attribute) and (
-                    node.func.attr == "run"
-                    and isinstance(node.func.value, ast.Name)
-                    and node.func.value.id == "subprocess"
+                    node.func.attr == "run" and isinstance(node.func.value, ast.Name) and node.func.value.id == "subprocess"
                 ):
                     is_subprocess_run = True
 

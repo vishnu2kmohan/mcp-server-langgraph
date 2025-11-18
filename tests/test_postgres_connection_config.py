@@ -19,8 +19,15 @@ import yaml
 
 @pytest.mark.unit
 @pytest.mark.precommit
+@pytest.mark.xdist_group(name="postgres_config_validation")
 class TestPostgresConnectionConfig:
     """Validate PostgreSQL connection configuration consistency."""
+
+    def teardown_method(self):
+        """Force GC to prevent resource leaks in xdist workers"""
+        import gc
+
+        gc.collect()
 
     def test_docker_compose_and_conftest_use_same_password(self):
         """

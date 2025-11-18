@@ -214,12 +214,16 @@ class TestMarkerConsistency:
                     and decorator.attr == marker_name
                 ):
                     return True
-            elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                isinstance(decorator.func.value, ast.Attribute)
-                and isinstance(decorator.func.value.value, ast.Name)
-                and decorator.func.value.value.id == "pytest"
-                and decorator.func.value.attr == "mark"
-                and decorator.func.attr == marker_name
+            elif (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr == marker_name
+                )
             ):
                 return True
         return False
@@ -451,19 +455,23 @@ class TestMarkerConsistency:
             Skip reason string or empty string if not a skip marker
         """
         # Handle @pytest.mark.skip(reason="...")
-        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-            isinstance(decorator.func.value, ast.Attribute)
-            and isinstance(decorator.func.value.value, ast.Name)
-            and decorator.func.value.value.id == "pytest"
-            and decorator.func.value.attr == "mark"
-            and decorator.func.attr == "skip"
+        if (
+            isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Attribute)
+            and (
+                isinstance(decorator.func.value, ast.Attribute)
+                and isinstance(decorator.func.value.value, ast.Name)
+                and decorator.func.value.value.id == "pytest"
+                and decorator.func.value.attr == "mark"
+                and decorator.func.attr == "skip"
+            )
         ):
             # Extract reason from keyword arguments
             for keyword in decorator.keywords:
                 if keyword.arg == "reason" and isinstance(keyword.value, ast.Constant):
                     return keyword.value.value
-                            # Note: ast.Str removed - deprecated since Python 3.8, removed in Python 3.14
-                            # All string constants are now ast.Constant nodes
+                    # Note: ast.Str removed - deprecated since Python 3.8, removed in Python 3.14
+                    # All string constants are now ast.Constant nodes
 
         return ""
 
@@ -735,12 +743,16 @@ class TestCLIToolGuards:
         """
         for decorator in func_node.decorator_list:
             # Check for @pytest.mark.skipif(...)
-            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute) and (
-                isinstance(decorator.func.value, ast.Attribute)
-                and isinstance(decorator.func.value.value, ast.Name)
-                and decorator.func.value.value.id == "pytest"
-                and decorator.func.value.attr == "mark"
-                and decorator.func.attr == "skipif"
+            if (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and (
+                    isinstance(decorator.func.value, ast.Attribute)
+                    and isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                    and decorator.func.attr == "skipif"
+                )
             ):
                 # Found skipif decorator
                 return True

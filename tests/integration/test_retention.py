@@ -468,11 +468,14 @@ class TestRetentionLogging:
         with patch("pathlib.Path.exists", return_value=True), patch("builtins.open", mock_open(read_data=config_yaml)):
             service = DataRetentionService(session_store=mock_session_store, config_path="test.yaml")
 
-            with patch.object(
-                service,
-                "_cleanup_inactive_sessions",
-                side_effect=Exception("Test error"),
-            ), patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger:
+            with (
+                patch.object(
+                    service,
+                    "_cleanup_inactive_sessions",
+                    side_effect=Exception("Test error"),
+                ),
+                patch("mcp_server_langgraph.compliance.retention.logger") as mock_logger,
+            ):
                 await service.cleanup_sessions()
 
                 # Verify error was logged
@@ -621,7 +624,7 @@ class TestAuditLogStorageIntegration:
 
                 # Should recognize cold storage is configured
                 assert result.policy_name == "audit_logs"
-                    # Implementation note will be logged
+                # Implementation note will be logged
 
     @pytest.mark.asyncio
     async def test_cleanup_without_audit_log_store(self, sample_config):

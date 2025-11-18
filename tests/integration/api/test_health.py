@@ -184,10 +184,13 @@ class TestStartupValidation:
 
     def test_run_startup_validation_fails_on_critical_error(self):
         """Test startup validation raises SystemValidationError on failure"""
-        with patch(
-            "mcp_server_langgraph.api.health.validate_observability_initialized",
-            return_value=(False, "Observability broken"),
-        ), patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
+        with (
+            patch(
+                "mcp_server_langgraph.api.health.validate_observability_initialized",
+                return_value=(False, "Observability broken"),
+            ),
+            patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")),
+        ):
             with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
                     with pytest.raises(SystemValidationError, match="Startup validation failed"):
@@ -254,10 +257,13 @@ class TestHealthCheckEndpoint:
 
     def test_health_endpoint_shows_unhealthy_with_errors(self, client):
         """Test health endpoint shows unhealthy status with errors"""
-        with patch(
-            "mcp_server_langgraph.api.health.validate_observability_initialized",
-            return_value=(False, "Observability broken"),
-        ), patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
+        with (
+            patch(
+                "mcp_server_langgraph.api.health.validate_observability_initialized",
+                return_value=(False, "Observability broken"),
+            ),
+            patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")),
+        ):
             with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
                     response = client.get("/api/v1/health")

@@ -81,9 +81,7 @@ class TestCIWorkflowTerraformSetup:
         Validate that CI workflow has a pre-commit job.
         """
         jobs = ci_workflow.get("jobs", {})
-        precommit_jobs = [
-            job_name for job_name in jobs if "pre-commit" in job_name.lower() or "precommit" in job_name.lower()
-        ]
+        precommit_jobs = [job_name for job_name in jobs if "pre-commit" in job_name.lower() or "precommit" in job_name.lower()]
 
         assert len(precommit_jobs) > 0, "No pre-commit job found in CI workflow. " f"Available jobs: {', '.join(jobs.keys())}"
 

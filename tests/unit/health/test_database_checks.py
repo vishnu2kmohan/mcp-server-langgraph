@@ -33,6 +33,7 @@ from mcp_server_langgraph.health.database_checks import (
 )
 
 
+@pytest.mark.xdist_group(name="database_checks")
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""
 

@@ -14,19 +14,17 @@ from typing import TYPE_CHECKING
 
 # Docker is an optional dependency - gracefully handle missing docker package
 try:
+    import docker
     from docker.errors import ImageNotFound, NotFound
     from docker.models.containers import Container
-
-    import docker
 
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
     if TYPE_CHECKING:
+        import docker
         from docker.errors import ImageNotFound, NotFound
         from docker.models.containers import Container
-
-        import docker
 
 import contextlib
 

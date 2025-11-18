@@ -85,6 +85,7 @@ def cache_service_with_mock_redis():
         assert stats["l2_misses"] == 0
         assert stats["sets"] == 0
         assert stats["deletes"] == 0
+
     return None
 
 

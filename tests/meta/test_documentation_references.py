@@ -264,4 +264,10 @@ class TestDocumentationReferences:
         # TODO: Fix remaining documentation cross-references
         # Threshold set to 500 to allow builds while docs are being fixed
         if len(broken_links) > 500:
-            raise AssertionError(f"Found {len(broken_links)} broken documentation cross-references:\n" + "\n".join(f"  - {link}" for link in broken_links[:20]) + (f"\n  ... and {len(broken_links) - 20} more" if len(broken_links) > 20 else "") + "\n\n" "Fix broken links or update documentation structure.")
+            raise AssertionError(
+                f"Found {len(broken_links)} broken documentation cross-references:\n"
+                + "\n".join(f"  - {link}" for link in broken_links[:20])
+                + (f"\n  ... and {len(broken_links) - 20} more" if len(broken_links) > 20 else "")
+                + "\n\n"
+                "Fix broken links or update documentation structure."
+            )
