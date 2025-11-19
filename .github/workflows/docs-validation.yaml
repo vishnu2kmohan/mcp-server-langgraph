@@ -130,27 +130,22 @@ jobs:
           echo "::endgroup::"
         continue-on-error: true
 
-      # Unique Check #3: MDX syntax auto-fix validation
-      - name: Check MDX Syntax (Dry-run)
-        id: mdx-syntax-check
-        run: |
-          echo "::group::MDX Syntax Check"
-          python scripts/fix_mdx_syntax.py --all --dry-run
-          echo "::endgroup::"
-        continue-on-error: true
+      # Note: MDX syntax validation removed (2025-11-19)
+      # Reason: fix_mdx_syntax.py Pattern 4 incorrectly treats bash/python comments (##)
+      #         as markdown headers, removing language specifiers that Mintlify requires.
+      #         This created validator conflict - Mintlify is authoritative for MDX syntax.
+      # See: PR #112 analysis showing Pattern 4 flagged legitimate code blocks with
+      #      bash comments like "## Install dependencies" as needing "fixes"
 
       - name: Check Specialized Validation Results
         run: |
           failures=""
-          # Note: Code block validation is disabled (see line 114)
+          # Note: MDX syntax check removed (see above comment)
           if [ "${{ steps.adr-sync-validation.outcome }}" == "failure" ]; then
             failures="${failures}- ADR synchronization validation failed\n"
           fi
           if [ "${{ steps.mdx-ext-validation.outcome }}" == "failure" ]; then
             failures="${failures}- MDX extension validation failed\n"
-          fi
-          if [ "${{ steps.mdx-syntax-check.outcome }}" == "failure" ]; then
-            failures="${failures}- MDX syntax check failed\n"
           fi
 
           if [ -n "$failures" ]; then
