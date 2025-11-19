@@ -26,11 +26,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+
 # Global cache for function signatures to avoid re-parsing files
-_function_signature_cache: Dict[str, Optional[bool]] = {}
+_function_signature_cache: dict[str, bool | None] = {}
 
 
-def is_async_function_in_source(module_path: str, function_name: str) -> Optional[bool]:
+def is_async_function_in_source(module_path: str, function_name: str) -> bool | None:
     """
     Check if a function is async by parsing its source file.
 
@@ -57,7 +58,7 @@ def is_async_function_in_source(module_path: str, function_name: str) -> Optiona
             continue
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content, filename=str(file_path))
@@ -68,7 +69,7 @@ def is_async_function_in_source(module_path: str, function_name: str) -> Optiona
                 if isinstance(node, ast.AsyncFunctionDef) and node.name == function_name:
                     _function_signature_cache[cache_key] = True
                     return True
-                elif isinstance(node, ast.FunctionDef) and node.name == function_name:
+                if isinstance(node, ast.FunctionDef) and node.name == function_name:
                     _function_signature_cache[cache_key] = False
                     return False
 
@@ -78,7 +79,7 @@ def is_async_function_in_source(module_path: str, function_name: str) -> Optiona
                         if isinstance(item, ast.AsyncFunctionDef) and item.name == function_name:
                             _function_signature_cache[cache_key] = True
                             return True
-                        elif isinstance(item, ast.FunctionDef) and item.name == function_name:
+                        if isinstance(item, ast.FunctionDef) and item.name == function_name:
                             _function_signature_cache[cache_key] = False
                             return False
         except Exception:
@@ -91,11 +92,11 @@ def is_async_function_in_source(module_path: str, function_name: str) -> Optiona
 class AsyncMockConfigChecker(ast.NodeVisitor):
     """AST visitor to detect unconfigured AsyncMock instances."""
 
-    def __init__(self, filepath: str, source_lines: List[str]):
+    def __init__(self, filepath: str, source_lines: list[str]):
         self.filepath = filepath
         self.source_lines = source_lines
-        self.issues: List[Tuple[int, str]] = []
-        self.async_mock_vars: Dict[str, int] = {}  # var_name -> line_number
+        self.issues: list[tuple[int, str]] = []
+        self.async_mock_vars: dict[str, int] = {}  # var_name -> line_number
 
     def has_noqa_comment(self, lineno: int) -> bool:
         """Check if a line has # noqa: async-mock-config comment."""
@@ -149,12 +150,9 @@ class AsyncMockConfigChecker(ast.NodeVisitor):
 
     def _has_config_kwargs(self, node: ast.Call) -> bool:
         """Check if AsyncMock() call has return_value or side_effect kwargs."""
-        for keyword in node.keywords:
-            if keyword.arg in ("return_value", "side_effect", "spec", "spec_set"):
-                return True
-        return False
+        return any(keyword.arg in ("return_value", "side_effect", "spec", "spec_set") for keyword in node.keywords)
 
-    def _get_full_attr_name(self, node: ast.Attribute) -> Optional[str]:
+    def _get_full_attr_name(self, node: ast.Attribute) -> str | None:
         """Get full attribute name like 'mock.method'."""
         parts = []
         current = node
@@ -166,11 +164,11 @@ class AsyncMockConfigChecker(ast.NodeVisitor):
             return ".".join(reversed(parts))
         return None
 
-    def _get_base_name(self, node: ast.expr) -> Optional[str]:
+    def _get_base_name(self, node: ast.expr) -> str | None:
         """Get base variable name from expression."""
         if isinstance(node, ast.Name):
             return node.id
-        elif isinstance(node, ast.Attribute):
+        if isinstance(node, ast.Attribute):
             return self._get_base_name(node.value)
         return None
 
@@ -215,10 +213,10 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
         "_send_smtp",
     ]
 
-    def __init__(self, filename: str, source_lines: List[str]):
+    def __init__(self, filename: str, source_lines: list[str]):
         self.filename = filename
         self.source_lines = source_lines
-        self.issues: List[Tuple[int, str]] = []
+        self.issues: list[tuple[int, str]] = []
         self.has_asyncmock_import = False
         self.in_xfail_function = False
 
@@ -281,7 +279,7 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
 
         self.generic_visit(node)
 
-    def _is_patch_call(self, node: ast.Call) -> Optional[str]:
+    def _is_patch_call(self, node: ast.Call) -> str | None:
         """Check if node is a patch() or patch.object() call. Returns patch name or None."""
         if isinstance(node.func, ast.Attribute):
             if node.func.attr in ("object", "__call__"):
@@ -299,7 +297,7 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
                     return True
         return False
 
-    def _extract_method_info(self, node: ast.Call) -> Tuple[Optional[str], Optional[str]]:
+    def _extract_method_info(self, node: ast.Call) -> tuple[str | None, str | None]:
         """Extract method name and module path from patch call."""
         method_name = None
         module_path = None
@@ -317,7 +315,7 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
 
         return method_name, module_path
 
-    def _should_flag_method(self, method_name: str, module_path: Optional[str]) -> bool:
+    def _should_flag_method(self, method_name: str, module_path: str | None) -> bool:
         """Determine if method should be flagged for missing AsyncMock."""
         if method_name in self.SYNC_FUNCTION_WHITELIST:
             return False
@@ -326,16 +324,12 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
             is_async = is_async_function_in_source(module_path, method_name)
             if is_async is True:
                 return True
-            elif is_async is False:
+            if is_async is False:
                 return False
             # Fall through to pattern matching if can't determine from source
 
         # Pattern-based detection
-        for pattern in self.ASYNC_PATTERNS:
-            if pattern in method_name.lower():
-                return True
-
-        return False
+        return any(pattern in method_name.lower() for pattern in self.ASYNC_PATTERNS)
 
     def _has_xfail_decorator(self, node) -> bool:
         """Check if node has @pytest.mark.xfail decorator."""
@@ -362,7 +356,7 @@ class AsyncMockUsageChecker(ast.NodeVisitor):
         return False
 
 
-def check_async_mock_configuration(filepath: str) -> List[Tuple[int, str]]:
+def check_async_mock_configuration(filepath: str) -> list[tuple[int, str]]:
     """
     Check a file for unconfigured AsyncMock instances.
 
@@ -373,7 +367,7 @@ def check_async_mock_configuration(filepath: str) -> List[Tuple[int, str]]:
         List of (line_number, message) tuples for violations found
     """
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         source_lines = content.splitlines()
@@ -391,7 +385,7 @@ def check_async_mock_configuration(filepath: str) -> List[Tuple[int, str]]:
         return []
 
 
-def check_async_mock_usage(filepath: str) -> List[Tuple[int, str]]:
+def check_async_mock_usage(filepath: str) -> list[tuple[int, str]]:
     """
     Check a file for async methods mocked without AsyncMock.
 
@@ -402,7 +396,7 @@ def check_async_mock_usage(filepath: str) -> List[Tuple[int, str]]:
         List of (line_number, message) tuples for violations found
     """
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
 
         source_lines = content.splitlines()

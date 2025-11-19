@@ -264,8 +264,7 @@ class TestTerraformVariableValidations:
                         if ref != current_variable:
                             relative_path = file_path.relative_to(Path(__file__).parent.parent.parent)
                             invalid_validations.append(
-                                f"{relative_path}:{line_num} - "
-                                f"variable '{current_variable}' validation references var.{ref}"
+                                f"{relative_path}:{line_num} - variable '{current_variable}' validation references var.{ref}"
                             )
 
                 # Exit validation block

@@ -40,7 +40,7 @@ def test_otel_deployment_has_pod_security_context():
     - seccompProfile.type: RuntimeDefault
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     assert deployment_file.exists(), f"OTel deployment not found: {deployment_file}"
@@ -112,7 +112,7 @@ def test_otel_deployment_has_container_security_context():
     - capabilities.drop: [ALL]
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     with open(deployment_file) as f:
@@ -130,9 +130,9 @@ def test_otel_deployment_has_container_security_context():
             otel_container = container
             break
 
-    assert otel_container is not None, (
-        "otel-collector container not found in deployment.\n" f"Available containers: {[c.get('name') for c in containers]}"
-    )
+    assert (
+        otel_container is not None
+    ), f"otel-collector container not found in deployment.\nAvailable containers: {[c.get('name') for c in containers]}"
 
     # Check for container-level securityContext
     security_context = otel_container.get("securityContext")
@@ -185,7 +185,7 @@ def test_otel_has_readonly_root_filesystem():
     "Container 'otel-collector' should set 'securityContext.readOnlyRootFilesystem' to true"
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     with open(deployment_file) as f:
@@ -218,7 +218,7 @@ def test_otel_runs_as_nonroot():
     This addresses Trivy AVD-KSV-0118 finding about default security context.
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     with open(deployment_file) as f:
@@ -252,7 +252,7 @@ def test_otel_has_tmpfs_volumes():
     These should be emptyDir volumes (tmpfs in memory).
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     with open(deployment_file) as f:
@@ -299,11 +299,11 @@ def test_otel_has_tmpfs_volumes():
     mount_paths = [vm.get("mountPath") for vm in volume_mounts]
 
     # Checking for volume mount path "/tmp", not creating temp file
-    assert "/tmp" in mount_paths, "Missing volumeMount for /tmp directory.\n" f"Current mounts: {mount_paths}"  # nosec B108
+    assert "/tmp" in mount_paths, f"Missing volumeMount for /tmp directory.\nCurrent mounts: {mount_paths}"  # nosec B108
 
-    assert "/home/otelcol" in mount_paths or "/home" in mount_paths, (
-        "Missing volumeMount for /home/otelcol or /home directory.\n" f"Current mounts: {mount_paths}"
-    )
+    assert (
+        "/home/otelcol" in mount_paths or "/home" in mount_paths
+    ), f"Missing volumeMount for /home/otelcol or /home directory.\nCurrent mounts: {mount_paths}"
 
 
 def test_otel_drops_all_capabilities():
@@ -314,7 +314,7 @@ def test_otel_drops_all_capabilities():
     OTel collector doesn't need any special capabilities.
     """
     deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/base/otel-collector-deployment.yaml"
     )
 
     with open(deployment_file) as f:

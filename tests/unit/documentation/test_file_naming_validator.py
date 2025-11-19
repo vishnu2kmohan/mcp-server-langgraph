@@ -23,10 +23,10 @@ from scripts.validators.file_naming_validator import (
 class TestFileNamingValidator:
     """Test file naming convention validation."""
 
-
     def teardown_method(self):
         """Force GC to prevent resource leaks in xdist workers"""
         import gc
+
         gc.collect()
 
     def test_lowercase_kebab_case_passes(self):

@@ -29,6 +29,7 @@ Exit codes:
 import sys
 from pathlib import Path
 
+
 # Add project root to path to enable imports from tests/
 _project_root = Path(__file__).parent.parent
 if str(_project_root) not in sys.path:
@@ -74,9 +75,8 @@ def main():
         print("\n💡 Fix: Import AsyncMock and add new_callable=AsyncMock to patch calls")
         print("   Example: patch.object(obj, 'async_method', new_callable=AsyncMock)")
         return 1
-    else:
-        print("✅ All async mocks are correctly configured!")
-        return 0
+    print("✅ All async mocks are correctly configured!")
+    return 0
 
 
 if __name__ == "__main__":

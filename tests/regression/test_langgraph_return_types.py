@@ -224,9 +224,9 @@ class TestLangGraphReturnTypes:
         result = compiled.invoke(SupervisorState(task="test"), config=config)
 
         # THEN: Should always return dict
-        assert isinstance(result, dict), (
-            f"Return type should be dict (with checkpointer={use_checkpointer}), " f"got {type(result).__name__}"
-        )
+        assert isinstance(
+            result, dict
+        ), f"Return type should be dict (with checkpointer={use_checkpointer}), got {type(result).__name__}"
 
 
 @pytest.mark.xdist_group(name="langgraph_compatibility")

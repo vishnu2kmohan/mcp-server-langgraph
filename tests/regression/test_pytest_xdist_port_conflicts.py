@@ -215,14 +215,14 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
     docstring_lower = docstring.lower()
 
     # Should mention single/shared infrastructure
-    assert "single" in docstring_lower or "shared" in docstring_lower or "session" in docstring_lower, (
-        f"Docstring should explain single/shared infrastructure approach.\n" f"Current docstring:\n{docstring}"
-    )
+    assert (
+        "single" in docstring_lower or "shared" in docstring_lower or "session" in docstring_lower
+    ), f"Docstring should explain single/shared infrastructure approach.\nCurrent docstring:\n{docstring}"
 
     # Should mention logical isolation
-    assert "schema" in docstring_lower or "isolation" in docstring_lower, (
-        f"Docstring should explain how logical isolation works.\n" f"Current docstring:\n{docstring}"
-    )
+    assert (
+        "schema" in docstring_lower or "isolation" in docstring_lower
+    ), f"Docstring should explain how logical isolation works.\nCurrent docstring:\n{docstring}"
 
 
 @pytest.mark.regression

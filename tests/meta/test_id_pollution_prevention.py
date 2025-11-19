@@ -78,9 +78,9 @@ class TestIDPollutionPreventionHook:
 
         st = os.stat(validation_script)
         is_executable = bool(st.st_mode & stat.S_IXUSR)
-        assert is_executable or validation_script.suffix == ".py", (
-            f"Validation script should be executable: {validation_script}\n" f"Run: chmod +x {validation_script}"
-        )
+        assert (
+            is_executable or validation_script.suffix == ".py"
+        ), f"Validation script should be executable: {validation_script}\nRun: chmod +x {validation_script}"
 
     def test_validation_script_detects_hardcoded_user_ids(self, validation_script: Path, tmp_path: Path) -> None:
         """Test script detects hardcoded user IDs like user:alice."""

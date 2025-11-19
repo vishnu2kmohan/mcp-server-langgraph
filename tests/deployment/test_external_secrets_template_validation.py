@@ -108,13 +108,12 @@ class TestExternalSecretsRedisURLEncoding:
         redis_url = template_data.get("redis-url", "")
         checkpoint_url = template_data.get("checkpoint-redis-url", "")
 
-        assert "| urlquery" in redis_url, (
-            "redis-url missing urlquery filter.\n" "This inconsistency led to production incident staging-758b8f744."
-        )
-        assert "| urlquery" in checkpoint_url, (
-            "checkpoint-redis-url missing urlquery filter.\n"
-            "This inconsistency led to production incident staging-758b8f744."
-        )
+        assert (
+            "| urlquery" in redis_url
+        ), "redis-url missing urlquery filter.\nThis inconsistency led to production incident staging-758b8f744."
+        assert (
+            "| urlquery" in checkpoint_url
+        ), "checkpoint-redis-url missing urlquery filter.\nThis inconsistency led to production incident staging-758b8f744."
 
     def test_redis_password_template_variable_correct(self, staging_external_secrets: dict):
         """Test that Redis URLs reference correct template variable."""
@@ -295,6 +294,6 @@ class TestExternalSecretsMultiEnvironmentConsistency:
         incorrect_pattern = r"redis://:\{\{\s*\.redisPassword\s*\}\}@"
         match = re.search(incorrect_pattern, content)
 
-        assert not match, (
-            f"Environment {overlay_path} has unencoded Redis password.\n" f"Found: {match.group(0) if match else 'N/A'}"
-        )
+        assert (
+            not match
+        ), f"Environment {overlay_path} has unencoded Redis password.\nFound: {match.group(0) if match else 'N/A'}"

@@ -40,7 +40,7 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     2. Step: Security scan rendered manifests
        - scan-ref: /tmp/staging-manifests.yaml (NOT the overlay directory)
     """
-    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/deploy-staging-gke.yaml")
 
     assert workflow_path.exists(), f"Workflow file not found: {workflow_path}"
 
@@ -71,10 +71,9 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
                     trivy_step = step
 
     # Validate that we found both steps
-    assert kustomize_render_step is not None, (
-        "Missing step to render Kustomize manifests. "
-        "Expected a step with 'kubectl kustomize deployments/overlays/staging-gke'"
-    )
+    assert (
+        kustomize_render_step is not None
+    ), "Missing step to render Kustomize manifests. Expected a step with 'kubectl kustomize deployments/overlays/staging-gke'"
 
     assert trivy_step is not None, "Missing Trivy security scan step. Expected step using aquasecurity/trivy-action"
 
@@ -213,7 +212,7 @@ def test_workflow_step_order_is_correct():
 
     This ensures the manifest is rendered before it's scanned.
     """
-    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/deploy-staging-gke.yaml")
 
     with open(workflow_path) as f:
         workflow_yaml = yaml.safe_load(f)

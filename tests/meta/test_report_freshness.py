@@ -37,7 +37,7 @@ class TestReportFreshness:
         """
         report_path = Path("docs-internal/reports/ASYNC_MOCK_SCAN.md")
 
-        assert report_path.exists(), f"Report not found: {report_path}\\n" f"Fix: Run 'make generate-reports'"
+        assert report_path.exists(), f"Report not found: {report_path}\\nFix: Run 'make generate-reports'"
 
         mtime = datetime.fromtimestamp(report_path.stat().st_mtime)
         age_days = (datetime.now() - mtime).days
@@ -56,7 +56,7 @@ class TestReportFreshness:
         """
         report_path = Path("docs-internal/reports/MEMORY_SAFETY_SCAN.md")
 
-        assert report_path.exists(), f"Report not found: {report_path}\\n" f"Fix: Run 'make generate-reports'"
+        assert report_path.exists(), f"Report not found: {report_path}\\nFix: Run 'make generate-reports'"
 
         mtime = datetime.fromtimestamp(report_path.stat().st_mtime)
         age_days = (datetime.now() - mtime).days
@@ -75,7 +75,7 @@ class TestReportFreshness:
         """
         report_path = Path("docs-internal/reports/TEST_SUITE_STATS.md")
 
-        assert report_path.exists(), f"Report not found: {report_path}\\n" f"Fix: Run 'make generate-reports'"
+        assert report_path.exists(), f"Report not found: {report_path}\\nFix: Run 'make generate-reports'"
 
         mtime = datetime.fromtimestamp(report_path.stat().st_mtime)
         age_days = (datetime.now() - mtime).days
@@ -117,9 +117,9 @@ class TestReportFreshness:
         """
         reports_dir = Path("docs-internal/reports")
 
-        assert reports_dir.exists(), (
-            f"Reports directory not found: {reports_dir}\\n" f"Fix: mkdir -p docs-internal/reports && make generate-reports"
-        )
+        assert (
+            reports_dir.exists()
+        ), f"Reports directory not found: {reports_dir}\\nFix: mkdir -p docs-internal/reports && make generate-reports"
 
         assert reports_dir.is_dir(), f"Reports path exists but is not a directory: {reports_dir}"
 
@@ -145,11 +145,11 @@ class TestReportFreshness:
         makefile = Path("Makefile")
         content = makefile.read_text()
 
-        assert "generate-reports:" in content, (
-            "Makefile missing 'generate-reports' target\\n" "Expected: Target that regenerates all test infrastructure reports"
-        )
+        assert (
+            "generate-reports:" in content
+        ), "Makefile missing 'generate-reports' target\\nExpected: Target that regenerates all test infrastructure reports"
 
         # Verify it's in .PHONY
-        assert "generate-reports" in content.split(".PHONY:")[1].split("\\n")[0], (
-            "'generate-reports' not in .PHONY declaration\\n" "Fix: Add to .PHONY line in Makefile"
-        )
+        assert (
+            "generate-reports" in content.split(".PHONY:")[1].split("\\n")[0]
+        ), "'generate-reports' not in .PHONY declaration\\nFix: Add to .PHONY line in Makefile"

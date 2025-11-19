@@ -87,10 +87,9 @@ class TestInfrastructureSingleton:
             f"\n"
             f"The single-instance architecture does NOT use port offsets."
         )
-        assert test_infrastructure_ports["redis_checkpoints"] == 9379, (
-            f"All workers should use base port 9379, not offset ports\n"
-            f"Got: {test_infrastructure_ports['redis_checkpoints']}"
-        )
+        assert (
+            test_infrastructure_ports["redis_checkpoints"] == 9379
+        ), f"All workers should use base port 9379, not offset ports\nGot: {test_infrastructure_ports['redis_checkpoints']}"
 
     def test_docker_compose_ports_match_fixture_ports(self, test_infrastructure_ports):
         """

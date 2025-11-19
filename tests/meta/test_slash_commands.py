@@ -71,9 +71,9 @@ class TestSlashCommands:
             if not content.startswith("#"):
                 commands_without_heading.append(cmd_file.name)
 
-        assert len(commands_without_heading) == 0, (
-            f"Commands without markdown heading: {commands_without_heading}. " f"Each command should start with # Title"
-        )
+        assert (
+            len(commands_without_heading) == 0
+        ), f"Commands without markdown heading: {commands_without_heading}. Each command should start with # Title"
 
     def test_all_commands_have_substantial_content(self, command_files: list[Path]):
         """Test that all commands have substantial content (> 100 chars)."""
@@ -165,9 +165,9 @@ class TestSlashCommands:
             if triple_backticks % 2 != 0:
                 unclosed_code_blocks.append(cmd_file.name)
 
-        assert len(unclosed_code_blocks) == 0, (
-            f"Commands with unclosed code blocks: {unclosed_code_blocks}. " f"Ensure all ``` blocks are properly closed."
-        )
+        assert (
+            len(unclosed_code_blocks) == 0
+        ), f"Commands with unclosed code blocks: {unclosed_code_blocks}. Ensure all ``` blocks are properly closed."
 
     def test_new_recommended_commands_exist(self, commands_dir: Path):
         """Test that new recommended commands exist."""
@@ -191,9 +191,9 @@ class TestSlashCommands:
             if not cmd_path.exists():
                 missing_commands.append(f"{cmd_name} ({description})")
 
-        assert len(missing_commands) == 0, (
-            f"Missing recommended commands: {missing_commands}. " f"Create them in .claude/commands/"
-        )
+        assert (
+            len(missing_commands) == 0
+        ), f"Missing recommended commands: {missing_commands}. Create them in .claude/commands/"
 
     def test_commands_have_consistent_format(self, command_files: list[Path]):
         """Test that commands follow a consistent format."""
@@ -221,7 +221,7 @@ class TestSlashCommands:
 
         # This is informational, not a hard failure
         if inconsistent_commands:
-            print(f"\nWARNING: Some commands may have inconsistent format: " f"{inconsistent_commands}")
+            print(f"\nWARNING: Some commands may have inconsistent format: {inconsistent_commands}")
 
     def test_tdd_command_references_red_green_refactor(self, commands_dir: Path):
         """Test that tdd.md command explains RED-GREEN-REFACTOR cycle."""
@@ -285,9 +285,9 @@ class TestSlashCommands:
                 if re.search(pattern, content):
                     dangerous_commands.append((cmd_file.name, pattern))
 
-        assert len(dangerous_commands) == 0, (
-            f"Commands contain dangerous operations: {dangerous_commands}. " f"Remove or add safety guards."
-        )
+        assert (
+            len(dangerous_commands) == 0
+        ), f"Commands contain dangerous operations: {dangerous_commands}. Remove or add safety guards."
 
 
 @pytest.mark.xdist_group(name="meta_slash_commands")

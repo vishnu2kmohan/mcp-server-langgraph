@@ -218,9 +218,9 @@ class TestKustomizeOverlays:
 
         result = subprocess.run(["kustomize", "build", str(overlay_dir)], capture_output=True, text=True, timeout=60)
 
-        assert result.returncode == 0, (
-            f"Kustomize build failed for overlay '{overlay}':\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
-        )
+        assert (
+            result.returncode == 0
+        ), f"Kustomize build failed for overlay '{overlay}':\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
 
         # Verify output contains valid YAML
         try:
@@ -335,7 +335,7 @@ class TestHelmChart:
 
         result = subprocess.run(["helm", "lint", str(helm_chart_dir)], capture_output=True, text=True, timeout=60)
 
-        assert result.returncode == 0, f"Helm lint failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
+        assert result.returncode == 0, f"Helm lint failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
 
     @requires_tool("helm")
     def test_helm_chart_renders_successfully(self, helm_chart_dir: Path) -> None:
@@ -361,7 +361,7 @@ class TestHelmChart:
             ["helm", "template", "test-release", str(helm_chart_dir)], capture_output=True, text=True, timeout=60
         )
 
-        assert result.returncode == 0, f"Helm template failed:\n" f"STDOUT:\n{result.stdout}\n" f"STDERR:\n{result.stderr}"
+        assert result.returncode == 0, f"Helm template failed:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
 
     def test_helm_networkpolicy_template_exists_when_enabled(self, helm_chart_dir: Path) -> None:
         """
@@ -380,9 +380,9 @@ class TestHelmChart:
 
         if networkpolicy_enabled:
             template_file = helm_chart_dir / "templates" / "networkpolicy.yaml"
-            assert template_file.exists(), (
-                "networkPolicy.enabled is true in values.yaml but " "templates/networkpolicy.yaml does not exist"
-            )
+            assert (
+                template_file.exists()
+            ), "networkPolicy.enabled is true in values.yaml but templates/networkpolicy.yaml does not exist"
 
     def test_helm_health_probe_paths_match_app(self, helm_chart_dir: Path, deployments_base_dir: Path) -> None:
         """
@@ -407,21 +407,21 @@ class TestHelmChart:
 
         # Check livenessProbe (in healthChecks structure)
         liveness_path = values.get("healthChecks", {}).get("liveness", {}).get("path")
-        assert liveness_path == expected_liveness, (
-            f"Helm values.yaml healthChecks.liveness.path is '{liveness_path}', " f"should be '{expected_liveness}'"
-        )
+        assert (
+            liveness_path == expected_liveness
+        ), f"Helm values.yaml healthChecks.liveness.path is '{liveness_path}', should be '{expected_liveness}'"
 
         # Check readinessProbe (in healthChecks structure)
         readiness_path = values.get("healthChecks", {}).get("readiness", {}).get("path")
-        assert readiness_path == expected_readiness, (
-            f"Helm values.yaml healthChecks.readiness.path is '{readiness_path}', " f"should be '{expected_readiness}'"
-        )
+        assert (
+            readiness_path == expected_readiness
+        ), f"Helm values.yaml healthChecks.readiness.path is '{readiness_path}', should be '{expected_readiness}'"
 
         # Check startupProbe (in healthChecks structure)
         startup_path = values.get("healthChecks", {}).get("startup", {}).get("path")
-        assert startup_path == expected_startup, (
-            f"Helm values.yaml healthChecks.startup.path is '{startup_path}', " f"should be '{expected_startup}'"
-        )
+        assert (
+            startup_path == expected_startup
+        ), f"Helm values.yaml healthChecks.startup.path is '{startup_path}', should be '{expected_startup}'"
 
     def test_helm_istio_resources_have_conditional_checks(self, helm_chart_dir: Path) -> None:
         """

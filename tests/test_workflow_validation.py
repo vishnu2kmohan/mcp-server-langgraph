@@ -285,8 +285,7 @@ class TestWorkflowValidation:
             warning_msg = "\n⚠️  INFO: Summary steps that could benefit from explicit status conditionals:\n"
             for issue in issues_found:
                 warning_msg += (
-                    f"  - {issue['workflow']}::{issue['job']}::{issue['step']}\n"
-                    f"    Suggestion: {issue['recommendation']}\n"
+                    f"  - {issue['workflow']}::{issue['job']}::{issue['step']}\n    Suggestion: {issue['recommendation']}\n"
                 )
             print(warning_msg)
 

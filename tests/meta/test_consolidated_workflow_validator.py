@@ -209,9 +209,9 @@ class TestConsolidatedWorkflowValidator:
         # Verify script includes context validation logic
         has_context_validation = "github.event" in content or "context_pattern" in content or "workflow_run" in content
 
-        assert has_context_validation, (
-            "Consolidated validator must include context validation logic\n" "(from scripts/validate_github_workflows.py)"
-        )
+        assert (
+            has_context_validation
+        ), "Consolidated validator must include context validation logic\n(from scripts/validate_github_workflows.py)"
 
         # Verify script includes version validation logic
         has_version_validation = "astral-sh/setup-uv" in content or "action_pattern" in content or "@v" in content
@@ -257,9 +257,9 @@ class TestConsolidatedWorkflowValidator:
         assert result.returncode == 0, f"Validator failed:\n{result.stdout}\n{result.stderr}"
 
         # Verify performance is acceptable
-        assert elapsed < 10, (
-            f"Validator took {elapsed:.2f}s (should be < 10s)\n" "Consider optimizing validation logic or adding caching"
-        )
+        assert (
+            elapsed < 10
+        ), f"Validator took {elapsed:.2f}s (should be < 10s)\nConsider optimizing validation logic or adding caching"
 
 
 @pytest.mark.xdist_group(name="testconsolidatedworkflowvalidatorregression")

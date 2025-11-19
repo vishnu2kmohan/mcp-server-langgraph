@@ -135,9 +135,9 @@ class TestDNSConfiguration:
         existing_records = result.stdout.strip().split("\n")
 
         for required_record in required_records:
-            assert required_record in existing_records, (
-                f"DNS record missing: {required_record}\n" f"Run: scripts/setup-cloud-dns-staging.sh"
-            )
+            assert (
+                required_record in existing_records
+            ), f"DNS record missing: {required_record}\nRun: scripts/setup-cloud-dns-staging.sh"
 
 
 @pytest.mark.deployment
@@ -439,9 +439,9 @@ class TestDNSFailoverSimulation:
         ttl = int(result.stdout.strip())
 
         # TTL should be low for fast failover
-        assert ttl <= 600, (
-            f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\n" f"Recommended: 300 seconds (5 minutes)"
-        )
+        assert (
+            ttl <= 600
+        ), f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\nRecommended: 300 seconds (5 minutes)"
 
     @requires_tool("kubectl")
     def test_deployment_can_connect_to_services_via_dns(self):

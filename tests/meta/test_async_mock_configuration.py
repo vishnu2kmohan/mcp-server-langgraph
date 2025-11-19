@@ -95,7 +95,7 @@ def test_all_async_mocks_have_return_values():
 def test_async_mock_guidelines_exist():
     """Verify AsyncMock guidelines documentation exists."""
     guidelines_path = Path(__file__).parent.parent / "ASYNC_MOCK_GUIDELINES.md"
-    assert guidelines_path.exists(), "AsyncMock guidelines documentation missing!\n" "Expected: tests/ASYNC_MOCK_GUIDELINES.md"
+    assert guidelines_path.exists(), "AsyncMock guidelines documentation missing!\nExpected: tests/ASYNC_MOCK_GUIDELINES.md"
 
 
 @pytest.mark.meta
@@ -103,12 +103,12 @@ def test_async_mock_guidelines_exist():
 def test_async_mock_checker_script_exists():
     """Verify AsyncMock configuration checker script exists."""
     script_path = Path(__file__).parent.parent.parent / "scripts" / "check_async_mock_configuration.py"
-    assert script_path.exists(), (
-        "AsyncMock configuration checker script missing!\n" "Expected: scripts/check_async_mock_configuration.py"
-    )
-    assert script_path.stat().st_mode & 0o111, (
-        "AsyncMock configuration checker script is not executable!\n" f"Run: chmod +x {script_path}"
-    )
+    assert (
+        script_path.exists()
+    ), "AsyncMock configuration checker script missing!\nExpected: scripts/check_async_mock_configuration.py"
+    assert (
+        script_path.stat().st_mode & 0o111
+    ), f"AsyncMock configuration checker script is not executable!\nRun: chmod +x {script_path}"
 
 
 if __name__ == "__main__":

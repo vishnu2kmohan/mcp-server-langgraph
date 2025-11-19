@@ -843,7 +843,7 @@ class TestXdistGroupCoverage:
 
         if missing_teardown:
             error_msg = (
-                f"Found {len(missing_teardown)} files with xdist_group but missing " "teardown_method() with gc.collect():\n\n"
+                f"Found {len(missing_teardown)} files with xdist_group but missing teardown_method() with gc.collect():\n\n"
             )
             for rel_path in missing_teardown:
                 error_msg += f"  - {rel_path}\n"
@@ -922,7 +922,7 @@ class TestXdistGroupCoverage:
             import warnings
 
             warnings.warn(
-                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% " f"(target: {TARGET_COVERAGE}%)",
+                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% (target: {TARGET_COVERAGE}%)",
                 UserWarning,
                 stacklevel=2,
             )

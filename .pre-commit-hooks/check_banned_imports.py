@@ -28,10 +28,7 @@ BANNED_IMPORTS = {
     "toml": {
         "reason": "Deprecated in Python 3.11+ (use built-in tomllib or tomli backport)",
         "fix": (
-            "try:\n"
-            "    import tomllib  # Python 3.11+\n"
-            "except ImportError:\n"
-            "    import tomli as tomllib  # Backport for <3.11"
+            "try:\n    import tomllib  # Python 3.11+\nexcept ImportError:\n    import tomli as tomllib  # Backport for <3.11"
         ),
     },
     "imp": {

@@ -41,6 +41,7 @@ import argparse
 import sys
 from pathlib import Path
 
+
 # Add project root to path to enable imports from tests/
 _project_root = Path(__file__).parent.parent
 if str(_project_root) not in sys.path:
@@ -70,7 +71,7 @@ def main() -> int:
             continue
 
         # Only validate Python test files
-        if not file_path.suffix == ".py":
+        if file_path.suffix != ".py":
             continue
 
         # Only validate files in tests/ directory OR test files (test_*.py)
@@ -115,10 +116,9 @@ def main() -> int:
 
     if all_passed:
         return 0
-    else:
-        print("\n🔴 ID POLLUTION PREVENTION FAILED", file=sys.stderr)
-        print("Fix hardcoded IDs before committing.\n", file=sys.stderr)
-        return 1
+    print("\n🔴 ID POLLUTION PREVENTION FAILED", file=sys.stderr)
+    print("Fix hardcoded IDs before committing.\n", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":

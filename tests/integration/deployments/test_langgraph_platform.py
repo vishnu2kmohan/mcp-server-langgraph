@@ -109,9 +109,9 @@ class TestLangGraphPlatformDeployment:
             expected_fields = {"messages", "next_action", "user_id", "request_id"}
             actual_fields = set(annotations.keys())
 
-            assert expected_fields == actual_fields, (
-                f"AgentState should have fields {expected_fields}, " f"but has {actual_fields}"
-            )
+            assert (
+                expected_fields == actual_fields
+            ), f"AgentState should have fields {expected_fields}, but has {actual_fields}"
         finally:
             if str(deployments_dir) in sys.path:
                 sys.path.remove(str(deployments_dir))

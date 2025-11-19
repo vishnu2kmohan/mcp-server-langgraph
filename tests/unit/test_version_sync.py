@@ -39,9 +39,9 @@ def test_version_matches_pyproject():
     # Import version from package
     from mcp_server_langgraph import __version__
 
-    assert __version__ == expected_version, (
-        f"Version mismatch: __init__.py has {__version__}, " f"but pyproject.toml has {expected_version}"
-    )
+    assert (
+        __version__ == expected_version
+    ), f"Version mismatch: __init__.py has {__version__}, but pyproject.toml has {expected_version}"
 
 
 @pytest.mark.unit

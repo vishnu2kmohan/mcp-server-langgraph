@@ -264,7 +264,7 @@ def circuit_breaker(  # noqa: C901
                 else:
                     # Not a system error, treat as success
                     logger.debug(
-                        f"Circuit breaker {breaker.name}: non-system error {type(exception).__name__}, " f"treating as success"
+                        f"Circuit breaker {breaker.name}: non-system error {type(exception).__name__}, treating as success"
                     )
                     breaker._state_storage.increment_counter()
                     for listener in breaker.listeners:

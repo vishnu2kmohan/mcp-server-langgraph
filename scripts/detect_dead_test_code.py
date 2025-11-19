@@ -94,8 +94,7 @@ def main():
         dead_code_instances = find_dead_code_in_fixtures(test_file)
         for fixture_name, return_line, dead_lines in dead_code_instances:
             violations.append(
-                f"{test_file}:{return_line} - "
-                f"Fixture '{fixture_name}' has {len(dead_lines)} lines of dead code after return"
+                f"{test_file}:{return_line} - Fixture '{fixture_name}' has {len(dead_lines)} lines of dead code after return"
             )
 
     if violations:

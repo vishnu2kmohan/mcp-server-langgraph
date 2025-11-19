@@ -82,9 +82,9 @@ class TestCodexConfigurationRecommendations:
         coverage_config = pyproject_config.get("tool", {}).get("coverage", {}).get("report", {})
         fail_under = coverage_config.get("fail_under")
 
-        assert fail_under is not None, (
-            "Coverage threshold not set. " "Fix: Add 'fail_under = 64' to [tool.coverage.report] in pyproject.toml"
-        )
+        assert (
+            fail_under is not None
+        ), "Coverage threshold not set. Fix: Add 'fail_under = 64' to [tool.coverage.report] in pyproject.toml"
 
         # Accept current baseline of 64%, with plan to reach 80%+
         # See: docs-internal/COVERAGE_IMPROVEMENT_PLAN.md
@@ -112,9 +112,9 @@ class TestCodexConfigurationRecommendations:
 
         required_markers = ["unit", "regression", "meta"]
         for marker in required_markers:
-            assert marker in marker_names, (
-                f"Required marker '{marker}' not found in pytest markers. " f"Available markers: {marker_names}"
-            )
+            assert (
+                marker in marker_names
+            ), f"Required marker '{marker}' not found in pytest markers. Available markers: {marker_names}"
 
     def test_coverage_omits_test_directories(self, pyproject_config):
         """
@@ -127,9 +127,9 @@ class TestCodexConfigurationRecommendations:
 
         # Check that tests are omitted
         test_patterns = [pattern for pattern in omit_patterns if "test" in pattern.lower()]
-        assert len(test_patterns) > 0, (
-            "Coverage should exclude test directories. " "Expected patterns like '*/tests/*' in tool.coverage.run.omit"
-        )
+        assert (
+            len(test_patterns) > 0
+        ), "Coverage should exclude test directories. Expected patterns like '*/tests/*' in tool.coverage.run.omit"
 
     def test_coverage_parallel_enabled_for_xdist(self, pyproject_config):
         """
@@ -140,9 +140,9 @@ class TestCodexConfigurationRecommendations:
         coverage_config = pyproject_config.get("tool", {}).get("coverage", {}).get("run", {})
         parallel = coverage_config.get("parallel")
 
-        assert parallel is True, (
-            "Coverage parallel mode should be enabled for pytest-xdist. " "Fix: Set 'parallel = true' in [tool.coverage.run]"
-        )
+        assert (
+            parallel is True
+        ), "Coverage parallel mode should be enabled for pytest-xdist. Fix: Set 'parallel = true' in [tool.coverage.run]"
 
     def test_benchmark_config_allows_marker_filtering(self, pyproject_config):
         """

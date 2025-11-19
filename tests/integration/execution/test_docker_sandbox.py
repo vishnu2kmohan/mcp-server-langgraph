@@ -572,11 +572,9 @@ except (IOError, OSError, PermissionError) as e:
         result = sandbox.execute(code)
 
         # Root FS should be read-only, preventing writes outside /tmp
-        assert "WRITE_BLOCKED" in result.stdout, (
-            "Root filesystem should be read-only! "
-            "Container can write to /, which is a security risk. "
-            f"Output: {result.stdout}"
-        )
+        assert (
+            "WRITE_BLOCKED" in result.stdout
+        ), f"Root filesystem should be read-only! Container can write to /, which is a security risk. Output: {result.stdout}"
         assert "WRITE_SUCCEEDED" not in result.stdout
 
     def test_container_allows_tmp_directory_writes(self, sandbox):
@@ -646,9 +644,7 @@ except Exception as e:
         result = sandbox.execute(code)
 
         # Unlisted domain should be blocked
-        assert "BLOCKED_DOMAIN_DENIED" in result.stdout, (
-            "Network allowlist should block google.com. " f"Output: {result.stdout}"
-        )
+        assert "BLOCKED_DOMAIN_DENIED" in result.stdout, f"Network allowlist should block google.com. Output: {result.stdout}"
         assert "BLOCKED_DOMAIN_ACCESSIBLE" not in result.stdout
 
         # Allowed domain should work

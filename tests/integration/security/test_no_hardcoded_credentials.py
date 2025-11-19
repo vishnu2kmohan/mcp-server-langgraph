@@ -178,9 +178,9 @@ class TestNoHardcodedCredentialsInSourceCode:
 
         for pattern in suspicious_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
-            assert len(matches) == 0, (
-                f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' " f"in user_provider.py: {matches}"
-            )
+            assert (
+                len(matches) == 0
+            ), f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' in user_provider.py: {matches}"
 
     def test_no_init_users_method_exists(self):
         """
@@ -260,9 +260,9 @@ class TestCredentialCreationDocumentation:
             ]
         )
 
-        assert has_user_creation_docs, (
-            "README.md should document how to create test users now that " "hard-coded credentials have been removed"
-        )
+        assert (
+            has_user_creation_docs
+        ), "README.md should document how to create test users now that hard-coded credentials have been removed"
 
     def test_add_user_method_has_docstring(self):
         """

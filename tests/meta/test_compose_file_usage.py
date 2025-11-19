@@ -116,9 +116,9 @@ class TestComposeFileConsolidation:
             ), "test-integration.sh must NOT use legacy docker/docker-compose.test.yml"
 
         # Should NOT reference test-runner container (legacy pattern)
-        assert "test-runner" not in content or "# LEGACY: test-runner" in content, (
-            "test-integration.sh should not use containerized test-runner pattern. " "Tests should run on host for CI parity."
-        )
+        assert (
+            "test-runner" not in content or "# LEGACY: test-runner" in content
+        ), "test-integration.sh should not use containerized test-runner pattern. Tests should run on host for CI parity."
 
     def test_makefile_uses_root_compose(self):
         """
@@ -316,9 +316,9 @@ class TestComposeFileConsistency:
         expected_ports = ["9432", "9379", "9380", "9080", "9082", "9333"]
 
         for port in expected_ports:
-            assert port in content, (
-                f"Expected test port {port} not found in compose file. " "Verify port mappings are consistent."
-            )
+            assert (
+                port in content
+            ), f"Expected test port {port} not found in compose file. Verify port mappings are consistent."
 
     def test_compose_services_match_conftest_expectations(self):
         """

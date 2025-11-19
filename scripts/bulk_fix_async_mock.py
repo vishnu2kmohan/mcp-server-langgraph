@@ -84,10 +84,7 @@ class AsyncMockTransformer(ast.NodeTransformer):
 
     def _is_already_configured(self, node: ast.Call) -> bool:
         """Check if AsyncMock is already configured with return_value or side_effect."""
-        for keyword in node.keywords:
-            if keyword.arg in ("return_value", "side_effect"):
-                return True
-        return False
+        return any(keyword.arg in ("return_value", "side_effect") for keyword in node.keywords)
 
     def _transform_to_configured(self, node: ast.Call) -> ast.Call:
         """Transform AsyncMock() to configured_async_mock(return_value=None)."""

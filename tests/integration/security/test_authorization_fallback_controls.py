@@ -105,9 +105,9 @@ class TestAuthorizationFallbackControls:
         )
 
         # Should be allowed when fallback is explicitly enabled
-        assert authorized is True, (
-            "Tool execution should be allowed when allow_auth_fallback=True " "and user has appropriate roles"
-        )
+        assert (
+            authorized is True
+        ), "Tool execution should be allowed when allow_auth_fallback=True and user has appropriate roles"
 
     @pytest.mark.asyncio
     async def test_fallback_denial_logged_when_openfga_unavailable_and_fallback_disabled(self, caplog):

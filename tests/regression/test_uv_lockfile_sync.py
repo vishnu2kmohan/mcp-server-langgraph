@@ -91,9 +91,9 @@ class TestUVLockfileSynchronization:
         project_root = Path(__file__).parent.parent.parent
         lockfile = project_root / "uv.lock"
 
-        assert lockfile.exists(), (
-            "uv.lock not found! This file is required for reproducible builds. " "Run 'uv lock' to create it."
-        )
+        assert (
+            lockfile.exists()
+        ), "uv.lock not found! This file is required for reproducible builds. Run 'uv lock' to create it."
 
         assert lockfile.stat().st_size > 0, "uv.lock exists but is empty!"
 
@@ -240,9 +240,9 @@ class TestCIPythonVersionMatrix:
             workflow_content = f.read()
 
         # Should verify Python version
-        assert ".venv/bin/python --version" in workflow_content or "python --version" in workflow_content, (
-            "CI workflow should verify Python version after venv creation.\n" "This catches Python version mismatches early."
-        )
+        assert (
+            ".venv/bin/python --version" in workflow_content or "python --version" in workflow_content
+        ), "CI workflow should verify Python version after venv creation.\nThis catches Python version mismatches early."
 
 
 @pytest.mark.regression
@@ -299,9 +299,9 @@ class TestFastAPIDependencyOverridesPattern:
         with open(test_file) as f:
             content = f.read()
 
-        assert "app.dependency_overrides[" in content, (
-            "API keys tests must use app.dependency_overrides.\n" "See commit 709adda for implementation."
-        )
+        assert (
+            "app.dependency_overrides[" in content
+        ), "API keys tests must use app.dependency_overrides.\nSee commit 709adda for implementation."
 
 
 if __name__ == "__main__":

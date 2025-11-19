@@ -46,9 +46,9 @@ class TestMypyEnforcement:
                 mypy_repo = repo
                 break
 
-        assert mypy_repo is not None, (
-            "Mypy hook not found in .pre-commit-config.yaml. " "Expected repo: https://github.com/pre-commit/mirrors-mypy"
-        )
+        assert (
+            mypy_repo is not None
+        ), "Mypy hook not found in .pre-commit-config.yaml. Expected repo: https://github.com/pre-commit/mirrors-mypy"
 
     def test_mypy_hook_is_not_commented_out(self):
         """Verify mypy hook is active (not commented out in YAML)."""
@@ -136,9 +136,9 @@ class TestMypyEnforcement:
         files = mypy_hook.get("files", "")
 
         # Should target source package
-        assert "src/mcp_server_langgraph" in files or "^src/" in files, (
-            f"Mypy should target src/mcp_server_langgraph package. " f"Current files pattern: {files}"
-        )
+        assert (
+            "src/mcp_server_langgraph" in files or "^src/" in files
+        ), f"Mypy should target src/mcp_server_langgraph package. Current files pattern: {files}"
 
     def test_mypy_has_appropriate_configuration(self, pre_commit_config):
         """Verify mypy has sensible configuration flags."""
@@ -171,9 +171,7 @@ class TestMypyEnforcement:
         # This is informational - we document if recommended flags are missing
         if not has_recommended_flag:
             print(
-                f"\nINFO: Mypy configuration could benefit from recommended flags:\n"
-                f"{recommended_flags}\n"
-                f"Current args: {args}"
+                f"\nINFO: Mypy configuration could benefit from recommended flags:\n{recommended_flags}\nCurrent args: {args}"
             )
 
     def test_mypy_passes_on_current_codebase(self):

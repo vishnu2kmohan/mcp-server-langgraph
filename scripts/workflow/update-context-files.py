@@ -247,7 +247,7 @@ def update_recent_work(repo_root: Path) -> None:
     # Generate content
     content = f"""# Recent Work Context
 
-**Last Updated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Last Updated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 **Auto-generated** by `scripts/workflow/update-context-files.py`
 
 ---
@@ -256,12 +256,12 @@ def update_recent_work(repo_root: Path) -> None:
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | {git_stats['total_commits']} |
-| Contributors | {git_stats['contributors']} |
-| Current Branch | `{git_stats['current_branch']}` |
-| Source Files | {git_stats['src_files']} Python files |
-| Test Files | {git_stats['test_files']} Python files |
-| Total Tests | {test_stats.get('total_tests', 'N/A')} tests |
+| Total Commits | {git_stats["total_commits"]} |
+| Contributors | {git_stats["contributors"]} |
+| Current Branch | `{git_stats["current_branch"]}` |
+| Source Files | {git_stats["src_files"]} Python files |
+| Test Files | {git_stats["test_files"]} Python files |
+| Total Tests | {test_stats.get("total_tests", "N/A")} tests |
 
 ---
 
@@ -349,7 +349,7 @@ Based on recent activity, consider:
 
 ---
 
-**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 **Source**: Git commit history (last 15 commits, 7 days of file activity)
 """
 

@@ -129,7 +129,7 @@ def format_markdown_report(findings: dict[str, Any]) -> str:
             if categorized[severity]:
                 md += f"\n### {severity} Severity\n\n"
                 for finding in categorized[severity]:
-                    md += f"""**{finding['file']}:{finding['line']}** - {finding['test_id']}\n"""
+                    md += f"""**{finding["file"]}:{finding["line"]}** - {finding["test_id"]}\n"""
                     md += f"- **Issue**: {finding['description']}\n"
                     md += f"- **Confidence**: {finding['confidence']}\n"
                     md += f"- **Test**: {finding['test_name']}\n\n"
@@ -145,7 +145,7 @@ def format_markdown_report(findings: dict[str, Any]) -> str:
         md += "### Safety Vulnerabilities\n\n"
         if safety_findings:
             for vuln in safety_findings:
-                md += f"""**{vuln['package']} {vuln['version']}** - {vuln['cve']}\n"""
+                md += f"""**{vuln["package"]} {vuln["version"]}** - {vuln["cve"]}\n"""
                 md += f"- **Advisory**: {vuln['advisory']}\n"
                 md += f"- **Vulnerable**: {vuln['vulnerable_spec']}\n\n"
         else:
@@ -154,7 +154,7 @@ def format_markdown_report(findings: dict[str, Any]) -> str:
         md += "### pip-audit Vulnerabilities\n\n"
         if pip_audit_findings:
             for vuln in pip_audit_findings:
-                md += f"""**{vuln['package']} {vuln['version']}** - {vuln['vuln_id']}\n"""
+                md += f"""**{vuln["package"]} {vuln["version"]}** - {vuln["vuln_id"]}\n"""
                 md += f"- **Description**: {vuln['description']}\n"
                 if vuln["fix_versions"]:
                     md += f"- **Fix versions**: {', '.join(vuln['fix_versions'])}\n"

@@ -77,7 +77,7 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
 
     if not config_path.exists():
         errors.append(
-            "❌ .pre-commit-config.yaml not found\n" "   Fix: Restore .pre-commit-config.yaml or run 'pre-commit install'"
+            "❌ .pre-commit-config.yaml not found\n   Fix: Restore .pre-commit-config.yaml or run 'pre-commit install'"
         )
         return False, errors
 
@@ -125,7 +125,7 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
         "documentation": r"(test_documentation|mintlify|docs)",
     }
 
-    found_required = {category: False for category in required_patterns}
+    found_required = dict.fromkeys(required_patterns, False)
     warnings = []
 
     for hook in pre_push_hooks:
@@ -147,7 +147,7 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
     # Count total pre-push hooks (informational)
     hook_count = len(pre_push_hooks)
     if hook_count < 10:
-        warnings.append(f"ℹ️  Only {hook_count} pre-push hooks found\n" "   Note: Expected 40+ for comprehensive validation")
+        warnings.append(f"ℹ️  Only {hook_count} pre-push hooks found\n   Note: Expected 40+ for comprehensive validation")
 
     # Print warnings if any (non-blocking)
     if warnings:
@@ -179,7 +179,7 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
 
     # Check 2: Is executable
     if not os.access(pre_push_path, os.X_OK):
-        errors.append(f"❌ Pre-push hook exists but is not executable\n" f"   Fix: chmod +x .git/hooks/pre-push")
+        errors.append(f"❌ Pre-push hook exists but is not executable\n   Fix: chmod +x .git/hooks/pre-push")
 
     # Read hook content
     with open(pre_push_path) as f:

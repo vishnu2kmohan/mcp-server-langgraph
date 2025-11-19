@@ -173,11 +173,7 @@ class WorkflowValidator:
             re.compile(rf"github\.event\.{context_name}\.\w+\s+\|\|"),
         ]
 
-        for pattern in guard_patterns:
-            if pattern.search(content):
-                return True
-
-        return False
+        return any(pattern.search(content) for pattern in guard_patterns)
 
     def _print_results(self) -> bool:
         """Print validation results and return success status."""

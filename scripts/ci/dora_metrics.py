@@ -284,14 +284,14 @@ def generate_markdown_report(metrics: dict[str, Any]) -> str:
     """
     report = f"""# DORA Metrics Report
 
-## Overall Classification: {metrics.get('classification', 'Unknown')}
+## Overall Classification: {metrics.get("classification", "Unknown")}
 
 ### Key Metrics
 
-- **Deployment Frequency:** {metrics.get('deployment_frequency_per_day', 0):.2f} deployments/day
-- **Lead Time for Changes:** {metrics.get('lead_time_hours', 0):.2f} hours
-- **Mean Time to Recovery:** {metrics.get('mttr_hours', 0):.2f} hours
-- **Change Failure Rate:** {metrics.get('change_failure_rate', 0):.1f}%
+- **Deployment Frequency:** {metrics.get("deployment_frequency_per_day", 0):.2f} deployments/day
+- **Lead Time for Changes:** {metrics.get("lead_time_hours", 0):.2f} hours
+- **Mean Time to Recovery:** {metrics.get("mttr_hours", 0):.2f} hours
+- **Change Failure Rate:** {metrics.get("change_failure_rate", 0):.1f}%
 
 ### Classification Thresholds
 

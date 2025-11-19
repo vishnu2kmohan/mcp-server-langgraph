@@ -133,9 +133,9 @@ class TestPrePushHookSync:
         mypy_validation_pattern = r'run_validation\s+"[^"]*[Mm]y[Pp]y[^"]*"\s+[^}]+?(\w+)\s*#.*?critical'
         matches = list(re.finditer(mypy_validation_pattern, pre_push_hook_content, re.DOTALL))
 
-        assert len(matches) > 0, (
-            "No MyPy validation found in pre-push hook\n" "Expected: run_validation with MyPy in the description"
-        )
+        assert (
+            len(matches) > 0
+        ), "No MyPy validation found in pre-push hook\nExpected: run_validation with MyPy in the description"
 
         for match in matches:
             critical_flag = match.group(1)

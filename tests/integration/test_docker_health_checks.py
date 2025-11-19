@@ -265,7 +265,7 @@ class TestDockerComposeHealthChecksIntegration:
         )
 
         if result.returncode != 0:
-            pytest.fail(f"Failed to start {qdrant_service}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
+            pytest.fail(f"Failed to start {qdrant_service}:\nstdout: {result.stdout}\nstderr: {result.stderr}")
 
         try:
             # Wait for health check to pass
@@ -353,7 +353,7 @@ class TestDockerComposeHealthChecksIntegration:
         )
 
         if result.returncode != 0:
-            pytest.fail(f"Failed to start {service_name}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
+            pytest.fail(f"Failed to start {service_name}:\nstdout: {result.stdout}\nstderr: {result.stderr}")
 
         try:
             print(f"⏳ Waiting for {service_name} to become healthy...")
@@ -445,11 +445,9 @@ def test_health_check_command_availability(docker_available):
             command_exists = result.returncode == 0
 
             if should_exist and not command_exists:
-                results.append(f"❌ {description}\n" f"   Image: {image}\n" f"   Expected '{command}' to exist but it doesn't")
+                results.append(f"❌ {description}\n   Image: {image}\n   Expected '{command}' to exist but it doesn't")
             elif not should_exist and command_exists:
-                results.append(
-                    f"⚠️  {description}\n" f"   Image: {image}\n" f"   Expected '{command}' NOT to exist but it does"
-                )
+                results.append(f"⚠️  {description}\n   Image: {image}\n   Expected '{command}' NOT to exist but it does")
             else:
                 print(f"✅ {description}")
 

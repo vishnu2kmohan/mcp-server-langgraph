@@ -32,9 +32,7 @@ def test_performance_workflow_overrides_addopts_to_exclude_xdist_flags():
 
     Expected solution: Use `-o addopts="..."` to override addopts without --dist flag
     """
-    workflow_path = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/performance-regression.yaml"
-    )
+    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/performance-regression.yaml")
 
     assert workflow_path.exists(), f"Performance workflow not found: {workflow_path}"
 
@@ -113,9 +111,7 @@ def test_performance_workflow_disables_xdist_for_benchmark_compatibility():
 
     The workflow must use `-p no:xdist` to prevent this.
     """
-    workflow_path = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/performance-regression.yaml"
-    )
+    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/performance-regression.yaml")
 
     with open(workflow_path) as f:
         workflow_yaml = yaml.safe_load(f)
@@ -150,9 +146,7 @@ def test_performance_workflow_uses_benchmark_only_mode():
 
     This ensures performance tests are isolated and run with proper benchmark configuration.
     """
-    workflow_path = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/performance-regression.yaml"
-    )
+    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/performance-regression.yaml")
 
     with open(workflow_path) as f:
         workflow_yaml = yaml.safe_load(f)

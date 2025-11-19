@@ -30,7 +30,7 @@ def test_trivyignore_exists_for_staging():
     Per user requirement: Suppress with .trivyignore (recommended approach).
     """
     trivyignore_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/overlays/staging-gke/.trivyignore"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/overlays/staging-gke/.trivyignore"
     )
 
     assert trivyignore_file.exists(), (
@@ -49,9 +49,9 @@ def test_trivyignore_exists_for_staging():
     with open(trivyignore_file) as f:
         content = f.read().strip()
 
-    assert content, (
-        f".trivyignore file exists but is empty: {trivyignore_file}\n" "It should contain suppression rules with documentation"
-    )
+    assert (
+        content
+    ), f".trivyignore file exists but is empty: {trivyignore_file}\nIt should contain suppression rules with documentation"
 
 
 def test_trivyignore_documents_configmap_false_positive():
@@ -66,7 +66,7 @@ def test_trivyignore_documents_configmap_false_positive():
     This prevents confusion and ensures future maintainers understand the decision.
     """
     trivyignore_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/overlays/staging-gke/.trivyignore"
+        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/deployments/overlays/staging-gke/.trivyignore"
     )
 
     with open(trivyignore_file) as f:
@@ -112,7 +112,7 @@ def test_trivyignore_workflow_integration():
 
     The Trivy action should reference the trivyignores file so suppressions are applied.
     """
-    workflow_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    workflow_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/deploy-staging-gke.yaml")
 
     assert workflow_file.exists(), f"Workflow file not found: {workflow_file}"
 

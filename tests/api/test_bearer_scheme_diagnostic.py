@@ -121,10 +121,9 @@ class TestBearerSchemeOverrideDiagnostic:
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.json() if response.status_code == 200 else response.text}")
 
-        assert response.status_code == 200, (
-            f"DIAGNOSTIC FAILURE: Bearer override with module reference didn't work!\n"
-            f"Expected 200, got {response.status_code}"
-        )
+        assert (
+            response.status_code == 200
+        ), f"DIAGNOSTIC FAILURE: Bearer override with module reference didn't work!\nExpected 200, got {response.status_code}"
 
     def test_get_current_user_override_without_bearer_override(self):
         """

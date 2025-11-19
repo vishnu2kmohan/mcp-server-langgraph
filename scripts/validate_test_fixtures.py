@@ -196,7 +196,7 @@ class TestFixtureValidator:
                                     (
                                         str(filepath),
                                         elem.lineno,
-                                        f"Invalid Ollama fallback model: '{model_name}'. " f"Should be 'ollama/{model_name}'",
+                                        f"Invalid Ollama fallback model: '{model_name}'. Should be 'ollama/{model_name}'",
                                     )
                                 )
 

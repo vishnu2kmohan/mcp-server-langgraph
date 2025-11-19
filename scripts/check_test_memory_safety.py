@@ -31,6 +31,7 @@ See: tests/MEMORY_SAFETY_GUIDELINES.md for complete documentation
 import sys
 from pathlib import Path
 
+
 # Add project root to path to enable imports from tests/
 _project_root = Path(__file__).parent.parent
 if str(_project_root) not in sys.path:

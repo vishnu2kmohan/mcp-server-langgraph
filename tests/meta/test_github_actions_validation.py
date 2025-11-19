@@ -159,7 +159,7 @@ class TestGitHubActionsVersions:
                     if major > max_major:
                         line_num = content[: match.start()].count("\n") + 1
                         violations.append(
-                            f"{workflow_file.name}:{line_num} - " f"{action}@{version} (major v{major} > max v{max_major})"
+                            f"{workflow_file.name}:{line_num} - {action}@{version} (major v{major} > max v{max_major})"
                         )
 
         assert not violations, f"Found {len(violations)} suspicious action version(s):\n" + "\n".join(

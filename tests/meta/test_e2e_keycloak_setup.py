@@ -66,7 +66,7 @@ def test_realm_json_has_mcp_server_client():
     - publicClient: true
     - directAccessGrantsEnabled: true (for password grant flow)
     """
-    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "tests/e2e/keycloak-test-realm.json")
+    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/e2e/keycloak-test-realm.json")
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -115,7 +115,7 @@ def test_realm_json_has_test_users():
     - enabled: true
     - credentials: password = alice123
     """
-    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "tests/e2e/keycloak-test-realm.json")
+    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/tests/e2e/keycloak-test-realm.json")
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -174,7 +174,7 @@ def test_docker_compose_imports_realm():
     - Mount the realm JSON file to /opt/keycloak/data/import/realm.json
     - Use command: start-dev --import-realm
     """
-    docker_compose_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "docker-compose.test.yml")
+    docker_compose_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/docker-compose.test.yml")
 
     assert docker_compose_file.exists(), f"docker-compose.test.yml not found: {docker_compose_file}"
 
@@ -188,9 +188,9 @@ def test_docker_compose_imports_realm():
     services = compose_config.get("services", {})
     keycloak_service = services.get("keycloak-test")
 
-    assert keycloak_service is not None, (
-        "Service 'keycloak-test' not found in docker-compose.test.yml\n" f"Available services: {list(services.keys())}"
-    )
+    assert (
+        keycloak_service is not None
+    ), f"Service 'keycloak-test' not found in docker-compose.test.yml\nAvailable services: {list(services.keys())}"
 
     # Check for volume mount
     volumes = keycloak_service.get("volumes", [])

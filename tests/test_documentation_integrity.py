@@ -61,9 +61,9 @@ class TestADRSynchronization:
 
         script_path = PROJECT_ROOT / "scripts" / "validators" / "adr_sync_validator.py"
 
-        assert script_path.exists(), (
-            f"ADR sync validator script not found: {script_path}\n" "Expected: scripts/validators/adr_sync_validator.py"
-        )
+        assert (
+            script_path.exists()
+        ), f"ADR sync validator script not found: {script_path}\nExpected: scripts/validators/adr_sync_validator.py"
 
         # Run the validation script - it will exit with code 1 if validation fails
         result = subprocess.run(
@@ -271,9 +271,9 @@ class TestArchitectureOverview:
 
         documented_count = int(match.group(1))
 
-        assert documented_count == actual_adr_count, (
-            f"Architecture overview shows {documented_count} ADRs " f"but there are actually {actual_adr_count} ADRs in adr/"
-        )
+        assert (
+            documented_count == actual_adr_count
+        ), f"Architecture overview shows {documented_count} ADRs but there are actually {actual_adr_count} ADRs in adr/"
 
 
 @pytest.mark.xdist_group(name="testmermaiddiagrams")

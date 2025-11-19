@@ -80,9 +80,9 @@ class TestValidationConsolidation:
         ]
 
         for hook in required_hooks:
-            assert hook in content, (
-                f"Pre-commit hook missing: {hook}\n" "Pre-commit config should have comprehensive test coverage."
-            )
+            assert (
+                hook in content
+            ), f"Pre-commit hook missing: {hook}\nPre-commit config should have comprehensive test coverage."
 
     def test_precommit_hooks_run_on_push_stage(self):
         """

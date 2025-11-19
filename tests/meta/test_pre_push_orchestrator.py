@@ -200,6 +200,6 @@ class TestPrePushOrchestrator:
             "This allows the script to be executed directly.\n"
         )
 
-        assert "python" in first_line.lower(), (
-            "Shebang MUST reference Python\n" "\n" f"Found: {first_line}\n" "Expected: #!/usr/bin/env python3\n"
-        )
+        assert (
+            "python" in first_line.lower()
+        ), f"Shebang MUST reference Python\n\nFound: {first_line}\nExpected: #!/usr/bin/env python3\n"

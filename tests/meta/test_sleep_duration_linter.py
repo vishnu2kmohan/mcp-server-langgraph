@@ -177,6 +177,6 @@ def test_something():
             if os.path.exists(test_file):
                 violations = check_test_files([test_file])
                 # After our optimizations, these should have no violations
-                assert len(violations) == 0, (
-                    f"{test_file} should have no sleep violations after optimization, " f"but found: {violations}"
-                )
+                assert (
+                    len(violations) == 0
+                ), f"{test_file} should have no sleep violations after optimization, but found: {violations}"

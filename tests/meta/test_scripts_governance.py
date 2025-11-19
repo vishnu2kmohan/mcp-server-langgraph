@@ -67,7 +67,7 @@ class TestScriptsGovernance:
         root = Path(__file__).parent.parent.parent
         readme = root / "scripts" / "README.md"
 
-        assert readme.exists(), "scripts/README.md should exist to document scripts.\n" "Create with: touch scripts/README.md"
+        assert readme.exists(), "scripts/README.md should exist to document scripts.\nCreate with: touch scripts/README.md"
 
     def test_validator_scripts_exist(self):
         """
@@ -229,9 +229,9 @@ class TestScriptsRegistry:
         root = Path(__file__).parent.parent.parent
         registry = root / "scripts" / "REGISTRY.md"
 
-        assert registry.exists(), (
-            "scripts/REGISTRY.md should exist to catalog all scripts.\n" "Create in Phase 6 of implementation plan."
-        )
+        assert (
+            registry.exists()
+        ), "scripts/REGISTRY.md should exist to catalog all scripts.\nCreate in Phase 6 of implementation plan."
 
     def test_registry_documents_validators(self):
         """

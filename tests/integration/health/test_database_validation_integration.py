@@ -28,10 +28,10 @@ from mcp_server_langgraph.health.database_checks import DatabaseValidator, Envir
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
 
-
     def teardown_method(self):
         """Force GC to prevent resource leaks in xdist workers"""
         import gc
+
         gc.collect()
 
     @pytest.fixture(autouse=True)
@@ -211,6 +211,7 @@ class TestDatabaseValidationFailureCases:
     def teardown_method(self):
         """Force GC to prevent resource leaks in xdist workers"""
         import gc
+
         gc.collect()
 
     @pytest.fixture(autouse=True)

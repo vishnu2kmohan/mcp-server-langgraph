@@ -182,9 +182,9 @@ class TestPrePushHookConfiguration:
 
     def test_pre_push_hook_is_executable(self, pre_push_hook_path: Path):
         """Test that pre-push hook has execute permissions."""
-        assert os.access(pre_push_hook_path, os.X_OK), (
-            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\n" f"Fix: chmod +x {pre_push_hook_path}"
-        )
+        assert os.access(
+            pre_push_hook_path, os.X_OK
+        ), f"Pre-push hook exists but is not executable: {pre_push_hook_path}\nFix: chmod +x {pre_push_hook_path}"
 
     def test_pre_push_hook_is_bash_script(self, pre_push_hook_path: Path):
         """Test that pre-push hook is a bash script."""
@@ -221,19 +221,18 @@ class TestPrePushHookConfiguration:
         ]
 
         for test_file in required_workflow_tests:
-            assert test_file in content, (
-                f"Pre-push hook must run workflow validation test: {test_file}\n"
-                f"This prevents workflow errors from reaching CI"
-            )
+            assert (
+                test_file in content
+            ), f"Pre-push hook must run workflow validation test: {test_file}\nThis prevents workflow errors from reaching CI"
 
     def test_pre_push_hook_runs_mypy(self, pre_push_hook_path: Path):
         """Test that pre-push hook runs MyPy type checking."""
         with open(pre_push_hook_path) as f:
             content = f.read()
 
-        assert "mypy src/mcp_server_langgraph" in content, (
-            "Pre-push hook must run MyPy type checking\n" "This catches type errors before CI"
-        )
+        assert (
+            "mypy src/mcp_server_langgraph" in content
+        ), "Pre-push hook must run MyPy type checking\nThis catches type errors before CI"
 
         # MyPy should be non-blocking (warning only)
         assert "false" in content or "non-blocking" in content.lower(), "MyPy should be non-blocking in pre-push hook"
@@ -243,9 +242,9 @@ class TestPrePushHookConfiguration:
         with open(pre_push_hook_path) as f:
             content = f.read()
 
-        assert "pre-commit run --all-files" in content, (
-            "Pre-push hook must run 'pre-commit run --all-files'\n" "Running on changed files only causes CI surprises"
-        )
+        assert (
+            "pre-commit run --all-files" in content
+        ), "Pre-push hook must run 'pre-commit run --all-files'\nRunning on changed files only causes CI surprises"
 
     def test_pre_push_hook_runs_property_tests_with_ci_profile(self, pre_push_hook_path: Path):
         """Test that pre-push hook runs property tests with CI profile."""
@@ -310,9 +309,9 @@ class TestMakefileValidationTarget:
 
     def test_validate_pre_push_target_exists(self, makefile_content: str):
         """Test that validate-pre-push target exists in Makefile."""
-        assert re.search(r"^validate-pre-push:", makefile_content, re.MULTILINE), (
-            "Makefile must have 'validate-pre-push' target\n" "This provides manual validation matching pre-push hook"
-        )
+        assert re.search(
+            r"^validate-pre-push:", makefile_content, re.MULTILINE
+        ), "Makefile must have 'validate-pre-push' target\nThis provides manual validation matching pre-push hook"
 
     def test_validate_pre_push_in_phony_targets(self, makefile_content: str):
         """Test that validate-pre-push is declared as .PHONY."""
@@ -618,9 +617,9 @@ class TestPytestXdistParity:
         unit_test_pattern = r"uv run pytest.*tests/.*-m.*unit"
 
         # Check that unit tests exist in pre-push hook
-        assert re.search(unit_test_pattern, pre_push_content), (
-            "Pre-push hook must run unit tests\n" "Expected pattern: uv run pytest tests/ -m unit"
-        )
+        assert re.search(
+            unit_test_pattern, pre_push_content
+        ), "Pre-push hook must run unit tests\nExpected pattern: uv run pytest tests/ -m unit"
 
         # Now check that unit tests use -n auto
         # The pattern should be: pytest -n auto OR pytest tests/ ... -n auto
@@ -712,9 +711,9 @@ class TestPytestXdistParity:
     def test_ci_uses_pytest_xdist_n_auto(self, ci_workflow_content: str):
         """Verify that CI uses -n auto (this is the baseline we're matching)."""
         # CI should use -n auto for unit tests
-        assert "pytest -n auto" in ci_workflow_content, (
-            "CI workflow must use 'pytest -n auto' for parallel execution\n" "If CI doesn't use it, this test needs updating"
-        )
+        assert (
+            "pytest -n auto" in ci_workflow_content
+        ), "CI workflow must use 'pytest -n auto' for parallel execution\nIf CI doesn't use it, this test needs updating"
 
 
 @pytest.mark.xdist_group(name="testotelsdkdisabledparity")
@@ -831,15 +830,13 @@ class TestOtelSdkDisabledParity:
         assert property_test_lines, "Pre-push hook must run property tests"
 
         for line in property_test_lines:
-            assert "OTEL_SDK_DISABLED=true" in line, (
-                f"Property tests must set OTEL_SDK_DISABLED=true\n" f"Found: {line.strip()}"
-            )
+            assert "OTEL_SDK_DISABLED=true" in line, f"Property tests must set OTEL_SDK_DISABLED=true\nFound: {line.strip()}"
 
     def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
         """Verify that CI sets OTEL_SDK_DISABLED=true (this is the baseline)."""
-        assert "OTEL_SDK_DISABLED=true" in ci_workflow_content, (
-            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n" "If CI doesn't use it, this test needs updating"
-        )
+        assert (
+            "OTEL_SDK_DISABLED=true" in ci_workflow_content
+        ), "CI workflow must set OTEL_SDK_DISABLED=true for tests\nIf CI doesn't use it, this test needs updating"
 
 
 @pytest.mark.xdist_group(name="testapimcptestsuiteparity")

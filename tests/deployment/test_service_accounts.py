@@ -156,9 +156,9 @@ class TestServiceAccountSeparation:
                 missing_sas.append(expected_sa)
 
         # This test will FAIL initially (before creating separate SAs)
-        assert not missing_sas, (
-            f"Missing ServiceAccounts for deployed components: {missing_sas}. " f"Found SAs: {service_accounts}"
-        )
+        assert (
+            not missing_sas
+        ), f"Missing ServiceAccounts for deployed components: {missing_sas}. Found SAs: {service_accounts}"
 
 
 @pytest.mark.xdist_group(name="testworkloadidentitybindings")

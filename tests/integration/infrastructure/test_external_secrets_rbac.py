@@ -254,9 +254,9 @@ class TestGCPServiceAccountIAM:
         """Test that external-secrets-system namespace exists."""
         result = run_kubectl(["get", "namespace", "external-secrets-system", "-o", "json"], check=False)
 
-        assert result["success"], (
-            "Namespace external-secrets-system not found. " "Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
-        )
+        assert result[
+            "success"
+        ], "Namespace external-secrets-system not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
 
         namespace = json.loads(result["output"])
         assert namespace["metadata"]["name"] == "external-secrets-system"
@@ -268,9 +268,9 @@ class TestGCPServiceAccountIAM:
             ["get", "deployment", "external-secrets", "-o", "json"], namespace="external-secrets-system", check=False
         )
 
-        assert result["success"], (
-            "ESO controller deployment not found. " "Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
-        )
+        assert result[
+            "success"
+        ], "ESO controller deployment not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
 
         deployment = json.loads(result["output"])
         assert deployment["metadata"]["name"] == "external-secrets"
@@ -291,9 +291,9 @@ class TestGCPServiceAccountIAM:
             ["get", "deployment", "external-secrets-webhook", "-o", "json"], namespace="external-secrets-system", check=False
         )
 
-        assert result["success"], (
-            "ESO webhook deployment not found. " "Webhook is required for validating ExternalSecret resources."
-        )
+        assert result[
+            "success"
+        ], "ESO webhook deployment not found. Webhook is required for validating ExternalSecret resources."
 
         deployment = json.loads(result["output"])
         assert deployment["metadata"]["name"] == "external-secrets-webhook"
@@ -316,9 +316,9 @@ class TestGCPServiceAccountIAM:
             check=False,
         )
 
-        assert result["success"], (
-            "ESO cert-controller deployment not found. " "Cert-controller is required for managing webhook TLS certificates."
-        )
+        assert result[
+            "success"
+        ], "ESO cert-controller deployment not found. Cert-controller is required for managing webhook TLS certificates."
 
         deployment = json.loads(result["output"])
         assert deployment["metadata"]["name"] == "external-secrets-cert-controller"
@@ -454,9 +454,9 @@ class TestESORBACResources:
         """Test that ESO controller ClusterRoleBinding exists."""
         result = run_kubectl(["get", "clusterrolebinding", "external-secrets-controller", "-o", "json"], check=False)
 
-        assert result["success"], (
-            "ESO controller ClusterRoleBinding not found. " "This indicates RBAC creation failed during installation."
-        )
+        assert result[
+            "success"
+        ], "ESO controller ClusterRoleBinding not found. This indicates RBAC creation failed during installation."
 
         binding = json.loads(result["output"])
         assert binding["metadata"]["name"] == "external-secrets-controller"
@@ -497,9 +497,9 @@ class TestESORBACResources:
         """Test that ESO cert-controller ClusterRoleBinding exists."""
         result = run_kubectl(["get", "clusterrolebinding", "external-secrets-cert-controller", "-o", "json"], check=False)
 
-        assert result["success"], (
-            "ESO cert-controller ClusterRoleBinding not found. " "This indicates RBAC creation failed during installation."
-        )
+        assert result[
+            "success"
+        ], "ESO cert-controller ClusterRoleBinding not found. This indicates RBAC creation failed during installation."
 
         binding = json.loads(result["output"])
         assert binding["metadata"]["name"] == "external-secrets-cert-controller"

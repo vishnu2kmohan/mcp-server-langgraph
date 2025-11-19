@@ -81,9 +81,9 @@ class TestHookFixtureResilience:
         )
 
         for keyword in expected_message_keywords:
-            assert keyword.lower() in skip_message.lower(), (
-                f"Skip message should mention '{keyword}' for developer guidance.\n" f"Message: {skip_message}"
-            )
+            assert (
+                keyword.lower() in skip_message.lower()
+            ), f"Skip message should mention '{keyword}' for developer guidance.\nMessage: {skip_message}"
 
     def test_skip_message_includes_documentation_links(self):
         """

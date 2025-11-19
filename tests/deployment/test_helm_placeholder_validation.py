@@ -179,7 +179,7 @@ class TestHelmPlaceholderValidation:
             has_local_ignore = "*.local.yaml" in gitignore_content or "*.local.yml" in gitignore_content
 
             if not has_local_ignore:
-                print("\nRECOMMENDATION: Add '*.local.yaml' to .gitignore to prevent " "committing deployment secrets")
+                print("\nRECOMMENDATION: Add '*.local.yaml' to .gitignore to prevent committing deployment secrets")
 
     def test_no_hardcoded_gcp_project_ids_in_non_vishnu_repos(self):
         """

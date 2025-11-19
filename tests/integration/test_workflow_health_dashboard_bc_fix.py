@@ -54,9 +54,9 @@ def test_awk_percentage_calculation():
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         success_rate = result.stdout.strip()
 
-        assert success_rate == expected, (
-            f"Expected {expected}%, got {success_rate}% " f"for {successful_runs}/{total_runs} using awk"
-        )
+        assert (
+            success_rate == expected
+        ), f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs} using awk"
 
 
 def test_awk_comparison_calculations():
@@ -83,9 +83,9 @@ def test_awk_comparison_calculations():
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         comparison_result = result.stdout.strip()
 
-        assert comparison_result == expected, (
-            f"Expected {expected} for {success_rate} >= {threshold}, " f"got {comparison_result} using awk"
-        )
+        assert (
+            comparison_result == expected
+        ), f"Expected {expected} for {success_rate} >= {threshold}, got {comparison_result} using awk"
 
 
 def test_awk_duration_formatting():
@@ -111,9 +111,9 @@ def test_awk_duration_formatting():
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         formatted_duration = result.stdout.strip()
 
-        assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
-        )
+        assert (
+            formatted_duration == expected
+        ), f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
 
 
 def test_awk_integer_formatting():
@@ -139,9 +139,9 @@ def test_awk_integer_formatting():
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True, timeout=60)  # nosec B602
         formatted_duration = result.stdout.strip()
 
-        assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
-        )
+        assert (
+            formatted_duration == expected
+        ), f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
 
 
 @pytest.mark.integration

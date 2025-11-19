@@ -55,9 +55,9 @@ class TestClaudeCodeConfiguration:
     def test_claude_settings_json_exists(self, claude_dir: Path):
         """Test that .claude/settings.json exists."""
         settings_file = claude_dir / "settings.json"
-        assert settings_file.exists(), (
-            ".claude/settings.json does not exist. " "Create it with allowedTools configuration for WebFetch and Bash."
-        )
+        assert (
+            settings_file.exists()
+        ), ".claude/settings.json does not exist. Create it with allowedTools configuration for WebFetch and Bash."
 
     def test_claude_settings_json_valid_json(self, claude_dir: Path):
         """Test that .claude/settings.json is valid JSON."""
@@ -80,7 +80,7 @@ class TestClaudeCodeConfiguration:
         with open(settings_file) as f:
             config = json.load(f)
 
-        assert "allowedTools" in config, "settings.json missing 'allowedTools' key. " "Add WebFetch and Bash tool permissions."
+        assert "allowedTools" in config, "settings.json missing 'allowedTools' key. Add WebFetch and Bash tool permissions."
 
     def test_claude_settings_has_webfetch_domains(self, claude_dir: Path):
         """Test that settings.json has WebFetch allowed_domains."""
@@ -208,9 +208,9 @@ class TestClaudeCodeConfiguration:
             if cmd not in existing_commands:
                 missing_commands.append(cmd)
 
-        assert len(missing_commands) == 0, (
-            f"Missing recommended slash commands: {missing_commands}. " f"Create them in .claude/commands/"
-        )
+        assert (
+            len(missing_commands) == 0
+        ), f"Missing recommended slash commands: {missing_commands}. Create them in .claude/commands/"
 
     def test_templates_directory_exists(self, claude_dir: Path):
         """Test that .claude/templates/ directory exists."""
@@ -256,9 +256,9 @@ class TestClaudeCodeConfiguration:
             gitignore_content = f.read()
 
         # Check for settings.local.json or *.local.json pattern
-        assert "settings.local.json" in gitignore_content or "*.local.json" in gitignore_content, (
-            ".gitignore should contain pattern to exclude settings.local.json " "to prevent committing local configurations"
-        )
+        assert (
+            "settings.local.json" in gitignore_content or "*.local.json" in gitignore_content
+        ), ".gitignore should contain pattern to exclude settings.local.json to prevent committing local configurations"
 
 
 @pytest.mark.xdist_group(name="slash_command_quality")

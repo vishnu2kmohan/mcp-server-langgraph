@@ -54,8 +54,7 @@ def test_infrastructure_check(test_infrastructure):
 
     if not test_infrastructure["ready"]:
         pytest.skip(
-            "E2E infrastructure services not ready. "
-            "Ensure Docker is running and docker-compose.test.yml services are healthy."
+            "E2E infrastructure services not ready. Ensure Docker is running and docker-compose.test.yml services are healthy."
         )
 
     return True

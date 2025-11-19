@@ -46,9 +46,9 @@ class TestMigrationChecklists:
 
     def test_checklists_directory_exists(self, checklists_dir: Path):
         """Test that .github/checklists/ directory exists."""
-        assert checklists_dir.exists(), (
-            ".github/checklists/ directory does not exist. " "Create it to store migration and large task checklists."
-        )
+        assert (
+            checklists_dir.exists()
+        ), ".github/checklists/ directory does not exist. Create it to store migration and large task checklists."
 
         assert checklists_dir.is_dir(), ".github/checklists/ exists but is not a directory"
 
@@ -71,9 +71,9 @@ class TestMigrationChecklists:
             if not checklist_path.exists():
                 missing_checklists.append(checklist)
 
-        assert len(missing_checklists) == 0, (
-            f"Missing required checklists: {missing_checklists}. " f"Create them in .github/checklists/"
-        )
+        assert (
+            len(missing_checklists) == 0
+        ), f"Missing required checklists: {missing_checklists}. Create them in .github/checklists/"
 
     def test_checklists_are_markdown(self, checklists_dir: Path):
         """Test that all checklists are markdown files."""
@@ -142,10 +142,9 @@ class TestMigrationChecklists:
             if not has_tasks:
                 checklists_without_tasks.append(checklist.name)
 
-        assert len(checklists_without_tasks) == 0, (
-            f"Checklists without task items (- [ ]): {checklists_without_tasks}. "
-            f"Checklists should have actionable task items."
-        )
+        assert (
+            len(checklists_without_tasks) == 0
+        ), f"Checklists without task items (- [ ]): {checklists_without_tasks}. Checklists should have actionable task items."
 
     def test_checklists_are_not_empty(self, checklists_dir: Path):
         """Test that checklists have substantial content (> 200 chars)."""
@@ -204,7 +203,7 @@ class TestTypeSafetyChecklist:
         # Should mention the specific number of errors to fix
         has_error_count = "145" in content or "145+" in content
 
-        assert has_error_count, "TYPE_SAFETY_MIGRATION.md should mention the baseline of 145+ errors " "that need to be fixed."
+        assert has_error_count, "TYPE_SAFETY_MIGRATION.md should mention the baseline of 145+ errors that need to be fixed."
 
     def test_has_phase_structure(self, type_safety_checklist: Path):
         """Test that checklist has multi-phase breakdown."""
@@ -234,7 +233,7 @@ class TestTypeSafetyChecklist:
         # Should include mypy command examples
         has_mypy_command = "mypy src/" in content or "`mypy" in content
 
-        assert has_mypy_command, "TYPE_SAFETY_MIGRATION.md should include mypy command examples " "for validating progress."
+        assert has_mypy_command, "TYPE_SAFETY_MIGRATION.md should include mypy command examples for validating progress."
 
 
 # TDD Validation: Run this test file to verify RED phase

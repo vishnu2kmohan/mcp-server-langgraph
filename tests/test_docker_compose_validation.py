@@ -258,9 +258,9 @@ class TestDockerComposeHealthChecks:
 
             # Validate test format
             test = health_check["test"]
-            assert isinstance(test, (list, str)), (
-                f"Service '{service_name}' health check 'test' must be list or string, " f"got {type(test)}"
-            )
+            assert isinstance(
+                test, (list, str)
+            ), f"Service '{service_name}' health check 'test' must be list or string, got {type(test)}"
 
             # Validate optional fields if present
             if "interval" in health_check:
@@ -309,12 +309,10 @@ class TestDockerComposeQdrantSpecific:
                 continue
 
             health_check = service_config.get("healthcheck")
-            assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"MUST have a health check"
+            assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} MUST have a health check"
 
             command_parts = extract_health_check_command(health_check)
-            assert command_parts, (
-                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"health check has no command"
-            )
+            assert command_parts, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} health check has no command"
 
             command = command_parts[0]
             base_command = Path(command).name

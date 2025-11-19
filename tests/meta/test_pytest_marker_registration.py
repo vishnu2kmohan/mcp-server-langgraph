@@ -185,6 +185,6 @@ def test_marker_naming_conventions():
         if not re.match(r"^[a-z][a-z0-9_]*$", marker):
             invalid_markers.append(marker)
 
-    assert not invalid_markers, (
-        f"The following markers don't follow naming conventions (snake_case):\n" f"  {sorted(invalid_markers)}"
-    )
+    assert (
+        not invalid_markers
+    ), f"The following markers don't follow naming conventions (snake_case):\n  {sorted(invalid_markers)}"

@@ -38,6 +38,7 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+
 # Patterns that indicate hardcoded IDs (violations)
 HARDCODED_ID_PATTERNS = [
     # User IDs in OpenFGA format
@@ -164,13 +165,10 @@ def is_legitimate_usage(line: str) -> bool:
     Returns:
         True if usage is legitimate (allowed), False otherwise
     """
-    for pattern in LEGITIMATE_PATTERNS:
-        if re.search(pattern, line):
-            return True
-    return False
+    return any(re.search(pattern, line) for pattern in LEGITIMATE_PATTERNS)
 
 
-def find_hardcoded_ids(file_path: Path) -> List[Tuple[int, str, str]]:
+def find_hardcoded_ids(file_path: Path) -> list[tuple[int, str, str]]:
     """
     Find hardcoded ID patterns in a test file.
 

@@ -278,9 +278,7 @@ class TestIntegrationTestOrganization:
         root = Path(__file__).parent.parent.parent
         integration_dir = root / "tests" / "integration"
 
-        assert integration_dir.exists(), (
-            "tests/integration/ directory must exist. Create with:\n" "  mkdir -p tests/integration"
-        )
+        assert integration_dir.exists(), "tests/integration/ directory must exist. Create with:\n  mkdir -p tests/integration"
         assert integration_dir.is_dir(), "tests/integration/ must be a directory"
 
 

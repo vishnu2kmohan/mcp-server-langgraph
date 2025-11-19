@@ -158,6 +158,6 @@ def test_jwt_secret_not_in_production_config():
     )
 
     # Check that we're not using weak secrets
-    assert len(constants.TEST_JWT_SECRET) >= 16, (
-        f"TEST_JWT_SECRET should be at least 16 characters for security. " f"Current length: {len(constants.TEST_JWT_SECRET)}"
-    )
+    assert (
+        len(constants.TEST_JWT_SECRET) >= 16
+    ), f"TEST_JWT_SECRET should be at least 16 characters for security. Current length: {len(constants.TEST_JWT_SECRET)}"

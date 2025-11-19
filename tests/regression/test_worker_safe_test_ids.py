@@ -116,9 +116,9 @@ class TestWorkerSafeIDGeneration:
 
         # Verify expected format
         expected_ids = {f"user:alice_{worker}" for worker in worker_ids}
-        assert generated_ids == expected_ids, (
-            f"Generated IDs don't match expected format. " f"Expected: {expected_ids}, Got: {generated_ids}"
-        )
+        assert (
+            generated_ids == expected_ids
+        ), f"Generated IDs don't match expected format. Expected: {expected_ids}, Got: {generated_ids}"
 
     def test_get_worker_scoped_email_with_default_worker(self):
         """
@@ -228,8 +228,8 @@ class TestWorkerSafeIDGeneration:
                 all_emails.add(email)
 
         # Verify we got 8 unique IDs (one per worker)
-        assert len(all_user_ids) == 8, f"Expected 8 unique user IDs, got {len(all_user_ids)}. " f"IDs: {all_user_ids}"
-        assert len(all_emails) == 8, f"Expected 8 unique emails, got {len(all_emails)}. " f"Emails: {all_emails}"
+        assert len(all_user_ids) == 8, f"Expected 8 unique user IDs, got {len(all_user_ids)}. IDs: {all_user_ids}"
+        assert len(all_emails) == 8, f"Expected 8 unique emails, got {len(all_emails)}. Emails: {all_emails}"
 
 
 @pytest.mark.unit

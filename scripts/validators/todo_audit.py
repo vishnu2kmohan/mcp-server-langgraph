@@ -119,10 +119,7 @@ class TodoAuditor:
     def _should_include(self, file_path: Path) -> bool:
         """Check if file should be included in audit."""
         relative_path = file_path.relative_to(self.docs_dir)
-        for pattern in self.EXCLUDE_PATTERNS:
-            if pattern in str(relative_path):
-                return False
-        return True
+        return all(pattern not in str(relative_path) for pattern in self.EXCLUDE_PATTERNS)
 
     def _audit_file(self, file_path: Path, relative_path: str) -> list[TodoMarker]:
         """Audit a single file for markers."""

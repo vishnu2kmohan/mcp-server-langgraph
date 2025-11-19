@@ -45,11 +45,9 @@ class TestMakefileParallelization:
         assert match, "test-ci target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-ci should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}\n"
-            f"Expected: Should contain '-n auto'"
-        )
+        assert (
+            "-n auto" in pytest_args
+        ), f"test-ci should use '-n auto' for parallel execution\nFound: {pytest_args}\nExpected: Should contain '-n auto'"
 
     @pytest.mark.unit
     def test_test_mcp_server_uses_parallel_execution(self):
@@ -70,9 +68,7 @@ class TestMakefileParallelization:
         assert match, "test-mcp-server target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-mcp-server should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
-        )
+        assert "-n auto" in pytest_args, f"test-mcp-server should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.unit
     def test_test_new_uses_parallel_execution(self):
@@ -93,7 +89,7 @@ class TestMakefileParallelization:
         assert match, "test-new target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.unit
     def test_test_integration_local_uses_parallel_execution(self):
@@ -114,9 +110,9 @@ class TestMakefileParallelization:
         assert match, "test-integration-local target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-integration-local should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
-        )
+        assert (
+            "-n auto" in pytest_args
+        ), f"test-integration-local should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.unit
     def test_test_e2e_uses_parallel_execution(self):
@@ -137,7 +133,7 @@ class TestMakefileParallelization:
         assert match, "test-e2e target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+        assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.unit
     def test_parallelized_targets_mention_parallel_in_output(self):

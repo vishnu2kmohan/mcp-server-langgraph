@@ -113,9 +113,9 @@ class TestFixtureScopeValidation:
         # Validate all fixtures found and are session-scoped
         for fixture_name in required_fixtures:
             assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in conftest.py"
-            assert fixture_scopes[fixture_name] == "session", (
-                f"Fixture '{fixture_name}' must be session-scoped, " f"found scope='{fixture_scopes[fixture_name]}'"
-            )
+            assert (
+                fixture_scopes[fixture_name] == "session"
+            ), f"Fixture '{fixture_name}' must be session-scoped, found scope='{fixture_scopes[fixture_name]}'"
 
     def test_openfga_scim_test_fixtures_compatible_with_session_scope(self):
         """
@@ -180,9 +180,9 @@ class TestKeycloakServiceConfiguration:
 
         # Validate Keycloak service exists and is not commented out
         assert "services" in compose_config, "No services defined in docker-compose.test.yml"
-        assert "keycloak-test" in compose_config["services"], (
-            "keycloak-test service not found in docker-compose.test.yml. " "Service must be uncommented for E2E auth testing."
-        )
+        assert (
+            "keycloak-test" in compose_config["services"]
+        ), "keycloak-test service not found in docker-compose.test.yml. Service must be uncommented for E2E auth testing."
 
     def test_keycloak_service_has_health_check(self):
         """
@@ -234,12 +234,12 @@ class TestKeycloakServiceConfiguration:
         has_admin_username = "KEYCLOAK_ADMIN" in env_keys or "KC_BOOTSTRAP_ADMIN_USERNAME" in env_keys
         has_admin_password = "KEYCLOAK_ADMIN_PASSWORD" in env_keys or "KC_BOOTSTRAP_ADMIN_PASSWORD" in env_keys
 
-        assert has_admin_username, (
-            "keycloak-test service missing admin username: " "must have KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME"
-        )
-        assert has_admin_password, (
-            "keycloak-test service missing admin password: " "must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
-        )
+        assert (
+            has_admin_username
+        ), "keycloak-test service missing admin username: must have KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME"
+        assert (
+            has_admin_password
+        ), "keycloak-test service missing admin password: must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
 
         # Database and health configuration (required regardless of Keycloak version)
         required_vars = [

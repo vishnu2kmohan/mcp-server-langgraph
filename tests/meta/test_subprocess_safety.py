@@ -212,9 +212,9 @@ class TestSubprocessSafety:
                     timeout_arg = run_cli_tool_node.args.defaults[default_index]
                 break
 
-        assert timeout_arg is not None, (
-            "run_cli_tool() must have timeout parameter with default value. " "Example: def run_cli_tool(..., timeout=60)"
-        )
+        assert (
+            timeout_arg is not None
+        ), "run_cli_tool() must have timeout parameter with default value. Example: def run_cli_tool(..., timeout=60)"
 
         # Extract default value
         if isinstance(timeout_arg, ast.Constant):

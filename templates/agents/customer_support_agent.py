@@ -133,9 +133,9 @@ def handle_faq(state: SupportState) -> SupportState:
         best_match = state.faq_matches[0]
         state.response = f"""I found this answer in our knowledge base:
 
-**{best_match['question']}**
+**{best_match["question"]}**
 
-{best_match['answer']}
+{best_match["answer"]}
 
 Is this what you were looking for? If you need more help, I can connect you with a specialist."""
     else:

@@ -59,7 +59,7 @@ def test_overlay_builds_successfully(overlay_dir: Path):
     """Test that overlay builds without errors."""
     stdout, stderr, returncode = build_kustomize(overlay_dir)
 
-    assert returncode == 0, f"Kustomize build failed for {overlay_dir.name}:\n" f"stderr: {stderr}\n" f"stdout: {stdout}"
+    assert returncode == 0, f"Kustomize build failed for {overlay_dir.name}:\nstderr: {stderr}\nstdout: {stdout}"
 
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomize build")
@@ -149,9 +149,9 @@ def test_namespace_consistency(overlay_dir: Path):
                 namespace = manifest.get("metadata", {}).get("namespace")
                 name = manifest.get("metadata", {}).get("name")
 
-                assert namespace == expected_namespace, (
-                    f"Resource {kind}/{name} has namespace '{namespace}' " f"but expected '{expected_namespace}'"
-                )
+                assert (
+                    namespace == expected_namespace
+                ), f"Resource {kind}/{name} has namespace '{namespace}' but expected '{expected_namespace}'"
 
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for duplicate resource detection")

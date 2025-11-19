@@ -1042,12 +1042,12 @@ class TestRedisAPICacheConfiguration:
                 assert result is not None, "Validation should succeed"
 
                 # CRITICAL: Verify Redis was used for caching
-                assert mock_redis.get.called, (
-                    "Redis get() should be called to check cache. " "This proves dependencies.py wired Redis client correctly."
-                )
-                assert mock_redis.setex.called, (
-                    "Redis setex() should be called to cache result. " "This proves caching is active."
-                )
+                assert (
+                    mock_redis.get.called
+                ), "Redis get() should be called to check cache. This proves dependencies.py wired Redis client correctly."
+                assert (
+                    mock_redis.setex.called
+                ), "Redis setex() should be called to cache result. This proves caching is active."
 
         # Cleanup
         deps_module._api_key_manager = None

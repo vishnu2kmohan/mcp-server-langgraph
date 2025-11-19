@@ -117,9 +117,9 @@ class TestPostgresWorkerIsolation:
         # This is what the fixed fixture should calculate
         calculated_schema = f"test_worker_{worker_id}"
 
-        assert calculated_schema == expected_schema, (
-            f"Worker {worker_id} should use schema {expected_schema}. " f"Got: {calculated_schema}"
-        )
+        assert (
+            calculated_schema == expected_schema
+        ), f"Worker {worker_id} should use schema {expected_schema}. Got: {calculated_schema}"
 
 
 @pytest.mark.unit
@@ -188,9 +188,9 @@ class TestRedisWorkerIsolation:
         worker_num = int(worker_id.replace("gw", ""))
         calculated_db_index = worker_num + 1
 
-        assert calculated_db_index == expected_db_index, (
-            f"Worker {worker_id} should use Redis DB {expected_db_index}. " f"Got: {calculated_db_index}"
-        )
+        assert (
+            calculated_db_index == expected_db_index
+        ), f"Worker {worker_id} should use Redis DB {expected_db_index}. Got: {calculated_db_index}"
 
     def test_redis_has_enough_databases_for_workers(self):
         """
@@ -205,9 +205,9 @@ class TestRedisWorkerIsolation:
         reserved_databases = 1  # DB 0 reserved for non-xdist
         max_xdist_workers = redis_default_databases - reserved_databases
 
-        assert max_xdist_workers >= 8, (
-            f"Redis should support at least 8 concurrent xdist workers. " f"Can support: {max_xdist_workers}"
-        )
+        assert (
+            max_xdist_workers >= 8
+        ), f"Redis should support at least 8 concurrent xdist workers. Can support: {max_xdist_workers}"
 
 
 @pytest.mark.unit
@@ -267,9 +267,9 @@ class TestOpenFGAWorkerIsolation:
         """
         calculated_store_name = f"test_store_{worker_id}"
 
-        assert calculated_store_name == expected_store_name, (
-            f"Worker {worker_id} should use store {expected_store_name}. " f"Got: {calculated_store_name}"
-        )
+        assert (
+            calculated_store_name == expected_store_name
+        ), f"Worker {worker_id} should use store {expected_store_name}. Got: {calculated_store_name}"
 
 
 @pytest.mark.unit
@@ -328,9 +328,9 @@ class TestWorkerIsolationIntegration:
         # TRUNCATE in worker gw0's schema
 
         # This is now safe because gw1 uses a different schema
-        assert worker_gw0_schema != worker_gw1_schema, (
-            "TRUNCATE in gw0's schema doesn't affect gw1's schema. " "This is the KEY benefit of worker-scoped isolation."
-        )
+        assert (
+            worker_gw0_schema != worker_gw1_schema
+        ), "TRUNCATE in gw0's schema doesn't affect gw1's schema. This is the KEY benefit of worker-scoped isolation."
 
 
 # TDD Documentation Tests

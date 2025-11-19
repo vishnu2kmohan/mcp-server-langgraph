@@ -49,11 +49,11 @@ class MemorySafetyChecker(ast.NodeVisitor):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.violations: List[Violation] = []
-        self.current_class: Optional[str] = None
-        self.current_class_line: Optional[int] = None
-        self.current_class_decorators: List[str] = []
-        self.current_class_methods: Set[str] = set()
+        self.violations: list[Violation] = []
+        self.current_class: str | None = None
+        self.current_class_line: int | None = None
+        self.current_class_decorators: list[str] = []
+        self.current_class_methods: set[str] = set()
         self.class_uses_mocks = False
         self.class_is_performance = False
 
@@ -230,7 +230,7 @@ class MemorySafetyChecker(ast.NodeVisitor):
         return False
 
 
-def check_file(file_path: str) -> List[Violation]:
+def check_file(file_path: str) -> list[Violation]:
     """
     Check a single file for memory safety violations.
 
@@ -241,7 +241,7 @@ def check_file(file_path: str) -> List[Violation]:
         List of Violation objects found in the file
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content, filename=file_path)
@@ -257,7 +257,7 @@ def check_file(file_path: str) -> List[Violation]:
         return []
 
 
-def find_test_files(base_dir: str = "tests") -> List[str]:
+def find_test_files(base_dir: str = "tests") -> list[str]:
     """
     Find all test files under the base directory.
 
@@ -279,7 +279,7 @@ def find_test_files(base_dir: str = "tests") -> List[str]:
     return sorted(test_files)
 
 
-def print_violations(violations: List[Violation]) -> None:
+def print_violations(violations: list[Violation]) -> None:
     """
     Print violations in a readable format.
 

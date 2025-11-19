@@ -236,7 +236,7 @@ def main():
         if process_file(file_path, args.dry_run):
             styled_count += 1
 
-    print(f"\n{'Would add styling to' if args.dry_run else 'Added styling to'} " f"{styled_count}/{len(mdx_files)} files")
+    print(f"\n{'Would add styling to' if args.dry_run else 'Added styling to'} {styled_count}/{len(mdx_files)} files")
 
     if args.dry_run:
         print("\nRun without --dry-run to apply changes")

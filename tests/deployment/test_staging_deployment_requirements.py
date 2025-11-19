@@ -129,9 +129,7 @@ class TestStagingDeploymentRequirements:
 
         # Validate format
         parts = instance_arg.split(":")
-        assert len(parts) == 3, (
-            f"Invalid instance connection string format: {instance_arg}\n" f"Expected: PROJECT:REGION:INSTANCE"
-        )
+        assert len(parts) == 3, f"Invalid instance connection string format: {instance_arg}\nExpected: PROJECT:REGION:INSTANCE"
 
     def test_cloud_sql_proxy_has_health_checks(self):
         """
@@ -332,9 +330,9 @@ class TestStagingDeploymentRequirements:
         ), f"Expected exactly 1 hostname topology constraint, found {len(hostname_constraints)}"
 
         hostname_constraint = hostname_constraints[0]
-        assert hostname_constraint["maxSkew"] == 2, (
-            f"Hostname constraint maxSkew should be 2 (allow some flexibility), " f"got {hostname_constraint['maxSkew']}"
-        )
+        assert (
+            hostname_constraint["maxSkew"] == 2
+        ), f"Hostname constraint maxSkew should be 2 (allow some flexibility), got {hostname_constraint['maxSkew']}"
 
     def test_mcp_server_has_required_pod_anti_affinity(self):
         """

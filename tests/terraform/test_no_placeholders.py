@@ -254,9 +254,9 @@ class TestEKSEndpointSecurity:
         # Check for validation block in cluster_endpoint_public_access_cidrs variable
         has_validation = "validation {" in content and "cluster_endpoint_public_access_cidrs" in content
 
-        assert has_validation, (
-            "EKS module should have validation to prevent 0.0.0.0/0 in " "cluster_endpoint_public_access_cidrs variable"
-        )
+        assert (
+            has_validation
+        ), "EKS module should have validation to prevent 0.0.0.0/0 in cluster_endpoint_public_access_cidrs variable"
 
 
 @pytest.mark.xdist_group(name="testgkenetworksecurity")

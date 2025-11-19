@@ -232,7 +232,7 @@ def generate_report(history: list[tuple[str, int, str]], days: int) -> str:
     report = f"""
 # TODO Burndown Report
 
-**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 **Time Range**: Last {days} days
 **Data Points**: {len(history)} commits sampled
 

@@ -332,6 +332,6 @@ def test_network_policy_coverage():
     # Check that main app has a network policy
     app_labels_in_policies = any("mcp-server-langgraph" in str(policy) for policy in network_policies)
 
-    assert app_labels_in_policies, "Main application workload should have a NetworkPolicy defined. " "Found policies: " + str(
+    assert app_labels_in_policies, "Main application workload should have a NetworkPolicy defined. Found policies: " + str(
         network_policies
     )
