@@ -210,6 +210,7 @@ class TestMakefileParallelizationBestPractices:
             "test-debug",  # Uses --pdb, must be serial
             "test-fast",  # Already parallelized according to analysis
             "fast",  # Alias or variant
+            "help-common",  # Documentation target, not a test target
         ]
 
         targets_without_parallel = [t for t in targets_without_parallel if t not in exceptions]
