@@ -1,4 +1,10 @@
 extends: default
+
+# Ignore Helm templates (they contain Go template syntax)
+ignore: |
+  deployments/helm/*/templates/
+  deployments/helm/mcp-server-langgraph/templates/
+
 rules:
   line-length:
     max: 120
