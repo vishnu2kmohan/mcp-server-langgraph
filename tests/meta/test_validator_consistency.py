@@ -268,8 +268,13 @@ class TestValidatorConsistency:
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="validator_consistency")
 class TestValidationLibraryVersion:
     """Test that validation library has proper versioning."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_validation_lib_has_version(self) -> None:
         """Test that validation_lib package has __version__."""
@@ -293,8 +298,13 @@ class TestValidationLibraryVersion:
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="validator_consistency")
 class TestValidationLibraryExports:
     """Test that validation library properly exports modules."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_can_import_memory_safety(self) -> None:
         """Test that memory_safety can be imported from validation_lib."""

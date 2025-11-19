@@ -286,8 +286,13 @@ class TestIDsValidator:
 
 @pytest.mark.unit
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="ids_validator")
 class TestIDsValidatorHelpers:
     """Test helper functions in test IDs validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_legitimate_patterns_match_correctly(self) -> None:
         """Test that legitimate usage patterns are correctly identified."""
