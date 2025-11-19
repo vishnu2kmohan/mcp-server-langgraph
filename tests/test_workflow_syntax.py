@@ -61,11 +61,13 @@ def test_workflow_syntax_valid(workflow_file):
     assert result.returncode == 0, "\n".join(errors)
 
 
+@requires_tool("actionlint", skip_reason="actionlint not installed (only required in workflow validation job)")
 def test_actionlint_installed():
     """
     Verify that actionlint is installed and available.
 
     This is a prerequisite test that ensures the validation tool is present.
+    Skips gracefully if actionlint is not installed (e.g., in Python version test jobs).
     """
     result = subprocess.run(["which", "actionlint"], capture_output=True, timeout=60)
 
