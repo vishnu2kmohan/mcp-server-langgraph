@@ -49,6 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 @pytest.mark.meta
 @pytest.mark.performance
+@pytest.mark.timeout(300)  # Override global 60s timeout - this test runs full suite as subprocess
 def test_no_slow_unit_tests():
     """
     Test that no individual unit test takes > 10 seconds.
