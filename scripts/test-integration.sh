@@ -233,6 +233,48 @@ else
     log_success "All services healthy"
     echo ""
 
+    # Verify PostgreSQL actually accepts connections (not just reports healthy)
+    # This matches CI workflow behavior (integration-tests.yaml lines 203-220)
+    log_info "Verifying PostgreSQL accepts connections..."
+    PG_CONNECTED=false
+    # shellcheck disable=SC2034
+    for i in {1..30}; do
+        if docker compose -f "$COMPOSE_FILE" exec -T postgres-test \
+            psql -U postgres -d gdpr_test -c "SELECT 1" > /dev/null 2>&1; then
+            log_success "PostgreSQL accepting connections on gdpr_test database"
+            PG_CONNECTED=true
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+    echo ""
+
+    if [ "$PG_CONNECTED" = false ]; then
+        log_error "PostgreSQL not accepting connections after 30 attempts"
+        docker compose -f "$COMPOSE_FILE" logs postgres-test
+        TEST_EXIT_CODE=1
+        exit $TEST_EXIT_CODE
+    fi
+
+    # Verify PostgreSQL is accessible from HOST on port 9432
+    # This is critical because tests run on host, not in container
+    log_info "Verifying PostgreSQL accessible from host on port 9432..."
+    if command -v nc &> /dev/null && nc -z localhost 9432 2>/dev/null; then
+        log_success "PostgreSQL port 9432 accessible from host"
+    elif command -v psql &> /dev/null; then
+        if PGPASSWORD=postgres psql -h localhost -p 9432 -U postgres -d gdpr_test -c "SELECT 1" > /dev/null 2>&1; then
+            log_success "PostgreSQL accessible from host (verified with psql)"
+        else
+            log_warning "PostgreSQL container healthy but not accessible from host on port 9432"
+            log_info "This may cause test failures. Check port mapping and firewall rules."
+        fi
+    else
+        log_warning "Cannot verify host connectivity (nc and psql not available)"
+        log_info "Proceeding with tests - errors may occur if port not accessible"
+    fi
+    echo ""
+
     # Run integration tests on host (CI parity - OpenAI Codex Finding #1)
     log_info "Running integration tests on host..."
     echo ""
@@ -240,9 +282,9 @@ else
     START_TIME=$(date +%s)
 
     # Run pytest directly on host (same as CI)
-    # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
-    # IMPORTANT: Set PostgreSQL connection parameters to match docker-compose.test.yml (port 9432)
+    # Set PostgreSQL connection parameters inline (MUST match docker-compose.test.yml and CI)
     # This ensures local/CI parity and prevents connection failures
+    # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
     if TESTING=true \
        OTEL_SDK_DISABLED=true \
        POSTGRES_HOST=localhost \

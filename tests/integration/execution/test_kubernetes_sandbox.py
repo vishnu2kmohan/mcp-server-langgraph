@@ -46,8 +46,26 @@ class TestKubernetesSandbox:
 
     @pytest.fixture
     def sandbox(self, kubernetes_available):
-        """Create Kubernetes sandbox instance"""
-        limits = ResourceLimits.testing()
+        """
+        Create Kubernetes sandbox instance with extended timeout.
+
+        NOTE: Kubernetes Job execution has significant overhead compared to Docker:
+        - Pod scheduling latency
+        - Image pull time (if not cached)
+        - Container startup time
+        - Job cleanup time
+
+        Using 20-second timeout instead of 10s to account for K8s overhead
+        while still catching genuine timeout issues.
+        """
+        limits = ResourceLimits(
+            timeout_seconds=20,  # Extended for K8s overhead (vs 10s for Docker)
+            memory_limit_mb=256,
+            cpu_quota=0.5,
+            disk_quota_mb=50,
+            max_processes=1,
+            network_mode="none",
+        )
         return KubernetesSandbox(limits=limits, namespace="default")
 
     def test_sandbox_initialization(self, sandbox):
