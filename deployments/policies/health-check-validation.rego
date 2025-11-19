@@ -2,7 +2,7 @@ package main
 
 # Cloud SQL Proxy health check validation
 deny[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
 
     container := input.spec.template.spec.containers[_]
     contains(container.image, "cloud-sql-proxy")
@@ -20,7 +20,7 @@ deny[msg] {
 }
 
 deny[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
 
     container := input.spec.template.spec.containers[_]
     contains(container.image, "cloud-sql-proxy")
@@ -39,7 +39,7 @@ deny[msg] {
 }
 
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
 
     container := input.spec.template.spec.containers[_]
     contains(container.image, "cloud-sql-proxy")
@@ -95,7 +95,7 @@ has_http_address_flag(args) {
 
 # General probe validation
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
 
     container := input.spec.template.spec.containers[_]
 
@@ -110,7 +110,7 @@ warn[msg] {
 }
 
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
 
     container := input.spec.template.spec.containers[_]
 

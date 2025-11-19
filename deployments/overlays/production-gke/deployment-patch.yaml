@@ -85,19 +85,19 @@ spec:
           runAsUser: 1000
           capabilities:
             drop:
-              - ALL
+            - ALL
             add:
-              - NET_BIND_SERVICE
+            - NET_BIND_SERVICE
 
         # Environment variables
         env:
         # LLM Provider Configuration
         - name: LLM_PROVIDER
           value: "google"
-          valueFrom: null  # Remove valueFrom from base to avoid conflict
+          valueFrom:       # Remove valueFrom from base to avoid conflict
         - name: MODEL_NAME
           value: "gemini-2.0-flash-exp"  # Production model
-          valueFrom: null  # Remove valueFrom from base to avoid conflict
+          valueFrom:       # Remove valueFrom from base to avoid conflict
 
         # Vertex AI Configuration (Workload Identity)
         - name: VERTEX_PROJECT
@@ -158,7 +158,7 @@ spec:
               key: redis-password
         - name: REDIS_SSL
           value: "true"
-          valueFrom: null  # Remove valueFrom from base to avoid conflict
+          valueFrom:       # Remove valueFrom from base to avoid conflict
 
         # PostgreSQL Configuration (via Cloud SQL Proxy)
         - name: POSTGRES_HOST
@@ -186,10 +186,10 @@ spec:
         # Production-specific settings
         - name: ENVIRONMENT
           value: "production"
-          valueFrom: null  # Remove valueFrom from base to avoid conflict
+          valueFrom:       # Remove valueFrom from base to avoid conflict
         - name: LOG_LEVEL
           value: "INFO"
-          valueFrom: null  # Remove valueFrom from base to avoid conflict
+          valueFrom:       # Remove valueFrom from base to avoid conflict
         - name: ENABLE_DEBUG
           value: "false"
 
@@ -229,13 +229,13 @@ spec:
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
-          - "--structured-logs"
-          - "--port=5432"
-          - "--private-ip"
-          - "$(CLOUDSQL_CONNECTION_NAME)"
-          - "--health-check"
-          - "--http-port=9801"
-          - "--http-address=0.0.0.0"
+        - "--structured-logs"
+        - "--port=5432"
+        - "--private-ip"
+        - "$(CLOUDSQL_CONNECTION_NAME)"
+        - "--health-check"
+        - "--http-port=9801"
+        - "--http-address=0.0.0.0"
 
         env:
         - name: CLOUDSQL_CONNECTION_NAME
@@ -251,7 +251,7 @@ spec:
           readOnlyRootFilesystem: true
           capabilities:
             drop:
-              - ALL
+            - ALL
 
         resources:
           requests:
