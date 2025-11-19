@@ -19,6 +19,9 @@ from scripts.validators.file_naming_validator import (
     validate_filename_convention,
 )
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 class TestFileNamingValidator:
     """Test file naming convention validation."""
