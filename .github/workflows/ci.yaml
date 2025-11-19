@@ -272,6 +272,13 @@ jobs:
         # Build Helm chart dependencies if helm is available
         # Required for tests in tests/deployment/test_helm_templates.py
         if command -v helm &> /dev/null; then
+          echo "🔨 Adding Helm repositories..."
+          helm repo add openfga https://openfga.github.io/helm-charts
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
           echo "🔨 Building Helm chart dependencies..."
           helm dependency build deployments/helm/mcp-server-langgraph
           echo "✓ Helm dependencies built successfully"
