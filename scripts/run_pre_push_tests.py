@@ -111,9 +111,10 @@ def main() -> int:
             print("  Start Docker and retry, or omit CI_PARITY=1 for faster pre-push")
             print("  Continuing with standard test suite...")
 
-    # Ensure OTEL_SDK_DISABLED for consistent environment
+    # Ensure OTEL_SDK_DISABLED and HYPOTHESIS_PROFILE for consistent environment
     env = os.environ.copy()
     env["OTEL_SDK_DISABLED"] = "true"
+    env["HYPOTHESIS_PROFILE"] = "ci"  # Match CI: use 100 examples instead of dev's 25
 
     # Run pytest via uv run (auto-syncs if needed)
     print(f"▶ Running consolidated pre-push tests: {' '.join(pytest_args)}")

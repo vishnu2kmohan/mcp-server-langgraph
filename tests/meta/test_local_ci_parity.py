@@ -2107,7 +2107,7 @@ class TestContractTestMarkerParity:
             and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
             and "api" not in line
             and "test_" not in line
-            and "echo" not in line
+            and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
         ]
         if unit_lines:
             for line in unit_lines:
@@ -2122,11 +2122,11 @@ class TestContractTestMarkerParity:
             for line in ci_workflow_content.split("\n")
             if "pytest" in line
             and "-m" in line
-            and "tests/" in line
             and "unit" in line
             and "api" not in line
             and "test_" not in line
-            and "echo" not in line
+            and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
+            # Note: tests/ check removed for CI - some CI workflows use relative paths or don't specify path
         ]
         if unit_lines:
             for line in unit_lines:
