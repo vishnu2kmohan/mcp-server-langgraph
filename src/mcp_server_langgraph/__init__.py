@@ -134,6 +134,16 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         import mcp_server_langgraph.health as health_module
 
         return health_module
+    elif name == "tools":
+        # Allow access to tools submodule for patch/mock scenarios in tests
+        # Prevent recursion: if tools module is already being imported, return it from sys.modules
+        module_name = f"{__name__}.tools"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.tools as tools_module
+
+        return tools_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
