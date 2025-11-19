@@ -94,6 +94,8 @@ spec:
           mountPath: /usr/local/etc/redis
         - name: data
           mountPath: /data
+        - name: tmp
+          mountPath: /tmp
         resources:
           requests:
             cpu: 100m
@@ -135,7 +137,7 @@ spec:
           failureThreshold: 3
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:
@@ -146,6 +148,8 @@ spec:
       - name: config
         configMap:
           name: redis-session-config
+      - name: tmp
+        emptyDir: {}
   volumeClaimTemplates:
   - metadata:
       name: data
