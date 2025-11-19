@@ -41,8 +41,13 @@ import argparse
 import sys
 from pathlib import Path
 
+# Add project root to path to enable imports from tests/
+_project_root = Path(__file__).parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 # Import validation logic from shared library
-from tests.validation_lib import test_ids
+from tests.validation_lib import test_ids  # noqa: E402
 
 
 def main() -> int:
