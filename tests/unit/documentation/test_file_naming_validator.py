@@ -7,6 +7,7 @@ Following TDD principles:
 3. REFACTOR: Clean up code
 """
 
+import gc
 from pathlib import Path
 
 import pytest
@@ -179,8 +180,13 @@ class TestFileNamingValidator:
             assert any(".mdx" in error or "extension" in error.lower() for error in errors)
 
 
+@pytest.mark.xdist_group(name="file_naming_validator")
 class TestValidatorCLI:
     """Test the CLI interface of the validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_validator_exit_code_on_errors(self, tmp_path):
         """Validator should exit with code 1 when errors found."""
@@ -202,8 +208,13 @@ class TestValidatorCLI:
         assert len(errors) == 0
 
 
+@pytest.mark.xdist_group(name="file_naming_validator")
 class TestEdgeCases:
     """Test edge cases and special scenarios."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_empty_filename(self):
         """Empty filename should be handled gracefully."""

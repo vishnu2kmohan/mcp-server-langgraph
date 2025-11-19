@@ -116,6 +116,7 @@ class TestEnvironmentDetection:
             assert validator.environment == Environment.TEST
 
 
+@pytest.mark.xdist_group(name="database_checks")
 class TestExpectedDatabasesConfiguration:
     """Tests for expected database configuration"""
 
@@ -405,6 +406,7 @@ class TestDatabaseValidation:
             assert "Failed to connect" in result.errors[0]
 
 
+@pytest.mark.xdist_group(name="database_checks")
 class TestOverallValidation:
     """Tests for overall validation of all databases"""
 
@@ -484,6 +486,7 @@ class TestOverallValidation:
             assert "openfga warning 1" in result.warnings
 
 
+@pytest.mark.xdist_group(name="database_checks")
 class TestValidationResultSerialization:
     """Tests for validation result serialization"""
 
@@ -582,8 +585,13 @@ class TestConvenienceFunction:
             assert result.is_valid
 
 
+@pytest.mark.xdist_group(name="database_checks")
 class TestDatabaseValidationResultProperty:
     """Tests for DatabaseValidationResult.is_valid property"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_is_valid_when_exists_and_no_errors(self):
         """Should be valid when database exists and has no errors"""

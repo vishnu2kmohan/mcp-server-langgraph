@@ -329,8 +329,13 @@ class TestAsyncMockUsageValidator:
 
 @pytest.mark.unit
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="async_mocks_validator")
 class TestAsyncMocksHelpers:
     """Test helper functions in async_mocks validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_is_async_function_detects_async_def(self, tmp_path: Path) -> None:
         """Test that is_async_function_in_source correctly identifies async functions."""
