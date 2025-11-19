@@ -18,3 +18,13 @@ spec:
             cpu: 500m
             memory: 1Gi
             ephemeral-storage: 1Gi
+        # Security context (KSV014 compliance)
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10000
+          capabilities:
+            drop:
+            - ALL
+          runAsGroup: 10000
