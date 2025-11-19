@@ -187,7 +187,7 @@ class PydanticAIAgentWrapper:
                 return decision  # type: ignore[no-any-return]
 
             except Exception as e:
-                logger.error(f"Routing failed: {e}", extra={"message": message}, exc_info=True)
+                logger.error(f"Routing failed: {e}", extra={"user_message": message}, exc_info=True)
                 metrics.failed_calls.add(1, {"operation": "route_message"})
                 span.record_exception(e)
                 raise
