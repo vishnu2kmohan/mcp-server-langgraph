@@ -301,9 +301,11 @@ class TestPlaceholderTestMarkers:
         Solution: Remove xfail or implement full test.
 
         References:
-        - tests/api/test_service_principals_endpoints.py::test_full_service_principal_lifecycle
+        - tests/integration/api/test_service_principals_endpoints.py::test_full_service_principal_lifecycle
+
+        Note: File was moved from tests/api/ to tests/integration/api/ in project reorganization.
         """
-        test_file = Path(__file__).parent.parent / "api" / "test_service_principals_endpoints.py"
+        test_file = Path(__file__).parent.parent / "integration" / "api" / "test_service_principals_endpoints.py"
 
         assert test_file.exists(), "test_service_principals_endpoints.py not found"
 

@@ -186,6 +186,7 @@ class TestDocumentationReferences:
         - Reference: ../OTHER.md
         """
         repo_root = Path(__file__).parent.parent.parent
+        docs_dir = repo_root / "docs"  # Mintlify documentation root
         broken_links = []
 
         import re
@@ -228,11 +229,21 @@ class TestDocumentationReferences:
 
                 # Skip Mintlify site paths (start with / from docs/.mintlify/)
                 if base_path.startswith("/") and "docs/.mintlify" in str(doc_file):
-                    continue  # These are site paths, not file paths
+                    continue  # These are site paths, not in version control
 
-                # Resolve relative path
+                # Resolve path
                 if base_path.startswith("/"):
-                    target_path = repo_root / base_path.lstrip("/")
+                    # Mintlify site paths are absolute within docs/ directory
+                    # /api-reference/foo -> docs/api-reference/foo.mdx (or .md)
+                    base_doc_path = docs_dir / base_path.lstrip("/")
+
+                    # Try with both .mdx and .md extensions (Mintlify doesn't include extension in links)
+                    possible_paths = [
+                        base_doc_path.with_suffix(".mdx"),
+                        base_doc_path.with_suffix(".md"),
+                        base_doc_path,  # Directory or extensionless file
+                    ]
+                    target_path = next((p for p in possible_paths if p.exists()), base_doc_path)
                 else:
                     target_path = (doc_file.parent / base_path).resolve()
 
@@ -244,9 +255,18 @@ class TestDocumentationReferences:
             for match in file_ref_pattern.finditer(content):
                 ref_path = match.group(1)
 
-                # Resolve relative path
+                # Resolve path
                 if ref_path.startswith("/"):
-                    target_path = repo_root / ref_path.lstrip("/")
+                    # Mintlify site paths are absolute within docs/ directory
+                    base_doc_path = docs_dir / ref_path.lstrip("/")
+
+                    # Try with both .mdx and .md extensions
+                    possible_paths = [
+                        base_doc_path.with_suffix(".mdx"),
+                        base_doc_path.with_suffix(".md"),
+                        base_doc_path,  # Directory or extensionless file
+                    ]
+                    target_path = next((p for p in possible_paths if p.exists()), base_doc_path)
                 else:
                     target_path = (doc_file.parent / ref_path).resolve()
 

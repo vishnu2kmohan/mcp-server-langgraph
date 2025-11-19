@@ -285,17 +285,29 @@ class TestDockerComposeQdrantSpecific:
         gc.collect()
 
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
-    def test_qdrant_uses_grpc_health_probe(self, compose_file: Path):
+    def test_qdrant_uses_valid_health_check(self, compose_file: Path):
         """
-        Test that Qdrant services use grpc_health_probe for health checks.
+        Test that Qdrant services use valid health check methods.
 
-        Background:
+        Background (based on official Qdrant documentation):
         - Qdrant v1.15+ removed wget/curl for security (GitHub issue #3491)
-        - Qdrant recommends grpc_health_probe (built-in since v1.15.0)
-        - HTTP endpoint (:6333) and gRPC endpoint (:6334) both available
+        - grpc_health_probe is NOT included in Qdrant images (never was)
+        - Official recommended endpoints: /healthz, /livez, /readyz (bypass auth)
+        - HTTP endpoint :6333 and gRPC endpoint :6334 both available
 
-        RED phase: Will fail on current docker-compose.test.yml:227-232
-        GREEN phase: Will pass after fix
+        Valid health check methods:
+        1. TCP check: /dev/tcp/localhost/6333 (works with minimal image, no HTTP client needed)
+        2. HTTP check: curl/wget to /healthz, /livez, /readyz, or / (requires external HTTP client)
+        3. Kubernetes httpGet probe (for K8s manifests, not tested here)
+
+        Invalid methods:
+        - wget/curl inside container (not in v1.15.1+ image)
+        - grpc_health_probe (not in image, requires k8s 1.24+)
+
+        References:
+        - Qdrant Monitoring Guide: https://qdrant.tech/documentation/guides/monitoring/
+        - GitHub #3491: curl not added to image (security)
+        - GitHub #4250: Healthcheck command discussion
         """
         config = parse_docker_compose(compose_file)
         services = config.get("services", {})
@@ -310,31 +322,56 @@ class TestDockerComposeQdrantSpecific:
             health_check = service_config.get("healthcheck")
             assert health_check, f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"MUST have a health check"
 
-            command_parts = extract_health_check_command(health_check)
-            assert command_parts, (
-                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"health check has no command"
+            # Get the raw test command (list or string)
+            test_command = health_check.get("test", [])
+            assert test_command, (
+                f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} " f"health check has no test command"
             )
 
-            command = command_parts[0]
-            base_command = Path(command).name
+            # Convert to string for pattern matching (works for both list and string formats)
+            if isinstance(test_command, list):
+                full_command = " ".join(str(part) for part in test_command)
+            else:
+                full_command = str(test_command)
 
-            # Validate using TCP-based health check (grpc_health_probe not in qdrant:v1.15.1 image)
-            full_command = " ".join(command_parts)
-            assert "/dev/tcp" in full_command, (
+            # Validate using one of the supported methods
+            has_tcp_check = "/dev/tcp" in full_command
+            has_http_check = any(
+                endpoint in full_command
+                for endpoint in ["/healthz", "/livez", "/readyz", "localhost:6333/", "127.0.0.1:6333/"]
+            )
+
+            assert has_tcp_check or has_http_check, (
                 f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} "
-                f"MUST use TCP-based health check (/dev/tcp), not '{base_command}'. "
+                f"must use EITHER TCP check (/dev/tcp) OR HTTP check (/healthz, /livez, /readyz). "
                 f"\n\nCurrent config: {health_check}"
-                f"\n\nExpected: "
-                f'test: ["CMD-SHELL", "timeout 2 bash -c \'</dev/tcp/localhost/6333\' || exit 1"]'
-                f"\n\nReason: Qdrant v1.15.1 image lacks wget, curl, and grpc_health_probe. "
-                f"TCP check requires only bash and is secure."
+                f"\n\nCurrent command: {full_command}"
+                f"\n\nValid examples:"
+                f'\n1. TCP check: ["CMD-SHELL", "timeout 2 bash -c \'</dev/tcp/localhost/6333\' || exit 1"]'
+                f'\n2. TCP check: ["CMD", "/bin/bash", "-c", "(echo > /dev/tcp/localhost/6333) >/dev/null 2>&1"]'
+                f'\n3. HTTP check (external): ["CMD", "curl", "-f", "http://localhost:6333/healthz"]'
+                f"\n\nNote: wget/curl are NOT available inside Qdrant v1.15.1+ images."
+                f"\nHTTP checks require external HTTP client or host-based healthcheck."
                 f"\n\nFile location: {compose_file}"
             )
+
+            # If using wget/curl inside container, fail (not available in image)
+            if "wget " in full_command or "curl " in full_command:
+                # Check if it's actually inside the container or external
+                if "CMD-SHELL" in full_command or ("CMD" in full_command and "/bin/bash" not in full_command):
+                    raise AssertionError(
+                        f"🔴 RED: Qdrant service '{service_name}' in {compose_file.name} "
+                        f"uses wget/curl which is NOT available in Qdrant v1.15.1+ images. "
+                        f"\n\nCurrent: {full_command}"
+                        f"\n\nUse TCP check instead: "
+                        f'["CMD-SHELL", "timeout 2 bash -c \'</dev/tcp/localhost/6333\' || exit 1"]'
+                        f"\n\nReference: GitHub issue #3491 (security hardening)"
+                    )
 
             # Validate targeting HTTP port 6333 (not gRPC 6334)
             assert ":6333" in full_command or "6333" in full_command, (
                 f"Qdrant service '{service_name}' health check should target "
-                f"HTTP port :6333 for TCP check. "
+                f"HTTP port :6333 for TCP/HTTP check. "
                 f"Current: {full_command}"
             )
 
