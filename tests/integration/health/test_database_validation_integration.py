@@ -15,6 +15,7 @@ References:
     - migrations/000_init_databases.sh
 """
 
+import gc
 import os
 
 import pytest
@@ -27,6 +28,10 @@ from mcp_server_langgraph.health.database_checks import DatabaseValidator, Envir
 @pytest.mark.xdist_group(name="testdatabasevalidationintegration")
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture(autouse=True)
     def setup_test_environment(self, monkeypatch):
