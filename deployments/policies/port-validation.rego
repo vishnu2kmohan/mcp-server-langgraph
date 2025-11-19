@@ -82,11 +82,4 @@ warn[msg] {
     )
 }
 
-# Helper function
-lower(s) = lower_s {
-    lower_s := to_lower(s)
-}
-
-to_lower(s) = l {
-    l := lower(s)
-}
+# Note: Using Rego's built-in lower() function directly
