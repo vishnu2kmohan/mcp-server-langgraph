@@ -797,15 +797,15 @@ class TestPytestXdistParity:
         """
         # Check that run_pre_push_tests.py uses -n auto
         assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must use pytest -n auto for parallel execution\n"
-            f"Expected: pytest_args.extend(['-n', 'auto'])\n"
-            f"\n"
-            f"Without -n auto:\n"
-            f"  - Tests run 2-3x slower locally\n"
-            f"  - pytest-xdist isolation bugs only caught in CI\n"
-            f"  - 'Works locally, fails in CI' issues\n"
-            f"\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
+            "run_pre_push_tests.py must use pytest -n auto for parallel execution\n"
+            "Expected: pytest_args.extend(['-n', 'auto'])\n"
+            "\n"
+            "Without -n auto:\n"
+            "  - Tests run 2-3x slower locally\n"
+            "  - pytest-xdist isolation bugs only caught in CI\n"
+            "  - 'Works locally, fails in CI' issues\n"
+            "\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
     def test_smoke_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
@@ -817,8 +817,8 @@ class TestPytestXdistParity:
         # Consolidated script uses -n auto for ALL tests (unit, api, property)
         # Smoke tests are unit tests, so they're covered
         assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must use pytest -n auto (covers smoke tests as unit tests)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
+            "run_pre_push_tests.py must use pytest -n auto (covers smoke tests as unit tests)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
     def test_integration_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
@@ -829,8 +829,8 @@ class TestPytestXdistParity:
         """
         # Script uses -n auto for ALL tests, including optional integration tests
         assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must use pytest -n auto (includes integration when CI_PARITY=1)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
+            "run_pre_push_tests.py must use pytest -n auto (includes integration when CI_PARITY=1)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
     def test_property_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
@@ -841,8 +841,8 @@ class TestPytestXdistParity:
         """
         # Consolidated script uses -n auto for ALL tests (includes property tests)
         assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must use pytest -n auto (covers property tests)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
+            "run_pre_push_tests.py must use pytest -n auto (covers property tests)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
     def test_ci_uses_pytest_xdist_n_auto(self, ci_workflow_content: str):
@@ -902,15 +902,15 @@ class TestOtelSdkDisabledParity:
         OTEL_SDK_DISABLED in the environment for all tests.
         """
         assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must set OTEL_SDK_DISABLED=true for all tests\n"
-            f"Expected: env['OTEL_SDK_DISABLED'] = 'true'\n"
-            f"\n"
-            f"Without OTEL_SDK_DISABLED=true:\n"
-            f"  - OpenTelemetry SDK may initialize (performance overhead)\n"
-            f"  - Different execution environment vs CI\n"
-            f"  - Potential telemetry-related side effects\n"
-            f"\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
+            "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true for all tests\n"
+            "Expected: env['OTEL_SDK_DISABLED'] = 'true'\n"
+            "\n"
+            "Without OTEL_SDK_DISABLED=true:\n"
+            "  - OpenTelemetry SDK may initialize (performance overhead)\n"
+            "  - Different execution environment vs CI\n"
+            "  - Potential telemetry-related side effects\n"
+            "\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
     def test_smoke_tests_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
@@ -920,8 +920,8 @@ class TestOtelSdkDisabledParity:
         OTEL_SDK_DISABLED for all tests in the environment.
         """
         assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers smoke tests)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
+            "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers smoke tests)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
     def test_integration_tests_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
@@ -931,8 +931,8 @@ class TestOtelSdkDisabledParity:
         environment setup that sets OTEL_SDK_DISABLED for all tests.
         """
         assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (includes integration tests)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
+            "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (includes integration tests)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
     def test_property_tests_already_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
@@ -942,8 +942,8 @@ class TestOtelSdkDisabledParity:
         by the same environment setup.
         """
         assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
-            f"run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers property tests)\n"
-            f"Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
+            "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers property tests)\n"
+            "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
     def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
@@ -2065,8 +2065,6 @@ class TestContractTestMarkerParity:
         This is the ultimate parity test - all three must use "unit and not llm" as the base.
         Additional exclusions like "and not property" are acceptable.
         """
-        expected_base_marker = "unit and not llm"
-
         markers_found = {}
 
         # Extract marker from pre-push hook (may be pre-commit framework or legacy bash)
@@ -2144,7 +2142,7 @@ class TestContractTestMarkerParity:
         )
 
         assert all_valid and len(markers_found) == 3, (
-            f"All three sources MUST contain compatible marker expressions\n"
+            "All three sources MUST contain compatible marker expressions\n"
             "\n"
             "Found markers:\n" + "\n".join(f"  - {source}: '{marker}'" for source, marker in markers_found.items()) + "\n"
             "\n"

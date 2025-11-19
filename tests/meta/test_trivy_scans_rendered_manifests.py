@@ -155,6 +155,8 @@ def test_rendered_manifests_include_security_contexts():
     """
     import subprocess
 
+    repo_root = Path(__file__).parent.parent.parent
+
     # Render the staging overlay
     result = subprocess.run(
         ["kubectl", "kustomize", "deployments/overlays/staging-gke"],
