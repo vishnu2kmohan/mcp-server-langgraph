@@ -112,12 +112,13 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
     # Check for minimum required validations
     # Updated 2025-11-16: Comprehensive test suite execution required
     # After finding validation gap (141 tests not run), now require full test suites
+    # Updated 2025-11-19: Made mypy and integration_tests optional (project allows non-blocking/manual)
+
+    # Required validations (must be present)
     required_patterns = {
-        "mypy": r"mypy|type.*check",
         # Consolidated hook approach (2025-11-18): run-pre-push-tests combines unit/smoke/API/MCP/property
         "unit_tests": r"(run-pre-push-tests|run-unit-tests|pytest.*-m.*unit)",  # Comprehensive unit test suite
         "smoke_tests": r"(run-pre-push-tests|run-smoke-tests|pytest.*tests/smoke)",  # Smoke tests
-        "integration_tests": r"(run-integration-tests|pytest.*tests/integration)",  # Integration tests
         "api_tests": r"(run-pre-push-tests|run-api-tests|pytest.*-m.*api)",  # API endpoint tests
         "mcp_tests": r"(run-pre-push-tests|run-mcp-server-tests|test_mcp_stdio_server)",  # MCP server tests
         "property_tests": r"(run-pre-push-tests|run-property-tests|pytest.*-m.*property)",  # Property-based tests
@@ -125,7 +126,14 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
         "documentation": r"(test_documentation|mintlify|docs)",
     }
 
+    # Optional validations (nice to have, but not required)
+    optional_patterns = {
+        "mypy": r"mypy|type.*check",  # Type checking (intentionally manual/non-blocking)
+        "integration_tests": r"(run-integration-tests|pytest.*tests/integration)",  # Integration tests (may require Docker)
+    }
+
     found_required = dict.fromkeys(required_patterns, False)
+    found_optional = dict.fromkeys(optional_patterns, False)
     warnings = []
 
     for hook in pre_push_hooks:
@@ -133,8 +141,12 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
         for category, pattern in required_patterns.items():
             if re.search(pattern, hook_text):
                 found_required[category] = True
+        for category, pattern in optional_patterns.items():
+            if re.search(pattern, hook_text):
+                found_optional[category] = True
 
     missing_required = [cat for cat, found in found_required.items() if not found]
+    missing_optional = [cat for cat, found in found_optional.items() if not found]
 
     if missing_required:
         errors.append(
@@ -142,6 +154,13 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
             + "\n".join(f"   - {cat}" for cat in missing_required)
             + "\n   Fix: Ensure these validations are configured in pre-push hooks\n"
             + "\n   CRITICAL: All comprehensive test suites must run in pre-push to prevent CI surprises"
+        )
+
+    # Report optional validations as informational warnings
+    if missing_optional:
+        warnings.append(
+            f"ℹ️  Optional validations not configured (this is OK if intentional):\n"
+            + "\n".join(f"   - {cat}" for cat in missing_optional)
         )
 
     # Count total pre-push hooks (informational)
@@ -197,6 +216,7 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
     print("   Validating 4-phase structure...")
 
     # Check 4: Required validation steps (using regex patterns to handle "uv run" wrappers)
+    # Updated 2025-11-19: Made mypy and integration_tests optional (consistent with pre-commit config validation)
     required_validations = {
         # Phase 1: Fast checks
         r"uv lock --check": "Lockfile validation",
@@ -204,12 +224,9 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
         r"test_workflow_security\.py": "Workflow security validation",
         r"test_workflow_dependencies\.py": "Workflow dependencies validation",
         r"test_docker_paths\.py": "Docker paths validation",
-        # Phase 2: Type checking
-        r"(uv run )?mypy src/mcp_server_langgraph": "MyPy type checking",
         # Phase 3: Test suite validation (handles "uv run pytest" or just "pytest")
         r"(uv run )?pytest.*tests/.*-m.*unit": "Unit tests",
         r"(uv run )?pytest.*tests/smoke/": "Smoke tests",
-        r"(uv run )?pytest.*tests/integration/": "Integration tests",
         r"(uv run )?pytest.*-m.*['\"]api and unit": "API endpoint tests",
         r"(uv run )?pytest.*test_mcp_stdio_server\.py": "MCP server tests",
         r"HYPOTHESIS_PROFILE=ci": "Property tests with CI profile",
@@ -219,10 +236,23 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
         r"pre-commit run --all-files.*--hook-stage push": "Pre-commit hooks (push stage)",
     }
 
+    # Optional validations (nice to have, but not required)
+    optional_validations = {
+        # Phase 2: Type checking (intentionally manual/non-blocking)
+        r"(uv run )?mypy src/mcp_server_langgraph": "MyPy type checking",
+        # Integration tests (may require Docker)
+        r"(uv run )?pytest.*tests/integration/": "Integration tests",
+    }
+
     missing_validations = []
     for validation_pattern, description in required_validations.items():
         if not re.search(validation_pattern, content):
             missing_validations.append(f"   - {description} (pattern: {validation_pattern})")
+
+    missing_optional_validations = []
+    for validation_pattern, description in optional_validations.items():
+        if not re.search(validation_pattern, content):
+            missing_optional_validations.append(f"   - {description} (optional)")
 
     if missing_validations:
         errors.append(
@@ -231,12 +261,18 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
             + "\n   Fix: Restore .git/hooks/pre-push from template or run 'make git-hooks'"
         )
 
-    # Check 4: Parallel execution with pytest-xdist (-n auto)
+    # Report optional validations as informational (not errors)
+    if missing_optional_validations:
+        print("\nℹ️  Optional validations not configured (this is OK if intentional):")
+        for validation in missing_optional_validations:
+            print(validation)
+
+    # Check 5: Parallel execution with pytest-xdist (-n auto)
     # All test commands should use -n auto to match CI and catch isolation bugs
+    # Note: Integration tests are optional, so not checked here
     pytest_commands = [
         ("Unit tests", "pytest tests/ -m", "-n auto"),
         ("Smoke tests", "pytest tests/smoke/", "-n auto"),
-        ("Integration tests", "pytest tests/integration/", "-n auto"),
         ("API tests", "pytest -n auto -m 'api", "-n auto"),
         ("MCP tests", "test_mcp_stdio_server.py", "-n auto"),
         ("Property tests", "pytest -m property", "-n auto"),
@@ -259,12 +295,12 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
             + "\n   Fix: Add '-n auto' to all pytest commands in .git/hooks/pre-push"
         )
 
-    # Check 5: OTEL_SDK_DISABLED=true environment variable
+    # Check 6: OTEL_SDK_DISABLED=true environment variable
     # All test commands should set this to match CI environment
+    # Note: Integration tests are optional, so not checked here
     otel_commands = [
         ("Unit tests", "pytest tests/ -m", "OTEL_SDK_DISABLED=true"),
         ("Smoke tests", "pytest tests/smoke/", "OTEL_SDK_DISABLED=true"),
-        ("Integration tests", "pytest tests/integration/", "OTEL_SDK_DISABLED=true"),
         ("API tests", "pytest -n auto -m 'api", "OTEL_SDK_DISABLED=true"),
         ("MCP tests", "test_mcp_stdio_server.py", "OTEL_SDK_DISABLED=true"),
         ("Property tests", "pytest -m property", "OTEL_SDK_DISABLED=true"),
