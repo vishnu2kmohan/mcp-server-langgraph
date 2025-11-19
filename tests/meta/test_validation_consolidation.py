@@ -59,29 +59,28 @@ class TestValidationConsolidation:
 
     def test_precommit_has_required_test_hooks(self):
         """
-        🟢 GREEN: Verify pre-commit has all required test hooks.
+        🟢 GREEN: Verify pre-commit has required test hooks.
 
-        Pre-commit should run comprehensive test suites on pre-push.
+        Pre-commit uses consolidated `run-pre-push-tests` hook which runs:
+        - Unit tests
+        - Smoke tests
+        - Integration tests (when CI_PARITY=1)
+        - API tests
+        - Property tests
+        - MCP server tests
+
+        This is a consolidated approach instead of separate hooks per test type.
         """
         root = Path(__file__).parent.parent.parent
         precommit_config = root / ".pre-commit-config.yaml"
 
         content = precommit_config.read_text()
 
-        # Required hooks for comprehensive validation
-        required_hooks = [
-            "run-full-test-suite",  # All tests
-            "run-smoke-tests",  # Smoke tests
-            "run-integration-tests",  # Integration tests
-            "run-api-tests",  # API tests
-            "run-mcp-server-tests",  # MCP server tests
-            "run-property-tests",  # Property-based tests
-        ]
-
-        for hook in required_hooks:
-            assert hook in content, (
-                f"Pre-commit hook missing: {hook}\n" "Pre-commit config should have comprehensive test coverage."
-            )
+        # Consolidated test hook (runs all test types)
+        assert "run-pre-push-tests" in content, (
+            "Pre-commit hook missing: run-pre-push-tests\n"
+            "Pre-commit config should have consolidated test hook that runs all test types."
+        )
 
     def test_precommit_hooks_run_on_push_stage(self):
         """
@@ -94,17 +93,29 @@ class TestValidationConsolidation:
 
         content = precommit_config.read_text()
 
-        # Pre-push hooks should have stages: [pre-push]
-        assert (
-            "stages: [pre-push]" in content or "stages: [push]" in content
-        ), "Pre-commit config should have hooks configured for pre-push stage"
+        # Pre-push hooks should have stages: [pre-push] or stages:\n    - pre-push (YAML list)
+        has_pre_push_stage = (
+            "stages: [pre-push]" in content
+            or "stages: [push]" in content
+            or ("stages:" in content and "- pre-push" in content)
+            or ("stages:" in content and "- push" in content)
+        )
 
-    def test_makefile_validate_pre_push_is_deprecated(self):
+        assert has_pre_push_stage, (
+            "Pre-commit config should have hooks configured for pre-push stage\n"
+            "Expected: stages: [pre-push] or stages:\\n    - pre-push"
+        )
+
+    def test_makefile_validate_pre_push_exists_and_documented(self):
         """
-        🟢 GREEN: Verify Makefile validate-pre-push target is marked deprecated.
+        🟢 GREEN: Verify Makefile validate-pre-push target exists and is documented.
 
-        After consolidation, developers should use 'git push' (pre-commit hooks)
-        instead of 'make validate-pre-push'.
+        The validate-pre-push target provides manual CI-equivalent validation.
+        It complements pre-commit hooks by allowing developers to manually run
+        the same comprehensive validation that CI runs.
+
+        NOTE: This is NOT deprecated - it serves as manual validation option
+        alongside automatic pre-commit hooks.
         """
         root = Path(__file__).parent.parent.parent
         makefile = root / "Makefile"
@@ -114,9 +125,9 @@ class TestValidationConsolidation:
         content = makefile.read_text()
 
         # Find validate-pre-push target
-        assert "validate-pre-push" in content, "validate-pre-push target exists"
+        assert "validate-pre-push:" in content, "validate-pre-push target must exist"
 
-        # Check for deprecation notice
+        # Check for documentation
         # Find the validate-pre-push section
         lines = content.split("\n")
         validate_pre_push_section = []
@@ -129,22 +140,26 @@ class TestValidationConsolidation:
             if in_section:
                 validate_pre_push_section.append(line)
 
-                # Stop at next target
-                if line.startswith(".PHONY:") and "validate-pre-push" not in line:
-                    break
-                if line.strip() and not line.startswith("\t") and ":" in line and "validate-pre-push:" not in line:
+                # Stop at next target (non-indented line with colon)
+                if (
+                    line.strip()
+                    and not line.startswith("\t")
+                    and not line.startswith("@")
+                    and ":" in line
+                    and "validate-pre-push:" not in line
+                ):
                     break
 
         section_text = "\n".join(validate_pre_push_section)
 
-        # Should have deprecation notice
-        deprecation_keywords = ["DEPRECATED", "deprecated", "LEGACY", "legacy", "Use 'git push'", "use pre-commit"]
+        # Should be documented (has descriptive echo statements or comments)
+        documentation_keywords = ["validation", "comprehensive", "CI", "PHASE", "checking"]
 
-        has_deprecation = any(keyword in section_text for keyword in deprecation_keywords)
+        has_documentation = any(keyword.lower() in section_text.lower() for keyword in documentation_keywords)
 
-        assert has_deprecation, (
-            "validate-pre-push target should be marked as DEPRECATED.\n"
-            "Add comment: # DEPRECATED: Use 'git push' which runs pre-commit hooks"
+        assert has_documentation, (
+            "validate-pre-push target should have clear documentation.\n"
+            "Expected: Echo statements or comments explaining what it does"
         )
 
     def test_validate_push_is_tier_2_quick_checks(self):
