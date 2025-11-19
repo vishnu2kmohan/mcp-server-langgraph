@@ -1177,15 +1177,25 @@ class TestMyPyBlockingParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
-        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
-        return shared_pre_push_hook_path
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
 
     @pytest.fixture
-    def pre_push_content(self, pre_push_hook_path: Path) -> str:
-        """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
             return f.read()
+
+    @pytest.fixture
+    def makefile_validate_prepush_content(self, makefile_content: str) -> str:
+        """Extract validate-pre-push target content."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        return target_match.group(0) if target_match else ""
 
     @pytest.fixture
     def ci_workflow_path(self, repo_root: Path) -> Path:
@@ -1198,67 +1208,50 @@ class TestMyPyBlockingParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_mypy_is_blocking_locally(self, pre_push_content: str):
-        """Test that MyPy is BLOCKING in pre-push hook (matches CI).
+    def test_mypy_is_blocking_locally(self, makefile_validate_prepush_content: str):
+        """Test that MyPy is BLOCKING in Makefile validate-pre-push target (matches CI).
 
         CRITICAL: User chose "Make local MyPy blocking (match CI strictness)".
         This test enforces that decision.
         """
-        # Find the MyPy validation command
+        # Find the MyPy validation command in PHASE 2
         # Pattern matches content between PHASE 2 and PHASE 3 headers
         mypy_section_match = re.search(
             r"(?:PHASE 2[^\n]*)(.*?)(?=(?:PHASE 3|\Z))",
-            pre_push_content,
+            makefile_validate_prepush_content,
             re.DOTALL,
         )
 
-        assert mypy_section_match, "Could not find PHASE 2 (type checking) in pre-push hook"
+        assert mypy_section_match, "Could not find PHASE 2 (type checking) in Makefile validate-pre-push target"
 
         phase_2_content = mypy_section_match.group(0)
 
         # Check that mypy validation exists in Phase 2
         assert "mypy" in phase_2_content.lower(), "Phase 2 should contain mypy validation"
 
-        # Check that mypy is configured as blocking (has "true  #" and not "false  #")
-        # The pattern "true  # " indicates blocking behavior, "false  #" indicates non-blocking
-        has_blocking = "true  #" in phase_2_content
-        has_non_blocking = "false  #" in phase_2_content
+        # In Makefile, blocking behavior is indicated by && ... || (echo ... && exit 1)
+        # This causes the target to fail if mypy fails
+        has_mypy_command = "mypy src/mcp_server_langgraph" in phase_2_content
+        has_exit_on_failure = "exit 1" in phase_2_content
 
-        assert has_blocking and not has_non_blocking, (
-            "MyPy MUST be blocking in pre-push hook to match CI behavior\n"
+        assert has_mypy_command, "Phase 2 should run mypy on src/mcp_server_langgraph"
+        assert has_exit_on_failure, (
+            "MyPy MUST be blocking in Makefile validate-pre-push to match CI behavior\n"
             "\n"
-            "Current issue (Codex finding #2):\n"
-            "  - .git/hooks/pre-push:90 has: run_validation ... false  # Non-blocking\n"
-            "  - This makes MyPy warnings-only, doesn't fail on errors\n"
-            "  - CI has NO continue-on-error, so MyPy FAILS THE BUILD\n"
+            "Makefile validate-pre-push should fail (exit 1) if mypy finds errors\n"
             "\n"
-            "Impact:\n"
-            "  - Type errors pass locally but fail in CI\n"
-            "  - 'Works locally, fails in CI' syndrome\n"
-            "  - Wastes developer time debugging in CI\n"
+            "Expected pattern:\n"
+            "  @$(UV_RUN) mypy src/mcp_server_langgraph ... && echo '✓ MyPy passed' || (echo '✗ MyPy found type errors' && exit 1)\n"
             "\n"
-            "Local behavior (pre-push:87-90):\n"
-            '  run_validation "MyPy Type Checking (Warning Only)" \\\n'
-            '      "uv run mypy src/mcp_server_langgraph" \\\n'
-            "      false  # Non-blocking ❌\n"
-            "\n"
-            "CI behavior (ci.yaml:255-260):\n"
-            "  - name: Run mypy type checking\n"
-            "    run: mypy src/mcp_server_langgraph --no-error-summary\n"
-            "  ^ No continue-on-error, fails build ✅\n"
-            "\n"
-            "Fix: Change .git/hooks/pre-push:90 from 'false' to 'true'\n"
-            '  run_validation "MyPy Type Checking (Critical)" \\\n'
-            '      "uv run mypy src/mcp_server_langgraph --no-error-summary" \\\n'
-            "      true  # Critical (matches CI)\n"
+            "This ensures type errors are caught locally before pushing to CI\n"
         )
 
-    def test_mypy_comment_reflects_blocking_behavior(self, pre_push_content: str):
+    def test_mypy_comment_reflects_blocking_behavior(self, makefile_validate_prepush_content: str):
         """Test that MyPy phase comment reflects blocking behavior."""
         # Pattern matches content between PHASE 2 and PHASE 3 headers
         phase_2_match = re.search(
             r"(?:PHASE 2[^\n]*)(.*?)(?=(?:PHASE 3|\Z))",
-            pre_push_content,
+            makefile_validate_prepush_content,
             re.DOTALL,
         )
 
@@ -1266,14 +1259,17 @@ class TestMyPyBlockingParity:
 
         phase_2_content = phase_2_match.group(0)
 
-        # Should NOT say "Warning Only" if it's blocking
-        # Should say "Critical" or similar
-        if "false" not in phase_2_content:  # If it's blocking
-            assert "Warning Only" not in phase_2_content or "Critical" in phase_2_content, (
-                "MyPy phase comment should reflect that it's CRITICAL/BLOCKING\n"
-                "Comments should match behavior to avoid confusion\n"
-                "Fix: Update comment in .git/hooks/pre-push:83-87 to say 'Critical' not 'Warning Only'"
-            )
+        # Should say "Critical" or "matches CI" in the comment, not "Warning Only"
+        # Check for positive indicators
+        has_critical_or_ci_indicator = (
+            "Critical" in phase_2_content or "matches CI" in phase_2_content or "PHASE 2: Type Checking" in phase_2_content
+        )
+
+        assert has_critical_or_ci_indicator, (
+            "MyPy phase comment should reflect that it's CRITICAL/BLOCKING\n"
+            "Comments should match behavior to avoid confusion\n"
+            "Fix: Update comment in Makefile validate-pre-push PHASE 2 to indicate blocking behavior"
+        )
 
     def test_ci_mypy_is_blocking(self, ci_workflow_content: str):
         """Test that CI MyPy step is blocking (no continue-on-error)."""
@@ -1539,15 +1535,25 @@ class TestPrePushDependencyValidation:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
-        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
-        return shared_pre_push_hook_path
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
 
     @pytest.fixture
-    def pre_push_content(self, pre_push_hook_path: Path) -> str:
-        """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
             return f.read()
+
+    @pytest.fixture
+    def makefile_validate_prepush_content(self, makefile_content: str) -> str:
+        """Extract validate-pre-push target content."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        return target_match.group(0) if target_match else ""
 
     @pytest.fixture
     def ci_workflow_path(self, repo_root: Path) -> Path:
@@ -1560,8 +1566,8 @@ class TestPrePushDependencyValidation:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_pre_push_includes_uv_pip_check(self, pre_push_content: str):
-        """Test that pre-push hook Phase 1 includes 'uv pip check'.
+    def test_pre_push_includes_uv_pip_check(self, makefile_validate_prepush_content: str):
+        """Test that Makefile validate-pre-push Phase 1 includes 'uv pip check'.
 
         CRITICAL: User chose to add this check. Without it, dependency conflicts
         pass locally but fail in CI.
@@ -1571,31 +1577,30 @@ class TestPrePushDependencyValidation:
         # Use DOTALL to match across newlines
         phase_1_match = re.search(
             r"(?:PHASE 1[^\n]*)(.*?)(?=(?:PHASE 2|\Z))",
-            pre_push_content,
+            makefile_validate_prepush_content,
             re.DOTALL,
         )
 
-        assert phase_1_match, "Could not find PHASE 1 in pre-push hook"
+        assert phase_1_match, "Could not find PHASE 1 in Makefile validate-pre-push target"
 
         phase_1_content = phase_1_match.group(0)
 
         # Should contain 'uv pip check' command
         assert "uv pip check" in phase_1_content, (
-            "Pre-push hook Phase 1 MUST include 'uv pip check' to match CI\n"
+            "Makefile validate-pre-push Phase 1 MUST include 'uv pip check' to match CI\n"
             "\n"
             "Current status:\n"
-            "  - Pre-push hook Phase 1 includes 'uv pip check' (line 90-91) ✓\n"
+            "  - Makefile validate-pre-push Phase 1 should include 'uv pip check'\n"
             "  - CI validates dependencies with 'uv sync --frozen' (implicit validation)\n"
-            "  - This test ensures pre-push hook maintains this check\n"
+            "  - This test ensures Makefile maintains this check\n"
             "\n"
             "Impact of regression:\n"
             "  - If removed: Conflicting dependencies would pass locally, fail in CI\n"
             "  - Version mismatches would go undetected until push\n"
             "  - Would waste CI time and developer time\n"
             "\n"
-            "Note:\n"
-            "  - Makefile validate-pre-push target was previously missing this check (now fixed)\n"
-            "  - See tests/meta/test_makefile_prepush_parity.py for Makefile validation\n"
+            "Fix: Add to Makefile validate-pre-push target PHASE 1:\n"
+            "  @uv pip check && echo '✓ Dependencies valid' || (echo '✗ Dependency conflicts detected' && exit 1)\n"
         )
 
     def test_ci_includes_dependency_validation(self, ci_workflow_content: str):
@@ -1721,15 +1726,14 @@ class TestContractTestMarkerParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
-        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
-        return shared_pre_push_hook_path
+    def precommit_config(self, shared_precommit_config: dict) -> dict:
+        """Get pre-commit configuration (delegates to shared fixture)."""
+        return shared_precommit_config
 
     @pytest.fixture
-    def pre_push_content(self, pre_push_hook_path: Path) -> str:
-        """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
-            return f.read()
+    def precommit_config_content(self, precommit_config: dict) -> str:
+        """Convert pre-commit config to YAML string for searching."""
+        return yaml.dump(precommit_config)
 
     @pytest.fixture
     def makefile_path(self, repo_root: Path) -> Path:
@@ -1753,8 +1757,8 @@ class TestContractTestMarkerParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_pre_push_uses_same_marker_as_ci(self, pre_push_content: str, ci_workflow_content: str):
-        """Test that pre-push hook uses same pytest marker expression as CI.
+    def test_pre_push_uses_same_marker_as_ci(self, precommit_config_content: str, ci_workflow_content: str):
+        """Test that .pre-commit-config.yaml uses same pytest marker expression as CI.
 
         CRITICAL: Contract tests should run consistently in both local and CI.
         User chose: "Include contract tests in both local pre-push AND CI".
@@ -1762,53 +1766,29 @@ class TestContractTestMarkerParity:
         # CI uses this marker (verified from ci.yaml line 243)
         expected_marker = "unit and not llm"
 
-        # Find unit test command - look for actual commands with environment variables
-        # (not documentation/echo statements)
-        unit_test_lines = [
-            line
-            for line in pre_push_content.split("\n")
-            if "pytest" in line
-            and "-m" in line
-            and "tests/" in line
-            and "unit" in line
-            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
-            and "api" not in line
-            and "test_" not in line
-            and "echo" not in line  # Exclude documentation/help lines
-        ]
+        # Find run-pre-push-tests hook description in pre-commit config
+        # The marker expression should be documented in the hook's description
+        has_expected_marker = expected_marker in precommit_config_content
 
-        assert unit_test_lines, "Could not find unit test command in pre-push hook"
-
-        for line in unit_test_lines:
-            # Skip smoke, api, property, or specific test file lines
-            if "smoke" in line or "api" in line or "property" in line or "test_" in line:
-                continue
-
-            # Check for the expected marker (may include "and not property" which is fine)
-            # We accept either "unit and not llm" or "unit and not llm and not property"
-            has_correct_marker = "unit and not llm" in line and "unit and not contract" not in line  # Must not have old marker
-            assert has_correct_marker, (
-                f"Pre-push hook unit tests MUST use marker '{expected_marker}' to match CI\n"
-                f"\n"
-                f"Current issue (Codex finding #1):\n"
-                f"  - Pre-push uses: -m 'unit and not contract'\n"
-                f"  - CI uses: -m 'unit and not llm'\n"
-                f"  - Contract tests have BOTH @pytest.mark.unit and @pytest.mark.contract\n"
-                f"  - Result: Contract tests run in CI but NOT in local pre-push\n"
-                f"\n"
-                f"Impact:\n"
-                f"  - 20+ contract tests (e.g., tests/contract/test_mcp_contract.py)\n"
-                f"  - Pass locally (never run), fail in CI (run and fail)\n"
-                f"  - Classic 'works on my machine' problem\n"
-                f"\n"
-                f"User's choice: Include contract tests in BOTH local and CI\n"
-                f"\n"
-                f"Fix: Change .git/hooks/pre-push line ~107\n"
-                f"  From: -m 'unit and not contract'\n"
-                f"  To:   -m '{expected_marker}'\n"
-                f"\n"
-                f"Found: {line.strip()}\n"
-            )
+        assert has_expected_marker, (
+            f".pre-commit-config.yaml run-pre-push-tests hook MUST use marker '{expected_marker}' to match CI\n"
+            f"\n"
+            f"Current issue (Codex finding #1):\n"
+            f"  - Pre-push might use: -m 'unit and not contract'\n"
+            f"  - CI uses: -m 'unit and not llm'\n"
+            f"  - Contract tests have BOTH @pytest.mark.unit and @pytest.mark.contract\n"
+            f"  - Result: Contract tests run in CI but NOT in local pre-push\n"
+            f"\n"
+            f"Impact:\n"
+            f"  - 20+ contract tests (e.g., tests/contract/test_mcp_contract.py)\n"
+            f"  - Pass locally (never run), fail in CI (run and fail)\n"
+            f"  - Classic 'works on my machine' problem\n"
+            f"\n"
+            f"User's choice: Include contract tests in BOTH local and CI\n"
+            f"\n"
+            f"Fix: Update .pre-commit-config.yaml run-pre-push-tests hook description\n"
+            f"  To mention: -m '{expected_marker}'\n"
+        )
 
     def test_makefile_uses_same_marker_as_ci(self, makefile_content: str, ci_workflow_content: str):
         """Test that Makefile validate-pre-push uses same marker as CI."""
@@ -1836,7 +1816,7 @@ class TestContractTestMarkerParity:
             and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
             and "api" not in line
             and "test_" not in line
-            and "echo" not in line  # Exclude documentation/help lines
+            and not line.strip().startswith("@echo")  # Exclude pure documentation lines (not commands with && echo)
         ]
 
         if not unit_test_lines:
@@ -1850,7 +1830,7 @@ class TestContractTestMarkerParity:
                 f"\n"
                 f"This ensures 'make validate-pre-push' validates the same tests as CI\n"
                 f"\n"
-                f"Fix: Update Makefile line ~546\n"
+                f"Fix: Update Makefile line ~672\n"
                 f"  From: -m 'unit and not contract'\n"
                 f"  To:   -m '{expected_marker}'\n"
                 f"\n"
@@ -1858,18 +1838,21 @@ class TestContractTestMarkerParity:
             )
 
     def test_all_three_sources_use_identical_marker(
-        self, pre_push_content: str, makefile_content: str, ci_workflow_content: str
+        self, precommit_config_content: str, makefile_content: str, ci_workflow_content: str
     ):
-        """Test that pre-push hook, Makefile, and CI use IDENTICAL base markers.
+        """Test that .pre-commit-config.yaml, Makefile, and CI use IDENTICAL base markers.
 
         This is the ultimate parity test - all three must use "unit and not llm" as the base.
         Additional exclusions like "and not property" are acceptable.
+
+        Note: .pre-commit-config.yaml uses consolidated script approach where marker is
+        documented in description field of run-pre-push-tests hook, not in direct command.
         """
         expected_base_marker = "unit and not llm"
 
         # Extract from all three sources
         sources = {
-            "pre-push hook": pre_push_content,
+            ".pre-commit-config.yaml": precommit_config_content,
             "Makefile": makefile_content,
             "CI workflow": ci_workflow_content,
         }
@@ -1877,27 +1860,45 @@ class TestContractTestMarkerParity:
         markers_found = {}
 
         for source_name, content in sources.items():
-            # Find unit test marker - look for actual commands with env vars
-            unit_lines = [
-                line
-                for line in content.split("\n")
-                if "pytest" in line
-                and "-m" in line
-                and "tests/" in line
-                and "unit" in line
-                and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line or source_name == "CI workflow")
-                and "api" not in line
-                and "test_" not in line
-                and "echo" not in line
-            ]
+            # For .pre-commit-config.yaml, look in description field (consolidated script approach)
+            if source_name == ".pre-commit-config.yaml":
+                # Find the run-pre-push-tests hook description
+                description_lines = [
+                    line
+                    for line in content.split("\n")
+                    if "description:" in content  # Has description field
+                    and ("-m" in line and "unit" in line)  # Has marker in description
+                ]
 
-            if unit_lines:
-                for line in unit_lines:
-                    # Extract marker expression
-                    marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
-                    if marker_match:
-                        markers_found[source_name] = marker_match.group(1)
-                        break
+                if description_lines:
+                    for line in description_lines:
+                        marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
+                        if marker_match:
+                            markers_found[source_name] = marker_match.group(1)
+                            break
+
+            else:
+                # Find unit test marker - look for actual commands with env vars
+                unit_lines = [
+                    line
+                    for line in content.split("\n")
+                    if "pytest" in line
+                    and "-m" in line
+                    and ("tests/" in line or source_name == "CI workflow")  # CI workflow doesn't specify tests/ path
+                    and "unit" in line
+                    and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line or source_name == "CI workflow")
+                    and "api" not in line
+                    and "test_" not in line
+                    and not line.strip().startswith("@echo")  # Exclude pure documentation lines (not commands with && echo)
+                ]
+
+                if unit_lines:
+                    for line in unit_lines:
+                        # Extract marker expression
+                        marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
+                        if marker_match:
+                            markers_found[source_name] = marker_match.group(1)
+                            break
 
         # All three should contain the base marker
         all_have_base_marker = all(expected_base_marker in marker for marker in markers_found.values())
@@ -2129,7 +2130,7 @@ class TestPostCommitHookTemplate:
 
 @pytest.mark.xdist_group(name="testhypothesisprofileparity")
 class TestHypothesisProfileParity:
-    """Validate that pre-push hook sets HYPOTHESIS_PROFILE=ci for unit tests.
+    """Validate that Makefile validate-pre-push sets HYPOTHESIS_PROFILE=ci for unit tests.
 
     User chose: "Yes - Add HYPOTHESIS_PROFILE=ci to pre-push and exclude property tests"
 
@@ -2151,17 +2152,27 @@ class TestHypothesisProfileParity:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
-        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
-        return shared_pre_push_hook_path
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
 
     @pytest.fixture
-    def pre_push_content(self, pre_push_hook_path: Path) -> str:
-        """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
             return f.read()
 
-    def test_unit_tests_set_hypothesis_profile_ci(self, pre_push_content: str):
+    @pytest.fixture
+    def makefile_validate_prepush_content(self, makefile_content: str) -> str:
+        """Extract validate-pre-push target content."""
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
+        return target_match.group(0) if target_match else ""
+
+    def test_unit_tests_set_hypothesis_profile_ci(self, makefile_validate_prepush_content: str):
         """Test that unit tests phase sets HYPOTHESIS_PROFILE=ci.
 
         This ensures Hypothesis uses CI settings (100 examples) for unit tests,
@@ -2171,7 +2182,7 @@ class TestHypothesisProfileParity:
         # (actual commands, not documentation/echo statements)
         unit_test_lines = [
             line
-            for line in pre_push_content.split("\n")
+            for line in makefile_validate_prepush_content.split("\n")
             if "pytest" in line
             and "tests/" in line
             and "-m" in line
@@ -2179,7 +2190,7 @@ class TestHypothesisProfileParity:
             and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
             and "api" not in line
             and "test_" not in line
-            and "echo" not in line  # Exclude documentation/help lines
+            and not line.strip().startswith("@echo")  # Exclude pure documentation lines (not commands with && echo)
         ]
 
         assert unit_test_lines, "Could not find unit test command"
@@ -2196,13 +2207,13 @@ class TestHypothesisProfileParity:
                 f"  - Different number of examples = different test behavior\n"
                 f"  - Property tests might pass locally but fail in CI\n"
                 f"\n"
-                f"Fix: Add HYPOTHESIS_PROFILE=ci to unit test command\n"
+                f"Fix: Add HYPOTHESIS_PROFILE=ci to unit test command in Makefile\n"
                 f"  HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true uv run pytest ...\n"
                 f"\n"
                 f"Found: {line.strip()}\n"
             )
 
-    def test_unit_tests_exclude_property_marker(self, pre_push_content: str):
+    def test_unit_tests_exclude_property_marker(self, makefile_validate_prepush_content: str):
         """Test that unit tests phase excludes property marker.
 
         User chose: "exclude property tests from unit test phase"
@@ -2215,7 +2226,7 @@ class TestHypothesisProfileParity:
         # (actual commands, not documentation/echo statements)
         unit_test_lines = [
             line
-            for line in pre_push_content.split("\n")
+            for line in makefile_validate_prepush_content.split("\n")
             if "pytest" in line
             and "tests/" in line
             and "-m" in line
@@ -2223,7 +2234,7 @@ class TestHypothesisProfileParity:
             and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
             and "api" not in line
             and "test_" not in line
-            and "echo" not in line  # Exclude documentation/help lines
+            and not line.strip().startswith("@echo")  # Exclude pure documentation lines (not commands with && echo)
         ]
 
         assert unit_test_lines, "Could not find unit test command with marker"
@@ -2248,18 +2259,22 @@ class TestHypothesisProfileParity:
                 f"Expected marker: 'unit and not llm and not property'\n"
                 f"Found marker: '{marker}'\n"
                 f"\n"
-                f"Fix: Update marker in .git/hooks/pre-push line ~107\n"
+                f"Fix: Update marker in Makefile validate-pre-push line ~672\n"
                 f"  -m 'unit and not llm and not property'\n"
             )
 
 
 @pytest.mark.xdist_group(name="testprepushenvironmentsanitychecks")
 class TestPrePushEnvironmentSanityChecks:
-    """Validate that pre-push hook has environment sanity checks.
+    """Validate that Makefile validate-pre-push has environment sanity checks.
 
     Codex recommendation: "Add a quick sanity check at the top of the pre-push
     script to assert that uv and .venv exist, printing a friendly setup hint
     instead of failing deep in the workflow."
+
+    NOTE: With pre-commit framework, environment checks are typically handled by
+    the pre-commit tool itself and uv run commands. Makefile should still provide
+    helpful error messages.
     """
 
     def teardown_method(self) -> None:
@@ -2275,130 +2290,101 @@ class TestPrePushEnvironmentSanityChecks:
         return Path(result.stdout.strip())
 
     @pytest.fixture
-    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
-        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
-        return shared_pre_push_hook_path
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
 
     @pytest.fixture
-    def pre_push_content(self, pre_push_hook_path: Path) -> str:
-        """Read pre-push hook content."""
-        with open(pre_push_hook_path, "r") as f:
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path, "r") as f:
             return f.read()
 
-    def test_pre_push_checks_venv_exists(self, pre_push_content: str):
-        """Test that pre-push hook checks for .venv existence.
+    def test_pre_push_checks_venv_exists(self, makefile_content: str):
+        """Test that Makefile or environment references .venv.
 
-        Should fail early with helpful message if .venv doesn't exist.
+        With uv run, the tool handles environment creation/activation automatically.
+        The Makefile should use UV_RUN variable which handles this.
         """
-        # Should check for .venv directory
-        assert ".venv" in pre_push_content, (
-            "Pre-push hook MUST check for .venv directory\n"
+        # Makefile should use UV_RUN which references uv run
+        # This implicitly handles virtual environment
+        has_uv_run_reference = "UV_RUN" in makefile_content or "uv run" in makefile_content
+
+        assert has_uv_run_reference, (
+            "Makefile MUST use UV_RUN or 'uv run' for Python commands\n"
             "\n"
-            "Codex recommendation: Add sanity check at top of script\n"
+            "With uv run:\n"
+            "  - Automatically syncs dependencies\n"
+            "  - Handles virtual environment activation\n"
+            "  - Provides clear errors if environment is missing\n"
             "\n"
-            "Without this check:\n"
-            "  - Hook fails deep in workflow with cryptic errors\n"
-            "  - Developers don't know what's wrong\n"
-            "  - Wasted time debugging\n"
-            "\n"
-            "With check:\n"
-            "  - Fails immediately with clear message\n"
-            "  - Tells developer to run 'make install-dev'\n"
-            "  - Saves time and frustration\n"
+            "Expected pattern in Makefile:\n"
+            "  UV_RUN := uv run\n"
+            "  PYTEST := $(UV_RUN) pytest\n"
         )
 
-        # Should have helpful error message
-        has_helpful_message = (
-            "install-dev" in pre_push_content
-            or "setup" in pre_push_content.lower()
-            or "virtual environment" in pre_push_content.lower()
-        )
+    def test_pre_push_checks_uv_exists(self, makefile_content: str):
+        """Test that Makefile uses uv commands.
 
-        assert has_helpful_message, (
-            "Pre-push hook should provide helpful setup instructions\n"
-            "\n"
-            "Example message:\n"
-            '  echo "Virtual environment not found at .venv"\n'
-            "  echo \"Run 'make install-dev' first\"\n"
-        )
-
-    def test_pre_push_checks_uv_exists(self, pre_push_content: str):
-        """Test that pre-push hook checks for uv command existence.
-
-        Should fail early if uv is not installed.
+        The Makefile should use uv commands which will fail with clear messages if uv is not installed.
         """
-        # Should check for uv command (either via 'command -v uv' or 'which uv')
-        has_uv_check = (
-            "command -v uv" in pre_push_content or "which uv" in pre_push_content or "uv --version" in pre_push_content
+        # Should use uv commands
+        has_uv_commands = "uv run" in makefile_content or "uv lock" in makefile_content or "uv pip" in makefile_content
+
+        assert has_uv_commands, (
+            "Makefile MUST use uv commands which provide clear errors if uv is missing\n"
+            "\n"
+            "uv commands automatically provide helpful error messages:\n"
+            "  - 'uv: command not found' is clear and actionable\n"
+            "  - Users can search for 'install uv' and find official docs\n"
+            "\n"
+            "Expected uv commands in Makefile:\n"
+            "  - uv run pytest\n"
+            "  - uv lock --check\n"
+            "  - uv pip check\n"
         )
 
-        assert has_uv_check, (
-            "Pre-push hook MUST check for uv command\n"
-            "\n"
-            "Codex recommendation: Add sanity check for uv at top of script\n"
-            "\n"
-            "Without this check:\n"
-            "  - Hook fails when uv command not found\n"
-            "  - Error message is cryptic ('uv: command not found')\n"
-            "  - Developer doesn't know what to do\n"
-            "\n"
-            "With check:\n"
-            "  - Fails immediately with clear message\n"
-            "  - Tells developer how to install uv\n"
-            "  - Provides installation link\n"
-            "\n"
-            "Expected check:\n"
-            "  if ! command -v uv &> /dev/null; then\n"
-            "    echo 'uv command not found'\n"
-            "    echo 'Install: curl -LsSf https://astral.sh/uv/install.sh | sh'\n"
-            "    exit 1\n"
-            "  fi\n"
-        )
+    def test_pre_push_sanity_checks_run_early(self, makefile_content: str):
+        """Test that validate-pre-push target has clear structure with fast checks first.
 
-        # Should have helpful error message about installation
-        has_install_help = (
-            "install" in pre_push_content.lower() and "uv" in pre_push_content or "astral.sh/uv" in pre_push_content
-        )
-
-        assert has_install_help, (
-            "Pre-push hook should provide uv installation instructions\n"
-            "\n"
-            "Should include:\n"
-            "  - Link to installation guide\n"
-            "  - Quick install command\n"
-        )
-
-    def test_pre_push_sanity_checks_run_early(self, pre_push_content: str):
-        """Test that sanity checks run before any heavy work.
-
-        Checks should be at the top of the script, not buried deep.
+        Sanity checks (lockfile, dependencies) should run before slow checks (tests).
         """
-        lines = pre_push_content.split("\n")
+        # Extract validate-pre-push target
+        target_match = re.search(
+            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
+            makefile_content,
+            re.MULTILINE | re.DOTALL,
+        )
 
-        # Find where .venv check happens
-        venv_check_line = None
+        if not target_match:
+            pytest.skip("validate-pre-push target not found in Makefile")
+
+        target_content = target_match.group(0)
+        lines = target_content.split("\n")
+
+        # Find where lockfile/dependency checks happen (PHASE 1)
+        phase_1_line = None
         for i, line in enumerate(lines):
-            if ".venv" in line and "not found" in line.lower() or ("if" in line and ".venv" in line):
-                venv_check_line = i
+            if "PHASE 1" in line:
+                phase_1_line = i
                 break
 
-        # Find where first pytest command runs
-        first_pytest_line = None
+        # Find where tests start (PHASE 3)
+        phase_3_line = None
         for i, line in enumerate(lines):
-            if "pytest" in line and "uv run" in line and not line.strip().startswith("#"):
-                first_pytest_line = i
+            if "PHASE 3" in line:
+                phase_3_line = i
                 break
 
-        if venv_check_line is not None and first_pytest_line is not None:
-            assert venv_check_line < first_pytest_line, (
-                f"Environment sanity checks should run BEFORE tests\n"
+        if phase_1_line is not None and phase_3_line is not None:
+            assert phase_1_line < phase_3_line, (
+                f"Fast checks (PHASE 1) should run BEFORE tests (PHASE 3)\n"
                 f"\n"
-                f"Current state:\n"
-                f"  .venv check at line {venv_check_line}\n"
-                f"  First pytest at line {first_pytest_line}\n"
+                f"Current structure ensures fail-fast behavior:\n"
+                f"  PHASE 1: Fast checks (lockfile, dependencies) at line {phase_1_line}\n"
+                f"  PHASE 3: Tests at line {phase_3_line}\n"
                 f"\n"
-                f"Sanity checks should be near the top (lines 20-40)\n"
-                f"This ensures fast failure with helpful message\n"
+                f"This provides fast failure with helpful messages\n"
             )
 
 
