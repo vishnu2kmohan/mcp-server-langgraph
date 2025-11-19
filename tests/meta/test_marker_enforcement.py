@@ -33,7 +33,7 @@ import pytest
 MARKER_EXEMPT_FILES: Set[str] = {
     # Add exempt files here with justification comments
     # Example: "tests/examples/demo.py",  # Educational example, not executed in CI
-    "tests/validation_lib/test_ids.py",  # Validator library imported by scripts (no pytest dependency)
+    "tests/validation_lib/test_ids.py",  # Validation utility module, not a test file
 }
 
 # Critical guard-rail tests that must have both 'unit' AND 'meta' markers

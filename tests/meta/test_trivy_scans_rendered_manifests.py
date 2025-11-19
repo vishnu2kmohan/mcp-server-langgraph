@@ -39,7 +39,8 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     2. Step: Security scan rendered manifests
        - scan-ref: /tmp/staging-manifests.yaml (NOT the overlay directory)
     """
-    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    repo_root = Path(__file__).parent.parent.parent
+    workflow_path = repo_root / ".github/workflows/deploy-staging-gke.yaml"
 
     assert workflow_path.exists(), f"Workflow file not found: {workflow_path}"
 
@@ -118,7 +119,7 @@ def test_trivy_scan_allows_documented_suppressions():
     - Global .trivyignore files are NOT allowed (too broad, could hide real issues)
     - All suppressions must be documented (validated by test_trivy_suppressions.py)
     """
-    repo_root = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph")
+    repo_root = Path(__file__).parent.parent.parent
 
     # Global .trivyignore files are NOT allowed (maintain strict default policy)
     global_ignore_locations = [
@@ -159,7 +160,7 @@ def test_rendered_manifests_include_security_contexts():
         ["kubectl", "kustomize", "deployments/overlays/staging-gke"],
         capture_output=True,
         text=True,
-        cwd="/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph",
+        cwd=str(repo_root),
         timeout=60,
     )
 
@@ -202,17 +203,15 @@ def test_rendered_manifests_include_security_contexts():
     assert "ALL" in drop_caps, "Expected capabilities.drop: [ALL] for security hardening"
 
 
-@pytest.mark.skipif(
-    not Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/deploy-staging-gke.yaml").exists(),
-    reason="Workflow file not found - repository structure may be different",
-)
+
 def test_workflow_step_order_is_correct():
     """
     Verify that the Kustomize render step comes BEFORE the Trivy scan step.
 
     This ensures the manifest is rendered before it's scanned.
     """
-    workflow_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    repo_root = Path(__file__).parent.parent.parent
+    workflow_path = repo_root / ".github/workflows/deploy-staging-gke.yaml"
 
     with open(workflow_path) as f:
         workflow_yaml = yaml.safe_load(f)
