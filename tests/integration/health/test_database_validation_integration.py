@@ -23,6 +23,13 @@ import pytest
 from mcp_server_langgraph.health.database_checks import DatabaseValidator, Environment, validate_database_architecture
 
 
+@pytest.fixture(autouse=True)
+def setup_test_environment(monkeypatch):
+    """Ensure we're in test environment for all database validation integration tests"""
+    monkeypatch.setenv("TESTING", "true")
+    monkeypatch.setenv("POSTGRES_DB", "gdpr_test")
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="testdatabasevalidationintegration")
@@ -32,12 +39,6 @@ class TestDatabaseValidationIntegration:
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
-
-    @pytest.fixture(autouse=True)
-    def setup_test_environment(self, monkeypatch):
-        """Ensure we're in test environment for these integration tests"""
-        monkeypatch.setenv("TESTING", "true")
-        monkeypatch.setenv("POSTGRES_DB", "gdpr_test")
 
     async def test_validate_test_environment_databases(self):
         """
@@ -205,12 +206,6 @@ class TestDatabaseValidationIntegration:
 @pytest.mark.asyncio
 class TestDatabaseValidationFailureCases:
     """Integration tests for validation failure scenarios"""
-
-    @pytest.fixture(autouse=True)
-    def setup_test_environment(self, monkeypatch):
-        """Ensure we're in test environment"""
-        monkeypatch.setenv("TESTING", "true")
-        monkeypatch.setenv("POSTGRES_DB", "gdpr_test")
 
     async def test_validation_with_wrong_port(self):
         """Should handle connection failure gracefully"""
