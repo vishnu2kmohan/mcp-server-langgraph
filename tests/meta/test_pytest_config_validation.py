@@ -49,7 +49,8 @@ def test_pytest_addopts_flags_have_required_plugins():
     NOTE: This test calls the validation script (scripts/validate_pytest_config.py)
     instead of duplicating the validation logic. The script is the source of truth.
     """
-    script_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/scripts/validate_pytest_config.py")
+    repo_root = Path(__file__).parent.parent.parent
+    script_path = repo_root / "scripts/validate_pytest_config.py"
 
     assert script_path.exists(), f"Validation script not found: {script_path}\nExpected: scripts/validate_pytest_config.py"
 
@@ -78,7 +79,8 @@ def test_validation_script_exists_and_is_executable():
     The validation script should be at: scripts/validate_pytest_config.py
     It should be executable and return exit code 0 when validation passes.
     """
-    script_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/scripts/validate_pytest_config.py")
+    repo_root = Path(__file__).parent.parent.parent
+    script_path = repo_root / "scripts/validate_pytest_config.py"
 
     assert script_path.exists(), (
         f"Validation script not found: {script_path}\n"
@@ -111,7 +113,8 @@ def test_all_pytest_flags_are_supported_by_installed_plugins():
     - A flag is misspelled in addopts
     - A plugin is version-incompatible and doesn't provide expected flags
     """
-    pyproject_path = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/pyproject.toml")
+    repo_root = Path(__file__).parent.parent.parent
+    pyproject_path = repo_root / "pyproject.toml"
 
     with open(pyproject_path, "rb") as f:
         pyproject_data = tomllib.load(f)
@@ -159,7 +162,8 @@ def test_pre_commit_hook_validates_pytest_config():
     This ensures that changes to pyproject.toml trigger validation
     before they can be committed.
     """
-    pre_commit_config = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.pre-commit-config.yaml")
+    repo_root = Path(__file__).parent.parent.parent
+    pre_commit_config = repo_root / ".pre-commit-config.yaml"
 
     assert pre_commit_config.exists(), ".pre-commit-config.yaml not found"
 
@@ -185,10 +189,11 @@ def test_ci_workflow_validates_pytest_config():
 
     This ensures validation runs in CI even if pre-commit hooks are bypassed.
     """
+    repo_root = Path(__file__).parent.parent.parent
     ci_workflows = [
-        Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/ci.yaml"),
-        Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/quality-tests.yaml"),
-        Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/.github/workflows/validate-workflows.yaml"),
+        repo_root / ".github/workflows/ci.yaml",
+        repo_root / ".github/workflows/quality-tests.yaml",
+        repo_root / ".github/workflows/validate-workflows.yaml",
     ]
 
     validation_found = False

@@ -33,6 +33,7 @@ from mcp_server_langgraph.health.database_checks import (
 )
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="database_checks")
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""
@@ -116,6 +117,7 @@ class TestEnvironmentDetection:
             assert validator.environment == Environment.TEST
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="database_checks")
 class TestExpectedDatabasesConfiguration:
     """Tests for expected database configuration"""
@@ -217,6 +219,7 @@ class TestExpectedDatabasesConfiguration:
         assert keycloak_db.managed_by == "keycloak"
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="testdatabasevalidation")
 class TestDatabaseValidation:
     """Tests for database validation logic"""
@@ -406,6 +409,7 @@ class TestDatabaseValidation:
             assert "Failed to connect" in result.errors[0]
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="database_checks")
 class TestOverallValidation:
     """Tests for overall validation of all databases"""
@@ -486,6 +490,7 @@ class TestOverallValidation:
             assert "openfga warning 1" in result.warnings
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="database_checks")
 class TestValidationResultSerialization:
     """Tests for validation result serialization"""
@@ -526,6 +531,7 @@ class TestValidationResultSerialization:
         assert len(result_dict["warnings"]) == 1
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="testconveniencefunction")
 class TestConvenienceFunction:
     """Tests for the convenience function"""
@@ -585,6 +591,7 @@ class TestConvenienceFunction:
             assert result.is_valid
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="database_checks")
 class TestDatabaseValidationResultProperty:
     """Tests for DatabaseValidationResult.is_valid property"""

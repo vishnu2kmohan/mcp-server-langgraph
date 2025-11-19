@@ -20,6 +20,7 @@ from scripts.validators.file_naming_validator import (
 )
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="file_naming_validator")
 class TestFileNamingValidator:
     """Test file naming convention validation."""
@@ -180,6 +181,7 @@ class TestFileNamingValidator:
             assert any(".mdx" in error or "extension" in error.lower() for error in errors)
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="file_naming_validator")
 class TestValidatorCLI:
     """Test the CLI interface of the validator."""
@@ -208,6 +210,7 @@ class TestValidatorCLI:
         assert len(errors) == 0
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="file_naming_validator")
 class TestEdgeCases:
     """Test edge cases and special scenarios."""

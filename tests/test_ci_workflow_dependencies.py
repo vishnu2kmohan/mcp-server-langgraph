@@ -86,8 +86,11 @@ def test_dev_extras_complete():
     This is a meta-test that verifies the pyproject.toml configuration
     includes all packages needed for workflow validation tests.
     """
-    # Read pyproject.toml
-    import tomllib
+    # Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        import tomli as tomllib
 
     project_root = Path(__file__).parent.parent
     pyproject_path = project_root / "pyproject.toml"
