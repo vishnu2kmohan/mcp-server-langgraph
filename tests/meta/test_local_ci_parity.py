@@ -473,40 +473,55 @@ class TestLocalCIParity:
         with open(pre_push_hook_path, "r") as f:
             return f.read()
 
-    def test_lockfile_validation_matches_ci(self, ci_workflow: dict, pre_push_content: str):
+    @pytest.fixture
+    def precommit_config(self, shared_precommit_config: dict) -> dict:
+        """Get pre-commit configuration (delegates to shared fixture)."""
+        return shared_precommit_config
+
+    @pytest.fixture
+    def precommit_config_content(self, precommit_config: dict) -> str:
+        """Convert pre-commit config to YAML string for searching."""
+        return yaml.dump(precommit_config)
+
+    def test_lockfile_validation_matches_ci(self, ci_workflow: dict, precommit_config_content: str):
         """Test that lockfile validation command matches CI."""
         # CI should run uv lock --check
         ci_content = yaml.dump(ci_workflow)
 
         if "uv lock --check" in ci_content or "uv sync --frozen" in ci_content:
-            # Local pre-push should also check lockfile
-            assert "uv lock --check" in pre_push_content, "Local pre-push must validate lockfile like CI does"
+            # Local pre-commit config should also check lockfile
+            assert "uv lock --check" in precommit_config_content, (
+                "Local .pre-commit-config.yaml must validate lockfile like CI does\n"
+                "Expected hook with 'uv lock --check' in pre-push stage"
+            )
 
-    def test_precommit_scope_matches_ci(self, ci_workflow: dict, pre_push_content: str):
+    def test_precommit_scope_matches_ci(self, ci_workflow: dict, precommit_config_content: str):
         """Test that pre-commit scope matches CI (all files)."""
         ci_content = yaml.dump(ci_workflow)
 
         if "pre-commit run" in ci_content:
             # CI runs on all files
             if "--all-files" in ci_content:
-                assert "--all-files" in pre_push_content, (
-                    "Local pre-push must run pre-commit on all files like CI does\n"
+                assert "--all-files" in precommit_config_content, (
+                    "Local .pre-commit-config.yaml must run pre-commit on all files like CI does\n"
                     "Running on changed files only causes CI surprises"
                 )
 
-    def test_hypothesis_profile_matches_ci(self, ci_workflow: dict, pre_push_content: str):
+    def test_hypothesis_profile_matches_ci(self, ci_workflow: dict, precommit_config_content: str):
         """Test that Hypothesis profile matches CI."""
         ci_content = yaml.dump(ci_workflow)
 
         if "HYPOTHESIS_PROFILE" in ci_content:
             # Extract CI profile
             if "HYPOTHESIS_PROFILE=ci" in ci_content or "HYPOTHESIS_PROFILE: ci" in ci_content:
-                assert "HYPOTHESIS_PROFILE=ci" in pre_push_content, (
-                    "Local pre-push must use same Hypothesis profile as CI\n"
-                    "CI uses 100 examples, local dev uses 25 - this causes failures"
+                assert (
+                    "HYPOTHESIS_PROFILE=ci" in precommit_config_content or "HYPOTHESIS_PROFILE: ci" in precommit_config_content
+                ), (
+                    "Local .pre-commit-config.yaml must use same Hypothesis profile as CI\n"
+                    "CI uses 100 examples (profile=ci), local dev uses 25 (profile=dev) - this causes failures"
                 )
 
-    def test_workflow_validation_matches_ci(self, ci_workflow: dict, pre_push_content: str):
+    def test_workflow_validation_matches_ci(self, ci_workflow: dict, precommit_config_content: str):
         """Test that workflow validation tests match what CI runs."""
         # CI has workflow validation job
         jobs = ci_workflow.get("jobs", {})
@@ -519,7 +534,10 @@ class TestLocalCIParity:
 
         if workflow_validation_jobs:
             # Local should also validate workflows
-            assert "test_workflow" in pre_push_content, "Local pre-push should validate workflows like CI does"
+            assert "test_workflow" in precommit_config_content or "workflow" in precommit_config_content, (
+                "Local .pre-commit-config.yaml should validate workflows like CI does\n"
+                "Expected hook running workflow validation tests"
+            )
 
 
 @pytest.mark.xdist_group(name="testcigapprevention")
@@ -1648,36 +1666,35 @@ class TestPreCommitHookStageFlag:
 
         assert precommit_commands, "validate-pre-push should run pre-commit"
 
-        # At least one pre-commit command should have --hook-stage push
-        has_hook_stage_push = any("--hook-stage push" in cmd for cmd in precommit_commands)
+        # At least one pre-commit command should have --hook-stage pre-push
+        has_hook_stage_push = any("--hook-stage pre-push" in cmd for cmd in precommit_commands)
 
         assert has_hook_stage_push, (
-            "Makefile validate-pre-push MUST use '--hook-stage push' flag\n"
+            "Makefile validate-pre-push MUST use '--hook-stage pre-push' flag\n"
             "\n"
             "Current issue (Codex finding #3):\n"
-            "  - Makefile:570 runs: pre-commit run --all-files\n"
-            "  - Missing --hook-stage push flag\n"
-            "  - None of the 45 push-stage hooks execute!\n"
-            "  - CONTRIBUTING.md:28 documents 'make validate-pre-push' as the command to use\n"
+            "  - validate-pre-push target runs: pre-commit run --all-files\n"
+            "  - Missing --hook-stage pre-push flag\n"
+            "  - None of the 45 pre-push stage hooks execute!\n"
+            "  - CONTRIBUTING.md documents 'make validate-pre-push' as the command to use\n"
             "\n"
             "Impact:\n"
             "  - Developers run 'make validate-pre-push' thinking it validates everything\n"
-            "  - Push-only hooks (actionlint, workflow validation, etc.) don't run\n"
+            "  - Pre-push-only hooks (actionlint, workflow validation, etc.) don't run\n"
             "  - False confidence: validation passes but push will fail\n"
             "  - Documentation misleads developers\n"
             "\n"
-            "Pre-push hooks that are skipped without --hook-stage push:\n"
+            "Pre-push hooks that are skipped without --hook-stage pre-push:\n"
             "  - actionlint-workflow-validation (validates GitHub Actions)\n"
             "  - validate-pytest-xdist-enforcement\n"
             "  - check-test-memory-safety\n"
             "  - ... and 42 more hooks!\n"
             "\n"
             "Git pre-push hook behavior:\n"
-            "  Uses: pre-commit run --all-files --hook-stage push ✅\n"
+            "  Uses: pre-commit run --all-files --hook-stage pre-push ✅\n"
             "\n"
-            "Fix: Update Makefile:570\n"
-            "  From: pre-commit run --all-files\n"
-            "  To:   pre-commit run --all-files --hook-stage push\n"
+            "Fix: Ensure validate-pre-push target includes:\n"
+            "  pre-commit run --all-files --hook-stage pre-push\n"
         )
 
 
