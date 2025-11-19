@@ -28,7 +28,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.meta]
 def repo_root() -> Path:
     """Get repository root directory (shared across all tests in module)."""
     result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
     )
     return Path(result.stdout.strip())
 
@@ -61,7 +65,9 @@ def test_keycloak_realm_import_file_exists(repo_root: Path):
         except json.JSONDecodeError as e:
             pytest.fail(f"Realm file is not valid JSON: {e}")
 
-    assert isinstance(realm_config, dict), f"Realm file must contain a JSON object, got: {type(realm_config)}"
+    assert isinstance(realm_config, dict), (
+        f"Realm file must contain a JSON object, got: {type(realm_config)}"
+    )
 
 
 def test_realm_json_has_mcp_server_client(repo_root: Path):
@@ -80,7 +86,9 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
 
     # Check for clients array
     clients = realm_config.get("clients", [])
-    assert isinstance(clients, list), f"Realm 'clients' must be an array, got: {type(clients)}"
+    assert isinstance(clients, list), (
+        f"Realm 'clients' must be an array, got: {type(clients)}"
+    )
 
     # Find mcp-server client
     mcp_client = None
@@ -106,11 +114,13 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     # Validate client configuration
     assert mcp_client.get("enabled") is True, "Client 'mcp-server' must be enabled"
 
-    assert mcp_client.get("publicClient") is True, "Client 'mcp-server' must be a public client (no secret required)"
+    assert mcp_client.get("publicClient") is True, (
+        "Client 'mcp-server' must be a public client (no secret required)"
+    )
 
-    assert (
-        mcp_client.get("directAccessGrantsEnabled") is True
-    ), "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    assert mcp_client.get("directAccessGrantsEnabled") is True, (
+        "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    )
 
 
 def test_realm_json_has_test_users(repo_root: Path):
@@ -129,7 +139,9 @@ def test_realm_json_has_test_users(repo_root: Path):
 
     # Check for users array
     users = realm_config.get("users", [])
-    assert isinstance(users, list), f"Realm 'users' must be an array, got: {type(users)}"
+    assert isinstance(users, list), (
+        f"Realm 'users' must be an array, got: {type(users)}"
+    )
 
     # Find alice user
     alice_user = None
@@ -170,7 +182,9 @@ def test_realm_json_has_test_users(repo_root: Path):
 
     assert password_cred is not None, "User 'alice' must have a password credential"
 
-    assert password_cred.get("value") == "alice123", "User 'alice' password must be 'alice123'"
+    assert password_cred.get("value") == "alice123", (
+        "User 'alice' password must be 'alice123'"
+    )
 
 
 def test_docker_compose_imports_realm(repo_root: Path):
@@ -183,7 +197,9 @@ def test_docker_compose_imports_realm(repo_root: Path):
     """
     docker_compose_file = repo_root / "docker-compose.test.yml"
 
-    assert docker_compose_file.exists(), f"docker-compose.test.yml not found: {docker_compose_file}"
+    assert docker_compose_file.exists(), (
+        f"docker-compose.test.yml not found: {docker_compose_file}"
+    )
 
     with open(docker_compose_file) as f:
         try:
@@ -196,24 +212,32 @@ def test_docker_compose_imports_realm(repo_root: Path):
     keycloak_service = services.get("keycloak-test")
 
     assert keycloak_service is not None, (
-        "Service 'keycloak-test' not found in docker-compose.test.yml\n" f"Available services: {list(services.keys())}"
+        "Service 'keycloak-test' not found in docker-compose.test.yml\n"
+        f"Available services: {list(services.keys())}"
     )
 
     # Check for volume mount
     volumes = keycloak_service.get("volumes", [])
-    assert isinstance(volumes, list), f"Service 'keycloak-test' volumes must be an array, got: {type(volumes)}"
+    assert isinstance(volumes, list), (
+        f"Service 'keycloak-test' volumes must be an array, got: {type(volumes)}"
+    )
 
     # Look for realm import volume mount
     realm_volume_found = False
     for volume in volumes:
         if isinstance(volume, str):
             # Simple string format
-            if "keycloak-test-realm.json" in volume and "/opt/keycloak/data/import" in volume:
+            if (
+                "keycloak-test-realm.json" in volume
+                and "/opt/keycloak/data/import" in volume
+            ):
                 realm_volume_found = True
                 break
         elif isinstance(volume, dict):
             # Dict format with source/target
-            if volume.get("source") and "keycloak-test-realm.json" in str(volume.get("source")):
+            if volume.get("source") and "keycloak-test-realm.json" in str(
+                volume.get("source")
+            ):
                 realm_volume_found = True
                 break
 

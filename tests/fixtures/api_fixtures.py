@@ -142,12 +142,14 @@ def create_api_test_client(
 # ==============================================================================
 
 
-def create_mock_current_user(user_id: str = "test_user", roles: list[str] = None) -> Dict[str, Any]:
+def create_mock_current_user(
+    user_id: str = "test_user", roles: list[str] = None
+) -> Dict[str, Any]:
     """
     Create a mock current_user dict for authentication testing.
 
     Args:
-        user_id: User ID in OpenFGA format (e.g., "user:alice_w0")
+        user_id: User ID in OpenFGA format (use get_user_id("alice") for worker-safe IDs)
         roles: List of roles (e.g., ["admin", "user"])
 
     Returns:

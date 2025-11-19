@@ -35,7 +35,13 @@ def shared_repo_root() -> Path:
 
     This avoids redundant git commands by computing repo root once per module.
     """
-    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60)
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
     return Path(result.stdout.strip())
 
 
@@ -60,7 +66,12 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
     """
     # Use git rev-parse to get common git directory (handles worktrees)
     result = subprocess.run(
-        ["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=True, timeout=60, cwd=shared_repo_root
+        ["git", "rev-parse", "--git-common-dir"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+        cwd=shared_repo_root,
     )
     git_common_dir = Path(result.stdout.strip())
     # If path is relative, make it relative to repo_root
@@ -226,7 +237,8 @@ class TestPrePushHookConfiguration:
     def test_pre_push_hook_is_executable(self, pre_push_hook_path: Path):
         """Test that pre-push hook has execute permissions."""
         assert os.access(pre_push_hook_path, os.X_OK), (
-            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\n" f"Fix: chmod +x {pre_push_hook_path}"
+            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\n"
+            f"Fix: chmod +x {pre_push_hook_path}"
         )
 
     def test_pre_push_hook_is_bash_script(self, pre_push_hook_path: Path):
@@ -239,7 +251,9 @@ class TestPrePushHookConfiguration:
             "#!/usr/bin/env bash",
         ], f"Pre-push hook must be a bash script, got shebang: {first_line}"
 
-    def test_pre_push_hook_validates_lockfile(self, repo_root: Path, pre_push_hook_path: Path):
+    def test_pre_push_hook_validates_lockfile(
+        self, repo_root: Path, pre_push_hook_path: Path
+    ):
         """Test that pre-push hook validates lockfile."""
         # Read hook to detect type
         with open(pre_push_hook_path, "r") as f:
@@ -259,7 +273,9 @@ class TestPrePushHookConfiguration:
             "This prevents out-of-sync lockfiles from being pushed"
         )
 
-    def test_pre_push_hook_validates_workflows(self, repo_root: Path, pre_push_hook_path: Path):
+    def test_pre_push_hook_validates_workflows(
+        self, repo_root: Path, pre_push_hook_path: Path
+    ):
         """Test that pre-push hook validates GitHub workflows."""
         with open(pre_push_hook_path, "r") as f:
             hook_content = f.read()
@@ -271,7 +287,10 @@ class TestPrePushHookConfiguration:
                 content = f.read()
 
             # Check for comprehensive workflow validator (consolidated in 2025-11-17)
-            assert "validate-github-workflows-comprehensive" in content or "actionlint" in content, (
+            assert (
+                "validate-github-workflows-comprehensive" in content
+                or "actionlint" in content
+            ), (
                 "Pre-push hook must validate GitHub workflows\n"
                 "Expected: validate-github-workflows-comprehensive or actionlint hook"
             )
@@ -307,7 +326,9 @@ class TestPrePushHookConfiguration:
             # If present, should be in manual stage or non-blocking
             if "mypy" in config_content:
                 # If mypy is present, it should be non-blocking (manual stage)
-                pytest.skip("MyPy found in config - checking it's non-blocking is handled by validate_pre_push_hook.py")
+                pytest.skip(
+                    "MyPy found in config - checking it's non-blocking is handled by validate_pre_push_hook.py"
+                )
         else:
             # Legacy bash script: MyPy should be present but non-blocking
             content = hook_content
@@ -318,9 +339,13 @@ class TestPrePushHookConfiguration:
                 )
             else:
                 # MyPy is optional, so skip if not present
-                pytest.skip("MyPy not configured in pre-push hook (OPTIONAL per project policy)")
+                pytest.skip(
+                    "MyPy not configured in pre-push hook (OPTIONAL per project policy)"
+                )
 
-    def test_pre_push_hook_runs_precommit_all_files(self, repo_root: Path, pre_push_hook_path: Path):
+    def test_pre_push_hook_runs_precommit_all_files(
+        self, repo_root: Path, pre_push_hook_path: Path
+    ):
         """Test that pre-push hook runs pre-commit on ALL files."""
         with open(pre_push_hook_path, "r") as f:
             hook_content = f.read()
@@ -345,7 +370,9 @@ class TestPrePushHookConfiguration:
                 "Running on changed files only causes CI surprises"
             )
 
-    def test_pre_push_hook_runs_property_tests_with_ci_profile(self, repo_root: Path, pre_push_hook_path: Path):
+    def test_pre_push_hook_runs_property_tests_with_ci_profile(
+        self, repo_root: Path, pre_push_hook_path: Path
+    ):
         """Test that pre-push hook runs property tests with CI profile."""
         with open(pre_push_hook_path, "r") as f:
             hook_content = f.read()
@@ -359,7 +386,9 @@ class TestPrePushHookConfiguration:
             # Check for property test configuration in run-pre-push-tests hook
             # Note: Default dev profile (25 examples), CI_PARITY=1 enables CI profile (100 examples)
             # Updated 2025-11-18: Consolidated test hook approach
-            assert "run-pre-push-tests" in config_content or "property" in config_content, (
+            assert (
+                "run-pre-push-tests" in config_content or "property" in config_content
+            ), (
                 "Pre-push hook must run property tests\n"
                 "Expected: run-pre-push-tests hook or explicit property test marker"
             )
@@ -393,9 +422,13 @@ class TestPrePushHookConfiguration:
         ]
 
         for phase in expected_phases:
-            assert phase in hook_content, f"Pre-push hook should have clearly labeled {phase} for readability"
+            assert phase in hook_content, (
+                f"Pre-push hook should have clearly labeled {phase} for readability"
+            )
 
-    def test_pre_push_hook_provides_helpful_error_messages(self, pre_push_hook_path: Path):
+    def test_pre_push_hook_provides_helpful_error_messages(
+        self, pre_push_hook_path: Path
+    ):
         """Test that pre-push hook provides helpful troubleshooting info (legacy only)."""
         with open(pre_push_hook_path, "r") as f:
             hook_content = f.read()
@@ -409,7 +442,9 @@ class TestPrePushHookConfiguration:
 
         # Legacy bash script: should have helpful messages
         # Should mention how to bypass (for emergencies)
-        assert "--no-verify" in hook_content, "Pre-push hook should document emergency bypass with --no-verify"
+        assert "--no-verify" in hook_content, (
+            "Pre-push hook should document emergency bypass with --no-verify"
+        )
 
         # Should provide fix instructions
         assert "To fix" in hook_content or "Fix:" in hook_content, (
@@ -429,7 +464,11 @@ class TestMakefileValidationTarget:
     def makefile_path(self) -> Path:
         """Get path to Makefile."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip()) / "Makefile"
 
@@ -442,7 +481,8 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_target_exists(self, makefile_content: str):
         """Test that validate-pre-push target exists in Makefile."""
         assert re.search(r"^validate-pre-push:", makefile_content, re.MULTILINE), (
-            "Makefile must have 'validate-pre-push' target\n" "This provides manual validation matching pre-push hook"
+            "Makefile must have 'validate-pre-push' target\n"
+            "This provides manual validation matching pre-push hook"
         )
 
     def test_validate_pre_push_in_phony_targets(self, makefile_content: str):
@@ -452,7 +492,9 @@ class TestMakefileValidationTarget:
         assert phony_match, "Makefile should have .PHONY declaration"
 
         phony_line = phony_match.group(0)
-        assert "validate-pre-push" in phony_line, "validate-pre-push must be declared in .PHONY targets"
+        assert "validate-pre-push" in phony_line, (
+            "validate-pre-push must be declared in .PHONY targets"
+        )
 
     def test_validate_pre_push_runs_lockfile_check(self, makefile_content: str):
         """Test that validate-pre-push target validates lockfile."""
@@ -465,7 +507,9 @@ class TestMakefileValidationTarget:
         assert target_match, "Could not find validate-pre-push target"
 
         target_content = target_match.group(0)
-        assert "uv lock --check" in target_content, "validate-pre-push target must run 'uv lock --check'"
+        assert "uv lock --check" in target_content, (
+            "validate-pre-push target must run 'uv lock --check'"
+        )
 
     def test_validate_pre_push_runs_workflow_tests(self, makefile_content: str):
         """Test that validate-pre-push target runs workflow validation tests."""
@@ -498,7 +542,9 @@ class TestMakefileValidationTarget:
         assert target_match, "Could not find validate-pre-push target"
 
         target_content = target_match.group(0)
-        assert "mypy src/mcp_server_langgraph" in target_content, "validate-pre-push must run MyPy type checking"
+        assert "mypy src/mcp_server_langgraph" in target_content, (
+            "validate-pre-push must run MyPy type checking"
+        )
 
     def test_validate_pre_push_runs_precommit_all_files(self, makefile_content: str):
         """Test that validate-pre-push runs pre-commit on all files."""
@@ -510,9 +556,13 @@ class TestMakefileValidationTarget:
         assert target_match, "Could not find validate-pre-push target"
 
         target_content = target_match.group(0)
-        assert "pre-commit run --all-files" in target_content, "validate-pre-push must run 'pre-commit run --all-files'"
+        assert "pre-commit run --all-files" in target_content, (
+            "validate-pre-push must run 'pre-commit run --all-files'"
+        )
 
-    def test_validate_pre_push_runs_property_tests_with_ci_profile(self, makefile_content: str):
+    def test_validate_pre_push_runs_property_tests_with_ci_profile(
+        self, makefile_content: str
+    ):
         """Test that validate-pre-push runs property tests with CI profile."""
         target_match = re.search(
             r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
@@ -522,9 +572,13 @@ class TestMakefileValidationTarget:
         assert target_match, "Could not find validate-pre-push target"
 
         target_content = target_match.group(0)
-        assert "HYPOTHESIS_PROFILE=ci" in target_content, "validate-pre-push must set HYPOTHESIS_PROFILE=ci"
+        assert "HYPOTHESIS_PROFILE=ci" in target_content, (
+            "validate-pre-push must set HYPOTHESIS_PROFILE=ci"
+        )
 
-        assert "-m property" in target_content, "validate-pre-push must run property tests"
+        assert "-m property" in target_content, (
+            "validate-pre-push must run property tests"
+        )
 
     def test_validate_pre_push_in_help_output(self, makefile_content: str):
         """Test that validate-pre-push is documented in help target."""
@@ -537,7 +591,9 @@ class TestMakefileValidationTarget:
         assert help_match, "Could not find help target"
 
         help_content = help_match.group(0)
-        assert "validate-pre-push" in help_content, "validate-pre-push should be documented in make help output"
+        assert "validate-pre-push" in help_content, (
+            "validate-pre-push should be documented in make help output"
+        )
 
 
 @pytest.mark.xdist_group(name="testlocalciparity")
@@ -552,7 +608,11 @@ class TestLocalCIParity:
     def ci_workflow_path(self) -> Path:
         """Get path to main CI workflow."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         repo_root = Path(result.stdout.strip())
         return repo_root / ".github" / "workflows" / "ci.yaml"
@@ -568,12 +628,21 @@ class TestLocalCIParity:
         """Get path to pre-push hook (handles git worktrees)."""
         # Get repository root
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         repo_root = Path(result.stdout.strip())
         # Use git rev-parse to get common git directory (handles worktrees)
         result = subprocess.run(
-            ["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=True, timeout=60, cwd=repo_root
+            ["git", "rev-parse", "--git-common-dir"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
+            cwd=repo_root,
         )
         git_common_dir = Path(result.stdout.strip())
         # If path is relative, make it relative to repo_root
@@ -587,7 +656,9 @@ class TestLocalCIParity:
         with open(pre_push_hook_path, "r") as f:
             return f.read()
 
-    def test_lockfile_validation_matches_ci(self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path):
+    def test_lockfile_validation_matches_ci(
+        self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path
+    ):
         """Test that lockfile validation command matches CI."""
         # CI should run uv lock --check
         ci_content = yaml.dump(ci_workflow)
@@ -604,12 +675,18 @@ class TestLocalCIParity:
                     "uv lock --check" in config_content
                     or "uv-lock-check" in config_content
                 )
-                assert has_lockfile_check, "Pre-commit config must validate lockfile like CI does"
+                assert has_lockfile_check, (
+                    "Pre-commit config must validate lockfile like CI does"
+                )
             else:
                 # Legacy bash script: check hook directly
-                assert "uv lock --check" in pre_push_content, "Local pre-push must validate lockfile like CI does"
+                assert "uv lock --check" in pre_push_content, (
+                    "Local pre-push must validate lockfile like CI does"
+                )
 
-    def test_precommit_scope_matches_ci(self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path):
+    def test_precommit_scope_matches_ci(
+        self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path
+    ):
         """Test that pre-commit scope matches CI (all files)."""
         ci_content = yaml.dump(ci_workflow)
 
@@ -624,7 +701,9 @@ class TestLocalCIParity:
 
                     # Verify .pre-commit-config.yaml has pre-push hooks configured
                     # Framework automatically runs on all files for git hooks
-                    assert "stages:" in config_content and "pre-push" in config_content, (
+                    assert (
+                        "stages:" in config_content and "pre-push" in config_content
+                    ), (
                         "Pre-commit config must have hooks configured for pre-push stage\n"
                         "Pre-commit framework automatically runs on all files for git hooks"
                     )
@@ -635,16 +714,27 @@ class TestLocalCIParity:
                         "Running on changed files only causes CI surprises"
                     )
 
-    def test_hypothesis_profile_matches_ci(self, ci_workflow: dict, pre_push_content: str, shared_run_pre_push_tests_content: str):
+    def test_hypothesis_profile_matches_ci(
+        self,
+        ci_workflow: dict,
+        pre_push_content: str,
+        shared_run_pre_push_tests_content: str,
+    ):
         """Test that Hypothesis profile matches CI."""
         ci_content = yaml.dump(ci_workflow)
 
         if "HYPOTHESIS_PROFILE" in ci_content:
             # Extract CI profile
-            if "HYPOTHESIS_PROFILE=ci" in ci_content or "HYPOTHESIS_PROFILE: ci" in ci_content:
+            if (
+                "HYPOTHESIS_PROFILE=ci" in ci_content
+                or "HYPOTHESIS_PROFILE: ci" in ci_content
+            ):
                 # Pre-commit framework: check scripts/run_pre_push_tests.py
                 if is_pre_commit_wrapper(pre_push_content):
-                    assert 'HYPOTHESIS_PROFILE' in shared_run_pre_push_tests_content and '"ci"' in shared_run_pre_push_tests_content, (
+                    assert (
+                        "HYPOTHESIS_PROFILE" in shared_run_pre_push_tests_content
+                        and '"ci"' in shared_run_pre_push_tests_content
+                    ), (
                         "run_pre_push_tests.py must set HYPOTHESIS_PROFILE=ci to match CI\n"
                         "CI uses 100 examples, local dev uses 25 - this causes failures"
                     )
@@ -655,7 +745,9 @@ class TestLocalCIParity:
                         "CI uses 100 examples, local dev uses 25 - this causes failures"
                     )
 
-    def test_workflow_validation_matches_ci(self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path):
+    def test_workflow_validation_matches_ci(
+        self, ci_workflow: dict, pre_push_content: str, shared_repo_root: Path
+    ):
         """Test that workflow validation tests match what CI runs."""
         # CI has workflow validation job
         jobs = ci_workflow.get("jobs", {})
@@ -674,13 +766,18 @@ class TestLocalCIParity:
                     config_content = f.read()
 
                 # Check for comprehensive workflow validator or actionlint
-                assert "validate-github-workflows-comprehensive" in config_content or "actionlint" in config_content, (
+                assert (
+                    "validate-github-workflows-comprehensive" in config_content
+                    or "actionlint" in config_content
+                ), (
                     "Pre-commit config must validate GitHub workflows\n"
                     "Expected: validate-github-workflows-comprehensive or actionlint hook"
                 )
             else:
                 # Legacy bash script: check for test_workflow tests
-                assert "test_workflow" in pre_push_content, "Local pre-push should validate workflows like CI does"
+                assert "test_workflow" in pre_push_content, (
+                    "Local pre-push should validate workflows like CI does"
+                )
 
 
 @pytest.mark.xdist_group(name="testcigapprevention")
@@ -695,7 +792,11 @@ class TestCIGapPrevention:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -710,7 +811,11 @@ class TestCIGapPrevention:
 
         # Should have pre-commit or validation job
         validation_jobs = [
-            job for job in jobs.keys() if any(keyword in job.lower() for keyword in ["pre-commit", "validate", "lint"])
+            job
+            for job in jobs.keys()
+            if any(
+                keyword in job.lower() for keyword in ["pre-commit", "validate", "lint"]
+            )
         ]
 
         assert validation_jobs, "CI workflow should have validation/pre-commit/lint job"
@@ -722,9 +827,13 @@ class TestCIGapPrevention:
         with open(contributing_path, "r") as f:
             content = f.read()
 
-        assert "validate-pre-push" in content, "CONTRIBUTING.md should document validate-pre-push requirement"
+        assert "validate-pre-push" in content, (
+            "CONTRIBUTING.md should document validate-pre-push requirement"
+        )
 
-        assert "make validate-pre-push" in content, "CONTRIBUTING.md should show the command to run"
+        assert "make validate-pre-push" in content, (
+            "CONTRIBUTING.md should show the command to run"
+        )
 
     def test_readme_or_quickstart_mentions_validation(self, repo_root: Path):
         """Test that quick start documentation mentions validation."""
@@ -736,7 +845,9 @@ class TestCIGapPrevention:
 
             # Should mention validation or testing before push
             validation_keywords = ["validate", "pre-push", "before push", "CI"]
-            has_validation_info = any(keyword in content for keyword in validation_keywords)
+            has_validation_info = any(
+                keyword in content for keyword in validation_keywords
+            )
 
             # Not strictly required in README, but good practice
             # So this is informational rather than blocking
@@ -760,7 +871,11 @@ class TestPytestXdistParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -786,7 +901,9 @@ class TestPytestXdistParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_unit_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
+    def test_unit_tests_use_pytest_xdist_n_auto(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that unit tests run with -n auto for parallel execution.
 
         CRITICAL: Without -n auto, pytest-xdist isolation bugs are only caught in CI.
@@ -796,7 +913,10 @@ class TestPytestXdistParity:
         instead of the bash hook file.
         """
         # Check that run_pre_push_tests.py uses -n auto
-        assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
+        assert (
+            '"-n"' in shared_run_pre_push_tests_content
+            and '"auto"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must use pytest -n auto for parallel execution\n"
             "Expected: pytest_args.extend(['-n', 'auto'])\n"
             "\n"
@@ -808,7 +928,9 @@ class TestPytestXdistParity:
             "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
-    def test_smoke_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
+    def test_smoke_tests_use_pytest_xdist_n_auto(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that smoke tests run with -n auto for parallel execution.
 
         Smoke tests are unit tests in tests/smoke/, covered by consolidated script's
@@ -816,31 +938,44 @@ class TestPytestXdistParity:
         """
         # Consolidated script uses -n auto for ALL tests (unit, api, property)
         # Smoke tests are unit tests, so they're covered
-        assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
+        assert (
+            '"-n"' in shared_run_pre_push_tests_content
+            and '"auto"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must use pytest -n auto (covers smoke tests as unit tests)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
-    def test_integration_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
+    def test_integration_tests_use_pytest_xdist_n_auto(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that integration tests use -n auto when CI_PARITY=1.
 
         Integration tests are optional in pre-push (require Docker), but when enabled
         via CI_PARITY=1 they should use -n auto for parallel execution.
         """
         # Script uses -n auto for ALL tests, including optional integration tests
-        assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
+        assert (
+            '"-n"' in shared_run_pre_push_tests_content
+            and '"auto"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must use pytest -n auto (includes integration when CI_PARITY=1)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
 
-    def test_property_tests_use_pytest_xdist_n_auto(self, shared_run_pre_push_tests_content: str):
+    def test_property_tests_use_pytest_xdist_n_auto(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that property tests run with -n auto for parallel execution.
 
         Property tests are included in consolidated marker expression:
         (unit or api or property) and not llm
         """
         # Consolidated script uses -n auto for ALL tests (includes property tests)
-        assert '"-n"' in shared_run_pre_push_tests_content and '"auto"' in shared_run_pre_push_tests_content, (
+        assert (
+            '"-n"' in shared_run_pre_push_tests_content
+            and '"auto"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must use pytest -n auto (covers property tests)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py includes -n auto in pytest_args"
         )
@@ -849,7 +984,8 @@ class TestPytestXdistParity:
         """Verify that CI uses -n auto (this is the baseline we're matching)."""
         # CI should use -n auto for unit tests
         assert "pytest -n auto" in ci_workflow_content, (
-            "CI workflow must use 'pytest -n auto' for parallel execution\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must use 'pytest -n auto' for parallel execution\n"
+            "If CI doesn't use it, this test needs updating"
         )
 
 
@@ -869,7 +1005,11 @@ class TestOtelSdkDisabledParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -895,13 +1035,18 @@ class TestOtelSdkDisabledParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_unit_tests_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
+    def test_unit_tests_set_otel_sdk_disabled(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that unit tests set OTEL_SDK_DISABLED=true to match CI.
 
         Since migrating to pre-commit framework, the consolidated script sets
         OTEL_SDK_DISABLED in the environment for all tests.
         """
-        assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
+        assert (
+            "OTEL_SDK_DISABLED" in shared_run_pre_push_tests_content
+            and '"true"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true for all tests\n"
             "Expected: env['OTEL_SDK_DISABLED'] = 'true'\n"
             "\n"
@@ -913,35 +1058,50 @@ class TestOtelSdkDisabledParity:
             "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
-    def test_smoke_tests_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
+    def test_smoke_tests_set_otel_sdk_disabled(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that smoke tests set OTEL_SDK_DISABLED=true to match CI.
 
         Smoke tests are unit tests covered by the consolidated script, which sets
         OTEL_SDK_DISABLED for all tests in the environment.
         """
-        assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
+        assert (
+            "OTEL_SDK_DISABLED" in shared_run_pre_push_tests_content
+            and '"true"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers smoke tests)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
-    def test_integration_tests_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
+    def test_integration_tests_set_otel_sdk_disabled(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that integration tests set OTEL_SDK_DISABLED=true to match CI.
 
         Integration tests (when enabled via CI_PARITY=1) are covered by the same
         environment setup that sets OTEL_SDK_DISABLED for all tests.
         """
-        assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
+        assert (
+            "OTEL_SDK_DISABLED" in shared_run_pre_push_tests_content
+            and '"true"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (includes integration tests)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
 
-    def test_property_tests_already_set_otel_sdk_disabled(self, shared_run_pre_push_tests_content: str):
+    def test_property_tests_already_set_otel_sdk_disabled(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Verify that property tests already set OTEL_SDK_DISABLED=true (should pass).
 
         Property tests are included in the consolidated marker expression and covered
         by the same environment setup.
         """
-        assert 'OTEL_SDK_DISABLED' in shared_run_pre_push_tests_content and '"true"' in shared_run_pre_push_tests_content, (
+        assert (
+            "OTEL_SDK_DISABLED" in shared_run_pre_push_tests_content
+            and '"true"' in shared_run_pre_push_tests_content
+        ), (
             "run_pre_push_tests.py must set OTEL_SDK_DISABLED=true (covers property tests)\n"
             "Fix: Ensure scripts/run_pre_push_tests.py sets env['OTEL_SDK_DISABLED'] = 'true'"
         )
@@ -949,7 +1109,8 @@ class TestOtelSdkDisabledParity:
     def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
         """Verify that CI sets OTEL_SDK_DISABLED=true (this is the baseline)."""
         assert "OTEL_SDK_DISABLED=true" in ci_workflow_content, (
-            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n"
+            "If CI doesn't use it, this test needs updating"
         )
 
 
@@ -969,7 +1130,11 @@ class TestApiMcpTestSuiteParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -995,14 +1160,19 @@ class TestApiMcpTestSuiteParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_api_endpoint_tests_run_locally(self, shared_run_pre_push_tests_content: str):
+    def test_api_endpoint_tests_run_locally(
+        self, shared_run_pre_push_tests_content: str
+    ):
         """Test that API endpoint tests run in pre-push hook like in CI.
 
         Since migrating to pre-commit framework, API tests are covered by the consolidated
         marker expression: (unit or api or property) and not llm
         """
         # Check that consolidated script includes 'api' marker
-        has_api_marker = 'api' in shared_run_pre_push_tests_content and 'marker_expression' in shared_run_pre_push_tests_content
+        has_api_marker = (
+            "api" in shared_run_pre_push_tests_content
+            and "marker_expression" in shared_run_pre_push_tests_content
+        )
 
         assert has_api_marker, (
             "run_pre_push_tests.py must include 'api' marker to run API endpoint tests\n"
@@ -1028,7 +1198,10 @@ class TestApiMcpTestSuiteParity:
         the consolidated marker expression: (unit or api or property) and not llm
         """
         # Check that consolidated script includes 'unit' marker (MCP tests are unit tests)
-        has_unit_marker = 'unit' in shared_run_pre_push_tests_content and 'marker_expression' in shared_run_pre_push_tests_content
+        has_unit_marker = (
+            "unit" in shared_run_pre_push_tests_content
+            and "marker_expression" in shared_run_pre_push_tests_content
+        )
 
         assert has_unit_marker, (
             "run_pre_push_tests.py must include 'unit' marker to run MCP server tests\n"
@@ -1080,7 +1253,11 @@ class TestMakefilePrePushParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1119,7 +1296,11 @@ class TestMakefilePrePushParity:
         target_content = target_match.group(0)
 
         # Should run unit tests
-        has_unit_tests = "-m unit" in target_content or '-m "unit' in target_content or "-m 'unit" in target_content
+        has_unit_tests = (
+            "-m unit" in target_content
+            or '-m "unit' in target_content
+            or "-m 'unit" in target_content
+        )
 
         assert has_unit_tests, (
             "Makefile validate-pre-push must run unit tests to match pre-push hook\n"
@@ -1169,7 +1350,9 @@ class TestMakefilePrePushParity:
         target_content = target_match.group(0)
 
         # Should run integration tests
-        has_integration_tests = "tests/integration" in target_content or "integration" in target_content
+        has_integration_tests = (
+            "tests/integration" in target_content or "integration" in target_content
+        )
 
         assert has_integration_tests, (
             "Makefile validate-pre-push must run integration tests to match pre-push hook\n"
@@ -1189,7 +1372,9 @@ class TestMakefilePrePushParity:
         target_content = target_match.group(0)
 
         # Should run API/MCP tests
-        has_api_tests = "api" in target_content or "test_mcp_stdio_server" in target_content
+        has_api_tests = (
+            "api" in target_content or "test_mcp_stdio_server" in target_content
+        )
 
         assert has_api_tests, (
             "Makefile validate-pre-push must run API/MCP tests to match pre-push hook\n"
@@ -1255,7 +1440,11 @@ class TestActionlintHookStrictness:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1283,7 +1472,9 @@ class TestActionlintHookStrictness:
             re.DOTALL,
         )
 
-        assert actionlint_section_match, "Could not find actionlint hook in .pre-commit-config.yaml"
+        assert actionlint_section_match, (
+            "Could not find actionlint hook in .pre-commit-config.yaml"
+        )
 
         actionlint_section = actionlint_section_match.group(0)
 
@@ -1309,7 +1500,9 @@ class TestActionlintHookStrictness:
             "  entry: bash -c 'actionlint -no-color -shellcheck= .github/workflows/*.{yml,yaml} 2>&1'\n"
         )
 
-    def test_actionlint_hook_configured_for_pre_push(self, pre_commit_config_content: str):
+    def test_actionlint_hook_configured_for_pre_push(
+        self, pre_commit_config_content: str
+    ):
         """Test that actionlint hook runs during pre-push stage."""
         actionlint_section_match = re.search(
             r"- repo:.*actionlint.*?(?=- repo:|\Z)",
@@ -1322,9 +1515,9 @@ class TestActionlintHookStrictness:
         actionlint_section = actionlint_section_match.group(0)
 
         # Should be configured for pre-push stage
-        assert (
-            "stages:" in actionlint_section and "push" in actionlint_section
-        ), "Actionlint hook should be configured to run during pre-push stage"
+        assert "stages:" in actionlint_section and "push" in actionlint_section, (
+            "Actionlint hook should be configured to run during pre-push stage"
+        )
 
 
 @pytest.mark.xdist_group(name="testmypyblockingparity")
@@ -1344,7 +1537,11 @@ class TestMyPyBlockingParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1382,7 +1579,10 @@ class TestMyPyBlockingParity:
         mypy_hooks = []
         for repo in shared_precommit_config.get("repos", []):
             for hook in repo.get("hooks", []):
-                if "mypy" in hook.get("id", "").lower() or "mypy" in hook.get("name", "").lower():
+                if (
+                    "mypy" in hook.get("id", "").lower()
+                    or "mypy" in hook.get("name", "").lower()
+                ):
                     mypy_hooks.append(hook)
 
         assert mypy_hooks, (
@@ -1398,7 +1598,9 @@ class TestMyPyBlockingParity:
             "Fix: Ensure .pre-commit-config.yaml includes mypy hook"
         )
 
-    def test_mypy_comment_reflects_blocking_behavior(self, shared_precommit_config: dict):
+    def test_mypy_comment_reflects_blocking_behavior(
+        self, shared_precommit_config: dict
+    ):
         """Test that MyPy configuration includes appropriate documentation.
 
         Validates that MyPy hook has description explaining non-blocking policy.
@@ -1413,8 +1615,8 @@ class TestMyPyBlockingParity:
         if mypy_hooks:
             # At least one mypy hook should have name/description mentioning non-blocking
             has_documentation = any(
-                "non-blocking" in hook.get("name", "").lower() or
-                "warning" in hook.get("name", "").lower()
+                "non-blocking" in hook.get("name", "").lower()
+                or "warning" in hook.get("name", "").lower()
                 for hook in mypy_hooks
             )
 
@@ -1462,7 +1664,11 @@ class TestIsolationValidationStrictness:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1477,7 +1683,9 @@ class TestIsolationValidationStrictness:
         with open(validation_script_path, "r") as f:
             return f.read()
 
-    def test_missing_xdist_group_is_error_not_warning(self, validation_script_content: str):
+    def test_missing_xdist_group_is_error_not_warning(
+        self, validation_script_content: str
+    ):
         """Test that missing xdist_group marker is treated as ERROR not WARNING.
 
         CRITICAL: User chose "Promote warnings to errors (strict enforcement)".
@@ -1514,7 +1722,9 @@ class TestIsolationValidationStrictness:
             "  To:   self.violations.append(...)\n"
         )
 
-    def test_missing_gc_collect_is_error_not_warning(self, validation_script_content: str):
+    def test_missing_gc_collect_is_error_not_warning(
+        self, validation_script_content: str
+    ):
         """Test that missing gc.collect() is treated as ERROR not WARNING."""
         # Find where gc.collect violations are appended
         gc_collect_check = re.search(
@@ -1559,7 +1769,11 @@ class TestMakefileDependencyExtras:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1659,7 +1873,10 @@ class TestMakefileDependencyExtras:
     def test_ci_uses_dev_and_builder_extras(self, ci_workflow_content: str):
         """Verify that CI uses both dev and builder extras (baseline check)."""
         # CI should have both extras
-        assert "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content, (
+        assert (
+            "--extra dev" in ci_workflow_content
+            and "--extra builder" in ci_workflow_content
+        ), (
             "CI workflow must use both --extra dev and --extra builder\n"
             "This is the baseline that local install-dev should match\n"
             "If CI doesn't use these extras, update this test"
@@ -1683,7 +1900,11 @@ class TestPrePushDependencyValidation:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1709,7 +1930,9 @@ class TestPrePushDependencyValidation:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_pre_push_includes_uv_pip_check(self, repo_root: Path, pre_push_content: str):
+    def test_pre_push_includes_uv_pip_check(
+        self, repo_root: Path, pre_push_content: str
+    ):
         """Test that pre-push hook includes 'uv pip check' (adapted for pre-commit framework).
 
         CRITICAL: User chose to add this check. Without it, dependency conflicts
@@ -1802,7 +2025,11 @@ class TestPreCommitHookStageFlag:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1844,7 +2071,8 @@ class TestPreCommitHookStageFlag:
         # At least one pre-commit command should have --hook-stage push or --hook-stage pre-push
         # Both forms are equivalent and valid
         has_hook_stage_push = any(
-            "--hook-stage push" in cmd or "--hook-stage pre-push" in cmd for cmd in precommit_commands
+            "--hook-stage push" in cmd or "--hook-stage pre-push" in cmd
+            for cmd in precommit_commands
         )
 
         assert has_hook_stage_push, (
@@ -1897,7 +2125,11 @@ class TestContractTestMarkerParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -1934,7 +2166,12 @@ class TestContractTestMarkerParity:
         with open(ci_workflow_path, "r") as f:
             return f.read()
 
-    def test_pre_push_uses_same_marker_as_ci(self, pre_push_content: str, ci_workflow_content: str, shared_run_pre_push_tests_content: str):
+    def test_pre_push_uses_same_marker_as_ci(
+        self,
+        pre_push_content: str,
+        ci_workflow_content: str,
+        shared_run_pre_push_tests_content: str,
+    ):
         """Test that pre-push hook uses same pytest marker expression as CI.
 
         CRITICAL: Contract tests should run consistently in both local and CI.
@@ -1946,13 +2183,22 @@ class TestContractTestMarkerParity:
         # Pre-commit framework: check scripts/run_pre_push_tests.py
         if is_pre_commit_wrapper(pre_push_content):
             # Check for marker expression in consolidated script
-            marker_match = re.search(r'marker_expression\s*=\s*["\']([^"\']+)["\']', shared_run_pre_push_tests_content)
-            assert marker_match, "Could not find marker_expression in run_pre_push_tests.py"
+            marker_match = re.search(
+                r'marker_expression\s*=\s*["\']([^"\']+)["\']',
+                shared_run_pre_push_tests_content,
+            )
+            assert marker_match, (
+                "Could not find marker_expression in run_pre_push_tests.py"
+            )
 
             marker = marker_match.group(1)
             # Check for consolidated marker that includes unit tests (may have "or api or property")
             # The key is: must include "unit", must exclude "contract", must have "not llm"
-            assert "unit" in marker and "not llm" in marker and "unit and not contract" not in marker, (
+            assert (
+                "unit" in marker
+                and "not llm" in marker
+                and "unit and not contract" not in marker
+            ), (
                 f"run_pre_push_tests.py must use marker expression that includes unit tests like CI\n"
                 f"\n"
                 f"Expected marker pattern: '(unit or api or property) and not llm'\n"
@@ -1981,12 +2227,19 @@ class TestContractTestMarkerParity:
 
             for line in unit_test_lines:
                 # Skip smoke, api, property, or specific test file lines
-                if "smoke" in line or "api" in line or "property" in line or "test_" in line:
+                if (
+                    "smoke" in line
+                    or "api" in line
+                    or "property" in line
+                    or "test_" in line
+                ):
                     continue
 
                 # Check for the expected marker (may include "and not property" which is fine)
                 # We accept either "unit and not llm" or "unit and not llm and not property"
-                has_correct_marker = "unit and not llm" in line and "unit and not contract" not in line  # Must not have old marker
+                has_correct_marker = (
+                    "unit and not llm" in line and "unit and not contract" not in line
+                )  # Must not have old marker
                 assert has_correct_marker, (
                     f"Pre-push hook unit tests MUST use marker '{expected_marker}' to match CI\n"
                     f"\n"
@@ -2010,7 +2263,9 @@ class TestContractTestMarkerParity:
                     f"Found: {line.strip()}\n"
                 )
 
-    def test_makefile_uses_same_marker_as_ci(self, makefile_content: str, ci_workflow_content: str):
+    def test_makefile_uses_same_marker_as_ci(
+        self, makefile_content: str, ci_workflow_content: str
+    ):
         """Test that Makefile validate-pre-push uses same marker as CI."""
         expected_marker = "unit and not llm"
 
@@ -2040,11 +2295,15 @@ class TestContractTestMarkerParity:
         ]
 
         if not unit_test_lines:
-            pytest.skip("Could not find unit test command in Makefile (may be correct but filtered out)")
+            pytest.skip(
+                "Could not find unit test command in Makefile (may be correct but filtered out)"
+            )
 
         for line in unit_test_lines:
             # Check for correct marker (may include "and not property")
-            has_correct_marker = "unit and not llm" in line and "unit and not contract" not in line
+            has_correct_marker = (
+                "unit and not llm" in line and "unit and not contract" not in line
+            )
             assert has_correct_marker, (
                 f"Makefile validate-pre-push MUST use marker '{expected_marker}' to match CI\n"
                 f"\n"
@@ -2058,7 +2317,11 @@ class TestContractTestMarkerParity:
             )
 
     def test_all_three_sources_use_identical_marker(
-        self, pre_push_content: str, makefile_content: str, ci_workflow_content: str, shared_run_pre_push_tests_content: str
+        self,
+        pre_push_content: str,
+        makefile_content: str,
+        ci_workflow_content: str,
+        shared_run_pre_push_tests_content: str,
     ):
         """Test that pre-push hook, Makefile, and CI use IDENTICAL base markers.
 
@@ -2070,7 +2333,10 @@ class TestContractTestMarkerParity:
         # Extract marker from pre-push hook (may be pre-commit framework or legacy bash)
         if is_pre_commit_wrapper(pre_push_content):
             # Pre-commit framework: extract from scripts/run_pre_push_tests.py
-            marker_match = re.search(r'marker_expression\s*=\s*["\']([^"\']+)["\']', shared_run_pre_push_tests_content)
+            marker_match = re.search(
+                r'marker_expression\s*=\s*["\']([^"\']+)["\']',
+                shared_run_pre_push_tests_content,
+            )
             if marker_match:
                 markers_found["pre-push hook"] = marker_match.group(1)
         else:
@@ -2105,7 +2371,9 @@ class TestContractTestMarkerParity:
             and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
             and "api" not in line
             and "test_" not in line
-            and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
+            and not line.strip().startswith(
+                "echo"
+            )  # Exclude doc lines, allow pytest commands with echo output
         ]
         if unit_lines:
             for line in unit_lines:
@@ -2123,7 +2391,9 @@ class TestContractTestMarkerParity:
             and "unit" in line
             and "api" not in line
             and "test_" not in line
-            and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
+            and not line.strip().startswith(
+                "echo"
+            )  # Exclude doc lines, allow pytest commands with echo output
             # Note: tests/ check removed for CI - some CI workflows use relative paths or don't specify path
         ]
         if unit_lines:
@@ -2137,14 +2407,22 @@ class TestContractTestMarkerParity:
         # For pre-commit framework: "(unit or api or property) and not llm" is valid
         # For legacy/Makefile/CI: "unit and not llm" is the base
         all_valid = all(
-            ("unit" in marker and "not llm" in marker and "unit and not contract" not in marker)
+            (
+                "unit" in marker
+                and "not llm" in marker
+                and "unit and not contract" not in marker
+            )
             for marker in markers_found.values()
         )
 
         assert all_valid and len(markers_found) == 3, (
             "All three sources MUST contain compatible marker expressions\n"
             "\n"
-            "Found markers:\n" + "\n".join(f"  - {source}: '{marker}'" for source, marker in markers_found.items()) + "\n"
+            "Found markers:\n"
+            + "\n".join(
+                f"  - {source}: '{marker}'" for source, marker in markers_found.items()
+            )
+            + "\n"
             "\n"
             "This test enforces Codex finding #1 fix:\n"
             "  All sources must use same base marker to prevent CI surprises\n"
@@ -2174,7 +2452,11 @@ class TestCIPushStageValidatorsJob:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -2200,7 +2482,11 @@ class TestCIPushStageValidatorsJob:
         push_stage_jobs = []
         for job_name, job_config in jobs.items():
             job_str = str(job_config).lower()
-            if "--hook-stage push" in job_str or "push-stage" in job_name.lower() or "push stage" in job_str:
+            if (
+                "--hook-stage push" in job_str
+                or "push-stage" in job_name.lower()
+                or "push stage" in job_str
+            ):
                 push_stage_jobs.append(job_name)
 
         assert push_stage_jobs, (
@@ -2250,12 +2536,18 @@ class TestCIPushStageValidatorsJob:
         # Find the push-stage validators job
         push_stage_job = None
         for job_name, job_config in jobs.items():
-            if "push" in job_name.lower() and "stage" in job_name.lower() or "push-stage" in job_name.lower():
+            if (
+                "push" in job_name.lower()
+                and "stage" in job_name.lower()
+                or "push-stage" in job_name.lower()
+            ):
                 push_stage_job = job_config
                 break
 
         if not push_stage_job:
-            pytest.skip("Push-stage validators job not found (will be caught by previous test)")
+            pytest.skip(
+                "Push-stage validators job not found (will be caught by previous test)"
+            )
 
         # Check that it runs pre-commit with --hook-stage push
         job_str = str(push_stage_job)
@@ -2290,7 +2582,11 @@ class TestPostCommitHookTemplate:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -2357,7 +2653,11 @@ class TestPostCommitHookTemplate:
         template = template_match.group(1)
 
         # Should have a comment explaining the uv run usage
-        has_explanation = "project-managed" in template.lower() or "uv run" in template or "consistency" in template.lower()
+        has_explanation = (
+            "project-managed" in template.lower()
+            or "uv run" in template
+            or "consistency" in template.lower()
+        )
 
         assert has_explanation, (
             "Hook template should include comment explaining why we use 'uv run python'\n"
@@ -2388,7 +2688,11 @@ class TestHypothesisProfileParity:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -2403,7 +2707,9 @@ class TestHypothesisProfileParity:
         with open(pre_push_hook_path, "r") as f:
             return f.read()
 
-    def test_unit_tests_set_hypothesis_profile_ci(self, pre_push_content: str, shared_run_pre_push_tests_content: str):
+    def test_unit_tests_set_hypothesis_profile_ci(
+        self, pre_push_content: str, shared_run_pre_push_tests_content: str
+    ):
         """Test that unit tests phase sets HYPOTHESIS_PROFILE=ci.
 
         This ensures Hypothesis uses CI settings (100 examples) for unit tests,
@@ -2414,7 +2720,7 @@ class TestHypothesisProfileParity:
             # Check that run_pre_push_tests.py sets HYPOTHESIS_PROFILE in environment
             # Note: Default dev profile (25 examples), CI_PARITY=1 enables CI profile (100 examples)
             # But we want to ensure it's configurable and documented
-            assert 'HYPOTHESIS_PROFILE' in shared_run_pre_push_tests_content, (
+            assert "HYPOTHESIS_PROFILE" in shared_run_pre_push_tests_content, (
                 "run_pre_push_tests.py must support HYPOTHESIS_PROFILE environment variable\n"
                 "\n"
                 "Current implementation uses CI_PARITY=1 to enable CI profile (100 examples)\n"
@@ -2459,7 +2765,9 @@ class TestHypothesisProfileParity:
                     f"Found: {line.strip()}\n"
                 )
 
-    def test_unit_tests_exclude_property_marker(self, pre_push_content: str, shared_run_pre_push_tests_content: str):
+    def test_unit_tests_exclude_property_marker(
+        self, pre_push_content: str, shared_run_pre_push_tests_content: str
+    ):
         """Test that unit tests phase excludes property marker.
 
         User chose: "exclude property tests from unit test phase"
@@ -2471,8 +2779,13 @@ class TestHypothesisProfileParity:
         # Pre-commit framework: check scripts/run_pre_push_tests.py marker expression
         if is_pre_commit_wrapper(pre_push_content):
             # Extract marker expression from consolidated script
-            marker_match = re.search(r'marker_expression\s*=\s*["\']([^"\']+)["\']', shared_run_pre_push_tests_content)
-            assert marker_match, "Could not find marker_expression in run_pre_push_tests.py"
+            marker_match = re.search(
+                r'marker_expression\s*=\s*["\']([^"\']+)["\']',
+                shared_run_pre_push_tests_content,
+            )
+            assert marker_match, (
+                "Could not find marker_expression in run_pre_push_tests.py"
+            )
 
             marker = marker_match.group(1)
 
@@ -2552,7 +2865,11 @@ class TestPrePushEnvironmentSanityChecks:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -2631,7 +2948,9 @@ class TestPrePushEnvironmentSanityChecks:
 
         # Legacy bash script: should check for uv command
         has_uv_check = (
-            "command -v uv" in pre_push_content or "which uv" in pre_push_content or "uv --version" in pre_push_content
+            "command -v uv" in pre_push_content
+            or "which uv" in pre_push_content
+            or "uv --version" in pre_push_content
         )
 
         assert has_uv_check, (
@@ -2659,7 +2978,9 @@ class TestPrePushEnvironmentSanityChecks:
 
         # Should have helpful error message about installation
         has_install_help = (
-            "install" in pre_push_content.lower() and "uv" in pre_push_content or "astral.sh/uv" in pre_push_content
+            "install" in pre_push_content.lower()
+            and "uv" in pre_push_content
+            or "astral.sh/uv" in pre_push_content
         )
 
         assert has_install_help, (
@@ -2691,14 +3012,22 @@ class TestPrePushEnvironmentSanityChecks:
         # Find where .venv check happens
         venv_check_line = None
         for i, line in enumerate(lines):
-            if ".venv" in line and "not found" in line.lower() or ("if" in line and ".venv" in line):
+            if (
+                ".venv" in line
+                and "not found" in line.lower()
+                or ("if" in line and ".venv" in line)
+            ):
                 venv_check_line = i
                 break
 
         # Find where first pytest command runs
         first_pytest_line = None
         for i, line in enumerate(lines):
-            if "pytest" in line and "uv run" in line and not line.strip().startswith("#"):
+            if (
+                "pytest" in line
+                and "uv run" in line
+                and not line.strip().startswith("#")
+            ):
                 first_pytest_line = i
                 break
 
@@ -2727,7 +3056,11 @@ class TestRegressionPrevention:
     def repo_root(self) -> Path:
         """Get repository root."""
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=60,
         )
         return Path(result.stdout.strip())
 
@@ -2776,4 +3109,6 @@ class TestRegressionPrevention:
         ]
 
         for step in required_steps:
-            assert step.lower() in content.lower(), f"CONTRIBUTING.md should document '{step}' validation"
+            assert step.lower() in content.lower(), (
+                f"CONTRIBUTING.md should document '{step}' validation"
+            )

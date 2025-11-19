@@ -32,7 +32,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.meta]
 def repo_root() -> Path:
     """Get repository root directory (shared across all tests in module)."""
     result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
     )
     return Path(result.stdout.strip())
 
@@ -47,7 +51,9 @@ def test_otel_deployment_has_pod_security_context(repo_root: Path):
     - fsGroup: 10001
     - seccompProfile.type: RuntimeDefault
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     assert deployment_file.exists(), f"OTel deployment not found: {deployment_file}"
 
@@ -55,9 +61,13 @@ def test_otel_deployment_has_pod_security_context(repo_root: Path):
         # File may contain multiple YAML documents
         docs = list(yaml.safe_load_all(f))
         # Find the Deployment document
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
-    assert otel_deployment is not None, "Deployment document not found in otel-collector-deployment.yaml"
+    assert otel_deployment is not None, (
+        "Deployment document not found in otel-collector-deployment.yaml"
+    )
 
     # Navigate to pod spec
     pod_spec = otel_deployment.get("spec", {}).get("template", {}).get("spec", {})
@@ -87,7 +97,9 @@ def test_otel_deployment_has_pod_security_context(repo_root: Path):
     )
 
     # Validate runAsNonRoot
-    assert security_context.get("runAsNonRoot") is True, "Pod securityContext must set runAsNonRoot: true"
+    assert security_context.get("runAsNonRoot") is True, (
+        "Pod securityContext must set runAsNonRoot: true"
+    )
 
     # Validate runAsUser (10001 from official image)
     assert security_context.get("runAsUser") == 10001, (
@@ -96,14 +108,16 @@ def test_otel_deployment_has_pod_security_context(repo_root: Path):
     )
 
     # Validate fsGroup
-    assert (
-        security_context.get("fsGroup") == 10001
-    ), f"Pod securityContext must set fsGroup: 10001, got: {security_context.get('fsGroup')}"
+    assert security_context.get("fsGroup") == 10001, (
+        f"Pod securityContext must set fsGroup: 10001, got: {security_context.get('fsGroup')}"
+    )
 
     # Validate seccomp profile
     seccomp = security_context.get("seccompProfile")
     assert seccomp is not None, "Pod securityContext must specify seccompProfile"
-    assert seccomp.get("type") == "RuntimeDefault", f"seccompProfile.type must be RuntimeDefault, got: {seccomp.get('type')}"
+    assert seccomp.get("type") == "RuntimeDefault", (
+        f"seccompProfile.type must be RuntimeDefault, got: {seccomp.get('type')}"
+    )
 
 
 def test_otel_deployment_has_container_security_context(repo_root: Path):
@@ -117,16 +131,25 @@ def test_otel_deployment_has_container_security_context(repo_root: Path):
     - runAsUser: 10001
     - capabilities.drop: [ALL]
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
     assert otel_deployment is not None, "Deployment not found"
 
     # Find otel-collector container
-    containers = otel_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+    containers = (
+        otel_deployment.get("spec", {})
+        .get("template", {})
+        .get("spec", {})
+        .get("containers", [])
+    )
 
     otel_container = None
     for container in containers:
@@ -135,7 +158,8 @@ def test_otel_deployment_has_container_security_context(repo_root: Path):
             break
 
     assert otel_container is not None, (
-        "otel-collector container not found in deployment.\n" f"Available containers: {[c.get('name') for c in containers]}"
+        "otel-collector container not found in deployment.\n"
+        f"Available containers: {[c.get('name') for c in containers]}"
     )
 
     # Check for container-level securityContext
@@ -159,26 +183,32 @@ def test_otel_deployment_has_container_security_context(repo_root: Path):
     )
 
     # Validate each security setting
-    assert (
-        security_context.get("allowPrivilegeEscalation") is False
-    ), "Container securityContext must set allowPrivilegeEscalation: false"
+    assert security_context.get("allowPrivilegeEscalation") is False, (
+        "Container securityContext must set allowPrivilegeEscalation: false"
+    )
 
-    assert (
-        security_context.get("readOnlyRootFilesystem") is True
-    ), "Container securityContext must set readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    assert security_context.get("readOnlyRootFilesystem") is True, (
+        "Container securityContext must set readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    )
 
-    assert security_context.get("runAsNonRoot") is True, "Container securityContext must set runAsNonRoot: true"
+    assert security_context.get("runAsNonRoot") is True, (
+        "Container securityContext must set runAsNonRoot: true"
+    )
 
-    assert (
-        security_context.get("runAsUser") == 10001
-    ), f"Container securityContext must set runAsUser: 10001, got: {security_context.get('runAsUser')}"
+    assert security_context.get("runAsUser") == 10001, (
+        f"Container securityContext must set runAsUser: 10001, got: {security_context.get('runAsUser')}"
+    )
 
     # Validate capabilities
     capabilities = security_context.get("capabilities")
-    assert capabilities is not None, "Container securityContext must specify capabilities"
+    assert capabilities is not None, (
+        "Container securityContext must specify capabilities"
+    )
 
     drop_caps = capabilities.get("drop", [])
-    assert "ALL" in drop_caps, f"Container securityContext must drop ALL capabilities, got: {drop_caps}"
+    assert "ALL" in drop_caps, (
+        f"Container securityContext must drop ALL capabilities, got: {drop_caps}"
+    )
 
 
 def test_otel_has_readonly_root_filesystem(repo_root: Path):
@@ -188,20 +218,33 @@ def test_otel_has_readonly_root_filesystem(repo_root: Path):
     This is the specific finding from Trivy AVD-KSV-0014:
     "Container 'otel-collector' should set 'securityContext.readOnlyRootFilesystem' to true"
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
     assert otel_deployment is not None, "Deployment not found"
 
-    containers = otel_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+    containers = (
+        otel_deployment.get("spec", {})
+        .get("template", {})
+        .get("spec", {})
+        .get("containers", [])
+    )
 
-    otel_container = next((c for c in containers if c.get("name") == "otel-collector"), None)
+    otel_container = next(
+        (c for c in containers if c.get("name") == "otel-collector"), None
+    )
     assert otel_container is not None
 
-    readonly_filesystem = otel_container.get("securityContext", {}).get("readOnlyRootFilesystem")
+    readonly_filesystem = otel_container.get("securityContext", {}).get(
+        "readOnlyRootFilesystem"
+    )
 
     assert readonly_filesystem is True, (
         "Trivy AVD-KSV-0014: Container 'otel-collector' must set "
@@ -219,11 +262,15 @@ def test_otel_runs_as_nonroot(repo_root: Path):
     Both pod and container levels must specify runAsNonRoot: true.
     This addresses Trivy AVD-KSV-0118 finding about default security context.
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
     assert otel_deployment is not None, "Deployment not found"
 
@@ -231,14 +278,22 @@ def test_otel_runs_as_nonroot(repo_root: Path):
 
     # Check pod-level runAsNonRoot
     pod_run_as_nonroot = pod_spec.get("securityContext", {}).get("runAsNonRoot")
-    assert pod_run_as_nonroot is True, "Pod-level securityContext must set runAsNonRoot: true"
+    assert pod_run_as_nonroot is True, (
+        "Pod-level securityContext must set runAsNonRoot: true"
+    )
 
     # Check container-level runAsNonRoot
     containers = pod_spec.get("containers", [])
-    otel_container = next((c for c in containers if c.get("name") == "otel-collector"), None)
+    otel_container = next(
+        (c for c in containers if c.get("name") == "otel-collector"), None
+    )
 
-    container_run_as_nonroot = otel_container.get("securityContext", {}).get("runAsNonRoot")
-    assert container_run_as_nonroot is True, "Container-level securityContext must set runAsNonRoot: true"
+    container_run_as_nonroot = otel_container.get("securityContext", {}).get(
+        "runAsNonRoot"
+    )
+    assert container_run_as_nonroot is True, (
+        "Container-level securityContext must set runAsNonRoot: true"
+    )
 
 
 def test_otel_has_tmpfs_volumes(repo_root: Path):
@@ -251,11 +306,15 @@ def test_otel_has_tmpfs_volumes(repo_root: Path):
 
     These should be emptyDir volumes (tmpfs in memory).
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
     assert otel_deployment is not None, "Deployment not found"
 
@@ -291,16 +350,21 @@ def test_otel_has_tmpfs_volumes(repo_root: Path):
 
     # Check volume mounts
     containers = pod_spec.get("containers", [])
-    otel_container = next((c for c in containers if c.get("name") == "otel-collector"), None)
+    otel_container = next(
+        (c for c in containers if c.get("name") == "otel-collector"), None
+    )
 
     volume_mounts = otel_container.get("volumeMounts", [])
     mount_paths = [vm.get("mountPath") for vm in volume_mounts]
 
     # Checking for volume mount path "/tmp", not creating temp file
-    assert "/tmp" in mount_paths, "Missing volumeMount for /tmp directory.\n" f"Current mounts: {mount_paths}"  # nosec B108
+    assert "/tmp" in mount_paths, (
+        f"Missing volumeMount for /tmp directory.\nCurrent mounts: {mount_paths}"
+    )  # nosec B108
 
     assert "/home/otelcol" in mount_paths or "/home" in mount_paths, (
-        "Missing volumeMount for /home/otelcol or /home directory.\n" f"Current mounts: {mount_paths}"
+        "Missing volumeMount for /home/otelcol or /home directory.\n"
+        f"Current mounts: {mount_paths}"
     )
 
 
@@ -311,17 +375,28 @@ def test_otel_drops_all_capabilities(repo_root: Path):
     Security best practice: Drop all capabilities unless specifically needed.
     OTel collector doesn't need any special capabilities.
     """
-    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    deployment_file = (
+        repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
+    )
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
-        otel_deployment = next((doc for doc in docs if doc and doc.get("kind") == "Deployment"), None)
+        otel_deployment = next(
+            (doc for doc in docs if doc and doc.get("kind") == "Deployment"), None
+        )
 
     assert otel_deployment is not None, "Deployment not found"
 
-    containers = otel_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+    containers = (
+        otel_deployment.get("spec", {})
+        .get("template", {})
+        .get("spec", {})
+        .get("containers", [])
+    )
 
-    otel_container = next((c for c in containers if c.get("name") == "otel-collector"), None)
+    otel_container = next(
+        (c for c in containers if c.get("name") == "otel-collector"), None
+    )
 
     capabilities = otel_container.get("securityContext", {}).get("capabilities", {})
 
@@ -367,7 +442,10 @@ def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
     for doc in rendered_docs:
         if doc is None:
             continue
-        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "staging-otel-collector":
+        if (
+            doc.get("kind") == "Deployment"
+            and doc.get("metadata", {}).get("name") == "staging-otel-collector"
+        ):
             otel_deployment = doc
             break
 
@@ -377,26 +455,42 @@ def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
     )
 
     # Validate pod-level security context
-    pod_security_context = otel_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("securityContext", {})
+    pod_security_context = (
+        otel_deployment.get("spec", {})
+        .get("template", {})
+        .get("spec", {})
+        .get("securityContext", {})
+    )
 
-    assert pod_security_context.get("runAsNonRoot") is True, "Rendered manifest missing pod-level runAsNonRoot: true"
+    assert pod_security_context.get("runAsNonRoot") is True, (
+        "Rendered manifest missing pod-level runAsNonRoot: true"
+    )
 
     # Validate container-level security context
-    containers = otel_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
+    containers = (
+        otel_deployment.get("spec", {})
+        .get("template", {})
+        .get("spec", {})
+        .get("containers", [])
+    )
 
-    otel_container = next((c for c in containers if "otel-collector" in c.get("name", "")), None)
+    otel_container = next(
+        (c for c in containers if "otel-collector" in c.get("name", "")), None
+    )
 
     assert otel_container is not None, "OTel collector container not found"
 
     container_security_context = otel_container.get("securityContext", {})
 
-    assert (
-        container_security_context.get("readOnlyRootFilesystem") is True
-    ), "Rendered manifest missing container-level readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    assert container_security_context.get("readOnlyRootFilesystem") is True, (
+        "Rendered manifest missing container-level readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    )
 
-    assert (
-        container_security_context.get("runAsNonRoot") is True
-    ), "Rendered manifest missing container-level runAsNonRoot: true"
+    assert container_security_context.get("runAsNonRoot") is True, (
+        "Rendered manifest missing container-level runAsNonRoot: true"
+    )
 
     capabilities = container_security_context.get("capabilities", {})
-    assert "ALL" in capabilities.get("drop", []), "Rendered manifest missing capabilities.drop: [ALL]"
+    assert "ALL" in capabilities.get("drop", []), (
+        "Rendered manifest missing capabilities.drop: [ALL]"
+    )
