@@ -71,7 +71,7 @@ warn[msg] {
 }
 
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
     container := input.spec.template.spec.containers[_]
     env := container.env[_]
 
