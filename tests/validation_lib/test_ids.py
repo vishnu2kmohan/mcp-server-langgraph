@@ -62,9 +62,16 @@ LEGITIMATE_PATTERNS = [
     r"#.*OpenFGA format.*'user:[a-zA-Z0-9_-]+'",
     r'"user:[a-zA-Z0-9_-]+".*#.*OpenFGA format',
     r"'user:[a-zA-Z0-9_-]+'.*#.*OpenFGA format",
-    # Docstring examples
+    # Docstring examples (single-line)
     r'""".*user:[a-zA-Z0-9_-]+.*"""',
     r"'''.*user:[a-zA-Z0-9_-]+.*'''",
+    # Docstring example prefixes (multiline docstrings)
+    r'^\s*Example:.*["\']user:[a-zA-Z0-9_-]+',
+    r'^\s*Example:.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'^\s*>>>.*["\']user:[a-zA-Z0-9_-]+',  # Doctest format
+    r'^\s*>>>.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'^\s*\.\.\.:.*["\']user:[a-zA-Z0-9_-]+',  # Doctest continuation
+    r'^\s*\.\.\.:.*["\']apikey_[a-zA-Z0-9_-]+',
     # Comments (documentation)
     r"#.*user:[a-zA-Z0-9_-]+",
     r"#.*apikey_[a-zA-Z0-9_-]+",
