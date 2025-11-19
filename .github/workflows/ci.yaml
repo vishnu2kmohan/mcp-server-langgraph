@@ -267,6 +267,18 @@ jobs:
         }
         echo "✓ Lockfile is current and valid"
 
+    - name: Build Helm chart dependencies
+      run: |
+        # Build Helm chart dependencies if helm is available
+        # Required for tests in tests/deployment/test_helm_templates.py
+        if command -v helm &> /dev/null; then
+          echo "🔨 Building Helm chart dependencies..."
+          helm dependency build deployments/helm/mcp-server-langgraph
+          echo "✓ Helm dependencies built successfully"
+        else
+          echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
+        fi
+
     - name: Run unit tests
       run: |
         source .venv/bin/activate

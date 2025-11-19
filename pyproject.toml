@@ -97,7 +97,7 @@ dev = [
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
-    "hypothesis>=6.142.1",
+    "hypothesis>=6.148.0",
     "hypothesis-jsonschema>=0.22.1",
     # Contract testing
     "jsonschema>=4.21.0",
@@ -553,7 +553,7 @@ dict_synonyms = "Struct,NamedStruct"
 [dependency-groups]
 dev = [
     "bandit>=1.8.0",
-    "hypothesis>=6.142.1",
+    "hypothesis>=6.148.0",
     "hypothesis-jsonschema>=0.23.1",
     "mypy>=1.18.0",
     "pre-commit>=4.0.0",
