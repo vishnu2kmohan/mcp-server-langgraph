@@ -17,19 +17,16 @@ repos:
   - id: check-json
   - id: check-toml
   - id: mixed-line-ending
-- repo: https://github.com/psf/black
-  rev: 25.9.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.8.4
   hooks:
-  - id: black
+  - id: ruff
+    name: Ruff Linter (replaces isort)
     args:
-    - --line-length=127
-    language_version: python3.12
-- repo: https://github.com/pycqa/isort
-  rev: 5.13.2
-  hooks:
-  - id: isort
+    - --fix
+  - id: ruff-format
+    name: Ruff Formatter (replaces Black)
     args:
-    - --profile=black
     - --line-length=127
 - repo: https://github.com/pycqa/flake8
   rev: 7.3.0
