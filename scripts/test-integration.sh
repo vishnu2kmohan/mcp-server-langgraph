@@ -241,7 +241,16 @@ else
 
     # Run pytest directly on host (same as CI)
     # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
-    if uv run pytest -m integration -v --tb=short; then
+    # IMPORTANT: Set PostgreSQL connection parameters to match docker-compose.test.yml (port 9432)
+    # This ensures local/CI parity and prevents connection failures
+    if TESTING=true \
+       OTEL_SDK_DISABLED=true \
+       POSTGRES_HOST=localhost \
+       POSTGRES_PORT=9432 \
+       POSTGRES_DB=gdpr_test \
+       POSTGRES_USER=postgres \
+       POSTGRES_PASSWORD=postgres \
+       uv run pytest -m integration -v --tb=short; then
         END_TIME=$(date +%s)
         DURATION=$((END_TIME - START_TIME))
 
