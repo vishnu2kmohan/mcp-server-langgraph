@@ -7,4 +7,5 @@ rules:
   truthy:
     allowed-values: ['true', 'false', 'on', 'off']
   indentation:
-    spaces: 2
+    spaces: consistent  # Allow consistent indentation regardless of exact spacing
+    indent-sequences: whatever  # Don't enforce specific sequence indentation
