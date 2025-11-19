@@ -123,6 +123,17 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         import mcp_server_langgraph.api as api_module
 
         return api_module
+    elif name == "health":
+        # Allow access to health submodule for health check endpoints
+        # Used in tests/integration/test_health_check.py
+        # Prevent recursion: if health module is already being imported, return it from sys.modules
+        module_name = f"{__name__}.health"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.health as health_module
+
+        return health_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
