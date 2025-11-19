@@ -30,9 +30,9 @@ deny[msg] {
     input.kind == "ResourceQuota"
     namespace := input.metadata.namespace
 
-    # This rule would need context about defined namespaces
-    # For now, warn about non-standard namespaces
+    # Only deny if namespace is obviously wrong (not standard and not project namespace)
     not namespace_is_standard(namespace)
+    not namespace_is_project(namespace)
 
     msg := sprintf(
         "ResourceQuota '%s' references namespace '%s' which may not be defined. Ensure the namespace exists or is created first.",
@@ -44,6 +44,18 @@ deny[msg] {
 namespace_is_standard(ns) {
     standard_namespaces := {"default", "kube-system", "kube-public", "kube-node-lease"}
     standard_namespaces[ns]
+}
+
+# Helper: Check if namespace is a project namespace
+namespace_is_project(ns) {
+    # Allow project namespaces (mcp-server-langgraph and its variants)
+    startswith(ns, "mcp-server-langgraph")
+}
+
+namespace_is_project(ns) {
+    # Allow overlay-specific namespaces
+    project_namespaces := {"staging-mcp-server-langgraph", "production-mcp-server-langgraph", "dev-mcp-server-langgraph"}
+    project_namespaces[ns]
 }
 
 # Warn about resources without namespace in multi-tenant deployments
