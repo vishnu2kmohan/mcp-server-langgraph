@@ -25,7 +25,7 @@ from mcp_server_langgraph.health.database_checks import DatabaseValidator, Envir
 
 @pytest.fixture(autouse=True)
 def setup_test_environment(monkeypatch):
-    """Ensure we're in test environment for all database validation integration tests"""
+    """Ensure we're in test environment for all integration tests in this module"""
     monkeypatch.setenv("TESTING", "true")
     monkeypatch.setenv("POSTGRES_DB", "gdpr_test")
 
@@ -36,7 +36,7 @@ def setup_test_environment(monkeypatch):
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
@@ -204,8 +204,13 @@ class TestDatabaseValidationIntegration:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testdatabasevalidationfailurecases")
 class TestDatabaseValidationFailureCases:
     """Integration tests for validation failure scenarios"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_validation_with_wrong_port(self):
         """Should handle connection failure gracefully"""

@@ -23,8 +23,13 @@ from scripts.validators.file_naming_validator import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="testfilenamingvalidator")
 class TestFileNamingValidator:
     """Test file naming convention validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_lowercase_kebab_case_passes(self):
         """Valid kebab-case filenames should pass."""
@@ -176,12 +181,12 @@ class TestFileNamingValidator:
             assert any(".mdx" in error or "extension" in error.lower() for error in errors)
 
 
-@pytest.mark.xdist_group(name="file_naming_validator")
+@pytest.mark.xdist_group(name="testvalidatorcli")
 class TestValidatorCLI:
     """Test the CLI interface of the validator."""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
     def test_validator_exit_code_on_errors(self, tmp_path):
@@ -206,12 +211,12 @@ class TestValidatorCLI:
         assert len(errors) == 0
 
 
-@pytest.mark.xdist_group(name="file_naming_validator")
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Test edge cases and special scenarios."""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
     def test_empty_filename(self):

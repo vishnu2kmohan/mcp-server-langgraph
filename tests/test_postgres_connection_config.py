@@ -10,6 +10,7 @@ TDD Context:
 Following TDD: This test written FIRST to catch configuration mismatches.
 """
 
+import gc
 import os
 from pathlib import Path
 
@@ -19,8 +20,13 @@ import yaml
 
 @pytest.mark.unit
 @pytest.mark.precommit
+@pytest.mark.xdist_group(name="testpostgresconnectionconfig")
 class TestPostgresConnectionConfig:
     """Validate PostgreSQL connection configuration consistency."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_docker_compose_and_conftest_use_same_password(self):
         """

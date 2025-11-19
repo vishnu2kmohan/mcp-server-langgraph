@@ -36,8 +36,13 @@ from mcp_server_langgraph.health.database_checks import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="testenvironmentdetection")
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_detect_environment_from_ENVIRONMENT_variable(self):
         """Should detect environment from ENVIRONMENT variable"""
@@ -118,9 +123,13 @@ class TestEnvironmentDetection:
             assert validator.environment == Environment.TEST
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.xdist_group(name="testexpecteddatabasesconfiguration")
 class TestExpectedDatabasesConfiguration:
     """Tests for expected database configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_expected_databases_dev_environment(self):
         """Should return databases without _test suffix in dev environment"""
@@ -408,9 +417,13 @@ class TestDatabaseValidation:
             assert "Failed to connect" in result.errors[0]
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.xdist_group(name="testoverallvalidation")
 class TestOverallValidation:
     """Tests for overall validation of all databases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_validate_all_databases_when_all_valid(self):
@@ -488,9 +501,13 @@ class TestOverallValidation:
             assert "openfga warning 1" in result.warnings
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.xdist_group(name="testvalidationresultserialization")
 class TestValidationResultSerialization:
     """Tests for validation result serialization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validation_result_to_dict(self):
         """Should serialize validation result to dictionary"""
@@ -587,12 +604,12 @@ class TestConvenienceFunction:
             assert result.is_valid
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.xdist_group(name="testdatabasevalidationresultproperty")
 class TestDatabaseValidationResultProperty:
     """Tests for DatabaseValidationResult.is_valid property"""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
     def test_is_valid_when_exists_and_no_errors(self):
