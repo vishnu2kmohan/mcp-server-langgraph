@@ -1,7 +1,7 @@
 # ArgoCD Multi-Cluster Setup for GCP (Dev, Staging, Production)
 #
 # TEMPLATE FILE: Replace the following before deploying:
-# - YOUR_PROJECT_ID → your GCP project ID
+# - ${GCP_PROJECT_ID} → your GCP project ID
 # - GCP_*_CLUSTER_ENDPOINT → actual cluster API endpoints
 #
 # ==============================================================================
@@ -23,7 +23,7 @@ spec:
             namespace: mcp-dev
             overlay: dev-gke
             replicas: "1"
-            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
+            project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
           - cluster: gcp-staging
@@ -31,7 +31,7 @@ spec:
             overlay: staging-gke
             namespace: mcp-staging
             replicas: "2"
-            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
+            project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
           - cluster: gcp-production
@@ -39,7 +39,7 @@ spec:
             overlay: production-gke
             namespace: mcp-production
             replicas: "3"
-            project: YOUR_PROJECT_ID  # TEMPLATE: Replace with your GCP project ID
+            project: ${GCP_PROJECT_ID}  # TEMPLATE: Replace with your GCP project ID
             region: us-central1
 
   template:

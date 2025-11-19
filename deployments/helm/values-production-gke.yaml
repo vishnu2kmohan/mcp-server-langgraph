@@ -6,7 +6,7 @@
 # Usage:
 #   helm install mcp-server ./deployments/helm/mcp-server-langgraph \
 #     -f deployments/helm/values-production-gke.yaml \
-#     --set gcp.projectId=YOUR_PROJECT_ID \
+#     --set gcp.projectId=${GCP_PROJECT_ID} \
 #     --namespace production-mcp-server-langgraph \
 #     --create-namespace
 
