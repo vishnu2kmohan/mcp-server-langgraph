@@ -1364,9 +1364,8 @@ repos:
       '
   - id: check-test-memory-safety
     name: Check Test Memory Safety (pytest-xdist OOM prevention)
-    entry: python scripts/check_test_memory_safety.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/check_test_memory_safety.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1409,9 +1408,8 @@ repos:
       '
   - id: check-async-mock-usage
     name: Check Async Mock Usage (prevent hanging tests)
-    entry: python scripts/check_async_mock_usage.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/check_async_mock_usage.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1448,9 +1446,8 @@ repos:
       '
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
-    entry: python scripts/check_async_mock_configuration.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/check_async_mock_configuration.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1498,9 +1495,8 @@ repos:
       '
   - id: validate-test-ids
     name: Validate Test IDs (prevent pytest-xdist pollution)
-    entry: python scripts/validate_test_ids.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validate_test_ids.py
+    language: system
     files: ^tests/.*\.py$
     pass_filenames: true
     always_run: false
