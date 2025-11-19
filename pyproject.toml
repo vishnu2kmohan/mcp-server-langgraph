@@ -324,20 +324,49 @@ select = [
 
 # Ignore specific rules that conflict with formatter or are too strict
 ignore = [
+    "E402",    # Module level import not at top - TODO: refactor sys.path manipulation
     "E501",    # Line too long (handled by formatter)
     "RET504",  # Unnecessary assignment before return (can hurt readability)
+    "SIM102",  # Nested if statements - TODO: combine incrementally
+    "SIM103",  # Return condition directly - TODO: simplify incrementally
     "SIM108",  # Use ternary operator instead of if-else (sometimes clearer as is)
+    "SIM105",  # Use contextlib.suppress - TODO: migrate incrementally
+    "SIM118",  # Use `key in dict` - TODO: migrate incrementally
     "ARG001",  # Unused function argument (common in callbacks/interfaces)
     "ARG002",  # Unused method argument (common in abstract methods)
+    "UP035",   # typing.Dict/List deprecated - TODO: migrate incrementally
+    "UP038",   # isinstance with tuple - removed in newer Ruff, ignore warning
+    "PTH100",  # os.path.abspath -> Path.resolve() - TODO: migrate incrementally
+    "PTH103",  # os.makedirs -> Path.mkdir() - TODO: migrate incrementally
+    "PTH107",  # os.remove -> Path.unlink() - TODO: migrate incrementally
+    "PTH108",  # os.unlink -> Path.unlink() - TODO: migrate incrementally
+    "PTH110",  # os.path.exists -> Path.exists() - TODO: migrate incrementally
+    "PTH112",  # os.path.isdir -> Path.is_dir() - TODO: migrate incrementally
+    "PTH113",  # os.path.isfile -> Path.is_file() - TODO: migrate incrementally
+    "PTH116",  # os.stat -> Path.stat() - TODO: migrate incrementally
+    "PTH118",  # os.path.join -> Path / operator - TODO: migrate incrementally
+    "PTH119",  # os.path.basename -> Path.name - TODO: migrate incrementally
+    "PTH120",  # os.path.dirname -> Path.parent - TODO: migrate incrementally
+    "PTH123",  # open() -> Path.open() - TODO: migrate incrementally
+    "PTH207",  # glob.glob -> Path.glob() - TODO: migrate incrementally
+    "SIM117",  # Nested with statements - TODO: combine incrementally
+    "N802",    # Function name lowercase - TODO: fix test names incrementally
+    "N806",    # Variable name lowercase in function - TODO: fix incrementally
+    "B007",    # Unused loop variable - TODO: rename to _ incrementally
+    "B017",    # pytest.raises(Exception) - TODO: use specific exceptions incrementally
+    "B018",    # Useless expression - TODO: review incrementally
+    "B904",    # raise without from clause - TODO: improve exception handling incrementally
+    "ARG005",  # Unused lambda argument - TODO: review incrementally
 ]
 
 # Per-file ignores (migrated from Flake8 + additions for SCIM compliance)
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
-"tests/*" = ["F401", "F811", "S101", "ARG001", "ARG002"]  # Allow unused args in test fixtures
+"tests/*" = ["F401", "F811", "S101", "ARG001", "ARG002", "B008"]  # Allow unused args and Depends() in tests
+"tests/meta/*" = ["C901"]  # Meta-tests are inherently complex, defer refactoring
 "conftest.py" = ["F401", "F811"]
 "*/migrations/*" = ["E501", "F401"]
-"scripts/*" = ["F401", "F541", "E722", "C901", "ARG001"]
+"scripts/*" = ["F401", "F541", "E722", "C901", "ARG001", "N999"]  # N999: Allow hyphenated script names
 # FastAPI uses Depends() and Query() in default arguments (correct usage, not a bug)
 "src/mcp_server_langgraph/api/*" = ["B008"]
 "src/mcp_server_langgraph/monitoring/cost_api.py" = ["B008"]
