@@ -86,6 +86,7 @@ EXEMPT_FILES = [
     "worker_safe_ids.py",  # Utility module with docstrings showing anti-patterns and solutions
     "test_id_pollution_prevention.py",  # Meta-test that tests this validation script
     "test_openfga_client.py",  # Unit tests for OpenFGA client library interface (uses mocked data)
+    "api_fixtures.py",  # Shared fixtures with docstrings showing example ID patterns
     # Regression tests (documentation/pattern examples - not production tests)
     "test_pytest_xdist_isolation.py",  # Documents FastAPI dependency override patterns
     "test_bearer_scheme_isolation.py",  # Documents bearer_scheme singleton isolation patterns
