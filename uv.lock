@@ -2781,14 +2781,12 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
-    { name = "pytest-docker-compose-v2" },
     { name = "pytest-mock" },
     { name = "pytest-split" },
     { name = "pytest-testmon" },
     { name = "pytest-timeout" },
     { name = "pytest-watch" },
     { name = "pytest-xdist" },
-    { name = "python-on-whales" },
     { name = "ruff" },
     { name = "schemathesis" },
     { name = "toml" },
@@ -2928,7 +2926,6 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.1.0" },
     { name = "pytest-benchmark", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0" },
-    { name = "pytest-docker-compose-v2", marker = "extra == 'dev'", specifier = ">=0.1.2" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12.0" },
     { name = "pytest-split", marker = "extra == 'dev'", specifier = ">=0.9.0" },
     { name = "pytest-testmon", marker = "extra == 'dev'", specifier = ">=2.1.0" },
@@ -2938,7 +2935,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "python-json-logger", specifier = ">=4.0.0" },
     { name = "python-keycloak", specifier = ">=5.8.1" },
-    { name = "python-on-whales", marker = "extra == 'dev'", specifier = ">=0.74.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "qdrant-client", specifier = ">=1.15.1" },
     { name = "redis", extras = ["hiredis"], specifier = ">=6.4.0" },
@@ -4574,19 +4570,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-docker-compose-v2"
-version = "0.1.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-    { name = "python-on-whales" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/03/db/e2924f62d34b4bf6cd5f30daf826db8c92b19adf7d84ed867b1d0c7b8fa0/pytest-docker-compose-v2-0.1.2.tar.gz", hash = "sha256:0315c8d9f7f84b5a1d80786d1fc78da4a787ea31e5a10c534c9f9c10a75b11db", size = 17743, upload-time = "2024-12-11T18:57:17.963Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/21/36002d6a3a3ea3261239d505ab6de95fadb5653599636885fe62a3e38e3d/pytest_docker_compose_v2-0.1.2-py3-none-any.whl", hash = "sha256:1f94dab2bf1b8b4e7d2b6315d4bb99988b70be33f937ef91b3d3d8a2ce87cf05", size = 12849, upload-time = "2024-12-11T18:57:16.24Z" },
-]
-
-[[package]]
 name = "pytest-mock"
 version = "3.15.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4741,19 +4724,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f3/87/f44d7c9f274c7ee665a29b885ec97089ec5dc034c7f3fafa03da9e39a09e/python_multipart-0.0.20.tar.gz", hash = "sha256:8dd0cab45b8e23064ae09147625994d090fa46f5b0d1e13af944c331a7fa9d13", size = 37158, upload-time = "2024-12-16T19:45:46.972Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/45/58/38b5afbc1a800eeea951b9285d3912613f2603bdf897a4ab0f4bd7f405fc/python_multipart-0.0.20-py3-none-any.whl", hash = "sha256:8a62d3a8335e06589fe01f2a3e178cdcc632f3fbe0d492ad9ee0ec35aab1f104", size = 24546, upload-time = "2024-12-16T19:45:44.423Z" },
-]
-
-[[package]]
-name = "python-on-whales"
-version = "0.79.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pydantic" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/51/f5/3a283762a9528dea6c666d28ae4c47cc14ad4ce9994ee976852dd0cb166f/python_on_whales-0.79.0.tar.gz", hash = "sha256:919bba304cc04db4b75cdd7fb14c0a8fea6ebeafacf7989f6956641cb58210e0", size = 114675, upload-time = "2025-10-24T09:07:02.81Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/f5/b8cf36274244c12fa1535a62fafdc72c89e8fe965ef1477a9279c09aa2f6/python_on_whales-0.79.0-py3-none-any.whl", hash = "sha256:4a39ab107a4e740e4302c853c0efc5ced4b4048f55acbb959a2faf53b7003c27", size = 118821, upload-time = "2025-10-24T09:07:01.668Z" },
 ]
 
 [[package]]

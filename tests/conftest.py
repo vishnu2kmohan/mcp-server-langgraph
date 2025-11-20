@@ -1071,8 +1071,9 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     # Keycloak (takes longer to start)
     if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
         pytest.skip("Keycloak test service not available - run 'make test-integration'")
-    # Additional check for Keycloak
-    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/health/ready", timeout=10):
+    # Additional check for Keycloak - use /realms/master endpoint (standard realm discovery)
+    # Keycloak 26.x doesn't expose /health/ready, but /realms/master returns 200 when ready
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/realms/master", timeout=10):
         pytest.skip("Keycloak health check failed - ensure keycloak-test container is healthy")
     logging.info("✓ Keycloak ready")
 
