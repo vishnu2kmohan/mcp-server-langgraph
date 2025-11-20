@@ -38,7 +38,7 @@ services:
   # ==============================================================================
 
   postgres-test:
-    image: postgres:16-alpine
+    image: postgres:16.8-alpine
     container_name: mcp-postgres-test
     environment:
       POSTGRES_USER: postgres
@@ -225,7 +225,7 @@ services:
   # ==============================================================================
 
   qdrant-test:
-    image: qdrant/qdrant:v1.15.1
+    image: qdrant/qdrant:v1.15.5
     container_name: mcp-qdrant-test
     ports:
       - "9333:6333"  # HTTP API
