@@ -133,7 +133,7 @@ def main():
                     f"  ✓ {file_path.relative_to(directory)}: {before} H1s → {after} H1s ({removed} removed, headings adjusted)"
                 )
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Files processed: {len(mdx_files)}")
     print(f"  Files modified: {total_modified}")
     print(f"  H1s before: {total_h1s_before}")

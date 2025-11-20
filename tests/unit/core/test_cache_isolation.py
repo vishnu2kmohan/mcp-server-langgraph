@@ -12,8 +12,6 @@ Expected to FAIL until:
 2. flushdb() replaced with pattern-based deletion (cache.py)
 """
 
-import gc
-import os
 from unittest.mock import MagicMock, patch
 
 import pytest

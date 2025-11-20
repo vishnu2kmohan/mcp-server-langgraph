@@ -4,8 +4,6 @@ Test user_id normalization for handling multiple formats.
 Ensures that both plain usernames and OpenFGA-prefixed IDs work correctly.
 """
 
-import gc
-
 import pytest
 
 from mcp_server_langgraph.auth.middleware import normalize_user_id

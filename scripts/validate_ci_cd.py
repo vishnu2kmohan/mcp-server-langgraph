@@ -18,6 +18,7 @@ This script prevents issues like:
 
 Created after 2025-11-12 CI/CD failure incident.
 """
+
 import argparse
 import subprocess
 import sys
@@ -256,7 +257,9 @@ class CICDValidator:
         # Filter out markers that are just partial matches (like 'foo' from conftest, 'requires_' prefix)
         # Only consider markers that appear as full @pytest.mark.marker_name decorators
         valid_used_markers = {
-            m for m in used_markers if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
+            m
+            for m in used_markers
+            if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
         }
 
         unregistered = valid_used_markers - registered_markers - builtin_markers
@@ -338,7 +341,7 @@ class CICDValidator:
 
                 # Auto-fix if requested
                 if self.auto_fix and result.fix_command:
-                    print_info(f"  Attempting auto-fix...")
+                    print_info("  Attempting auto-fix...")
                     try:
                         # SECURITY: shell=True is acceptable here because:
                         # 1. fix_command values are hardcoded in this script, not user input

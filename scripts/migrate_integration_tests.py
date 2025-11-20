@@ -206,7 +206,7 @@ def migrate_test_file(source: Path, target: Path, dry_run: bool = False) -> bool
         return False
 
     if dry_run:
-        print(f"  [DRY RUN] Would move:")
+        print("  [DRY RUN] Would move:")
         print(f"    {source.relative_to(source.parent.parent.parent)}")
         print(f"    → {target.relative_to(target.parent.parent.parent)}")
         return True

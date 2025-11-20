@@ -45,14 +45,12 @@ def _filtered_atexit_register(func, *args, **kwargs):
 # Replace atexit.register before any litellm imports
 atexit.register = _filtered_atexit_register
 
-import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
-from typing import AsyncGenerator, Generator  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
@@ -348,8 +346,6 @@ def reset_dependency_singletons():
     See: tests/regression/test_auth_middleware_isolation.py
     """
     yield
-
-    import sys
 
     # Reset all dependency singletons to ensure clean state for next test
     try:

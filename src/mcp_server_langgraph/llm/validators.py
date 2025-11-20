@@ -163,7 +163,10 @@ class LLMValidator:
                     empty_data = None
 
                 return ValidatedResponse(
-                    data=empty_data, raw_content=content, validation_success=False, validation_errors=errors  # type: ignore[arg-type]
+                    data=empty_data,
+                    raw_content=content,
+                    validation_success=False,
+                    validation_errors=errors,  # type: ignore[arg-type]
                 )
 
             except Exception as e:

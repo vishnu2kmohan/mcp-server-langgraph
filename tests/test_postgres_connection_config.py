@@ -10,7 +10,6 @@ TDD Context:
 Following TDD: This test written FIRST to catch configuration mismatches.
 """
 
-import os
 from pathlib import Path
 
 import pytest

@@ -109,7 +109,7 @@ def main():
             total_modifications += mods
             print(f"Fixed {test_file.relative_to(repo_root)}: {mods} call(s)")
 
-    print(f"\n=== SUMMARY ===")
+    print("\n=== SUMMARY ===")
     print(f"Modified {total_files_modified} file(s)")
     print(f"Fixed {total_modifications} subprocess.run() call(s)")
 

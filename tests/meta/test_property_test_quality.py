@@ -9,7 +9,6 @@ Purpose: Prevent regression of Codex Finding #9 (property tests with missing ass
 
 import ast
 import gc
-import os
 from pathlib import Path
 
 import pytest

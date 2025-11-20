@@ -10,7 +10,6 @@ TDD Approach (RED → GREEN → REFACTOR):
 3. REFACTOR: Improve Docker build process while keeping tests green
 """
 
-import gc
 from pathlib import Path
 
 import pytest
@@ -83,9 +82,7 @@ def test_docker_python_path_consistency():
 
                 is_configured = has_path_variable or has_conditional or uses_simple_python
 
-                assert (
-                    is_configured
-                ), f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
+                assert is_configured, f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
 
 
 def test_docker_variant_matrix_complete():

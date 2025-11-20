@@ -28,7 +28,7 @@ Environment Variables:
 import asyncio
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
 
@@ -139,7 +139,7 @@ async def configure_ldap_user_federation(
     }
 
     component_id = await keycloak_admin.create_component(realm_name, component_config)
-    print(f"✓ LDAP user federation configured")
+    print("✓ LDAP user federation configured")
 
     return component_id
 

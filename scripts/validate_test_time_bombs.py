@@ -172,7 +172,7 @@ def main():
     warnings = [i for i in all_issues if i["severity"] == "warning"]
 
     if errors or warnings:
-        print(f"\n🔍 Test Time Bomb Detection Report")
+        print("\n🔍 Test Time Bomb Detection Report")
         print(f"Files checked: {files_checked}")
         print(f"Issues found: {len(errors)} errors, {len(warnings)} warnings\n")
 

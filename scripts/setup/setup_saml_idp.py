@@ -269,11 +269,11 @@ async def main():
         print("✓ SAML identity provider setup completed successfully!")
         print("=" * 70)
         print("\nNext steps:")
-        print(f"1. Import SAML metadata in Keycloak Admin Console")
+        print("1. Import SAML metadata in Keycloak Admin Console")
         print(f"   - Identity Providers → {saml_alias} → Import from URL/file")
-        print(f"2. Test SAML SSO flow")
-        print(f"3. Verify attribute mapping")
-        print(f"4. Configure account linking if needed")
+        print("2. Test SAML SSO flow")
+        print("3. Verify attribute mapping")
+        print("4. Configure account linking if needed")
         print("=" * 70)
 
         return 0

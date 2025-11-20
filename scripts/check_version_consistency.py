@@ -158,8 +158,8 @@ def main():
         print()
 
     print(f"\n📊 Summary: {total_issues} outdated version references in {len(issues)} files")
-    print(f"\n💡 Tip: Review each reference to determine if it should be updated.")
-    print(f"   Some references (examples, historical) may be intentionally older.")
+    print("\n💡 Tip: Review each reference to determine if it should be updated.")
+    print("   Some references (examples, historical) may be intentionally older.")
 
     if args.fix:
         print("\n⚠️  Auto-fix not implemented yet. Manual review recommended.")

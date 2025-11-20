@@ -31,7 +31,6 @@ References:
 """
 
 from typing import Any, Callable, Dict
-from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import FastAPI

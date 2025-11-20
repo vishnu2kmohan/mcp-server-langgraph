@@ -122,7 +122,6 @@ class TestWorkflowValidation:
                 for i, step in enumerate(steps):
                     # Check if this is a download-artifact with continue-on-error
                     if step.get("uses", "").startswith("actions/download-artifact") and step.get("continue-on-error") is True:
-
                         # Look at next few steps for file operations without checks
                         artifact_name = step.get("with", {}).get("name", "unknown")
                         path = step.get("with", {}).get("path", "")

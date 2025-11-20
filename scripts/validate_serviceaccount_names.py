@@ -13,6 +13,7 @@ Returns:
     0 if all ServiceAccount names are consistent
     1 if naming inconsistencies are found
 """
+
 import sys
 from pathlib import Path
 from typing import List, Set, Tuple

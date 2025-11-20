@@ -27,7 +27,7 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 
 class Colors:
@@ -388,7 +388,7 @@ def generate_index(dry_run: bool = False) -> bool:
 
         if dry_run:
             print(f"{Colors.YELLOW}Dry run - would write to {readme_path}{Colors.RESET}")
-            print(f"\nPreview (first 20 lines):\n")
+            print("\nPreview (first 20 lines):\n")
             for line in content.splitlines()[:20]:
                 print(f"  {line}")
             print("  ...")

@@ -96,12 +96,12 @@ def main():
             total_modifications += len(line_numbers)
             print(f"✓ {test_file.relative_to(tests_dir)}: Added timeout to {len(line_numbers)} calls")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Modified files: {len(modified_files)}")
     print(f"  Total timeout parameters added: {total_modifications}")
 
     if modified_files:
-        print(f"\nModified files:")
+        print("\nModified files:")
         for file in modified_files:
             print(f"  - {file}")
 

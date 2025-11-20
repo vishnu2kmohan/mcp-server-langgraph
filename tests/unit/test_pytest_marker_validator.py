@@ -11,7 +11,6 @@ Following TDD: Tests ensure validator prevents marker registration issues.
 
 import gc
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest

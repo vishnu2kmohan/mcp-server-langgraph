@@ -24,7 +24,7 @@ Usage:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 
 class MemorySafetyAnalyzer(ast.NodeVisitor):

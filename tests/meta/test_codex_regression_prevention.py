@@ -12,7 +12,7 @@ import ast
 import gc
 import subprocess
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Tuple
 
 import pytest
 

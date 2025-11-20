@@ -14,7 +14,7 @@ Usage:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List
 
 
 def fix_file(file_path: Path) -> bool:

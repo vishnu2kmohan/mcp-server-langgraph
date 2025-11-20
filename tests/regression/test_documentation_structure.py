@@ -16,7 +16,7 @@ Related: GitHub Issues #75-80
 import gc
 import json
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict
 
 import pytest
 

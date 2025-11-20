@@ -12,7 +12,6 @@ The suppression should be documented and scoped to avoid hiding real security is
 Reference: Deploy to GKE Staging workflow Trivy false positives
 """
 
-import gc
 from pathlib import Path
 
 import pytest

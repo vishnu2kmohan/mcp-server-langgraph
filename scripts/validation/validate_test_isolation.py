@@ -19,7 +19,6 @@ See: tests/PYTEST_XDIST_BEST_PRACTICES.md
 
 import argparse
 import ast
-import re
 import sys
 from pathlib import Path
 from typing import List, Tuple

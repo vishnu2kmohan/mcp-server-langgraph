@@ -79,10 +79,9 @@ class TestGitHubActionsVersions:
                 line_numbers = [i + 1 for i, line in enumerate(lines) if invalid_version in line]
                 violations.append((workflow_file.name, line_numbers))
 
-        assert (
-            not violations
-        ), f"Found invalid astral-sh/setup-uv@v7.1.1 in {len(violations)} file(s). " f"Should be v7.1.0 or v7:\n" + "\n".join(
-            [f"  - {name}: lines {lines}" for name, lines in violations]
+        assert not violations, (
+            f"Found invalid astral-sh/setup-uv@v7.1.1 in {len(violations)} file(s). "
+            f"Should be v7.1.0 or v7:\n" + "\n".join([f"  - {name}: lines {lines}" for name, lines in violations])
         )
 
     def test_actions_cache_version_is_valid(self, all_workflow_files: List[Path]):

@@ -35,9 +35,6 @@ References:
 - ADR: Single shared test infrastructure with logical isolation
 """
 
-import gc
-import os
-
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI

@@ -9,11 +9,10 @@ Tests validate that:
 """
 
 import gc
-from pathlib import Path
 
 import pytest
 
-from scripts.validators.mdx_extension_validator import ExtensionError, InvalidExtensionError, MDXExtensionValidator
+from scripts.validators.mdx_extension_validator import InvalidExtensionError, MDXExtensionValidator
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

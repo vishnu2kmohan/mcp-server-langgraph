@@ -9,8 +9,6 @@ rather than "allowlist" or "unrestricted". Users must explicitly opt-in to netwo
 Expected to FAIL until core/config.py:216 is fixed to default to "none".
 """
 
-import gc
-
 import pytest
 
 # Mark as unit test to ensure it runs in CI

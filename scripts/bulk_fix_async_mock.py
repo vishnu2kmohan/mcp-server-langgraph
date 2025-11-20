@@ -33,7 +33,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import Tuple
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -255,8 +255,8 @@ def transform_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
         # Restore from backup
         try:
             shutil.copy2(backup_path, file_path)
-            logger.info(f"  Restored from backup")
-        except:
+            logger.info("  Restored from backup")
+        except Exception:
             pass
         return 0, False
 

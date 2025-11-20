@@ -181,10 +181,9 @@ class TestMDXSyntax:
             if re.search(r"<!--", content_no_code):
                 files_with_html_comments.append(mdx_file.relative_to(PROJECT_ROOT))
 
-        assert (
-            not files_with_html_comments
-        ), "MDX files with HTML comments outside code blocks (use {/* */} instead):\n" + "\n".join(
-            f"  - {f}" for f in sorted(files_with_html_comments)
+        assert not files_with_html_comments, (
+            "MDX files with HTML comments outside code blocks (use {/* */} instead):\n"
+            + "\n".join(f"  - {f}" for f in sorted(files_with_html_comments))
         )
 
     def test_jsx_comments_are_properly_closed(self):
@@ -373,8 +372,7 @@ class TestDocumentationCompleteness:
             if line_count < 50:
                 inadequate_readmes.append(f"{readme_path.relative_to(PROJECT_ROOT)} ({line_count} lines, minimum 50)")
 
-        assert (
-            not inadequate_readmes
-        ), "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n" + "\n".join(
-            f"  - {f}" for f in sorted(inadequate_readmes)
+        assert not inadequate_readmes, (
+            "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n"
+            + "\n".join(f"  - {f}" for f in sorted(inadequate_readmes))
         )

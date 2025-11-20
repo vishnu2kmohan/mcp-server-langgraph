@@ -11,7 +11,6 @@ Critical issue prevented:
   that don't exist, causing "bad address" errors and infinite wait loops.
 """
 
-import gc
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Set

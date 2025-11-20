@@ -2,7 +2,7 @@
 
 import gc
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import jwt
 import pytest

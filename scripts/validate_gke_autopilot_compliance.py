@@ -13,11 +13,10 @@ Exit codes:
     1: Validation failures found
 """
 
-import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import yaml
 

@@ -30,8 +30,8 @@ References:
 
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Literal, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Dict, Generator, Literal
+from unittest.mock import AsyncMock
 
 # ==============================================================================
 # OpenFGA Mock Factories

@@ -544,7 +544,6 @@ class TestAPIKeyEndpointAuthorization:
 
     def test_create_without_auth(self, monkeypatch):
         """Test creating API key without authentication fails"""
-        import os
 
         from fastapi import FastAPI
 

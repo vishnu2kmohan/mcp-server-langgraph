@@ -254,7 +254,7 @@ def fix_yaml_file(file_path: Path) -> bool:
             docs = list(yaml.load_all(f))
 
         if not docs or all(d is None for d in docs):
-            print(f"  ⚠️  Skipped (empty)")
+            print("  ⚠️  Skipped (empty)")
             return False
 
         # Fix each document
@@ -273,10 +273,10 @@ def fix_yaml_file(file_path: Path) -> bool:
                             f.write("---\n")
                         yaml.dump(doc, f)
 
-            print(f"  ✅ Fixed")
+            print("  ✅ Fixed")
             return True
         else:
-            print(f"  ℹ️  No changes needed")
+            print("  ℹ️  No changes needed")
             return False
 
     except Exception as e:

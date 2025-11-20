@@ -9,7 +9,6 @@ Following TDD principles - these tests are written FIRST, before implementation.
 
 import gc
 import subprocess
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -167,7 +166,6 @@ class TestCLIAvailabilityFixtures:
         """Verify docker_compose_available fixture checks docker compose functionality."""
         # Test the logic directly by importing and checking
         # We can't test the fixture execution directly, but we can test the pattern
-        import subprocess
 
         # Mock successful docker compose
         def mock_run_success(*args, **kwargs):

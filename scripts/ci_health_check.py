@@ -32,7 +32,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # Terminal colors for output
 RED = "\033[91m"

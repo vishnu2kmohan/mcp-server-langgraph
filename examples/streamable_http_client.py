@@ -6,6 +6,7 @@ This example demonstrates the secure authentication flow:
 1. Login with username/password to get JWT token
 2. Use token for all subsequent tool calls
 """
+
 import asyncio
 import datetime
 import json

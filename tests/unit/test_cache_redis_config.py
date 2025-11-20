@@ -16,7 +16,6 @@ Created to ensure Redis cache configuration is validated before production deplo
 
 import gc
 import os
-from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

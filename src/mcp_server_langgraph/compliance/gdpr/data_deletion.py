@@ -83,7 +83,12 @@ class DataDeletionService:
             logger.error(error_msg, exc_info=True)
 
     async def _safe_anonymize(  # type: ignore[no-untyped-def]
-        self, operation_name: str, anonymize_func, user_id: str, anonymized_items: dict, errors: list  # type: ignore[type-arg]
+        self,
+        operation_name: str,
+        anonymize_func,
+        user_id: str,
+        anonymized_items: dict,
+        errors: list,  # type: ignore[type-arg]
     ) -> None:
         """
         Safely execute an anonymization operation with error handling

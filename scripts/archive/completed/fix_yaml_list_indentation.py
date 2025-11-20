@@ -6,7 +6,6 @@ This is a conservative approach that only fixes the specific indentation
 pattern identified by yamllint: list items indented 2 spaces less than expected.
 """
 
-import re
 import sys
 from pathlib import Path
 
@@ -75,10 +74,10 @@ def fix_yaml_file(file_path: Path) -> bool:
         if fixed_content != original_content:
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(fixed_content)
-            print(f"  ✅ Fixed")
+            print("  ✅ Fixed")
             return True
         else:
-            print(f"  ℹ️  No changes needed")
+            print("  ℹ️  No changes needed")
             return False
 
     except Exception as e:
@@ -134,7 +133,7 @@ def main():
         if fix_yaml_file(file_path):
             fixed_count += 1
 
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  ✅ Fixed: {fixed_count}")
     print(f"  ❌ Errors: {error_count}")
     print(f"  📁 Total: {len(files_to_fix)}")

@@ -13,8 +13,6 @@ The correct approach is to:
 Reference: Codex finding - Deploy to GKE Staging (run 19250053057) failures
 """
 
-import gc
-import re
 from pathlib import Path
 
 import pytest

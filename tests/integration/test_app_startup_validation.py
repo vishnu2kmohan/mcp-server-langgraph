@@ -140,7 +140,6 @@ class TestFastAPIStartupValidation:
         This test validates Bug Fix #3: ServicePrincipalManager must guard
         all OpenFGA operations and not crash when OpenFGA is disabled.
         """
-        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
@@ -444,7 +443,6 @@ class TestRegressionPrevention:
         """
         Regression test for Bug #3: ServicePrincipalManager accepts Optional[OpenFGAClient].
         """
-        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 

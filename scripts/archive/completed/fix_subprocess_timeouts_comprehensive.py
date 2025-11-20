@@ -126,7 +126,7 @@ def main():
             total_modifications += mods
             print(f"✓ {test_file.relative_to(tests_dir)}: Added {mods} timeout parameter(s)")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Modified files: {total_modified_files}")
     print(f"  Total timeout parameters added: {total_modifications}")
 

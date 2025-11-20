@@ -18,7 +18,6 @@ import gc
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 

@@ -8,7 +8,7 @@ Target coverage: 85%+ on src/mcp_server_langgraph/mcp/server_stdio.py
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage

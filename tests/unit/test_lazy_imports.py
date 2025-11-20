@@ -7,7 +7,6 @@ preventing ModuleNotFoundError for minimal installations.
 
 import gc
 import sys
-from unittest.mock import MagicMock
 
 import pytest
 

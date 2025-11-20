@@ -2,6 +2,7 @@
 """
 Setup script for Infisical secrets management
 """
+
 import os
 
 from mcp_server_langgraph.secrets.manager import SecretsManager

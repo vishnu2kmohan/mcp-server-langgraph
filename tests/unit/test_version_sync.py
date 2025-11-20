@@ -8,7 +8,6 @@ Ensures that version is consistent across:
 - observability telemetry
 """
 
-import gc
 import sys
 from pathlib import Path
 

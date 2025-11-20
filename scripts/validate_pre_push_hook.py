@@ -27,7 +27,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import yaml
 
@@ -179,7 +179,7 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
 
     # Check 2: Is executable
     if not os.access(pre_push_path, os.X_OK):
-        errors.append(f"❌ Pre-push hook exists but is not executable\n" f"   Fix: chmod +x .git/hooks/pre-push")
+        errors.append("❌ Pre-push hook exists but is not executable\n" "   Fix: chmod +x .git/hooks/pre-push")
 
     # Read hook content
     with open(pre_push_path, "r") as f:

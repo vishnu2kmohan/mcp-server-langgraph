@@ -219,9 +219,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     code_execution_cpu_quota: float = 1.0  # CPU cores quota (0.1-8.0)
     code_execution_disk_quota_mb: int = 100  # Disk quota in MB (1-10240)
     code_execution_max_processes: int = 1  # Maximum processes (1-100)
-    code_execution_network_mode: str = (
-        "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to 'none' for maximum isolation - users must explicitly opt-in to network access)
-    )
+    code_execution_network_mode: str = "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to 'none' for maximum isolation - users must explicitly opt-in to network access)
     code_execution_allowed_domains: List[str] = []  # Allowed domains for allowlist mode
     code_execution_allowed_imports: List[str] = [
         # Safe standard library modules

@@ -179,14 +179,14 @@ class TodoAuditor:
         print("\n📊 Statistics:")
         print(f"  Total files scanned: {result.stats.get('total_files', 0)}")
         print(f"  Total markers found: {result.stats.get('total_markers', 0)}")
-        print(f"\n  By type:")
+        print("\n  By type:")
         for marker_type, count in result.stats.get("by_type", {}).items():
             if count > 0:
                 print(f"    {marker_type}: {count}")
 
         # Markers by file
         if result.markers:
-            print(f"\n📝 Markers Found:")
+            print("\n📝 Markers Found:")
 
             # Group by file
             by_file: Dict[str, List[TodoMarker]] = {}

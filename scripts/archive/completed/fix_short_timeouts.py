@@ -102,7 +102,7 @@ def main():
                 total_modifications += mods
                 print(f"Fixed {file_path.relative_to(repo_root)}: {mods} call(s)")
 
-    print(f"\n=== SUMMARY ===")
+    print("\n=== SUMMARY ===")
     print(f"Total modifications: {total_modifications}")
 
     return 0

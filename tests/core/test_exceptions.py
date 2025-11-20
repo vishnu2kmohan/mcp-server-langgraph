@@ -25,42 +25,30 @@ from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Auth
     HIPAAViolationError,
     InputValidationError,
     InsufficientPermissionsError,
-    InternalServerError,
-    InvalidConfigError,
     InvalidCredentialsError,
-    KeycloakAuthError,
     KeycloakError,
-    KeycloakUnavailableError,
     LLMModelNotFoundError,
     LLMProviderError,
     LLMRateLimitError,
     LLMTimeoutError,
     MCPServerException,
     MFARequiredError,
-    MissingConfigError,
     OpenFGAError,
-    OpenFGATimeoutError,
-    OpenFGAUnavailableError,
     PermissionDeniedError,
     QuotaExceededError,
     RateLimitError,
     RateLimitExceededError,
-    RedisConnectionError,
     RedisError,
-    RedisTimeoutError,
     ResilienceError,
     ResourceNotFoundError,
     RetryExhaustedError,
     RetryPolicy,
     SchemaValidationError,
-    SecretNotFoundError,
     SOC2ViolationError,
-    StorageBackendError,
     StorageError,
     TimeoutError,
     TokenExpiredError,
     TokenInvalidError,
-    UnexpectedError,
     ValidationError,
 )
 
@@ -179,16 +167,6 @@ class TestAuthenticationExceptions:
     @pytest.mark.unit
     def test_mfa_required_error(self):
         """Test MFARequiredError"""
-
-    def setup_method(self):
-        """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-        import os
-
-        import mcp_server_langgraph.auth.middleware as middleware_module
-
-        middleware_module._global_auth_middleware = None
-        os.environ["MCP_SKIP_AUTH"] = "false"
-
         exc = MFARequiredError()
         assert exc.status_code == 403
         assert "mfa" in exc.user_message.lower()

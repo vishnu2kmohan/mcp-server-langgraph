@@ -40,7 +40,6 @@ class TestMCPCodeExecutionEndpoint:
         from unittest.mock import MagicMock
 
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
-        from mcp_server_langgraph.core.config import Settings
 
         # Create auth middleware with pre-registered user provider
         auth = AuthMiddleware(
@@ -214,7 +213,6 @@ class TestMCPToolDiscoveryEndpoint:
         from unittest.mock import MagicMock
 
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
-        from mcp_server_langgraph.core.config import Settings
 
         # Create auth middleware with pre-registered user provider
         auth = AuthMiddleware(

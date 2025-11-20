@@ -25,7 +25,7 @@ References:
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 
 def extract_final_test_stage(dockerfile_content: str) -> Optional[str]:

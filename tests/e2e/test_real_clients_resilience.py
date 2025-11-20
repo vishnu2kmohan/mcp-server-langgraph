@@ -6,7 +6,7 @@ the retry logic and enhanced error handling in real_clients.py.
 """
 
 import gc
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest

@@ -10,7 +10,6 @@ These tests ensure deployment configuration issues can never occur again by:
 6. Validating Helm chart lints successfully
 """
 
-import gc
 import re
 import subprocess
 from pathlib import Path

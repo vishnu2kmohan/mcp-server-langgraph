@@ -7,9 +7,8 @@ consolidated into tests/conftest.py.
 """
 
 import ast
-import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import Tuple
 
 
 def find_fixture_definition(file_path: Path, fixture_name: str = "init_test_observability") -> Tuple[int, int]:

@@ -103,7 +103,6 @@ class ApiKeyError(OpenApiException, KeyError):
 
 
 class ApiException(OpenApiException):
-
     def __init__(
         self,
         status=None,

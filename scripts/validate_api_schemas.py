@@ -134,7 +134,7 @@ def main():
     warnings = [i for i in validator.issues if i["severity"] == "warning"]
 
     if errors or warnings:
-        print(f"\n🔍 API Schema Validation Report")
+        print("\n🔍 API Schema Validation Report")
         print(f"Files checked: {files_checked}")
         print(f"Issues found: {len(errors)} errors, {len(warnings)} warnings\n")
 

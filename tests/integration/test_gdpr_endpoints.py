@@ -8,7 +8,6 @@ Tests all GDPR endpoints through FastAPI test client to ensure:
 """
 
 import gc
-import os
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 

@@ -8,7 +8,7 @@ Replaces hardcoded user IDs like "user:alice" with worker-safe ID helpers like g
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 
 def fix_hardcoded_user_ids(content: str, filename: str) -> Tuple[str, int]:
@@ -134,7 +134,7 @@ def main():
             total_fixes += num_fixes
             files_modified += 1
         else:
-            print(f"  No fixes needed")
+            print("  No fixes needed")
 
     if total_fixes > 0:
         print(f"\n✅ Total: Fixed {total_fixes} hardcoded IDs in {files_modified} files")

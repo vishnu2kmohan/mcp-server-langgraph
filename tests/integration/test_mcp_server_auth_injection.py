@@ -11,7 +11,7 @@ Following TDD best practices:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 

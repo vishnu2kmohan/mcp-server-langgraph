@@ -17,10 +17,7 @@ SOLUTION:
 See commits: 709adda, c193936, ba5296f for history
 """
 
-import gc
 import os
-
-import pytest
 
 
 # Set test mode environment variable for ALL pytest-xdist workers

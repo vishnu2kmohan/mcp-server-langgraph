@@ -6,7 +6,6 @@ and formatting at different detail levels following Anthropic's MCP best practic
 """
 
 import gc
-import json
 from unittest.mock import MagicMock
 
 import pytest

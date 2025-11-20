@@ -22,8 +22,7 @@ import argparse
 import os
 import re
 import sys
-from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 # Sleep duration thresholds (seconds)
 UNIT_TEST_MAX_SLEEP = 0.5
@@ -170,13 +169,13 @@ def main():
     parser = argparse.ArgumentParser(description="Check test files for excessive sleep durations")
     parser.add_argument("paths", nargs="+", help="Test files or directories to check")
     parser.add_argument(
-        "--unit-max", type=float, default=UNIT_TEST_MAX_SLEEP, help=f"Max sleep duration for unit tests (default: 0.5s)"
+        "--unit-max", type=float, default=UNIT_TEST_MAX_SLEEP, help="Max sleep duration for unit tests (default: 0.5s)"
     )
     parser.add_argument(
         "--integration-max",
         type=float,
         default=INTEGRATION_TEST_MAX_SLEEP,
-        help=f"Max sleep duration for integration tests (default: 2.0s)",
+        help="Max sleep duration for integration tests (default: 2.0s)",
     )
 
     args = parser.parse_args()

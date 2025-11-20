@@ -153,24 +153,24 @@ def print_suggestions(calculator: GKEResourceCalculator, request: str, limit: st
     is_compliant, ratio = calculator.validate_ratio(request, limit)
 
     print(f"\n{'=' * 70}")
-    print(f"GKE Autopilot Resource Analysis")
+    print("GKE Autopilot Resource Analysis")
     print(f"{'=' * 70}\n")
 
-    print(f"Current Configuration:")
+    print("Current Configuration:")
     print(f"  Request: {request}")
     print(f"  Limit:   {limit}")
     print(f"  Ratio:   {ratio:.2f}x")
 
     if is_compliant:
         print(f"  Status:  ✅ COMPLIANT (ratio ≤ {calculator.MAX_RATIO}x)")
-        print(f"\n✨ Your configuration is GKE Autopilot compliant!")
+        print("\n✨ Your configuration is GKE Autopilot compliant!")
     else:
         print(f"  Status:  ❌ VIOLATION (ratio > {calculator.MAX_RATIO}x)")
 
         suggestions = calculator.suggest_compliant_values(request, limit)
 
         print(f"\n{'─' * 70}")
-        print(f"Recommended Fixes:")
+        print("Recommended Fixes:")
         print(f"{'─' * 70}\n")
 
         # Option 1
@@ -191,7 +191,7 @@ def print_suggestions(calculator: GKEResourceCalculator, request: str, limit: st
         print(f"  Pros:    {opt2['pros']}")
         print(f"  Cons:    {opt2['cons']}\n")
 
-        print(f"💡 Recommendation: Use Option 1 for production workloads")
+        print("💡 Recommendation: Use Option 1 for production workloads")
 
     print(f"{'=' * 70}\n")
 
@@ -201,7 +201,7 @@ def print_examples(calculator: GKEResourceCalculator):
     examples = calculator.get_service_examples()
 
     print(f"\n{'=' * 70}")
-    print(f"Common Service Configurations (GKE Autopilot Compliant)")
+    print("Common Service Configurations (GKE Autopilot Compliant)")
     print(f"{'=' * 70}\n")
 
     for service, config in examples.items():

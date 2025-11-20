@@ -28,7 +28,7 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, Set
 
 import pytest
 

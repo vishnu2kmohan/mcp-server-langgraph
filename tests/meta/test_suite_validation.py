@@ -18,7 +18,6 @@ References:
 
 import ast
 import gc
-import os
 from pathlib import Path
 from typing import List, Set, Tuple
 

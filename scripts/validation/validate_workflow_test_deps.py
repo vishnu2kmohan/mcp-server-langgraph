@@ -22,10 +22,9 @@ Exit codes:
     1: Validation failures found
 """
 
-import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import List, Set
 
 import yaml
 

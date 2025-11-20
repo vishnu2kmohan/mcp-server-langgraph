@@ -15,7 +15,6 @@ Related Codex Finding: docker-compose.test.yml:214-233 uses wget for Qdrant heal
 """
 
 import gc
-import re
 from pathlib import Path
 from typing import Any, Dict, List
 

@@ -6,8 +6,7 @@ tuples when a resource is deleted, ensuring no orphaned permissions remain.
 """
 
 import gc
-from typing import Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 

@@ -17,7 +17,6 @@ See: https://www.anthropic.com/engineering/claude-code-best-practices
 
 import gc
 import json
-import os
 from pathlib import Path
 from typing import List
 
