@@ -498,9 +498,9 @@ def _check_http_health(url: str, timeout: float = 2.0) -> bool:
         return False
 
 
-async def _verify_gdpr_schema_ready(host: str, port: int, timeout: float = 30.0) -> bool:
+async def _verify_schema_ready(host: str, port: int, timeout: float = 30.0) -> bool:
     """
-    Verify GDPR schema is fully initialized with all required tables.
+    Verify database schema is fully initialized with all required tables.
 
     This function prevents integration test failures where tests start before
     the schema migration completes. The PostgreSQL health check (pg_isready)
@@ -517,9 +517,9 @@ async def _verify_gdpr_schema_ready(host: str, port: int, timeout: float = 30.0)
         timeout: Maximum time to wait for schema (default: 30s)
 
     Returns:
-        True if all GDPR tables exist, False if timeout reached
+        True if all required tables exist, False if timeout reached
 
-    Required tables:
+    Required tables (GDPR schema):
     - user_profiles
     - user_preferences
     - consent_records
@@ -1027,79 +1027,65 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     # all workers to enable test infrastructure detection.
     os.environ["TESTING"] = "true"
 
-    # Check if python-on-whales is available
-    try:
-        from python_on_whales import DockerClient
-    except ImportError:
-        pytest.skip("python-on-whales not installed - infrastructure tests require Docker support")
+    # Detect existing test infrastructure (started by make test-integration script)
+    # This approach removes the need for python-on-whales dependency and avoids
+    # redundant docker-compose operations
+    logging.info("Detecting existing test infrastructure...")
 
-    try:
-        docker = DockerClient(compose_files=[docker_compose_file])
+    # Wait for critical services to be ready
+    logging.info("Waiting for test infrastructure health checks...")
 
-        # Start services
-        logging.info("Starting test infrastructure via docker-compose...")
-        docker.compose.up(detach=True, wait=False)
+    # PostgreSQL
+    if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
+        pytest.skip(
+            "PostgreSQL test service not available - run 'make test-integration' or start docker-compose.test.yml manually"
+        )
+    logging.info("✓ PostgreSQL port ready")
 
-        # Wait for critical services to be ready
-        logging.info("Waiting for test infrastructure health checks...")
+    # Verify GDPR schema is fully initialized (not just port open)
+    # This prevents race conditions where tests start before tables exist
+    logging.info("Verifying GDPR schema initialization...")
+    schema_ready = asyncio.run(_verify_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
+    if not schema_ready:
+        pytest.skip("GDPR schema not initialized in time - run migrations/001_gdpr_schema.sql")
+    logging.info("✓ PostgreSQL ready with GDPR schema")
 
-        # PostgreSQL
-        if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
-            pytest.skip("PostgreSQL test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ PostgreSQL port ready")
+    # Redis (checkpoints)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
+        pytest.skip("Redis checkpoints test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (checkpoints) ready")
 
-        # Verify GDPR schema is fully initialized (not just port open)
-        # This prevents race conditions where tests start before tables exist
-        logging.info("Verifying GDPR schema initialization...")
-        schema_ready = asyncio.run(_verify_gdpr_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
-        if not schema_ready:
-            pytest.skip("GDPR schema not initialized in time - skipping infrastructure tests")
-        logging.info("✓ PostgreSQL ready with GDPR schema")
+    # Redis (sessions)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
+        pytest.skip("Redis sessions test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (sessions) ready")
 
-        # Redis (checkpoints)
-        if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
-            pytest.skip("Redis checkpoints test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Redis (checkpoints) ready")
+    # OpenFGA HTTP
+    if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
+        pytest.skip("OpenFGA test service not available - run 'make test-integration'")
+    # Additional check for OpenFGA
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
+        pytest.skip("OpenFGA health check failed - ensure openfga-test container is healthy")
+    logging.info("✓ OpenFGA ready")
 
-        # Redis (sessions)
-        if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
-            pytest.skip("Redis sessions test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Redis (sessions) ready")
+    # Keycloak (takes longer to start)
+    if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
+        pytest.skip("Keycloak test service not available - run 'make test-integration'")
+    # Additional check for Keycloak
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/health/ready", timeout=10):
+        pytest.skip("Keycloak health check failed - ensure keycloak-test container is healthy")
+    logging.info("✓ Keycloak ready")
 
-        # OpenFGA HTTP
-        if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
-            pytest.skip("OpenFGA test service did not become ready in time - skipping infrastructure tests")
-        # Additional check for OpenFGA
-        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
-            pytest.skip("OpenFGA health check failed - skipping infrastructure tests")
-        logging.info("✓ OpenFGA ready")
+    # Qdrant
+    if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
+        pytest.skip("Qdrant test service not available - run 'make test-integration'")
+    logging.info("✓ Qdrant ready")
 
-        # Keycloak (takes longer to start)
-        if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
-            pytest.skip("Keycloak test service did not become ready in time - skipping infrastructure tests")
-        # Additional check for Keycloak
-        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/health/ready", timeout=10):
-            pytest.skip("Keycloak health check failed - skipping infrastructure tests")
-        logging.info("✓ Keycloak ready")
+    logging.info("✅ All test infrastructure services ready")
 
-        # Qdrant
-        if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
-            pytest.skip("Qdrant test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Qdrant ready")
-
-        logging.info("✅ All test infrastructure services ready")
-
-        # Return infrastructure info
-        yield {"ports": test_infrastructure_ports, "docker": docker, "ready": True}
-
-    finally:
-        # Cleanup: Stop and remove services
-        logging.info("Tearing down test infrastructure...")
-        try:
-            docker.compose.down(volumes=True, remove_orphans=True, timeout=30)
-            logging.info("✅ Test infrastructure cleaned up")
-        except Exception as e:
-            logging.error(f"Error during infrastructure cleanup: {e}")
+    # Return infrastructure info
+    # NOTE: No cleanup needed - infrastructure is managed externally by make test-integration
+    yield {"ports": test_infrastructure_ports, "ready": True}
 
 
 # ==============================================================================

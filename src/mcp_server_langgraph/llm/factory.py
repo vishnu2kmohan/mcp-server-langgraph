@@ -92,6 +92,10 @@ class LLMFactory:
         model_lower = model_name.lower()
 
         # Check provider prefixes FIRST (azure/gpt-4 should be azure, not openai)
+        # Vertex AI (Google Cloud AI Platform)
+        if model_lower.startswith("vertex_ai/"):
+            return "vertex_ai"
+
         # Azure (prefixed models)
         if model_lower.startswith("azure/"):
             return "azure"

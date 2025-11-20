@@ -87,23 +87,29 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     enable_file_logging: bool = False  # Opt-in file-based log rotation (for persistent storage)
 
     # LLM Provider (litellm integration)
-    llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock
+    llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock, vertex_ai
 
-    # Anthropic
+    # Anthropic (Direct API)
+    # Latest models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-1-20250805
     anthropic_api_key: str | None = None
 
     # OpenAI
     openai_api_key: str | None = None
     openai_organization: str | None = None
 
-    # Google (Gemini/VertexAI)
+    # Google (Gemini via Google AI Studio)
+    # Latest models: gemini-3-pro-preview (Nov 2025), gemini-2.5-flash
     google_api_key: str | None = None
     google_project_id: str | None = None
     google_location: str = "us-central1"
 
     # Vertex AI (Google Cloud AI Platform)
-    # Use Workload Identity on GKE (no GOOGLE_APPLICATION_CREDENTIALS needed)
-    # or set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+    # Supports both Anthropic Claude and Google Gemini models via Vertex AI
+    # Authentication:
+    #   - On GKE: Use Workload Identity (automatic, no credentials needed)
+    #   - Locally: Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+    # Anthropic via Vertex AI: vertex_ai/claude-sonnet-4-5@20250929
+    # Google via Vertex AI: vertex_ai/gemini-3-pro-preview
     vertex_project: str | None = None  # GCP project ID for Vertex AI (falls back to google_project_id)
     vertex_location: str = "us-central1"  # Vertex AI location/region
 
@@ -122,7 +128,13 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     ollama_base_url: str = "http://localhost:11434"
 
     # Model Configuration (Primary Chat Model)
-    model_name: str = "gemini-2.5-flash"  # Latest Gemini 2.5 Flash
+    # Options:
+    #   - gemini-3-pro-preview (Gemini 3.0 Pro - latest, Nov 2025, 1M context window)
+    #   - gemini-2.5-flash (Gemini 2.5 Flash - fast, cost-effective)
+    #   - claude-sonnet-4-5-20250929 (Claude Sonnet 4.5 via Anthropic API)
+    #   - vertex_ai/claude-sonnet-4-5@20250929 (Claude Sonnet 4.5 via Vertex AI)
+    #   - vertex_ai/gemini-3-pro-preview (Gemini 3.0 Pro via Vertex AI)
+    model_name: str = "gemini-2.5-flash"  # Default: Gemini 2.5 Flash (balanced cost/performance)
     model_temperature: float = 0.7
     model_max_tokens: int = 8192
     model_timeout: int = 60
