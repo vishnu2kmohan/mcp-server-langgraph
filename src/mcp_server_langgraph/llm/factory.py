@@ -12,7 +12,7 @@ Enhanced with resilience patterns (ADR-0026):
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
@@ -34,12 +34,12 @@ class LLMFactory:
         self,
         provider: str = "anthropic",
         model_name: str = "claude-3-5-sonnet-20241022",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         timeout: int = 60,
         enable_fallback: bool = True,
-        fallback_models: Optional[list[str]] = None,
+        fallback_models: list[str] | None = None,
         **kwargs,
     ):
         """
@@ -236,7 +236,7 @@ class LLMFactory:
                         f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
                     )
 
-    def _format_messages(self, messages: list[BaseMessage]) -> list[Dict[str, str]]:
+    def _format_messages(self, messages: list[BaseMessage]) -> list[dict[str, str]]:
         """
         Convert LangChain messages to LiteLLM format
 

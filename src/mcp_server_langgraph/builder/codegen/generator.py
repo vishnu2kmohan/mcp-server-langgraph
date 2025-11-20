@@ -32,7 +32,7 @@ Example:
     print(python_code)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -51,8 +51,8 @@ class NodeDefinition(BaseModel):
     id: str = Field(description="Unique node ID")
     type: str = Field(description="Node type: tool, llm, conditional, approval, custom")
     label: str = Field(default="", description="Display label")
-    config: Dict[str, Any] = Field(default_factory=dict, description="Node configuration")
-    position: Dict[str, float] = Field(default_factory=dict, description="Canvas position {x, y}")
+    config: dict[str, Any] = Field(default_factory=dict, description="Node configuration")
+    position: dict[str, float] = Field(default_factory=dict, description="Canvas position {x, y}")
 
 
 class EdgeDefinition(BaseModel):
@@ -60,7 +60,7 @@ class EdgeDefinition(BaseModel):
 
     from_node: str = Field(description="Source node ID", alias="from")
     to_node: str = Field(description="Target node ID", alias="to")
-    condition: Optional[str] = Field(default=None, description="Optional condition for edge")
+    condition: str | None = Field(default=None, description="Optional condition for edge")
     label: str = Field(default="", description="Edge label")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -71,11 +71,11 @@ class WorkflowDefinition(BaseModel):
 
     name: str = Field(description="Workflow name")
     description: str = Field(default="", description="Workflow description")
-    nodes: List[NodeDefinition] = Field(description="List of nodes")
-    edges: List[EdgeDefinition] = Field(description="List of edges")
+    nodes: list[NodeDefinition] = Field(description="List of nodes")
+    edges: list[EdgeDefinition] = Field(description="List of edges")
     entry_point: str = Field(description="Entry node ID")
-    state_schema: Dict[str, str] = Field(default_factory=dict, description="State field definitions")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    state_schema: dict[str, str] = Field(default_factory=dict, description="State field definitions")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class CodeGenerator:
@@ -175,9 +175,9 @@ if __name__ == "__main__":
 
     def __init__(self) -> None:
         """Initialize code generator."""
-        self.templates: Dict[str, str] = {}
+        self.templates: dict[str, str] = {}
 
-    def _generate_state_fields(self, state_schema: Dict[str, str]) -> str:
+    def _generate_state_fields(self, state_schema: dict[str, str]) -> str:
         """
         Generate state field definitions.
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     return state
 '''
 
-    def _generate_routing_function(self, node: NodeDefinition, edges: List[EdgeDefinition]) -> Optional[str]:
+    def _generate_routing_function(self, node: NodeDefinition, edges: list[EdgeDefinition]) -> str | None:
         """
         Generate routing function for conditional edges.
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
         lines.append("\n    # Add edges")
 
         # Group edges by source node
-        edges_by_source: Dict[str, List[EdgeDefinition]] = {}
+        edges_by_source: dict[str, list[EdgeDefinition]] = {}
         for edge in workflow.edges:
             if edge.from_node not in edges_by_source:
                 edges_by_source[edge.from_node] = []

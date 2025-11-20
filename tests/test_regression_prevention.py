@@ -14,7 +14,6 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 import yaml
@@ -31,19 +30,19 @@ class TestPytestFixtureValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_python_test_files(self) -> List[Path]:
+    def get_python_test_files(self) -> list[Path]:
         """Get all Python test files in the tests directory"""
         test_dir = Path("tests")
         return list(test_dir.rglob("test_*.py")) + list(test_dir.rglob("*_test.py"))
 
-    def extract_fixtures_and_decorators(self, file_path: Path) -> List[Tuple[str, bool, int]]:
+    def extract_fixtures_and_decorators(self, file_path: Path) -> list[tuple[str, bool, int]]:
         """
         Extract functions with yield and check for @pytest.fixture decorator.
 
         Returns:
             List of (function_name, has_fixture_decorator, line_number)
         """
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             content = f.read()
 
         try:
@@ -63,15 +62,21 @@ class TestPytestFixtureValidation:
                     has_fixture_decorator = False
                     for dec in node.decorator_list:
                         # Direct decorator: @pytest.fixture or @fixture
-                        if isinstance(dec, ast.Name) and dec.id == "fixture":
-                            has_fixture_decorator = True
-                        elif isinstance(dec, ast.Attribute) and dec.attr == "fixture":
+                        if (
+                            isinstance(dec, ast.Name)
+                            and dec.id == "fixture"
+                            or isinstance(dec, ast.Attribute)
+                            and dec.attr == "fixture"
+                        ):
                             has_fixture_decorator = True
                         # Decorator with arguments: @pytest.fixture(...) or @fixture(...)
                         elif isinstance(dec, ast.Call):
-                            if isinstance(dec.func, ast.Name) and dec.func.id == "fixture":
-                                has_fixture_decorator = True
-                            elif isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture":
+                            if (
+                                isinstance(dec.func, ast.Name)
+                                and dec.func.id == "fixture"
+                                or isinstance(dec.func, ast.Attribute)
+                                and dec.func.attr == "fixture"
+                            ):
                                 has_fixture_decorator = True
 
                     fixtures.append((node.name, has_fixture_decorator, node.lineno))
@@ -112,7 +117,7 @@ class TestPytestFixtureValidation:
         issues = []
 
         for test_file in self.get_python_test_files():
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 content = f.read()
 
             try:
@@ -127,9 +132,12 @@ class TestPytestFixtureValidation:
                         is_fixture_decorator = False
 
                         if isinstance(dec, ast.Call):
-                            if isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture":
-                                is_fixture_decorator = True
-                            elif isinstance(dec.func, ast.Name) and dec.func.id == "fixture":
+                            if (
+                                isinstance(dec.func, ast.Attribute)
+                                and dec.func.attr == "fixture"
+                                or isinstance(dec.func, ast.Name)
+                                and dec.func.id == "fixture"
+                            ):
                                 is_fixture_decorator = True
 
                         if is_fixture_decorator:
@@ -162,7 +170,7 @@ class TestMonkeypatchReloadPattern:
         """
         test_file = Path("tests/integration/test_app_startup_validation.py")
 
-        with open(test_file, "r") as f:
+        with open(test_file) as f:
             content = f.read()
 
         # Find all test functions that use monkeypatch.setenv
@@ -205,7 +213,7 @@ class TestWorkflowToolMaintenance:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         return list(workflow_dir.glob("*.yml")) + list(workflow_dir.glob("*.yaml"))
@@ -232,7 +240,7 @@ class TestWorkflowToolMaintenance:
         issues = []
 
         for workflow_file in self.get_workflow_files():
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             try:
@@ -275,7 +283,7 @@ class TestWorkflowToolMaintenance:
             if not workflow_file.exists():
                 continue
 
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # If using kubeconform, should have -ignore-missing-schemas
@@ -300,7 +308,7 @@ class TestWorkflowActionVersions:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         return list(workflow_dir.glob("*.yml")) + list(workflow_dir.glob("*.yaml"))
@@ -315,7 +323,7 @@ class TestWorkflowActionVersions:
         issues = []
 
         for workflow_file in self.get_workflow_files():
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Find uses of astral-sh/setup-uv
@@ -349,7 +357,7 @@ class TestWorkflowSyntaxValidation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def get_workflow_files(self) -> List[Path]:
+    def get_workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflow_dir = Path(".github/workflows")
         if not workflow_dir.exists():
@@ -366,7 +374,7 @@ class TestWorkflowSyntaxValidation:
 
         for workflow_file in self.get_workflow_files():
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     yaml.safe_load(f)
             except yaml.YAMLError as e:
                 issues.append(f"{workflow_file} - Invalid YAML: {e}")
@@ -386,7 +394,7 @@ class TestWorkflowSyntaxValidation:
 
         for workflow_file in self.get_workflow_files():
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     workflow = yaml.safe_load(f)
 
                 if not workflow:

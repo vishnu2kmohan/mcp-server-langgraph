@@ -20,7 +20,6 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 import yaml
@@ -41,7 +40,7 @@ class TestConfigMapValidation:
         gc.collect()
 
     @requires_tool("kustomize")
-    def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
+    def get_kustomize_output(self, overlay_path: str) -> list[dict]:
         """Build kustomize and return parsed YAML documents."""
         if not shutil.which("kustomize"):
             pytest.skip("kustomize not installed")
@@ -54,7 +53,7 @@ class TestConfigMapValidation:
         # Parse all YAML documents
         return list(yaml.safe_load_all(result.stdout))
 
-    def extract_configmap_keys(self, docs: List[Dict], namespace: str) -> Dict[str, Set[str]]:
+    def extract_configmap_keys(self, docs: list[dict], namespace: str) -> dict[str, set[str]]:
         """Extract all ConfigMap keys from built manifests."""
         configmaps = {}
         for doc in docs:
@@ -64,7 +63,7 @@ class TestConfigMapValidation:
                     configmaps[name] = set(doc.get("data", {}).keys())
         return configmaps
 
-    def extract_configmap_references(self, docs: List[Dict]) -> Dict[str, Set[str]]:
+    def extract_configmap_references(self, docs: list[dict]) -> dict[str, set[str]]:
         """
         Extract all ConfigMap key references from container env variables.
 
@@ -74,7 +73,7 @@ class TestConfigMapValidation:
         """
         references = {}
 
-        def scan_env_vars(env_vars: List[Dict]):
+        def scan_env_vars(env_vars: list[dict]):
             """Recursively scan env variables for configMapKeyRef."""
             for env in env_vars or []:
                 if "valueFrom" in env and "configMapKeyRef" in env["valueFrom"]:
@@ -231,7 +230,7 @@ class TestSecretValidation:
         gc.collect()
 
     @requires_tool("kustomize")
-    def get_kustomize_output(self, overlay_path: str) -> List[Dict]:
+    def get_kustomize_output(self, overlay_path: str) -> list[dict]:
         """Build kustomize and return parsed YAML documents."""
         if not shutil.which("kustomize"):
             pytest.skip("kustomize not installed")
@@ -243,11 +242,11 @@ class TestSecretValidation:
 
         return list(yaml.safe_load_all(result.stdout))
 
-    def extract_secret_references(self, docs: List[Dict]) -> Dict[str, Set[str]]:
+    def extract_secret_references(self, docs: list[dict]) -> dict[str, set[str]]:
         """Extract all Secret name references from container env variables."""
         references = {}
 
-        def scan_env_vars(env_vars: List[Dict]):
+        def scan_env_vars(env_vars: list[dict]):
             """Recursively scan env variables for secretKeyRef."""
             for env in env_vars or []:
                 if "valueFrom" in env and "secretKeyRef" in env["valueFrom"]:
@@ -276,7 +275,7 @@ class TestSecretValidation:
 
         return references
 
-    def extract_external_secrets(self, docs: List[Dict]) -> Dict[str, Set[str]]:
+    def extract_external_secrets(self, docs: list[dict]) -> dict[str, set[str]]:
         """Extract ExternalSecret target names and their keys."""
         external_secrets = {}
 
@@ -437,7 +436,7 @@ class TestKustomizePrefixConsistency:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def read_kustomization(self, overlay_path: str) -> Dict:
+    def read_kustomization(self, overlay_path: str) -> dict:
         """Read and parse kustomization.yaml."""
         kustomization_file = REPO_ROOT / overlay_path / "kustomization.yaml"
         with open(kustomization_file) as f:

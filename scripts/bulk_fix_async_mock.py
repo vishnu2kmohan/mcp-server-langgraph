@@ -33,7 +33,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -166,7 +165,7 @@ def add_import_statement(source: str) -> str:
     return "\n".join(lines)
 
 
-def transform_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
+def transform_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     """
     Transform a single Python file to use configured AsyncMock helpers.
 
@@ -255,7 +254,7 @@ def transform_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
         # Restore from backup
         try:
             shutil.copy2(backup_path, file_path)
-            logger.info(f"  Restored from backup")
+            logger.info("  Restored from backup")
         except:
             pass
         return 0, False
@@ -282,7 +281,7 @@ def main():
         if not file_path.is_file():
             logger.error(f"Not a file: {file_path}")
             continue
-        if not file_path.suffix == ".py":
+        if file_path.suffix != ".py":
             logger.warning(f"Not a Python file: {file_path}")
             continue
         files.append(file_path)

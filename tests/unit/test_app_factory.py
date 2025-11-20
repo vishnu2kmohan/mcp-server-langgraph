@@ -6,7 +6,6 @@ allowing tests to customize configuration without affecting global state.
 """
 
 import gc
-from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -199,7 +198,7 @@ class TestAppFactoryRouterMounting:
 
         # This is how uvicorn imports the app
         module = importlib.import_module("mcp_server_langgraph.app")
-        app = getattr(module, "app")
+        app = module.app
 
         assert app is not None
         assert isinstance(app, FastAPI)

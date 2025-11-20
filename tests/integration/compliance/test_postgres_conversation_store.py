@@ -6,8 +6,8 @@ Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest

@@ -14,8 +14,8 @@ Following TDD principles:
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest

@@ -7,7 +7,6 @@ Defines the contract for all sandbox implementations (Docker, Kubernetes, Proces
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
@@ -38,7 +37,7 @@ class ExecutionResult:
     exit_code: int = 0
     execution_time: float = 0.0
     timed_out: bool = False
-    memory_used_mb: Optional[float] = None
+    memory_used_mb: float | None = None
     error_message: str = ""
 
     def __repr__(self) -> str:
@@ -93,7 +92,7 @@ class Sandbox(ABC):
         stdout: str,
         stderr: str,
         execution_time: float,
-        memory_used_mb: Optional[float] = None,
+        memory_used_mb: float | None = None,
     ) -> ExecutionResult:
         """Helper to create successful execution result"""
         return ExecutionResult(

@@ -7,7 +7,6 @@ Adds ColorBrewer2-based theme to sequence diagrams that lack %%{init:...}%%.
 
 import sys
 from pathlib import Path
-from typing import Tuple
 
 # Standard ColorBrewer2 theme for sequence diagrams
 SEQUENCE_THEME = (
@@ -18,7 +17,7 @@ SEQUENCE_THEME = (
 )
 
 
-def add_theme_to_sequence_diagrams(content: str) -> Tuple[str, bool]:
+def add_theme_to_sequence_diagrams(content: str) -> tuple[str, bool]:
     """
     Add theme initialization to sequence diagrams missing it.
 

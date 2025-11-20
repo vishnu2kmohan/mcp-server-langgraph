@@ -8,7 +8,7 @@ Following TDD principles: Write tests first, then ensure infrastructure meets re
 """
 
 import gc
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import yaml
@@ -25,7 +25,7 @@ class TestDatabaseHA:
         gc.collect()
 
     @pytest.fixture
-    def gcp_cloudsql_config(self) -> Dict[str, Any]:
+    def gcp_cloudsql_config(self) -> dict[str, Any]:
         """Load CloudSQL Terraform configuration."""
         return {
             "module_path": "terraform/modules/cloudsql",
@@ -36,7 +36,7 @@ class TestDatabaseHA:
         }
 
     @pytest.fixture
-    def aws_rds_config(self) -> Dict[str, Any]:
+    def aws_rds_config(self) -> dict[str, Any]:
         """Load RDS Terraform configuration."""
         return {
             "module_path": "terraform/modules/rds",
@@ -47,7 +47,7 @@ class TestDatabaseHA:
         }
 
     @pytest.fixture
-    def azure_database_config(self) -> Dict[str, Any]:
+    def azure_database_config(self) -> dict[str, Any]:
         """Load Azure Database Terraform configuration."""
         return {
             "module_path": "terraform/modules/azure-database",
@@ -63,7 +63,7 @@ class TestDatabaseHA:
         # Expected: CloudSQL instance should have availability_type = REGIONAL
 
         # Read the module configuration
-        with open(f"{gcp_cloudsql_config['module_path']}/main.tf", "r") as f:
+        with open(f"{gcp_cloudsql_config['module_path']}/main.tf") as f:
             config = f.read()
 
         # Verify regional availability is supported
@@ -72,7 +72,7 @@ class TestDatabaseHA:
 
     def test_cloudsql_has_automated_backups(self, gcp_cloudsql_config):
         """Test CloudSQL has automated backups enabled."""
-        with open(f"{gcp_cloudsql_config['module_path']}/main.tf", "r") as f:
+        with open(f"{gcp_cloudsql_config['module_path']}/main.tf") as f:
             config = f.read()
 
         # Verify backup configuration exists
@@ -82,7 +82,7 @@ class TestDatabaseHA:
 
     def test_cloudsql_has_read_replicas(self, gcp_cloudsql_config):
         """Test CloudSQL supports read replicas for HA."""
-        with open(f"{gcp_cloudsql_config['module_path']}/main.tf", "r") as f:
+        with open(f"{gcp_cloudsql_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "google_sql_database_instance" in config
@@ -92,7 +92,7 @@ class TestDatabaseHA:
         """Test RDS is configured for Multi-AZ deployment."""
         # RED: This test should initially fail without Multi-AZ
 
-        with open(f"{aws_rds_config['module_path']}/main.tf", "r") as f:
+        with open(f"{aws_rds_config['module_path']}/main.tf") as f:
             config = f.read()
 
         # Verify Multi-AZ is supported
@@ -101,7 +101,7 @@ class TestDatabaseHA:
 
     def test_rds_has_automated_backups(self, aws_rds_config):
         """Test RDS has automated backups configured."""
-        with open(f"{aws_rds_config['module_path']}/main.tf", "r") as f:
+        with open(f"{aws_rds_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "backup_retention_period" in config
@@ -110,7 +110,7 @@ class TestDatabaseHA:
 
     def test_rds_has_encryption_at_rest(self, aws_rds_config):
         """Test RDS has encryption at rest enabled."""
-        with open(f"{aws_rds_config['module_path']}/main.tf", "r") as f:
+        with open(f"{aws_rds_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "storage_encrypted" in config
@@ -118,7 +118,7 @@ class TestDatabaseHA:
 
     def test_rds_has_enhanced_monitoring(self, aws_rds_config):
         """Test RDS has enhanced monitoring enabled."""
-        with open(f"{aws_rds_config['module_path']}/main.tf", "r") as f:
+        with open(f"{aws_rds_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "monitoring_interval" in config
@@ -135,7 +135,7 @@ class TestDatabaseHA:
     def test_azure_database_has_ha_configuration(self, azure_database_config):
         """Test Azure Database has zone-redundant HA."""
         # RED: Will fail until module is created
-        with open(f"{azure_database_config['module_path']}/main.tf", "r") as f:
+        with open(f"{azure_database_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "high_availability" in config
@@ -144,7 +144,7 @@ class TestDatabaseHA:
 
     def test_azure_database_has_geo_redundant_backup(self, azure_database_config):
         """Test Azure Database has geo-redundant backup."""
-        with open(f"{azure_database_config['module_path']}/main.tf", "r") as f:
+        with open(f"{azure_database_config['module_path']}/main.tf") as f:
             config = f.read()
 
         assert "backup" in config
@@ -154,7 +154,7 @@ class TestDatabaseHA:
         """Test Helm chart can be configured with external database."""
         # RED: Will fail until Helm values are updated
 
-        with open("deployments/helm/mcp-server-langgraph/values.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/values.yaml") as f:
             values = yaml.safe_load(f)
 
         # Should have postgresql configuration
@@ -167,7 +167,7 @@ class TestDatabaseHA:
         """Test Helm chart supports CloudSQL proxy sidecar."""
         # For GKE deployments, should support CloudSQL proxy
 
-        with open("deployments/helm/mcp-server-langgraph/templates/deployment.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/templates/deployment.yaml") as f:
             deployment = f.read()
 
         # FIXED: Remove placeholder 'or True' - implement proper assertion
@@ -189,7 +189,7 @@ class TestDatabaseHA:
         # This improves HA by managing connections during failover
 
         # Check if PgBouncer is in dependencies or templates
-        with open("deployments/helm/mcp-server-langgraph/Chart.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/Chart.yaml") as f:
             chart = yaml.safe_load(f)
 
         # PgBouncer should be optional dependency (will add)
@@ -218,7 +218,7 @@ class TestDatabaseFailover:
 
         found_retry_logic = False
         for db_file in db_files:
-            with open(db_file, "r") as f:
+            with open(db_file) as f:
                 content = f.read()
                 if "retry" in content.lower() or "reconnect" in content.lower():
                     found_retry_logic = True
@@ -258,7 +258,7 @@ class TestDatabaseBackupRestore:
         ]
 
         for module_path in modules:
-            with open(module_path, "r") as f:
+            with open(module_path) as f:
                 config = f.read()
 
             assert "backup" in config.lower(), f"{module_path} missing backup configuration"
@@ -267,7 +267,7 @@ class TestDatabaseBackupRestore:
         """Test Azure Database module has backup configuration."""
         # RED: Will fail until module is created
 
-        with open("terraform/modules/azure-database/main.tf", "r") as f:
+        with open("terraform/modules/azure-database/main.tf") as f:
             config = f.read()
 
         assert "backup" in config.lower()
@@ -284,7 +284,7 @@ class TestDatabaseBackupRestore:
         ]
 
         for module_path in modules:
-            with open(module_path, "r") as f:
+            with open(module_path) as f:
                 config = f.read()
 
             # Should have backup retention variable
@@ -301,7 +301,7 @@ class TestDatabaseMonitoring:
 
     def test_cloudsql_has_monitoring_alerts(self):
         """Test CloudSQL module configures monitoring alerts."""
-        with open("terraform/modules/cloudsql/main.tf", "r") as f:
+        with open("terraform/modules/cloudsql/main.tf") as f:
             config = f.read()
 
         # Should have CloudWatch/Cloud Monitoring alert policies
@@ -309,7 +309,7 @@ class TestDatabaseMonitoring:
 
     def test_rds_has_cloudwatch_alarms(self):
         """Test RDS module configures CloudWatch alarms."""
-        with open("terraform/modules/rds/main.tf", "r") as f:
+        with open("terraform/modules/rds/main.tf") as f:
             config = f.read()
 
         assert "aws_cloudwatch_metric_alarm" in config
@@ -318,7 +318,7 @@ class TestDatabaseMonitoring:
         """Test Azure Database module has Azure Monitor integration."""
         # RED: Will fail until module exists
 
-        with open("terraform/modules/azure-database/main.tf", "r") as f:
+        with open("terraform/modules/azure-database/main.tf") as f:
             config = f.read()
 
         assert "azurerm_monitor" in config or "monitor" in config.lower()
@@ -328,7 +328,7 @@ class TestDatabaseMonitoring:
         # Should have postgres_exporter or similar configuration
 
         # Check Helm chart dependencies
-        with open("deployments/helm/mcp-server-langgraph/Chart.yaml", "r") as f:
+        with open("deployments/helm/mcp-server-langgraph/Chart.yaml") as f:
             chart = yaml.safe_load(f)
 
         # Prometheus should be in dependencies

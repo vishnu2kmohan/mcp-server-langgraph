@@ -15,7 +15,6 @@ import gc
 import re
 import subprocess
 from pathlib import Path
-from typing import List, Set
 
 import pytest
 import yaml
@@ -44,7 +43,7 @@ class TestKustomizeConfigurations:
         gc.collect()
 
     @pytest.fixture
-    def kustomize_overlays(self) -> List[Path]:
+    def kustomize_overlays(self) -> list[Path]:
         """Get all Kustomize overlay directories"""
         deployments_dir = Path(__file__).parent.parent / "deployments" / "overlays"
         if not deployments_dir.exists():
@@ -62,7 +61,7 @@ class TestKustomizeConfigurations:
         return base_dir
 
     @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for overlay build validation")
-    def test_kustomize_overlay_builds_successfully(self, kustomize_overlays: List[Path]):
+    def test_kustomize_overlay_builds_successfully(self, kustomize_overlays: list[Path]):
         """
         Test that all Kustomize overlays build successfully.
 
@@ -102,7 +101,7 @@ class TestKustomizeConfigurations:
                 )
 
     @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for ConfigMap collision detection")
-    def test_no_configmap_collisions(self, kustomize_overlays: List[Path], kustomize_base: Path):
+    def test_no_configmap_collisions(self, kustomize_overlays: list[Path], kustomize_base: Path):
         """
         Test that overlay ConfigMaps don't collide with base ConfigMaps.
 
@@ -143,7 +142,7 @@ class TestKustomizeConfigurations:
                         )
 
     @requires_tool("kustomize", skip_reason="kustomize CLI not installed - required for patch validation")
-    def test_overlay_patches_target_existing_resources(self, kustomize_overlays: List[Path]):
+    def test_overlay_patches_target_existing_resources(self, kustomize_overlays: list[Path]):
         """
         Test that overlay patches target resources that exist in base or overlay.
 
@@ -170,7 +169,7 @@ class TestKustomizeConfigurations:
                     f"Ensure patch targets exist in base or are defined in overlay resources."
                 )
 
-    def _get_configmap_names(self, directory: Path) -> Set[str]:
+    def _get_configmap_names(self, directory: Path) -> set[str]:
         """Extract all ConfigMap names from YAML files in a directory"""
         configmap_names = set()
 
@@ -201,7 +200,7 @@ class TestGitHubActionsWorkflows:
         gc.collect()
 
     @pytest.fixture
-    def workflow_files(self) -> List[Path]:
+    def workflow_files(self) -> list[Path]:
         """Get all GitHub Actions workflow files"""
         workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
         if not workflows_dir.exists():
@@ -210,7 +209,7 @@ class TestGitHubActionsWorkflows:
         return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
     @pytest.fixture
-    def composite_actions(self) -> List[Path]:
+    def composite_actions(self) -> list[Path]:
         """Get all composite action files"""
         actions_dir = Path(__file__).parent.parent / ".github" / "actions"
         if not actions_dir.exists():
@@ -228,7 +227,7 @@ class TestGitHubActionsWorkflows:
 
         return action_files
 
-    def test_composite_actions_have_error_handling(self, composite_actions: List[Path]):
+    def test_composite_actions_have_error_handling(self, composite_actions: list[Path]):
         """
         Test that composite actions have proper error handling with set -e.
 
@@ -285,7 +284,7 @@ class TestGitHubActionsWorkflows:
                         f"    # your commands here\n"
                     )
 
-    def test_e2e_workflow_has_adequate_timeout(self, workflow_files: List[Path]):
+    def test_e2e_workflow_has_adequate_timeout(self, workflow_files: list[Path]):
         """
         Test that E2E workflow has adequate health check timeout.
 
@@ -330,7 +329,7 @@ class TestGitHubActionsWorkflows:
             f"\nRecommendation: Use at least 150 iterations with 3s sleep (7.5 min total)"
         )
 
-    def test_ci_workflow_validates_lockfile(self, workflow_files: List[Path]):
+    def test_ci_workflow_validates_lockfile(self, workflow_files: list[Path]):
         """
         Test that CI workflow validates UV lockfile is up-to-date.
 
@@ -391,7 +390,7 @@ class TestGitHubActionsWorkflows:
             "but the lockfile is not regenerated, leading to inconsistent builds."
         )
 
-    def test_workflow_bash_steps_have_error_handling(self, workflow_files: List[Path]):
+    def test_workflow_bash_steps_have_error_handling(self, workflow_files: list[Path]):
         """
         Test that workflow bash steps with multiple commands have error handling.
 

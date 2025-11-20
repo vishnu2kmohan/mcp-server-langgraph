@@ -7,8 +7,6 @@ systems are properly initialized before the app accepts requests.
 This module prevents the classes of issues found in OpenAI Codex audit from recurring.
 """
 
-from typing import Dict, List
-
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -22,9 +20,9 @@ class HealthCheckResult(BaseModel):
     """Health check result model"""
 
     status: str
-    checks: Dict[str, bool]
-    errors: List[str]
-    warnings: List[str]
+    checks: dict[str, bool]
+    errors: list[str]
+    warnings: list[str]
 
 
 class SystemValidationError(Exception):

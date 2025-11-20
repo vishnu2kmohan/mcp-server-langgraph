@@ -41,7 +41,7 @@ class TestPreCommitConfigSyntax:
 
         # This should not raise yaml.YAMLError
         try:
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 config = yaml.safe_load(f)
 
             assert config is not None, "YAML config should not be empty"
@@ -85,7 +85,7 @@ class TestPreCommitConfigSyntax:
 
         for yaml_file in yaml_files:
             try:
-                with open(yaml_file, "r") as f:
+                with open(yaml_file) as f:
                     content = yaml.safe_load(f)
 
                 assert content is not None, f"Workflow {yaml_file.name} should not be empty"
@@ -102,7 +102,7 @@ class TestPreCommitConfigSyntax:
         """
         config_file = Path(__file__).parent.parent / ".pre-commit-config-requirements-check.yaml"
 
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = yaml.safe_load(f)
 
         # For each hook, verify entry is a valid string (proves block scalar worked)
@@ -154,7 +154,7 @@ class TestKubernetesYAMLSyntax:
 
         for kust_file in kustomization_files:
             try:
-                with open(kust_file, "r") as f:
+                with open(kust_file) as f:
                     content = yaml.safe_load(f)
 
                 assert content is not None, f"{kust_file} should not be empty"
@@ -203,7 +203,7 @@ class TestYAMLIndentation:
         """Test that YAML files use 2-space indentation (not tabs)."""
         config_file = Path(__file__).parent.parent / ".pre-commit-config-requirements-check.yaml"
 
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             content = f.read()
 
         # Check no tabs are used for indentation

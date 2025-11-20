@@ -24,7 +24,6 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -59,9 +58,9 @@ class ProgressReportGenerator:
         "perf": "Performance",
     }
 
-    def __init__(self, since_date: Optional[str] = None):
+    def __init__(self, since_date: str | None = None):
         self.since_date = since_date or self._get_week_ago()
-        self.commits: List[CommitInfo] = []
+        self.commits: list[CommitInfo] = []
 
     def _get_week_ago(self) -> str:
         """Get date one week ago"""
@@ -89,7 +88,7 @@ class ProgressReportGenerator:
 
         print(f"Found {len(self.commits)} commits")
 
-    def _get_commit_info(self, commit_hash: str) -> Optional[CommitInfo]:
+    def _get_commit_info(self, commit_hash: str) -> CommitInfo | None:
         """Get detailed information about a commit"""
         try:
             # Get commit message and metadata
@@ -244,7 +243,7 @@ class ProgressReportGenerator:
         latest = max(c.date for c in self.commits)
         return max(1, (latest - earliest).days + 1)
 
-    def _group_by_day(self) -> Dict[str, List[CommitInfo]]:
+    def _group_by_day(self) -> dict[str, list[CommitInfo]]:
         """Group commits by day"""
         daily = defaultdict(list)
         for commit in self.commits:
@@ -252,7 +251,7 @@ class ProgressReportGenerator:
             daily[date_str].append(commit)
         return dict(daily)
 
-    def _get_file_changes(self) -> Dict[str, int]:
+    def _get_file_changes(self) -> dict[str, int]:
         """Get count of changes per file"""
         cmd = ["git", "log", f"--since={self.since_date}", "--name-only", "--pretty=format:"]
         result = subprocess.run(cmd, capture_output=True, text=True)

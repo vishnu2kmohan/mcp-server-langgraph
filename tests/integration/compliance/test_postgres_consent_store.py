@@ -6,8 +6,8 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest

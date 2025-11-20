@@ -11,7 +11,7 @@ Implements data subject rights under GDPR:
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -34,9 +34,9 @@ router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
 class UserProfileUpdate(BaseModel):
     """User profile update model (GDPR Article 16 - Right to Rectification)"""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=100, description="User's full name")
-    email: Optional[str] = Field(None, description="User's email address")
-    preferences: Optional[Dict[str, Any]] = Field(None, description="User preferences")
+    name: str | None = Field(None, min_length=1, max_length=100, description="User's full name")
+    email: str | None = Field(None, description="User's email address")
+    preferences: dict[str, Any] | None = Field(None, description="User preferences")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -63,9 +63,9 @@ class ConsentRecord(BaseModel):
 
     consent_type: ConsentType = Field(..., description="Type of consent")
     granted: bool = Field(..., description="Whether consent is granted")
-    timestamp: Optional[str] = Field(None, description="ISO timestamp (auto-generated)")
-    ip_address: Optional[str] = Field(None, description="IP address (auto-captured)")
-    user_agent: Optional[str] = Field(None, description="User agent (auto-captured)")
+    timestamp: str | None = Field(None, description="ISO timestamp (auto-generated)")
+    ip_address: str | None = Field(None, description="IP address (auto-captured)")
+    user_agent: str | None = Field(None, description="User agent (auto-captured)")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -81,7 +81,7 @@ class ConsentResponse(BaseModel):
     """Response for consent operations"""
 
     user_id: str
-    consents: Dict[str, dict[str, Any]] = Field(description="Current consent status for all types")
+    consents: dict[str, dict[str, Any]] = Field(description="Current consent status for all types")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -109,7 +109,7 @@ class ConsentResponse(BaseModel):
 
 @router.get("/me/data", response_model=UserDataExport)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_user_data(
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> UserDataExport:
@@ -164,7 +164,7 @@ async def get_user_data(
 
 @router.get("/me/export", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def export_user_data(
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
@@ -218,8 +218,8 @@ async def export_user_data(
 @router.patch("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def update_user_profile(
     profile_update: UserProfileUpdate,
-    user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
+    user: dict[str, Any] = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Update user profile (GDPR Article 16 - Right to Rectification)
 
@@ -274,11 +274,11 @@ async def update_user_profile(
 
 @router.delete("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def delete_user_account(
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Delete user account and all data (GDPR Article 17 - Right to Erasure)
 
@@ -369,7 +369,7 @@ async def delete_user_account(
 @router.post("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def update_consent(
     consent: ConsentRecord,
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> ConsentResponse:
     """
@@ -442,7 +442,7 @@ async def update_consent(
 
 @router.get("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_consent_status(
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: dict[str, Any] = Depends(get_current_user),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> ConsentResponse:
     """

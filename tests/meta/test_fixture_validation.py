@@ -18,7 +18,6 @@ References:
 import ast
 import gc
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import pytest
 
@@ -132,7 +131,7 @@ class TestFixtureDecorators:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -162,7 +161,7 @@ class TestFixtureDecorators:
             error_msg += "\nEnsure all test parameters have corresponding @pytest.fixture definitions."
             pytest.fail(error_msg)
 
-    def _find_generator_functions_without_fixture_decorator(self) -> List[Tuple[str, str, int]]:
+    def _find_generator_functions_without_fixture_decorator(self) -> list[tuple[str, str, int]]:
         """
         Find Generator-returning functions without @pytest.fixture decorator
 
@@ -181,7 +180,7 @@ class TestFixtureDecorators:
                     continue
 
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 
@@ -322,9 +321,9 @@ class TestFixtureDecorators:
         func_node: ast.FunctionDef,
         test_file: Path,
         tests_dir: Path,
-        defined_fixtures: Set[str],
-        builtin_fixtures: Set[str],
-        violations: List[Tuple[str, str, str, int]],
+        defined_fixtures: set[str],
+        builtin_fixtures: set[str],
+        violations: list[tuple[str, str, str, int]],
     ) -> None:
         """
         Check test function parameters for valid fixtures
@@ -366,7 +365,7 @@ class TestFixtureDecorators:
                 rel_path = test_file.relative_to(tests_dir.parent)
                 violations.append((str(rel_path), func_node.name, param_name, func_node.lineno))
 
-    def _get_parametrize_params(self, func_node: ast.FunctionDef) -> Set[str]:
+    def _get_parametrize_params(self, func_node: ast.FunctionDef) -> set[str]:
         """
         Get parameter names from @pytest.mark.parametrize decorators
 
@@ -399,7 +398,7 @@ class TestFixtureDecorators:
 
         return params
 
-    def _get_patch_params(self, func_node: ast.FunctionDef) -> Set[str]:
+    def _get_patch_params(self, func_node: ast.FunctionDef) -> set[str]:
         """
         Get parameter names from @patch decorators
 
@@ -418,9 +417,12 @@ class TestFixtureDecorators:
         for decorator in func_node.decorator_list:
             # Check for @patch("...") or @patch.object(...)
             if isinstance(decorator, ast.Call):
-                if isinstance(decorator.func, ast.Name) and decorator.func.id == "patch":
-                    patch_count += 1
-                elif isinstance(decorator.func, ast.Attribute) and decorator.func.attr in ["object", "dict", "multiple"]:
+                if (
+                    isinstance(decorator.func, ast.Name)
+                    and decorator.func.id == "patch"
+                    or isinstance(decorator.func, ast.Attribute)
+                    and decorator.func.attr in ["object", "dict", "multiple"]
+                ):
                     patch_count += 1
 
         # Get the last N parameters (where N = patch_count)
@@ -433,7 +435,7 @@ class TestFixtureDecorators:
 
         return set()
 
-    def _find_placeholder_tests(self) -> List[Tuple[str, str, int]]:
+    def _find_placeholder_tests(self) -> list[tuple[str, str, int]]:
         """
         Find test functions that have only 'pass' statement
 
@@ -448,7 +450,7 @@ class TestFixtureDecorators:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -565,7 +567,7 @@ class TestFixtureDecorators:
             )
             pytest.fail(error_msg)
 
-    def _find_fixture_scope_violations(self) -> List[Tuple[str, str, str, str, str, int]]:
+    def _find_fixture_scope_violations(self) -> list[tuple[str, str, str, str, str, int]]:
         """
         Find fixtures with scope incompatibilities
 
@@ -623,7 +625,7 @@ class TestFixtureDecorators:
 
         return violations
 
-    def _get_all_fixtures_with_dependencies(self) -> List[Tuple[Path, str, str, List[str], int]]:
+    def _get_all_fixtures_with_dependencies(self) -> list[tuple[Path, str, str, list[str], int]]:
         """
         Get all fixtures with their scopes and parameter dependencies
 
@@ -639,7 +641,7 @@ class TestFixtureDecorators:
         for pattern in search_patterns:
             for test_file in tests_dir.rglob(pattern):
                 try:
-                    with open(test_file, "r") as f:
+                    with open(test_file) as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 
@@ -688,7 +690,7 @@ class TestFixtureDecorators:
         # No scope specified = function scope (default)
         return None
 
-    def _get_all_defined_fixtures(self) -> Set[str]:
+    def _get_all_defined_fixtures(self) -> set[str]:
         """
         Get all fixture names defined in the test suite
 
@@ -704,7 +706,7 @@ class TestFixtureDecorators:
         for pattern in search_patterns:
             for test_file in tests_dir.rglob(pattern):
                 try:
-                    with open(test_file, "r", encoding="utf-8") as f:
+                    with open(test_file, encoding="utf-8") as f:
                         content = f.read()
                         tree = ast.parse(content, filename=str(test_file))
 

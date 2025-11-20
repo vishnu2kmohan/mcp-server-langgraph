@@ -10,8 +10,9 @@ Separates infrastructure concerns from business logic.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_app(
-    container: Optional[ApplicationContainer] = None,
-    settings: Optional[Settings] = None,
-    environment: Optional[str] = None,
+    container: ApplicationContainer | None = None,
+    settings: Settings | None = None,
+    environment: str | None = None,
 ) -> FastAPI:
     """
     Create a FastAPI application with proper configuration.
@@ -105,7 +106,7 @@ def create_app(
 
 
 @asynccontextmanager
-async def create_lifespan(container: Optional[ApplicationContainer] = None) -> AsyncIterator[None]:
+async def create_lifespan(container: ApplicationContainer | None = None) -> AsyncIterator[None]:
     """
     Create application lifespan context manager.
 

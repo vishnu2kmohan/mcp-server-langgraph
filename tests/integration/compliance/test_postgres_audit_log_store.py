@@ -6,8 +6,8 @@ Tests HIPAA §164.312(b) and SOC2 CC6.6 - 7-year audit log retention
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest

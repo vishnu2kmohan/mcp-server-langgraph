@@ -12,8 +12,9 @@ Implements Anthropic's best practices for writing tools for agents:
 
 import json
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Literal, Optional
+from typing import Any, Literal
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -956,7 +957,7 @@ class MCPAgentStreamableServer:
 # - Observability not yet initialized
 # - Test dependency injection
 
-_mcp_server_instance: Optional[MCPAgentStreamableServer] = None
+_mcp_server_instance: MCPAgentStreamableServer | None = None
 
 
 def get_mcp_server() -> MCPAgentStreamableServer:

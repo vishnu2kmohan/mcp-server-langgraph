@@ -15,7 +15,7 @@ Test Journeys:
 
 import gc
 import os
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -1012,17 +1012,17 @@ class TestPerformanceE2E:
 # ==============================================================================
 
 
-async def create_test_user(username: str, password: str, email: str) -> Dict[str, Any]:
+async def create_test_user(username: str, password: str, email: str) -> dict[str, Any]:
     """Create test user in Keycloak"""
     # TODO: Implement Keycloak user creation via admin API
 
 
-async def login_user(username: str, password: str) -> Dict[str, Any]:
+async def login_user(username: str, password: str) -> dict[str, Any]:
     """Login and get JWT token"""
     # TODO: Implement POST /auth/login
 
 
-async def invoke_mcp_tool(tool_name: str, arguments: Dict[str, Any], token: str) -> Any:
+async def invoke_mcp_tool(tool_name: str, arguments: dict[str, Any], token: str) -> Any:
     """Invoke MCP tool and get response"""
     # TODO: Implement MCP protocol communication
 

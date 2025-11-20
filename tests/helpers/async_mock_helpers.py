@@ -51,12 +51,12 @@ Author: Claude Code (Sonnet 4.5)
 Created: 2025-11-15
 """
 
-from typing import Any, Optional, Type
+from typing import Any
 from unittest.mock import AsyncMock
 
 
 def configured_async_mock(
-    return_value: Any = None, side_effect: Optional[Any] = None, spec: Optional[Type] = None, **kwargs: Any
+    return_value: Any = None, side_effect: Any | None = None, spec: type | None = None, **kwargs: Any
 ) -> AsyncMock:
     """
     Create an AsyncMock with explicit return_value configuration.
@@ -116,7 +116,7 @@ def configured_async_mock(
     return AsyncMock(**kwargs)
 
 
-def configured_async_mock_deny(spec: Optional[Type] = None, **kwargs: Any) -> AsyncMock:
+def configured_async_mock_deny(spec: type | None = None, **kwargs: Any) -> AsyncMock:
     """
     Create an AsyncMock that always returns False (authorization denial).
 
@@ -166,7 +166,7 @@ def configured_async_mock_deny(spec: Optional[Type] = None, **kwargs: Any) -> As
     return AsyncMock(**kwargs)
 
 
-def configured_async_mock_raise(exception: Exception, spec: Optional[Type] = None, **kwargs: Any) -> AsyncMock:
+def configured_async_mock_raise(exception: Exception, spec: type | None = None, **kwargs: Any) -> AsyncMock:
     """
     Create an AsyncMock that raises an exception when called.
 

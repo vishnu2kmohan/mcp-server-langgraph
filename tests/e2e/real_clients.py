@@ -18,8 +18,9 @@ Usage:
 """
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Dict
+from typing import Any
 
 import httpx
 
@@ -43,7 +44,7 @@ class RealKeycloakAuth:
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         self.client = httpx.AsyncClient(timeout=30.0)
 
-    async def login(self, username: str, password: str) -> Dict[str, str]:
+    async def login(self, username: str, password: str) -> dict[str, str]:
         """
         Login user and get real JWT tokens from Keycloak.
 
@@ -89,7 +90,7 @@ class RealKeycloakAuth:
                 f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} " f"(URL: {token_url})"
             ) from e
 
-    async def refresh(self, refresh_token: str) -> Dict[str, str]:
+    async def refresh(self, refresh_token: str) -> dict[str, str]:
         """
         Refresh access token using refresh token.
 
@@ -130,7 +131,7 @@ class RealKeycloakAuth:
             },
         )
 
-    async def introspect(self, token: str) -> Dict[str, Any]:
+    async def introspect(self, token: str) -> dict[str, Any]:
         """
         Introspect token to get metadata.
 
@@ -182,7 +183,7 @@ class RealMCPClient:
 
         self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0)
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """
         Initialize MCP session.
 
@@ -208,7 +209,7 @@ class RealMCPClient:
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"MCP initialize failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
-    async def list_tools(self) -> Dict[str, Any]:
+    async def list_tools(self) -> dict[str, Any]:
         """
         List available tools.
 
@@ -230,7 +231,7 @@ class RealMCPClient:
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"MCP list_tools failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
-    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """
         Call a tool.
 
@@ -274,7 +275,7 @@ class RealMCPClient:
         data = response.json()
         return data["conversation_id"]
 
-    async def send_message(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    async def send_message(self, conversation_id: str, content: str) -> dict[str, Any]:
         """
         Send message to conversation.
 
@@ -296,7 +297,7 @@ class RealMCPClient:
 
         return response.json()
 
-    async def get_conversation(self, conversation_id: str) -> Dict[str, Any]:
+    async def get_conversation(self, conversation_id: str) -> dict[str, Any]:
         """
         Get conversation details.
 

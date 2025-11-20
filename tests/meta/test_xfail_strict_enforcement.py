@@ -26,7 +26,6 @@ References:
 import ast
 import gc
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 
@@ -56,7 +55,7 @@ class TestXfailStrictEnforcement:
         test_files.extend(tests_dir.rglob("*_test.py"))
         return sorted(set(test_files))
 
-    def _find_non_strict_xfails(self, file_path: Path) -> List[Tuple[int, str]]:
+    def _find_non_strict_xfails(self, file_path: Path) -> list[tuple[int, str]]:
         """
         Find @pytest.mark.xfail decorators without strict=True.
 
@@ -66,7 +65,7 @@ class TestXfailStrictEnforcement:
         violations = []
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 tree = ast.parse(content, filename=str(file_path))
         except SyntaxError:
@@ -105,10 +104,7 @@ class TestXfailStrictEnforcement:
                                 # Check for strict=True in keyword arguments
                                 for keyword in decorator.keywords:
                                     if keyword.arg == "strict":
-                                        if isinstance(keyword.value, ast.Constant):
-                                            has_strict = keyword.value.value is True
-                                        # Also check for ast.NameConstant (Python < 3.8)
-                                        elif hasattr(keyword.value, "value"):
+                                        if isinstance(keyword.value, ast.Constant) or hasattr(keyword.value, "value"):
                                             has_strict = keyword.value.value is True
 
                     # Report violation if xfail without strict=True
@@ -160,7 +156,7 @@ class TestXfailStrictEnforcement:
         # Build error message if violations found
         if all_violations:
             error_lines = [
-                "Found {} test files with non-strict xfail markers.".format(len(all_violations)),
+                f"Found {len(all_violations)} test files with non-strict xfail markers.",
                 "",
                 "WHY THIS MATTERS:",
                 "- Non-strict xfail tests fail silently when they start passing",
@@ -172,9 +168,9 @@ class TestXfailStrictEnforcement:
             ]
 
             for file_path, violations in sorted(all_violations.items()):
-                error_lines.append("File: {}".format(file_path))
+                error_lines.append(f"File: {file_path}")
                 for line_num, source_line in violations:
-                    error_lines.append("  Line {}: {}".format(line_num, source_line))
+                    error_lines.append(f"  Line {line_num}: {source_line}")
                 error_lines.append("")
 
             error_lines.extend(
@@ -218,7 +214,7 @@ class TestXfailStrictEnforcement:
             # Count total xfails (strict + non-strict)
             # We need to count strict ones separately
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -257,10 +253,10 @@ class TestXfailStrictEnforcement:
         print("\n" + "=" * 60)
         print("Xfail Strict Enforcement Statistics")
         print("=" * 60)
-        print("Total xfail markers: {}".format(total_xfails))
-        print("Strict xfails (strict=True): {}".format(strict_xfails))
-        print("Non-strict xfails: {}".format(non_strict_xfails))
-        print("Strict coverage: {:.1f}%".format(coverage))
+        print(f"Total xfail markers: {total_xfails}")
+        print(f"Strict xfails (strict=True): {strict_xfails}")
+        print(f"Non-strict xfails: {non_strict_xfails}")
+        print(f"Strict coverage: {coverage:.1f}%")
         print("=" * 60 + "\n")
 
         # This test always passes - it's informational only

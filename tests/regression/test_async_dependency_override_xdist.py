@@ -25,7 +25,7 @@ See Also:
 """
 
 import gc
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 from fastapi import Depends, FastAPI, Request
@@ -71,7 +71,7 @@ class TestAsyncDependencyOverridePattern:
         async def get_current_user(
             request: Request,
             credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """Async dependency that requires authentication"""
             if not credentials:
                 from fastapi import HTTPException
@@ -83,7 +83,7 @@ class TestAsyncDependencyOverridePattern:
             return {"user_id": "authenticated-user"}
 
         @app.get("/test-endpoint")
-        async def test_endpoint(user: Dict[str, Any] = Depends(get_current_user)):
+        async def test_endpoint(user: dict[str, Any] = Depends(get_current_user)):
             """Test endpoint requiring authentication"""
             return {"message": "success", "user": user}
 
@@ -130,7 +130,7 @@ class TestAsyncDependencyOverridePattern:
         async def get_current_user(
             request: Request,
             credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """Async dependency that requires authentication"""
             if not credentials:
                 from fastapi import HTTPException
@@ -142,7 +142,7 @@ class TestAsyncDependencyOverridePattern:
             return {"user_id": "authenticated-user"}
 
         @app.get("/test-endpoint")
-        async def test_endpoint(user: Dict[str, Any] = Depends(get_current_user)):
+        async def test_endpoint(user: dict[str, Any] = Depends(get_current_user)):
             """Test endpoint requiring authentication"""
             return {"message": "success", "user": user}
 
@@ -183,19 +183,19 @@ class TestAsyncDependencyOverridePattern:
         app = FastAPI()
 
         # Sync dependency (can use lambda)
-        def get_config() -> Dict[str, str]:
+        def get_config() -> dict[str, str]:
             """Sync dependency"""
             return {"setting": "production"}
 
         # Async dependency (must use async function)
-        async def get_user() -> Dict[str, str]:
+        async def get_user() -> dict[str, str]:
             """Async dependency"""
             return {"user_id": "real-user"}
 
         @app.get("/test-mixed")
         async def test_endpoint(
-            config: Dict[str, str] = Depends(get_config),
-            user: Dict[str, str] = Depends(get_user),
+            config: dict[str, str] = Depends(get_config),
+            user: dict[str, str] = Depends(get_user),
         ):
             return {"config": config, "user": user}
 

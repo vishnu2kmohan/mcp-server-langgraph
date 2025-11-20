@@ -27,7 +27,8 @@ Example:
     result = supervisor.invoke({"task": "Write a research report"})
 """
 
-from typing import Any, Callable, Dict, List, Literal, Optional
+from collections.abc import Callable
+from typing import Any, Literal
 
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
@@ -37,10 +38,10 @@ class SupervisorState(BaseModel):
     """State for supervisor pattern."""
 
     task: str = Field(description="The task to accomplish")
-    current_agent: Optional[str] = Field(default=None, description="Currently active agent")
-    agent_history: List[str] = Field(default_factory=list, description="Sequence of agents executed")
-    agent_results: Dict[str, Any] = Field(default_factory=dict, description="Results from each agent")
-    next_agent: Optional[str] = Field(default=None, description="Next agent to execute")
+    current_agent: str | None = Field(default=None, description="Currently active agent")
+    agent_history: list[str] = Field(default_factory=list, description="Sequence of agents executed")
+    agent_results: dict[str, Any] = Field(default_factory=dict, description="Results from each agent")
+    next_agent: str | None = Field(default=None, description="Next agent to execute")
     final_result: str = Field(default="", description="Final aggregated result")
     routing_decision: str = Field(default="", description="Supervisor's routing decision")
     completed: bool = Field(default=False, description="Whether task is completed")
@@ -55,9 +56,9 @@ class Supervisor:
 
     def __init__(
         self,
-        agents: Dict[str, Callable[[str], Any]],
+        agents: dict[str, Callable[[str], Any]],
         routing_strategy: Literal["sequential", "conditional", "parallel"] = "conditional",
-        supervisor_prompt: Optional[str] = None,
+        supervisor_prompt: str | None = None,
     ):
         """
         Initialize supervisor.
@@ -73,7 +74,7 @@ class Supervisor:
         self.agents = agents
         self.routing_strategy = routing_strategy
         self.supervisor_prompt = supervisor_prompt or self._default_supervisor_prompt()
-        self._graph: Optional[StateGraph[SupervisorState]] = None
+        self._graph: StateGraph[SupervisorState] | None = None
 
     def _default_supervisor_prompt(self) -> str:
         """Default supervisor prompt."""
@@ -231,7 +232,7 @@ Choose the best agent for each sub-task."""
 
         return self._graph.compile(checkpointer=checkpointer)
 
-    def invoke(self, task: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def invoke(self, task: str, config: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute the supervisor pattern.
 

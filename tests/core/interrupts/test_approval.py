@@ -15,7 +15,7 @@ Tests cover:
 
 import gc
 import json
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -263,7 +263,7 @@ class TestApprovalNode:
             risk_level="high",
         )
 
-        state: Dict[str, Any] = {"user": "john", "amount": 5000}
+        state: dict[str, Any] = {"user": "john", "amount": 5000}
 
         # Execute approval node
         result_state = node(state)
@@ -287,7 +287,7 @@ class TestApprovalNode:
         node1 = ApprovalNode("action_1", risk_level="low")
         node2 = ApprovalNode("action_2", risk_level="high")
 
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         # First approval
         state = node1(state)
@@ -302,7 +302,7 @@ class TestApprovalNode:
     def test_approval_node_call_generates_unique_ids(self):
         """Test each approval node call generates unique approval ID."""
         node = ApprovalNode("test_approval")
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         # Call twice with small delay
         with freeze_time("2024-01-15 12:00:00.000000"):
@@ -320,7 +320,7 @@ class TestApprovalNode:
     def test_approval_node_notification_webhook_none(self, mock_print):
         """Test notification is NOT sent when webhook is None."""
         node = ApprovalNode("test_approval", notification_webhook=None)
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         node(state)
 
@@ -336,7 +336,7 @@ class TestApprovalNode:
             risk_level="high",
             notification_webhook="https://api.example.com/webhook",
         )
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         node(state)
 
@@ -348,7 +348,7 @@ class TestApprovalNode:
     def test_approval_node_call_preserves_original_state(self):
         """Test approval node preserves user data in state."""
         node = ApprovalNode("preserve_test")
-        state: Dict[str, Any] = {
+        state: dict[str, Any] = {
             "user_id": "user_123",
             "session": "session_456",
             "data": {"key": "value"},
@@ -378,21 +378,21 @@ class TestCheckApprovalStatus:
 
     def test_check_approval_status_pending_no_responses(self):
         """Test pending status when no responses exist."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
         status = check_approval_status(state, "approval_123")
 
         assert status == ApprovalStatus.PENDING
 
     def test_check_approval_status_pending_different_id(self):
         """Test pending status when approval ID not in responses."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_456": {"status": "approved"}}}
+        state: dict[str, Any] = {"approval_responses": {"approval_456": {"status": "approved"}}}
 
         status = check_approval_status(state, "approval_123")
         assert status == ApprovalStatus.PENDING
 
     def test_check_approval_status_approved(self):
         """Test approved status returned correctly."""
-        state: Dict[str, Any] = {
+        state: dict[str, Any] = {
             "approval_responses": {"approval_123": {"status": "approved", "approved_by": "john@example.com"}}
         }
 
@@ -401,14 +401,14 @@ class TestCheckApprovalStatus:
 
     def test_check_approval_status_rejected(self):
         """Test rejected status returned correctly."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_789": {"status": "rejected", "reason": "Too risky"}}}
+        state: dict[str, Any] = {"approval_responses": {"approval_789": {"status": "rejected", "reason": "Too risky"}}}
 
         status = check_approval_status(state, "approval_789")
         assert status == ApprovalStatus.REJECTED
 
     def test_check_approval_status_expired(self):
         """Test expired status returned correctly."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_001": {"status": "expired"}}}
+        state: dict[str, Any] = {"approval_responses": {"approval_001": {"status": "expired"}}}
 
         status = check_approval_status(state, "approval_001")
         assert status == ApprovalStatus.EXPIRED
@@ -426,7 +426,7 @@ class TestApproveAction:
     @freeze_time("2024-01-15 14:00:00")
     def test_approve_action_creates_response(self):
         """Test approve_action creates approval response."""
-        state: Dict[str, Any] = {"pending_approval": True}
+        state: dict[str, Any] = {"pending_approval": True}
 
         result_state = approve_action(
             state,
@@ -447,7 +447,7 @@ class TestApproveAction:
 
     def test_approve_action_clears_pending_flag(self):
         """Test approve_action clears pending_approval flag."""
-        state: Dict[str, Any] = {"pending_approval": True}
+        state: dict[str, Any] = {"pending_approval": True}
 
         result_state = approve_action(state, "approval_456", "jane@example.com")
 
@@ -455,7 +455,7 @@ class TestApproveAction:
 
     def test_approve_action_without_reason(self):
         """Test approve_action without optional reason."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result_state = approve_action(state, "approval_789", "admin@example.com")
 
@@ -464,7 +464,7 @@ class TestApproveAction:
 
     def test_approve_action_preserves_existing_responses(self):
         """Test approve_action preserves other approval responses."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_001": {"status": "approved", "approved_by": "user1"}}}
+        state: dict[str, Any] = {"approval_responses": {"approval_001": {"status": "approved", "approved_by": "user1"}}}
 
         result_state = approve_action(state, "approval_002", "user2")
 
@@ -474,7 +474,7 @@ class TestApproveAction:
 
     def test_approve_action_multiple_approvals(self):
         """Test multiple sequential approvals."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         state = approve_action(state, "approval_1", "approver_1", "Reason 1")
         state = approve_action(state, "approval_2", "approver_2", "Reason 2")
@@ -498,7 +498,7 @@ class TestRejectAction:
     @freeze_time("2024-01-15 15:30:00")
     def test_reject_action_creates_response(self):
         """Test reject_action creates rejection response."""
-        state: Dict[str, Any] = {"pending_approval": True}
+        state: dict[str, Any] = {"pending_approval": True}
 
         result_state = reject_action(
             state,
@@ -519,7 +519,7 @@ class TestRejectAction:
 
     def test_reject_action_sets_workflow_halted(self):
         """Test reject_action sets workflow_halted flag."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result_state = reject_action(
             state,
@@ -532,7 +532,7 @@ class TestRejectAction:
 
     def test_reject_action_clears_pending_flag(self):
         """Test reject_action clears pending_approval flag."""
-        state: Dict[str, Any] = {"pending_approval": True}
+        state: dict[str, Any] = {"pending_approval": True}
 
         result_state = reject_action(state, "approval_789", "user@example.com", "Not authorized")
 
@@ -540,7 +540,7 @@ class TestRejectAction:
 
     def test_reject_action_preserves_existing_responses(self):
         """Test reject_action preserves other approval responses."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_001": {"status": "approved", "approved_by": "user1"}}}
+        state: dict[str, Any] = {"approval_responses": {"approval_001": {"status": "approved", "approved_by": "user1"}}}
 
         result_state = reject_action(
             state,
@@ -647,7 +647,7 @@ class TestApprovalWorkflowIntegration:
             risk_level="high",
         )
 
-        state: Dict[str, Any] = {"amount": 25000, "vendor": "ACME Corp"}
+        state: dict[str, Any] = {"amount": 25000, "vendor": "ACME Corp"}
 
         # Execute approval node
         state = node(state)
@@ -687,7 +687,7 @@ class TestApprovalWorkflowIntegration:
             risk_level="critical",
         )
 
-        state: Dict[str, Any] = {"customer_id": "cust_123"}
+        state: dict[str, Any] = {"customer_id": "cust_123"}
         state = node(state)
 
         approval_id = state["current_approval_id"]
@@ -710,7 +710,7 @@ class TestApprovalWorkflowIntegration:
 
     def test_multiple_approvals_workflow(self):
         """Test workflow with multiple sequential approvals."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         # First approval
         node1 = ApprovalNode("step_1", risk_level="low")
@@ -752,7 +752,7 @@ class TestApprovalEdgeCases:
 
     def test_approve_action_on_empty_state(self):
         """Test approve_action creates approval_responses if missing."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result_state = approve_action(state, "approval_999", "user@example.com")
 
@@ -761,7 +761,7 @@ class TestApprovalEdgeCases:
 
     def test_reject_action_on_empty_state(self):
         """Test reject_action creates approval_responses if missing."""
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result_state = reject_action(state, "approval_888", "user@example.com", "Test rejection")
 
@@ -771,7 +771,7 @@ class TestApprovalEdgeCases:
     def test_approval_node_with_empty_state(self):
         """Test ApprovalNode works with completely empty state."""
         node = ApprovalNode("test")
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result_state = node(state)
 
@@ -780,7 +780,7 @@ class TestApprovalEdgeCases:
 
     def test_check_approval_status_malformed_response(self):
         """Test check_approval_status handles malformed response gracefully."""
-        state: Dict[str, Any] = {"approval_responses": {"approval_123": {"status": "approved"}}}  # Valid
+        state: dict[str, Any] = {"approval_responses": {"approval_123": {"status": "approved"}}}  # Valid
 
         # Should work with valid response
         status = check_approval_status(state, "approval_123")
@@ -789,7 +789,7 @@ class TestApprovalEdgeCases:
     def test_approval_request_context_isolation(self):
         """Test approval request context is copy, not reference."""
         node = ApprovalNode("test_isolation")
-        original_state: Dict[str, Any] = {"value": "original"}
+        original_state: dict[str, Any] = {"value": "original"}
 
         result_state = node(original_state)
 

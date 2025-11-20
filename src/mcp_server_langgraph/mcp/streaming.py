@@ -6,7 +6,7 @@ Provides type-safe streaming responses for MCP server with validation.
 
 import asyncio
 import json
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 from pydantic import BaseModel, Field
 
@@ -29,7 +29,7 @@ class StreamedResponse(BaseModel):
     total_length: int = Field(description="Total content length")
     chunk_count: int = Field(description="Number of chunks received")
     is_complete: bool = Field(description="Whether stream completed successfully")
-    error_message: Optional[str] = Field(default=None, description="Error message if stream failed")
+    error_message: str | None = Field(default=None, description="Error message if stream failed")
 
     def get_full_content(self) -> str:
         """
@@ -53,7 +53,7 @@ class MCPStreamingValidator:
         """Initialize streaming validator."""
         self.active_streams: dict[str, list[StreamChunk]] = {}
 
-    async def validate_chunk(self, chunk_data: dict, stream_id: str) -> Optional[StreamChunk]:  # type: ignore[type-arg]
+    async def validate_chunk(self, chunk_data: dict, stream_id: str) -> StreamChunk | None:  # type: ignore[type-arg]
         """
         Validate a single stream chunk.
 
@@ -155,9 +155,7 @@ class MCPStreamingValidator:
             return response
 
 
-async def stream_validated_response(
-    content: str, chunk_size: int = 100, stream_id: Optional[str] = None
-) -> AsyncIterator[str]:
+async def stream_validated_response(content: str, chunk_size: int = 100, stream_id: str | None = None) -> AsyncIterator[str]:
     """
     Stream response with validation as newline-delimited JSON.
 

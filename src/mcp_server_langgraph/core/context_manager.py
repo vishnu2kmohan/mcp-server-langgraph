@@ -10,8 +10,6 @@ References:
 - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 """
 
-from typing import Optional
-
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
@@ -568,9 +566,7 @@ PREFERENCES:
 
 
 # Convenience functions for easy import
-async def compact_if_needed(
-    messages: list[BaseMessage], context_manager: Optional[ContextManager] = None
-) -> list[BaseMessage]:
+async def compact_if_needed(messages: list[BaseMessage], context_manager: ContextManager | None = None) -> list[BaseMessage]:
     """
     Compact conversation if needed, otherwise return unchanged.
 

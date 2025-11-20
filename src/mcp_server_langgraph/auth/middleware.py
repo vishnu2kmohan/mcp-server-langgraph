@@ -8,7 +8,7 @@ Now supports:
 """
 
 from functools import wraps
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -77,7 +77,7 @@ class AuthorizationResult(BaseModel):
     user_id: str = Field(..., description="User identifier that was checked")
     relation: str = Field(..., description="Relation that was checked")
     resource: str = Field(..., description="Resource that was checked")
-    reason: Optional[str] = Field(None, description="Reason for denial if not authorized")
+    reason: str | None = Field(None, description="Reason for denial if not authorized")
     used_fallback: bool = Field(default=False, description="Whether fallback authorization was used")
 
     model_config = ConfigDict(
@@ -96,12 +96,12 @@ class AuthorizationResult(BaseModel):
         },
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuthorizationResult":
+    def from_dict(cls, data: dict[str, Any]) -> "AuthorizationResult":
         """Create AuthorizationResult from dictionary"""
         return cls(**data)
 
@@ -121,11 +121,11 @@ class AuthMiddleware:
 
     def __init__(
         self,
-        secret_key: Optional[str] = None,
-        openfga_client: Optional[OpenFGAClient] = None,
-        user_provider: Optional[UserProvider] = None,
-        session_store: Optional[SessionStore] = None,
-        settings: Optional[Any] = None,
+        secret_key: str | None = None,
+        openfga_client: OpenFGAClient | None = None,
+        user_provider: UserProvider | None = None,
+        session_store: SessionStore | None = None,
+        settings: Any | None = None,
     ):
         """
         Initialize AuthMiddleware
@@ -166,7 +166,7 @@ class AuthMiddleware:
             },
         )
 
-    async def authenticate(self, username: str, password: Optional[str] = None) -> AuthResponse:
+    async def authenticate(self, username: str, password: str | None = None) -> AuthResponse:
         """
         Authenticate user by username
 
@@ -201,7 +201,7 @@ class AuthMiddleware:
 
             return result
 
-    async def authorize(self, user_id: str, relation: str, resource: str, context: Optional[Dict[str, Any]] = None) -> bool:
+    async def authorize(self, user_id: str, relation: str, resource: str, context: dict[str, Any] | None = None) -> bool:
         """
         Check if user is authorized using OpenFGA
 
@@ -574,10 +574,10 @@ class AuthMiddleware:
         self,
         user_id: str,
         username: str,
-        roles: List[str],
-        metadata: Optional[Dict[str, Any]] = None,
-        ttl_seconds: Optional[int] = None,
-    ) -> Optional[str]:
+        roles: list[str],
+        metadata: dict[str, Any] | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str | None:
         """
         Create a new session
 
@@ -605,7 +605,7 @@ class AuthMiddleware:
             logger.info("Session created", extra={"session_id": session_id, "user_id": user_id})
             return session_id
 
-    async def get_session(self, session_id: str) -> Optional[SessionData]:
+    async def get_session(self, session_id: str) -> SessionData | None:
         """
         Get session data
 
@@ -630,7 +630,7 @@ class AuthMiddleware:
 
             return session
 
-    async def refresh_session(self, session_id: str, ttl_seconds: Optional[int] = None) -> bool:
+    async def refresh_session(self, session_id: str, ttl_seconds: int | None = None) -> bool:
         """
         Refresh session expiration
 
@@ -681,7 +681,7 @@ class AuthMiddleware:
 
             return revoked
 
-    async def list_user_sessions(self, user_id: str) -> List[SessionData]:
+    async def list_user_sessions(self, user_id: str) -> list[SessionData]:
         """
         List all active sessions for a user
 
@@ -725,9 +725,9 @@ class AuthMiddleware:
 
 
 def require_auth(  # type: ignore[no-untyped-def]
-    relation: Optional[str] = None,
-    resource: Optional[str] = None,
-    openfga_client: Optional[OpenFGAClient] = None,
+    relation: str | None = None,
+    resource: str | None = None,
+    openfga_client: OpenFGAClient | None = None,
     auth_middleware: Optional["AuthMiddleware"] = None,
 ):
     """
@@ -773,7 +773,7 @@ def require_auth(  # type: ignore[no-untyped-def]
     return decorator
 
 
-async def verify_token(token: str, secret_key: Optional[str] = None) -> TokenVerification:
+async def verify_token(token: str, secret_key: str | None = None) -> TokenVerification:
     """
     Standalone token verification function
 
@@ -794,7 +794,7 @@ async def verify_token(token: str, secret_key: Optional[str] = None) -> TokenVer
 
 if FASTAPI_AVAILABLE:  # noqa: C901
     # Global auth middleware instance (set by application)
-    _global_auth_middleware: Optional[AuthMiddleware] = None
+    _global_auth_middleware: AuthMiddleware | None = None
 
     def set_global_auth_middleware(auth: AuthMiddleware) -> None:
         """
@@ -827,8 +827,8 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
     async def get_current_user(
         request: Request,
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    ) -> Dict[str, Any]:
+        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    ) -> dict[str, Any]:
         """
         FastAPI dependency for extracting authenticated user from request.
 
@@ -910,10 +910,10 @@ if FASTAPI_AVAILABLE:  # noqa: C901
         )
 
     async def get_current_user_with_auth(
-        user: Dict[str, Any],
-        relation: Optional[str] = None,
-        resource: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        user: dict[str, Any],
+        relation: str | None = None,
+        resource: str | None = None,
+    ) -> dict[str, Any]:
         """
         FastAPI dependency for authenticated + authorized user.
 
@@ -953,7 +953,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         return user
 
-    def require_auth_dependency(relation: Optional[str] = None, resource: Optional[str] = None) -> None:
+    def require_auth_dependency(relation: str | None = None, resource: str | None = None) -> None:
         """
         Create a FastAPI dependency for authentication + authorization.
 
@@ -976,8 +976,8 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         async def dependency(
             request: Request,
-            credentials: Optional[HTTPAuthorizationCredentials] = bearer_scheme,
-        ) -> Dict[str, Any]:
+            credentials: HTTPAuthorizationCredentials | None = bearer_scheme,
+        ) -> dict[str, Any]:
             # Get authenticated user
             user = await get_current_user(request, credentials)
 

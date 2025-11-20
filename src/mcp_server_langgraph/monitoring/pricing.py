@@ -22,13 +22,12 @@ Example:
 """
 
 from decimal import Decimal
-from typing import Dict
 
 # ==============================================================================
 # Pricing Table - Updated: 2025-11-02
 # ==============================================================================
 
-PRICING_TABLE: Dict[str, Dict[str, Dict[str, Decimal]]] = {
+PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
     "anthropic": {
         "claude-3-5-sonnet-20241022": {
             "input": Decimal("0.003"),  # $3.00 per 1M tokens
@@ -126,7 +125,7 @@ def calculate_cost(
     return input_cost + output_cost
 
 
-def get_all_models() -> Dict[str, list[str]]:
+def get_all_models() -> dict[str, list[str]]:
     """
     Get all available models grouped by provider.
 
@@ -141,7 +140,7 @@ def get_all_models() -> Dict[str, list[str]]:
     return {provider: list(models.keys()) for provider, models in PRICING_TABLE.items()}
 
 
-def get_model_pricing(provider: str, model: str) -> Dict[str, Decimal]:
+def get_model_pricing(provider: str, model: str) -> dict[str, Decimal]:
     """
     Get pricing information for a specific model.
 

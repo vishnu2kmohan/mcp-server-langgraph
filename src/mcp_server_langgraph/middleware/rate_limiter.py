@@ -11,7 +11,8 @@ Provides DoS protection with:
 See ADR-0027 for design rationale.
 """
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request
 from slowapi import Limiter
@@ -40,7 +41,7 @@ ENDPOINT_RATE_LIMITS = {
 }
 
 
-def get_user_id_from_jwt(request: Request) -> Optional[str]:
+def get_user_id_from_jwt(request: Request) -> str | None:
     """
     Extract user ID from JWT token in request.
 

@@ -9,7 +9,7 @@ TDD RED phase: Tests written FIRST, will fail until Admin API methods are implem
 
 import gc
 import os
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 import httpx

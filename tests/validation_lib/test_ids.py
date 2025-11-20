@@ -36,7 +36,6 @@ See: adr/adr-0058-pytest-xdist-state-pollution-prevention.md for architecture de
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # NOTE: This is a validator library, not a test file. It's imported by scripts
 # that don't have pytest in their environment. Therefore, we cannot add pytest
@@ -182,7 +181,7 @@ def is_legitimate_usage(line: str) -> bool:
     return False
 
 
-def find_hardcoded_ids(file_path: Path) -> List[Tuple[int, str, str]]:
+def find_hardcoded_ids(file_path: Path) -> list[tuple[int, str, str]]:
     """
     Find hardcoded ID patterns in a test file.
 

@@ -67,7 +67,7 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 # Handle multi-document YAML (with ---)
                 patches = list(yaml.safe_load_all(f))
 
@@ -122,7 +122,7 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 patches = list(yaml.safe_load_all(f))
 
             for patch in patches:
@@ -165,7 +165,7 @@ class TestSecurityContexts:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
 
-            with open(patch_file, "r") as f:
+            with open(patch_file) as f:
                 patches = list(yaml.safe_load_all(f))
 
             for patch in patches:
@@ -293,7 +293,7 @@ class TestRedisExternalNameService:
         if not redis_service_file.exists():
             pytest.skip("Redis service patch not found")
 
-        with open(redis_service_file, "r") as f:
+        with open(redis_service_file) as f:
             patches = list(yaml.safe_load_all(f))
 
         for patch in patches:

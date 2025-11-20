@@ -11,7 +11,7 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 """
 
 import operator
-from typing import Annotated, Any, Literal, Optional, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -107,7 +107,7 @@ def _initialize_pydantic_agent() -> None:
         return None
 
 
-def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
+def _create_checkpointer(settings_to_use: Any | None = None) -> BaseCheckpointSaver[Any]:
     """
     Create checkpointer backend based on configuration
 
@@ -177,7 +177,7 @@ def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpoin
         return MemorySaver()
 
 
-def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
+def create_checkpointer(settings_override: Any | None = None) -> BaseCheckpointSaver[Any]:
     """
     Public API to create checkpointer backend based on configuration.
 
@@ -244,7 +244,7 @@ def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
         logger.error(f"Error during checkpointer cleanup: {e}", exc_info=True)
 
 
-def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
+def _get_runnable_config(user_id: str | None = None, request_id: str | None = None) -> RunnableConfig | None:
     """Get runnable config with LangSmith metadata"""
     if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
         return None
@@ -274,7 +274,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     }
 
 
-def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> Any:  # noqa: C901
+def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any:  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -900,8 +900,8 @@ agent_graph = None
 
 
 def create_agent_graph(
-    settings: Optional[Any] = None,
-    container: Optional[Any] = None,
+    settings: Any | None = None,
+    container: Any | None = None,
 ) -> Any:
     """
     Create a new agent graph with dependency injection support.
@@ -966,8 +966,8 @@ def create_agent_graph_impl(settings_to_use: Any) -> Any:
 
 
 def create_agent(
-    settings: Optional[Any] = None,
-    container: Optional[Any] = None,
+    settings: Any | None = None,
+    container: Any | None = None,
 ) -> Any:
     """
     Create a new agent instance with dependency injection support.

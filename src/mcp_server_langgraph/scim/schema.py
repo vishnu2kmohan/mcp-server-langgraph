@@ -12,7 +12,7 @@ References:
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -26,39 +26,39 @@ class SCIMEmail(BaseModel):
     """SCIM email address"""
 
     value: str
-    type: Optional[str] = "work"  # work, home, other
+    type: str | None = "work"  # work, home, other
     primary: bool = False
 
 
 class SCIMName(BaseModel):
     """SCIM user name"""
 
-    formatted: Optional[str] = None
-    familyName: Optional[str] = None
-    givenName: Optional[str] = None
-    middleName: Optional[str] = None
-    honorificPrefix: Optional[str] = None
-    honorificSuffix: Optional[str] = None
+    formatted: str | None = None
+    familyName: str | None = None
+    givenName: str | None = None
+    middleName: str | None = None
+    honorificPrefix: str | None = None
+    honorificSuffix: str | None = None
 
 
 class SCIMPhoneNumber(BaseModel):
     """SCIM phone number"""
 
     value: str
-    type: Optional[str] = "work"
+    type: str | None = "work"
     primary: bool = False
 
 
 class SCIMAddress(BaseModel):
     """SCIM address"""
 
-    formatted: Optional[str] = None
-    streetAddress: Optional[str] = None
-    locality: Optional[str] = None
-    region: Optional[str] = None
-    postalCode: Optional[str] = None
-    country: Optional[str] = None
-    type: Optional[str] = "work"
+    formatted: str | None = None
+    streetAddress: str | None = None
+    locality: str | None = None
+    region: str | None = None
+    postalCode: str | None = None
+    country: str | None = None
+    type: str | None = "work"
     primary: bool = False
 
 
@@ -75,20 +75,20 @@ class SCIMGroupMembership(BaseModel):
 
     value: str  # Group ID
     # Use 'reference' as field name, serialize as '$ref' for SCIM compliance
-    reference: Optional[str] = Field(None, serialization_alias="$ref", validation_alias="$ref")
-    display: Optional[str] = None
-    type: Optional[str] = "direct"
+    reference: str | None = Field(None, serialization_alias="$ref", validation_alias="$ref")
+    display: str | None = None
+    type: str | None = "direct"
 
 
 class SCIMEnterpriseUser(BaseModel):
     """SCIM Enterprise User Extension (RFC 7643 Section 4.3)"""
 
-    employeeNumber: Optional[str] = None
-    costCenter: Optional[str] = None
-    organization: Optional[str] = None
-    division: Optional[str] = None
-    department: Optional[str] = None
-    manager: Optional[Dict[str, str]] = None  # {value: manager_id, ref: url, displayName: name}
+    employeeNumber: str | None = None
+    costCenter: str | None = None
+    organization: str | None = None
+    division: str | None = None
+    department: str | None = None
+    manager: dict[str, str] | None = None  # {value: manager_id, ref: url, displayName: name}
 
 
 class SCIMUser(BaseModel):
@@ -98,37 +98,35 @@ class SCIMUser(BaseModel):
     Core schema with optional Enterprise extension.
     """
 
-    schemas: List[str] = Field(default=[SCIM_USER_SCHEMA])
-    id: Optional[str] = None
-    externalId: Optional[str] = None
+    schemas: list[str] = Field(default=[SCIM_USER_SCHEMA])
+    id: str | None = None
+    externalId: str | None = None
     userName: str
-    name: Optional[SCIMName] = None
-    displayName: Optional[str] = None
-    nickName: Optional[str] = None
-    profileUrl: Optional[str] = None
-    title: Optional[str] = None
-    userType: Optional[str] = None
-    preferredLanguage: Optional[str] = None
-    locale: Optional[str] = None
-    timezone: Optional[str] = None
+    name: SCIMName | None = None
+    displayName: str | None = None
+    nickName: str | None = None
+    profileUrl: str | None = None
+    title: str | None = None
+    userType: str | None = None
+    preferredLanguage: str | None = None
+    locale: str | None = None
+    timezone: str | None = None
     active: bool = True
-    password: Optional[str] = None
-    emails: List[SCIMEmail] = []
-    phoneNumbers: List[SCIMPhoneNumber] = []
-    addresses: List[SCIMAddress] = []
-    groups: List[SCIMGroupMembership] = []
+    password: str | None = None
+    emails: list[SCIMEmail] = []
+    phoneNumbers: list[SCIMPhoneNumber] = []
+    addresses: list[SCIMAddress] = []
+    groups: list[SCIMGroupMembership] = []
 
     # Meta
-    meta: Optional[Dict[str, Any]] = None
+    meta: dict[str, Any] | None = None
 
     # Enterprise extension
-    enterpriseUser: Optional[SCIMEnterpriseUser] = Field(
-        None, alias="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
-    )
+    enterpriseUser: SCIMEnterpriseUser | None = Field(None, alias="urn:ietf:params:scim:schemas:extension:enterprise:2.0:User")
 
     @field_validator("schemas")
     @classmethod
-    def validate_schemas(cls, v: List[str]) -> List[str]:
+    def validate_schemas(cls, v: list[str]) -> list[str]:
         """Validate that required schemas are present"""
         if SCIM_USER_SCHEMA not in v:
             raise ValueError(f"Missing required schema: {SCIM_USER_SCHEMA}")
@@ -136,7 +134,7 @@ class SCIMUser(BaseModel):
 
     @field_validator("emails")
     @classmethod
-    def validate_primary_email(cls, v: List[SCIMEmail]) -> List[SCIMEmail]:
+    def validate_primary_email(cls, v: list[SCIMEmail]) -> list[SCIMEmail]:
         """Ensure at most one primary email"""
         primary_count = sum(1 for email in v if email.primary)
         if primary_count > 1:
@@ -157,23 +155,23 @@ class SCIMMember(BaseModel):
 
     value: str  # User ID
     # Use 'reference' as field name, serialize as '$ref' for SCIM compliance
-    reference: Optional[str] = Field(None, serialization_alias="$ref", validation_alias="$ref")
-    display: Optional[str] = None
-    type: Optional[str] = "User"
+    reference: str | None = Field(None, serialization_alias="$ref", validation_alias="$ref")
+    display: str | None = None
+    type: str | None = "User"
 
 
 class SCIMGroup(BaseModel):
     """SCIM 2.0 Group Resource"""
 
-    schemas: List[str] = Field(default=[SCIM_GROUP_SCHEMA])
-    id: Optional[str] = None
+    schemas: list[str] = Field(default=[SCIM_GROUP_SCHEMA])
+    id: str | None = None
     displayName: str
-    members: List[SCIMMember] = []
-    meta: Optional[Dict[str, Any]] = None
+    members: list[SCIMMember] = []
+    meta: dict[str, Any] | None = None
 
     @field_validator("schemas")
     @classmethod
-    def validate_schemas(cls, v: List[str]) -> List[str]:
+    def validate_schemas(cls, v: list[str]) -> list[str]:
         """Validate that required schemas are present"""
         if SCIM_GROUP_SCHEMA not in v:
             raise ValueError(f"Missing required schema: {SCIM_GROUP_SCHEMA}")
@@ -192,37 +190,37 @@ class SCIMPatchOperation(BaseModel):
     """SCIM PATCH operation"""
 
     op: SCIMPatchOp
-    path: Optional[str] = None
+    path: str | None = None
     value: Any = None
 
 
 class SCIMPatchRequest(BaseModel):
     """SCIM PATCH request"""
 
-    schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:PatchOp"])
-    Operations: List[SCIMPatchOperation]
+    schemas: list[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:PatchOp"])
+    Operations: list[SCIMPatchOperation]
 
 
 class SCIMListResponse(BaseModel):
     """SCIM List Response"""
 
-    schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:ListResponse"])
+    schemas: list[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:ListResponse"])
     totalResults: int
     startIndex: int = 1
     itemsPerPage: int
-    Resources: List[Any]  # Can be Users or Groups
+    Resources: list[Any]  # Can be Users or Groups
 
 
 class SCIMError(BaseModel):
     """SCIM Error Response"""
 
-    schemas: List[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:Error"])
+    schemas: list[str] = Field(default=["urn:ietf:params:scim:api:messages:2.0:Error"])
     status: int
-    scimType: Optional[str] = None
-    detail: Optional[str] = None
+    scimType: str | None = None
+    detail: str | None = None
 
 
-def validate_scim_user(data: Dict[str, Any]) -> SCIMUser:
+def validate_scim_user(data: dict[str, Any]) -> SCIMUser:
     """
     Validate SCIM user data
 
@@ -241,7 +239,7 @@ def validate_scim_user(data: Dict[str, Any]) -> SCIMUser:
         raise ValueError(f"Invalid SCIM user data: {str(e)}")
 
 
-def validate_scim_group(data: Dict[str, Any]) -> SCIMGroup:
+def validate_scim_group(data: dict[str, Any]) -> SCIMGroup:
     """
     Validate SCIM group data
 
@@ -260,7 +258,7 @@ def validate_scim_group(data: Dict[str, Any]) -> SCIMGroup:
         raise ValueError(f"Invalid SCIM group data: {str(e)}")
 
 
-def user_to_keycloak(scim_user: SCIMUser) -> Dict[str, Any]:
+def user_to_keycloak(scim_user: SCIMUser) -> dict[str, Any]:
     """
     Convert SCIM user to Keycloak user representation
 
@@ -270,8 +268,8 @@ def user_to_keycloak(scim_user: SCIMUser) -> Dict[str, Any]:
     Returns:
         Keycloak user representation
     """
-    attributes: Dict[str, str] = {}
-    keycloak_user: Dict[str, Any] = {
+    attributes: dict[str, str] = {}
+    keycloak_user: dict[str, Any] = {
         "username": scim_user.userName,
         "enabled": scim_user.active,
         "emailVerified": False,
@@ -319,7 +317,7 @@ def user_to_keycloak(scim_user: SCIMUser) -> Dict[str, Any]:
     return keycloak_user
 
 
-def keycloak_to_scim_user(keycloak_user: Dict[str, Any]) -> SCIMUser:
+def keycloak_to_scim_user(keycloak_user: dict[str, Any]) -> SCIMUser:
     """
     Convert Keycloak user to SCIM user representation
 

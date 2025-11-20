@@ -14,9 +14,10 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 import pybreaker
 from opentelemetry import trace
@@ -131,7 +132,7 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: 
 
 
 # Global circuit breaker instances
-_circuit_breakers: Dict[str, pybreaker.CircuitBreaker] = {}
+_circuit_breakers: dict[str, pybreaker.CircuitBreaker] = {}
 
 
 def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
@@ -180,9 +181,9 @@ def get_circuit_breaker(name: str) -> pybreaker.CircuitBreaker:
 
 def circuit_breaker(  # noqa: C901
     name: str,
-    fail_max: Optional[int] = None,
-    timeout: Optional[int] = None,
-    fallback: Optional[Callable[..., Any]] = None,
+    fail_max: int | None = None,
+    timeout: int | None = None,
+    fallback: Callable[..., Any] | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to protect a function with a circuit breaker.
@@ -386,7 +387,7 @@ def get_circuit_breaker_state(name: str) -> CircuitBreakerState:
     return CircuitBreakerMetricsListener._map_state(breaker.state)
 
 
-def get_all_circuit_breaker_states() -> Dict[str, CircuitBreakerState]:
+def get_all_circuit_breaker_states() -> dict[str, CircuitBreakerState]:
     """
     Get states of all circuit breakers.
 

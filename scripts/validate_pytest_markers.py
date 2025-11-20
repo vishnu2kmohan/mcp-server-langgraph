@@ -12,7 +12,6 @@ Exit codes:
 import re
 import sys
 from pathlib import Path
-from typing import Set
 
 try:
     import tomllib  # Python 3.11+
@@ -20,7 +19,7 @@ except ImportError:
     import tomli as tomllib  # Fallback for Python < 3.11
 
 
-def get_registered_markers() -> Set[str]:
+def get_registered_markers() -> set[str]:
     """Extract registered markers from pyproject.toml."""
     pyproject_path = Path("pyproject.toml")
 
@@ -42,7 +41,7 @@ def get_registered_markers() -> Set[str]:
     return markers
 
 
-def get_used_markers() -> Set[str]:
+def get_used_markers() -> set[str]:
     """Find all pytest.mark.* usage in test files."""
     tests_dir = Path("tests")
 

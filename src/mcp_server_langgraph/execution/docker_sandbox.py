@@ -13,19 +13,17 @@ from typing import TYPE_CHECKING
 
 # Docker is an optional dependency - gracefully handle missing docker package
 try:
+    import docker
     from docker.errors import ImageNotFound, NotFound
     from docker.models.containers import Container
-
-    import docker
 
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
     if TYPE_CHECKING:
+        import docker
         from docker.errors import ImageNotFound, NotFound
         from docker.models.containers import Container
-
-        import docker
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError

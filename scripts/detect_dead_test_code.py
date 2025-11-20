@@ -25,10 +25,9 @@ Exit codes:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
-def find_dead_code_in_fixtures(filepath: Path) -> List[Tuple[str, int, List[int]]]:
+def find_dead_code_in_fixtures(filepath: Path) -> list[tuple[str, int, list[int]]]:
     """
     Find code after return statements in pytest fixtures.
 

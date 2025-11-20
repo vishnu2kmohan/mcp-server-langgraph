@@ -16,10 +16,9 @@ code here
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
-def find_code_blocks_without_lang(content: str, filepath: Path) -> List[Tuple[int, str]]:
+def find_code_blocks_without_lang(content: str, filepath: Path) -> list[tuple[int, str]]:
     """
     Find code blocks without language tags.
 
@@ -67,9 +66,9 @@ def detect_language_from_content(preview: str) -> str:
         return "python"
     elif any(x in preview for x in ["const ", "let ", "function ", "=>", "import {"]):
         return "javascript"
-    elif any(x in preview for x in ["#!/bin/bash", "#!/bin/sh", "export ", "echo "]):
-        return "bash"
-    elif any(x in preview for x in ["kubectl ", "docker ", "helm ", "gcloud "]):
+    elif any(x in preview for x in ["#!/bin/bash", "#!/bin/sh", "export ", "echo "]) or any(
+        x in preview for x in ["kubectl ", "docker ", "helm ", "gcloud "]
+    ):
         return "bash"
     elif "{" in preview and ":" in preview and '"' in preview:
         return "json"
@@ -83,7 +82,7 @@ def detect_language_from_content(preview: str) -> str:
         return "text"
 
 
-def analyze_file(filepath: Path) -> Dict:
+def analyze_file(filepath: Path) -> dict:
     """
     Analyze a single file for missing language tags.
 

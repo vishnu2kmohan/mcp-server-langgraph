@@ -10,12 +10,11 @@ updates the files with the new frontmatter.
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import yaml
 
 
-def extract_frontmatter(content: str) -> tuple[Optional[Dict], str]:
+def extract_frontmatter(content: str) -> tuple[dict | None, str]:
     """Extract YAML frontmatter from MDX content.
 
     Returns:
@@ -97,7 +96,7 @@ def generate_seo_description(description: str, title: str) -> str:
     return desc
 
 
-def extract_keywords(title: str, description: str, content: str) -> List[str]:
+def extract_keywords(title: str, description: str, content: str) -> list[str]:
     """Extract relevant keywords from title, description, and content.
 
     Args:

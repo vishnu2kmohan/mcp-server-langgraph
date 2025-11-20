@@ -12,7 +12,7 @@ import base64
 import time
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 from cryptography.fernet import Fernet
 from langchain_core.embeddings import Embeddings
@@ -29,8 +29,8 @@ from mcp_server_langgraph.utils.response_optimizer import count_tokens
 def _create_embeddings(
     provider: str,
     model_name: str,
-    google_api_key: Optional[str] = None,
-    task_type: Optional[str] = None,
+    google_api_key: str | None = None,
+    task_type: str | None = None,
 ) -> Embeddings:
     """
     Create embeddings instance based on provider.
@@ -194,7 +194,7 @@ class DynamicContextLoader:
         self.enable_auto_deletion = settings.enable_auto_deletion
 
         # Initialize encryption if enabled
-        self.cipher: Optional[Fernet] = None
+        self.cipher: Fernet | None = None
         if self.enable_encryption:
             if not settings.context_encryption_key:
                 raise ValueError(

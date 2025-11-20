@@ -9,8 +9,6 @@ Defines comprehensive metrics for monitoring authentication workflows:
 - OpenFGA role synchronization
 """
 
-from typing import Optional
-
 from opentelemetry import metrics as otel_metrics
 
 # Get meter for auth metrics
@@ -204,7 +202,7 @@ def record_session_operation(operation: str, backend: str, result: str, duration
     auth_session_operations_duration.record(duration_ms, {"operation": operation, "backend": backend})
 
 
-def record_jwks_operation(operation: str, result: str, duration_ms: Optional[float] = None) -> None:
+def record_jwks_operation(operation: str, result: str, duration_ms: float | None = None) -> None:
     """Record JWKS cache operation metrics"""
     if operation in ["hit", "miss"]:
         auth_jwks_cache_operations.add(1, {"type": operation})

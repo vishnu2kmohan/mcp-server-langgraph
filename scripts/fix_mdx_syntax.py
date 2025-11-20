@@ -12,10 +12,9 @@ Usage:
 import argparse
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 
-def fix_code_block_closings(content: str) -> Tuple[str, int]:
+def fix_code_block_closings(content: str) -> tuple[str, int]:
     """
     Fix code blocks that are closed with ```LANG instead of ```.
 
@@ -94,7 +93,7 @@ def fix_code_block_closings(content: str) -> Tuple[str, int]:
     return "\n".join(fixed_lines), fixes
 
 
-def fix_file(file_path: Path, dry_run: bool = False) -> Tuple[int, List[str]]:
+def fix_file(file_path: Path, dry_run: bool = False) -> tuple[int, list[str]]:
     """
     Fix MDX syntax errors in a file.
 
@@ -106,7 +105,7 @@ def fix_file(file_path: Path, dry_run: bool = False) -> Tuple[int, List[str]]:
         Tuple of (number_of_fixes, list_of_changes)
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             original_content = f.read()
 
         fixed_content, fixes = fix_code_block_closings(original_content)

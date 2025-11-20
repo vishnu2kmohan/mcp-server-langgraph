@@ -272,7 +272,7 @@ class TestNetworkPolicyComments:
         if not staging_netpol.exists():
             pytest.skip("Staging network policy file not found")
 
-        with open(staging_netpol, "r") as f:
+        with open(staging_netpol) as f:
             content = f.read()
 
         # Check for comments near port specifications

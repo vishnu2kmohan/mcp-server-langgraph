@@ -70,7 +70,7 @@ def main() -> int:
             continue
 
         # Only validate Python test files
-        if not file_path.suffix == ".py":
+        if file_path.suffix != ".py":
             continue
 
         # Only validate files in tests/ directory OR test files (test_*.py)

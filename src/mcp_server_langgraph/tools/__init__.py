@@ -15,7 +15,7 @@ from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_fil
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
 
 
-def get_all_tools(settings_override: Optional[Any] = None) -> list[BaseTool]:
+def get_all_tools(settings_override: Any | None = None) -> list[BaseTool]:
     """
     Factory function to get all tools based on settings.
 
@@ -90,7 +90,7 @@ def _get_code_execution_tools() -> list[BaseTool]:
 CODE_EXECUTION_TOOLS = _get_code_execution_tools()
 
 
-def get_tools(categories: list[str] | None = None, settings_override: Optional[Any] = None) -> list[BaseTool]:
+def get_tools(categories: list[str] | None = None, settings_override: Any | None = None) -> list[BaseTool]:
     """
     Get tools by category.
 
@@ -125,7 +125,7 @@ def get_tools(categories: list[str] | None = None, settings_override: Optional[A
     return tools
 
 
-def get_tool_by_name(name: str, settings_override: Optional[Any] = None) -> BaseTool | None:
+def get_tool_by_name(name: str, settings_override: Any | None = None) -> BaseTool | None:
     """
     Get a specific tool by name.
 

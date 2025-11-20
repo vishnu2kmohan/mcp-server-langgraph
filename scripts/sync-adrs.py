@@ -17,7 +17,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 
 class Colors:
@@ -31,7 +30,7 @@ class Colors:
     RESET = "\033[0m"
 
 
-def extract_title_and_date(content: str) -> Tuple[str, str]:
+def extract_title_and_date(content: str) -> tuple[str, str]:
     """
     Extract title and date from ADR content.
 
@@ -109,7 +108,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     dest_file = Path(f"docs/architecture/adr-{source_file.name.replace('.md', '.mdx')}")
 
     # Read source
-    with open(source_file, "r", encoding="utf-8") as f:
+    with open(source_file, encoding="utf-8") as f:
         source_content = f.read()
 
     # Convert to MDX
@@ -118,7 +117,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     # Check if update needed
     needs_update = True
     if dest_file.exists():
-        with open(dest_file, "r", encoding="utf-8") as f:
+        with open(dest_file, encoding="utf-8") as f:
             existing_content = f.read()
 
         # Extract body (skip frontmatter) for comparison
@@ -142,7 +141,7 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
         return False
 
 
-def sync_all_adrs(dry_run: bool = False) -> Dict[str, int]:
+def sync_all_adrs(dry_run: bool = False) -> dict[str, int]:
     """
     Sync all ADRs from adr/ to docs/architecture/
 
@@ -214,10 +213,10 @@ def check_sync_status() -> bool:
             continue
 
         # Read both files
-        with open(source_file, "r", encoding="utf-8") as f:
+        with open(source_file, encoding="utf-8") as f:
             source_content = f.read()
 
-        with open(dest_file, "r", encoding="utf-8") as f:
+        with open(dest_file, encoding="utf-8") as f:
             dest_content = f.read()
 
         # Extract body for comparison

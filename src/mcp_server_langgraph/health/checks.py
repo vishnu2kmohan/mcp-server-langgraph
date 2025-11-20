@@ -3,7 +3,7 @@ Health check endpoints for Kubernetes probes
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
@@ -23,7 +23,7 @@ class HealthResponse(BaseModel):
     status: str
     timestamp: str
     version: str
-    checks: Dict[str, Any]
+    checks: dict[str, Any]
 
 
 @app.get("/", response_model=HealthResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
@@ -120,7 +120,7 @@ async def readiness_check() -> JSONResponse:
 
 
 @app.get("/startup", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-async def startup_check() -> JSONResponse | Dict[str, Any]:
+async def startup_check() -> JSONResponse | dict[str, Any]:
     """
     Startup probe - returns 200 when application has fully started
 
@@ -147,7 +147,7 @@ async def startup_check() -> JSONResponse | Dict[str, Any]:
 
 
 @app.get("/metrics/prometheus")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-async def prometheus_metrics() -> Dict[str, Any]:
+async def prometheus_metrics() -> dict[str, Any]:
     """
     Prometheus metrics endpoint
 

@@ -13,7 +13,7 @@ Validates all deployment configurations (Docker Compose, Kubernetes, Helm) to en
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 
@@ -23,8 +23,8 @@ class DeploymentValidator:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
 
     def validate_all(self) -> bool:
         """Run all validation checks."""
@@ -142,7 +142,7 @@ class DeploymentValidator:
         if redis_docs:
             self._check_redis_deployment(redis_docs)
 
-    def _check_deployment(self, deployment: Dict[str, Any]):
+    def _check_deployment(self, deployment: dict[str, Any]):
         """Check main application deployment."""
         spec = deployment.get("spec", {})
         template = spec.get("template", {})
@@ -182,7 +182,7 @@ class DeploymentValidator:
 
         print("  ✓ Main deployment validated")
 
-    def _check_configmap(self, configmap: Dict[str, Any]):
+    def _check_configmap(self, configmap: dict[str, Any]):
         """Check ConfigMap configuration."""
         data = configmap.get("data", {})
 
@@ -202,7 +202,7 @@ class DeploymentValidator:
         else:
             print(f"  ✓ ConfigMap validated ({len(data)} keys)")
 
-    def _check_secret(self, secret: Dict[str, Any]):
+    def _check_secret(self, secret: dict[str, Any]):
         """Check Secret template."""
         string_data = secret.get("stringData", {})
 
@@ -220,7 +220,7 @@ class DeploymentValidator:
         else:
             print(f"  ✓ Secret template validated ({len(string_data)} keys)")
 
-    def _check_keycloak_deployment(self, deployment: Dict[str, Any]):
+    def _check_keycloak_deployment(self, deployment: dict[str, Any]):
         """Check Keycloak deployment configuration."""
         spec = deployment.get("spec", {})
 
@@ -236,7 +236,7 @@ class DeploymentValidator:
 
         print("  ✓ Keycloak deployment validated")
 
-    def _check_redis_deployment(self, docs: List[Dict[str, Any]]):
+    def _check_redis_deployment(self, docs: list[dict[str, Any]]):
         """Check Redis deployment configuration."""
         # Find the Deployment document
         deployment = next((d for d in docs if d.get("kind") == "Deployment"), None)
@@ -369,7 +369,7 @@ class DeploymentValidator:
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
-    def _load_yaml(self, relative_path: str) -> Dict[str, Any] | None:
+    def _load_yaml(self, relative_path: str) -> dict[str, Any] | None:
         """Load a single-document YAML file."""
         try:
             with open(self.project_root / relative_path) as f:
@@ -378,7 +378,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_all(self, relative_path: str) -> List[Dict[str, Any]] | None:
+    def _load_yaml_all(self, relative_path: str) -> list[dict[str, Any]] | None:
         """Load a multi-document YAML file."""
         try:
             with open(self.project_root / relative_path) as f:
@@ -387,7 +387,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_optional(self, relative_path: str) -> Dict[str, Any] | None:
+    def _load_yaml_optional(self, relative_path: str) -> dict[str, Any] | None:
         """Load a single-document YAML file (optional - no error if missing)."""
         full_path = self.project_root / relative_path
         if not full_path.exists():
@@ -399,7 +399,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_all_optional(self, relative_path: str) -> List[Dict[str, Any]] | None:
+    def _load_yaml_all_optional(self, relative_path: str) -> list[dict[str, Any]] | None:
         """Load a multi-document YAML file (optional - no error if missing)."""
         full_path = self.project_root / relative_path
         if not full_path.exists():

@@ -54,7 +54,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file uses kubectl
@@ -142,7 +142,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             # Check if file uses kubectl
@@ -214,7 +214,7 @@ class TestKubectlSafetyEnforcement:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             if "kubectl" not in source:
@@ -268,7 +268,7 @@ class TestKubectlTestNaming:
             if "meta" in str(test_file):
                 continue
 
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             if "kubectl" not in source:

@@ -53,7 +53,7 @@ class TestGKEAutopilotLabels:
     def _load_yaml_file(self, file_path: Path):
         """Load YAML file and return parsed content."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return yaml.safe_load(f)
         except Exception as e:
             pytest.fail(f"Error loading YAML file {file_path}: {e}")

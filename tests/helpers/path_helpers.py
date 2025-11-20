@@ -19,10 +19,9 @@ or reorganized.
 """
 
 from pathlib import Path
-from typing import Union
 
 
-def get_integration_test_file(relative_path: Union[str, Path]) -> Path:
+def get_integration_test_file(relative_path: str | Path) -> Path:
     """
     Get absolute path to an integration test file with existence validation.
 

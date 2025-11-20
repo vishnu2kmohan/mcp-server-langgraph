@@ -19,7 +19,7 @@ Validates:
 
 import gc
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
@@ -39,13 +39,13 @@ class TestImagePullPolicy:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
+    def _load_yaml_docs(self, file_path: Path) -> list[dict[str, Any]]:
         """Load all YAML documents from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             return [d for d in docs if d is not None]
 
-    def _get_deployments_and_statefulsets(self) -> List[Path]:
+    def _get_deployments_and_statefulsets(self) -> list[Path]:
         """Get all deployment and statefulset YAML files."""
         files = []
         for pattern in ["*deployment.yaml", "*statefulset.yaml"]:
@@ -112,13 +112,13 @@ class TestResourceLimits:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
+    def _load_yaml_docs(self, file_path: Path) -> list[dict[str, Any]]:
         """Load all YAML documents from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             return [d for d in docs if d is not None]
 
-    def _get_deployments_and_statefulsets(self) -> List[Path]:
+    def _get_deployments_and_statefulsets(self) -> list[Path]:
         """Get all deployment and statefulset YAML files."""
         files = []
         for pattern in ["*deployment.yaml", "*statefulset.yaml"]:
@@ -228,13 +228,13 @@ class TestSecurityContext:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
+    def _load_yaml_docs(self, file_path: Path) -> list[dict[str, Any]]:
         """Load all YAML documents from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             return [d for d in docs if d is not None]
 
-    def _get_deployments_and_statefulsets(self) -> List[Path]:
+    def _get_deployments_and_statefulsets(self) -> list[Path]:
         """Get all deployment and statefulset YAML files."""
         files = []
         for pattern in ["*deployment.yaml", "*statefulset.yaml"]:
@@ -343,13 +343,13 @@ class TestProbeConfiguration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def _load_yaml_docs(self, file_path: Path) -> List[Dict[str, Any]]:
+    def _load_yaml_docs(self, file_path: Path) -> list[dict[str, Any]]:
         """Load all YAML documents from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.safe_load_all(f))
             return [d for d in docs if d is not None]
 
-    def _get_deployments_and_statefulsets(self) -> List[Path]:
+    def _get_deployments_and_statefulsets(self) -> list[Path]:
         """Get all deployment and statefulset YAML files."""
         files = []
         for pattern in ["*deployment.yaml", "*statefulset.yaml"]:

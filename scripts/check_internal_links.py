@@ -14,10 +14,9 @@ See: scripts/validators/archive/check_internal_links.py.deprecated
 
 import re
 from pathlib import Path
-from typing import List, Optional
 
 
-def extract_internal_links(content: str) -> List[str]:
+def extract_internal_links(content: str) -> list[str]:
     """
     Extract internal link targets from markdown/MDX content.
 
@@ -63,7 +62,7 @@ def extract_internal_links(content: str) -> List[str]:
     return list(set(links))  # Remove duplicates
 
 
-def resolve_link(source_file: Path, target: str, docs_root: Optional[Path] = None) -> Optional[Path]:
+def resolve_link(source_file: Path, target: str, docs_root: Path | None = None) -> Path | None:
     """
     Resolve a link target to an absolute path.
 
@@ -105,7 +104,7 @@ def resolve_link(source_file: Path, target: str, docs_root: Optional[Path] = Non
         return None
 
 
-def check_internal_links(file_path: Path, docs_root: Optional[Path] = None) -> List[str]:
+def check_internal_links(file_path: Path, docs_root: Path | None = None) -> list[str]:
     """
     Check all internal links in a file.
 
@@ -133,7 +132,7 @@ def check_internal_links(file_path: Path, docs_root: Optional[Path] = None) -> L
         return []
 
 
-def validate_file_links(file_path: Path, docs_root: Optional[Path] = None) -> List[str]:
+def validate_file_links(file_path: Path, docs_root: Path | None = None) -> list[str]:
     """
     Validate links in a single file.
 

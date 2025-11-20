@@ -17,7 +17,7 @@ import gc
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
@@ -62,7 +62,7 @@ def load_yaml_file(file_path: Path) -> Any:
         return docs if len(docs) > 1 else docs[0]
 
 
-def load_yaml_documents(file_path: Path) -> List[Dict[str, Any]]:
+def load_yaml_documents(file_path: Path) -> list[dict[str, Any]]:
     """Load all documents from a potentially multi-document YAML file."""
     with open(file_path) as f:
         return [doc for doc in yaml.safe_load_all(f) if doc is not None]
