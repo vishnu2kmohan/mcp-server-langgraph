@@ -1068,13 +1068,29 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
         pytest.skip("OpenFGA health check failed - ensure openfga-test container is healthy")
     logging.info("✓ OpenFGA ready")
 
-    # Keycloak (takes longer to start)
+    # Keycloak (takes longer to start - needs DB migration + realm import + JIT compilation)
+    # Note: Keycloak uses Java and requires JIT warmup, which adds ~30-60s to first startup
     if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
         pytest.skip("Keycloak test service not available - run 'make test-integration'")
+
     # Additional check for Keycloak - use /realms/master endpoint (standard realm discovery)
-    # Keycloak 26.x doesn't expose /health/ready, but /realms/master returns 200 when ready
-    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/realms/master", timeout=10):
-        pytest.skip("Keycloak health check failed - ensure keycloak-test container is healthy")
+    # Keycloak 26.x doesn't expose /health/ready in start-dev mode, but /realms/master returns 200 when ready
+    # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
+    # This accounts for:
+    #   1. Database schema migration
+    #   2. Realm import from keycloak-test-realm.json
+    #   3. JIT compilation of Java bytecode
+    keycloak_url = f"http://localhost:{test_infrastructure_ports['keycloak']}/realms/master"
+    keycloak_ready = False
+    for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
+        if _check_http_health(keycloak_url, timeout=5):
+            keycloak_ready = True
+            break
+        time.sleep(2)
+
+    if not keycloak_ready:
+        logging.error("Keycloak /realms/master endpoint not responding after 60s additional wait")
+        pytest.skip("Keycloak health check failed - /realms/master endpoint not responding")
     logging.info("✓ Keycloak ready")
 
     # Qdrant
