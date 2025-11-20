@@ -15,10 +15,9 @@ This script:
 import re
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
 
-def extract_frontmatter_title(content: str) -> Optional[str]:
+def extract_frontmatter_title(content: str) -> str | None:
     """Extract title from frontmatter."""
     match = re.search(r'^---\s*\ntitle:\s*["\']?(.+?)["\']?\s*\n', content, re.MULTILINE)
     if match:
@@ -26,7 +25,7 @@ def extract_frontmatter_title(content: str) -> Optional[str]:
     return None
 
 
-def remove_duplicate_h1(file_path: Path) -> Tuple[int, int]:
+def remove_duplicate_h1(file_path: Path) -> tuple[int, int]:
     """Remove duplicate H1 heading that matches frontmatter title.
 
     Returns:
@@ -133,7 +132,7 @@ def main():
                     f"  ✓ {file_path.relative_to(directory)}: {before} H1s → {after} H1s ({removed} removed, headings adjusted)"
                 )
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Files processed: {len(mdx_files)}")
     print(f"  Files modified: {total_modified}")
     print(f"  H1s before: {total_h1s_before}")

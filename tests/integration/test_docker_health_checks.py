@@ -19,7 +19,6 @@ import os
 import subprocess
 import time
 from pathlib import Path
-from typing import List, Optional
 
 import pytest
 import yaml
@@ -69,7 +68,7 @@ def run_docker_compose(
     compose_file: Path,
     *args: str,
     timeout: int = 30,
-    env: Optional[dict] = None,
+    env: dict | None = None,
 ) -> subprocess.CompletedProcess:
     """Run a docker-compose command."""
     cmd = ["docker", "compose", "-f", str(compose_file)] + list(args)

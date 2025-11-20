@@ -30,8 +30,8 @@ References:
     - Root cause: Incomplete dependency override patterns
 """
 
-from typing import Any, Callable, Dict
-from unittest.mock import AsyncMock
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from fastapi import FastAPI
@@ -79,7 +79,7 @@ def mock_openfga_client():
 
 def create_api_test_client(
     router: APIRouter,
-    dependency_overrides: Dict[Callable[..., Any], Callable[..., Any]],
+    dependency_overrides: dict[Callable[..., Any], Callable[..., Any]],
 ) -> TestClient:
     """
     Create a FastAPI TestClient with properly configured dependency overrides.
@@ -142,9 +142,7 @@ def create_api_test_client(
 # ==============================================================================
 
 
-def create_mock_current_user(
-    user_id: str = "test_user", roles: list[str] = None
-) -> Dict[str, Any]:
+def create_mock_current_user(user_id: str = "test_user", roles: list[str] = None) -> dict[str, Any]:
     """
     Create a mock current_user dict for authentication testing.
 

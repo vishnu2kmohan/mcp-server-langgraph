@@ -13,7 +13,6 @@ import gc
 import json
 import re
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -94,7 +93,7 @@ class TestDocsJsonIntegrity:
         docs_json_path = PROJECT_ROOT / "docs" / "docs.json"
         assert docs_json_path.exists(), "docs/docs.json not found"
 
-        with open(docs_json_path, "r") as f:
+        with open(docs_json_path) as f:
             data = json.load(f)  # Will raise JSONDecodeError if invalid
 
         assert isinstance(data, dict), "docs.json must be a JSON object"
@@ -105,7 +104,7 @@ class TestDocsJsonIntegrity:
         docs_json_path = PROJECT_ROOT / "docs" / "docs.json"
         docs_dir = PROJECT_ROOT / "docs"
 
-        with open(docs_json_path, "r") as f:
+        with open(docs_json_path) as f:
             data = json.load(f)
 
         # Extract all page references from navigation
@@ -126,7 +125,7 @@ class TestDocsJsonIntegrity:
             f"  - {f}.mdx" for f in sorted(missing_files)
         )
 
-    def _extract_all_pages(self, navigation: dict) -> List[str]:
+    def _extract_all_pages(self, navigation: dict) -> list[str]:
         """Recursively extract all page references from navigation structure."""
         pages = []
 
@@ -181,10 +180,9 @@ class TestMDXSyntax:
             if re.search(r"<!--", content_no_code):
                 files_with_html_comments.append(mdx_file.relative_to(PROJECT_ROOT))
 
-        assert (
-            not files_with_html_comments
-        ), "MDX files with HTML comments outside code blocks (use {/* */} instead):\n" + "\n".join(
-            f"  - {f}" for f in sorted(files_with_html_comments)
+        assert not files_with_html_comments, (
+            "MDX files with HTML comments outside code blocks (use {/* */} instead):\n"
+            + "\n".join(f"  - {f}" for f in sorted(files_with_html_comments))
         )
 
     def test_jsx_comments_are_properly_closed(self):
@@ -373,8 +371,7 @@ class TestDocumentationCompleteness:
             if line_count < 50:
                 inadequate_readmes.append(f"{readme_path.relative_to(PROJECT_ROOT)} ({line_count} lines, minimum 50)")
 
-        assert (
-            not inadequate_readmes
-        ), "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n" + "\n".join(
-            f"  - {f}" for f in sorted(inadequate_readmes)
+        assert not inadequate_readmes, (
+            "Monitoring READMEs are too brief (should explain setup, usage, troubleshooting):\n"
+            + "\n".join(f"  - {f}" for f in sorted(inadequate_readmes))
         )

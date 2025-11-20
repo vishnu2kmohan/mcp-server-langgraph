@@ -32,7 +32,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 # Terminal colors for output
 RED = "\033[91m"
@@ -59,9 +58,9 @@ class CIHealthChecker:
         self.root_dir = root_dir
         self.quick = quick
         self.auto_fix = auto_fix
-        self.results: List[HealthCheckResult] = []
+        self.results: list[HealthCheckResult] = []
 
-    def run_all_checks(self) -> Tuple[int, int, int]:
+    def run_all_checks(self) -> tuple[int, int, int]:
         """
         Run all health checks.
 

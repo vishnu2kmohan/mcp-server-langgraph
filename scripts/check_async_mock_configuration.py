@@ -26,6 +26,7 @@ Exit codes:
 Usage:
     python scripts/check_async_mock_configuration.py [files...]
 """
+
 import sys
 from pathlib import Path
 

@@ -18,11 +18,11 @@ This script prevents issues like:
 
 Created after 2025-11-12 CI/CD failure incident.
 """
+
 import argparse
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 import yaml
 
@@ -82,9 +82,9 @@ class CICDValidator:
     def __init__(self, project_root: Path, auto_fix: bool = False):
         self.project_root = project_root
         self.auto_fix = auto_fix
-        self.errors: List[ValidationResult] = []
-        self.warnings: List[ValidationResult] = []
-        self.successes: List[ValidationResult] = []
+        self.errors: list[ValidationResult] = []
+        self.warnings: list[ValidationResult] = []
+        self.successes: list[ValidationResult] = []
 
     def validate_lockfile_sync(self) -> ValidationResult:
         """
@@ -256,7 +256,9 @@ class CICDValidator:
         # Filter out markers that are just partial matches (like 'foo' from conftest, 'requires_' prefix)
         # Only consider markers that appear as full @pytest.mark.marker_name decorators
         valid_used_markers = {
-            m for m in used_markers if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
+            m
+            for m in used_markers
+            if len(m) > 2 and not m.startswith("requires_")  # requires_ is a pattern, not a marker
         }
 
         unregistered = valid_used_markers - registered_markers - builtin_markers
@@ -309,7 +311,7 @@ class CICDValidator:
 
         return ValidationResult(passed=True, message="FastAPI tests use correct dependency_overrides pattern")
 
-    def run_all_validations(self) -> Tuple[int, int, int]:
+    def run_all_validations(self) -> tuple[int, int, int]:
         """Run all validations and return (passed, warned, failed) counts"""
         print_header("CI/CD Pre-Commit Validation")
         print_info("Catching issues before they reach CI...")
@@ -338,7 +340,7 @@ class CICDValidator:
 
                 # Auto-fix if requested
                 if self.auto_fix and result.fix_command:
-                    print_info(f"  Attempting auto-fix...")
+                    print_info("  Attempting auto-fix...")
                     try:
                         # SECURITY: shell=True is acceptable here because:
                         # 1. fix_command values are hardcoded in this script, not user input

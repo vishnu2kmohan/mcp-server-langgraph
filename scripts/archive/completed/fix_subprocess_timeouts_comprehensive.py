@@ -6,10 +6,9 @@ Handles multiple code patterns and formatting styles.
 
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 
-def find_subprocess_blocks(content: str) -> List[Tuple[int, int, str]]:
+def find_subprocess_blocks(content: str) -> list[tuple[int, int, str]]:
     """Find all subprocess.run() call blocks.
 
     Returns:
@@ -84,9 +83,9 @@ def fix_subprocess_timeouts_in_file(file_path: Path) -> int:
         Number of modifications made
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
-    except (UnicodeDecodeError, IOError):
+    except (OSError, UnicodeDecodeError):
         return 0
 
     modifications = 0
@@ -126,7 +125,7 @@ def main():
             total_modifications += mods
             print(f"✓ {test_file.relative_to(tests_dir)}: Added {mods} timeout parameter(s)")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Modified files: {total_modified_files}")
     print(f"  Total timeout parameters added: {total_modifications}")
 

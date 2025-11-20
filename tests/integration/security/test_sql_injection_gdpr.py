@@ -10,7 +10,6 @@ Tests cover OWASP A03:2021 - Injection attacks on database queries.
 
 import gc
 from datetime import datetime, timedelta, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest

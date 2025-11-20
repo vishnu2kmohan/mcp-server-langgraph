@@ -17,10 +17,7 @@ SOLUTION:
 See commits: 709adda, c193936, ba5296f for history
 """
 
-import gc
 import os
-
-import pytest
 
 
 # Set test mode environment variable for ALL pytest-xdist workers
@@ -68,15 +65,15 @@ def bypass_authentication(monkeypatch, mock_user=None):
         }
 
     # Patch get_current_user at module level
-    from typing import Any, Dict, Optional
+    from typing import Any
 
     from fastapi import Request
     from fastapi.security import HTTPAuthorizationCredentials
 
     async def mock_get_current_user(
         request: Request,
-        credentials: Optional[HTTPAuthorizationCredentials] = None,
-    ) -> Dict[str, Any]:
+        credentials: HTTPAuthorizationCredentials | None = None,
+    ) -> dict[str, Any]:
         return mock_user
 
     monkeypatch.setattr(middleware, "get_current_user", mock_get_current_user)

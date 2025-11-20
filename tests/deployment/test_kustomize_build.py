@@ -6,10 +6,9 @@ Ensures that all Kustomize overlays build successfully and produce
 valid Kubernetes manifests without errors or warnings.
 """
 
-import gc
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
@@ -47,7 +46,7 @@ def build_kustomize(overlay_dir: Path) -> tuple[str, str, int]:
     return result.stdout, result.stderr, result.returncode
 
 
-def parse_manifests(manifest_text: str) -> List[Dict[str, Any]]:
+def parse_manifests(manifest_text: str) -> list[dict[str, Any]]:
     """Parse YAML manifests from text."""
     return [m for m in yaml.safe_load_all(manifest_text) if m]
 

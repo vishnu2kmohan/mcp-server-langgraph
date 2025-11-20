@@ -52,10 +52,9 @@ import ast
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
 
 
-def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
+def find_pytest_markers_in_file(file_path: Path) -> set[str]:
     """
     Extract all pytest markers from a test file using AST parsing.
 
@@ -147,7 +146,7 @@ def determine_target_directory(source_path: Path, root: Path) -> Path:
     return target_subdir
 
 
-def find_integration_tests_to_migrate(root: Path) -> List[Tuple[Path, Path]]:
+def find_integration_tests_to_migrate(root: Path) -> list[tuple[Path, Path]]:
     """
     Find all integration tests outside tests/integration/ and their target paths.
 
@@ -160,7 +159,7 @@ def find_integration_tests_to_migrate(root: Path) -> List[Tuple[Path, Path]]:
     # Find all test files
     all_test_files = sorted(tests_dir.rglob("test_*.py"))
 
-    migrations: List[Tuple[Path, Path]] = []
+    migrations: list[tuple[Path, Path]] = []
 
     for test_file in all_test_files:
         # Skip __init__.py files
@@ -206,7 +205,7 @@ def migrate_test_file(source: Path, target: Path, dry_run: bool = False) -> bool
         return False
 
     if dry_run:
-        print(f"  [DRY RUN] Would move:")
+        print("  [DRY RUN] Would move:")
         print(f"    {source.relative_to(source.parent.parent.parent)}")
         print(f"    → {target.relative_to(target.parent.parent.parent)}")
         return True
@@ -228,7 +227,7 @@ def migrate_test_file(source: Path, target: Path, dry_run: bool = False) -> bool
         return False
 
 
-def create_init_files(root: Path, migrations: List[Tuple[Path, Path]], dry_run: bool = False):
+def create_init_files(root: Path, migrations: list[tuple[Path, Path]], dry_run: bool = False):
     """
     Create __init__.py files in new directories.
     """

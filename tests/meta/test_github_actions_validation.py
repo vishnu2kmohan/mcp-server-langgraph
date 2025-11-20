@@ -11,7 +11,6 @@ Following TDD principles - these tests define the expected valid state before fi
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 import yaml
@@ -29,7 +28,7 @@ class TestGitHubActionsVersions:
         gc.collect()
 
     @pytest.fixture
-    def workflow_files(self) -> List[Path]:
+    def workflow_files(self) -> list[Path]:
         """Get all GitHub workflow files."""
         workflows_dir = Path(".github/workflows")
         if not workflows_dir.exists():
@@ -38,7 +37,7 @@ class TestGitHubActionsVersions:
         return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
     @pytest.fixture
-    def composite_action_files(self) -> List[Path]:
+    def composite_action_files(self) -> list[Path]:
         """Get all composite action files."""
         actions_dir = Path(".github/actions")
         if not actions_dir.exists():
@@ -53,11 +52,11 @@ class TestGitHubActionsVersions:
         return action_files
 
     @pytest.fixture
-    def all_workflow_files(self, workflow_files: List[Path], composite_action_files: List[Path]) -> List[Path]:
+    def all_workflow_files(self, workflow_files: list[Path], composite_action_files: list[Path]) -> list[Path]:
         """Get all workflow and action files."""
         return workflow_files + composite_action_files
 
-    def test_astral_sh_setup_uv_version_is_valid(self, all_workflow_files: List[Path]):
+    def test_astral_sh_setup_uv_version_is_valid(self, all_workflow_files: list[Path]):
         """
         Ensure astral-sh/setup-uv uses valid version tag.
 
@@ -79,13 +78,12 @@ class TestGitHubActionsVersions:
                 line_numbers = [i + 1 for i, line in enumerate(lines) if invalid_version in line]
                 violations.append((workflow_file.name, line_numbers))
 
-        assert (
-            not violations
-        ), f"Found invalid astral-sh/setup-uv@v7.1.1 in {len(violations)} file(s). " f"Should be v7.1.0 or v7:\n" + "\n".join(
-            [f"  - {name}: lines {lines}" for name, lines in violations]
+        assert not violations, (
+            f"Found invalid astral-sh/setup-uv@v7.1.1 in {len(violations)} file(s). "
+            f"Should be v7.1.0 or v7:\n" + "\n".join([f"  - {name}: lines {lines}" for name, lines in violations])
         )
 
-    def test_actions_cache_version_is_valid(self, all_workflow_files: List[Path]):
+    def test_actions_cache_version_is_valid(self, all_workflow_files: list[Path]):
         """
         Ensure actions/cache uses valid version tag.
 
@@ -111,7 +109,7 @@ class TestGitHubActionsVersions:
             f"Should be v4.2.0 or v4:\n" + "\n".join([f"  - {name}: lines {lines}" for name, lines in violations])
         )
 
-    def test_no_other_suspicious_action_versions(self, all_workflow_files: List[Path]):
+    def test_no_other_suspicious_action_versions(self, all_workflow_files: list[Path]):
         """
         Validate that commonly used actions have reasonable version patterns.
 
@@ -176,7 +174,7 @@ class TestGitHubActionsPermissions:
         gc.collect()
 
     @pytest.fixture
-    def workflow_files(self) -> List[Path]:
+    def workflow_files(self) -> list[Path]:
         """Get all GitHub workflow files."""
         workflows_dir = Path(".github/workflows")
         if not workflows_dir.exists():
@@ -185,7 +183,7 @@ class TestGitHubActionsPermissions:
         return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
     @pytest.fixture
-    def scheduled_workflows(self) -> Dict[str, dict]:
+    def scheduled_workflows(self) -> dict[str, dict]:
         """Get all workflows that run on schedule."""
         workflows_dir = Path(".github/workflows")
         if not workflows_dir.exists():
@@ -195,7 +193,7 @@ class TestGitHubActionsPermissions:
 
         for workflow_file in workflows_dir.glob("*.yaml"):
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     workflow_data = yaml.safe_load(f)
 
                 if not workflow_data:
@@ -212,7 +210,7 @@ class TestGitHubActionsPermissions:
 
         for workflow_file in workflows_dir.glob("*.yml"):
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     workflow_data = yaml.safe_load(f)
 
                 if not workflow_data:
@@ -227,7 +225,7 @@ class TestGitHubActionsPermissions:
 
         return scheduled
 
-    def test_scheduled_workflows_creating_issues_have_issues_write_permission(self, scheduled_workflows: Dict[str, dict]):
+    def test_scheduled_workflows_creating_issues_have_issues_write_permission(self, scheduled_workflows: dict[str, dict]):
         """
         Ensure scheduled workflows that create GitHub issues have issues: write permission.
 
@@ -264,7 +262,7 @@ class TestGitHubActionsPermissions:
             + "\n\nAdd 'issues: write' to the permissions block of these workflows."
         )
 
-    def test_all_workflows_creating_issues_have_permission(self, workflow_files: List[Path]):
+    def test_all_workflows_creating_issues_have_permission(self, workflow_files: list[Path]):
         """
         Ensure ALL workflows that create GitHub issues have issues: write permission.
 
@@ -277,7 +275,7 @@ class TestGitHubActionsPermissions:
 
         for workflow_file in workflow_files:
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     workflow_data = yaml.safe_load(f)
 
                 if not workflow_data:
@@ -311,7 +309,7 @@ class TestGitHubActionsPermissions:
             + "\n\nAdd 'issues: write' to the permissions block of these workflows."
         )
 
-    def test_workflows_have_minimal_permissions(self, scheduled_workflows: Dict[str, dict]):
+    def test_workflows_have_minimal_permissions(self, scheduled_workflows: dict[str, dict]):
         """
         Ensure workflows don't use overly broad permissions.
 
@@ -425,14 +423,14 @@ class TestGitHubActionsStructure:
 
         for workflow_file in workflows_dir.glob("*.yaml"):
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     yaml.safe_load(f)
             except yaml.YAMLError as e:
                 invalid_files.append((workflow_file.name, str(e)))
 
         for workflow_file in workflows_dir.glob("*.yml"):
             try:
-                with open(workflow_file, "r") as f:
+                with open(workflow_file) as f:
                     yaml.safe_load(f)
             except yaml.YAMLError as e:
                 invalid_files.append((workflow_file.name, str(e)))

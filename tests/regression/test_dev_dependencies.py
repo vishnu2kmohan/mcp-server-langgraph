@@ -12,7 +12,6 @@ This test follows TDD principles:
 """
 
 import ast
-import gc
 import sys
 
 # Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
@@ -493,52 +492,55 @@ def test_dev_dependencies_are_importable():
     all_deps = get_all_dependencies()
 
     # Skip packages that don't match their import name or are pytest plugins
-    skip_import_check = {
-        # Pytest plugins (pytest-* packages don't import as pytest-*)
-        pkg
-        for pkg in all_deps
-        if pkg.startswith("pytest_")
-    } | {
-        # Other packages with different import names (after normalization)
-        "python_on_whales",  # imports as python_on_whales (normalized)
-        "infisical_python",  # imports as infisical_client
-        "pydantic_ai",  # imports as pydantic_ai (normalized)
-        "types_pyyaml",  # type stub, no runtime import
-        "types_requests",  # type stub, no runtime import
-        "types_redis",  # type stub, no runtime import
-        "openapi_spec_validator",  # Complex import structure
-        "langchain_google_genai",  # Complex import structure
-        "python_json_logger",  # imports as pythonjsonlogger
-        "prometheus_api_client",  # imports differently
-        "prometheus_client",  # imports as prometheus_client
-        "ast_comments",  # imports as ast_comments
-        # Package vs import name mismatches
-        "pyyaml",  # imports as yaml
-        "pyjwt",  # imports as jwt
-        "python_dotenv",  # imports as dotenv
-        "python_keycloak",  # imports as keycloak
-        "opentelemetry_api",  # imports as opentelemetry.api
-        "opentelemetry_sdk",  # imports as opentelemetry.sdk
-        "opentelemetry_instrumentation_logging",  # imports as opentelemetry.instrumentation.logging
-        "opentelemetry_exporter_otlp_proto_grpc",  # imports as opentelemetry.exporter.otlp.proto.grpc
-        "opentelemetry_exporter_otlp_proto_http",  # imports as opentelemetry.exporter.otlp.proto.http
-        "langgraph_checkpoint_redis",  # imports as langgraph.checkpoint.redis
-        # Optional dependencies (not always installed)
-        "torch",  # Only in embeddings-local extra
-        "sentence_transformers",  # Only in embeddings-local extra
-        # Build and release tools
-        "build",  # build tool, not imported in tests
-        "twine",  # release tool, not imported in tests
-        # CLI tools
-        "langgraph_cli",  # CLI tool, not imported in tests
-        "mutmut",  # CLI tool, not imported in tests
-        "bandit",  # CLI tool; stevedore plugin loader logs ERROR about missing sarif_om (optional SARIF formatter dependency we don't use)
-        # Uvicorn extras
-        "uvicorn",  # may have [standard] extras, import works as 'uvicorn'
-        "redis",  # may have [hiredis] extras, import works as 'redis'
-        "sqlalchemy",  # may have [asyncio] extras, import works as 'sqlalchemy'
-        "coverage",  # may have [toml] extras, import works as 'coverage'
-    }
+    skip_import_check = (
+        {
+            # Pytest plugins (pytest-* packages don't import as pytest-*)
+            pkg
+            for pkg in all_deps
+            if pkg.startswith("pytest_")
+        }
+        | {
+            # Other packages with different import names (after normalization)
+            "python_on_whales",  # imports as python_on_whales (normalized)
+            "infisical_python",  # imports as infisical_client
+            "pydantic_ai",  # imports as pydantic_ai (normalized)
+            "types_pyyaml",  # type stub, no runtime import
+            "types_requests",  # type stub, no runtime import
+            "types_redis",  # type stub, no runtime import
+            "openapi_spec_validator",  # Complex import structure
+            "langchain_google_genai",  # Complex import structure
+            "python_json_logger",  # imports as pythonjsonlogger
+            "prometheus_api_client",  # imports differently
+            "prometheus_client",  # imports as prometheus_client
+            "ast_comments",  # imports as ast_comments
+            # Package vs import name mismatches
+            "pyyaml",  # imports as yaml
+            "pyjwt",  # imports as jwt
+            "python_dotenv",  # imports as dotenv
+            "python_keycloak",  # imports as keycloak
+            "opentelemetry_api",  # imports as opentelemetry.api
+            "opentelemetry_sdk",  # imports as opentelemetry.sdk
+            "opentelemetry_instrumentation_logging",  # imports as opentelemetry.instrumentation.logging
+            "opentelemetry_exporter_otlp_proto_grpc",  # imports as opentelemetry.exporter.otlp.proto.grpc
+            "opentelemetry_exporter_otlp_proto_http",  # imports as opentelemetry.exporter.otlp.proto.http
+            "langgraph_checkpoint_redis",  # imports as langgraph.checkpoint.redis
+            # Optional dependencies (not always installed)
+            "torch",  # Only in embeddings-local extra
+            "sentence_transformers",  # Only in embeddings-local extra
+            # Build and release tools
+            "build",  # build tool, not imported in tests
+            "twine",  # release tool, not imported in tests
+            # CLI tools
+            "langgraph_cli",  # CLI tool, not imported in tests
+            "mutmut",  # CLI tool, not imported in tests
+            "bandit",  # CLI tool; stevedore plugin loader logs ERROR about missing sarif_om (optional SARIF formatter dependency we don't use)
+            # Uvicorn extras
+            "uvicorn",  # may have [standard] extras, import works as 'uvicorn'
+            "redis",  # may have [hiredis] extras, import works as 'redis'
+            "sqlalchemy",  # may have [asyncio] extras, import works as 'sqlalchemy'
+            "coverage",  # may have [toml] extras, import works as 'coverage'
+        }
+    )
 
     failed_imports = []
 

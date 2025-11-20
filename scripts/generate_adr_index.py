@@ -27,7 +27,6 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 class Colors:
@@ -44,7 +43,7 @@ class Colors:
 class ADRMetadata:
     """Metadata extracted from an ADR file."""
 
-    def __init__(self, number: int, filename: str, title: str, status: str, date: str, tags: List[str]):
+    def __init__(self, number: int, filename: str, title: str, status: str, date: str, tags: list[str]):
         self.number = number
         self.filename = filename
         self.title = title
@@ -108,7 +107,7 @@ def extract_adr_metadata(file_path: Path) -> ADRMetadata:
     )
 
 
-def categorize_adrs(adrs: List[ADRMetadata]) -> Dict[str, List[ADRMetadata]]:
+def categorize_adrs(adrs: list[ADRMetadata]) -> dict[str, list[ADRMetadata]]:
     """
     Categorize ADRs by topic based on tags and titles.
 
@@ -174,7 +173,7 @@ def categorize_adrs(adrs: List[ADRMetadata]) -> Dict[str, List[ADRMetadata]]:
     return {cat: adrs for cat, adrs in categories.items() if adrs}
 
 
-def generate_readme_content(adrs: List[ADRMetadata]) -> str:
+def generate_readme_content(adrs: list[ADRMetadata]) -> str:
     """
     Generate README.md content with ADR index.
 
@@ -285,7 +284,7 @@ python scripts/generate_adr_index.py --check
     return content
 
 
-def find_all_adrs() -> List[ADRMetadata]:
+def find_all_adrs() -> list[ADRMetadata]:
     """
     Find and parse all ADR files.
 
@@ -313,7 +312,7 @@ def find_all_adrs() -> List[ADRMetadata]:
     return sorted(adrs, key=lambda x: x.number)
 
 
-def validate_adr_numbering(adrs: List[ADRMetadata]) -> List[str]:
+def validate_adr_numbering(adrs: list[ADRMetadata]) -> list[str]:
     """
     Validate ADR numbering for duplicates and gaps.
 
@@ -388,7 +387,7 @@ def generate_index(dry_run: bool = False) -> bool:
 
         if dry_run:
             print(f"{Colors.YELLOW}Dry run - would write to {readme_path}{Colors.RESET}")
-            print(f"\nPreview (first 20 lines):\n")
+            print("\nPreview (first 20 lines):\n")
             for line in content.splitlines()[:20]:
                 print(f"  {line}")
             print("  ...")

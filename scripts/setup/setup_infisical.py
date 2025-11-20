@@ -2,6 +2,7 @@
 """
 Setup script for Infisical secrets management
 """
+
 import os
 
 from mcp_server_langgraph.secrets.manager import SecretsManager
@@ -76,7 +77,7 @@ def setup_infisical():  # noqa: C901
 
     # Test retrieval
     print("\n3. Testing secret retrieval...")
-    for key in sample_secrets.keys():
+    for key in sample_secrets:
         try:
             value = secrets_mgr.get_secret(key, use_cache=False)
             if value:

@@ -6,7 +6,6 @@ and that missing credentials are detected at startup.
 """
 
 import gc
-from unittest.mock import MagicMock, patch
 
 import pytest
 

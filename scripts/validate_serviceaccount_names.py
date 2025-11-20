@@ -13,9 +13,9 @@ Returns:
     0 if all ServiceAccount names are consistent
     1 if naming inconsistencies are found
 """
+
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import yaml
 
@@ -24,7 +24,7 @@ BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 
 
-def load_base_serviceaccount_names() -> Set[str]:
+def load_base_serviceaccount_names() -> set[str]:
     """Load ServiceAccount names from base deployment."""
     base_names = set()
 
@@ -48,7 +48,7 @@ def load_base_serviceaccount_names() -> Set[str]:
     return base_names
 
 
-def validate_overlay_serviceaccounts(base_names: Set[str]) -> List[Tuple[Path, str, str]]:
+def validate_overlay_serviceaccounts(base_names: set[str]) -> list[tuple[Path, str, str]]:
     """
     Validate ServiceAccount names in overlays match base naming convention.
 

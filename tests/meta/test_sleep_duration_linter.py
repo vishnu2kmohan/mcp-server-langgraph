@@ -159,7 +159,6 @@ def test_something():
 
     def test_linter_checks_actual_test_files(self):
         """Linter should successfully check real test files."""
-        import os
 
         from scripts.check_test_sleep_duration import check_test_files
 

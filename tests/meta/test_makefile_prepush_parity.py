@@ -18,7 +18,6 @@ import gc
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 
@@ -62,7 +61,7 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -72,7 +71,7 @@ class TestMakefilePrePushParity:
 
         This is the actual validation logic, not the auto-generated hook wrapper.
         """
-        with open(pre_push_script_path, "r") as f:
+        with open(pre_push_script_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -377,7 +376,7 @@ class TestMakefileEfficiency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_test_targets_do_not_have_redundant_uv_sync(self, makefile_content: str):
@@ -501,7 +500,7 @@ class TestMakefileValidationConsistency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_makefile_critical_checks_exit_on_failure(self, makefile_content: str):

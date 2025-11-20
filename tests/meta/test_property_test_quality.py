@@ -9,7 +9,6 @@ Purpose: Prevent regression of Codex Finding #9 (property tests with missing ass
 
 import ast
 import gc
-import os
 from pathlib import Path
 
 import pytest
@@ -51,7 +50,7 @@ class TestPropertyTestQuality:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -102,7 +101,7 @@ class TestPropertyTestQuality:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -202,7 +201,7 @@ class TestPropertyTestNaming:
         violations = []
 
         for test_file in property_test_files:
-            with open(test_file, "r") as f:
+            with open(test_file) as f:
                 source = f.read()
 
             tree = ast.parse(source)

@@ -11,7 +11,6 @@ import gc
 
 import pytest
 from fastapi import Depends, FastAPI
-from fastapi.security import HTTPBearer
 from fastapi.testclient import TestClient
 
 
@@ -60,7 +59,6 @@ class TestBearerSchemeOverrideDiagnostic:
 
         Tests the current pattern used in service principal tests.
         """
-        from fastapi import FastAPI
 
         from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
 
@@ -96,7 +94,6 @@ class TestBearerSchemeOverrideDiagnostic:
 
         Alternative approach: Use module.bearer_scheme instead of imported name.
         """
-        from fastapi import FastAPI
 
         from mcp_server_langgraph.auth import middleware
 
@@ -132,7 +129,6 @@ class TestBearerSchemeOverrideDiagnostic:
 
         If we override get_current_user, do we even need to override bearer_scheme?
         """
-        from fastapi import FastAPI
 
         from mcp_server_langgraph.auth.middleware import get_current_user
 
@@ -170,8 +166,6 @@ class TestBearerSchemeOverrideDiagnostic:
         This mimics the actual test setup to identify where the override breaks.
         """
         from unittest.mock import AsyncMock
-
-        from fastapi import FastAPI
 
         from mcp_server_langgraph.api.service_principals import router
         from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user

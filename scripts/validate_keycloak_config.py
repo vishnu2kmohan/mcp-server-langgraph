@@ -23,7 +23,6 @@ References:
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import yaml
 
@@ -46,7 +45,7 @@ def parse_start_period(start_period_str: str) -> int:
         return int(start_period_str)
 
 
-def validate_keycloak_service_exists(config: Dict) -> Optional[str]:
+def validate_keycloak_service_exists(config: dict) -> str | None:
     """Validate keycloak-test service exists in docker-compose."""
     if "services" not in config:
         return "No services defined in docker-compose.test.yml"
@@ -57,7 +56,7 @@ def validate_keycloak_service_exists(config: Dict) -> Optional[str]:
     return None  # Success
 
 
-def validate_health_check(keycloak_service: Dict) -> Optional[str]:
+def validate_health_check(keycloak_service: dict) -> str | None:
     """Validate Keycloak service has proper health check configuration."""
     if "healthcheck" not in keycloak_service:
         return "keycloak-test service must have healthcheck configuration"
@@ -76,7 +75,7 @@ def validate_health_check(keycloak_service: Dict) -> Optional[str]:
     return None  # Success
 
 
-def validate_start_period(keycloak_service: Dict) -> Optional[str]:
+def validate_start_period(keycloak_service: dict) -> str | None:
     """Validate Keycloak has adequate start_period (60s minimum)."""
     healthcheck = keycloak_service.get("healthcheck", {})
     start_period = healthcheck.get("start_period")
@@ -94,7 +93,7 @@ def validate_start_period(keycloak_service: Dict) -> Optional[str]:
     return None  # Success
 
 
-def validate_environment_variables(keycloak_service: Dict) -> Optional[str]:
+def validate_environment_variables(keycloak_service: dict) -> str | None:
     """
     Validate Keycloak has required environment variables.
 

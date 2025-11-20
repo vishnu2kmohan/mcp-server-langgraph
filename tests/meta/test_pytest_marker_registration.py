@@ -11,10 +11,8 @@ See: https://docs.pytest.org/en/stable/how-to/mark.html
 """
 
 import ast
-import gc
 import re
 from pathlib import Path
-from typing import Set
 
 import pytest
 
@@ -25,7 +23,7 @@ except ImportError:
     import tomli as tomllib
 
 
-def get_registered_markers() -> Set[str]:
+def get_registered_markers() -> set[str]:
     """
     Extract all registered markers from pyproject.toml
 
@@ -49,7 +47,7 @@ def get_registered_markers() -> Set[str]:
     return marker_names
 
 
-def get_used_markers() -> Set[str]:
+def get_used_markers() -> set[str]:
     """
     Scan all test files for @pytest.mark.* usage
 

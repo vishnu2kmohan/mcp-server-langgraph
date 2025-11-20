@@ -13,8 +13,6 @@ The correct approach is to:
 Reference: Codex finding - Deploy to GKE Staging (run 19250053057) failures
 """
 
-import gc
-import re
 from pathlib import Path
 
 import pytest
@@ -76,22 +74,15 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
         "Expected a step with 'kubectl kustomize deployments/overlays/staging-gke'"
     )
 
-    assert trivy_step is not None, (
-        "Missing Trivy security scan step. Expected step using aquasecurity/trivy-action"
-    )
+    assert trivy_step is not None, "Missing Trivy security scan step. Expected step using aquasecurity/trivy-action"
 
     # Validate kustomize render step creates temp file
     kustomize_run_cmd = kustomize_render_step.get("run", "")
-    assert "kubectl kustomize" in kustomize_run_cmd, (
-        "Kustomize render step must use 'kubectl kustomize'"
-    )
-    assert "deployments/overlays/staging-gke" in kustomize_run_cmd, (
-        "Kustomize render step must target staging-gke overlay"
-    )
+    assert "kubectl kustomize" in kustomize_run_cmd, "Kustomize render step must use 'kubectl kustomize'"
+    assert "deployments/overlays/staging-gke" in kustomize_run_cmd, "Kustomize render step must target staging-gke overlay"
     # Intentionally checking for /tmp/ path in CI workflow validation
     assert (
-        "/tmp/staging-manifests" in kustomize_run_cmd
-        or "/tmp/staging.yaml" in kustomize_run_cmd  # nosec B108
+        "/tmp/staging-manifests" in kustomize_run_cmd or "/tmp/staging.yaml" in kustomize_run_cmd  # nosec B108
     ), "Kustomize render step must output to /tmp/ file for Trivy scanning"  # nosec B108
 
     # Validate Trivy scans the rendered manifest file, NOT the overlay directory
@@ -104,14 +95,10 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
     )
 
     # Intentionally checking for /tmp/ path in CI workflow validation
-    assert "/tmp/" in scan_ref, (
-        f"Trivy scan-ref should point to rendered manifest in /tmp/, got: {scan_ref}"
-    )  # nosec B108
+    assert "/tmp/" in scan_ref, f"Trivy scan-ref should point to rendered manifest in /tmp/, got: {scan_ref}"  # nosec B108
 
     # Validate scan type is 'config'
-    assert trivy_with.get("scan-type") == "config", (
-        "Trivy scan-type must be 'config' for Kubernetes manifest scanning"
-    )
+    assert trivy_with.get("scan-type") == "config", "Trivy scan-type must be 'config' for Kubernetes manifest scanning"
 
     # Validate severity includes CRITICAL and HIGH
     severity = trivy_with.get("severity", "")
@@ -188,10 +175,7 @@ def test_rendered_manifests_include_security_contexts():
     for doc in rendered_docs:
         if doc is None:
             continue
-        if (
-            doc.get("kind") == "Deployment"
-            and doc.get("metadata", {}).get("name") == "staging-qdrant"
-        ):
+        if doc.get("kind") == "Deployment" and doc.get("metadata", {}).get("name") == "staging-qdrant":
             qdrant_deployment = doc
             break
 
@@ -201,12 +185,7 @@ def test_rendered_manifests_include_security_contexts():
     )
 
     # Extract security context from container spec
-    containers = (
-        qdrant_deployment.get("spec", {})
-        .get("template", {})
-        .get("spec", {})
-        .get("containers", [])
-    )
+    containers = qdrant_deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
 
     assert len(containers) > 0, "No containers found in Qdrant deployment"
 
@@ -214,18 +193,14 @@ def test_rendered_manifests_include_security_contexts():
     security_context = qdrant_container.get("securityContext", {})
 
     # Validate security hardening
-    assert security_context.get("readOnlyRootFilesystem") is True, (
-        "Expected readOnlyRootFilesystem: true from qdrant-patch.yaml"
-    )
-    assert security_context.get("runAsNonRoot") is True, (
-        "Expected runAsNonRoot: true for security hardening"
-    )
+    assert (
+        security_context.get("readOnlyRootFilesystem") is True
+    ), "Expected readOnlyRootFilesystem: true from qdrant-patch.yaml"
+    assert security_context.get("runAsNonRoot") is True, "Expected runAsNonRoot: true for security hardening"
 
     capabilities = security_context.get("capabilities", {})
     drop_caps = capabilities.get("drop", [])
-    assert "ALL" in drop_caps, (
-        "Expected capabilities.drop: [ALL] for security hardening"
-    )
+    assert "ALL" in drop_caps, "Expected capabilities.drop: [ALL] for security hardening"
 
 
 def test_workflow_step_order_is_correct():

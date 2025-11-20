@@ -14,7 +14,6 @@ Tests cover:
 """
 
 import gc
-import os
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch

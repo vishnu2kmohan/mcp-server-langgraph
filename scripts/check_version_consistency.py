@@ -16,7 +16,6 @@ Exit codes:
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 try:
     import tomllib  # Python 3.11+
@@ -35,7 +34,7 @@ def get_current_version() -> str:
         sys.exit(1)
 
 
-def find_version_references(file_path: Path, current_version: str) -> List[Tuple[int, str, str]]:
+def find_version_references(file_path: Path, current_version: str) -> list[tuple[int, str, str]]:
     """
     Find version references in a file.
 
@@ -60,7 +59,7 @@ def find_version_references(file_path: Path, current_version: str) -> List[Tuple
         return []
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         for i, line in enumerate(lines, 1):
@@ -126,7 +125,7 @@ def main():
     md_files = [f.resolve() for f in Path(".").glob("*.md")]
     all_files = mdx_files + md_files
 
-    issues: Dict[Path, List[Tuple[int, str, str]]] = {}
+    issues: dict[Path, list[tuple[int, str, str]]] = {}
 
     for file_path in all_files:
         outdated = find_version_references(file_path, current_version)
@@ -158,8 +157,8 @@ def main():
         print()
 
     print(f"\n📊 Summary: {total_issues} outdated version references in {len(issues)} files")
-    print(f"\n💡 Tip: Review each reference to determine if it should be updated.")
-    print(f"   Some references (examples, historical) may be intentionally older.")
+    print("\n💡 Tip: Review each reference to determine if it should be updated.")
+    print("   Some references (examples, historical) may be intentionally older.")
 
     if args.fix:
         print("\n⚠️  Auto-fix not implemented yet. Manual review recommended.")

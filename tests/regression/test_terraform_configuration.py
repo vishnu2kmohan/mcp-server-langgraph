@@ -41,7 +41,6 @@ and compatible across all modules and environments.
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 
@@ -55,7 +54,7 @@ except ImportError:
     hcl2 = None
 
 
-def find_terraform_files() -> List[Path]:
+def find_terraform_files() -> list[Path]:
     """Find all Terraform .tf files."""
     terraform_dir = Path(__file__).parent.parent.parent / "terraform"
     if not terraform_dir.exists():
@@ -63,7 +62,7 @@ def find_terraform_files() -> List[Path]:
     return list(terraform_dir.rglob("*.tf"))
 
 
-def parse_terraform_file(file_path: Path) -> Dict:
+def parse_terraform_file(file_path: Path) -> dict:
     """
     Parse a Terraform file and return its structure.
 
@@ -124,7 +123,7 @@ class TestTerraformDuplicateBlocks:
 
         for file_path in tf_files:
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     # Use HCL parser to properly parse terraform configuration
                     # This avoids false positives from heredocs, strings, and comments
                     parsed = hcl2.load(f)
@@ -321,7 +320,7 @@ class TestTerraformProviderVersions:
         - Allows flexibility for minor version bumps
         """
         tf_files = find_terraform_files()
-        google_provider_versions: Dict[str, List[str]] = {}
+        google_provider_versions: dict[str, list[str]] = {}
 
         for file_path in tf_files:
             content = file_path.read_text()
@@ -340,7 +339,7 @@ class TestTerraformProviderVersions:
 
         # Check for conflicting major versions
         major_versions = set()
-        for version in google_provider_versions.keys():
+        for version in google_provider_versions:
             # Extract major version from constraints like "~> 6.0" or ">= 5.0"
             major_match = re.search(r"(\d+)\.\d+", version)
             if major_match:

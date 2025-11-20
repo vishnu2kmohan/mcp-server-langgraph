@@ -27,7 +27,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import yaml
 
@@ -62,7 +61,7 @@ def is_pre_commit_wrapper(content: str) -> bool:
     return any(re.search(pattern, content) for pattern in wrapper_patterns)
 
 
-def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
+def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
     """
     Validate .pre-commit-config.yaml has all required pre-push hooks.
 
@@ -83,7 +82,7 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
 
     # Load config
     try:
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
     except yaml.YAMLError as e:
         errors.append(f"❌ Failed to parse .pre-commit-config.yaml: {e}")
@@ -159,7 +158,7 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
     # Report optional validations as informational warnings
     if missing_optional:
         warnings.append(
-            f"ℹ️  Optional validations not configured (this is OK if intentional):\n"
+            "ℹ️  Optional validations not configured (this is OK if intentional):\n"
             + "\n".join(f"   - {cat}" for cat in missing_optional)
         )
 
@@ -177,7 +176,7 @@ def validate_pre_commit_config(repo_root: Path) -> Tuple[bool, List[str]]:
     return len(errors) == 0, errors
 
 
-def check_pre_push_hook() -> Tuple[bool, List[str]]:
+def check_pre_push_hook() -> tuple[bool, list[str]]:
     """
     Validate pre-push hook configuration.
 
@@ -198,10 +197,10 @@ def check_pre_push_hook() -> Tuple[bool, List[str]]:
 
     # Check 2: Is executable
     if not os.access(pre_push_path, os.X_OK):
-        errors.append(f"❌ Pre-push hook exists but is not executable\n" f"   Fix: chmod +x .git/hooks/pre-push")
+        errors.append("❌ Pre-push hook exists but is not executable\n" "   Fix: chmod +x .git/hooks/pre-push")
 
     # Read hook content
-    with open(pre_push_path, "r") as f:
+    with open(pre_push_path) as f:
         content = f.read()
 
     # Check 3: Detect hook type and validate accordingly

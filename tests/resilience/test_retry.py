@@ -5,7 +5,6 @@ Tests retry behavior, backoff calculation, and exception handling.
 """
 
 import gc
-import time
 from unittest.mock import patch
 
 import pytest

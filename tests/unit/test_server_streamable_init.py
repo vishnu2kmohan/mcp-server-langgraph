@@ -9,8 +9,6 @@ is complex due to dependency injection and is better validated via
 integration tests and production deployment verification.
 """
 
-import gc
-
 import pytest
 
 

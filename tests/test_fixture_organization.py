@@ -8,9 +8,7 @@ This test module validates that test fixtures follow best practices:
 """
 
 import ast
-import gc
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import pytest
 
@@ -18,21 +16,21 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 
-def find_autouse_fixtures(test_dir: Path) -> Dict[str, List[Tuple[str, int]]]:
+def find_autouse_fixtures(test_dir: Path) -> dict[str, list[tuple[str, int]]]:
     """
     Scan all Python test files for autouse fixtures.
 
     Returns:
         Dictionary mapping fixture names to list of (file_path, line_number) tuples
     """
-    autouse_fixtures: Dict[str, List[Tuple[str, int]]] = {}
+    autouse_fixtures: dict[str, list[tuple[str, int]]] = {}
 
     for test_file in test_dir.rglob("*.py"):
         if test_file.name.startswith("_"):
             continue
 
         try:
-            with open(test_file, "r", encoding="utf-8") as f:
+            with open(test_file, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(test_file))
         except SyntaxError:
             continue  # Skip files with syntax errors
@@ -73,7 +71,7 @@ def test_no_duplicate_autouse_fixtures():
     autouse_fixtures = find_autouse_fixtures(test_dir)
 
     # Find fixtures with multiple definitions
-    duplicates: Dict[str, List[Tuple[str, int]]] = {}
+    duplicates: dict[str, list[tuple[str, int]]] = {}
     for fixture_name, locations in autouse_fixtures.items():
         if len(locations) > 1:
             # Allow duplicate fixtures if they're all in conftest.py files
@@ -118,13 +116,13 @@ def test_autouse_fixtures_documented():
     test_dir = Path(__file__).parent
     autouse_fixtures = find_autouse_fixtures(test_dir)
 
-    undocumented: List[Tuple[str, str, int]] = []
+    undocumented: list[tuple[str, str, int]] = []
 
     for fixture_name, locations in autouse_fixtures.items():
         for file_path, line_num in locations:
             full_path = test_dir / file_path
             try:
-                with open(full_path, "r", encoding="utf-8") as f:
+                with open(full_path, encoding="utf-8") as f:
                     lines = f.readlines()
 
                 # Check if the function has a docstring
@@ -139,7 +137,7 @@ def test_autouse_fixtures_documented():
 
                     if not has_docstring:
                         undocumented.append((fixture_name, file_path, line_num))
-            except (IOError, IndexError):
+            except (OSError, IndexError):
                 continue
 
     if undocumented:

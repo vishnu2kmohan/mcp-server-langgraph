@@ -131,7 +131,6 @@ class TestEndToEndDependencyWiring:
         3. ServicePrincipalManager handles None OpenFGA
         4. create_service_principal() succeeds without crashing
         """
-        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 

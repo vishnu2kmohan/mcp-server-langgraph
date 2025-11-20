@@ -18,7 +18,6 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import gc
 import json
 import tempfile
 from pathlib import Path

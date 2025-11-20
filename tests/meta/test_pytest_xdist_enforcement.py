@@ -19,8 +19,6 @@ References:
 
 import ast
 import gc
-import os
-import subprocess
 from pathlib import Path
 
 import pytest

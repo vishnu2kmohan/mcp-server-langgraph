@@ -27,7 +27,6 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 
 @dataclass
@@ -46,7 +45,7 @@ class StageResult:
 
     stage: str
     total_duration: float
-    hook_results: List[HookResult]
+    hook_results: list[HookResult]
     passed: bool
 
 
@@ -77,10 +76,10 @@ def measure_pre_commit_hooks(stage: str, profile: bool = False) -> StageResult:
 
     if stage == "commit":
         hook_stage = "commit"
-        print(f"🔍 Measuring pre-commit hook performance (commit stage)...")
+        print("🔍 Measuring pre-commit hook performance (commit stage)...")
     else:
         hook_stage = "push"
-        print(f"🔍 Measuring pre-commit hook performance (push stage)...")
+        print("🔍 Measuring pre-commit hook performance (push stage)...")
 
     # Run pre-commit hooks
     cmd = ["pre-commit", "run", "--all-files"]
@@ -271,7 +270,7 @@ def print_results(stage_result: StageResult) -> None:
 
     # Individual hooks/phases
     if len(stage_result.hook_results) > 1:
-        print(f"\n📋 Individual Phase Timings:")
+        print("\n📋 Individual Phase Timings:")
         print("-" * 80)
         for hook in sorted(stage_result.hook_results, key=lambda x: x.duration, reverse=True):
             status = "✅" if hook.passed else "❌"
@@ -280,7 +279,7 @@ def print_results(stage_result: StageResult) -> None:
             print(f"{status} {hook.hook_id:40s} {duration_str:>10s} ({percentage:5.1f}%)")
 
     # Recommendations
-    print(f"\n💡 Recommendations:")
+    print("\n💡 Recommendations:")
     print("-" * 80)
 
     if "commit" in stage_result.stage.lower():
@@ -306,7 +305,7 @@ def print_results(stage_result: StageResult) -> None:
         # Identify slow phases
         slow_phases = [h for h in stage_result.hook_results if h.duration > 60]
         if slow_phases:
-            print(f"\n   Slow phases (> 1 minute):")
+            print("\n   Slow phases (> 1 minute):")
             for phase in slow_phases:
                 print(f"   - {phase.hook_id}: {format_duration(phase.duration)}")
 

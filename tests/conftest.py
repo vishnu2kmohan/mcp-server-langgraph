@@ -45,14 +45,12 @@ def _filtered_atexit_register(func, *args, **kwargs):
 # Replace atexit.register before any litellm imports
 atexit.register = _filtered_atexit_register
 
-import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
-from typing import AsyncGenerator, Generator  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
@@ -349,8 +347,6 @@ def reset_dependency_singletons():
     """
     yield
 
-    import sys
-
     # Reset all dependency singletons to ensure clean state for next test
     try:
         # Only import if already loaded (don't pollute import cache for lazy import tests)
@@ -484,7 +480,7 @@ def _wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
             sock.close()
             if result == 0:
                 return True
-        except socket.error:
+        except OSError:
             pass
         time.sleep(0.5)
     return False

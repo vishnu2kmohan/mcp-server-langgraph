@@ -26,7 +26,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # Patterns that indicate potential time bombs
 TIME_BOMB_PATTERNS = [
@@ -78,14 +78,14 @@ ALLOWED_PATTERNS = [
 ]
 
 
-def check_file(filepath: Path) -> List[Dict[str, Any]]:
+def check_file(filepath: Path) -> list[dict[str, Any]]:
     """Check a single test file for time bombs."""
     issues = []
     current_year = datetime.now().year
     max_safe_year = current_year + 25  # Allow up to 25 years (reasonable for certs/tokens)
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
             lines = content.split("\n")
 
@@ -172,7 +172,7 @@ def main():
     warnings = [i for i in all_issues if i["severity"] == "warning"]
 
     if errors or warnings:
-        print(f"\n🔍 Test Time Bomb Detection Report")
+        print("\n🔍 Test Time Bomb Detection Report")
         print(f"Files checked: {files_checked}")
         print(f"Issues found: {len(errors)} errors, {len(warnings)} warnings\n")
 

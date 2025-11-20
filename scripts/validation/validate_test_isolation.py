@@ -19,10 +19,8 @@ See: tests/PYTEST_XDIST_BEST_PRACTICES.md
 
 import argparse
 import ast
-import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 class TestIsolationValidator(ast.NodeVisitor):
@@ -30,8 +28,8 @@ class TestIsolationValidator(ast.NodeVisitor):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.violations: List[Tuple[int, str, str]] = []
-        self.warnings: List[Tuple[int, str, str]] = []
+        self.violations: list[tuple[int, str, str]] = []
+        self.warnings: list[tuple[int, str, str]] = []
         self.current_class = None
         self.current_function = None
         self.has_xdist_group_marker = False
@@ -182,7 +180,7 @@ class TestIsolationValidator(ast.NodeVisitor):
         return False
 
 
-def validate_file(file_path: Path) -> Tuple[List, List]:
+def validate_file(file_path: Path) -> tuple[list, list]:
     """Validate a single test file"""
     try:
         with open(file_path) as f:

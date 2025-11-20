@@ -15,9 +15,8 @@ Related Codex Finding: docker-compose.test.yml:214-233 uses wget for Qdrant heal
 """
 
 import gc
-import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
@@ -29,7 +28,7 @@ pytestmark = pytest.mark.unit
 PROJECT_ROOT = Path(__file__).parent.parent
 
 
-def find_docker_compose_files() -> List[Path]:
+def find_docker_compose_files() -> list[Path]:
     """Find all docker-compose files in the project."""
     compose_files = []
 
@@ -48,13 +47,13 @@ def find_docker_compose_files() -> List[Path]:
     return sorted(set(compose_files))
 
 
-def parse_docker_compose(file_path: Path) -> Dict[str, Any]:
+def parse_docker_compose(file_path: Path) -> dict[str, Any]:
     """Parse a docker-compose file and return its contents."""
     with open(file_path) as f:
         return yaml.safe_load(f)
 
 
-def extract_health_check_command(health_check: Dict[str, Any]) -> List[str]:
+def extract_health_check_command(health_check: dict[str, Any]) -> list[str]:
     """Extract the command from a health check configuration."""
     if not health_check:
         return []

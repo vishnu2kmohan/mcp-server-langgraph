@@ -22,8 +22,6 @@ import argparse
 import os
 import re
 import sys
-from pathlib import Path
-from typing import List, Tuple
 
 # Sleep duration thresholds (seconds)
 UNIT_TEST_MAX_SLEEP = 0.5
@@ -60,7 +58,7 @@ def is_unit_test(file_path: str, content: str) -> bool:
     return False
 
 
-def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
+def check_file(content: str, file_path: str, is_unit: bool = True) -> list[str]:
     """
     Check file for sleep duration violations.
 
@@ -107,7 +105,7 @@ def check_file(content: str, file_path: str, is_unit: bool = True) -> List[str]:
     return violations
 
 
-def check_test_files(file_paths: List[str]) -> List[str]:
+def check_test_files(file_paths: list[str]) -> list[str]:
     """
     Check multiple test files for sleep violations.
 
@@ -126,7 +124,7 @@ def check_test_files(file_paths: List[str]) -> List[str]:
         if not file_path.endswith(".py"):
             continue
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         is_unit = is_unit_test(file_path, content)
@@ -136,7 +134,7 @@ def check_test_files(file_paths: List[str]) -> List[str]:
     return all_violations
 
 
-def find_test_files(directory: str) -> List[str]:
+def find_test_files(directory: str) -> list[str]:
     """
     Recursively find all test files in directory.
 
@@ -170,13 +168,13 @@ def main():
     parser = argparse.ArgumentParser(description="Check test files for excessive sleep durations")
     parser.add_argument("paths", nargs="+", help="Test files or directories to check")
     parser.add_argument(
-        "--unit-max", type=float, default=UNIT_TEST_MAX_SLEEP, help=f"Max sleep duration for unit tests (default: 0.5s)"
+        "--unit-max", type=float, default=UNIT_TEST_MAX_SLEEP, help="Max sleep duration for unit tests (default: 0.5s)"
     )
     parser.add_argument(
         "--integration-max",
         type=float,
         default=INTEGRATION_TEST_MAX_SLEEP,
-        help=f"Max sleep duration for integration tests (default: 2.0s)",
+        help="Max sleep duration for integration tests (default: 2.0s)",
     )
 
     args = parser.parse_args()

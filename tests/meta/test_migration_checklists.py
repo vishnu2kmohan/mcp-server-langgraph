@@ -17,7 +17,6 @@ See: https://www.anthropic.com/engineering/claude-code-best-practices
 
 import gc
 from pathlib import Path
-from typing import List
 
 import pytest
 

@@ -22,7 +22,6 @@ Solution: Execute schema SQL directly using async connection, bypassing Alembic.
 
 from pathlib import Path
 
-import asyncpg
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.security, pytest.mark.gdpr, pytest.mark.database]

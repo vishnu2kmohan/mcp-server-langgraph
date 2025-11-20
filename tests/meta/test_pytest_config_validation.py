@@ -12,7 +12,6 @@ The validator checks that:
 Reference: Codex finding - pytest addopts compatibility validation
 """
 
-import gc
 import subprocess
 import sys
 

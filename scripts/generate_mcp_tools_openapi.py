@@ -257,7 +257,7 @@ def main():
     with open(output_path, "w") as f:
         json.dump(mcp_tools_spec, f, indent=2)
 
-    print(f"✓ Generated MCP Tools OpenAPI spec")
+    print("✓ Generated MCP Tools OpenAPI spec")
     print(f"  Saved to: {output_path}")
     print(f"  Tools documented: {len(mcp_tools_spec['paths'])}")
     print(f"  Schemas: {len(mcp_tools_spec['components']['schemas'])}")

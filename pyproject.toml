@@ -106,13 +106,14 @@ dev = [
     # Mutation testing
     "mutmut>=3.3.1",
     # Code quality
-    "black>=25.9.0",
-    "flake8>=7.0.0",
+    "ruff>=0.8.0",  # Replaces black, isort, and flake8 (10-100x faster, Rust-based)
+    "black>=25.9.0",  # Keep for now during migration, will remove after validation
+    "flake8>=7.0.0",  # Keep for now during migration, will remove after validation
     "mypy>=1.18.2",
     "types-PyYAML",
     "types-redis",
     "types-requests",
-    "isort>=7.0.0",
+    "isort>=7.0.0",  # Keep for now during migration, will remove after validation
     "bandit>=1.7.6",
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
@@ -265,6 +266,61 @@ Changelog = "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHA
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*", "*.tests*", "*.tests"]
+
+# ==============================================================================
+# RUFF CONFIGURATION - Replaces black, isort, and flake8
+# ==============================================================================
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+# Exclude directories (same as black/isort/flake8)
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "__pycache__",
+    "htmlcov",
+    ".pytest_cache",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+# Enable rule categories:
+# E/W: pycodestyle errors and warnings
+# F: pyflakes
+# I: isort (import sorting)
+# N: pep8-naming
+# UP: pyupgrade (modernize Python syntax)
+# B: flake8-bugbear (common bugs)
+# C4: flake8-comprehensions
+# SIM: flake8-simplify
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM"]
+
+# Ignore specific rules to align with black formatting
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+# Use black-compatible isort settings
+force-single-line = false
+force-wrap-aliases = false
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+# Use black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# ==============================================================================
+# LEGACY TOOLS - Keep during migration, will remove after validation
+# ==============================================================================
 
 [tool.black]
 line-length = 127

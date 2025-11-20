@@ -31,8 +31,6 @@ References:
 """
 
 import gc
-from pathlib import Path
-from typing import List, Set
 
 import pytest
 

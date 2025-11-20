@@ -8,7 +8,6 @@ Tests cover:
 - Invalid template validation
 """
 
-import gc
 import tempfile
 from pathlib import Path
 

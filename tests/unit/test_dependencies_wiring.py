@@ -17,7 +17,6 @@ Created to ensure dependency wiring is validated before production deployments.
 import gc
 import importlib
 import sys
-from typing import Dict, Set
 from unittest.mock import MagicMock, patch
 
 import pytest

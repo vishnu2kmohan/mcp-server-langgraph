@@ -36,11 +36,10 @@ These tests validate that the isolation mechanisms are in place and working.
 """
 
 import gc
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi.testclient import TestClient
 

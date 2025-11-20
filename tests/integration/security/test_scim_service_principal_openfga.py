@@ -61,7 +61,9 @@ class TestSCIMOpenFGAIntegration:
         # Current implementation checks roles, new implementation should check OpenFGA
         try:
             await _require_admin_or_scim_role(
-                current_user=current_user, openfga=mock_openfga, resource="scim:users"  # Should use this
+                current_user=current_user,
+                openfga=mock_openfga,
+                resource="scim:users",  # Should use this
             )
             # If OpenFGA is used, should succeed because mock returns True
             # If roles are used, should fail because user lacks roles

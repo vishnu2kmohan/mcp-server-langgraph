@@ -2,6 +2,7 @@
 """
 Example usage of OpenFGA authorization in the agent
 """
+
 import asyncio
 
 from mcp_server_langgraph.auth.middleware import AuthMiddleware

@@ -11,7 +11,6 @@ Following TDD: This test written FIRST to catch configuration mismatches.
 """
 
 import gc
-import os
 from pathlib import Path
 
 import pytest

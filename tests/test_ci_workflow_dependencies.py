@@ -5,8 +5,6 @@ This test ensures that the CI workflow validation step has access to all
 necessary dependencies, particularly langchain_core and other project modules.
 """
 
-import gc
-import subprocess
 import sys
 from pathlib import Path
 

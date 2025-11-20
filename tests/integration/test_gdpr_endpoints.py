@@ -8,8 +8,7 @@ Tests all GDPR endpoints through FastAPI test client to ensure:
 """
 
 import gc
-import os
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -19,7 +18,7 @@ from tests.conftest import get_user_id
 
 
 @pytest.fixture
-def mock_auth_user() -> Dict[str, Any]:
+def mock_auth_user() -> dict[str, Any]:
     """Mock authenticated user for testing."""
     user_id = get_user_id("alice")
     return {
