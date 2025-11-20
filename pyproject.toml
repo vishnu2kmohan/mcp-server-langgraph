@@ -93,7 +93,7 @@ dev = [
     "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
     "python-on-whales>=0.74.0",  # Docker management library used by test infrastructure
     "docker>=7.1.0",  # Docker Python SDK for test imports (tests/unit/execution/test_docker_sandbox_unit.py)
-    "kubernetes>=31.0.0",  # Kubernetes Python client for test imports (tests/unit/execution/)
+    "kubernetes>=34.0.0",  # Kubernetes Python client for test imports (fixes HTTPResponse.getheaders deprecation)
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
@@ -158,7 +158,7 @@ code-execution = [
     # Code execution sandbox dependencies
     # Supports both Docker Engine (local/dev) and Kubernetes (production)
     "docker>=7.1.0",  # Docker Python SDK for container management
-    "kubernetes>=31.0.0",  # Kubernetes Python client for K8s Jobs
+    "kubernetes>=34.0.0",  # Kubernetes Python client for K8s Jobs (fixes HTTPResponse.getheaders deprecation)
     "psutil>=6.1.0",  # Process and system monitoring
 ]
 
@@ -453,7 +453,7 @@ strict = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
-norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__"]
+norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__", ".hypothesis"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

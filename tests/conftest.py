@@ -45,6 +45,7 @@ def _filtered_atexit_register(func, *args, **kwargs):
 # Replace atexit.register before any litellm imports
 atexit.register = _filtered_atexit_register
 
+import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import socket  # noqa: E402
@@ -495,6 +496,93 @@ def _check_http_health(url: str, timeout: float = 2.0) -> bool:
         return response.status_code == 200
     except Exception:
         return False
+
+
+async def _verify_gdpr_schema_ready(host: str, port: int, timeout: float = 30.0) -> bool:
+    """
+    Verify GDPR schema is fully initialized with all required tables.
+
+    This function prevents integration test failures where tests start before
+    the schema migration completes. The PostgreSQL health check (pg_isready)
+    only verifies the server accepts connections, not that tables exist.
+
+    Root Cause (OpenAI Codex Finding 2025-11-20):
+    - Docker container runs migrations/001_gdpr_schema.sql automatically
+    - Health check passes before migration completes
+    - Tests fail with "relation does not exist" errors
+
+    Args:
+        host: PostgreSQL host (default: localhost)
+        port: PostgreSQL port (default: 9432)
+        timeout: Maximum time to wait for schema (default: 30s)
+
+    Returns:
+        True if all GDPR tables exist, False if timeout reached
+
+    Required tables:
+    - user_profiles
+    - user_preferences
+    - consent_records
+    - conversations
+    - audit_logs
+    """
+    try:
+        import asyncpg
+    except ImportError:
+        logging.warning("asyncpg not installed - skipping schema verification")
+        return False
+
+    start_time = time.time()
+    required_tables = ["user_profiles", "user_preferences", "consent_records", "conversations", "audit_logs"]
+
+    while time.time() - start_time < timeout:
+        try:
+            # Connect to gdpr_test database
+            conn = await asyncpg.connect(
+                host=host,
+                port=port,
+                database=os.getenv("POSTGRES_DB", "gdpr_test"),
+                user=os.getenv("POSTGRES_USER", "postgres"),
+                password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+                timeout=5,
+            )
+
+            try:
+                # Query for all GDPR tables
+                tables = await conn.fetch(
+                    """
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_name IN ('user_profiles', 'user_preferences',
+                                          'consent_records', 'conversations', 'audit_logs')
+                    """
+                )
+
+                table_names = [row["table_name"] for row in tables]
+
+                # Check if all required tables exist
+                if len(table_names) == 5:
+                    missing = set(required_tables) - set(table_names)
+                    if not missing:
+                        logging.info(f"✓ GDPR schema ready: all {len(required_tables)} tables exist")
+                        return True
+                    else:
+                        logging.debug(f"GDPR schema incomplete: missing {missing}")
+                else:
+                    logging.debug(f"GDPR schema incomplete: found {len(table_names)}/5 tables: {table_names}")
+
+            finally:
+                await conn.close()
+
+        except Exception as e:
+            logging.debug(f"Schema verification attempt failed: {e}")
+
+        # Wait before retry
+        await asyncio.sleep(1)
+
+    logging.error(f"GDPR schema not ready after {timeout}s timeout")
+    return False
 
 
 @pytest.fixture(scope="session")
@@ -958,7 +1046,15 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
         # PostgreSQL
         if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
             pytest.skip("PostgreSQL test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ PostgreSQL ready")
+        logging.info("✓ PostgreSQL port ready")
+
+        # Verify GDPR schema is fully initialized (not just port open)
+        # This prevents race conditions where tests start before tables exist
+        logging.info("Verifying GDPR schema initialization...")
+        schema_ready = asyncio.run(_verify_gdpr_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
+        if not schema_ready:
+            pytest.skip("GDPR schema not initialized in time - skipping infrastructure tests")
+        logging.info("✓ PostgreSQL ready with GDPR schema")
 
         # Redis (checkpoints)
         if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
@@ -1297,7 +1393,27 @@ def integration_test_env(test_infrastructure):
 
 @pytest.fixture(scope="session")
 async def postgres_connection_real(integration_test_env):
-    """Real PostgreSQL connection for integration tests"""
+    """
+    PostgreSQL connection pool for integration tests.
+
+    Replaces single session-scoped connection with pool to fix:
+    - Connection state pollution across tests
+    - search_path not persisting correctly
+    - Worker isolation issues with shared connection
+
+    OpenAI Codex Finding Fix (2025-11-20):
+    ========================================
+    Previous: Single session-scoped connection shared across all tests
+    Problem: SET search_path persists across tests, causing state pollution
+    Fix: Connection pool with min_size=4, max_size=10 for worker isolation
+
+    Each test acquires a connection from the pool, sets worker-scoped schema,
+    and releases it back. This ensures clean state per test.
+
+    References:
+    - tests/integration/test_schema_initialization_timing.py::test_connection_pool_isolation
+    - tests/conftest.py::postgres_connection_clean (uses this pool)
+    """
     if not integration_test_env:
         pytest.skip("Integration test environment not available (requires Docker)")
 
@@ -1308,17 +1424,20 @@ async def postgres_connection_real(integration_test_env):
 
     # Connection params from environment (set in docker-compose.test.yml)
     # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
-    conn = await asyncpg.connect(
+    pool = await asyncpg.create_pool(
         host=os.getenv("POSTGRES_HOST", "localhost"),
         port=int(os.getenv("POSTGRES_PORT", "9432")),
         database=os.getenv("POSTGRES_DB", "gdpr_test"),
         user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
+        min_size=4,  # One connection per typical worker count
+        max_size=10,  # Allow burst for parallel tests
+        command_timeout=60,  # Prevent hanging queries
     )
 
-    yield conn
+    yield pool
 
-    await conn.close()
+    await pool.close()
 
 
 @pytest.fixture(scope="session")
@@ -1411,6 +1530,12 @@ async def postgres_connection_clean(postgres_connection_real):
     This prevents race conditions where one worker's TRUNCATE affects another
     worker's in-progress test data.
 
+    **Connection Pool Usage (OpenAI Codex Finding Fix 2025-11-20):**
+    - Acquires connection from pool (not shared session connection)
+    - Sets worker-scoped schema on acquired connection
+    - Releases connection back to pool after test
+    - Each test gets clean connection state
+
     Usage:
         @pytest.mark.asyncio
         async def test_my_feature(postgres_connection_clean):
@@ -1420,32 +1545,38 @@ async def postgres_connection_clean(postgres_connection_real):
     References:
     - tests/regression/test_pytest_xdist_worker_database_isolation.py
     - OpenAI Codex Finding: conftest.py:1042
+    - tests/integration/test_schema_initialization_timing.py::test_connection_pool_isolation
     """
     # Get worker ID from environment (set by pytest-xdist)
     worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
     schema_name = f"test_worker_{worker_id}"
 
-    # Create worker-scoped schema if it doesn't exist
-    try:
-        await postgres_connection_real.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
-        # Set search_path to worker schema for all subsequent queries
-        await postgres_connection_real.execute(f"SET search_path TO {schema_name}, public")
-    except Exception as e:
-        # Log but don't fail - some tests may not need the schema
-        import warnings
+    # Acquire connection from pool
+    async with postgres_connection_real.acquire() as conn:
+        # Create worker-scoped schema if it doesn't exist
+        try:
+            await conn.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+            # Set search_path to worker schema for all subsequent queries
+            await conn.execute(f"SET search_path TO {schema_name}, public")
+        except Exception as e:
+            # Log but don't fail - some tests may not need the schema
+            import warnings
 
-        warnings.warn(f"Failed to create worker schema {schema_name}: {e}")
+            warnings.warn(f"Failed to create worker schema {schema_name}: {e}")
 
-    yield postgres_connection_real
+        # Yield connection for test use
+        yield conn
 
-    # Cleanup: Drop entire worker schema (safe, isolated to this worker)
-    # This is faster and more thorough than TRUNCATE
-    try:
-        await postgres_connection_real.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
-    except Exception:
-        # If cleanup fails, don't fail the test
-        # The schema will be recreated on next test run
-        pass
+        # Cleanup: Drop entire worker schema (safe, isolated to this worker)
+        # This is faster and more thorough than TRUNCATE
+        try:
+            await conn.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
+        except Exception:
+            # If cleanup fails, don't fail the test
+            # The schema will be recreated on next test run
+            pass
+
+    # Connection automatically returned to pool when exiting context
 
 
 @pytest.fixture
@@ -1574,40 +1705,22 @@ async def openfga_client_clean(openfga_client_real):
             pass
 
 
-@pytest.fixture(scope="session")
-async def postgres_with_schema(postgres_connection_real):
-    """
-    PostgreSQL connection with GDPR schema initialized.
-
-    Runs the GDPR schema migration once per test session.
-    Required for testing PostgreSQL storage backends.
-
-    Usage:
-        @pytest.mark.asyncio
-        async def test_postgres_storage(postgres_with_schema):
-            # Schema already created (audit_logs, consent_records, etc.)
-    """
-    from pathlib import Path
-
-    # Find schema file
-    project_root = Path(__file__).parent.parent
-    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-
-    if not schema_file.exists():
-        pytest.skip(f"Schema file not found: {schema_file}")
-
-    # Read and execute schema
-    schema_sql = schema_file.read_text()
-
-    try:
-        await postgres_connection_real.execute(schema_sql)
-    except Exception:
-        # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
-        pass
-
-    yield postgres_connection_real
-
-    # No cleanup - schema persists for all tests in session
+# REMOVED: postgres_with_schema fixture (OpenAI Codex Finding Fix 2025-11-20)
+#
+# Reason: Duplicate schema initialization causing race conditions
+# - Docker container already runs migrations/001_gdpr_schema.sql via docker-entrypoint-initdb.d
+# - This fixture was redundantly running the same migration
+# - test_infrastructure fixture now verifies schema completion before tests start
+#
+# Migration: Tests using postgres_with_schema should:
+# 1. Remove postgres_with_schema from fixture parameters
+# 2. Use postgres_connection_clean directly (pool-based connection)
+# 3. Schema guaranteed to exist via test_infrastructure verification
+#
+# References:
+# - tests/integration/test_schema_initialization_timing.py::test_no_duplicate_schema_initialization
+# - docker-compose.test.yml: volumes mapping migrations to /docker-entrypoint-initdb.d
+# - migrations/000_init_databases.sh: Auto-runs 001_gdpr_schema.sql on container start
 
 
 @pytest.fixture

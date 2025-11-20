@@ -52,8 +52,12 @@ services:
       # Mount migration scripts for database initialization
       - ./migrations:/docker-entrypoint-initdb.d:ro
     # No persistent volumes - ephemeral storage for test isolation
+    # OpenAI Codex Finding Fix (2025-11-20): Increased from 256m to 512m
+    # Reason: Multiple worker schemas (test_worker_gw0, gw1, gw2...) need more space
+    # Previous: 256MB caused OOM with 4+ parallel workers
+    # Current: 512MB supports 8+ workers safely
     tmpfs:
-      - /var/lib/postgresql/data:rw,noexec,nosuid,size=256m
+      - /var/lib/postgresql/data:rw,noexec,nosuid,size=512m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s  # Codex Fix: interval must be >= timeout
