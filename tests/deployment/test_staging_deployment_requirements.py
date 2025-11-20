@@ -185,9 +185,20 @@ class TestStagingDeploymentRequirements:
 
     def test_keycloak_has_required_volume_mounts(self):
         """
-        Test: Keycloak container has all required volume mounts for readOnlyRootFilesystem.
+        Test: Keycloak container has proper security configuration with compensating controls.
 
-        Cross-validates with security hardening requirements.
+        **IMPORTANT**: Keycloak requires readOnlyRootFilesystem: false due to Quarkus JIT compilation.
+        This is documented in deployments/overlays/staging-gke/.trivyignore (AVD-KSV-0014).
+
+        Security mitigations (compensating controls):
+        1. emptyDir volumes for writable paths (/tmp, /var/tmp, /opt/keycloak/data)
+        2. runAsNonRoot: true, runAsUser: 1000
+        3. allowPrivilegeEscalation: false
+        4. capabilities.drop: ALL
+
+        References:
+        - .trivyignore: AVD-KSV-0014 (lines 96-152)
+        - Upstream issue: https://github.com/keycloak/keycloak/issues/10150
         """
         patch_file = Path("deployments/overlays/staging-gke/keycloak-patch.yaml")
 
@@ -199,24 +210,27 @@ class TestStagingDeploymentRequirements:
 
         assert keycloak, "Keycloak container not found"
 
-        # Check readOnlyRootFilesystem is enabled
+        # Verify readOnlyRootFilesystem is explicitly set to false (documented exception)
         security_context = keycloak.get("securityContext", {})
-        assert (
-            security_context.get("readOnlyRootFilesystem") is True
-        ), "Keycloak should have readOnlyRootFilesystem: true (security requirement)"
+        assert security_context.get("readOnlyRootFilesystem") is False, (
+            "Keycloak should have readOnlyRootFilesystem: false (Quarkus JIT requirement). "
+            "See .trivyignore AVD-KSV-0014 for justification."
+        )
 
-        # Verify required volume mounts exist
+        # Verify compensating control: emptyDir volumes for writable paths
         volume_mounts = keycloak.get("volumeMounts", [])
         mount_paths = {vm["mountPath"] for vm in volume_mounts}
 
-        required_mounts = {"/tmp"}  # Minimum requirement
+        # Required emptyDir mounts (ephemeral, isolated writes)
+        required_mounts = {"/tmp", "/var/tmp", "/opt/keycloak/data"}
 
         missing_mounts = required_mounts - mount_paths
 
         assert not missing_mounts, (
-            f"Keycloak missing required volume mounts: {missing_mounts}\n"
-            f"These are needed for readOnlyRootFilesystem: true to work.\n"
-            f"Current mounts: {mount_paths}"
+            f"Keycloak missing required emptyDir volume mounts: {missing_mounts}\n"
+            f"These compensate for readOnlyRootFilesystem: false by ensuring writes are ephemeral.\n"
+            f"Current mounts: {mount_paths}\n"
+            f"See .trivyignore AVD-KSV-0014 for security rationale."
         )
 
     def test_staging_uses_staging_secrets(self):

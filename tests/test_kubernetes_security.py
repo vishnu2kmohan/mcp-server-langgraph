@@ -45,7 +45,24 @@ class TestSecurityContexts:
 
         This test will initially FAIL because security contexts are missing.
         After fix, all containers should have this critical security setting.
+
+        **EXCEPTION: Keycloak**
+        Keycloak requires readOnlyRootFilesystem: false due to Quarkus JIT compilation.
+        This is documented in deployments/overlays/staging-gke/.trivyignore (AVD-KSV-0014).
+
+        Security mitigations for Keycloak:
+        - emptyDir volumes (ephemeral, isolated per pod)
+        - runAsNonRoot: true, runAsUser: 1000
+        - allowPrivilegeEscalation: false
+        - capabilities.drop: ALL
+
+        See: https://github.com/keycloak/keycloak/issues/10150 (upstream tracking)
         """
+        # Documented exceptions (see .trivyignore for detailed justification)
+        READONLY_FILESYSTEM_EXCEPTIONS = {
+            "keycloak": "Quarkus JIT compilation requires writable filesystem (AVD-KSV-0014)",
+        }
+
         for patch_file in deployment_patch_files:
             if not patch_file.exists():
                 pytest.skip(f"Patch file not found: {patch_file}")
@@ -68,7 +85,22 @@ class TestSecurityContexts:
                     container_name = container.get("name", f"container-{container_idx}")
                     security_context = container.get("securityContext", {})
 
-                    # Check for readOnlyRootFilesystem
+                    # Check if this container has a documented exception
+                    if container_name.lower() in READONLY_FILESYSTEM_EXCEPTIONS:
+                        # For exceptions, verify it's explicitly set to false (not just missing)
+                        assert "readOnlyRootFilesystem" in security_context, (
+                            f"{patch_file.name}: Container '{container_name}' is an exception but must "
+                            f"explicitly set readOnlyRootFilesystem: false.\n"
+                            f"Reason: {READONLY_FILESYSTEM_EXCEPTIONS[container_name.lower()]}"
+                        )
+                        assert security_context["readOnlyRootFilesystem"] is False, (
+                            f"{patch_file.name}: Container '{container_name}' must have "
+                            f"readOnlyRootFilesystem: false (not true).\n"
+                            f"Reason: {READONLY_FILESYSTEM_EXCEPTIONS[container_name.lower()]}"
+                        )
+                        continue  # Skip readOnly check for documented exceptions
+
+                    # All other containers must have readOnlyRootFilesystem: true
                     assert (
                         "readOnlyRootFilesystem" in security_context
                     ), f"{patch_file.name}: Container '{container_name}' missing securityContext.readOnlyRootFilesystem"

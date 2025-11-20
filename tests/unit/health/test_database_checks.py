@@ -32,6 +32,9 @@ from mcp_server_langgraph.health.database_checks import (
     validate_database_architecture,
 )
 
+# Mark as unit test to ensure it runs in CI
+pytestmark = pytest.mark.unit
+
 
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""

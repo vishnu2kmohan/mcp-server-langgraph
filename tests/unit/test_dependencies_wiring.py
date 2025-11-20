@@ -123,7 +123,7 @@ class TestSettingsInjection:
 
     def test_container_can_be_created_with_settings(self):
         """ApplicationContainer should accept custom settings"""
-        from mcp_server_langgraph.core.container import ApplicationContainer
+        from mcp_server_langgraph.core.container import create_test_container
 
         test_settings = Settings(
             service_name="test",
@@ -131,10 +131,10 @@ class TestSettingsInjection:
             anthropic_api_key="test-key",
         )
 
-        # Should not raise
-        container = ApplicationContainer()
-        container.config.from_dict({"settings": test_settings})
+        # Should not raise - use factory function with settings override
+        container = create_test_container(settings=test_settings)
         assert container is not None
+        assert container.settings.service_name == "test"
 
 
 # ============================================================================
@@ -230,10 +230,14 @@ class TestProductionReadiness:
         assert len(missing) == 0, f"Missing required packages: {missing}"
 
     def test_settings_validation_prevents_invalid_config(self):
-        """Settings should validate required fields"""
-        # Missing required fields should raise ValidationError
-        with pytest.raises(Exception):  # Pydantic ValidationError
-            Settings()  # No required fields provided
+        """Settings should validate field types"""
+        from pydantic import ValidationError
+
+        # Invalid field types should raise ValidationError
+        with pytest.raises(ValidationError):
+            Settings(
+                jwt_expiration_seconds="not-an-integer",  # Should be int
+            )
 
 
 # ============================================================================

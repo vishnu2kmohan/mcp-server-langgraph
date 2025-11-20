@@ -56,9 +56,16 @@ class TestMDXParsing:
             # Find unescaped <digit patterns (not inside backticks or code blocks)
             # Pattern: < followed by digit, not preceded by backtick or &lt;
             lines = content.split("\n")
+            in_code_block = False
+
             for line_num, line in enumerate(lines, 1):
-                # Skip code blocks
-                if line.strip().startswith("```") or line.strip().startswith("    "):
+                # Track fenced code blocks
+                if line.strip().startswith("```"):
+                    in_code_block = not in_code_block
+                    continue
+
+                # Skip lines inside code blocks or indented code blocks
+                if in_code_block or line.startswith("    "):
                     continue
 
                 # Find <digit patterns that are NOT:

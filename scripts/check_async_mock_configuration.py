@@ -48,8 +48,8 @@ def main() -> int:
     all_issues = []
 
     for filepath in files:
-        # Only check test files
-        if not filepath.startswith("tests/") or not filepath.endswith(".py"):
+        # Only check Python files
+        if not filepath.endswith(".py"):
             continue
 
         issues = async_mocks.check_async_mock_configuration(filepath)

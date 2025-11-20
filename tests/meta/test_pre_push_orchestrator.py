@@ -108,6 +108,7 @@ class TestPrePushOrchestrator:
 
         # Verify it uses -n auto for parallel execution
         # Check for various representations: string "-n auto" or list ["-n", "auto"]
+        # Also handle multiline formatting where -n and auto are on separate lines
         has_parallel = (
             '"-n", "auto"' in content
             or '"-n","auto"' in content
@@ -115,6 +116,9 @@ class TestPrePushOrchestrator:
             or "'-n','auto'" in content
             or '"-n auto"' in content
             or "-n auto" in content
+            or (
+                '"-n"' in content and '"auto"' in content and content.index('"auto"') - content.index('"-n"') < 100
+            )  # Multiline: within 100 chars
         )
 
         assert has_parallel, (

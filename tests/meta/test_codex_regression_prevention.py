@@ -573,9 +573,13 @@ class TestCodexFindingCompliance:
         gc.collect()
 
     def test_codex_validation_commit_exists(self):
-        """Verify Codex findings validation commits exist in git history"""
+        """Verify Codex findings validation commits exist in git history
+
+        Note: Searches last 100 commits to account for recent work on other areas.
+        Codex findings commits exist but may be older than 20 commits.
+        """
         result = subprocess.run(
-            ["git", "log", "--oneline", "--all", "-20"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+            ["git", "log", "--oneline", "--all", "-100"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         log_output = result.stdout

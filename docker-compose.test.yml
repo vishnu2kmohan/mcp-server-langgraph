@@ -156,7 +156,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 40
-      start_period: 45s
+      start_period: 60s  # Minimum required per ADR-0053 (Keycloak initialization time)
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
