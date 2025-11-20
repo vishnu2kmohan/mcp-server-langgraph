@@ -120,7 +120,7 @@ services:
   # ==============================================================================
 
   keycloak-test:
-    image: quay.io/keycloak/keycloak:26.0.0
+    image: quay.io/keycloak/keycloak:26.4.2
     container_name: mcp-keycloak-test
     command: start-dev --import-realm
     depends_on:
