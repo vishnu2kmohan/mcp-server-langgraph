@@ -907,7 +907,8 @@ def test_infrastructure_ports():
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
         "openfga_grpc": 9081,
-        "keycloak": 9082,
+        "keycloak": 9082,  # HTTP API port
+        "keycloak_management": 9900,  # Management/health port (Keycloak 26.x best practice)
     }
 
 
@@ -1073,24 +1074,26 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
         pytest.skip("Keycloak test service not available - run 'make test-integration'")
 
-    # Additional check for Keycloak - use /realms/master endpoint (standard realm discovery)
-    # Keycloak 26.x doesn't expose /health/ready in start-dev mode, but /realms/master returns 200 when ready
+    # Best Practice: Use /health/ready endpoint on management port (9000)
+    # Reference: https://www.keycloak.org/observability/health
+    # Keycloak 26.x exposes health endpoints on port 9000 (management port)
+    # This is more reliable than /realms/master as it's purpose-built for health checks
     # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
     # This accounts for:
     #   1. Database schema migration
     #   2. Realm import from keycloak-test-realm.json
     #   3. JIT compilation of Java bytecode
-    keycloak_url = f"http://localhost:{test_infrastructure_ports['keycloak']}/realms/master"
+    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
     keycloak_ready = False
     for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
-        if _check_http_health(keycloak_url, timeout=5):
+        if _check_http_health(keycloak_health_url, timeout=5):
             keycloak_ready = True
             break
         time.sleep(2)
 
     if not keycloak_ready:
-        logging.error("Keycloak /realms/master endpoint not responding after 60s additional wait")
-        pytest.skip("Keycloak health check failed - /realms/master endpoint not responding")
+        logging.error("Keycloak /health/ready endpoint not responding after 60s additional wait")
+        pytest.skip("Keycloak health check failed - /health/ready endpoint not responding (port 9900)")
     logging.info("✓ Keycloak ready")
 
     # Qdrant

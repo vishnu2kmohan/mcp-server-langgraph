@@ -127,7 +127,8 @@ services:
       postgres-test:
         condition: service_healthy
     ports:
-      - "9082:8080"
+      - "9082:8080"    # HTTP API
+      - "9900:9000"    # Management/health port
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
@@ -147,20 +148,25 @@ services:
       - KC_HTTP_ENABLED=true
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
-      - KC_HEALTH_ENABLED=true
-      - KC_METRICS_ENABLED=false  # Disabled for test speed
-      - KC_LOG_LEVEL=warn  # Reduced logging
+
+      # Health and management settings (Best Practice: Official Keycloak documentation)
+      - KC_HEALTH_ENABLED=true          # Enable health endpoints
+      - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
+      - KC_METRICS_ENABLED=false        # Disabled for test speed
+      - KC_LOG_LEVEL=warn               # Reduced logging
 
       # Test-specific
       - TESTING=true
     healthcheck:
-      # Use Keycloak's built-in health command instead of curl (not available in image)
-      # Codex Fix: curl doesn't exist in Keycloak image, use native kc.sh command
-      test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config | grep -q 'kc.db' || exit 1"]
+      # Best Practice: Use /health/ready endpoint on management port 9000
+      # Reference: https://www.keycloak.org/observability/health
+      # Keycloak 26.x exposes health endpoints on port 9000 (management port)
+      # curl is not available in image, use bash TCP redirect
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' && timeout 5 bash -c 'echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/9000' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 40
-      start_period: 60s  # Minimum required per ADR-0053 (Keycloak initialization time)
+      start_period: 60s  # Accounts for DB migration + realm import + JIT compilation
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:

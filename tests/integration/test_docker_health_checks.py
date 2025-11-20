@@ -297,7 +297,11 @@ class TestDockerComposeHealthChecksIntegration:
                 f"  - Health check uses 'curl' but image doesn't have it\n"
                 f"  - Wrong port in health check\n"
                 f"  - Service not starting properly\n\n"
-                f"Expected fix: Use 'grpc_health_probe' for Qdrant health check"
+                f"Current configuration (as of 2025-11-20):\n"
+                f"  - docker-compose.test.yml: timeout 2 bash -c '</dev/tcp/localhost/6333'\n"
+                f"  - conftest.py: HTTP check http://localhost:9333/readyz\n"
+                f"  - Production: /healthz (startup), /livez (liveness), /readyz (readiness)\n"
+                f"  - Qdrant version: v1.15.5 (latest stable)"
             )
 
             print(f"✅ {qdrant_service} is healthy!")
