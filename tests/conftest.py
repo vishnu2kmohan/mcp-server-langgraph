@@ -1080,6 +1080,10 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     # Qdrant
     if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
         pytest.skip("Qdrant test service not available - run 'make test-integration'")
+    # Additional check for Qdrant - use /readyz endpoint (official health check endpoint)
+    # Qdrant exposes /healthz, /livez, and /readyz for Kubernetes-style health checks
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['qdrant']}/readyz", timeout=5):
+        pytest.skip("Qdrant health check failed - ensure qdrant-test container is healthy")
     logging.info("✓ Qdrant ready")
 
     logging.info("✅ All test infrastructure services ready")
