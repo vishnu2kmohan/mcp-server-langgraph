@@ -31,7 +31,7 @@ def mock_settings():
     settings.jwt_secret_key = "test-secret-key-change-in-production"
     settings.use_password_hashing = False
     # Keycloak settings
-    settings.keycloak_server_url = "http://localhost:8180"
+    settings.keycloak_server_url = "http://localhost:9082"
     settings.keycloak_realm = "test-realm"
     settings.keycloak_client_id = "test-client"
     settings.keycloak_client_secret = "test-secret"

@@ -1544,6 +1544,7 @@ repos:
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
     always_run: false
+    additional_dependencies: ['pyyaml>=6.0.0']
     stages:
     - pre-push
     description: "Validates that GitHub Actions workflows installing dependencies for tests\ninclude the required 'dev' extras.\n\

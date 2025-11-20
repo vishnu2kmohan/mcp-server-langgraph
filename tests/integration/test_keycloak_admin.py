@@ -20,7 +20,7 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient, KeycloakConfig
 from tests.conftest import get_user_id
 
 # Test configuration - can be overridden via environment variables
-KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:8180")
+KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082")
 KEYCLOAK_TEST_REALM = os.getenv("KEYCLOAK_TEST_REALM", "test-realm")
 KEYCLOAK_TEST_CLIENT_ID = os.getenv("KEYCLOAK_TEST_CLIENT_ID", "test-client")
 KEYCLOAK_TEST_CLIENT_SECRET = os.getenv("KEYCLOAK_TEST_CLIENT_SECRET", "test-secret")  # gitleaks:allow

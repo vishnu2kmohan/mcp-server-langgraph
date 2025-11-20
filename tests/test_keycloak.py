@@ -32,7 +32,7 @@ from tests.conftest import get_user_id  # noqa: E402
 def keycloak_config():
     """Sample Keycloak configuration"""
     return KeycloakConfig(
-        server_url="http://localhost:8180",
+        server_url="http://localhost:9082",
         realm="test-realm",
         client_id="test-client",
         client_secret="test-secret",
@@ -98,27 +98,27 @@ class TestKeycloakConfig:
 
     def test_realm_url(self, keycloak_config):
         """Test realm URL construction"""
-        assert keycloak_config.realm_url == "http://localhost:8180/realms/test-realm"
+        assert keycloak_config.realm_url == "http://localhost:9082/realms/test-realm"
 
     def test_admin_url(self, keycloak_config):
         """Test admin API URL construction"""
-        assert keycloak_config.admin_url == "http://localhost:8180/admin/realms/test-realm"
+        assert keycloak_config.admin_url == "http://localhost:9082/admin/realms/test-realm"
 
     def test_token_endpoint(self, keycloak_config):
         """Test token endpoint URL"""
-        assert keycloak_config.token_endpoint == "http://localhost:8180/realms/test-realm/protocol/openid-connect/token"
+        assert keycloak_config.token_endpoint == "http://localhost:9082/realms/test-realm/protocol/openid-connect/token"
 
     def test_userinfo_endpoint(self, keycloak_config):
         """Test userinfo endpoint URL"""
-        assert keycloak_config.userinfo_endpoint == "http://localhost:8180/realms/test-realm/protocol/openid-connect/userinfo"
+        assert keycloak_config.userinfo_endpoint == "http://localhost:9082/realms/test-realm/protocol/openid-connect/userinfo"
 
     def test_jwks_uri(self, keycloak_config):
         """Test JWKS URI"""
-        assert keycloak_config.jwks_uri == "http://localhost:8180/realms/test-realm/protocol/openid-connect/certs"
+        assert keycloak_config.jwks_uri == "http://localhost:9082/realms/test-realm/protocol/openid-connect/certs"
 
     def test_well_known_url(self, keycloak_config):
         """Test OpenID configuration URL"""
-        assert keycloak_config.well_known_url == "http://localhost:8180/realms/test-realm/.well-known/openid-configuration"
+        assert keycloak_config.well_known_url == "http://localhost:9082/realms/test-realm/.well-known/openid-configuration"
 
 
 @pytest.mark.unit
@@ -674,7 +674,7 @@ class TestKeycloakAdminClientManagement:
             mock_create_response = MagicMock()
             mock_create_response.status_code = 201
             mock_create_response.headers = {
-                "Location": "http://localhost:8180/admin/realms/test-realm/clients/client-uuid-123"
+                "Location": "http://localhost:9082/admin/realms/test-realm/clients/client-uuid-123"
             }
             mock_create_response.raise_for_status = MagicMock()
             mock_async_client = configured_async_mock(return_value=None)
@@ -776,7 +776,7 @@ class TestKeycloakAdminUserManagement:
             mock_token_response.raise_for_status = MagicMock()
             mock_create_response = MagicMock()
             mock_create_response.status_code = 201
-            mock_create_response.headers = {"Location": "http://localhost:8180/admin/realms/test-realm/users/user-uuid-456"}
+            mock_create_response.headers = {"Location": "http://localhost:9082/admin/realms/test-realm/users/user-uuid-456"}
             mock_create_response.raise_for_status = MagicMock()
             mock_async_client = configured_async_mock(return_value=None)
             mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_create_response])
@@ -1127,7 +1127,7 @@ class TestKeycloakSCIMGroupMethods:
             mock_token_response.raise_for_status = MagicMock()
             mock_post_response = MagicMock()
             mock_post_response.status_code = 201
-            mock_post_response.headers = {"Location": "http://localhost:8180/admin/realms/test-realm/groups/group-uuid-789"}
+            mock_post_response.headers = {"Location": "http://localhost:9082/admin/realms/test-realm/groups/group-uuid-789"}
             mock_post_response.raise_for_status = MagicMock()
             mock_async_client = configured_async_mock(return_value=None)
             mock_async_client.post = AsyncMock(side_effect=[mock_token_response, mock_post_response])

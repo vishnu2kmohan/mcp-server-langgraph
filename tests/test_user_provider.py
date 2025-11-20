@@ -35,7 +35,7 @@ def inmemory_provider_with_users():
 def keycloak_config():
     """Sample Keycloak configuration"""
     return KeycloakConfig(
-        server_url="http://localhost:8180",
+        server_url="http://localhost:9082",
         realm="test-realm",
         client_id="test-client",
         client_secret="test-secret",
