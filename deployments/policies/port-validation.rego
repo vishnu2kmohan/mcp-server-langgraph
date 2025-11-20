@@ -58,7 +58,7 @@ deny[msg] {
 
 # Deployment/StatefulSet database connection validation
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
     container := input.spec.template.spec.containers[_]
     env := container.env[_]
 
@@ -71,7 +71,7 @@ warn[msg] {
 }
 
 warn[msg] {
-    input.kind in ["Deployment", "StatefulSet"]
+    {"Deployment", "StatefulSet"}[input.kind]
     container := input.spec.template.spec.containers[_]
     env := container.env[_]
 
@@ -82,11 +82,4 @@ warn[msg] {
     )
 }
 
-# Helper function
-lower(s) = lower_s {
-    lower_s := to_lower(s)
-}
-
-to_lower(s) = l {
-    l := lower(s)
-}
+# Note: Using Rego's built-in lower() function directly

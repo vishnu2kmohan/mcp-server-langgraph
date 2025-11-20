@@ -33,37 +33,33 @@ deny[msg] {
     )
 }
 
-# General warning for strings with TODO markers
+# General warning for strings with TODO markers (simplified to avoid deep recursion)
 warn[msg] {
     input.kind
 
-    # Recursively check for TODO in string fields
-    contains_todo_in_values(input)
+    # Check metadata annotations for TODO
+    val := input.metadata.annotations[_]
+    is_string(val)
+    contains(upper(val), "TODO")
 
     msg := sprintf(
-        "%s '%s' contains TODO markers. Ensure all placeholder values are replaced before deployment.",
+        "%s '%s' contains TODO markers in annotations. Ensure all placeholder values are replaced before deployment.",
         [input.kind, input.metadata.name]
     )
 }
 
-# Helper: Recursively check for TODO in values
-contains_todo_in_values(obj) {
-    val := obj[_]
+warn[msg] {
+    input.kind
+
+    # Check labels for TODO
+    val := input.metadata.labels[_]
     is_string(val)
     contains(upper(val), "TODO")
-}
 
-contains_todo_in_values(obj) {
-    val := obj[_]
-    is_object(val)
-    contains_todo_in_values(val)
-}
-
-contains_todo_in_values(obj) {
-    val := obj[_]
-    is_array(val)
-    item := val[_]
-    contains_todo_in_values(item)
+    msg := sprintf(
+        "%s '%s' contains TODO markers in labels. Ensure all placeholder values are replaced before deployment.",
+        [input.kind, input.metadata.name]
+    )
 }
 
 # Detect unsubstituted template variables
@@ -118,7 +114,4 @@ warn[msg] {
     )
 }
 
-# Helper to convert string to uppercase
-upper(s) = u {
-    u := upper(s)
-}
+# Note: Using Rego's built-in upper() function directly

@@ -273,8 +273,13 @@ class TestMemorySafetyValidator:
 
 @pytest.mark.unit
 @pytest.mark.meta
+@pytest.mark.xdist_group(name="memory_safety_validator")
 class TestMemorySafetyHelpers:
     """Test helper functions in memory safety validator."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
 
     def test_find_test_files_returns_sorted_list(self, tmp_path: Path) -> None:
         """Test that find_test_files returns sorted list of test files."""

@@ -339,7 +339,7 @@ gcloud secrets add-iam-policy-binding anthropic-api-key \
 
 #### Use External Secrets Operator
 
-```bash
+```
 ## Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
@@ -397,7 +397,7 @@ EOF
 
 #### Build and Push Images
 
-```bash
+```
 ## Configure Docker for GCR
 gcloud auth configure-docker
 
@@ -426,7 +426,7 @@ EOF
 
 #### Artifact Registry (Recommended)
 
-```bash
+```
 ## Create Artifact Registry repository
 gcloud artifacts repositories create langgraph \
   --repository-format=docker \
@@ -560,7 +560,7 @@ spec:
 
 Configure structured logging to Cloud Logging:
 
-```python
+```
 ## Install dependencies
 # uv add google-cloud-logging
 

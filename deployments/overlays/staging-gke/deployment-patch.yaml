@@ -33,7 +33,7 @@ spec:
           readOnlyRootFilesystem: true  # Enable read-only root filesystem (Codex Security Fix)
           capabilities:
             drop:
-              - ALL
+            - ALL
             # No capabilities needed - app listens on port 8000 (non-privileged)
 
         # Volume mounts for writable directories (required with readOnlyRootFilesystem)
@@ -201,13 +201,13 @@ spec:
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         imagePullPolicy: Always  # Security: Always pull latest image for staging environment
         args:
-          - "--structured-logs"
-          - "--port=5432"
-          - "--private-ip"
-          - "--health-check"
-          - "--http-port=9801"
-          - "--http-address=0.0.0.0"
-          - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
+        - "--structured-logs"
+        - "--port=5432"
+        - "--private-ip"
+        - "--health-check"
+        - "--http-port=9801"
+        - "--http-address=0.0.0.0"
+        - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
 
         securityContext:
           runAsNonRoot: true
@@ -216,7 +216,7 @@ spec:
           readOnlyRootFilesystem: true
           capabilities:
             drop:
-              - ALL
+            - ALL
 
         resources:
           requests:
@@ -260,7 +260,7 @@ spec:
           readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
-              - ALL
+            - ALL
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity
@@ -279,7 +279,7 @@ spec:
           readOnlyRootFilesystem: true  # Codex Security Fix
           capabilities:
             drop:
-              - ALL
+            - ALL
         resources:
           requests:
             cpu: 500m  # GKE Autopilot minimum when using pod anti-affinity

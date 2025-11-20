@@ -108,22 +108,8 @@ jobs:
         # NOTE: Using pip for single-tool install (yamllint only). For full project deps, use uv sync --frozen
         run: pip install yamllint
 
-      - name: Create yamllint config
-        run: |
-          cat > .yamllint.yml <<EOF
-          extends: default
-          rules:
-            line-length:
-              max: 120
-              level: warning
-            document-start: disable
-            truthy:
-              allowed-values: ['true', 'false', 'on', 'off']
-            indentation:
-              spaces: 2
-          EOF
-
       - name: Lint YAML files
+        # Use repository's .yamllint.yml configuration
         run: yamllint -c .yamllint.yml deployments/
 
   validate-security:
@@ -131,6 +117,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Fetch full git history for Gitleaks
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2

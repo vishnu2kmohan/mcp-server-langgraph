@@ -37,14 +37,14 @@ spec:
 
         command: ["redis-server"]
         args:
-          - "--maxmemory"
-          - "128mb"  # Match memory limit
-          - "--maxmemory-policy"
-          - "allkeys-lru"
-          - "--save"
-          - ""  # No persistence for sessions
-          - "--appendonly"
-          - "no"
+        - "--maxmemory"
+        - "128mb"    # Match memory limit
+        - "--maxmemory-policy"
+        - "allkeys-lru"
+        - "--save"
+        - ""    # No persistence for sessions
+        - "--appendonly"
+        - "no"
 
         # OPTIMIZED: Right-sized for session storage
         resources:
@@ -81,7 +81,7 @@ spec:
 
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 999
           capabilities:
