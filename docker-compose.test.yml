@@ -234,9 +234,9 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      # Use bash explicitly for /dev/tcp support (CMD-SHELL defaults to /bin/sh which doesn't support it)
-      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature
-      test: ["CMD", "/bin/bash", "-c", "(echo > /dev/tcp/localhost/6333) >/dev/null 2>&1"]
+      # Use CMD-SHELL with timeout for robust health checking
+      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature with timeout
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 15  # Increased from 10 to allow more startup time (45s max)
