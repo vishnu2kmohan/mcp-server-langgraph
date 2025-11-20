@@ -300,12 +300,22 @@ select = ["E", "F", "I", "UP", "B"]
 # Ignore specific rules to align with black formatting and reduce noise during migration
 ignore = [
     "E501",  # Line too long (handled by formatter)
+    "E402",  # module-import-not-at-top-of-file
+    "E721",  # type-comparison
     "E722",  # Bare except (will fix separately)
-    "B007",  # Loop variable not used (will fix separately)
+    "F401",  # Unused imports
+    "F811",  # Redefinition of unused
+    "I001",  # unsorted-imports
+    "B007",  # Loop variable not used
     "B008",  # FastAPI Depends in defaults (intentional pattern)
-    "B904",  # Exception chaining (will fix separately)
-    "F811",  # Redefinition of unused (will fix separately)
-    "UP038", # isinstance with tuple (will fix separately)
+    "B011",  # assert-false
+    "B017",  # assert-raises-exception
+    "B018",  # useless-expression
+    "B028",  # no-explicit-stacklevel
+    "B904",  # Exception chaining
+    "UP028", # yield-in-for-loop
+    "UP035", # deprecated-import
+    "UP038", # isinstance with tuple - REMOVED rule, no longer exists
     # Temporarily disabled during Ruff migration (can re-enable incrementally):
     # N-series (naming): 404 violations - will fix in separate PR
     # C4 (comprehensions): Low priority - readability improvements

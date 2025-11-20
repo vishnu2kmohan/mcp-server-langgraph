@@ -64,10 +64,10 @@ class TestPhase1Validation:
         constraints = spec["topologySpreadConstraints"]
         assert len(constraints) >= 2
 
-        # Check zone constraint
+        # Check zone constraint (allows single-zone clusters for GKE Autopilot/dev)
         zone_constraint = [c for c in constraints if c["topologyKey"] == "topology.kubernetes.io/zone"][0]
         assert zone_constraint["maxSkew"] == 1
-        assert zone_constraint["whenUnsatisfiable"] == "DoNotSchedule"
+        assert zone_constraint["whenUnsatisfiable"] == "ScheduleAnyway"  # Flexible for single-zone dev environments
 
     def test_topology_spread_in_helm_values(self):
         """Test topology spread constraints in Helm values."""
