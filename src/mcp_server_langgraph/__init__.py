@@ -47,7 +47,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):  # type: ignore[no-untyped-def]
+def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
     """
     Lazy import heavy dependencies on demand.
 
@@ -144,6 +144,78 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]
         import mcp_server_langgraph.tools as tools_module
 
         return tools_module
+    elif name == "llm":
+        # Allow access to llm submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.llm"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.llm as llm_module
+
+        return llm_module
+    elif name == "core":
+        # Allow access to core submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.core"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.core as core_module
+
+        return core_module
+    elif name == "monitoring":
+        # Allow access to monitoring submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.monitoring"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.monitoring as monitoring_module
+
+        return monitoring_module
+    elif name == "app":
+        # Allow access to app submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.app"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.app as app_module
+
+        return app_module
+    elif name == "middleware":
+        # Allow access to middleware submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.middleware"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.middleware as middleware_module
+
+        return middleware_module
+    elif name == "execution":
+        # Allow access to execution submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.execution"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.execution as execution_module
+
+        return execution_module
+    elif name == "compliance":
+        # Allow access to compliance submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.compliance"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.compliance as compliance_module
+
+        return compliance_module
+    elif name == "schedulers":
+        # Allow access to schedulers submodule for tests (needed for Python 3.10 mock compatibility)
+        module_name = f"{__name__}.schedulers"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.schedulers as schedulers_module
+
+        return schedulers_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

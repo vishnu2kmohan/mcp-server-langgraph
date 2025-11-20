@@ -45,8 +45,6 @@ repos:
   - id: bandit
     args:
     - -lll
-    - -x
-    - tests
     - --skip
     - B608
 - repo: https://github.com/pre-commit/mirrors-mypy
@@ -113,7 +111,6 @@ repos:
       '
     entry: python .pre-commit-hooks/check_subprocess_timeout.py
     language: python
-    additional_dependencies: []
     types: [python]
     files: ^tests/.*\.py$
     stages:
@@ -131,7 +128,6 @@ repos:
       '
     entry: python .pre-commit-hooks/check_banned_imports.py
     language: python
-    additional_dependencies: []
     types: [python]
     stages:
     - pre-commit
@@ -267,7 +263,6 @@ repos:
     name: Check Test Sleep Durations
     entry: uv run python scripts/check_test_sleep_duration.py
     language: python
-    additional_dependencies: []
     files: ^tests/.*\.py$
     exclude: ^tests/meta/test_sleep_duration_linter\.py$
     pass_filenames: true
@@ -288,7 +283,6 @@ repos:
     name: Validate Pytest Configuration Compatibility
     entry: uv run python scripts/validate_pytest_config.py
     language: python
-    additional_dependencies: []
     files: ^pyproject\.toml$
     pass_filenames: false
     always_run: false
@@ -304,7 +298,6 @@ repos:
     name: Validate Pre-Push Hook Configuration
     entry: uv run python scripts/validate_pre_push_hook.py
     language: python
-    additional_dependencies: []
     files: ^\.git/hooks/pre-push$
     pass_filenames: false
     always_run: true
@@ -347,7 +340,6 @@ repos:
     name: Validate MDX File Extensions in docs/
     entry: uv run python scripts/validators/mdx_extension_validator.py
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -378,8 +370,6 @@ repos:
     name: Check Frontmatter Quote Style
     entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: \.mdx$
     pass_filenames: false
     always_run: false
@@ -407,7 +397,6 @@ repos:
     name: Audit TODO/FIXME/XXX Markers in Documentation
     entry: uv run python scripts/validators/todo_audit.py --quiet
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -421,7 +410,6 @@ repos:
     name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
     entry: uv run python scripts/validators/adr_sync_validator.py
     language: python
-    additional_dependencies: []
     files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
     pass_filenames: false
     always_run: false
@@ -532,7 +520,6 @@ repos:
     name: Validate ADR Index is Up-to-Date
     entry: python scripts/generate_adr_index.py --check
     language: python
-    additional_dependencies: []
     files: ^adr/.*\.md$
     pass_filenames: false
     always_run: false
@@ -635,7 +622,6 @@ repos:
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
     entry: uv run python scripts/check_mermaid_styling.py
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.mdx$
     pass_filenames: true
     always_run: false
@@ -704,7 +690,6 @@ repos:
     name: Validate Dependency Injection Configuration
     entry: python3 .githooks/pre-commit-dependency-validation
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
     always_run: false
@@ -729,7 +714,6 @@ repos:
     name: Validate Test Fixtures for Common Issues
     entry: uv run python scripts/validate_test_fixtures.py
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -768,7 +752,6 @@ repos:
     name: Validate Pytest Markers
     entry: uv run python scripts/validate_pytest_markers.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
     description: 'Validates that all pytest.mark.* decorators used in tests are registered
@@ -839,7 +822,6 @@ repos:
     name: Detect Dead Code in Test Fixtures (Codex P0)
     entry: uv run python scripts/detect_dead_test_code.py tests/
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -855,7 +837,6 @@ repos:
     name: Validate API Response Schemas
     entry: uv run python scripts/validate_api_schemas.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
     always_run: false
@@ -891,7 +872,6 @@ repos:
     name: Detect Test Time Bombs (Future Dates/Models)
     entry: uv run python scripts/validate_test_time_bombs.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
     always_run: false
@@ -930,7 +910,6 @@ repos:
     name: Check E2E Test Implementation Progress
     entry: uv run python scripts/check_e2e_completion.py --min-percent 25
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/e2e/test_full_user_journey\.py$
     always_run: false
@@ -944,7 +923,6 @@ repos:
     name: Monitor Test Wall-Clock Sleep Time Budget
     entry: uv run python scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
     always_run: false
@@ -1080,8 +1058,6 @@ repos:
     name: Validate ServiceAccount Naming Consistency
     entry: uv run python scripts/validate_serviceaccount_names.py
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
     pass_filenames: false
     always_run: false
@@ -1190,8 +1166,6 @@ repos:
     name: Validate Keycloak service configuration in docker-compose.test.yml
     entry: uv run python scripts/validate_keycloak_config.py docker/docker-compose.test.yml
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^docker/docker-compose\.test\.yml$
     pass_filenames: false
     always_run: false
@@ -1234,7 +1208,6 @@ repos:
 
       - src/ (application source code)
 
-      - tests/ (test suite)
 
       - pyproject.toml (project configuration)
 
@@ -1516,7 +1489,6 @@ repos:
     name: Validate Test Isolation for Pytest-xdist
     entry: python scripts/validation/validate_test_isolation.py tests/
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -1578,8 +1550,6 @@ repos:
     name: Validate Workflow Test Dependencies
     entry: uv run python scripts/validation/validate_workflow_test_deps.py
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
     always_run: false
