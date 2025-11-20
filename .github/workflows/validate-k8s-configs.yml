@@ -29,8 +29,11 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          curl -H "Authorization: token $GITHUB_TOKEN" \
+            -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
           sudo mv kustomize /usr/local/bin/
 
       - name: Validate all overlays build successfully
@@ -94,8 +97,11 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          curl -H "Authorization: token $GITHUB_TOKEN" \
+            -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
           sudo mv kustomize /usr/local/bin/
 
       - name: Run GKE Autopilot validation
@@ -125,8 +131,11 @@ jobs:
           version: 'v1.31.0'
 
       - name: Set up Kustomize
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          curl -H "Authorization: token $GITHUB_TOKEN" \
+            -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
           sudo mv kustomize /usr/local/bin/
 
       - name: Run regression tests
