@@ -1173,7 +1173,7 @@ repos:
       '
   - id: validate-docker-compose-health-checks
     name: Validate Docker Compose health check configurations
-    entry: uv run pytest tests/test_docker_compose_validation.py::TestDockerComposeQdrantSpecific::test_qdrant_uses_grpc_health_probe
+    entry: uv run pytest tests/security/test_deployment_security_regression.py::TestQdrantHealthCheckSecurity::test_qdrant_uses_tcp_health_check
       -v --tb=short
     language: system
     files: ^.*docker-compose.*\.(yaml|yml)$

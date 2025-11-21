@@ -37,11 +37,6 @@ import re
 import sys
 from pathlib import Path
 
-
-# NOTE: This is a validator library, not a test file. It's imported by scripts
-# that don't have pytest in their environment. Therefore, we cannot add pytest
-# markers here. The proper fix is to move this to scripts/validation/ in the future.
-
 # Patterns that indicate hardcoded IDs (violations)
 HARDCODED_ID_PATTERNS = [
     # User IDs in OpenFGA format

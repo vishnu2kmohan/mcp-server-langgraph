@@ -319,7 +319,7 @@ class TestValidationLibraryExports:
 
     def test_can_import_test_ids(self) -> None:
         """Test that test_ids can be imported from validation_lib."""
-        from tests.validation_lib import test_ids
+        from scripts.validation import validate_ids as test_ids
 
         assert test_ids is not None
         assert hasattr(test_ids, "find_hardcoded_ids")

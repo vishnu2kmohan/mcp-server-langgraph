@@ -1,7 +1,7 @@
 # Architecture Decision Records (ADRs)
 
-**Last Updated**: 2025-11-15
-**Total ADRs**: 58
+**Last Updated**: 2025-11-20
+**Total ADRs**: 59
 
 ## Overview
 
@@ -46,6 +46,7 @@ Each ADR follows this structure:
 | [ADR-0026](adr-0026-lazy-observability-initialization.md) | Lazy Observability Initialization | Unknown | 2025-01-17 |
 | [ADR-0031](adr-0031-keycloak-authoritative-identity.md) | 31. Keycloak as Authoritative Identity Provider | Unknown | Unknown |
 | [ADR-0037](adr-0037-identity-federation.md) | 37. Identity Federation Architecture | Unknown | Unknown |
+| [ADR-0060](adr-0060-database-architecture-and-naming-convention.md) | 60. Database Architecture and Naming Convention | Unknown | Unknown |
 
 ### Data & Storage
 

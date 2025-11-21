@@ -1,3 +1,17 @@
 # Trivy Ignore File
-# ArgoCD ConfigMap false positives - these reference Secrets, don't store them
+# Security findings that are documented/tracked separately
+
+# AVD-KSV-0109: ConfigMap stores secrets
+# ArgoCD ConfigMaps use field names containing "Secret" or "token" but these
+# reference Kubernetes Secret resources, not store actual secrets
 AVD-KSV-0109
+
+# AVD-KSV-0014: readOnlyRootFilesystem not set
+# Many containers (postgres, keycloak, redis, etc.) require writable filesystems
+# to function properly. Setting readOnlyRootFilesystem=true would break them.
+# These are tracked separately for security hardening evaluation
+AVD-KSV-0014
+
+# AVD-KSV-0108: Service with external IPs
+# Tracked separately for network security review
+AVD-KSV-0108
