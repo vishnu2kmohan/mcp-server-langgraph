@@ -176,6 +176,7 @@
             "group": "Deployment",
             "pages": [
               "deployment/overview",
+              "deployment/environments",
               "deployment/langgraph-platform",
               "deployment/cloud-run",
               "deployment/docker",
@@ -287,6 +288,7 @@
               "guides/multi-llm-setup",
               "guides/versioning-strategy",
               "guides/google-gemini",
+              "guides/vertex-ai-setup",
               "guides/anthropic-claude",
               "guides/openai-gpt",
               "guides/local-models",

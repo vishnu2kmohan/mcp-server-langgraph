@@ -60,6 +60,9 @@ def test_ports_are_intentionally_fixed(test_infrastructure_ports):
     assert test_infrastructure_ports["openfga_http"] == 9080, "OpenFGA HTTP port should be fixed at 9080 for all workers"
     assert test_infrastructure_ports["openfga_grpc"] == 9081, "OpenFGA gRPC port should be fixed at 9081 for all workers"
     assert test_infrastructure_ports["keycloak"] == 9082, "Keycloak port should be fixed at 9082 for all workers"
+    assert (
+        test_infrastructure_ports["keycloak_management"] == 9900
+    ), "Keycloak management port should be fixed at 9900 for all workers"
 
 
 @pytest.mark.regression
@@ -80,6 +83,7 @@ def test_all_workers_share_same_ports(test_infrastructure_ports):
         "openfga_http": 9080,
         "openfga_grpc": 9081,
         "keycloak": 9082,
+        "keycloak_management": 9900,
     }
 
     # Current worker should match base ports exactly
