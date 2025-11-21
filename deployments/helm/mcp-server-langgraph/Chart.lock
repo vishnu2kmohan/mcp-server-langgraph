@@ -1,16 +1,16 @@
 dependencies:
 - name: openfga
   repository: https://openfga.github.io/helm-charts
-  version: 0.2.12
+  version: 0.2.49
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 16.6.2
+  version: 18.1.11
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 20.6.2
+  version: 23.2.12
 - name: keycloak
   repository: https://charts.bitnami.com/bitnami
-  version: 24.2.2
+  version: 25.2.0
 - name: grafana
   repository: https://charts.bitnami.com/bitnami
   version: 12.1.8
@@ -19,6 +19,6 @@ dependencies:
   version: 3.4.1
 - name: kube-prometheus-stack
   repository: https://prometheus-community.github.io/helm-charts
-  version: 78.3.2
-digest: sha256:5722144a7874913a556b1d00669b1dfcd0da2e78a51716f1238ccfd95acd71f8
-generated: "2025-10-21T01:51:03.073168711-04:00"
+  version: 79.6.1
+digest: sha256:d028550e7e71124f15e2517c0aef2b6218efb07ab5e2270e5eb790771665d3f2
+generated: "2025-11-20T19:27:12.658913339-05:00"
