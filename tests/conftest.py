@@ -373,6 +373,17 @@ def reset_dependency_singletons():
         # If module not loaded or reset fails, continue (defensive)
         pass
 
+    # Reset GDPR storage singleton (only if already loaded)
+    try:
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.compliance.gdpr.factory" in sys.modules:
+            import mcp_server_langgraph.compliance.gdpr.factory as gdpr_factory
+
+            gdpr_factory._gdpr_storage = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
 
 # ==============================================================================
 # Worker-Safe ID Helpers for pytest-xdist Isolation

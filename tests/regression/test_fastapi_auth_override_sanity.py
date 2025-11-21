@@ -72,6 +72,24 @@ def create_mock_gdpr_storage():
     )
 
 
+@pytest.fixture(autouse=True)
+def reset_gdpr_singleton():
+    """
+    Reset GDPR storage singleton before and after each test to prevent pollution.
+
+    DEFENSIVE FIX: Ensures global _gdpr_storage singleton is None before/after
+    each test, preventing state pollution from test_gdpr_endpoints.py or other
+    integration tests that initialize the singleton.
+
+    This is defensive in addition to the global reset in tests/conftest.py.
+    """
+    from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
+
+    reset_gdpr_storage()
+    yield
+    reset_gdpr_storage()
+
+
 @pytest.mark.xdist_group(name="auth_override_sanity_tests")
 class TestGDPREndpointAuthOverrides:
     """

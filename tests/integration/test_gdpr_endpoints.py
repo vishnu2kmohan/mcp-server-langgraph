@@ -117,9 +117,14 @@ def client(test_app):
     return TestClient(test_app)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="function")
 async def setup_gdpr_storage():
-    """Initialize GDPR storage for tests (using memory backend for speed)."""
+    """
+    Initialize GDPR storage for tests (using memory backend for speed).
+
+    Function-scoped to ensure each test gets a fresh GDPR storage instance
+    and prevents singleton pollution affecting other tests.
+    """
     from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage, reset_gdpr_storage
 
     # Initialize with memory backend for fast testing
