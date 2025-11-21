@@ -44,6 +44,22 @@ jobs:
           helm dependency update deployments/helm/mcp-server-langgraph
           echo "✅ Helm dependencies updated successfully"
 
+      - name: Validate Helm dependencies
+        run: |
+          echo "Validating all chart dependencies are present..."
+          cd deployments/helm/mcp-server-langgraph
+          EXPECTED_CHARTS=7  # openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack
+          ACTUAL_CHARTS=$(ls charts/*.tgz 2>/dev/null | wc -l)
+          if [ "$ACTUAL_CHARTS" -ne "$EXPECTED_CHARTS" ]; then
+            echo "❌ ERROR: Expected $EXPECTED_CHARTS chart dependencies, found $ACTUAL_CHARTS"
+            echo "Expected charts: openfga, postgresql, redis, keycloak, grafana, jaeger, kube-prometheus-stack"
+            echo "Actual charts in charts/ directory:"
+            ls -1 charts/*.tgz 2>/dev/null || echo "  (none found)"
+            exit 1
+          fi
+          echo "✅ All $ACTUAL_CHARTS chart dependencies present"
+          ls -1 charts/*.tgz
+
       - name: Helm lint
         run: |
           helm lint deployments/helm/mcp-server-langgraph

@@ -86,6 +86,32 @@ def get_used_markers() -> set[str]:
     return used_markers
 
 
+def get_test_files_without_markers() -> list[Path]:
+    """Find test files missing pytestmark declarations."""
+    tests_dir = Path("tests")
+
+    if not tests_dir.exists():
+        return []
+
+    # Pattern matches: pytestmark = pytest.mark.xxx at module level
+    pytestmark_pattern = re.compile(r"^pytestmark\s*=\s*pytest\.mark\.\w+", re.MULTILINE)
+
+    files_without_markers = []
+
+    for test_file in tests_dir.rglob("test_*.py"):
+        # Skip __init__.py and conftest.py
+        if test_file.name in ["__init__.py", "conftest.py"]:
+            continue
+
+        content = test_file.read_text()
+
+        # Check if file has pytestmark declaration
+        if not pytestmark_pattern.search(content):
+            files_without_markers.append(test_file)
+
+    return files_without_markers
+
+
 def main():
     """Main validation logic."""
     print("🔍 Validating pytest markers...")
@@ -95,7 +121,13 @@ def main():
 
     unregistered = used - registered
 
+    # Check for test files missing pytestmark
+    files_without_markers = get_test_files_without_markers()
+
+    has_errors = False
+
     if unregistered:
+        has_errors = True
         print(f"\n❌ Found {len(unregistered)} unregistered pytest markers:")
         for marker in sorted(unregistered):
             print(f"   - {marker}")
@@ -106,9 +138,24 @@ def main():
             print(f'    "{marker}: Description of {marker} marker",')
         print("]")
 
+    if files_without_markers:
+        has_errors = True
+        print(f"\n❌ Found {len(files_without_markers)} test files without pytestmark:")
+        for test_file in sorted(files_without_markers):
+            print(f"   - {test_file}")
+
+        print("\n📝 To fix, add module-level pytestmark to each file:")
+        print("   pytestmark = pytest.mark.unit")
+        print("   # or")
+        print("   pytestmark = pytest.mark.integration")
+        print("   # or")
+        print("   pytestmark = pytest.mark.e2e")
+
+    if has_errors:
         sys.exit(1)
 
     print(f"✅ All {len(used)} used markers are registered")
+    print("✅ All test files have pytestmark declarations")
     print(f"   Registered: {len(registered)} markers")
     print(f"   Used: {len(used)} markers")
     sys.exit(0)
