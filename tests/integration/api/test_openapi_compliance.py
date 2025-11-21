@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 
+# Mark all tests in this file as integration and contract tests
+pytestmark = [pytest.mark.integration, pytest.mark.contract]
+
 
 @pytest.fixture
 def openapi_schema():
