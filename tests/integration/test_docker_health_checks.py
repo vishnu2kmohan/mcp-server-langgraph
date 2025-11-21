@@ -16,6 +16,7 @@ Related Codex Finding: docker-compose.test.yml:214-233 Qdrant health check issue
 
 import gc
 import os
+import socket
 import subprocess
 import time
 from pathlib import Path
@@ -28,6 +29,31 @@ from tests.conftest import requires_tool
 pytestmark = pytest.mark.integration
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
+def is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    """
+    Check if a port is already in use.
+
+    CODEX FINDING FIX (2025-11-21): Port Conflict Detection
+    ========================================================
+    Prevents docker compose from failing with "port already allocated" error
+    when health check tests try to start services on ports already used by
+    main test infrastructure.
+
+    Args:
+        port: Port number to check
+        host: Host to check (default: 127.0.0.1)
+
+    Returns:
+        True if port is in use, False otherwise
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.bind((host, port))
+            return False
+        except OSError:
+            return True
 
 
 @pytest.fixture(scope="module")
@@ -254,6 +280,19 @@ class TestDockerComposeHealthChecksIntegration:
         import os
         import uuid
 
+        # CODEX FINDING FIX (2025-11-21): Port Conflict Resolution
+        # ========================================================
+        # Check if Qdrant test port is already in use before starting service
+        # Prevents "Bind ... port 9333 already allocated" error when main test
+        # infrastructure already has Qdrant running
+        QDRANT_TEST_PORT = 9333  # From docker-compose.test.yml:242
+        if is_port_in_use(QDRANT_TEST_PORT):
+            pytest.skip(
+                f"Qdrant test port {QDRANT_TEST_PORT} already in use. "
+                f"This likely means main test infrastructure is running. "
+                f"Stop existing containers or run this test in isolation."
+            )
+
         compose_file = PROJECT_ROOT / "docker-compose.test.yml"
 
         if not compose_file.exists():
@@ -342,11 +381,23 @@ class TestDockerComposeHealthChecksIntegration:
             # This allows multiple isolated projects to run simultaneously without conflicts.
             # Note: Using 'down' without '-v' to avoid interfering with shared network (mcp-test-network)
             # since all storage is tmpfs-based anyway (no volumes to clean up).
+            #
+            # CODEX FINDING FIX (2025-11-21): Docker Health-Check Teardown Interference
+            # ==========================================================================
+            # Previous: Used 'docker compose down --remove-orphans'
+            # Problem: --remove-orphans flag can remove containers from shared network
+            #          (mcp-test-network), causing 8+ tests to fail with connection errors
+            # Fix: Remove --remove-orphans flag from cleanup command
+            #
+            # Root Cause: Even with isolated COMPOSE_PROJECT_NAME, --remove-orphans
+            #             traverses the shared network and may stop unrelated containers
+            #
+            # Prevention: Added @pytest.mark.xdist_group to isolate health check tests
             print(f"\n🧹 Cleaning up isolated project '{unique_project_name}'...")
             cleanup_result = run_docker_compose(
                 compose_file,
                 "down",
-                "--remove-orphans",
+                # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
                 env=test_env,
             )
@@ -406,11 +457,13 @@ class TestDockerComposeHealthChecksIntegration:
             print(f"✅ {service_name} is healthy!")
 
         finally:
+            # CODEX FINDING FIX (2025-11-21): Docker Health-Check Teardown Interference
+            # See test_qdrant_health_check_works for detailed explanation
             print(f"\n🧹 Cleaning up {service_name}...")
             run_docker_compose(
                 compose_file,
                 "down",
-                "--remove-orphans",
+                # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
             )
 

@@ -268,6 +268,93 @@ services:
       - mcp-test-network
 
   # ==============================================================================
+  # MCP SERVER (for E2E tests)
+  # ==============================================================================
+
+  mcp-server-test:
+    # CODEX FINDING FIX (2025-11-21): MCP Server for E2E Tests
+    # =========================================================
+    # Enables end-to-end testing of MCP protocol and full user journeys
+    # Addresses Bucket 4: E2E MCP journeys missing service dependencies
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    command: >
+      sh -c "
+      echo 'Waiting for dependencies to be ready...' &&
+      sleep 5 &&
+      echo 'Starting MCP server...' &&
+      uv run uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
+      "
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      keycloak-test:
+        condition: service_healthy
+      openfga-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      redis-sessions-test:
+        condition: service_healthy
+      qdrant-test:
+        condition: service_healthy
+    ports:
+      - "8000:8000"  # HTTP API
+    environment:
+      # Application settings
+      - ENVIRONMENT=test
+      - TESTING=true
+      - LOG_LEVEL=INFO
+
+      # Database
+      - POSTGRES_HOST=postgres-test
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=gdpr_test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+      # Authentication
+      - KEYCLOAK_URL=http://keycloak-test:8080
+      - KEYCLOAK_REALM=master
+      - KEYCLOAK_CLIENT_ID=mcp-server
+      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
+
+      # Authorization
+      - OPENFGA_API_URL=http://openfga-test:8080
+
+      # Cache & Sessions
+      - REDIS_URL=redis://redis-test:6379
+      - REDIS_SESSION_URL=redis://redis-sessions-test:6379
+
+      # Vector DB
+      - QDRANT_URL=http://qdrant-test:6333
+
+      # Observability
+      - OTEL_SDK_DISABLED=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_SERVICE_NAME=mcp-server-test
+
+      # GDPR
+      - GDPR_STORAGE_BACKEND=postgres
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s  # Allow time for all dependencies to initialize
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    networks:
+      - mcp-test-network
+
+  # ==============================================================================
   # OBSERVABILITY SERVICES
   # ==============================================================================
 

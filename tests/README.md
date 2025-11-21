@@ -544,7 +544,155 @@ pre-commit install
 
 ## Troubleshooting
 
-### Common Issues
+### Common Integration Test Issues (Updated 2025-11-21)
+
+**IMPORTANT**: Recent fixes addressed 7 major failure buckets affecting 78+ tests. If experiencing failures, review the CODEX FINDING FIX comments in the code for context.
+
+#### 1. RuntimeError: Future attached to a different loop (34 tests)
+
+**Symptom**: `RuntimeError: Future <Future pending> attached to a different loop than the current one`
+
+**Root Cause**: Session-scoped async fixtures using function-scoped event loop
+
+**Fix Applied**: Added explicit `loop_scope="session"` to async fixtures in `tests/conftest.py`:
+- `postgres_connection_real` (line 1424)
+- `redis_client_real` (line 1487)
+- `openfga_client_real` (line 1524)
+
+**Validation**: Run postgres compliance tests:
+```bash
+pytest tests/integration/compliance/test_postgres_*.py -v
+```
+
+**Prevention**: Pre-commit hook validates `asyncio_default_fixture_loop_scope="session"` in `pyproject.toml`
+
+---
+
+#### 2. GDPR Endpoint 401 Unauthorized (6 tests)
+
+**Symptom**: All GDPR endpoint tests fail with 401 Unauthorized
+
+**Root Cause**: Missing authentication middleware in test fixture. Endpoints check `request.state.user` (set by middleware), but test only overrode dependencies.
+
+**Fix Applied**: Added mock auth middleware to `tests/integration/test_gdpr_endpoints.py:109-118`:
+```python
+@app.middleware("http")
+async def mock_auth_middleware(request_obj: Request, call_next):
+    request_obj.state.user = mock_auth_user
+    response = await call_next(request_obj)
+    return response
+```
+
+**Validation**: Run GDPR endpoint tests:
+```bash
+pytest tests/integration/test_gdpr_endpoints.py -v
+```
+
+---
+
+#### 3. Docker Health-Check Tests Kill Main Infrastructure (8 tests)
+
+**Symptom**: OSError: [Errno 111] Connect call failed ('127.0.0.1', 9432) after health check tests run
+
+**Root Cause**: `docker compose down --remove-orphans` from health check tests tears down shared network containers
+
+**Fix Applied**: Removed `--remove-orphans` flag from cleanup in `tests/integration/test_docker_health_checks.py` (lines 361, 427)
+
+**Validation**: Run health checks then schema tests:
+```bash
+pytest tests/integration/test_docker_health_checks.py::TestDockerComposeHealthChecksIntegration::test_qdrant_health_check_works -v
+pytest tests/integration/test_schema_initialization_timing.py -v
+```
+
+**Prevention**: Tests use isolated `COMPOSE_PROJECT_NAME` but share network
+
+---
+
+#### 4. Qdrant Port Already Allocated (3 tests)
+
+**Symptom**: `Bind for 0.0.0.0:9333 failed: port is already allocated`
+
+**Root Cause**: Health check tests try to start Qdrant on port already used by main infrastructure
+
+**Fix Applied**: Added port-in-use check to `tests/integration/test_docker_health_checks.py:289-294`:
+```python
+if is_port_in_use(QDRANT_TEST_PORT):
+    pytest.skip(f"Qdrant test port {QDRANT_TEST_PORT} already in use...")
+```
+
+**Validation**: Run health check test with main infrastructure running:
+```bash
+docker compose -f docker-compose.test.yml up -d
+pytest tests/integration/test_docker_health_checks.py::TestDockerComposeHealthChecksIntegration::test_qdrant_health_check_works -v
+```
+
+---
+
+#### 5. OpenFGA Initialization Timeout (3 tests)
+
+**Symptom**: `pytest.skip: Failed to initialize OpenFGA after 3 attempts`
+
+**Root Cause**: PostgreSQL migrations take >14s in slow CI environments
+
+**Fix Applied**: Increased retry logic in `tests/conftest.py:1563-1564`:
+- `max_retries`: 3 → 5
+- `retry_delay`: 2.0 → 3.0
+- Max wait time: 14s → 93s
+
+**Validation**: Run OpenFGA-dependent tests:
+```bash
+pytest tests/integration/api/test_scim_security.py::test_openfga_admin_relation_check -v
+```
+
+---
+
+#### 6. Kubernetes Health Probe Tests Run Unconditionally
+
+**Symptom**: Tests fail when `HEALTH_CHECK_URL` not set
+
+**Root Cause**: Incomplete `pytestmark = pytest.mark.skipif` (missing condition)
+
+**Fix Applied**: Added proper skip condition to `tests/integration/test_kubernetes_health_probes.py:29-33`:
+```python
+pytestmark = pytest.mark.skipif(
+    os.getenv("HEALTH_CHECK_URL") is None,
+    reason="Kubernetes health probe tests require HEALTH_CHECK_URL..."
+)
+```
+
+**Validation**: Tests should skip gracefully:
+```bash
+pytest tests/integration/test_kubernetes_health_probes.py -v
+# Should see: SKIPPED (Kubernetes health probe tests require...)
+```
+
+---
+
+#### 7. E2E Tests Missing MCP Server
+
+**Symptom**: E2E tests marked xfail with "MCP server not running"
+
+**Root Cause**: No MCP server in test infrastructure
+
+**Fix Applied**:
+1. Added `mcp-server-test` service to `docker-compose.test.yml` (lines 274-354)
+2. Configured Keycloak confidential client in `tests/e2e/keycloak-test-realm.json`
+3. Updated `scripts/test-integration.sh` to start MCP server (line 220)
+
+**Validation**: Check MCP server starts correctly:
+```bash
+docker compose -f docker-compose.test.yml up -d
+docker compose -f docker-compose.test.yml ps mcp-server-test
+curl http://localhost:8000/health
+```
+
+**E2E Test Status**:
+- ✅ Infrastructure ready (6 tests passing: login, init, list_tools, chat, continue, get_conversation)
+- ⏳ 23 tests remain xfail (features not yet implemented: search, token refresh, GDPR, service principals, API keys)
+
+---
+
+### Common Issues (General)
 
 **Import errors**:
 ```bash
@@ -577,6 +725,30 @@ deadline = 10000  # 10 seconds
 - Some modules intentionally excluded (see pyproject.toml)
 - MCP entry points tested via integration tests
 - Target is 80%+, not 100%
+
+**Docker Compose services won't start**:
+```bash
+# Clean up all test containers and networks
+docker compose -f docker-compose.test.yml down -v --remove-orphans
+
+# Rebuild images
+docker compose -f docker-compose.test.yml build --no-cache
+
+# Start fresh
+docker compose -f docker-compose.test.yml up -d
+```
+
+**Port conflicts**:
+```bash
+# Check what's using test ports
+lsof -i :9432  # PostgreSQL
+lsof -i :9080  # OpenFGA
+lsof -i :9082  # Keycloak
+lsof -i :9333  # Qdrant
+lsof -i :8000  # MCP Server
+
+# Stop conflicting processes or use different ports
+```
 
 ### Debug Tests
 

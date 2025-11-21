@@ -17,8 +17,20 @@ import time
 import pytest
 import requests
 
-# Skip if not in Kubernetes environment + xdist_group for worker isolation
-pytestmark = pytest.mark.skipif
+# CODEX FINDING FIX (2025-11-21): Incomplete Skip Condition
+# ==========================================================
+# Previous: pytestmark = pytest.mark.skipif (missing condition and reason)
+# Problem: Tests would run unconditionally, causing failures when health
+#          endpoint URL is not available (HEALTH_CHECK_URL not set)
+# Fix: Added proper skip condition checking for HEALTH_CHECK_URL environment
+#      variable to ensure tests only run when endpoint is accessible
+#
+# Skip if health check URL not configured (indicates no K8s/MCP server running)
+pytestmark = pytest.mark.skipif(
+    os.getenv("HEALTH_CHECK_URL") is None,
+    reason="Kubernetes health probe tests require HEALTH_CHECK_URL environment variable. "
+    "Set to MCP server URL (e.g., http://localhost:8000) to run these tests.",
+)
 
 
 def teardown_module():

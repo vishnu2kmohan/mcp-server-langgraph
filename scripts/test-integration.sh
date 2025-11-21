@@ -199,6 +199,15 @@ log_info "Starting infrastructure services..."
 echo ""
 
 # Start services in background
+# CODEX FINDING FIX (2025-11-21): Add mcp-server-test for E2E Tests
+# ====================================================================
+# Added mcp-server-test service to enable end-to-end testing of:
+# - MCP protocol initialization
+# - Full user journey workflows
+# - API endpoint integration
+#
+# The MCP server depends on all infrastructure services being healthy
+# before it starts, ensuring proper initialization order.
 docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d \
     "${BUILD_ARGS[@]}" \
     postgres-test \
@@ -207,7 +216,8 @@ docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d \
     keycloak-test \
     redis-test \
     redis-sessions-test \
-    qdrant-test
+    qdrant-test \
+    mcp-server-test
 
 log_success "Services started"
 

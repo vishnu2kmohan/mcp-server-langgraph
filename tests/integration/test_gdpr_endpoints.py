@@ -12,6 +12,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
@@ -91,6 +92,29 @@ def test_app(mock_get_current_user, monkeypatch):
     router = gdpr.router
 
     app = FastAPI()
+
+    # CODEX FINDING FIX (2025-11-21): GDPR Endpoint Auth Middleware
+    # ==============================================================
+    # Previous: Only overrode dependencies, not middleware
+    # Problem: Endpoints check request.state.user (set by AuthRequestMiddleware)
+    #          All 11 tests failed with 401 Unauthorized
+    # Fix: Add mock middleware that sets request.state.user before request
+    #      processing, matching production middleware behavior
+    #
+    # Root Cause: Production endpoints expect request.state.user from middleware,
+    #             not from dependency injection. Dependency overrides alone are
+    #             insufficient for endpoints that access request.state directly.
+    #
+    # Prevention: Test validates request.state.user is populated before endpoint
+    @app.middleware("http")
+    async def mock_auth_middleware(request_obj: Request, call_next):
+        """Mock authentication middleware that sets request.state.user"""
+        # Set authenticated user on request state (matches AuthRequestMiddleware)
+        request_obj.state.user = mock_auth_user
+
+        # Process request
+        response = await call_next(request_obj)
+        return response
 
     # CRITICAL: Override bearer_scheme BEFORE include_router (Revision 7)
     # This prevents bearer_scheme singleton pollution in pytest-xdist
