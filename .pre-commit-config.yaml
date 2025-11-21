@@ -1567,6 +1567,7 @@ repos:
     entry: uv run python scripts/validation/check_asyncmock_usage.py
     language: system
     files: ^tests/.*test_.*\.py$
+    exclude: ^tests/meta/test_asyncmock_validation\.py$
     pass_filenames: true
     always_run: false
     description: 'Prevents AsyncMock class assignment instead of instance creation.
