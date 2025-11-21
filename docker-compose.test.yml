@@ -263,37 +263,123 @@ services:
       - mcp-test-network
 
   # ==============================================================================
-  # OBSERVABILITY SERVICES (Optional - comment out if not needed for tests)
+  # OBSERVABILITY SERVICES
   # ==============================================================================
-  #
-  # Jaeger can be enabled for debugging E2E test flows
-  # Uncomment if you need distributed tracing during tests
-  #
-  # jaeger-test:
-  #   image: jaegertracing/all-in-one:1.62.0
-  #   container_name: mcp-jaeger-test
-  #   ports:
-  #     - "19686:16686"  # Jaeger UI (offset by 3000)
-  #     - "17268:14268"  # Jaeger collector HTTP
-  #   environment:
-  #     - COLLECTOR_OTLP_ENABLED=true
-  #     - LOG_LEVEL=warn
-  #     - SPAN_STORAGE_TYPE=memory
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 5
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '0.25'
-  #         memory: 256M
-  #       reservations:
-  #         cpus: '0.05'
-  #         memory: 128M
-  #   networks:
-  #     - mcp-test-network
+
+  jaeger-test:
+    image: jaegertracing/all-in-one:1.62.0
+    container_name: mcp-jaeger-test
+    ports:
+      - "19686:16686"  # Jaeger UI (offset by 3000)
+      - "17268:14268"  # Jaeger collector HTTP
+      - "17250:14250"  # Jaeger collector gRPC
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=warn
+      - SPAN_STORAGE_TYPE=memory
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      - mcp-test-network
+
+  prometheus-test:
+    image: prom/prometheus:v3.7.1
+    container_name: mcp-prometheus-test
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1d'  # Shorter retention for testing
+      - '--web.enable-lifecycle'
+    ports:
+      - "19090:9090"  # Prometheus UI (offset by 10000)
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      - mcp-test-network
+
+  alertmanager-test:
+    image: prom/alertmanager:v0.28.1
+    container_name: mcp-alertmanager-test
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:19093'
+    ports:
+      - "19093:9093"  # AlertManager UI (offset by 10000)
+    volumes:
+      - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      - mcp-test-network
+
+  grafana-test:
+    image: grafana/grafana:12.2.0
+    container_name: mcp-grafana-test
+    depends_on:
+      prometheus-test:
+        condition: service_healthy
+    ports:
+      - "13001:3000"  # Grafana UI (offset by 10000 from prod's 3001)
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:13001
+    volumes:
+      - ../monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      - mcp-test-network
 
 networks:
   mcp-test-network:

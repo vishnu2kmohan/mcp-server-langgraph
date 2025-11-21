@@ -44,7 +44,7 @@ services:
   # ==============================================================================
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.8-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -107,7 +107,7 @@ services:
   # ==============================================================================
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.0
+    image: quay.io/keycloak/keycloak:26.4.2
     command: start-dev
     depends_on:
       postgres:
@@ -193,7 +193,7 @@ services:
   # ==============================================================================
 
   qdrant:
-    image: qdrant/qdrant:v1.15.1
+    image: qdrant/qdrant:v1.15.5
     ports:
       - "6333:6333"  # HTTP API
       - "6334:6334"  # gRPC API

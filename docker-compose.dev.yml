@@ -85,7 +85,7 @@ services:
 
   # PostgreSQL (multi-database: gdpr, openfga, keycloak)
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.8-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -108,7 +108,7 @@ services:
 
   # OpenFGA (authorization)
   openfga:
-    image: openfga/openfga:latest
+    image: openfga/openfga:v1.10.2
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres:5432/openfga?sslmode=disable'
     depends_on:
       postgres:
@@ -134,7 +134,7 @@ services:
 
   # Qdrant (vector database for context loading)
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.15.5
     ports:
       - "6333:6333"  # HTTP
       - "6334:6334"  # gRPC
@@ -152,7 +152,7 @@ services:
 
   # Jaeger (OpenTelemetry traces - optional)
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.62.0
     ports:
       - "4317:4317"  # OTLP gRPC
       - "4318:4318"  # OTLP HTTP
@@ -165,6 +165,7 @@ services:
 networks:
   mcp-network:
     driver: bridge
+    name: mcp-dev-network
 
 volumes:
   postgres-data:

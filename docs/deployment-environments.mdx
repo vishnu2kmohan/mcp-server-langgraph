@@ -1,0 +1,71 @@
+# Deployment Environments - Version Matrix
+
+This document provides a comprehensive overview of all deployment environments, service versions, and configuration differences.
+
+**Last Updated**: 2025-11-20
+**Synchronization Status**: ✅ All environments synchronized
+
+---
+
+## Environment Overview
+
+| Environment | Purpose | Docker Compose File | Kubernetes Config | Network Name |
+|-------------|---------|-------------------|-------------------|--------------|
+| **Production** | Live production workloads | `docker-compose.yml` | `deployments/helm/values-production-gke.yaml` | `mcp-network` |
+| **Test** | Automated testing | `docker-compose.test.yml` | N/A | `mcp-test-network` |
+| **Development** | Local development | `docker-compose.dev.yml` | N/A | `mcp-dev-network` |
+| **Minimal** | Lightweight stack | `docker-compose.minimal.yml` | N/A | `mcp-network-minimal` |
+
+---
+
+## Service Version Matrix
+
+### Infrastructure Services (Synchronized Across All Environments)
+
+| Service | Version | Image | Notes |
+|---------|---------|-------|-------|
+| **PostgreSQL** | 16.8-alpine | `postgres:16.8-alpine` | Explicit version pinning |
+| **Keycloak** | 26.4.2 | `quay.io/keycloak/keycloak:26.4.2` | Latest stable v26 |
+| **OpenFGA** | v1.10.2 | `openfga/openfga:v1.10.2` | Authorization service |
+| **Redis** | 7-alpine | `redis:7-alpine` | Cache & sessions |
+| **Qdrant** | v1.15.5 | `qdrant/qdrant:v1.15.5` | Vector database |
+| **Jaeger** | 1.62.0 | `jaegertracing/all-in-one:1.62.0` | Distributed tracing |
+| **Prometheus** | v3.7.1 | `prom/prometheus:v3.7.1` | Metrics collection |
+| **AlertManager** | v0.28.1 | `prom/alertmanager:v0.28.1` | Alert management |
+| **Grafana** | 12.2.0 | `grafana/grafana:12.2.0` | Visualization |
+
+---
+
+## Deployment Synchronization (2025-11-20)
+
+### Changes Applied
+
+**Service Version Updates**:
+- PostgreSQL: All environments → 16.8-alpine (explicit version)
+- Keycloak: All environments → 26.4.2 (from 26.0.0/23.0)
+- Qdrant: All environments → v1.15.5 (from v1.15.1)
+- Development: Pinned all versions (no more 'latest' tags)
+
+**Environment Enhancements**:
+- Development: Network renamed to `mcp-dev-network` (conflict resolution)
+- Test: Added full observability stack (Jaeger, Prometheus, AlertManager, Grafana)
+- Helm: Increased maxReplicas to 20 (from 10)
+
+**Configuration Management**:
+- Added service version variables to .env templates
+- CI/CD automated version validation
+
+**Files Modified**: 10 files across all deployment configs
+
+---
+
+## See Also
+
+- [README.md](../README.md) - Project overview
+- [Testing Guide](../TESTING.md) - Testing documentation
+- [Makefile](../Makefile) - Deployment commands
+
+---
+
+**Maintained By**: DevOps Team
+**Review Schedule**: Quarterly or on major version updates
