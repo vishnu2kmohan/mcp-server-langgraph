@@ -50,7 +50,7 @@ class TestRealKeycloakAuth:
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
@@ -79,7 +79,7 @@ class TestRealKeycloakAuth:
         THEN: Should properly close HTTP client on exit
         """
         with patch("tests.e2e.real_clients.httpx.AsyncClient") as mock_client_class:
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_client_class.return_value = mock_instance
 
             async with real_keycloak_auth() as auth:
@@ -120,7 +120,7 @@ class TestRealMCPClient:
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
@@ -156,7 +156,7 @@ class TestRealMCPClient:
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_instance.get = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
@@ -179,7 +179,7 @@ class TestRealMCPClient:
         THEN: Should properly close HTTP client on exit
         """
         with patch("tests.e2e.real_clients.httpx.AsyncClient") as mock_client_class:
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_client_class.return_value = mock_instance
 
             async with real_mcp_client(access_token="token") as client:

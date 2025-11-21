@@ -29,6 +29,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Mark as integration test (requires kubectl/kustomize tools)
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def repo_root() -> Path:

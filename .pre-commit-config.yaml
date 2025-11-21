@@ -1457,6 +1457,43 @@ repos:
       Meta-test: tests/meta/test_async_mock_configuration.py validates this
 
       '
+  - id: check-asyncmock-instantiation
+    name: Check AsyncMock Instantiation (prevent class assignment)
+    entry: uv run python scripts/validation/check_asyncmock_usage.py
+    language: system
+    files: ^tests/.*test_.*\.py$
+    pass_filenames: true
+    always_run: false
+    description: 'Prevents AsyncMock class assignment instead of instance creation.
+
+      Issue prevented:
+
+      - Assigning AsyncMock class instead of AsyncMock() instance
+
+      - Causes "object AsyncMock can''t be used in ''await'' expression" errors
+
+      - Often appears with noqa comments documenting intended config but not applied
+
+
+      Required pattern:
+
+      - CORRECT: mock.method = AsyncMock(return_value=1)
+
+      - CORRECT: mock.method = AsyncMock()
+
+      - WRONG: mock.method = AsyncMock  # noqa: async-mock-config(return_value=1)
+
+
+      This hook catches the specific bug where developers put the configuration
+
+      in a noqa comment but forget to actually instantiate the AsyncMock.
+
+
+      See: tests/unit/health/test_database_checks.py (fixed instances)
+
+      Meta-test: tests/meta/test_asyncmock_validation.py validates this
+
+      '
   - id: validate-test-ids
     name: Validate Test IDs (prevent pytest-xdist pollution)
     entry: uv run python scripts/validate_test_ids.py
