@@ -36,8 +36,21 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture(scope="module")
 def repo_root() -> Path:
-    """Get repository root directory"""
-    return Path(__file__).resolve().parents[3]
+    """
+    Get repository root directory using marker file search.
+
+    Uses marker files (.git, pyproject.toml) instead of hardcoded .parents[N]
+    to prevent path calculation errors when files are moved.
+    """
+    current = Path(__file__).resolve().parent
+    markers = [".git", "pyproject.toml"]
+
+    while current != current.parent:
+        if any((current / marker).exists() for marker in markers):
+            return current
+        current = current.parent
+
+    raise RuntimeError("Cannot find project root - no .git or pyproject.toml found")
 
 
 @pytest.fixture(scope="module")

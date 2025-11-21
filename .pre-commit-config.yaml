@@ -882,6 +882,65 @@ repos:
         CREATE TRIGGER trigger_name ...
 
       '
+  - id: validate-repo-root-calculations
+    name: Validate Repository Root Path Calculations
+    entry: uv run python scripts/validate_repo_root_calculations.py
+    language: python
+    pass_filenames: false
+    files: ^tests/.*\.py$
+    description: 'Prevents hardcoded .parents[N] path calculations without marker validation.
+
+
+      PATH CALCULATION ANTI-PATTERN PREVENTION:
+
+      Hardcoded .parents[N] breaks when files are moved between directories.
+
+
+      Issue fixed: test_keycloak_readonly_filesystem.py used .parents[2] which
+
+      should have been .parents[3], causing FileNotFoundError.
+
+
+      Required patterns:
+
+      1. Use project_root fixture from tests/conftest.py:
+
+         def test_something(project_root):
+
+             config = project_root / "config.yaml"
+
+
+      2. Use get_repo_root() function with marker validation:
+
+         def get_repo_root() -> Path:
+
+             current = Path(__file__).parent
+
+             markers = [".git", "pyproject.toml"]
+
+             while current != current.parent:
+
+                 if any((current / m).exists() for m in markers):
+
+                     return current
+
+                 current = current.parent
+
+             raise RuntimeError("Cannot find repo root")
+
+
+      Benefits:
+
+      - Paths remain valid when files are moved
+
+      - Marker files provide reliable repo root detection
+
+      - Prevents FileNotFoundError in tests
+
+
+      See: tests/test_path_validation.py for meta-tests
+
+      '
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
     entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
