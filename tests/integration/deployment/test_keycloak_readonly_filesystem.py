@@ -37,7 +37,7 @@ pytestmark = pytest.mark.integration
 @pytest.fixture(scope="module")
 def repo_root() -> Path:
     """Get repository root directory"""
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 @pytest.fixture(scope="module")
