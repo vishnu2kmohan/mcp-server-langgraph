@@ -23,6 +23,7 @@ References:
 - deployments/base/.trivyignore: AVD-KSV-0014 suppression documentation
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -117,8 +118,13 @@ def get_keycloak_container_security_context(deployment: dict) -> dict | None:
 
 @pytest.mark.deployment
 @pytest.mark.kubernetes
+@pytest.mark.xdist_group(name="keycloak_deployment_tests")
 class TestKeycloakReadOnlyFilesystemConfiguration:
     """Test Keycloak readOnlyRootFilesystem configuration across all environments"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_base_keycloak_has_readonly_filesystem_false(self, base_manifest: list[dict]) -> None:
         """
@@ -255,8 +261,13 @@ class TestKeycloakReadOnlyFilesystemConfiguration:
 
 @pytest.mark.deployment
 @pytest.mark.security
+@pytest.mark.xdist_group(name="keycloak_deployment_tests")
 class TestKeycloakReadOnlyFilesystemDocumentation:
     """Test that readOnlyRootFilesystem: false is properly documented"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_base_deployment_has_inline_comments(self, deployments_dir: Path) -> None:
         """

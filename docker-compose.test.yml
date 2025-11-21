@@ -22,6 +22,7 @@
 #   - Reduced resource limits for parallel execution
 #   - TESTING=true environment variables
 #   - Observability services optional (can be disabled)
+#   - No hard-coded container names (allows multiple isolated test stacks)
 #
 # PORTS (offset by +1000 or +3000 to avoid conflicts with dev environment):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
@@ -31,6 +32,17 @@
 #   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
 #   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
 #   9082  - Keycloak (test, offset +1002 from standard 8080)
+#
+# IMPORTANT - Container Naming:
+#   Container names are NOT hard-coded (no container_name: directives) to allow
+#   multiple isolated test stacks to run simultaneously. Docker Compose will use
+#   project-scoped names like "{PROJECT_NAME}_postgres-test_1". This prevents:
+#   - "container name already in use" conflicts during parallel tests
+#   - Network teardown issues when isolated test projects clean up
+#
+#   To reference containers, use service names (postgres-test, openfga-test, etc.)
+#   or docker compose commands:
+#     docker compose -f docker-compose.test.yml exec postgres-test psql -U postgres
 
 services:
   # ==============================================================================
@@ -39,7 +51,6 @@ services:
 
   postgres-test:
     image: postgres:16.8-alpine
-    container_name: mcp-postgres-test
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -74,7 +85,6 @@ services:
 
   openfga-migrate-test:
     image: openfga/openfga:v1.10.2
-    container_name: mcp-openfga-migrate-test
     command: migrate --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -88,7 +98,6 @@ services:
 
   openfga-test:
     image: openfga/openfga:v1.10.2
-    container_name: mcp-openfga-test
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -121,7 +130,6 @@ services:
 
   keycloak-test:
     image: quay.io/keycloak/keycloak:26.4.2
-    container_name: mcp-keycloak-test
     command: start-dev --import-realm
     depends_on:
       postgres-test:
@@ -178,7 +186,6 @@ services:
 
   redis-test:
     image: redis:7-alpine
-    container_name: mcp-redis-checkpoints-test
     command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
     ports:
       - "9379:6379"
@@ -203,7 +210,6 @@ services:
 
   redis-sessions-test:
     image: redis:7-alpine
-    container_name: mcp-redis-sessions-test
     command: redis-server --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
     ports:
       - "9380:6379"
@@ -232,7 +238,6 @@ services:
 
   qdrant-test:
     image: qdrant/qdrant:v1.15.5
-    container_name: mcp-qdrant-test
     ports:
       - "9333:6333"  # HTTP API
       - "9334:6334"  # gRPC API
@@ -268,7 +273,6 @@ services:
 
   jaeger-test:
     image: jaegertracing/all-in-one:1.62.0
-    container_name: mcp-jaeger-test
     ports:
       - "19686:16686"  # Jaeger UI (offset by 3000)
       - "17268:14268"  # Jaeger collector HTTP
@@ -278,6 +282,7 @@ services:
       - LOG_LEVEL=warn
       - SPAN_STORAGE_TYPE=memory
     healthcheck:
+      # wget is available in the official Jaeger all-in-one image
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
       interval: 5s
       timeout: 3s
@@ -295,7 +300,6 @@ services:
 
   prometheus-test:
     image: prom/prometheus:v3.7.1
-    container_name: mcp-prometheus-test
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -306,6 +310,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     healthcheck:
+      # wget is available in the official Prometheus image (prom/prometheus)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 10s
       timeout: 5s
@@ -323,7 +328,6 @@ services:
 
   alertmanager-test:
     image: prom/alertmanager:v0.28.1
-    container_name: mcp-alertmanager-test
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
@@ -333,6 +337,7 @@ services:
     volumes:
       - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     healthcheck:
+      # wget is available in the official Alertmanager image (prom/alertmanager)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 10s
       timeout: 5s
@@ -350,7 +355,6 @@ services:
 
   grafana-test:
     image: grafana/grafana:12.2.0
-    container_name: mcp-grafana-test
     depends_on:
       prometheus-test:
         condition: service_healthy
@@ -366,6 +370,7 @@ services:
       - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     healthcheck:
+      # wget is available in the official Grafana image (grafana/grafana)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s

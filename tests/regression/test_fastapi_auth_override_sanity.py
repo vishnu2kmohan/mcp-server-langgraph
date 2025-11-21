@@ -78,13 +78,15 @@ class TestGDPREndpointAuthOverrides:
 
         This test demonstrates the CORRECT pattern:
         - Async override for async get_current_user dependency
-        - bearer_scheme override to prevent singleton pollution
         - Dependency cleanup in fixture teardown
+
+        After refactoring to remove Depends(bearer_scheme) coupling,
+        only get_current_user needs to be overridden.
 
         This test should PASS with our current implementation.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         app.include_router(router)
@@ -98,8 +100,7 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
-        # CRITICAL: Must override BOTH bearer_scheme and get_current_user
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
         client = TestClient(app)
@@ -114,27 +115,18 @@ class TestGDPREndpointAuthOverrides:
         # Cleanup
         app.dependency_overrides.clear()
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason=(
-            "Non-deterministic test documenting bearer_scheme singleton pollution. "
-            "May return 200 or 401 depending on pytest-xdist execution order. "
-            "Demonstrates why BOTH bearer_scheme AND get_current_user must be overridden. "
-            "See PYTEST_XDIST_BEST_PRACTICES.md for details."
-        ),
-    )
-    def test_user_data_endpoint_without_bearer_scheme_override_may_fail(self):
+    def test_user_data_endpoint_override_without_bearer_coupling(self):
         """
-        🔴 RED: Test GET /api/v1/users/me/data WITHOUT bearer_scheme override.
+        🟢 GREEN: Test GET /api/v1/users/me/data with only get_current_user override.
 
-        This test demonstrates what happens when you forget to override bearer_scheme.
-        Per PYTEST_XDIST_BEST_PRACTICES.md, this can cause singleton pollution
-        and intermittent 401 errors in pytest-xdist.
+        After refactoring to remove Depends(bearer_scheme) coupling,
+        this test validates that overriding ONLY get_current_user is sufficient.
 
-        This test may PASS or FAIL depending on test execution order, which is
-        exactly the problem - it's non-deterministic!
+        This eliminates the dependency coupling issue where FastAPI would
+        evaluate bearer_scheme even when get_current_user was overridden.
 
-        The test documents the INCORRECT pattern to avoid.
+        Previously, this test was marked xfail because it demonstrated the
+        broken behavior. Now it should PASS, proving the refactoring worked.
         """
         from mcp_server_langgraph.api.gdpr import router
         from mcp_server_langgraph.auth.middleware import get_current_user
@@ -150,22 +142,16 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
-        # INCORRECT: Only overriding get_current_user, NOT bearer_scheme
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
         client = TestClient(app)
-
-        # This might return 200 OR 401 depending on execution order (flaky!)
-        # The non-determinism is the PROBLEM
         response = client.get("/api/v1/users/me/data")
 
-        # Incomplete override should cause 401 (bearer_scheme validation fails)
-        # If we get 200, it means the non-determinism bug is manifesting
-        assert response.status_code == 401, (
-            f"Expected 401 with incomplete override (missing bearer_scheme), got {response.status_code}. "
-            "Without bearer_scheme override, auth should fail even if get_current_user is overridden. "
-            "If this test fails with 200, it demonstrates the non-determinism bug in pytest-xdist. "
-            "Always override BOTH bearer_scheme AND get_current_user."
+        # With refactored architecture, overriding only get_current_user should work
+        assert response.status_code == 200, (
+            f"Expected 200 with get_current_user override, got {response.status_code}. "
+            "After removing Depends(bearer_scheme) coupling, overriding only get_current_user should be sufficient."
         )
 
         # Cleanup
@@ -176,9 +162,12 @@ class TestGDPREndpointAuthOverrides:
         🟢 GREEN: Test POST /api/v1/users/me/consent with proper auth override.
 
         Another example of the CORRECT pattern for a different endpoint.
+
+        After refactoring to remove Depends(bearer_scheme) coupling,
+        only get_current_user needs to be overridden.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         app.include_router(router)
@@ -191,8 +180,7 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
-        # CORRECT: Override both bearer_scheme and get_current_user
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
         client = TestClient(app)
@@ -231,14 +219,14 @@ def test_auth_override_sanity_pattern_documentation():
     Prevent regressions in FastAPI authentication override patterns by
     creating minimal sanity tests for each authenticated endpoint.
 
-    Pattern:
-    --------
+    Pattern (After Refactoring):
+    -----------------------------
     For EVERY authenticated FastAPI endpoint, create a sanity test:
 
     ```python
     def test_{endpoint}_with_proper_auth_override_returns_200(self):
         from {module} import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         app.include_router(router)
@@ -246,8 +234,7 @@ def test_auth_override_sanity_pattern_documentation():
         async def mock_get_current_user_async():
             return {"user_id": "test-user", ...}
 
-        # CRITICAL: Override BOTH dependencies
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
         client = TestClient(app)
@@ -257,10 +244,18 @@ def test_auth_override_sanity_pattern_documentation():
         app.dependency_overrides.clear()
     ```
 
+    Refactoring Note:
+    -----------------
+    Previously, tests needed to override BOTH bearer_scheme AND get_current_user
+    due to dependency coupling (get_current_user had Depends(bearer_scheme) parameter).
+
+    After refactoring to remove this coupling, only get_current_user needs to be
+    overridden. Bearer token extraction now happens inside get_current_user.
+
     Benefits:
     ---------
     1. ✅ Makes authentication contract visible
-    2. ✅ Catches missing bearer_scheme override immediately
+    2. ✅ Simpler test pattern (only one override needed)
     3. ✅ Catches async/sync mismatch immediately
     4. ✅ Prevents intermittent 401 errors in pytest-xdist
     5. ✅ Serves as living documentation
@@ -297,7 +292,7 @@ def test_auth_override_sanity_pattern_documentation():
     """
 
     assert len(documentation) > 100, "Pattern is documented"
-    assert "bearer_scheme" in documentation, "Documents bearer_scheme requirement"
+    assert "get_current_user" in documentation, "Documents get_current_user override"
     assert "async def" in documentation, "Documents async override pattern"
     assert "dependency_overrides.clear()" in documentation, "Documents cleanup"
 
@@ -321,10 +316,13 @@ class TestAuthOverrideSanityPattern:
         - No complex dependency mocking
         - Just verify 200 vs 401
 
+        After refactoring to remove Depends(bearer_scheme) coupling,
+        only get_current_user needs to be overridden.
+
         This keeps them maintainable and fast to run.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         app.include_router(router)
@@ -333,7 +331,7 @@ class TestAuthOverrideSanityPattern:
         async def mock_user():
             return {"user_id": "test", "username": "test"}
 
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_user
 
         client = TestClient(app)

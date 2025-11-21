@@ -126,6 +126,7 @@ services:
     networks:
       - mcp-network
     healthcheck:
+      # wget is available in the official OpenFGA image (openfga/openfga)
       test: ["CMD", "wget", "--spider", "http://localhost:8080/healthz"]
       interval: 5s
       timeout: 3s

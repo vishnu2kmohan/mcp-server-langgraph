@@ -139,7 +139,8 @@ await asyncpg.create_pool(
 ```bash
 # Verify GDPR schema tables exist
 docker-compose -f docker-compose.test.yml up -d postgres-test
-docker exec mcp-postgres-test psql -U postgres -d mcp_test -c "\dt"
+# Note: Use docker-compose exec instead of docker exec since container names are project-scoped
+docker-compose -f docker-compose.test.yml exec postgres-test psql -U postgres -d mcp_test -c "\dt"
 
 # Should show:
 #  user_profiles

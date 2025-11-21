@@ -336,12 +336,14 @@ class TestDockerComposeHealthChecksIntegration:
 
         finally:
             # Cleanup: Stop and remove containers from isolated project
-            # CODEX FINDING FIX: This now only affects the isolated test project, not shared infrastructure
+            # CODEX FINDING FIX (2025-11-20): Removed hard-coded container names from docker-compose.test.yml
+            # This allows multiple isolated projects to run simultaneously without conflicts.
+            # Note: Using 'down' without '-v' to avoid interfering with shared network (mcp-test-network)
+            # since all storage is tmpfs-based anyway (no volumes to clean up).
             print(f"\n🧹 Cleaning up isolated project '{unique_project_name}'...")
             cleanup_result = run_docker_compose(
                 compose_file,
                 "down",
-                "-v",
                 "--remove-orphans",
                 timeout=30,
                 env=test_env,
@@ -406,7 +408,6 @@ class TestDockerComposeHealthChecksIntegration:
             run_docker_compose(
                 compose_file,
                 "down",
-                "-v",
                 "--remove-orphans",
                 timeout=30,
             )

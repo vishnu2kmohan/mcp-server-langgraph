@@ -33,26 +33,23 @@ def teardown_method_audit_log_store():
 
 
 @pytest.fixture
-async def db_pool(integration_test_env) -> AsyncGenerator[asyncpg.Pool, None]:
+async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None]:
     """
-    Create test database pool with environment-based configuration.
+    Use shared test database pool with cleanup.
 
-    Depends on integration_test_env to ensure Docker infrastructure is ready
-    before attempting connections (prevents "Connection refused" errors).
+    CODEX FINDING FIX (2025-11-20):
+    =================================
+    Previous: Created separate pool per test file
+    Problem: Multiple pools caused "asyncpg.exceptions.InterfaceError: another operation is in progress"
+    Fix: Use shared session-scoped pool from conftest.py
 
-    Supports both local development and CI/CD environments by using
-    environment variables with sensible defaults.
+    This prevents connection conflicts when multiple test files run in parallel.
+
+    Depends on postgres_connection_real (session-scoped shared pool) instead of
+    creating a new pool. This fixes the "another operation is in progress" errors
+    that occurred when multiple pools tried to access the same database.
     """
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "9432")),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        min_size=1,
-        max_size=5,
-        timeout=90,  # Increased timeout for slower environments
-    )
+    pool = postgres_connection_real
 
     # Clean up test data
     async with pool.acquire() as conn:
@@ -64,7 +61,7 @@ async def db_pool(integration_test_env) -> AsyncGenerator[asyncpg.Pool, None]:
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM audit_logs WHERE log_id LIKE 'test_%'")
 
-    await pool.close()
+    # Note: Don't close the pool - it's session-scoped and shared across all tests
 
 
 @pytest.fixture

@@ -58,6 +58,7 @@ class TestInfrastructureSingleton:
             "openfga_http": 9080,
             "openfga_grpc": 9081,
             "keycloak": 9082,
+            "keycloak_management": 9900,
         }
 
         # Test current worker's ports

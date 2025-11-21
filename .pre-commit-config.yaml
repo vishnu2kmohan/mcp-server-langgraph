@@ -426,7 +426,7 @@ repos:
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
       bash -c 'if command -v npm >/dev/null 2>&1; then
-      cd docs && npm ci --silent && npm exec -- mintlify broken-links;
+      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links;
       else echo "Skipping: npm/Node.js not installed (install from https://nodejs.org/)";
       exit 0; fi'
     language: system

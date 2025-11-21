@@ -827,7 +827,6 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
     async def get_current_user(
         request: Request,
-        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     ) -> dict[str, Any]:
         """
         FastAPI dependency for extracting authenticated user from request.
@@ -838,7 +837,6 @@ if FASTAPI_AVAILABLE:  # noqa: C901
 
         Args:
             request: FastAPI request object
-            credentials: Bearer token credentials from Authorization header (auto-injected by FastAPI)
 
         Returns:
             User dict with user_id, username, roles, etc.
@@ -850,10 +848,16 @@ if FASTAPI_AVAILABLE:  # noqa: C901
         if hasattr(request.state, "user") and request.state.user:
             return request.state.user  # type: ignore[no-any-return]
 
+        # Extract bearer token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        token = None
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]  # Remove "Bearer " prefix
+
         # Try to authenticate with Bearer token
-        if credentials and credentials.credentials:
+        if token:
             auth = get_auth_middleware()
-            verification = await auth.verify_token(credentials.credentials)
+            verification = await auth.verify_token(token)
 
             if verification.valid and verification.payload:
                 # Extract username: prefer preferred_username (Keycloak) over username over sub
