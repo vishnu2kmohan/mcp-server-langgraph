@@ -70,9 +70,7 @@ class ConversationStore:
                 )
 
             try:
-                self._redis_client = redis.from_url(  # type: ignore[no-untyped-call]
-                    redis_url, decode_responses=True
-                )
+                self._redis_client = redis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
                 # Test connection
                 self._redis_client.ping()
             except Exception as e:

@@ -11,7 +11,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class FeatureFlags(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lacks complete type stubs
+class FeatureFlags(BaseSettings):  # type: ignore[misc]
     """
     Feature flags for controlling system behavior
 

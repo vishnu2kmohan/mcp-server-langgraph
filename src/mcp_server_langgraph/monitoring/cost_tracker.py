@@ -22,7 +22,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -124,16 +124,22 @@ except ImportError:
             self.parent._values[self.label_values] += amount
 
     # Mock Prometheus metrics (fallback when prometheus_client not installed)
-    llm_token_usage = MockPrometheusCounter(  # Mock has compatible interface
-        name="llm_token_usage_total",
-        description="Total tokens used by LLM calls",
-        labelnames=["provider", "model", "token_type"],
+    llm_token_usage = cast(
+        Counter,
+        MockPrometheusCounter(
+            name="llm_token_usage_total",
+            description="Total tokens used by LLM calls",
+            labelnames=["provider", "model", "token_type"],
+        ),
     )
 
-    llm_cost = MockPrometheusCounter(  # Mock has compatible interface
-        name="llm_cost_usd_total",
-        description="Total estimated cost in USD",
-        labelnames=["provider", "model"],
+    llm_cost = cast(
+        Counter,
+        MockPrometheusCounter(
+            name="llm_cost_usd_total",
+            description="Total estimated cost in USD",
+            labelnames=["provider", "model"],
+        ),
     )
 
     PROMETHEUS_AVAILABLE = False
