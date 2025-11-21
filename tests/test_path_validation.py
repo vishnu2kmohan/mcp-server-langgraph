@@ -85,31 +85,41 @@ class TestRepoRootCalculations:
 
     def test_langgraph_deployment_test_repo_root_is_correct(self, actual_repo_root: Path) -> None:
         """
-        GIVEN tests/integration/deployments/test_langgraph_platform.py
+        GIVEN tests/integration/deployment/test_langgraph_platform.py
         WHEN path to deployments/ is calculated
-        THEN it should point to actual repository deployments/ directory
+        THEN it should use marker file approach (not hardcoded .parents[N])
+        AND it should point to actual repository deployments/ directory
+
+        NOTE: Directory consolidation completed - test_langgraph_platform.py
+        moved from deployments/ (plural) to deployment/ (singular) and
+        updated to use get_repo_root() function with marker file validation.
         """
-        # Check if test file exists in either location
-        test_file_deployments = actual_repo_root / "tests" / "integration" / "deployments" / "test_langgraph_platform.py"
-        test_file_deployment = actual_repo_root / "tests" / "integration" / "deployment" / "test_langgraph_platform.py"
+        # File should now be in deployment/ (singular) only
+        test_file = actual_repo_root / "tests" / "integration" / "deployment" / "test_langgraph_platform.py"
 
-        if test_file_deployments.exists():
-            test_file = test_file_deployments
-        elif test_file_deployment.exists():
-            test_file = test_file_deployment
-        else:
-            pytest.skip("LangGraph test file not found in either deployment/ or deployments/")
-
-        # Test uses .parent.parent.parent which should give repo root
-        calculated_repo_root = test_file.resolve().parent.parent.parent
-
-        assert calculated_repo_root == actual_repo_root, (
-            f"LangGraph test path calculation incorrect. Expected {actual_repo_root}, got {calculated_repo_root}"
+        assert test_file.exists(), (
+            f"test_langgraph_platform.py should be in deployment/ directory (singular), "
+            f"not deployments/ (plural). File not found at {test_file}"
         )
 
-        # Verify deployments/ directory exists
-        deployments_dir = calculated_repo_root / "deployments"
-        assert deployments_dir.exists(), f"deployments/ not found at {deployments_dir}"
+        # Verify file uses marker file approach (has get_repo_root function)
+        content = test_file.read_text()
+        assert "def get_repo_root()" in content, (
+            "test_langgraph_platform.py should use get_repo_root() function "
+            "with marker file validation, not hardcoded .parents[N]"
+        )
+        assert "pyproject.toml" in content or ".git" in content, (
+            "test_langgraph_platform.py should validate marker files " "(.git, pyproject.toml) in get_repo_root() function"
+        )
+
+        # Verify no hardcoded .parents[N] path calculations remain
+        assert "Path(__file__).parent.parent.parent" not in content, (
+            "test_langgraph_platform.py should not use hardcoded .parents[N] - " "use get_repo_root() function instead"
+        )
+
+        # Verify deployments/ directory exists at repo root
+        deployments_dir = actual_repo_root / "deployments"
+        assert deployments_dir.exists(), f"deployments/ directory not found at {deployments_dir}"
 
     def test_all_deployment_test_paths_point_to_existing_directories(self, actual_repo_root: Path) -> None:
         """
@@ -220,9 +230,9 @@ class TestPathCalculationPatterns:
         THEN pyproject.toml should exist at that path
         """
         pyproject_toml = actual_repo_root / "pyproject.toml"
-        assert pyproject_toml.exists(), (
-            f"pyproject.toml not found at {actual_repo_root}. This indicates repo_root calculation is incorrect."
-        )
+        assert (
+            pyproject_toml.exists()
+        ), f"pyproject.toml not found at {actual_repo_root}. This indicates repo_root calculation is incorrect."
 
     def test_repo_root_points_to_directory_with_git_folder(self, actual_repo_root: Path) -> None:
         """

@@ -37,7 +37,7 @@ class TestMCPServerStartupValidation:
 
         This catches import-time failures and circular dependencies.
         """
-        from mcp_server_langgraph.server import MCPAgentServer
+        from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
         # Verify the imported class exists and is a class
         assert MCPAgentServer is not None, "MCPAgentServer class is None"
@@ -51,7 +51,7 @@ class TestMCPServerStartupValidation:
         Validates that dependency injection works for MCP server.
         """
         try:
-            from mcp_server_langgraph.server import MCPAgentServer
+            from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
             # Arrange: Set minimal config
             monkeypatch.setenv("KEYCLOAK_SERVER_URL", "http://localhost:8082")

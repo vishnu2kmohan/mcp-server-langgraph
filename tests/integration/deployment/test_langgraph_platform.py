@@ -6,10 +6,29 @@ without errors, preventing deployment-time failures.
 """
 
 import gc
+from pathlib import Path
 
 import pytest
 
 pytestmark = pytest.mark.integration
+
+
+def get_repo_root() -> Path:
+    """
+    Get repository root using marker file search.
+
+    This is the recommended approach (vs hardcoded .parents[N] counts) to
+    prevent path calculation errors when files move between directories.
+    """
+    current = Path(__file__).resolve().parent
+    markers = [".git", "pyproject.toml"]
+
+    while current != current.parent:
+        if any((current / marker).exists() for marker in markers):
+            return current
+        current = current.parent
+
+    raise RuntimeError("Cannot find project root - no .git or pyproject.toml found")
 
 
 @pytest.mark.xdist_group(name="testlanggraphplatformdeployment")
@@ -26,7 +45,7 @@ class TestLangGraphPlatformDeployment:
         from pathlib import Path
 
         # Add deployments to path
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
@@ -44,7 +63,7 @@ class TestLangGraphPlatformDeployment:
         import sys
         from pathlib import Path
 
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
@@ -62,7 +81,7 @@ class TestLangGraphPlatformDeployment:
         import sys
         from pathlib import Path
 
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
@@ -80,7 +99,7 @@ class TestLangGraphPlatformDeployment:
         import sys
         from pathlib import Path
 
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
@@ -98,7 +117,7 @@ class TestLangGraphPlatformDeployment:
         import sys
         from pathlib import Path
 
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
@@ -123,7 +142,7 @@ class TestLangGraphPlatformDeployment:
         import sys
         from pathlib import Path
 
-        deployments_dir = Path(__file__).parent.parent.parent / "deployments"
+        deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
 
         try:
