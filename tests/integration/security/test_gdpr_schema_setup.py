@@ -333,12 +333,19 @@ class TestGDPRSchemaFixturePattern:
         """
         Test that schema setup can be run multiple times safely.
 
-        Using CREATE TABLE IF NOT EXISTS makes setup idempotent.
+        CODEX FINDING FIX (2025-11-20): Enhanced to run migration 3 times to validate
+        trigger idempotency. Previous issue: CREATE TRIGGER without IF NOT EXISTS
+        caused DuplicateObjectError on second execution.
+
+        Using CREATE TABLE IF NOT EXISTS and DROP TRIGGER IF EXISTS makes setup idempotent.
+
+        References:
+        - migrations/001_gdpr_schema.sql:196,211 - Trigger creation
         """
         # GIVEN: Database pool (schema already created by fixture)
         pool = db_pool_gdpr
 
-        # WHEN: We execute schema SQL again (find project root by looking for pyproject.toml)
+        # WHEN: We execute schema SQL multiple times (find project root by looking for pyproject.toml)
         current = Path(__file__).resolve()
         project_root = None
         for parent in current.parents:
@@ -352,10 +359,18 @@ class TestGDPRSchemaFixturePattern:
         schema_sql = schema_file.read_text()
 
         async with pool.acquire() as conn:
-            # Execute schema SQL (should not fail, just no-op on existing tables)
-            await conn.execute(schema_sql)
+            # Execute schema SQL three times to prove complete idempotency
+            # (including triggers, which previously failed on 2nd execution)
+            for iteration in range(3):
+                try:
+                    await conn.execute(schema_sql)
+                except Exception as e:
+                    pytest.fail(
+                        f"Schema execution failed on iteration {iteration + 1}/3: {e}\n"
+                        "Migration must be idempotent (CREATE TABLE IF NOT EXISTS, DROP TRIGGER IF EXISTS)"
+                    )
 
-            # Query tables again
+            # Query tables after all iterations
             tables = await conn.fetch(
                 """
                 SELECT table_name
@@ -368,7 +383,7 @@ class TestGDPRSchemaFixturePattern:
 
         table_names = [row["table_name"] for row in tables]
 
-        # THEN: Tables should still exist (no errors)
+        # THEN: Tables should still exist (no errors across all iterations)
         required_tables = ["user_profiles", "conversations", "audit_logs"]
         for table in required_tables:
             assert table in table_names

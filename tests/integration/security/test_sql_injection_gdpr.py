@@ -64,11 +64,22 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 async def test_conversation(
     conversation_store: PostgresConversationStore,
     test_user: str,
+    request,
 ) -> str:
-    """Create test conversation for security tests"""
+    """
+    Create test conversation for security tests.
+
+    CODEX FINDING FIX (2025-11-20): Use unique conversation ID per test to prevent
+    UniqueViolationError when multiple tests run. Previous static ID "test_sec_conv_123"
+    caused conflicts in parallel execution.
+    """
+    # Use test node ID to create unique conversation ID per test
+    test_name = request.node.name
+    conversation_id = f"test_sec_conv_{test_name}_{id(request)}"
+
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
-        conversation_id="test_sec_conv_123",
+        conversation_id=conversation_id,
         user_id=test_user,
         title="Security Test Conversation",
         messages=[
@@ -79,7 +90,15 @@ async def test_conversation(
         last_message_at=now,
     )
     await conversation_store.create(conversation)
-    return "test_sec_conv_123"
+
+    yield conversation_id
+
+    # Cleanup: Delete test conversation to prevent state pollution
+    try:
+        await conversation_store.delete(conversation_id, test_user)
+    except Exception:
+        # Conversation may have been deleted by test or db_pool_gdpr cleanup
+        pass
 
 
 # ============================================================================

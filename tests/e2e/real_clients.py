@@ -42,6 +42,9 @@ class RealKeycloakAuth:
         self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082")
         self.realm = os.getenv("KEYCLOAK_REALM", "master")
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
+        # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
+        # Keycloak requires client authentication for introspection endpoint
+        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
         self.client = httpx.AsyncClient(timeout=30.0)
 
     async def login(self, username: str, password: str) -> dict[str, str]:
@@ -135,21 +138,31 @@ class RealKeycloakAuth:
         """
         Introspect token to get metadata.
 
+        CODEX FINDING FIX (2025-11-20): Added client_secret for proper Keycloak authentication.
+        Previous issue: Missing client_secret caused 403 Forbidden errors.
+
         Args:
             token: Access token to introspect
 
         Returns:
             Dict with token metadata (active, sub, username, etc.)
+
+        Raises:
+            httpx.HTTPStatusError: If introspection fails (e.g., 403 without client_secret)
         """
         introspect_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token/introspect"
 
-        response = await self.client.post(
-            introspect_url,
-            data={
-                "client_id": self.client_id,
-                "token": token,
-            },
-        )
+        # Keycloak requires client authentication for introspection
+        # Use client_secret if available, otherwise try public client introspection
+        data = {
+            "client_id": self.client_id,
+            "token": token,
+        }
+
+        if self.client_secret:
+            data["client_secret"] = self.client_secret
+
+        response = await self.client.post(introspect_url, data=data)
         response.raise_for_status()
 
         return response.json()

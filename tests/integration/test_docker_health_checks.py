@@ -90,7 +90,7 @@ def run_docker_compose(
     return result
 
 
-def get_service_health(compose_file: Path, service_name: str) -> str:
+def get_service_health(compose_file: Path, service_name: str, env: dict | None = None) -> str:
     """Get the health status of a service."""
     result = run_docker_compose(
         compose_file,
@@ -98,6 +98,7 @@ def get_service_health(compose_file: Path, service_name: str) -> str:
         "--format",
         "json",
         timeout=10,
+        env=env,
     )
 
     if result.returncode != 0:
@@ -126,9 +127,17 @@ def wait_for_health(
     service_name: str,
     timeout: int = 120,
     check_interval: int = 2,
+    env: dict | None = None,
 ) -> bool:
     """
     Wait for a service to become healthy.
+
+    Args:
+        compose_file: Path to docker-compose file
+        service_name: Name of service to check
+        timeout: Maximum wait time in seconds
+        check_interval: Seconds between health checks
+        env: Optional environment variables (for COMPOSE_PROJECT_NAME isolation)
 
     Returns:
         True if service became healthy, False if timeout
@@ -136,7 +145,7 @@ def wait_for_health(
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        health = get_service_health(compose_file, service_name)
+        health = get_service_health(compose_file, service_name, env=env)
 
         if health == "healthy":
             return True
@@ -226,6 +235,12 @@ class TestDockerComposeHealthChecksIntegration:
         """
         Test that Qdrant container health check works correctly.
 
+        CODEX FINDING FIX (2025-11-20): Use isolated test infrastructure to prevent
+        tearing down shared containers. Previous issue: 'docker compose down -v' stopped
+        PostgreSQL/Redis/etc, causing subsequent tests to fail with connection errors.
+
+        Solution: Use unique COMPOSE_PROJECT_NAME for test-specific isolation.
+
         RED phase: Will fail if using wget (command not found)
         GREEN phase: Will pass after switching to grpc_health_probe
 
@@ -234,6 +249,9 @@ class TestDockerComposeHealthChecksIntegration:
         Note: Requires extended timeout (150s) as Qdrant can take up to 120s to become healthy
         in CI environments with limited resources.
         """
+        import os
+        import uuid
+
         compose_file = PROJECT_ROOT / "docker-compose.test.yml"
 
         if not compose_file.exists():
@@ -252,21 +270,29 @@ class TestDockerComposeHealthChecksIntegration:
 
         qdrant_service = qdrant_services[0]
 
-        # Start only the Qdrant service (no dependencies)
-        print(f"\n🐳 Starting {qdrant_service} service...")
+        # Use unique project name for isolated test infrastructure
+        # This prevents 'docker compose down' from affecting shared test infrastructure
+        unique_project_name = f"health-check-test-{uuid.uuid4().hex[:8]}"
+        test_env = os.environ.copy()
+        test_env["COMPOSE_PROJECT_NAME"] = unique_project_name
+
+        print(f"\n🐳 Starting {qdrant_service} in isolated project '{unique_project_name}'...")
+
+        # Start only the Qdrant service (no dependencies) with isolated project name
         result = run_docker_compose(
             compose_file,
             "up",
             "-d",
             qdrant_service,
             timeout=60,
+            env=test_env,
         )
 
         if result.returncode != 0:
             pytest.fail(f"Failed to start {qdrant_service}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
 
         try:
-            # Wait for health check to pass
+            # Wait for health check to pass (using isolated environment)
             print(f"⏳ Waiting for {qdrant_service} to become healthy (max 120s)...")
 
             is_healthy = wait_for_health(
@@ -274,17 +300,19 @@ class TestDockerComposeHealthChecksIntegration:
                 qdrant_service,
                 timeout=120,
                 check_interval=3,
+                env=test_env,
             )
 
-            # Get final health status
-            final_health = get_service_health(compose_file, qdrant_service)
+            # Get final health status (using isolated environment)
+            final_health = get_service_health(compose_file, qdrant_service, env=test_env)
 
-            # Get container logs for debugging
+            # Get container logs for debugging (using isolated environment)
             logs_result = run_docker_compose(
                 compose_file,
                 "logs",
                 qdrant_service,
                 timeout=10,
+                env=test_env,
             )
 
             assert is_healthy, (
@@ -307,14 +335,16 @@ class TestDockerComposeHealthChecksIntegration:
             print(f"✅ {qdrant_service} is healthy!")
 
         finally:
-            # Cleanup: Stop and remove containers
-            print(f"\n🧹 Cleaning up {qdrant_service}...")
+            # Cleanup: Stop and remove containers from isolated project
+            # CODEX FINDING FIX: This now only affects the isolated test project, not shared infrastructure
+            print(f"\n🧹 Cleaning up isolated project '{unique_project_name}'...")
             cleanup_result = run_docker_compose(
                 compose_file,
                 "down",
                 "-v",
                 "--remove-orphans",
                 timeout=30,
+                env=test_env,
             )
 
             if cleanup_result.returncode != 0:

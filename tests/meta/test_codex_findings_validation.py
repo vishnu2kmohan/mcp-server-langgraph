@@ -151,6 +151,57 @@ class TestFixtureScopeValidation:
                 "for pytest-xdist isolation to prevent ScopeMismatch"
             )
 
+    def test_pytest_asyncio_event_loop_scope_matches_session_fixtures(self):
+        """
+        Validate pytest-asyncio default event loop scope is session-scoped.
+
+        CODEX FINDING (2025-11-20): 34 integration tests fail with ScopeMismatch
+        because session-scoped async fixtures (postgres_connection_real, redis_client_real,
+        openfga_client_real) require session-scoped event loop.
+
+        Problem:
+        - pyproject.toml sets asyncio_default_fixture_loop_scope = "function"
+        - Session-scoped async fixtures try to use function-scoped event loop
+        - pytest-asyncio 1.2.0 raises ScopeMismatch error
+
+        Solution: Set asyncio_default_fixture_loop_scope = "session"
+
+        References:
+        - pyproject.toml:469 - asyncio_default_fixture_loop_scope configuration
+        - tests/conftest.py:1404 - postgres_connection_real (session-scoped)
+        - tests/conftest.py:1453 - redis_client_real (session-scoped)
+        - tests/conftest.py:1483 - openfga_client_real (session-scoped)
+        - pytest-asyncio docs: https://pytest-asyncio.readthedocs.io/en/latest/concepts.html#event-loop-scope
+        """
+        import tomli
+
+        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+        assert pyproject_path.exists(), "pyproject.toml not found"
+
+        with open(pyproject_path, "rb") as f:
+            config = tomli.load(f)
+
+        # Navigate to pytest configuration
+        assert "tool" in config, "No [tool] section in pyproject.toml"
+        assert "pytest" in config["tool"], "No [tool.pytest] section in pyproject.toml"
+        assert "ini_options" in config["tool"]["pytest"], "No [tool.pytest.ini_options] section"
+
+        pytest_config = config["tool"]["pytest"]["ini_options"]
+
+        # Validate asyncio_default_fixture_loop_scope is set to "session"
+        assert "asyncio_default_fixture_loop_scope" in pytest_config, (
+            "asyncio_default_fixture_loop_scope must be configured in pyproject.toml [tool.pytest.ini_options]. "
+            "Required for session-scoped async fixtures to work with pytest-asyncio 1.2.0+"
+        )
+
+        loop_scope = pytest_config["asyncio_default_fixture_loop_scope"]
+        assert loop_scope == "session", (
+            f"asyncio_default_fixture_loop_scope must be 'session', found '{loop_scope}'. "
+            "Session-scoped async fixtures (postgres_connection_real, redis_client_real, openfga_client_real) "
+            "require session-scoped event loop to prevent ScopeMismatch errors. "
+            "Change pyproject.toml:469 from 'function' to 'session'."
+        )
+
 
 @pytest.mark.xdist_group(name="testkeycloakserviceconfiguration")
 class TestKeycloakServiceConfiguration:

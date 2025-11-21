@@ -1786,7 +1786,21 @@ async def db_pool_gdpr(integration_test_env):
 
     yield pool
 
-    # Cleanup
+    # Cleanup: Truncate test data to prevent state pollution between tests
+    # CODEX FINDING FIX (2025-11-20): SQL injection tests leave data (test_sec_log_001, test_sec_conv_123)
+    # causing assertion failures when tests expect clean state
+    async with pool.acquire() as conn:
+        try:
+            # Cascade truncate to handle foreign key constraints
+            await conn.execute(
+                """
+                TRUNCATE TABLE audit_logs, conversations, user_preferences, user_profiles CASCADE
+                """
+            )
+        except Exception as e:
+            # Log warning but don't fail cleanup if tables don't exist
+            logging.warning(f"Failed to truncate GDPR test tables during cleanup: {e}")
+
     await pool.close()
 
 

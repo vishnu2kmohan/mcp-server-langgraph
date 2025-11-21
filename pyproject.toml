@@ -466,7 +466,9 @@ python_functions = ["test_*"]
 addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60 --benchmark-disable"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+# CODEX FINDING FIX (2025-11-20): Set to "session" to support session-scoped async fixtures
+# (postgres_connection_real, redis_client_real, openfga_client_real) without ScopeMismatch errors
+asyncio_default_fixture_loop_scope = "session"
 # Filter warnings to reduce test output noise
 filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
