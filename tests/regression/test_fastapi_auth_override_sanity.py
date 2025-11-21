@@ -37,6 +37,7 @@ References:
 """
 
 import gc
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -46,18 +47,29 @@ from fastapi.testclient import TestClient
 pytestmark = [pytest.mark.unit]
 
 
-@pytest.fixture(autouse=True)
-async def setup_gdpr_storage():
-    """Initialize GDPR storage for tests (using memory backend for speed)."""
-    from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage, reset_gdpr_storage
+def create_mock_gdpr_storage():
+    """
+    Create a mock GDPR storage for testing without global singleton dependency.
 
-    # Initialize with memory backend for fast testing
-    await initialize_gdpr_storage(backend="memory")
+    This avoids test isolation issues from the global _gdpr_storage singleton.
+    Each test gets a fresh mock instance.
+    """
+    from mcp_server_langgraph.compliance.gdpr.storage import (
+        InMemoryAuditLogStore,
+        InMemoryConsentStore,
+        InMemoryConversationStore,
+        InMemoryPreferencesStore,
+        InMemoryUserProfileStore,
+    )
+    from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 
-    yield
-
-    # Reset after test
-    reset_gdpr_storage()
+    return GDPRStorage(
+        user_profiles=InMemoryUserProfileStore(),
+        preferences=InMemoryPreferencesStore(),
+        consents=InMemoryConsentStore(),
+        conversations=InMemoryConversationStore(),
+        audit_logs=InMemoryAuditLogStore(),
+    )
 
 
 @pytest.mark.xdist_group(name="auth_override_sanity_tests")
@@ -79,6 +91,7 @@ class TestGDPREndpointAuthOverrides:
         This test demonstrates the CORRECT pattern:
         - Async override for async get_current_user dependency
         - Dependency cleanup in fixture teardown
+        - Mock GDPR storage to avoid global singleton pollution
 
         After refactoring to remove Depends(bearer_scheme) coupling,
         only get_current_user needs to be overridden.
@@ -87,6 +100,7 @@ class TestGDPREndpointAuthOverrides:
         """
         from mcp_server_langgraph.api.gdpr import router
         from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
         app.include_router(router)
@@ -100,8 +114,12 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+
         # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
@@ -130,6 +148,7 @@ class TestGDPREndpointAuthOverrides:
         """
         from mcp_server_langgraph.api.gdpr import router
         from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
         app.include_router(router)
@@ -142,8 +161,12 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+
         # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
@@ -168,6 +191,7 @@ class TestGDPREndpointAuthOverrides:
         """
         from mcp_server_langgraph.api.gdpr import router
         from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
         app.include_router(router)
@@ -180,8 +204,12 @@ class TestGDPREndpointAuthOverrides:
                 "roles": ["user"],
             }
 
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+
         # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
 
@@ -323,6 +351,7 @@ class TestAuthOverrideSanityPattern:
         """
         from mcp_server_langgraph.api.gdpr import router
         from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
         app.include_router(router)
@@ -331,8 +360,12 @@ class TestAuthOverrideSanityPattern:
         async def mock_user():
             return {"user_id": "test", "username": "test"}
 
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+
         # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_user
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
