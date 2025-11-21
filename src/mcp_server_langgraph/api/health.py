@@ -129,6 +129,61 @@ def validate_docker_sandbox_security() -> tuple[bool, str]:
     return True, "Docker sandbox security checks not applicable (runtime validation required)"
 
 
+def validate_database_connectivity() -> tuple[bool, str]:
+    """
+    Validate that PostgreSQL database is accessible.
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: PostgreSQL dependency chain validation
+    """
+    import asyncio
+
+    async def _check_database_connection() -> tuple[bool, str]:
+        """Async helper to check database connectivity"""
+        try:
+            import asyncpg
+
+            # Parse the postgres URL from settings
+            postgres_url = settings.gdpr_postgres_url
+
+            logger.debug(f"Validating database connectivity to {postgres_url.split('@')[-1]}")
+
+            # Try to connect to PostgreSQL (with timeout)
+            try:
+                conn = await asyncio.wait_for(asyncpg.connect(postgres_url), timeout=5.0)
+                await conn.close()
+                return True, "PostgreSQL database accessible"
+            except asyncio.TimeoutError:
+                return False, "PostgreSQL connection timeout (5s)"
+            except asyncpg.InvalidPasswordError as e:
+                return False, f"PostgreSQL authentication failed: {e}"
+            except asyncpg.PostgresError as e:
+                # Check if it's a missing database error
+                if "does not exist" in str(e):
+                    return False, f"PostgreSQL database does not exist: {e}"
+                return False, f"PostgreSQL error: {e}"
+            except ValueError as e:
+                return False, f"Invalid PostgreSQL connection string: {e}"
+            except Exception as e:
+                return False, f"PostgreSQL connection failed: {e}"
+
+        except ImportError:
+            return False, "asyncpg not installed - cannot validate database connectivity"
+        except Exception as e:
+            return False, f"Unexpected error during database validation: {e}"
+
+    # Run the async check synchronously
+    try:
+        return asyncio.run(_check_database_connection())
+    except RuntimeError as e:
+        # If we're already in an event loop (shouldn't happen in startup)
+        if "cannot be called from a running event loop" in str(e):
+            return False, "Database validation failed: already in event loop"
+        raise
+
+
 def run_startup_validation() -> None:
     """
     Run all startup validations and raise SystemValidationError if critical checks fail.
@@ -152,6 +207,7 @@ def run_startup_validation() -> None:
         "session_store": validate_session_store_registered(),
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": validate_database_connectivity(),
     }
 
     errors = []
@@ -212,6 +268,7 @@ async def health_check() -> HealthCheckResult:
         "session_store": validate_session_store_registered(),
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": validate_database_connectivity(),
     }
 
     # Convert to bool dict and collect errors/warnings

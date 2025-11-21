@@ -140,11 +140,32 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             # Re-raise to prevent application from starting with invalid config
             raise
 
+        # Initialize GDPR storage at startup (fail-fast)
+        from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage
+
+        try:
+            logger.info(f"Initializing GDPR storage (backend: {container.settings.gdpr_storage_backend})")
+            await initialize_gdpr_storage(
+                backend=container.settings.gdpr_storage_backend,  # type: ignore[arg-type]
+                postgres_url=container.settings.gdpr_postgres_url,
+            )
+            logger.info("GDPR storage initialized successfully")
+        except Exception as e:
+            logger.error(f"GDPR storage initialization failed: {e}")
+            # Re-raise to prevent application from starting without GDPR storage
+            raise
+
     yield
 
     # Shutdown
     if container:
         logger.info("Application shutting down")
+
+        # Reset GDPR storage on shutdown
+        from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
+
+        reset_gdpr_storage()
+        logger.info("GDPR storage reset")
 
 
 def customize_openapi(app: FastAPI) -> dict[str, Any]:

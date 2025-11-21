@@ -62,10 +62,14 @@ services:
       - "8001:8001"  # Health check
 
     depends_on:
-      - redis
-      - postgres
-      - openfga
-      - qdrant
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      openfga:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
 
     networks:
       - mcp-network

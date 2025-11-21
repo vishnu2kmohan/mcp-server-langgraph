@@ -65,6 +65,8 @@ async def create_postgres_storage(postgres_url: str) -> GDPRStorage:
     """
     Create PostgreSQL-backed GDPR storage (RECOMMENDED for production)
 
+    Uses retry logic with exponential backoff to handle transient connection failures.
+
     Args:
         postgres_url: PostgreSQL connection URL
                      Example: postgresql://user:pass@localhost:5432/gdpr
@@ -73,18 +75,37 @@ async def create_postgres_storage(postgres_url: str) -> GDPRStorage:
         GDPRStorage instance with PostgreSQL backends
 
     Raises:
-        asyncpg.PostgresError: If connection fails
+        asyncpg.PostgresError: If connection fails after retries
+        Exception: If retries are exhausted
 
     Example:
         >>> storage = await create_postgres_storage("postgresql://postgres:postgres@localhost:5432/gdpr")
         >>> profile = await storage.user_profiles.get("user:alice")
     """
-    # Create connection pool
-    pool = await asyncpg.create_pool(
-        postgres_url,
-        min_size=2,
-        max_size=10,
-        command_timeout=60,
+    from mcp_server_langgraph.utils.retry import retry_with_backoff
+
+    async def _create_pool() -> asyncpg.Pool:
+        """Helper to create connection pool with retry logic"""
+        pool = await asyncpg.create_pool(
+            postgres_url,
+            min_size=2,
+            max_size=10,
+            command_timeout=60,
+        )
+        if pool is None:
+            raise RuntimeError("Failed to create connection pool")
+        return pool
+
+    # Create connection pool with retry logic
+    # Retries: 3, Backoff: 1s, 2s, 4s (with jitter)
+    pool = await retry_with_backoff(
+        _create_pool,
+        max_retries=3,
+        initial_delay=1.0,
+        max_delay=8.0,
+        exponential_base=2.0,
+        jitter=True,
+        max_timeout=60.0,
     )
 
     # Create storage instances
