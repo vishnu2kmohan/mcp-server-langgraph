@@ -14,6 +14,8 @@ from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoade
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def mock_settings():

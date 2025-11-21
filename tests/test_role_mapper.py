@@ -19,6 +19,8 @@ import pytest
 from mcp_server_langgraph.auth.keycloak import KeycloakUser
 from mcp_server_langgraph.auth.role_mapper import ConditionalMapping, GroupMapping, RoleMapper, SimpleRoleMapping
 
+pytestmark = pytest.mark.unit
+
 # ============================================================================
 # SimpleRoleMapping Tests
 # ============================================================================

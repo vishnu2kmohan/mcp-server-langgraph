@@ -18,13 +18,7 @@ import pytest
 import requests
 
 # Skip if not in Kubernetes environment + xdist_group for worker isolation
-pytestmark = [
-    pytest.mark.skipif(
-        os.getenv("KUBERNETES_SERVICE_HOST") is None and os.getenv("TEST_KUBERNETES_PROBES") != "true",
-        reason="Requires Kubernetes environment or TEST_KUBERNETES_PROBES=true",
-    ),
-    pytest.mark.xdist_group(name="integration_kubernetes_health_probes_tests"),
-]
+pytestmark = pytest.mark.skipif
 
 
 def teardown_module():

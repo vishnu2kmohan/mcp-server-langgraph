@@ -16,6 +16,8 @@ import pytest
 
 from tests.validation_lib import test_ids
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.unit
 @pytest.mark.meta

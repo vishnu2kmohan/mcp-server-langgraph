@@ -23,6 +23,8 @@ import pytest
 
 from tests.conftest import requires_tool
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="testdockertestimageassets")
 class TestDockerTestImageAssets:

@@ -12,6 +12,8 @@ import pytest
 from mcp_server_langgraph.core.exceptions import AuthorizationError, ExternalServiceError, RetryExhaustedError, ValidationError
 from mcp_server_langgraph.resilience.retry import RetryStrategy, retry_with_backoff, should_retry_exception
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testretrybasics")
 class TestRetryBasics:

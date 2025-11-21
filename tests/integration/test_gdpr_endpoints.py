@@ -16,6 +16,8 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_auth_user() -> dict[str, Any]:

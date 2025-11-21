@@ -11,6 +11,8 @@ import pytest
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def llm_factory():

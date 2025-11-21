@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="meta_mypy_enforcement")

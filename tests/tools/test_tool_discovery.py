@@ -13,6 +13,9 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.tools.tool_discovery import (
+
+pytestmark = pytest.mark.unit
+
     SearchToolsInput,
     _filter_tools_by_category,
     _filter_tools_by_query,

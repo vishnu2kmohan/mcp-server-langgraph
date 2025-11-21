@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 # This import will fail initially - that's expected in TDD!
 try:
     from mcp_server_langgraph.execution import ExecutionResult

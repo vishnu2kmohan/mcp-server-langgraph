@@ -17,7 +17,7 @@ from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
 from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_audit_log_tests")]
+pytestmark = pytest.mark.integration
 
 
 def teardown_module():

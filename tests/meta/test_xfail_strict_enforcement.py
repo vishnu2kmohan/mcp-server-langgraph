@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 # Test files intentionally exempt from strict xfail requirement
 # Each entry must have a documented reason
 XFAIL_STRICT_EXEMPT_FILES: set[str] = {

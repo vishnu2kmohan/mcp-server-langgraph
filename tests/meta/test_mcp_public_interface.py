@@ -13,6 +13,8 @@ import inspect
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="mcp_public_interface")

@@ -24,6 +24,8 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestFastAPIStartupValidation:

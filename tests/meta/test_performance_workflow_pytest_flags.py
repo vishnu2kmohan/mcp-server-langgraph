@@ -17,7 +17,7 @@ import pytest
 import yaml
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def test_performance_workflow_overrides_addopts_to_exclude_xdist_flags():

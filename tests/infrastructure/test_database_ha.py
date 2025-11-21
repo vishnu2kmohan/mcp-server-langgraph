@@ -13,6 +13,8 @@ from typing import Any
 import pytest
 import yaml
 
+pytestmark = pytest.mark.infrastructure
+
 
 @pytest.mark.unit
 @pytest.mark.infrastructure

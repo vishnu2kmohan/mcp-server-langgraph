@@ -15,6 +15,8 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.compliance.gdpr.storage import InMemoryAuditLogStore, InMemoryConversationStore
 from mcp_server_langgraph.compliance.retention import DataRetentionService, RetentionPolicy, RetentionResult
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_session_store():

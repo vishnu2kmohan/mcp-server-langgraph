@@ -13,6 +13,8 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from mcp_server_langgraph.core.context_manager import CompactionResult, ContextManager, compact_if_needed
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def context_manager():

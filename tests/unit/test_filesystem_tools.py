@@ -10,6 +10,8 @@ import pytest
 
 from mcp_server_langgraph.tools.filesystem_tools import list_directory, read_file, search_files
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testreadfile")

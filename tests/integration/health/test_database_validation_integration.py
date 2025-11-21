@@ -22,6 +22,8 @@ import pytest
 
 from mcp_server_langgraph.health.database_checks import DatabaseValidator, Environment, validate_database_architecture
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(autouse=True)
 def setup_test_environment(monkeypatch, integration_test_env):

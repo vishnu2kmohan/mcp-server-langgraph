@@ -15,6 +15,8 @@ import pytest
 
 from mcp_server_langgraph.cli.init import init_project
 
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Project Creation Tests
 # ==============================================================================

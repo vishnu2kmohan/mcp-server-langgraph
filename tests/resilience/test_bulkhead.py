@@ -12,6 +12,9 @@ import pytest
 
 from mcp_server_langgraph.core.exceptions import BulkheadRejectedError
 from mcp_server_langgraph.resilience.bulkhead import (
+
+pytestmark = pytest.mark.unit
+
     BulkheadContext,
     get_bulkhead,
     get_bulkhead_stats,

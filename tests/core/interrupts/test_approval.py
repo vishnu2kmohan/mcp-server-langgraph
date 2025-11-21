@@ -27,6 +27,9 @@ except ImportError:
     pytest.skip("freezegun not installed (optional test dependency)", allow_module_level=True)
 
 from mcp_server_langgraph.core.interrupts.approval import (
+
+pytestmark = pytest.mark.unit
+
     ApprovalNode,
     ApprovalRequired,
     ApprovalResponse,

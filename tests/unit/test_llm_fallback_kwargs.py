@@ -15,15 +15,7 @@ from mcp_server_langgraph.llm.factory import LLMFactory
 
 # Use shared circuit breaker config from conftest.py
 # Mark as llm tests (expensive, require API keys, skipped in CI)
-pytestmark = [
-    pytest.mark.unit,
-    pytest.mark.llm,
-    pytest.mark.skipif(
-        os.getenv("CI") == "true",
-        reason="LLM tests require real API keys and are expensive for CI - run in scheduled workflow",
-    ),
-    pytest.mark.usefixtures("test_circuit_breaker_config"),
-]
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture

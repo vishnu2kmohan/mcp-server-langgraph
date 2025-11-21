@@ -33,6 +33,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.testclient import TestClient
 from starlette import status
 
+pytestmark = pytest.mark.regression
+
 # ==============================================================================
 # Test Fixtures and Setup
 # ==============================================================================

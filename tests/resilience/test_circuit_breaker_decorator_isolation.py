@@ -35,6 +35,9 @@ import pytest
 
 from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 from mcp_server_langgraph.resilience.circuit_breaker import (
+
+pytestmark = pytest.mark.unit
+
     circuit_breaker,
     get_circuit_breaker,
     reset_all_circuit_breakers,

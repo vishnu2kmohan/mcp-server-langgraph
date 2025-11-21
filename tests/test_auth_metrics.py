@@ -12,6 +12,8 @@ import pytest
 
 from mcp_server_langgraph.auth import metrics
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testmetricdefinitions")

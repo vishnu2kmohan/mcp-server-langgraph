@@ -18,6 +18,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter, log_with_context, setup_json_logging
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def tracer_provider(monkeypatch):

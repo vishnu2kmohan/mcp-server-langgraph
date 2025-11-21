@@ -11,6 +11,8 @@ integration tests and production deployment verification.
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 def test_module_level_logger_uses_standard_logging():

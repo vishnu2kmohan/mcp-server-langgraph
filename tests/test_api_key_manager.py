@@ -23,6 +23,8 @@ from redis.asyncio import Redis
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_keycloak_client():

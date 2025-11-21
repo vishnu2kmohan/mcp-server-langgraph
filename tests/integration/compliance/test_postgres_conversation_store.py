@@ -16,7 +16,7 @@ from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConver
 from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserProfile
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_conversation_tests")]
+pytestmark = pytest.mark.integration
 
 
 def teardown_module():

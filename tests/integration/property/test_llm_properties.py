@@ -12,6 +12,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
+pytestmark = pytest.mark.integration
+
 # Hypothesis strategies
 valid_providers = st.sampled_from(["anthropic", "openai", "google", "gemini", "azure", "bedrock", "ollama"])
 

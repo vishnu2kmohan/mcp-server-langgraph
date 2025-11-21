@@ -13,6 +13,8 @@ import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.api
+
 
 @pytest.mark.diagnostic
 @pytest.mark.unit

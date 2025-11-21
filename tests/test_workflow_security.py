@@ -17,7 +17,7 @@ import pytest
 import yaml
 
 # Mark this as both unit and meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def get_workflow_files():

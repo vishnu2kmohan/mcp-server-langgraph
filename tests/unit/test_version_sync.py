@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 # Python 3.11+ has tomllib built-in, older versions need tomli
 if sys.version_info >= (3, 11):
     import tomllib

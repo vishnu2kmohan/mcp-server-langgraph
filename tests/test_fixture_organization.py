@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = [pytest.mark.unit]
+pytestmark = pytest.mark.unit
 
 
 def find_autouse_fixtures(test_dir: Path) -> dict[str, list[tuple[str, int]]]:

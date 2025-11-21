@@ -27,6 +27,8 @@ from fastapi import HTTPException
 from mcp_server_langgraph.api.scim import _require_admin_or_scim_role
 from mcp_server_langgraph.api.service_principals import _validate_user_association_permission
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit

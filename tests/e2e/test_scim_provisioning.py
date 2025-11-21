@@ -28,11 +28,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082")
 SCIM_BASE_URL = f"{API_BASE_URL}/scim/v2"
 
-pytestmark = [
-    pytest.mark.e2e,
-    pytest.mark.scim,
-    pytest.mark.xdist_group(name="e2e_scim"),  # Prevent concurrent E2E runs
-]
+pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture(scope="module")

@@ -16,6 +16,8 @@ from fastapi import FastAPI
 
 from mcp_server_langgraph.app import create_app
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="api_app_configuration_tests")

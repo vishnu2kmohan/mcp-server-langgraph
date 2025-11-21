@@ -9,6 +9,8 @@ import gc
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="testlanggraphplatformdeployment")
 class TestLangGraphPlatformDeployment:

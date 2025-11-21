@@ -15,6 +15,8 @@ from click.testing import CliRunner
 
 from mcp_server_langgraph.cli import cli
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testclismoke")

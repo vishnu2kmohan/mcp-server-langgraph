@@ -11,6 +11,8 @@ import pytest
 
 from mcp_server_langgraph.core.config import Settings
 
+pytestmark = pytest.mark.unit
+
 # Test model constants - use obviously fake names to prevent time-bomb failures
 # when real models are released (e.g., when OpenAI actually releases GPT-5)
 TEST_NONEXISTENT_OPENAI_MODEL = "gpt-999-test-nonexistent"

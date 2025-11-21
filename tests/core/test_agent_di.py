@@ -14,6 +14,8 @@ import gc
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="testagentfactory")
 class TestAgentFactory:

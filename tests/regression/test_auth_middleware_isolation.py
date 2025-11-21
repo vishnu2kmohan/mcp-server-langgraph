@@ -34,6 +34,8 @@ import pytest
 import mcp_server_langgraph.auth.middleware as middleware
 from mcp_server_langgraph.auth.middleware import set_global_auth_middleware
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.xdist_group(name="auth_middleware_isolation")
 class TestAuthMiddlewareIsolation:

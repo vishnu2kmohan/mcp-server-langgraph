@@ -13,6 +13,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.api.health import (
+
+pytestmark = pytest.mark.integration
+
     SystemValidationError,
     router,
     run_startup_validation,

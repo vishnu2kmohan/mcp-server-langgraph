@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_client() -> Generator[TestClient, None, None]:

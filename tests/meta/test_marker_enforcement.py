@@ -27,6 +27,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 # Test files that are intentionally exempt from marker requirements
 # Each entry must have a documented reason
 MARKER_EXEMPT_FILES: set[str] = {

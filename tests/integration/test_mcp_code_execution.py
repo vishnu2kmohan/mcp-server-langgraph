@@ -13,6 +13,8 @@ import pytest
 # These imports should work since MCP servers exist
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.mcp

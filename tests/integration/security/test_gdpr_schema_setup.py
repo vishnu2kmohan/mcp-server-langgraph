@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.integration, pytest.mark.security, pytest.mark.gdpr, pytest.mark.database]
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.xdist_group(name="integration_security_gdpr_schema_tests")

@@ -11,6 +11,8 @@ from unittest.mock import Mock, patch
 import httpx
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="e2e_real_clients_resilience_tests")

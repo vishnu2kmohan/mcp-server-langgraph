@@ -24,6 +24,8 @@ import pytest
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, ConsentRecord
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio

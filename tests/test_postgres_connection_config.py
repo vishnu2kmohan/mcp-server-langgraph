@@ -16,6 +16,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.precommit

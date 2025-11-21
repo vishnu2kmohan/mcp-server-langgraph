@@ -39,6 +39,8 @@ import os
 import pytest
 from fastapi import FastAPI
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.unit
 @pytest.mark.regression

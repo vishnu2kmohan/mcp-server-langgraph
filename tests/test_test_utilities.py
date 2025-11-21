@@ -16,6 +16,8 @@ import pytest
 from mcp_server_langgraph.core.config import settings
 from tests.conftest import requires_tool
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="utilities_tests")
 class TestRequiresToolDecorator:

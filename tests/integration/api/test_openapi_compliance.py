@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 # Mark all tests in this file as integration and contract tests
-pytestmark = [pytest.mark.integration, pytest.mark.contract]
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture

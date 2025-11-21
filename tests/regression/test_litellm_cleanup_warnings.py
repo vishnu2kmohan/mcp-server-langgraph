@@ -47,6 +47,8 @@ import pytest
 
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.unit
 @pytest.mark.regression

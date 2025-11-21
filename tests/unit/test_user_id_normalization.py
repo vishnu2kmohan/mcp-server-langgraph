@@ -8,6 +8,8 @@ import pytest
 
 from mcp_server_langgraph.auth.middleware import normalize_user_id
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 def test_normalize_plain_username():

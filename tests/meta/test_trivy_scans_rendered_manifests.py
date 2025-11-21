@@ -21,7 +21,7 @@ import yaml
 from tests.conftest import requires_tool
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():

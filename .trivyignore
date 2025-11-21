@@ -1,0 +1,3 @@
+# Trivy Ignore File
+# ArgoCD ConfigMap false positives - these reference Secrets, don't store them
+AVD-KSV-0109

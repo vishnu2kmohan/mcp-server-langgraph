@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft7Validator, ValidationError
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mcp_schemas():

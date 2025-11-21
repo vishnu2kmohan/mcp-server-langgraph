@@ -12,6 +12,8 @@ import pytest
 # This import will work but settings won't have execution fields yet
 from mcp_server_langgraph.core.config import Settings
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testcodeexecutionsettings")

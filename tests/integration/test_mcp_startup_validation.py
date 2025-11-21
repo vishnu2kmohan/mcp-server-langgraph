@@ -20,6 +20,8 @@ import pytest
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="integration_mcp_startup_validation_tests")
 class TestMCPServerStartupValidation:

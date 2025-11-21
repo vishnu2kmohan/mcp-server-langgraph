@@ -23,6 +23,8 @@ from typing import Any
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # Helper functions for kubectl commands
 def run_kubectl(args: list[str], namespace: str | None = None, check: bool = True) -> dict[str, Any]:

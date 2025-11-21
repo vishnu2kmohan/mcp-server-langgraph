@@ -10,6 +10,9 @@ from datetime import datetime
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.storage import (
+
+pytestmark = pytest.mark.unit
+
     AuditLogEntry,
     ConsentRecord,
     Conversation,

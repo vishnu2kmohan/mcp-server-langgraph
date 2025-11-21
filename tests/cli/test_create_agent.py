@@ -19,6 +19,8 @@ import pytest
 
 from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agent
 
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Test generate_agent Function
 # ==============================================================================

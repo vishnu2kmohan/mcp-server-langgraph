@@ -16,6 +16,8 @@ from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionServi
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
 
+pytestmark = pytest.mark.integration
+
 # ==================== Test Fixtures ====================
 
 

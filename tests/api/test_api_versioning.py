@@ -12,6 +12,8 @@ import gc
 import pytest
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.api
+
 
 @pytest.fixture
 def test_client(monkeypatch):

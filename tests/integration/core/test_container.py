@@ -19,6 +19,9 @@ import pytest
 # We'll create this module after writing the tests
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.container import (
+
+pytestmark = pytest.mark.integration
+
     ApplicationContainer,
     AuthProvider,
     ContainerConfig,

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 # Obsolete scripts that should NOT be referenced in documentation

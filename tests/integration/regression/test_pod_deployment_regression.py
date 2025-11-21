@@ -26,6 +26,8 @@ import yaml
 
 from tests.conftest import requires_tool
 
+pytestmark = pytest.mark.integration
+
 
 # Test configuration - Environment-agnostic path resolution
 def _find_project_root() -> Path:

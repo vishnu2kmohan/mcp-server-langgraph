@@ -26,6 +26,8 @@ import pytest
 
 from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetMonitor, BudgetPeriod
 
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Test Fixtures
 # ==============================================================================

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 

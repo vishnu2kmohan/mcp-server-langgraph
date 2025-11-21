@@ -15,6 +15,8 @@ from fastapi import FastAPI, Request, Response
 from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.middleware.session_timeout import SessionTimeoutMiddleware, create_session_timeout_middleware
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_session_store():

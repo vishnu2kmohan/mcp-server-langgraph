@@ -22,6 +22,8 @@ from mcp_server_langgraph.compliance.soc2.evidence import (
 )
 from mcp_server_langgraph.schedulers.compliance import AccessReviewItem, AccessReviewReport, ComplianceScheduler
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_session_store():

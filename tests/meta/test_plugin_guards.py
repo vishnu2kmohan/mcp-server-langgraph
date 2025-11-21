@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.xdist_group(name="testpluginclimodeguards")
 class TestPluginCLIModeGuards:

@@ -16,6 +16,8 @@ from mcp_server_langgraph.api.scim import create_group, create_user, delete_user
 from tests.conftest import get_user_id
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="scim_security_tests")
 class TestSCIMSecurityControls:

@@ -17,6 +17,8 @@ from langchain_core.messages import HumanMessage
 
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="vertex_ai_auth_tests")

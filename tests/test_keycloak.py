@@ -27,6 +27,8 @@ from mcp_server_langgraph.auth.keycloak import (  # noqa: E402
 )
 from tests.conftest import get_user_id  # noqa: E402
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def keycloak_config():

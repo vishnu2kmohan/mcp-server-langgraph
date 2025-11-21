@@ -17,6 +17,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+pytestmark = pytest.mark.deployment
+
 # Define project root relative to test file
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DEPLOYMENTS_DIR = PROJECT_ROOT / "deployments"

@@ -44,7 +44,7 @@ from fastapi.security import HTTPBearer
 from fastapi.testclient import TestClient
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def create_test_endpoint_with_auth():

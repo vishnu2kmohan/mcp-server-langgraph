@@ -19,6 +19,8 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.unit
 @pytest.mark.regression

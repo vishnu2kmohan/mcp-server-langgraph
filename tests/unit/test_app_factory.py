@@ -12,6 +12,8 @@ from fastapi import FastAPI
 
 from mcp_server_langgraph.core.config import Settings
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testappfactorypattern")

@@ -21,6 +21,8 @@ from fastapi.testclient import TestClient
 from mcp_server_langgraph.api.error_handlers import create_error_response, register_exception_handlers
 from mcp_server_langgraph.core.exceptions import AuthorizationError, InvalidCredentialsError, RateLimitExceededError
 
+pytestmark = pytest.mark.api
+
 # ==============================================================================
 # Test Fixtures
 # ==============================================================================

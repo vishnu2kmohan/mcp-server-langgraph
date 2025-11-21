@@ -28,6 +28,9 @@ except ImportError:
 
 
 from mcp_server_langgraph.core.interrupts.interrupts import (
+
+pytestmark = pytest.mark.unit
+
     InterruptConfig,
     InterruptHandler,
     InterruptType,

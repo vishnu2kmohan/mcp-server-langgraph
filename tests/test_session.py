@@ -27,6 +27,8 @@ except ImportError:
 from mcp_server_langgraph.auth.session import InMemorySessionStore, RedisSessionStore, create_session_store
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="session_tests")
 class TestInMemorySessionStore:

@@ -10,6 +10,9 @@ metadata:
   labels:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
+  annotations:
+    # Trivy exception: usernameSecret/passwordSecret are field names referencing a Secret, not storing secrets
+    trivy.aquasecurity.com/ignore: AVD-KSV-0109
 data:
   # Enable status badge
   statusbadge.enabled: "true"
@@ -124,6 +127,9 @@ metadata:
   labels:
     app.kubernetes.io/name: argocd-notifications-cm
     app.kubernetes.io/part-of: argocd
+  annotations:
+    # Trivy exception: token uses ArgoCD's $variable syntax to reference argocd-notifications-secret
+    trivy.aquasecurity.com/ignore: AVD-KSV-0109
 data:
   # Service configuration (Slack example)
   service.slack: |

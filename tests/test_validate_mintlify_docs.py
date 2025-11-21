@@ -19,7 +19,7 @@ import pytest
 
 # Mark this as both unit and meta test to ensure it runs in CI
 # Note: Individual tests may be skipped if validation module not available
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))

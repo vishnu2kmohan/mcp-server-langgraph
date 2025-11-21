@@ -31,6 +31,8 @@ from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from tests.conftest import get_user_id
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit

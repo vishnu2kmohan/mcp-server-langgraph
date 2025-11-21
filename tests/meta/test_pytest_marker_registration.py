@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 # Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
 try:
     import tomllib

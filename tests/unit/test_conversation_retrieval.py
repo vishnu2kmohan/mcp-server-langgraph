@@ -13,6 +13,8 @@ from langchain_core.messages import AIMessage, HumanMessage
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_auth():

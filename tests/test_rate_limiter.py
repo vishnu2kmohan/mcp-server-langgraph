@@ -7,6 +7,9 @@ import pytest
 from fastapi import Request
 
 from mcp_server_langgraph.middleware.rate_limiter import (
+
+pytestmark = pytest.mark.unit
+
     get_dynamic_limit,
     get_rate_limit_for_tier,
     get_rate_limit_key,
