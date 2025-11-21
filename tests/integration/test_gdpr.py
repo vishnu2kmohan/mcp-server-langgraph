@@ -330,13 +330,23 @@ class TestGDPREndpoints:
 
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
         from mcp_server_langgraph.auth.session import get_session_store
         from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
+
+        # Add test middleware to set request.state.user (required by GDPR handlers)
+        # This replaces the previous bearer_scheme/get_current_user dependency overrides
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                request.state.user = mock_current_user
+                response = await call_next(request)
+                return response
+
+        app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
 
         # Mock session store with proper return values
@@ -405,9 +415,6 @@ class TestGDPREndpoints:
 
         # Define async override functions for async dependencies
         # CRITICAL: Must use async def for async dependencies (not sync lambdas)
-        async def mock_get_current_user_async():
-            return mock_current_user
-
         async def mock_get_session_store_async():
             return mock_session_store
 
@@ -415,9 +422,7 @@ class TestGDPREndpoints:
             return mock_gdpr_storage
 
         # Override dependencies
-        # CRITICAL: Override bearer_scheme to prevent singleton pollution (per PYTEST_XDIST_BEST_PRACTICES.md)
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        # Note: bearer_scheme and get_current_user no longer needed - TestAuthMiddleware handles auth
         app.dependency_overrides[get_session_store] = mock_get_session_store_async
         app.dependency_overrides[get_gdpr_storage] = mock_get_gdpr_storage_async
 

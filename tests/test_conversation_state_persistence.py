@@ -46,6 +46,13 @@ def mock_llm():
 class TestConversationStatePersistence:
     """Test that conversation state is preserved across agent operations."""
 
+    def setup_method(self):
+        """Reset agent graph singleton before each test."""
+        import mcp_server_langgraph.core.agent as agent_module
+
+        # Reset agent graph cache to ensure patches apply
+        agent_module._agent_graph_cache = None
+
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
@@ -118,13 +125,18 @@ class TestConversationStatePersistence:
             "request_id": "test-request",
         }
 
-        # Mock LLM to return different responses each time
-        responses = [
-            AIMessage(content="Response 1"),
-            AIMessage(content="Response 2"),
-            AIMessage(content="Response 3"),
-        ]
-        mock_llm.ainvoke = AsyncMock(side_effect=responses)
+        # Create a callable mock that returns responses in sequence across multiple graph invocations
+        # The graph calls the LLM multiple times per invocation (router + generate_response)
+        # We want to return consistent responses for all calls within each invocation
+        invocation_responses = ["Response 1", "Response 2", "Response 3"]
+        current_invocation = [0]  # Use list to allow mutation in nested function
+
+        async def mock_ainvoke(*args, **kwargs):
+            """Mock that returns appropriate response for current invocation"""
+            idx = min(current_invocation[0], len(invocation_responses) - 1)
+            return AIMessage(content=invocation_responses[idx])
+
+        mock_llm.ainvoke = mock_ainvoke
 
         with patch("mcp_server_langgraph.core.agent.create_llm_from_config", return_value=mock_llm):
             graph = create_agent_graph(test_settings)
@@ -132,11 +144,13 @@ class TestConversationStatePersistence:
             # Act: Run graph THREE times
             state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test1"}})
             assert len(state["messages"]) == 2, f"After 1st call: expected 2 messages, got {len(state['messages'])}"
+            current_invocation[0] = 1  # Move to next response
 
             # Add a human message for second turn
             state["messages"] = state["messages"] + [HumanMessage(content="Question 2")]
             state = await graph.ainvoke(state, config={"configurable": {"thread_id": "test2"}})
             assert len(state["messages"]) == 4, f"After 2nd call: expected 4 messages, got {len(state['messages'])}"
+            current_invocation[0] = 2  # Move to next response
 
             # Add a human message for third turn
             state["messages"] = state["messages"] + [HumanMessage(content="Question 3")]

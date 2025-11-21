@@ -263,6 +263,7 @@ def init_test_observability():
     - No file logging (console only)
     - LangSmith tracing disabled
     - OpenTelemetry backend for tracing
+    - Default test environment variables to suppress warnings
 
     Session scope ensures observability is initialized exactly once per test run,
     avoiding duplicate initialization and improving test performance.
@@ -273,8 +274,16 @@ def init_test_observability():
     IMPORTANT: Properly shuts down OpenTelemetry exporters and processors after
     test session to prevent thread leaks and memory bloat.
     """
+    import os
+
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
+
+    # Set default test environment variables to suppress warnings
+    # These are only set if not already defined (allowing tests to override)
+    os.environ.setdefault("OPENFGA_STORE_ID", "test-store-id")
+    os.environ.setdefault("OPENFGA_MODEL_ID", "test-model-id")
+    os.environ.setdefault("GOOGLE_API_KEY", "test-google-api-key")
 
     if not is_initialized():
         test_settings = Settings(

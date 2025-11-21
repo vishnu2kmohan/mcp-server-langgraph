@@ -25,8 +25,13 @@ class TestBearerSchemeOverrideDiagnostic:
     def setup_method(self):
         """Reset state BEFORE test to prevent cross-test pollution"""
         import mcp_server_langgraph.auth.middleware as middleware_module
+        from mcp_server_langgraph.core.dependencies import reset_singleton_dependencies
 
+        # Reset auth middleware singleton
         middleware_module._global_auth_middleware = None
+
+        # Reset dependency singletons (KeycloakClient, OpenFGAClient, ServicePrincipalManager, etc.)
+        reset_singleton_dependencies()
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
@@ -171,16 +176,22 @@ class TestBearerSchemeOverrideDiagnostic:
 
         from mcp_server_langgraph.api.service_principals import router
         from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-        from mcp_server_langgraph.core.dependencies import get_openfga_client, get_service_principal_manager
+        from mcp_server_langgraph.core.dependencies import (
+            get_keycloak_client,
+            get_openfga_client,
+            get_service_principal_manager,
+        )
 
         # Create fresh app
         app = FastAPI()
 
         # Create mocks
+        from src.mcp_server_langgraph.auth.keycloak import KeycloakClient
         from src.mcp_server_langgraph.auth.openfga import OpenFGAClient
         from src.mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
+        mock_keycloak = AsyncMock(spec=KeycloakClient)
         mock_current_user = {
             "user_id": "user:alice",
             "username": "alice",
@@ -192,6 +203,10 @@ class TestBearerSchemeOverrideDiagnostic:
         async def mock_get_current_user_async():
             print(f"  [DEBUG] mock_get_current_user_async called - returning {mock_current_user}")
             return mock_current_user
+
+        def mock_get_keycloak_sync():
+            print("  [DEBUG] mock_get_keycloak_sync called")
+            return mock_keycloak
 
         def mock_get_sp_manager_sync():
             print("  [DEBUG] mock_get_sp_manager_sync called")
@@ -208,6 +223,7 @@ class TestBearerSchemeOverrideDiagnostic:
         # Override dependencies
         print("[DEBUG] Setting dependency overrides...")
         app.dependency_overrides[bearer_scheme] = lambda: None
+        app.dependency_overrides[get_keycloak_client] = mock_get_keycloak_sync
         app.dependency_overrides[get_service_principal_manager] = mock_get_sp_manager_sync
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
         app.dependency_overrides[get_openfga_client] = mock_get_openfga_sync

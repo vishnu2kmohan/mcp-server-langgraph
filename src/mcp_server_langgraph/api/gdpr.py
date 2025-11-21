@@ -13,10 +13,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
@@ -109,7 +108,7 @@ class ConsentResponse(BaseModel):
 
 @router.get("/me/data", response_model=UserDataExport)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_user_data(
-    user: dict[str, Any] = Depends(get_current_user),
+    request: Request,
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> UserDataExport:
@@ -131,7 +130,15 @@ async def get_user_data(
     - Consents
     """
     with tracer.start_as_current_span("gdpr.get_user_data"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         username = user.get("username")
 
@@ -164,7 +171,7 @@ async def get_user_data(
 
 @router.get("/me/export", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def export_user_data(
-    user: dict[str, Any] = Depends(get_current_user),
+    request: Request,
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
@@ -181,7 +188,15 @@ async def export_user_data(
     **Response**: File download in requested format
     """
     with tracer.start_as_current_span("gdpr.export_user_data"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = str(user.get("user_id") or "")
         username = str(user.get("username") or "")
         email = str(user.get("email", f"{username}@example.com"))
@@ -217,8 +232,8 @@ async def export_user_data(
 
 @router.patch("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def update_user_profile(
+    request: Request,
     profile_update: UserProfileUpdate,
-    user: dict[str, Any] = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Update user profile (GDPR Article 16 - Right to Rectification)
@@ -232,7 +247,15 @@ async def update_user_profile(
     **Response**: Updated user profile
     """
     with tracer.start_as_current_span("gdpr.update_user_profile"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         username = user.get("username")
 
@@ -274,7 +297,7 @@ async def update_user_profile(
 
 @router.delete("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def delete_user_account(
-    user: dict[str, Any] = Depends(get_current_user),
+    request: Request,
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
@@ -309,7 +332,15 @@ async def delete_user_account(
                 detail="Account deletion requires confirmation. Set confirm=true to proceed.",
             )
 
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = str(user.get("user_id") or "")
         username = str(user.get("username") or "")
 
@@ -368,8 +399,8 @@ async def delete_user_account(
 
 @router.post("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def update_consent(
+    request: Request,
     consent: ConsentRecord,
-    user: dict[str, Any] = Depends(get_current_user),
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> ConsentResponse:
     """
@@ -383,7 +414,15 @@ async def update_consent(
     **Response**: Current consent status for all types
     """
     with tracer.start_as_current_span("gdpr.update_consent"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         if not user_id:
             raise HTTPException(
@@ -442,7 +481,7 @@ async def update_consent(
 
 @router.get("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_consent_status(
-    user: dict[str, Any] = Depends(get_current_user),
+    request: Request,
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
 ) -> ConsentResponse:
     """
@@ -453,7 +492,15 @@ async def get_consent_status(
     **Response**: Current consent status for all consent types
     """
     with tracer.start_as_current_span("gdpr.get_consent_status"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         if not user_id:
             raise HTTPException(

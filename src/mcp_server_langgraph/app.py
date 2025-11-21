@@ -17,8 +17,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
+from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation
+from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
@@ -88,6 +90,16 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             logger.info("CORS disabled (no allowed origins configured)")
         except RuntimeError:
             pass  # Graceful degradation if observability not initialized
+
+    # Authentication middleware - intercepts requests and verifies JWT tokens
+    # Sets request.state.user for authenticated requests
+    auth_middleware = AuthMiddleware(secret_key=config.jwt_secret_key, settings=config)
+    set_global_auth_middleware(auth_middleware)  # Set global instance for dependency injection
+    app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
+    try:
+        logger.info("Auth request middleware enabled")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
 
     # Rate limiting - setup function registers middleware and exception handlers
     setup_rate_limiting(app)
