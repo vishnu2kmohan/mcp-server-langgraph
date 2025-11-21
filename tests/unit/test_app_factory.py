@@ -182,7 +182,7 @@ class TestAppFactoryRouterMounting:
             client = TestClient(app)
 
             # When: Request health endpoint
-            response = client.get("/health")
+            response = client.get("/api/v1/health")
 
             # Then: Should return 200
             assert response.status_code == 200
@@ -231,7 +231,7 @@ class TestAppFactoryRouterMounting:
             client = TestClient(app)
 
             # When: Request health endpoint
-            response = client.get("/health")
+            response = client.get("/api/v1/health")
 
             # Then: Should return 200
             assert response.status_code == 200

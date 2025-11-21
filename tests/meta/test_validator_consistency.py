@@ -20,7 +20,8 @@ from textwrap import dedent
 
 import pytest
 
-from tests.validation_lib import async_mocks, memory_safety, test_ids
+from tests.validation_lib import async_mocks, memory_safety
+from scripts.validation import validate_ids as test_ids
 
 pytestmark = pytest.mark.meta
 

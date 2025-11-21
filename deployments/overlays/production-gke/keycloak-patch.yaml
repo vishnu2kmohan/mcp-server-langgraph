@@ -36,6 +36,9 @@ spec:
           capabilities:
             drop:
               - ALL
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
 
       containers:
       - name: keycloak

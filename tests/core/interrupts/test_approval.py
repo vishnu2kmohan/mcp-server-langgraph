@@ -27,9 +27,6 @@ except ImportError:
     pytest.skip("freezegun not installed (optional test dependency)", allow_module_level=True)
 
 from mcp_server_langgraph.core.interrupts.approval import (
-
-pytestmark = pytest.mark.unit
-
     ApprovalNode,
     ApprovalRequired,
     ApprovalResponse,
@@ -39,6 +36,8 @@ pytestmark = pytest.mark.unit
     create_approval_workflow,
     reject_action,
 )
+
+pytestmark = [pytest.mark.unit]
 
 # ==============================================================================
 # ApprovalStatus Enum Tests

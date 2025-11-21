@@ -373,6 +373,7 @@ def get_project_modules() -> set[str]:
         "check_internal_links",  # Script for checking documentation links
         "validate_gke_autopilot_compliance",  # Script for GKE Autopilot validation
         "validate_pytest_markers",  # Script for pytest marker validation
+        "fix_missing_pytestmarks",  # Script for fixing missing pytestmark declarations
     }
 
 

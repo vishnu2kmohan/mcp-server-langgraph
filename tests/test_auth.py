@@ -575,8 +575,8 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
-        user = await get_current_user(request, credentials)
+        request.headers = {"Authorization": f"Bearer {token}"}
+        user = await get_current_user(request)
         assert user is not None
         assert user["username"] == "alice"
         assert user["user_id"] == get_user_id("alice")
@@ -593,9 +593,9 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid.jwt.token")
+        request.headers = {"Authorization": "Bearer invalid.jwt.token"}
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(request, credentials)
+            await get_current_user(request)
         assert exc_info.value.status_code == 401
         assert "Invalid token" in exc_info.value.detail
 
@@ -622,9 +622,9 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=expired_token)
+        request.headers = {"Authorization": f"Bearer {expired_token}"}
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(request, credentials)
+            await get_current_user(request)
         assert exc_info.value.status_code == 401
         assert "Token expired" in exc_info.value.detail
 
@@ -638,8 +638,9 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
+        request.headers = {}
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(request, credentials=None)
+            await get_current_user(request)
         assert exc_info.value.status_code == 401
         assert "Authentication required" in exc_info.value.detail
 
@@ -651,7 +652,8 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = {"user_id": get_user_id("bob"), "username": "bob", "roles": ["standard"], "email": "bob@acme.com"}
-        user = await get_current_user(request, credentials=None)
+        request.headers = {}
+        user = await get_current_user(request)
         assert user["username"] == "bob"
         assert user["user_id"] == get_user_id("bob")
 
@@ -677,8 +679,8 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=keycloak_token)
-        user = await get_current_user(request, credentials)
+        request.headers = {"Authorization": f"Bearer {keycloak_token}"}
+        user = await get_current_user(request)
         assert user["username"] == "alice"
         # Keycloak JWTs normalize to clean user:username format (no worker-safe IDs)
         expected_user_id = f"user:{user['username']}"
@@ -706,8 +708,8 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=legacy_token)
-        user = await get_current_user(request, credentials)
+        request.headers = {"Authorization": f"Bearer {legacy_token}"}
+        user = await get_current_user(request)
         assert user["username"] == "charlie"
         assert user["user_id"] == get_user_id("charlie")
 
@@ -736,8 +738,8 @@ class TestGetCurrentUser:
         request = MagicMock(spec=Request)
         request.state = MagicMock()
         request.state.user = None
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
-        user = await get_current_user(request, credentials)
+        request.headers = {"Authorization": f"Bearer {token}"}
+        user = await get_current_user(request)
         assert user["username"] == "dave"
         # Manually created JWTs normalize to clean user:username format (no worker-safe IDs)
         expected_user_id = f"user:{user['username']}"

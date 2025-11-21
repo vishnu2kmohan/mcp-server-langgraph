@@ -12,9 +12,6 @@ import gc
 import pytest
 
 from mcp_server_langgraph.auth.hipaa import (
-
-pytestmark = pytest.mark.unit
-
     DataIntegrityCheck,
     EmergencyAccessRequest,
     HIPAAControls,
@@ -22,6 +19,8 @@ pytestmark = pytest.mark.unit
     get_hipaa_controls,
     set_hipaa_controls,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.unit

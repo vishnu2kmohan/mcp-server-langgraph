@@ -17,6 +17,14 @@ repos:
   - id: check-json
   - id: check-toml
   - id: mixed-line-ending
+  - id: check-ast
+    name: Check Python AST (Syntax Validation)
+    description: 'Validates Python files can be parsed (no SyntaxError).
+
+      Prevents commits of syntactically invalid Python code.
+
+      Regression prevention for commit a57fcc95 (pytestmark inside imports).
+      '
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.8.4
   hooks:
@@ -740,14 +748,61 @@ repos:
 
       '
   - id: validate-pytest-markers
-    name: Validate Pytest Markers
+    name: Validate Pytest Markers & Placement
     entry: uv run python scripts/validate_pytest_markers.py
     language: python
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
-    description: 'Validates that all pytest.mark.* decorators used in tests are registered
+    description: 'Validates pytest marker registration and pytestmark placement.
 
-      in pyproject.toml. Prevents "PytestUnknownMarkWarning" errors in CI.
+
+      1. Checks all pytest.mark.* decorators are registered in pyproject.toml
+
+         (prevents "PytestUnknownMarkWarning" errors)
+
+
+      2. Validates pytestmark appears AFTER all imports (prevents SyntaxError)
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside import blocks causing SyntaxError
+
+      - Uses AST parsing to detect misplaced module-level pytestmark
+
+      - See: docs-internal/PYTESTMARK_GUIDELINES.md for placement rules
+
+      '
+  - id: validate-test-collection
+    name: Validate Pytest Can Collect All Tests
+    entry: bash -c 'uv run pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: false
+    description: 'Validates that pytest can successfully collect all test files.
+
+      Prevents test collection failures from:
+
+      - SyntaxError in test files
+
+      - ImportError from missing modules
+
+      - Invalid pytest markers
+
+
+      Runs test collection without executing tests (fast check).
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside imports causing collection failure
+
+      - Prevents ImportError from module relocations
+
+      - Ensures test suite integrity before commit
+
+
+      Regression prevention for commit a57fcc95.
 
       '
   - id: validate-fixture-organization

@@ -12,14 +12,13 @@ import pytest
 from langchain_core.messages import SystemMessage
 
 from mcp_server_langgraph.core.dynamic_context_loader import (
-
-pytestmark = pytest.mark.integration
-
     ContextReference,
     DynamicContextLoader,
     LoadedContext,
     search_and_load_context,
 )
+
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.fixture

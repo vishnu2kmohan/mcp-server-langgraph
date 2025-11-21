@@ -4,11 +4,15 @@ Validate that all pytest markers used in test files are registered in pyproject.
 
 This prevents the error: "PytestUnknownMarkWarning: Unknown pytest.mark.X"
 
+Also validates that pytestmark declarations appear AFTER all module-level imports,
+preventing SyntaxError from misplaced pytestmark assignments.
+
 Exit codes:
-    0 - All markers are registered
-    1 - Found unregistered markers
+    0 - All markers are registered and correctly placed
+    1 - Found unregistered markers or placement errors
 """
 
+import ast
 import re
 import sys
 from pathlib import Path
@@ -93,8 +97,9 @@ def get_test_files_without_markers() -> list[Path]:
     if not tests_dir.exists():
         return []
 
-    # Pattern matches: pytestmark = pytest.mark.xxx at module level
-    pytestmark_pattern = re.compile(r"^pytestmark\s*=\s*pytest\.mark\.\w+", re.MULTILINE)
+    # Pattern matches: pytestmark = pytest.mark.xxx or pytestmark = [pytest.mark.xxx, ...] at module level
+    # Handles both single-line and multi-line list declarations
+    pytestmark_pattern = re.compile(r"^pytestmark\s*=\s*(\[|pytest\.mark\.\w+)", re.MULTILINE)
 
     files_without_markers = []
 
@@ -112,6 +117,74 @@ def get_test_files_without_markers() -> list[Path]:
     return files_without_markers
 
 
+def validate_pytestmark_placement() -> list[str]:
+    """
+    Validate that pytestmark appears AFTER all module-level imports.
+
+    Uses AST parsing to detect pytestmark declarations placed inside or
+    between import statements, which causes SyntaxError.
+
+    Returns:
+        List of error messages (empty if all files are valid)
+
+    Example violation:
+        import pytest
+        pytestmark = pytest.mark.unit  # ❌ Before other imports
+        from pathlib import Path       # SyntaxError!
+
+    Correct placement:
+        import pytest
+        from pathlib import Path
+
+        pytestmark = pytest.mark.unit  # ✅ After all imports
+    """
+    tests_dir = Path("tests")
+
+    if not tests_dir.exists():
+        return []
+
+    violations = []
+
+    for test_file in tests_dir.rglob("test_*.py"):
+        # Skip special files
+        if test_file.name in ["__init__.py", "conftest.py"]:
+            continue
+
+        try:
+            content = test_file.read_text(encoding="utf-8")
+            tree = ast.parse(content, filename=str(test_file))
+        except SyntaxError as e:
+            # File has syntax errors - might be due to misplaced pytestmark
+            violations.append(f"{test_file}:PARSE_ERROR (cannot parse: {e})")
+            continue
+
+        # Find pytestmark assignment line (module-level only)
+        pytestmark_line = None
+        for node in tree.body:  # Only module-level nodes
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "pytestmark":
+                        pytestmark_line = node.lineno
+                        break
+
+        # No pytestmark found - handled by other validators
+        if pytestmark_line is None:
+            continue
+
+        # Find last module-level import line
+        last_import_line = 0
+        for node in tree.body:  # Only module-level nodes
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if hasattr(node, "lineno"):
+                    last_import_line = max(last_import_line, node.lineno)
+
+        # Validate pytestmark appears AFTER all imports
+        if last_import_line > 0 and pytestmark_line < last_import_line:
+            violations.append(f"{test_file}:{pytestmark_line} " f"(pytestmark before import at line {last_import_line})")
+
+    return violations
+
+
 def main():
     """Main validation logic."""
     print("🔍 Validating pytest markers...")
@@ -123,6 +196,9 @@ def main():
 
     # Check for test files missing pytestmark
     files_without_markers = get_test_files_without_markers()
+
+    # Check for misplaced pytestmark (NEW!)
+    placement_violations = validate_pytestmark_placement()
 
     has_errors = False
 
@@ -151,11 +227,32 @@ def main():
         print("   # or")
         print("   pytestmark = pytest.mark.e2e")
 
+    if placement_violations:
+        has_errors = True
+        print(f"\n❌ Found {len(placement_violations)} pytestmark placement errors:")
+        for violation in sorted(placement_violations):
+            print(f"   - {violation}")
+
+        print("\n📝 To fix, move pytestmark AFTER all import statements:")
+        print("   ❌ WRONG:")
+        print("      import pytest")
+        print("      pytestmark = pytest.mark.unit  # Before other imports!")
+        print("      from pathlib import Path")
+        print("")
+        print("   ✅ CORRECT:")
+        print("      import pytest")
+        print("      from pathlib import Path")
+        print("")
+        print("      pytestmark = pytest.mark.unit  # After all imports")
+        print("")
+        print("   See: docs-internal/PYTESTMARK_GUIDELINES.md for details")
+
     if has_errors:
         sys.exit(1)
 
     print(f"✅ All {len(used)} used markers are registered")
     print("✅ All test files have pytestmark declarations")
+    print("✅ All pytestmark declarations are correctly placed")
     print(f"   Registered: {len(registered)} markers")
     print(f"   Used: {len(used)} markers")
     sys.exit(0)

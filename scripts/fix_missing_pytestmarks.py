@@ -16,7 +16,7 @@ from typing import Dict, List, Set, Tuple
 from collections import defaultdict
 
 
-class TestFileAnalyzer:
+class FileAnalyzer:
     """Analyzes test files to determine appropriate pytest markers and required patterns."""
 
     def __init__(self, file_path: Path):
@@ -110,6 +110,17 @@ class TestFileAnalyzer:
         Find the position to insert module-level code (after imports, before any code).
 
         Returns line number (1-indexed) where pytestmark should be inserted.
+
+        IMPORTANT: Uses end_lineno instead of lineno to correctly handle multi-line
+        import statements. For example:
+
+            from module import (  # <- lineno points here (line 10)
+                foo,
+                bar,
+            )  # <- end_lineno points here (line 13)
+
+        Using lineno would insert pytestmark at line 10 (inside the import block),
+        causing a SyntaxError. Using end_lineno inserts at line 13 (after closing paren).
         """
         try:
             tree = ast.parse(self.content)
@@ -122,7 +133,11 @@ class TestFileAnalyzer:
         last_import_line = 0
         for node in tree.body:  # Only iterate over module-level nodes
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                if hasattr(node, "lineno"):
+                # CRITICAL: Use end_lineno for multi-line imports (not lineno)
+                if hasattr(node, "end_lineno") and node.end_lineno is not None:
+                    last_import_line = max(last_import_line, node.end_lineno)
+                elif hasattr(node, "lineno"):
+                    # Fallback for single-line imports or older Python versions
                     last_import_line = max(last_import_line, node.lineno)
 
         # Return position after last import (1-indexed from AST)
@@ -138,14 +153,14 @@ class TestFileAnalyzer:
         return last_import
 
 
-class TestFileFixer:
+class FileFixer:
     """Fixes test files by adding pytestmark and memory safety patterns."""
 
     def __init__(self, file_path: Path, marker: str, needs_memory_safety: bool):
         self.file_path = file_path
         self.marker = marker
         self.needs_memory_safety = needs_memory_safety
-        self.analyzer = TestFileAnalyzer(file_path)
+        self.analyzer = FileAnalyzer(file_path)
 
     def add_pytestmark(self) -> str:
         """Add pytestmark declaration to the file at module level."""
@@ -281,7 +296,7 @@ def analyze_all_files(files: list[Path]) -> dict[str, list[tuple[Path, bool]]]:
     categorization = defaultdict(list)
 
     for file_path in files:
-        analyzer = TestFileAnalyzer(file_path)
+        analyzer = FileAnalyzer(file_path)
 
         # Skip if already has pytestmark
         if analyzer.has_pytestmark():
@@ -331,7 +346,7 @@ def fix_all_files(categorization: dict[str, list[tuple[Path, bool]]]) -> int:
 
         for file_path, needs_memory_safety in files:
             try:
-                fixer = TestFileFixer(file_path, marker, needs_memory_safety)
+                fixer = FileFixer(file_path, marker, needs_memory_safety)
                 fixed_content = fixer.fix()
 
                 # Write back to file

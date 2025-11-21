@@ -28,9 +28,6 @@ except ImportError:
 
 
 from mcp_server_langgraph.core.interrupts.interrupts import (
-
-pytestmark = pytest.mark.unit
-
     InterruptConfig,
     InterruptHandler,
     InterruptType,
@@ -38,6 +35,8 @@ pytestmark = pytest.mark.unit
     create_interrupt_handler,
     create_timeout_interrupt,
 )
+
+pytestmark = [pytest.mark.unit]
 
 # ==============================================================================
 # InterruptType Enum Tests

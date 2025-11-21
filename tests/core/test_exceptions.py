@@ -10,9 +10,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Authentication errors; Authorization errors; Rate limiting errors; Validation errors; External service errors; Resilience errors; Storage errors; Compliance errors; Internal errors  # noqa: E501
-
-pytestmark = pytest.mark.unit
-
     AuthenticationError,
     AuthorizationError,
     BulkheadRejectedError,
@@ -54,6 +51,8 @@ pytestmark = pytest.mark.unit
     TokenInvalidError,
     ValidationError,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="core_exceptions_tests")

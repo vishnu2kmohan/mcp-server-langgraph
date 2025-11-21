@@ -13,9 +13,6 @@ import pytest
 
 from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 from mcp_server_langgraph.resilience.circuit_breaker import (
-
-pytestmark = pytest.mark.unit
-
     CircuitBreakerState,
     circuit_breaker,
     get_all_circuit_breaker_states,
@@ -24,6 +21,8 @@ pytestmark = pytest.mark.unit
     reset_all_circuit_breakers,
     reset_circuit_breaker,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.fixture

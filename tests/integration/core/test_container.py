@@ -19,9 +19,6 @@ import pytest
 # We'll create this module after writing the tests
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.container import (
-
-pytestmark = pytest.mark.integration
-
     ApplicationContainer,
     AuthProvider,
     ContainerConfig,
@@ -29,6 +26,8 @@ pytestmark = pytest.mark.integration
     TelemetryProvider,
     create_test_container,
 )
+
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.unit

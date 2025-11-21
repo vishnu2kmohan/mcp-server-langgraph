@@ -13,14 +13,14 @@ from pathlib import Path
 
 import pytest
 
-# Mark this as both unit and meta test to ensure it runs in CI
-pytestmark = pytest.mark.unit
-
 # Add scripts directory to path - use absolute path resolution
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 
 from fix_mdx_syntax import fix_code_block_closings  # noqa: E402
+
+# Mark this as both unit and meta test to ensure it runs in CI
+pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
 @pytest.mark.xdist_group(name="testcodeblockclosingfixes")

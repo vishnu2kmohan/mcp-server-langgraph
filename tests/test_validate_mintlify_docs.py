@@ -17,10 +17,6 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-# Mark this as both unit and meta test to ensure it runs in CI
-# Note: Individual tests may be skipped if validation module not available
-pytestmark = pytest.mark.unit
-
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
@@ -46,10 +42,15 @@ except ImportError:
     check_mermaid_diagrams = None
     parse_frontmatter = None
 
+# Mark this as both unit and meta test to ensure it runs in CI
 # Skip all tests if validation module is not available
-pytestmark = pytest.mark.skipif(
-    not VALIDATION_MODULE_AVAILABLE, reason="validate_mintlify_docs module not available (scripts not in Docker image)"
-)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.meta,
+    pytest.mark.skipif(
+        not VALIDATION_MODULE_AVAILABLE, reason="validate_mintlify_docs module not available (scripts not in Docker image)"
+    ),
+]
 
 
 @pytest.mark.xdist_group(name="testmermaidarrowregex")

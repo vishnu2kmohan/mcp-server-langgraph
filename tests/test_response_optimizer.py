@@ -10,9 +10,6 @@ import gc
 import pytest
 
 from mcp_server_langgraph.utils.response_optimizer import (
-
-pytestmark = pytest.mark.unit
-
     DEFAULT_CONCISE_TOKENS,
     DEFAULT_DETAILED_TOKENS,
     MAX_RESPONSE_TOKENS,
@@ -22,6 +19,8 @@ pytestmark = pytest.mark.unit
     format_response,
     truncate_response,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.unit

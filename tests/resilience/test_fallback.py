@@ -11,9 +11,6 @@ from unittest.mock import patch
 import pytest
 
 from mcp_server_langgraph.resilience.fallback import (
-
-pytestmark = pytest.mark.unit
-
     CachedValueFallback,
     DefaultValueFallback,
     FunctionFallback,
@@ -23,6 +20,8 @@ pytestmark = pytest.mark.unit
     return_empty_on_error,
     with_fallback,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="testbasicfallback")

@@ -12,14 +12,13 @@ import pytest
 from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.compliance.retention import DataRetentionService, RetentionResult
 from mcp_server_langgraph.schedulers.cleanup import (
-
-pytestmark = pytest.mark.unit
-
     CleanupScheduler,
     get_cleanup_scheduler,
     start_cleanup_scheduler,
     stop_cleanup_scheduler,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.fixture
