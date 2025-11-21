@@ -777,6 +777,56 @@ repos:
       See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
 
       '
+  - id: validate-async-fixture-scope
+    name: Validate Async Fixture Event Loop Scope
+    entry: uv run python scripts/validate_async_fixture_scope.py
+    language: python
+    pass_filenames: false
+    files: ^pyproject\.toml$
+    description: 'Validates asyncio_default_fixture_loop_scope is set to "session".
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      Prevents ScopeMismatch errors with session-scoped async fixtures.
+
+      34 integration tests failed before this configuration was fixed.
+
+
+      Session-scoped fixtures: postgres_connection_real, redis_client_real,
+
+      openfga_client_real all require session-scoped event loop.
+
+
+      Fix: asyncio_default_fixture_loop_scope = "session" in pyproject.toml
+
+      '
+  - id: validate-migration-idempotency
+    name: Validate SQL Migration Idempotency
+    entry: uv run python scripts/validate_migration_idempotency.py
+    language: python
+    pass_filenames: true
+    files: ^migrations/.*\.sql$
+    description: 'Validates SQL migrations use idempotent patterns for triggers.
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      PostgreSQL does not support CREATE TRIGGER IF NOT EXISTS.
+
+      Migrations must use DROP TRIGGER IF EXISTS before CREATE TRIGGER.
+
+
+      Issue fixed: DuplicateObjectError when running migrations multiple times.
+
+
+      Required pattern:
+
+        DROP TRIGGER IF EXISTS trigger_name ON table_name;
+
+        CREATE TRIGGER trigger_name ...
+
+      '
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
     entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
