@@ -210,16 +210,6 @@ jobs:
         # Note: E2E tests focus on user journeys, coverage threshold set to 0 (overrides pyproject.toml's 66%)
         TESTING=true OTEL_SDK_DISABLED=true pytest -m e2e -v --tb=short --cov=src/mcp_server_langgraph --cov-report=xml:coverage-e2e.xml --cov-fail-under=0
 
-    - name: Run new test suites
-      run: |
-        source .venv/bin/activate
-        echo "=== Running API endpoint tests ==="
-        OTEL_SDK_DISABLED=true pytest -n auto -m "api and unit" -v --tb=short
-
-        echo ""
-        echo "=== Running MCP server unit tests ==="
-        OTEL_SDK_DISABLED=true pytest tests/unit/test_mcp_stdio_server.py -v --tb=short
-
     - name: Upload E2E coverage artifact
       if: always()
       uses: actions/upload-artifact@v5

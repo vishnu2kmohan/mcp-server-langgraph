@@ -21,7 +21,7 @@ import pytest
 import pytest_asyncio
 
 # These tests require the full test infrastructure
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture(scope="module")

@@ -313,7 +313,7 @@ unique_project = f"health-check-{uuid.uuid4().hex[:8]}"
 
 #### 8. Update E2E Tests Authentication
 
-**Issue**: `tests/integration/e2e/test_full_user_journey.py:103-220`
+**Issue**: `tests/e2e/test_full_user_journey.py:103-220`
 - Calls real Keycloak introspection without `KEYCLOAK_CLIENT_SECRET`
 - Returns 403, all MCP steps fail
 
