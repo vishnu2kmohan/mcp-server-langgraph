@@ -44,6 +44,25 @@ def reset_circuit_breakers():
         cb_module._circuit_breakers.clear()
 
 
+@pytest.fixture(autouse=True)
+def mock_http_clients():
+    """
+    Mock HTTP clients to prevent real network calls in LLM fallback tests.
+
+    Without this, tests would attempt real network connections to:
+    - Azure OpenAI endpoints
+    - AWS Bedrock endpoints
+    - Ollama (localhost:11434)
+
+    This causes httpcore.ConnectError: [Errno -2] Name or service not known
+    """
+    from unittest.mock import patch
+
+    with patch("httpx.Client"):
+        with patch("httpx.AsyncClient"):
+            yield
+
+
 @pytest.mark.unit
 def test_fallback_forwards_kwargs_sync(mock_litellm_responses):
     """Test that sync fallback forwards provider-specific kwargs to same-provider fallback."""
