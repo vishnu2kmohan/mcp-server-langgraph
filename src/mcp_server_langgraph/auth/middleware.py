@@ -983,7 +983,7 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             credentials: HTTPAuthorizationCredentials | None = bearer_scheme,
         ) -> dict[str, Any]:
             # Get authenticated user
-            user = await get_current_user(request, credentials)
+            user = await get_current_user(request)
 
             # Check authorization if required
             if relation and resource:

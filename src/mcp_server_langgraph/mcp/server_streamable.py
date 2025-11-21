@@ -1483,8 +1483,10 @@ def custom_openapi() -> dict[str, Any]:
 
     This follows TDD principles - tests define the expected API contract first.
     """
+    from typing import cast
+
     if app.openapi_schema:
-        return app.openapi_schema
+        return cast(dict[str, Any], app.openapi_schema)
 
     # Generate base OpenAPI schema
     from fastapi.openapi.utils import get_openapi
@@ -1518,7 +1520,7 @@ def custom_openapi() -> dict[str, Any]:
     # generated automatically when endpoints use them
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return cast(dict[str, Any], app.openapi_schema)
 
 
 # Apply custom OpenAPI schema

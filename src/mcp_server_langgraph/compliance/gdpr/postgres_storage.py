@@ -584,7 +584,7 @@ class PostgresConversationStore(ConversationStore):
             True if updated, False if not found
         """
         set_clauses = []
-        values = []
+        values: list[Any] = []
         param_num = 1
 
         for key, value in updates.items():

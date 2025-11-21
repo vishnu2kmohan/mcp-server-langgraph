@@ -162,8 +162,10 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
         schema = customize_openapi(app)
         app.openapi_schema = schema
     """
+    from typing import cast
+
     if app.openapi_schema:
-        return app.openapi_schema
+        return cast(dict[str, Any], app.openapi_schema)
 
     from fastapi.openapi.utils import get_openapi
 
@@ -178,4 +180,4 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
     openapi_schema["info"]["x-logo"] = {"url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"}
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return cast(dict[str, Any], app.openapi_schema)

@@ -18,6 +18,7 @@ References:
 import os
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 import asyncpg
 
@@ -162,7 +163,7 @@ class DatabaseValidator:
             True if database exists, False otherwise
         """
         result = await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", db_name)
-        return result == 1
+        return bool(result == 1)
 
     async def _check_table_exists(self, conn: asyncpg.Connection, db_name: str, table_name: str) -> bool:
         """
@@ -183,7 +184,7 @@ class DatabaseValidator:
             """,
             table_name,
         )
-        return result == 1
+        return bool(result == 1)
 
     async def validate_database(self, db_info: DatabaseInfo) -> "DatabaseValidationResult":
         """
@@ -195,8 +196,8 @@ class DatabaseValidator:
         Returns:
             Validation result for this database
         """
-        errors = []
-        warnings = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         try:
             # Connect to postgres database to check if target database exists
@@ -346,7 +347,7 @@ class ValidationResult:
     errors: list[str]
     warnings: list[str]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "environment": self.environment.value,

@@ -3,6 +3,7 @@ GDPR Data Deletion Service - Article 17 (Right to Erasure)
 """
 
 from datetime import datetime, timezone
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -86,8 +87,8 @@ class DataDeletionService:
         operation_name: str,
         anonymize_func,
         user_id: str,
-        anonymized_items: dict,
-        errors: list,  # type: ignore[type-arg]
+        anonymized_items: dict[str, Any],
+        errors: list[str],
     ) -> None:
         """
         Safely execute an anonymization operation with error handling

@@ -44,7 +44,7 @@ class APIKeyManager:
     def __init__(
         self,
         keycloak_client: KeycloakClient,
-        redis_client: Optional["Redis[bytes]"] = None,
+        redis_client: Optional["Redis"] = None,
         cache_ttl: int = 3600,
         cache_enabled: bool = True,
     ):

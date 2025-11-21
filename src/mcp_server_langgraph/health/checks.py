@@ -50,7 +50,9 @@ async def liveness_check() -> HealthResponse:
 
     Used by Kubernetes liveness probe at /health/live
     """
-    return await health_check()
+    from typing import cast
+
+    return cast(HealthResponse, await health_check())
 
 
 @app.get("/ready", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
