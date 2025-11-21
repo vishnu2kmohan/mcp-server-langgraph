@@ -63,17 +63,18 @@ class TestDatabaseStartupValidation:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        # Mock asyncpg connection to all databases
-        with patch("asyncpg.connect") as mock_connect:
-            # Mock successful connections
-            mock_conn = AsyncMock()
-            mock_connect.return_value.__aenter__.return_value = mock_conn
+        # Mock the database infrastructure layer
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (True, "PostgreSQL database accessible")
 
             # Run validation
             is_healthy, message = validate_database_connectivity()
 
             assert is_healthy is True
             assert "database" in message.lower() or "accessible" in message.lower()
+            mock_check.assert_called_once()
 
     def test_database_connectivity_validation_fails_when_postgres_unreachable(self):
         """
@@ -86,14 +87,17 @@ class TestDatabaseStartupValidation:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        # Mock connection failure
-        with patch("asyncpg.connect") as mock_connect:
-            mock_connect.side_effect = Exception("Connection refused")
+        # Mock the database infrastructure layer
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (False, "PostgreSQL connection failed: Connection refused")
 
             is_healthy, message = validate_database_connectivity()
 
             assert is_healthy is False
             assert "connection" in message.lower() or "refused" in message.lower()
+            mock_check.assert_called_once()
 
     def test_startup_validation_fails_when_database_unreachable(self):
         """
@@ -124,20 +128,21 @@ class TestDatabaseStartupValidation:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        # Mock settings and connection
+        # Mock settings and database infrastructure
         with patch("mcp_server_langgraph.api.health.settings") as mock_settings:
-            with patch("asyncpg.connect") as mock_connect:
+            with patch(
+                "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+            ) as mock_check:
                 # Configure mock settings
                 mock_settings.gdpr_postgres_url = "postgresql://test:test@testhost:5555/gdpr_test"
-
-                mock_conn = AsyncMock()
-                mock_connect.return_value.__aenter__.return_value = mock_conn
+                mock_check.return_value = (True, "PostgreSQL database accessible")
 
                 validate_database_connectivity()
 
-                # Should have tried to connect with settings from config
-                # Implementation may parse URL or use it directly
-                assert mock_connect.called
+                # Should have called check_database_connectivity with the URL from settings
+                mock_check.assert_called_once()
+                call_args = mock_check.call_args
+                assert "postgresql://test:test@testhost:5555/gdpr_test" in str(call_args)
 
     def test_database_connectivity_validation_is_logged(self):
         """
@@ -151,9 +156,10 @@ class TestDatabaseStartupValidation:
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
         with patch("mcp_server_langgraph.api.health.logger") as mock_logger:
-            with patch("asyncpg.connect") as mock_connect:
-                mock_conn = AsyncMock()
-                mock_connect.return_value.__aenter__.return_value = mock_conn
+            with patch(
+                "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+            ) as mock_check:
+                mock_check.return_value = (True, "PostgreSQL database accessible")
 
                 validate_database_connectivity()
 
@@ -172,9 +178,10 @@ class TestDatabaseStartupValidation:
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
         # Function should be callable synchronously
-        with patch("asyncpg.connect") as mock_connect:
-            mock_conn = AsyncMock()
-            mock_connect.return_value.__aenter__.return_value = mock_conn
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (True, "PostgreSQL database accessible")
 
             # Should not require await
             result = validate_database_connectivity()
@@ -219,11 +226,11 @@ class TestDatabaseStartupValidation:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        # Mock connection timeout
-        with patch("asyncpg.connect") as mock_connect:
-            import asyncio
-
-            mock_connect.side_effect = asyncio.TimeoutError("Connection timeout")
+        # Mock the database infrastructure layer
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (False, "PostgreSQL connection timeout (5s)")
 
             is_healthy, message = validate_database_connectivity()
 
@@ -253,8 +260,10 @@ class TestDatabaseValidationErrors:
         with patch("mcp_server_langgraph.api.health.settings") as mock_settings:
             mock_settings.gdpr_postgres_url = "invalid://url"
 
-            with patch("asyncpg.connect") as mock_connect:
-                mock_connect.side_effect = ValueError("Invalid connection string")
+            with patch(
+                "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+            ) as mock_check:
+                mock_check.return_value = (False, "Invalid PostgreSQL connection string: Invalid connection string")
 
                 is_healthy, message = validate_database_connectivity()
 
@@ -271,10 +280,10 @@ class TestDatabaseValidationErrors:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        with patch("asyncpg.connect") as mock_connect:
-            import asyncpg
-
-            mock_connect.side_effect = asyncpg.InvalidPasswordError("Authentication failed")
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (False, "PostgreSQL authentication failed: Authentication failed")
 
             is_healthy, message = validate_database_connectivity()
 
@@ -291,9 +300,10 @@ class TestDatabaseValidationErrors:
         """
         from mcp_server_langgraph.api.health import validate_database_connectivity
 
-        with patch("asyncpg.connect") as mock_connect:
-            # Simulate database doesn't exist error
-            mock_connect.side_effect = Exception('database "gdpr" does not exist')
+        with patch(
+            "mcp_server_langgraph.infrastructure.database.check_database_connectivity", new_callable=AsyncMock
+        ) as mock_check:
+            mock_check.return_value = (False, 'PostgreSQL database does not exist: database "gdpr" does not exist')
 
             is_healthy, message = validate_database_connectivity()
 
