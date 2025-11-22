@@ -512,6 +512,7 @@ markers = [
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
     "performance: Performance tests (load, stress, benchmarks)",
+    "stress: Stress tests (high load, parallel execution stress)",
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",

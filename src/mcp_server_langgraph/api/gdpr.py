@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
-from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage_dependency
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord as GDPRConsentRecord
 from mcp_server_langgraph.core.security import sanitize_header_value
 from mcp_server_langgraph.observability.telemetry import logger, tracer
@@ -110,7 +110,7 @@ class ConsentResponse(BaseModel):
 async def get_user_data(
     request: Request,
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> UserDataExport:
     """
     Export all user data (GDPR Article 15 - Right to Access)
@@ -174,7 +174,7 @@ async def export_user_data(
     request: Request,
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> Response:
     """
     Export user data in portable format (GDPR Article 20 - Right to Data Portability)
@@ -300,7 +300,7 @@ async def delete_user_account(
     request: Request,
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> dict[str, Any]:
     """
     Delete user account and all data (GDPR Article 17 - Right to Erasure)
@@ -401,7 +401,7 @@ async def delete_user_account(
 async def update_consent(
     request: Request,
     consent: ConsentRecord,
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> ConsentResponse:
     """
     Update user consent preferences (GDPR Article 21 - Right to Object)
@@ -482,7 +482,7 @@ async def update_consent(
 @router.get("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
 async def get_consent_status(
     request: Request,
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> ConsentResponse:
     """
     Get current consent status (GDPR Article 21 - Right to Object)
