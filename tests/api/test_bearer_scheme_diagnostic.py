@@ -17,7 +17,7 @@ pytestmark = pytest.mark.api
 
 
 @pytest.mark.diagnostic
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.xdist_group(name="bearer_scheme_diagnostic_tests")
 class TestBearerSchemeOverrideDiagnostic:
     """Diagnostic tests to understand bearer_scheme override behavior."""

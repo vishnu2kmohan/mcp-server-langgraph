@@ -22,7 +22,7 @@ pytestmark = pytest.mark.unit
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_creates_quickstart_template_successfully():
     """Test init_project() with quickstart template creates project."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -37,7 +37,7 @@ def test_init_project_creates_quickstart_template_successfully():
         assert (project_path / "tests").exists()
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_creates_production_template_successfully():
     """Test init_project() with production template creates project."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -50,7 +50,7 @@ def test_init_project_creates_production_template_successfully():
         assert project_path.exists()
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_creates_enterprise_template_successfully():
     """Test init_project() with enterprise template creates project."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -63,7 +63,7 @@ def test_init_project_creates_enterprise_template_successfully():
         assert project_path.exists()
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_uses_production_template_by_default():
     """Test init_project() defaults to production template when not specified."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -81,7 +81,7 @@ def test_init_project_uses_production_template_by_default():
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_raises_error_when_directory_exists():
     """Test init_project() raises FileExistsError when directory already exists."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -93,7 +93,7 @@ def test_init_project_raises_error_when_directory_exists():
             init_project(str(project_path))
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_raises_error_for_invalid_template():
     """Test init_project() raises ValueError for invalid template name."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -109,7 +109,7 @@ def test_init_project_raises_error_for_invalid_template():
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_quickstart_template_creates_correct_directory_structure():
     """Test quickstart template creates expected directory structure."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -123,7 +123,7 @@ def test_quickstart_template_creates_correct_directory_structure():
         assert (project_path / "tests").is_dir()
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_accepts_string_path():
     """Test init_project() accepts string path (not just Path object)."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -137,7 +137,7 @@ def test_init_project_accepts_string_path():
         assert project_path.exists()
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 def test_init_project_creates_nested_parent_directories():
     """Test init_project() creates parent directories if needed."""
     with tempfile.TemporaryDirectory() as tmpdir:

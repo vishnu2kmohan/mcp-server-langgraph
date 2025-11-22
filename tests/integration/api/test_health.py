@@ -181,7 +181,9 @@ class TestStartupValidation:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             # Should not raise
                             run_startup_validation()
 
@@ -194,7 +196,9 @@ class TestStartupValidation:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             with pytest.raises(SystemValidationError, match="Startup validation failed"):
                                 run_startup_validation()
 
@@ -207,7 +211,9 @@ class TestStartupValidation:
                         "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
                         return_value=(True, "Docker sandbox warnings: Network allowlist not implemented"),
                     ):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             # Should not raise, but will log warning
                             run_startup_validation()
 
@@ -234,7 +240,9 @@ class TestHealthCheckEndpoint:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             response = client.get("/api/v1/health")
 
                             assert response.status_code == 200
@@ -252,7 +260,9 @@ class TestHealthCheckEndpoint:
                         "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
                         return_value=(True, "Warning: Network allowlist not implemented"),
                     ):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             response = client.get("/api/v1/health")
 
                             assert response.status_code == 200
@@ -269,7 +279,9 @@ class TestHealthCheckEndpoint:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with patch("mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")):
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
                             response = client.get("/api/v1/health")
 
                             assert response.status_code == 200  # Endpoint still works

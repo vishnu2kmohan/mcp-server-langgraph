@@ -17,7 +17,7 @@ import pytest
 pytestmark = pytest.mark.infrastructure
 
 
-@pytest.mark.unit
+@pytest.mark.infrastructure
 @pytest.mark.xdist_group(name="testappfactory")
 class TestAppFactory:
     """Test the FastAPI app factory function"""

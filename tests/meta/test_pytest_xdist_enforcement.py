@@ -147,8 +147,10 @@ class TestEnforcementMechanisms:
         content_db = database_fixtures.read_text()
 
         # test_infrastructure_ports should use FIXED ports (current architecture)
-        assert "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db, "Worker-aware logic missing"
-        
+        assert (
+            "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db
+        ), "Worker-aware logic missing"
+
         # postgres_connection_clean should use worker schema
         assert "test_worker_" in content_db, "Worker-scoped schema missing from database_fixtures.py"
 

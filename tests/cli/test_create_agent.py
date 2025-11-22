@@ -26,7 +26,7 @@ pytestmark = pytest.mark.unit
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgenerateagent")
 class TestGenerateAgent:
     """Test agent file generation functionality."""
@@ -255,7 +255,7 @@ class TestGenerateAgent:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testagenttemplates")
 class TestAgentTemplates:
     """Test agent template structures."""
@@ -349,7 +349,7 @@ class TestAgentTemplates:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgenerateagentedgecases")
 class TestGenerateAgentEdgeCases:
     """Test edge cases and error scenarios for generate_agent."""

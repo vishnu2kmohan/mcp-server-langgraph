@@ -18,7 +18,7 @@ from mcp_server_langgraph.cli import cli
 pytestmark = pytest.mark.unit
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testclismoke")
 class TestCLISmoke:
     """Smoke tests for CLI commands."""
@@ -86,7 +86,7 @@ class TestCLISmoke:
         assert "--input" in result.output
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testclitemplateoptions")
 class TestCLITemplateOptions:
     """Test that CLI commands accept valid template options."""

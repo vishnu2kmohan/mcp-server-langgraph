@@ -74,7 +74,7 @@ def test_client(monkeypatch):
     app.dependency_overrides.clear()
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testapiversionmetadata")
 class TestAPIVersionMetadata:
@@ -126,7 +126,7 @@ class TestAPIVersionMetadata:
         assert openapi_version == version_data.get("version"), "OpenAPI version must match /api/version"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testapiversionprefixes")
 class TestAPIVersionPrefixes:
@@ -183,7 +183,7 @@ class TestAPIVersionPrefixes:
                 pass
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testversionnegotiation")
 class TestVersionNegotiation:
@@ -216,7 +216,7 @@ class TestVersionNegotiation:
         ], f"Unexpected status for unsupported version: {response.status_code}"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testdeprecationsupport")
 class TestDeprecationSupport:
@@ -257,7 +257,7 @@ class TestDeprecationSupport:
                     assert "description" in prop_def, f"Deprecated field {schema_name}.{prop_name} should have description"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testbackwardcompatibility")
 class TestBackwardCompatibility:
@@ -308,7 +308,7 @@ class TestBackwardCompatibility:
                     pass
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.contract
 @pytest.mark.xdist_group(name="testversiondocumentation")
 class TestVersionDocumentation:

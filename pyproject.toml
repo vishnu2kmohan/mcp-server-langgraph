@@ -533,6 +533,8 @@ markers = [
     "requires_kustomize: Tests requiring kustomize CLI tool",
     "requires_kubectl: Tests requiring kubectl CLI tool",
     "requires_helm: Tests requiring helm CLI tool",
+    "validation: Validation tests for deployments and configurations",
+    "cli: CLI tool tests",
 ]
 
 # CODEX FINDING #4: Benchmark configuration

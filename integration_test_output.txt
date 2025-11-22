@@ -76,7 +76,7 @@ Running integration tests in Docker environment (matches CI)...
 #18 1.973       platform tag (e.g., `manylinux_2_41_x86_64`) and you require
 #18 1.973       infisical-python==2.3.6, we can conclude that your requirements are
 #18 1.973       unsatisfiable.
-#18 1.973 
+#18 1.973
 #18 1.973       hint: Wheels are available for `infisical-python` (v2.3.6) on the
 #18 1.973       following platforms: `manylinux_2_28_aarch64`, `macosx_10_7_x86_64`,
 #18 1.973       `macosx_11_0_arm64`, `win_amd64`
@@ -89,7 +89,7 @@ Running integration tests in Docker environment (matches CI)...
 1.973       platform tag (e.g., `manylinux_2_41_x86_64`) and you require
 1.973       infisical-python==2.3.6, we can conclude that your requirements are
 1.973       unsatisfiable.
-1.973 
+1.973
 1.973       hint: Wheels are available for `infisical-python` (v2.3.6) on the
 1.973       following platforms: `manylinux_2_28_aarch64`, `macosx_10_7_x86_64`,
 1.973       `macosx_11_0_arm64`, `win_amd64`
@@ -106,7 +106,7 @@ Dockerfile.test:43
 
   45 | >>>     uv pip install --python $(which python) --no-cache --no-deps .
 
-  46 |     
+  46 |
 
 --------------------
 

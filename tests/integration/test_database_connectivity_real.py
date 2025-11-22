@@ -105,8 +105,8 @@ class TestDatabaseConnectivityReal:
         """
         from mcp_server_langgraph.infrastructure.database import check_database_connectivity
 
-    # Invalid credentials
-    postgres_url = "postgresql://invalid_user:invalid_pass@localhost:9432/gdpr"
+        # Invalid credentials
+        postgres_url = "postgresql://invalid_user:invalid_pass@localhost:9432/gdpr"
 
         is_healthy, message = await check_database_connectivity(postgres_url, timeout=5.0)
 
@@ -126,8 +126,8 @@ class TestDatabaseConnectivityReal:
         """
         from mcp_server_langgraph.infrastructure.database import check_database_connectivity
 
-    # Invalid database
-    postgres_url = "postgresql://postgres:postgres@localhost:9432/nonexistent_db"
+        # Invalid database
+        postgres_url = "postgresql://postgres:postgres@localhost:9432/nonexistent_db"
 
         is_healthy, message = await check_database_connectivity(postgres_url, timeout=5.0)
 
@@ -147,8 +147,8 @@ class TestDatabaseConnectivityReal:
         """
         from mcp_server_langgraph.infrastructure.database import check_database_connectivity
 
-    # Invalid host/unreachable
-    postgres_url = "postgresql://postgres:postgres@192.0.2.1:9432/gdpr"
+        # Invalid host/unreachable
+        postgres_url = "postgresql://postgres:postgres@192.0.2.1:9432/gdpr"
 
         is_healthy, message = await check_database_connectivity(postgres_url, timeout=1.0)
 

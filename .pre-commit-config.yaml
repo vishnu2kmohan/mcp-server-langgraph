@@ -652,7 +652,7 @@ repos:
       '
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
-    entry: uv run python scripts/validation/validate_github_workflows_comprehensive.py
+    entry: uv run python scripts/validation/validate_github_workflows.py
     language: system
     files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "navigation": [
-    {"title": "Introduction", "pages": ["README.md"]},
-    {"title": "Development", "pages": ["CONTRIBUTING.md"]}
+    {"title": "Introduction", "pages": ["getting-started/introduction"]},
+    {"title": "Quickstart", "pages": ["getting-started/quickstart"]}
   ]
 }

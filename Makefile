@@ -78,9 +78,10 @@ help:
 	@echo "  make setup-keycloak   Initialize Keycloak"
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
-	@echo "Testing:"
+Testing:
 	@echo "  make test                     Run all automated tests with coverage"
-	@echo "  make test-unit                Run unit tests with coverage"
+	@echo "  make test-unit                Run pure unit tests (tests/unit/)"
+	@echo "  make test-local               Run all local tests (Unit + CLI + Validation)"
 	@echo "  make test-integration         Run integration tests in Docker"
 	@echo ""
 	@echo "Fast Testing (40-70% faster):"
@@ -230,10 +231,16 @@ test:
 	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
 
 test-unit:
-	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
+	@echo "Running pure unit tests (tests/unit/)..."
 	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
-	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
+
+test-local:
+	@echo "Running all local tests (Unit + CLI + Validation)..."
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit tests/cli tests/deployment tests/infrastructure tests/ci
+	@echo "✓ Local tests complete"
 
 test-unit-fast:
 	@echo "Running unit tests without coverage (fast iteration)..."

@@ -61,7 +61,7 @@ def client(app):
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_register_exception_handlers_adds_handlers_to_app():
     """Test register_exception_handlers() registers exception handlers successfully."""
     # Arrange
@@ -79,7 +79,7 @@ def test_register_exception_handlers_adds_handlers_to_app():
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_mcp_exception_handler_returns_correct_status_code(client):
     """Test MCP exception handler returns correct HTTP status code."""
     # Act
@@ -91,7 +91,7 @@ def test_mcp_exception_handler_returns_correct_status_code(client):
     assert data["error"]["code"] == "auth.invalid_credentials"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_mcp_exception_handler_includes_trace_id_in_response(client):
     """Test MCP exception handler includes trace_id in response (auto-generated if not provided)."""
     # Act
@@ -103,7 +103,7 @@ def test_mcp_exception_handler_includes_trace_id_in_response(client):
     assert "trace_id" in data["error"]
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_mcp_exception_handler_returns_structured_error_response(client):
     """Test MCP exception handler returns structured JSON error."""
     # Act
@@ -118,7 +118,7 @@ def test_mcp_exception_handler_returns_structured_error_response(client):
     assert data["error"]["metadata"]["resource"] == "admin_panel"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_mcp_exception_handler_includes_user_friendly_message(client):
     """Test MCP exception handler includes user-friendly message."""
     # Act
@@ -131,7 +131,7 @@ def test_mcp_exception_handler_includes_user_friendly_message(client):
     assert "Invalid username or password" in data["error"]["message"]
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_rate_limit_exception_includes_retry_after_header(client):
     """Test rate limit exceptions include Retry-After header."""
     # Act
@@ -143,7 +143,7 @@ def test_rate_limit_exception_includes_retry_after_header(client):
     assert response.headers["Retry-After"] == "120"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @patch("mcp_server_langgraph.observability.telemetry.error_counter")
 def test_mcp_exception_handler_emits_metrics(mock_counter, client):
     """Test MCP exception handler emits error metrics."""
@@ -158,7 +158,7 @@ def test_mcp_exception_handler_emits_metrics(mock_counter, client):
     assert "error_code" in call_args[1]["attributes"]
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @patch("mcp_server_langgraph.observability.telemetry.error_counter", Mock(side_effect=Exception("Metric error")))
 def test_mcp_exception_handler_continues_if_metrics_fail(client):
     """Test exception handler continues gracefully if metrics emission fails."""
@@ -175,7 +175,7 @@ def test_mcp_exception_handler_continues_if_metrics_fail(client):
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_create_error_response_with_minimal_params_returns_structured_response():
     """Test create_error_response() with only required parameters."""
     # Act
@@ -189,7 +189,7 @@ def test_create_error_response_with_minimal_params_returns_structured_response()
     assert result["error"]["trace_id"] is None
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_create_error_response_with_all_params_includes_all_fields():
     """Test create_error_response() with all parameters."""
     # Arrange
@@ -213,7 +213,7 @@ def test_create_error_response_with_all_params_includes_all_fields():
     assert result["error"]["trace_id"] == trace_id
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_create_error_response_with_custom_status_code():
     """Test create_error_response() respects custom status code."""
     # Act
@@ -223,7 +223,7 @@ def test_create_error_response_with_custom_status_code():
     assert result["error"]["status_code"] == 422
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_create_error_response_handles_empty_metadata():
     """Test create_error_response() handles None metadata gracefully."""
     # Act
@@ -233,7 +233,7 @@ def test_create_error_response_handles_empty_metadata():
     assert result["error"]["metadata"] == {}
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_create_error_response_preserves_complex_metadata():
     """Test create_error_response() preserves nested metadata structures."""
     # Arrange
@@ -258,7 +258,7 @@ def test_create_error_response_preserves_complex_metadata():
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_error_response_format_matches_api_spec(client):
     """Test error responses match OpenAPI specification format."""
     # Act
@@ -275,7 +275,7 @@ def test_error_response_format_matches_api_spec(client):
     assert "metadata" in data["error"]
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_multiple_exception_types_handled_correctly(client):
     """Test different exception types return appropriate status codes."""
     # Test different endpoints (excluding generic-error which raises ValueError in FastAPI)
@@ -301,7 +301,7 @@ class TestErrorHandlerEdgeCases:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.integration
     def test_error_response_with_complex_nested_metadata(self):
         """
         Test that error responses handle complex nested metadata correctly
@@ -331,7 +331,7 @@ class TestErrorHandlerEdgeCases:
         assert response["error"]["metadata"]["resource"]["type"] == "document"
         assert "owner" in response["error"]["metadata"]["resource"]
 
-    @pytest.mark.unit
+    @pytest.mark.integration
     def test_error_response_with_very_long_message(self):
         """
         Test that error responses handle very long error messages (>1000 chars)
@@ -351,7 +351,7 @@ class TestErrorHandlerEdgeCases:
         assert len(response["error"]["message"]) > 1000
         assert response["error"]["code"] == "invalid_credentials"
 
-    @pytest.mark.unit
+    @pytest.mark.integration
     @patch("mcp_server_langgraph.api.error_handlers.logger")
     def test_register_exception_handlers_logs_registration(self, mock_logger):
         """
@@ -367,7 +367,7 @@ class TestErrorHandlerEdgeCases:
         # Note: This verifies logging calls were made
         assert mock_logger.info.called or True  # Registration happened
 
-    @pytest.mark.unit
+    @pytest.mark.integration
     def test_error_response_with_trace_id_set(self):
         """
         Test error response when trace_id is explicitly set

@@ -49,10 +49,15 @@ def virtual_clock():
     """
     try:
         from mcp_server_langgraph.core.time_provider import VirtualClock
+
         return VirtualClock()
     except ImportError:
         # Fallback mock if core module not available
         class MockVirtualClock:
-            def time(self): return 0.0
-            def sleep(self, seconds): pass
+            def time(self):
+                return 0.0
+
+            def sleep(self, seconds):
+                pass
+
         return MockVirtualClock()

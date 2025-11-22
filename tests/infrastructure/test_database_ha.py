@@ -16,7 +16,7 @@ import yaml
 pytestmark = pytest.mark.infrastructure
 
 
-@pytest.mark.unit
+@pytest.mark.infrastructure
 @pytest.mark.infrastructure
 @pytest.mark.xdist_group(name="testdatabaseha")
 class TestDatabaseHA:

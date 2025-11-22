@@ -623,9 +623,9 @@ postgres-test-1  | 2025-11-22 22:10:21.527 UTC [43] LOG:  checkpoint complete: w
 postgres-test-1  | 2025-11-22 22:10:21.536 UTC [42] LOG:  database system is shut down
 postgres-test-1  |  done
 postgres-test-1  | server stopped
-postgres-test-1  | 
+postgres-test-1  |
 postgres-test-1  | PostgreSQL init process complete; ready for start up.
-postgres-test-1  | 
+postgres-test-1  |
 postgres-test-1  | 2025-11-22 22:10:21.624 UTC [1] LOG:  starting PostgreSQL 16.8 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
 postgres-test-1  | 2025-11-22 22:10:21.624 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
 postgres-test-1  | 2025-11-22 22:10:21.624 UTC [1] LOG:  listening on IPv6 address "::", port 5432
@@ -653,16 +653,16 @@ postgres-test-1  | 2025-11-22 22:10:37.393 UTC [129] STATEMENT:  SELECT COUNT(*)
 [0;34mℹ[0m qdrant-test not yet healthy (120s / 120s)...
 [0;31m✗[0m qdrant-test failed to become healthy within 120s
 [0;34mℹ[0m Last 20 lines of qdrant-test logs:
-qdrant-test-1  |            _                 _    
-qdrant-test-1  |   __ _  __| |_ __ __ _ _ __ | |_  
-qdrant-test-1  |  / _` |/ _` | '__/ _` | '_ \| __| 
-qdrant-test-1  | | (_| | (_| | | | (_| | | | | |_  
-qdrant-test-1  |  \__, |\__,_|_|  \__,_|_| |_|\__| 
-qdrant-test-1  |     |_|                           
-qdrant-test-1  | 
+qdrant-test-1  |            _                 _
+qdrant-test-1  |   __ _  __| |_ __ __ _ _ __ | |_
+qdrant-test-1  |  / _` |/ _` | '__/ _` | '_ \| __|
+qdrant-test-1  | | (_| | (_| | | | (_| | | | | |_
+qdrant-test-1  |  \__, |\__,_|_|  \__,_|_| |_|\__|
+qdrant-test-1  |     |_|
+qdrant-test-1  |
 qdrant-test-1  | Version: 1.15.5, build: 48203e41
 qdrant-test-1  | Access web UI at http://localhost:6333/dashboard
-qdrant-test-1  | 
+qdrant-test-1  |
 qdrant-test-1  | 2025-11-22T22:10:20.559097Z  WARN qdrant: There is a potential issue with the filesystem for storage path ./storage. Details: Data will be lost on system restart - tmpfs is memory-based
 [0;34mℹ[0m Waiting for [0;33mredis-sessions-test[0m to become healthy...
 [0;34mℹ[0m redis-sessions-test not yet healthy (10s / 120s)...
@@ -880,3 +880,80 @@ alertmanager-test-1  | time=2025-11-22T22:23:41.788Z level=INFO source=cluster.g
 [0;34mℹ[0m grafana-test not yet healthy (50s / 120s)...
 [0;34mℹ[0m grafana-test not yet healthy (60s / 120s)...
 [0;34mℹ[0m grafana-test not yet healthy (70s / 120s)...
+[0;34mℹ[0m grafana-test not yet healthy (80s / 120s)...
+[0;34mℹ[0m grafana-test not yet healthy (90s / 120s)...
+[0;34mℹ[0m grafana-test not yet healthy (100s / 120s)...
+[0;34mℹ[0m grafana-test not yet healthy (110s / 120s)...
+[0;34mℹ[0m grafana-test not yet healthy (120s / 120s)...
+[0;31m✗[0m grafana-test failed to become healthy within 120s
+[0;34mℹ[0m Last 20 lines of grafana-test logs:
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:27.872310376Z level=info msg="falling back to original path due to EvalSymlink/Abs failure"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:27.872315496Z level=error msg="failed to search for dashboards" error="stat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:37.872895678Z level=error msg="Cannot read directory" error="stat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:37.872933118Z level=error msg="Failed to read content of symlinked path" path=/etc/grafana/provisioning/dashboards/performance error="lstat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:37.872940672Z level=info msg="falling back to original path due to EvalSymlink/Abs failure"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:37.87295067Z level=error msg="failed to search for dashboards" error="stat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:37.872930943Z level=error msg="Cannot read directory" error="stat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:37.872974986Z level=error msg="Failed to read content of symlinked path" path=/etc/grafana/provisioning/dashboards/security error="lstat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:37.872983812Z level=info msg="falling back to original path due to EvalSymlink/Abs failure"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:37.872990224Z level=error msg="failed to search for dashboards" error="stat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:47.873023935Z level=error msg="Cannot read directory" error="stat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:47.873060463Z level=error msg="Cannot read directory" error="stat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:47.873131025Z level=error msg="Failed to read content of symlinked path" path=/etc/grafana/provisioning/dashboards/security error="lstat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:47.87314991Z level=info msg="falling back to original path due to EvalSymlink/Abs failure"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:47.873151894Z level=error msg="Failed to read content of symlinked path" path=/etc/grafana/provisioning/dashboards/performance error="lstat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Security & Compliance" t=2025-11-22T22:33:47.873167092Z level=error msg="failed to search for dashboards" error="stat /etc/grafana/provisioning/dashboards/security: no such file or directory"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:47.873171831Z level=info msg="falling back to original path due to EvalSymlink/Abs failure"
+grafana-test-1  | logger=provisioning.dashboard type=file name="Performance Monitoring" t=2025-11-22T22:33:47.87318188Z level=error msg="failed to search for dashboards" error="stat /etc/grafana/provisioning/dashboards/performance: no such file or directory"
+grafana-test-1  | logger=cleanup t=2025-11-22T22:33:51.790644855Z level=info msg="Completed cleanup jobs" duration=278.501944ms
+grafana-test-1  | logger=plugins.update.checker t=2025-11-22T22:33:52.75379048Z level=info msg="Update check succeeded" duration=90.817876ms
+[0;34mℹ[0m Waiting for [0;33mjaeger-test[0m to become healthy...
+[0;34mℹ[0m jaeger-test not yet healthy (10s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (20s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (30s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (40s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (50s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (60s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (70s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (80s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (90s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (100s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (110s / 120s)...
+[0;34mℹ[0m jaeger-test not yet healthy (120s / 120s)...
+[0;31m✗[0m jaeger-test failed to become healthy within 120s
+[0;34mℹ[0m Last 20 lines of jaeger-test logs:
+jaeger-test-1  | 2025/11/22 22:22:34 maxprocs: Updating GOMAXPROCS=1: using minimum allowed GOMAXPROCS
+jaeger-test-1  | 2025/11/22 22:22:34 application version: git-commit=4b7446248e087edffd15508e760e8e5da044f4b4, git-version=v1.62.0, build-date=2024-10-07T09:16:33Z
+jaeger-test-1  | {"level":"warn","ts":1763850154.1394212,"caller":"static/provider.go:71","msg":"Default operations level strategies will not be included for Ratelimiting service strategies.This behavior will be changed in future releases. Cf. https://github.com/jaegertracing/jaeger/issues/5270"}
+jaeger-test-1  | {"level":"warn","ts":1763850154.1441312,"caller":"internal@v0.111.0/warning.go:40","msg":"Using the 0.0.0.0 address exposes this server to every network interface, which may facilitate Denial of Service attacks.","documentation":"https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/security-best-practices.md#safeguards-against-denial-of-service-attacks"}
+jaeger-test-1  | {"level":"warn","ts":1763850154.1442049,"caller":"internal@v0.111.0/warning.go:40","msg":"Using the 0.0.0.0 address exposes this server to every network interface, which may facilitate Denial of Service attacks.","documentation":"https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/security-best-practices.md#safeguards-against-denial-of-service-attacks"}
+
+[0;31m✗[0m 12 service(s) failed to become healthy:
+[0;31m✗[0m   - postgres-test
+[0;31m✗[0m   - qdrant-test
+[0;31m✗[0m   - redis-sessions-test
+[0;31m✗[0m   - redis-test
+[0;31m✗[0m   - keycloak-test
+[0;31m✗[0m   - openfga-migrate-test
+[0;31m✗[0m   - openfga-test
+[0;31m✗[0m   - mcp-server-test
+[0;31m✗[0m   - prometheus-test
+[0;31m✗[0m   - alertmanager-test
+[0;31m✗[0m   - grafana-test
+[0;31m✗[0m   - jaeger-test
+[0;31m✗[0m Services failed to become healthy within timeout
+[0;34mℹ[0m Showing service status for debugging:
+NAME                                                                 IMAGE                              COMMAND                  SERVICE               CREATED          STATUS                    PORTS
+mcp-server-langgraph-session-20251118-221044-grafana-test-1          grafana/grafana:12.2.0             "/run.sh"                grafana-test          12 minutes ago   Up 12 minutes (healthy)   0.0.0.0:13001->3000/tcp
+mcp-server-langgraph-session-20251118-221044-jaeger-test-1           jaegertracing/all-in-one:1.62.0    "/go/bin/all-in-one-…"   jaeger-test           13 minutes ago   Up 13 minutes             4317-4318/tcp, 5775/udp, 5778/tcp, 9411/tcp, 6831-6832/udp, 0.0.0.0:17250->14250/tcp, 0.0.0.0:17268->14268/tcp, 0.0.0.0:19686->16686/tcp
+mcp-server-langgraph-session-20251118-221044-keycloak-test-1         quay.io/keycloak/keycloak:26.4.2   "/opt/keycloak/bin/k…"   keycloak-test         13 minutes ago   Up 13 minutes (healthy)   8443/tcp, 0.0.0.0:9082->8080/tcp, 0.0.0.0:9900->9000/tcp
+mcp-server-langgraph-session-20251118-221044-openfga-test-1          openfga/openfga:v1.10.2            "/openfga run --data…"   openfga-test          13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:9080->8080/tcp, 0.0.0.0:9081->8081/tcp
+mcp-server-langgraph-session-20251118-221044-postgres-test-1         postgres:16.8-alpine               "docker-entrypoint.s…"   postgres-test         13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:9432->5432/tcp
+mcp-server-langgraph-session-20251118-221044-prometheus-test-1       prom/prometheus:v3.7.1             "/bin/prometheus --c…"   prometheus-test       13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:19090->9090/tcp
+mcp-server-langgraph-session-20251118-221044-qdrant-test-1           qdrant/qdrant:v1.15.5              "./entrypoint.sh"        qdrant-test           13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:9333->6333/tcp, 0.0.0.0:9334->6334/tcp
+mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1   redis:7-alpine                     "docker-entrypoint.s…"   redis-sessions-test   13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:9380->6379/tcp
+mcp-server-langgraph-session-20251118-221044-redis-test-1            redis:7-alpine                     "docker-entrypoint.s…"   redis-test            13 minutes ago   Up 13 minutes (healthy)   0.0.0.0:9379->6379/tcp
+
+[0;34mℹ[0m Cleaning up containers and networks...
+[0;32m✓[0m Cleanup complete
+make: *** [Makefile:252: test-integration] Error 1
