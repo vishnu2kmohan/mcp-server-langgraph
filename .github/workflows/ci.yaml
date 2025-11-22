@@ -119,7 +119,7 @@ jobs:
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          uv run pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
+          uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
       - name: Validate pytest configuration compatibility
