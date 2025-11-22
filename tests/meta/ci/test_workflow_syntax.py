@@ -23,7 +23,8 @@ pytestmark = pytest.mark.unit
 
 def get_workflow_files():
     """Get all workflow YAML files."""
-    workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+    # Navigate from tests/meta/ci/ to repo root (3 levels up)
+    workflows_dir = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
     return list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
 
 
@@ -77,7 +78,8 @@ def test_actionlint_installed():
 
 def test_workflows_directory_exists():
     """Verify that the workflows directory exists."""
-    workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+    # Navigate from tests/meta/ci/ to repo root (3 levels up)
+    workflows_dir = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
     assert workflows_dir.exists(), f"Workflows directory not found: {workflows_dir}"
     assert workflows_dir.is_dir(), f"Workflows path is not a directory: {workflows_dir}"
 

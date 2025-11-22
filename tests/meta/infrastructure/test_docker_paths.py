@@ -21,7 +21,7 @@ pytestmark = pytest.mark.unit
 
 def get_ci_workflow():
     """Get the CI workflow file."""
-    workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+    workflows_dir = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
     ci_file = workflows_dir / "ci.yaml"
     if not ci_file.exists():
         ci_file = workflows_dir / "ci.yml"

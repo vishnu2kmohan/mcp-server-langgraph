@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 def get_workflow_files():
     """Get all workflow YAML files."""
-    workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+    workflows_dir = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
     return list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
 
 
