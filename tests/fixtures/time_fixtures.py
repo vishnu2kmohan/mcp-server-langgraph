@@ -1,62 +1,41 @@
 """
-Pytest fixtures for time provider abstraction.
+Time manipulation fixtures for test suite.
 
-Provides virtual clock fixtures for fast test execution without real sleep().
+This module provides fixtures for:
+- Freezing time for deterministic timestamp testing
+- Eliminating time-dependent test flakiness
 
-Usage:
-    def test_ttl_expiration(virtual_clock):
-        cache = CacheService(l1_maxsize=100, l1_ttl=1.0)
-        cache.set("key", "value")
-
-        # Instead of time.sleep(1.5), instantly advance
-        virtual_clock.advance(1.5)
-
-        assert cache.get("key") is None  # Expired
+Extracted from tests/conftest.py to improve maintainability.
+See: Testing Strategy Remediation Plan - Phase 3.4
 """
 
 import pytest
 
-from mcp_server_langgraph.core.time_provider import VirtualClock
+# Check if freezegun is available (optional dependency)
+try:
+    from freezegun import freeze_time
+
+    FREEZEGUN_AVAILABLE = True
+except ImportError:
+    FREEZEGUN_AVAILABLE = False
 
 
 @pytest.fixture
-def virtual_clock() -> VirtualClock:
+def frozen_time():
     """
-    Provide a VirtualClock instance for instant time advancement.
+    Freeze time for deterministic timestamp testing.
 
-    This eliminates sleep() overhead in tests that verify TTL, timeouts,
-    and staleness behavior.
+    All datetime.now(), time.time(), etc. calls will return the fixed time.
+    This eliminates test flakiness caused by time-dependent assertions.
 
-    Returns:
-        VirtualClock instance starting at time=0.0
+    Usage:
+        @pytest.mark.usefixtures("frozen_time")
+        def test_timestamps():
+            # datetime.now() will always return 2024-01-01T00:00:00Z
+            assert datetime.now(timezone.utc).isoformat() == "2024-01-01T00:00:00+00:00"
     """
-    return VirtualClock()
+    if not FREEZEGUN_AVAILABLE:
+        pytest.skip("freezegun not installed - required for time-freezing tests. Install with: pip install freezegun")
 
-
-@pytest.fixture
-def virtual_clock_at_epoch() -> VirtualClock:
-    """
-    Provide a VirtualClock starting at Unix epoch (1970-01-01 00:00:00).
-
-    Useful for tests that need realistic timestamps.
-
-    Returns:
-        VirtualClock instance starting at time=0.0 (Unix epoch)
-    """
-    return VirtualClock(start_time=0.0)
-
-
-@pytest.fixture
-def virtual_clock_at_now() -> VirtualClock:
-    """
-    Provide a VirtualClock starting at current real time.
-
-    Useful for tests that need current timestamps but still want
-    instant time advancement.
-
-    Returns:
-        VirtualClock instance starting at current time
-    """
-    import time
-
-    return VirtualClock(start_time=time.time())
+    with freeze_time("2024-01-01 00:00:00", tz_offset=0):
+        yield

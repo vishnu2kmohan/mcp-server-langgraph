@@ -1,8 +1,20 @@
 """Pytest configuration and shared fixtures"""
 
-# Import fixture organization enforcement plugin
+# Import fixture modules and enforcement plugin
 # Must be defined before imports (pytest requirement)
-pytest_plugins = ["tests.conftest_fixtures_plugin"]
+#
+# Phase 3: conftest.py Modularization (Testing Strategy Remediation)
+# Extracted non-autouse fixtures into separate modules for improved maintainability:
+# - docker_fixtures: Docker Compose lifecycle, port waiting, schema verification
+# - time_fixtures: Time freezing for deterministic tests
+#
+# Note: Autouse fixtures (observability, singleton reset) must remain in conftest.py
+# per fixture organization enforcement rules (see tests/meta/test_fixture_organization.py)
+pytest_plugins = [
+    "tests.conftest_fixtures_plugin",
+    "tests.fixtures.docker_fixtures",
+    "tests.fixtures.time_fixtures",
+]
 
 import atexit  # noqa: E402
 
