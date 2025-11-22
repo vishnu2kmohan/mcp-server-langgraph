@@ -668,23 +668,8 @@ validate-pre-push:
 	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Unit Tests (with coverage)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Unit tests passed (coverage collected)" || (echo "✗ Unit tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Smoke Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Integration Tests (Last Failed)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/integration/ -x --tb=short --lf && echo "✓ Integration tests passed" || echo "⚠ Integration tests failed (non-blocking)"
-	@echo ""
-	@echo "▶ API Endpoint Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m 'api and unit and not llm' -v --tb=short && echo "✓ API tests passed" || (echo "✗ API tests failed" && exit 1)
-	@echo ""
-	@echo "▶ MCP Server Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit/test_mcp_stdio_server.py -m 'not llm' -v --tb=short && echo "✓ MCP tests passed" || (echo "✗ MCP tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Property Tests (100 examples)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
+	@echo "▶ Consolidated Test Suite (Unit, Smoke, API, MCP, Property)..."
+	@OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci $(UV_RUN) pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Consolidated tests passed (coverage collected)" || (echo "✗ Tests failed" && exit 1)
 	@echo ""
 	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
@@ -1173,10 +1158,10 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 	@echo "🔧 SUPPLEMENTARY: Specialized validators"
 	@echo "   Note: Code block validation disabled (caused more trouble than it's worth)"
 	@echo "🔍 Validating ADR synchronization..."
-	@python scripts/validators/adr_sync_validator.py || \
+	@python scripts/validation/adr_sync_validator.py || \
 		(echo "❌ ADR synchronization failed." && exit 1)
 	@echo "🔍 Validating MDX file extensions..."
-	@python scripts/validators/mdx_extension_validator.py --docs-dir docs || \
+	@python scripts/validation/mdx_extension_validator.py --docs-dir docs || \
 		(echo "❌ MDX extension validation failed." && exit 1)
 	@echo "✅ Specialized validators passed"
 
@@ -1188,7 +1173,7 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."
-	@python3 scripts/check_version_consistency.py || \
+	@python3 scripts/validation/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
 
 docs-fix-mdx:
@@ -1217,11 +1202,11 @@ generate-reports:  ## Regenerate all test infrastructure scan reports
 	@echo "📊 Regenerating test infrastructure reports..."
 	@echo ""
 	@echo "🔍 Running AsyncMock configuration scan..."
-	@$(UV_RUN) python scripts/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
 	@echo "✅ AsyncMock scan complete"
 	@echo ""
 	@echo "🔍 Running memory safety scan..."
-	@$(UV_RUN) python scripts/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
 	@echo "✅ Memory safety scan complete"
 	@echo ""
 	@echo "📈 Generating test suite statistics..."

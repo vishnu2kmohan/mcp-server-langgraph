@@ -125,7 +125,7 @@ jobs:
       - name: Validate pytest configuration compatibility
         run: |
           echo "🔍 Validating pytest addopts against installed plugins..."
-          uv run python scripts/validate_pytest_config.py
+          uv run python scripts/validation/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
   validate-local-ci-parity:
