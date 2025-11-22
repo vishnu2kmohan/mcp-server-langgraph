@@ -461,7 +461,7 @@ test-e2e:
 	$(MAKE) test-infra-up
 	@echo ""
 	@echo "Waiting for services to be healthy..."
-	@sleep 10
+	@bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 	@echo ""
 	@echo "Running E2E tests..."
 	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m e2e -v --tb=short
@@ -960,7 +960,8 @@ quick-start:
 	@$(MAKE) install-dev -s
 	@echo "Starting infrastructure..."
 	@$(MAKE) setup-infra -s
-	@sleep 5
+	@echo "Waiting for services to be healthy..."
+	@bash scripts/utils/wait_for_services.sh docker-compose.yml
 	@echo ""
 	@echo "✓ Quick start complete!"
 	@echo ""

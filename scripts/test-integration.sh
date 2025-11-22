@@ -223,23 +223,8 @@ log_success "Services started"
 
 # Wait for services to be healthy
 log_info "Waiting for services to be healthy..."
-# shellcheck disable=SC2034
-for _ in {1..30}; do
-    if docker compose -f "$COMPOSE_FILE" ps | grep -q "unhealthy"; then
-        echo -n "."
-        sleep 2
-    else
-        break
-    fi
-done
-echo ""
-
-# Check if services are healthy
-if docker compose -f "$COMPOSE_FILE" ps | grep -q "unhealthy"; then
-    log_error "Some services failed to become healthy"
-    docker compose -f "$COMPOSE_FILE" ps
-    TEST_EXIT_CODE=1
-else
+# Use smart wait utility instead of hardcoded sleep loops
+if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
     log_success "All services healthy"
     echo ""
 
@@ -256,7 +241,7 @@ else
             break
         fi
         echo -n "."
-        sleep 2
+        sleep 1  # Reduced from 2s since health check already passed
     done
     echo ""
 
@@ -319,6 +304,12 @@ else
         log_info "Test duration: ${DURATION}s"
         TEST_EXIT_CODE=1
     fi
+else
+    # Services failed to become healthy
+    log_error "Services failed to become healthy within timeout"
+    log_info "Showing service status for debugging:"
+    docker compose -f "$COMPOSE_FILE" ps
+    TEST_EXIT_CODE=1
 fi
 
 echo ""
