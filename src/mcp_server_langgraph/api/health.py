@@ -212,7 +212,7 @@ def run_startup_validation() -> None:
     status_code=status.HTTP_200_OK,
     summary="Health Check",
     description="Check the health status of all critical systems",
-)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+)
 async def health_check() -> HealthCheckResult:
     """
     Health check endpoint that validates all critical systems.

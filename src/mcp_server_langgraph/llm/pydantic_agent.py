@@ -21,7 +21,7 @@ try:
     PYDANTIC_AI_AVAILABLE = True
 except ImportError:
     PYDANTIC_AI_AVAILABLE = False
-    Agent = None  # type: ignore[unused-ignore,assignment]
+    Agent = None  # type: ignore[unused-ignore,assignment,misc]
 
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.core.prompts import RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT
@@ -82,13 +82,13 @@ class PydanticAIAgentWrapper:
         self.pydantic_model_name = self._get_pydantic_model_name()
 
         # Create specialized agents for different tasks with XML-structured prompts
-        self.router_agent = Agent(
+        self.router_agent = Agent(  # type: ignore[call-overload]
             self.pydantic_model_name,
             result_type=RouterDecision,
             system_prompt=ROUTER_SYSTEM_PROMPT,
         )
 
-        self.response_agent = Agent(
+        self.response_agent = Agent(  # type: ignore[call-overload]
             self.pydantic_model_name,
             result_type=AgentResponse,
             system_prompt=RESPONSE_SYSTEM_PROMPT,

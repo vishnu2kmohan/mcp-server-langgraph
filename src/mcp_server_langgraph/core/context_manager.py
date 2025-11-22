@@ -244,7 +244,8 @@ Focus on high-signal information that maintains conversation context.
             try:
                 # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
                 response = await self.llm.ainvoke([HumanMessage(content=summarization_prompt)])
-                summary = response.content if hasattr(response, "content") else str(response)
+                content = response.content if hasattr(response, "content") else str(response)
+                summary = str(content) if not isinstance(content, str) else content
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
 

@@ -105,7 +105,11 @@ class LLMValidator:
         with tracer.start_as_current_span("llm.validate_response") as span:
             # Extract content
             if isinstance(response, AIMessage):
-                content = response.content
+                if isinstance(response.content, str):
+                    content = response.content
+                else:
+                    # Handle structured content (list) by converting to string
+                    content = str(response.content)
             else:
                 content = str(response)
 

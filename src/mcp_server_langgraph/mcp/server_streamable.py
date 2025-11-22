@@ -187,7 +187,7 @@ try:
     app.state.limiter = limiter
 
     # Register custom exception handler for rate limit exceeded
-    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     _module_logger.info(
         "Rate limiting enabled - strategy: fixed-window, tiers: anonymous/free/standard/premium/enterprise, fail_open: True"
@@ -337,7 +337,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc]  # MCP decorator lacks type stubs
+        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]  # MCP decorator lacks type stubs
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -538,7 +538,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc]  # MCP decorator lacks type stubs
+        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]  # MCP decorator lacks type stubs
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -1029,7 +1029,7 @@ class RefreshTokenResponse(BaseModel):
 
 
 # FastAPI endpoints for MCP StreamableHTTP transport
-@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/")
 async def root() -> dict[str, Any]:
     """Root endpoint with server info"""
     return {
@@ -1060,7 +1060,7 @@ async def root() -> dict[str, Any]:
     }
 
 
-@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
@@ -1146,7 +1146,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         )
 
 
-@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
 async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
@@ -1265,7 +1265,7 @@ async def stream_jsonrpc_response(data: dict[str, Any]) -> AsyncIterator[str]:
     yield json.dumps(data) + "\n"
 
 
-@app.post("/message", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/message", response_model=None)
 async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
     """
     Handle MCP messages via StreamableHTTP POST
@@ -1430,7 +1430,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
         )
 
 
-@app.get("/tools")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/tools")
 async def list_tools() -> dict[str, Any]:
     """List available tools (convenience endpoint)"""
     # Use public API instead of private _tool_manager
@@ -1438,7 +1438,7 @@ async def list_tools() -> dict[str, Any]:
     return {"tools": [tool.model_dump(mode="json") for tool in tools]}
 
 
-@app.get("/resources")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/resources")
 async def list_resources() -> dict[str, Any]:
     """List available resources (convenience endpoint)"""
     # Use public API instead of private _resource_manager
@@ -1486,7 +1486,7 @@ def custom_openapi() -> dict[str, Any]:
     from typing import cast
 
     if app.openapi_schema:
-        return cast(dict[str, Any], app.openapi_schema)
+        return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]
 
     # Generate base OpenAPI schema
     from fastapi.openapi.utils import get_openapi
@@ -1520,11 +1520,11 @@ def custom_openapi() -> dict[str, Any]:
     # generated automatically when endpoints use them
 
     app.openapi_schema = openapi_schema
-    return cast(dict[str, Any], app.openapi_schema)
+    return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]
 
 
 # Apply custom OpenAPI schema
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
 def main() -> None:

@@ -73,15 +73,18 @@ def create_app(
     # Get settings from container
     app_settings = container.settings
 
-    # Create lifespan context
-    lifespan_ctx = create_lifespan(container=container)
+    # Create lifespan wrapper to inject container
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        async with create_lifespan(container=container):
+            yield
 
     # Create FastAPI app
     app = FastAPI(
         title=app_settings.service_name,
         description="MCP Server with LangGraph",
         version="1.0.0",
-        lifespan=lifespan_ctx,
+        lifespan=lifespan,
     )
 
     # Add CORS middleware
@@ -94,7 +97,7 @@ def create_app(
     )
 
     # Add health check endpoint
-    @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+    @app.get("/health")
     async def health_check() -> dict[str, str]:
         """Health check endpoint"""
         return {"status": "healthy", "service": app_settings.service_name}
@@ -186,7 +189,7 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
     from typing import cast
 
     if app.openapi_schema:
-        return cast(dict[str, Any], app.openapi_schema)
+        return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]
 
     from fastapi.openapi.utils import get_openapi
 
@@ -201,4 +204,4 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
     openapi_schema["info"]["x-logo"] = {"url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"}
 
     app.openapi_schema = openapi_schema
-    return cast(dict[str, Any], app.openapi_schema)
+    return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]

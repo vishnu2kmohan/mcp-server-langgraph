@@ -62,7 +62,7 @@ def _create_embeddings(
         # Create Google embeddings with task type optimization
         from pydantic import SecretStr
 
-        embeddings = GoogleGenerativeAIEmbeddings(
+        embeddings: Embeddings = GoogleGenerativeAIEmbeddings(
             model=model_name,
             google_api_key=SecretStr(google_api_key),
             task_type=task_type or "RETRIEVAL_DOCUMENT",
@@ -79,7 +79,7 @@ def _create_embeddings(
         try:
             from sentence_transformers import SentenceTransformer
 
-            class SentenceTransformerEmbeddings(Embeddings):  # type: ignore[misc]  # LangChain Embeddings lacks complete type stubs
+            class SentenceTransformerEmbeddings(Embeddings):
                 """Wrapper to make SentenceTransformer compatible with LangChain Embeddings interface."""
 
                 def __init__(self, model_name: str) -> None:

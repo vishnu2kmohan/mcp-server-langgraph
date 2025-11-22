@@ -655,7 +655,7 @@ validate-pre-push:
 	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
 	@echo ""
 	@echo "▶ Workflow Validation Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 2: Type Checking (Critical - matches CI)"

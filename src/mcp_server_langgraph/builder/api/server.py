@@ -198,7 +198,7 @@ app.add_middleware(
 # ==============================================================================
 
 
-@app.get("/")  # type: ignore[misc]
+@app.get("/")
 def root() -> dict[str, Any]:
     """API information."""
     return {
@@ -214,7 +214,7 @@ def root() -> dict[str, Any]:
     }
 
 
-@app.post("/api/builder/generate", response_model=GenerateCodeResponse)  # type: ignore[misc]
+@app.post("/api/builder/generate", response_model=GenerateCodeResponse)
 async def generate_code(
     request: GenerateCodeRequest,
     _auth: None = Depends(verify_builder_auth),
@@ -262,7 +262,7 @@ async def generate_code(
         raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}")
 
 
-@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)  # type: ignore[misc]
+@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)
 async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflowResponse:
     """
     Validate workflow structure.
@@ -330,7 +330,7 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
         return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {str(e)}"])
 
 
-@app.post("/api/builder/save")  # type: ignore[misc]
+@app.post("/api/builder/save")
 async def save_workflow(
     request: SaveWorkflowRequest,
     _auth: None = Depends(verify_builder_auth),
@@ -372,7 +372,7 @@ async def save_workflow(
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
 
 
-@app.get("/api/builder/templates")  # type: ignore[misc]
+@app.get("/api/builder/templates")
 async def list_templates() -> dict[str, Any]:
     """
     List available workflow templates.
@@ -417,7 +417,7 @@ async def list_templates() -> dict[str, Any]:
     return {"templates": templates}
 
 
-@app.get("/api/builder/templates/{template_id}")  # type: ignore[misc]
+@app.get("/api/builder/templates/{template_id}")
 async def get_template(template_id: str) -> dict[str, Any]:
     """
     Get a specific workflow template.
@@ -451,7 +451,7 @@ async def get_template(template_id: str) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
 
-@app.post("/api/builder/import")  # type: ignore[misc]
+@app.post("/api/builder/import")
 async def import_workflow(
     request: ImportWorkflowRequest,
     _auth: None = Depends(verify_builder_auth),
@@ -495,7 +495,7 @@ async def import_workflow(
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 
-@app.get("/api/builder/node-types")  # type: ignore[misc]
+@app.get("/api/builder/node-types")
 async def list_node_types() -> dict[str, Any]:
     """
     List available node types for the builder.

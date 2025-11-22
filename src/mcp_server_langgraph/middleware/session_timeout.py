@@ -19,7 +19,7 @@ from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.observability.telemetry import logger, metrics
 
 
-class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Starlette BaseHTTPMiddleware lacks complete type stubs
+class SessionTimeoutMiddleware(BaseHTTPMiddleware):
     """
     Automatic session timeout middleware (HIPAA 164.312(a)(2)(iii))
 
@@ -169,7 +169,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):  # type: ignore[misc]  # Sta
             algorithm = settings.jwt_algorithm
             if algorithm.startswith(("RS", "ES", "PS")):
                 # Asymmetric algorithm - use public key for verification
-                key = settings.jwt_public_key or ""
+                key = settings.jwt_public_key or ""  # type: ignore[attr-defined]
             else:
                 # Symmetric algorithm - use secret key
                 key = str(settings.jwt_secret_key) if settings.jwt_secret_key else ""

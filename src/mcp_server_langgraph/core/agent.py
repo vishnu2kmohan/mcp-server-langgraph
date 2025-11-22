@@ -93,7 +93,7 @@ class AgentState(TypedDict):
     user_request: str | None  # Original user request for verification
 
 
-def _initialize_pydantic_agent() -> None:
+def _initialize_pydantic_agent() -> Any:
     """Initialize Pydantic AI agent if available"""
     if not PYDANTIC_AI_AVAILABLE:
         return None
@@ -101,13 +101,13 @@ def _initialize_pydantic_agent() -> None:
     try:
         pydantic_agent = create_pydantic_agent()
         logger.info("Pydantic AI agent initialized for type-safe routing")
-        return pydantic_agent  # type: ignore[return-value]
+        return pydantic_agent
     except Exception as e:
         logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
         return None
 
 
-def _create_checkpointer(settings_to_use: Any | None = None) -> BaseCheckpointSaver[Any]:
+def _create_checkpointer(settings_to_use: Any | None = None) -> Any:
     """
     Create checkpointer backend based on configuration
 
@@ -154,7 +154,7 @@ def _create_checkpointer(settings_to_use: Any | None = None) -> BaseCheckpointSa
 
             # Store context manager reference for proper cleanup on shutdown
             # This prevents resource leaks (Redis connections, file descriptors)
-            checkpointer.__context_manager__ = checkpointer_ctx
+            checkpointer.__context_manager__ = checkpointer_ctx  # type: ignore[attr-defined]
 
             logger.info("Redis checkpointer initialized successfully")
             return checkpointer
@@ -177,7 +177,7 @@ def _create_checkpointer(settings_to_use: Any | None = None) -> BaseCheckpointSa
         return MemorySaver()
 
 
-def create_checkpointer(settings_override: Any | None = None) -> BaseCheckpointSaver[Any]:
+def create_checkpointer(settings_override: Any | None = None) -> Any:
     """
     Public API to create checkpointer backend based on configuration.
 
@@ -201,7 +201,7 @@ def create_checkpointer(settings_override: Any | None = None) -> BaseCheckpointS
     return _create_checkpointer(settings_to_use=settings_override)
 
 
-def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
+def cleanup_checkpointer(checkpointer: BaseCheckpointSaver[Any]) -> None:
     """
     Clean up checkpointer resources on application shutdown.
 
@@ -296,7 +296,7 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
     model = create_llm_from_config(effective_settings)
 
     # Initialize Pydantic AI agent if available
-    pydantic_agent = _initialize_pydantic_agent()  # type: ignore[func-returns-value]
+    pydantic_agent = _initialize_pydantic_agent()
 
     # Initialize context manager for compaction
     context_manager = ContextManager(compaction_threshold=8000, target_after_compaction=4000, recent_message_count=5)

@@ -197,7 +197,7 @@ Choose the best agent for each sub-task."""
         # Add worker nodes
         for agent_name, agent_func in self.agents.items():
             worker_node = self._create_worker_wrapper(agent_name, agent_func)
-            graph.add_node(agent_name, worker_node)
+            graph.add_node(agent_name, worker_node)  # type: ignore[arg-type]
 
         # Add aggregator node
         graph.add_node("aggregate", self._create_aggregator_node)

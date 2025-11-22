@@ -26,7 +26,7 @@ class HealthResponse(BaseModel):
     checks: dict[str, Any]
 
 
-@app.get("/", response_model=HealthResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
     """
     Liveness probe - returns 200 if application is running
@@ -43,7 +43,7 @@ async def health_check() -> HealthResponse:
     )
 
 
-@app.get("/live", response_model=HealthResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/live", response_model=HealthResponse)
 async def liveness_check() -> HealthResponse:
     """
     Liveness probe - same as root health check
@@ -52,10 +52,10 @@ async def liveness_check() -> HealthResponse:
     """
     from typing import cast
 
-    return cast(HealthResponse, await health_check())
+    return await health_check()
 
 
-@app.get("/ready", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/ready", response_model=None)
 async def readiness_check() -> JSONResponse:
     """
     Readiness probe - returns 200 if application can serve traffic
@@ -121,7 +121,7 @@ async def readiness_check() -> JSONResponse:
     )
 
 
-@app.get("/startup", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/startup", response_model=None)
 async def startup_check() -> JSONResponse | dict[str, Any]:
     """
     Startup probe - returns 200 when application has fully started
@@ -148,7 +148,7 @@ async def startup_check() -> JSONResponse | dict[str, Any]:
     return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
 
 
-@app.get("/metrics/prometheus")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/metrics/prometheus")
 async def prometheus_metrics() -> dict[str, Any]:
     """
     Prometheus metrics endpoint

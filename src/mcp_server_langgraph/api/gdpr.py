@@ -106,7 +106,7 @@ class ConsentResponse(BaseModel):
 # ==================== Endpoints ====================
 
 
-@router.get("/me/data", response_model=UserDataExport)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/data", response_model=UserDataExport)
 async def get_user_data(
     request: Request,
     session_store: SessionStore = Depends(get_session_store),
@@ -169,7 +169,7 @@ async def get_user_data(
         return export
 
 
-@router.get("/me/export", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/export", response_model=None)
 async def export_user_data(
     request: Request,
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
@@ -230,7 +230,7 @@ async def export_user_data(
         return Response(content=data_bytes, media_type=content_type, headers=headers)
 
 
-@router.patch("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.patch("/me")
 async def update_user_profile(
     request: Request,
     profile_update: UserProfileUpdate,
@@ -295,7 +295,7 @@ async def update_user_profile(
         return updated_profile
 
 
-@router.delete("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.delete("/me")
 async def delete_user_account(
     request: Request,
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
@@ -397,7 +397,7 @@ async def delete_user_account(
         }
 
 
-@router.post("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/me/consent")
 async def update_consent(
     request: Request,
     consent: ConsentRecord,
@@ -479,7 +479,7 @@ async def update_consent(
         return ConsentResponse(user_id=user_id, consents=consents_dict)
 
 
-@router.get("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/consent")
 async def get_consent_status(
     request: Request,
     gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),

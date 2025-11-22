@@ -16,7 +16,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
-from litellm.utils import ModelResponse
+from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
 from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -253,23 +253,26 @@ class LLMFactory:
         formatted = []
         for msg in messages:
             if isinstance(msg, HumanMessage):
-                formatted.append({"role": "user", "content": msg.content})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "user", "content": content})
             elif isinstance(msg, AIMessage):
-                formatted.append({"role": "assistant", "content": msg.content})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "assistant", "content": content})
             elif isinstance(msg, SystemMessage):
-                formatted.append({"role": "system", "content": msg.content})
-            elif isinstance(msg, dict):
-                # Handle dict messages (already in correct format or need conversion)
-                # Note: Technically unreachable since msg is BaseMessage, but kept for defensive programming
-                if "role" in msg and "content" in msg:
-                    # Already formatted dict
-                    formatted.append(msg)
-                elif "content" in msg:
-                    # Dict with content but no role
-                    formatted.append({"role": "user", "content": str(msg["content"])})
-                else:
-                    # Malformed dict, convert to string
-                    formatted.append({"role": "user", "content": str(msg)})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "system", "content": content})
+            # elif isinstance(msg, dict):
+            #     # Handle dict messages (already in correct format or need conversion)
+            #     # Note: Technically unreachable since msg is BaseMessage, but kept for defensive programming
+            #     if "role" in msg and "content" in msg:
+            #         # Already formatted dict
+            #         formatted.append(msg)
+            #     elif "content" in msg:
+            #         # Dict with content but no role
+            #         formatted.append({"role": "user", "content": str(msg["content"])})
+            #     else:
+            #         # Malformed dict, convert to string
+            #         formatted.append({"role": "user", "content": str(msg)})
             else:
                 # Fallback for other types - check if it has content attribute
                 if hasattr(msg, "content"):
@@ -310,7 +313,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = completion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 # Track metrics
                 metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
@@ -319,7 +322,7 @@ class LLMFactory:
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 
@@ -385,7 +388,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = await acompletion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
@@ -393,7 +396,7 @@ class LLMFactory:
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 

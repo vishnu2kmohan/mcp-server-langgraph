@@ -152,13 +152,13 @@ _is_pytest_session = os.getenv("PYTEST_CURRENT_TEST") is not None
 app = create_app(skip_startup_validation=_is_pytest_session)
 
 
-@app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint"""
     return {"status": "healthy", "service": "mcp-server-langgraph"}
 
 
-@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint with API information"""
     return {

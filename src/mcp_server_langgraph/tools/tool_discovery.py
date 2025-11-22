@@ -71,7 +71,7 @@ def _format_tool_standard(t: BaseTool) -> str:
     result = f"### {t.name}\n{t.description}\n\n"
 
     if hasattr(t, "args_schema") and t.args_schema:
-        schema = t.args_schema.model_json_schema()
+        schema = t.args_schema.model_json_schema()  # type: ignore[union-attr]
         if "properties" in schema:
             result += "**Parameters:**\n"
             for param_name, param_info in schema["properties"].items():
@@ -88,7 +88,7 @@ def _format_tool_full(t: BaseTool) -> str:
     result = f"### {t.name}\n{t.description}\n\n"
 
     if hasattr(t, "args_schema") and t.args_schema:
-        schema = t.args_schema.model_json_schema()
+        schema = t.args_schema.model_json_schema()  # type: ignore[union-attr]
         if "properties" in schema:
             result += "**Parameters:**\n"
             for param_name, param_info in schema["properties"].items():
@@ -122,7 +122,7 @@ def _format_tool_results(tools: list[BaseTool], detail_level: str) -> str:
     return result
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
+@tool
 def search_tools(
     query: str | None = None,
     category: str | None = None,

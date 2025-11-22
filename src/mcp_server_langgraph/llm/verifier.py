@@ -119,7 +119,10 @@ class OutputVerifier:
                 # Get LLM judgment
                 # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
                 llm_response = await self.llm.ainvoke([HumanMessage(content=verification_prompt)])
-                judgment = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
+
+                # Get content and ensure it's a string
+                content = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
+                judgment = str(content) if not isinstance(content, str) else content
 
                 # Parse judgment into structured result
                 result = self._parse_verification_judgment(judgment, threshold)

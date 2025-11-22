@@ -92,7 +92,7 @@ class APIVersionInfo(BaseModel):
         }
     },
     operation_id="get_api_version_metadata",
-)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+)
 async def get_version() -> APIVersionInfo:
     """
     Get API version metadata

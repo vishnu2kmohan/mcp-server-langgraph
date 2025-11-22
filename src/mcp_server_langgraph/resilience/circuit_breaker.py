@@ -17,7 +17,7 @@ import logging
 from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar, cast
 
 import pybreaker
 from opentelemetry import trace
@@ -39,7 +39,7 @@ class CircuitBreakerState(str, Enum):
     HALF_OPEN = "half_open"  # Testing recovery
 
 
-class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):  # type: ignore[misc]  # pybreaker lacks complete type stubs
+class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
     """
     Listener for circuit breaker events.
 
@@ -238,10 +238,12 @@ def circuit_breaker(  # noqa: C901
                     try:
                         with breaker._lock:
                             # This will transition to HALF_OPEN if timeout elapsed, or raise if still OPEN
-                            breaker.state.before_call(func, *args, **kwargs)
+                            state_any: Any = breaker.state  # type: ignore
+                            state_any.before_call(func, *args, **kwargs)
                             # Also notify listeners
                             for listener in breaker.listeners:
-                                listener.before_call(breaker, func, *args, **kwargs)
+                                listener_any_before: Any = listener  # type: ignore
+                                listener_any_before.before_call(breaker, func, *args, **kwargs)
                     except pybreaker.CircuitBreakerError:
                         # Circuit is still OPEN (timeout not elapsed)
                         span.set_attribute("circuit_breaker.success", False)
@@ -274,7 +276,7 @@ def circuit_breaker(  # noqa: C901
                         # Success - handle via state machine
                         with breaker._lock:
                             breaker._state_storage.increment_counter()
-                            for listener in breaker.listeners:
+                            for listener in cast(list[Any], breaker.listeners):
                                 listener.success(breaker)
                             breaker.state.on_success()
 
@@ -292,7 +294,7 @@ def circuit_breaker(  # noqa: C901
                                         f"state={breaker.state.name}"
                                     )
                                     breaker._inc_counter()
-                                    for listener in breaker.listeners:
+                                    for listener in cast(list[Any], breaker.listeners):
                                         listener.failure(breaker, e)
                                     breaker.state.on_failure(e)
                                     logger.debug(

@@ -33,7 +33,7 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
         app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
     """
 
-    def __init__(self, app, auth_middleware: AuthMiddleware):
+    def __init__(self, app, auth_middleware: AuthMiddleware):  # type: ignore[no-untyped-def]
         """
         Initialize the auth request middleware.
 
@@ -44,7 +44,7 @@ class AuthRequestMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.auth_middleware = auth_middleware
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
         """
         Process incoming request, extract and verify auth token.
 
