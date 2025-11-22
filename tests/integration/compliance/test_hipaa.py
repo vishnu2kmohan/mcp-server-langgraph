@@ -11,6 +11,8 @@ import gc
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 from mcp_server_langgraph.auth.hipaa import (
     DataIntegrityCheck,
     EmergencyAccessRequest,
