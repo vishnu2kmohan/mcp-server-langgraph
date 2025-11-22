@@ -4,22 +4,176 @@ Comprehensive test suite for MCP Server with LangGraph, following best practices
 
 ## Directory Structure
 
+**🎉 Restructured November 2025** - Test suite reorganized from 55 files in root to 1 file, with logical categorization into 24 subdirectories for improved maintainability. See `TESTING_STRATEGY_VALIDATION_REPORT.md` for full details.
+
 ```
 tests/
-├── test_*.py              # Unit & integration tests (mixed markers)
-├── api/                   # API endpoint tests (NEW)
+├── conftest.py                    # Shared fixtures (2400 lines, -9% from modularization)
+│
+├── test_app_factory.py            # Only remaining root test (app factory initialization)
+│
+├── fixtures/                      # 📦 Modular fixture packages (Phase 3)
+│   ├── __init__.py               #     Package initialization with loading rules
+│   ├── docker_fixtures.py        #     Docker Compose lifecycle, health checks (183 lines)
+│   └── time_fixtures.py          #     Time freezing for deterministic tests (42 lines)
+│
+├── api/                           # REST API endpoint tests
 │   ├── test_api_keys_endpoints.py
+│   ├── test_conversation_api.py
+│   ├── test_execution_api.py
+│   ├── test_monitoring_api.py
 │   └── test_service_principals_endpoints.py
-├── e2e/                   # End-to-end user journey tests (NEW)
-│   └── test_full_user_journey.py
-├── unit/                  # Dedicated unit tests (NEW)
-│   └── test_mcp_stdio_server.py
-├── contract/              # Contract tests (MCP protocol, OpenAPI)
-├── property/              # Property-based tests (Hypothesis)
-├── performance/           # Performance benchmark tests
-├── regression/            # Performance regression tests
-└── conftest.py            # Shared test fixtures and configuration
+│
+├── benchmarks/                    # Performance benchmarking
+│   ├── scenarios/                #     Benchmark scenario definitions
+│   └── test_*.py                 #     Pytest-benchmark performance tests
+│
+├── builder/                       # Graph builder tests
+│   ├── api/                      #     Builder API tests
+│   └── test_*.py                 #     Builder logic tests
+│
+├── cli/                           # CLI command tests
+│   └── test_*.py                 #     Command-line interface tests
+│
+├── contract/                      # Contract testing (MCP, OpenAPI)
+│   ├── test_mcp_protocol_contract.py
+│   └── test_openapi_spec.py
+│
+├── core/                          # Core functionality tests
+│   ├── interrupts/               #     Interrupt handling tests
+│   └── test_*.py                 #     Core logic tests
+│
+├── deployment/                    # Deployment configuration validation
+│   └── test_*.py                 #     Terraform, K8s manifest tests
+│
+├── deployments/                   # Deployment-specific tests
+│   └── test_*.py                 #     Environment-specific deployment tests
+│
+├── e2e/                           # 🚀 End-to-end user journey tests
+│   ├── test_full_user_journey.py #     Complete user workflows (6 journeys)
+│   ├── test_real_clients.py      #     Real infrastructure integration
+│   ├── test_scim_provisioning.py #     SCIM provisioning workflows
+│   ├── real_clients.py           #     Real Keycloak/MCP clients
+│   └── helpers.py                #     E2E test helpers (mock clients)
+│
+├── helpers/                       # Test helper utilities
+│   └── test_*.py                 #     Shared test utilities
+│
+├── infrastructure/                # Infrastructure tests (non-K8s)
+│   └── test_*.py                 #     Docker, database, cache tests
+│
+├── integration/                   # 🔗 Integration test suites (by domain)
+│   ├── api/                      #     API integration tests
+│   ├── compliance/               #     GDPR, SOC2 compliance tests
+│   ├── contract/                 #     Contract integration tests
+│   ├── core/                     #     Core integration tests
+│   ├── deployment/               #     Deployment integration tests
+│   ├── execution/                #     Execution engine integration
+│   ├── health/                   #     Health check integration
+│   ├── infrastructure/           #     Infrastructure integration
+│   ├── patterns/                 #     Design pattern tests
+│   ├── property/                 #     Property-based integration
+│   ├── regression/               #     Regression prevention tests
+│   ├── resilience/               #     Resilience pattern tests
+│   └── security/                 #     Security integration tests
+│
+├── kubernetes/                    # Kubernetes-specific tests
+│   └── test_*.py                 #     K8s manifest validation
+│
+├── llm/                           # LLM provider tests
+│   └── test_*.py                 #     LangChain, Pydantic AI tests
+│
+├── meta/                          # 🔍 Meta-validation (tests that test tests)
+│   ├── ci/                       #     CI/CD workflow validation
+│   │   ├── test_workflow_dependencies.py  # Workflow job dependency validation
+│   │   ├── test_workflow_security.py      # Workflow secret security patterns
+│   │   └── test_workflow_syntax.py        # Actionlint syntax validation
+│   ├── infrastructure/           #     Infrastructure configuration tests
+│   │   └── test_docker_paths.py  #     Docker Python path validation
+│   └── validation/               #     Test suite validation scripts
+│       └── test_*.py             #     Test organization enforcement
+│
+├── middleware/                    # Middleware component tests
+│   └── test_*.py                 #     Middleware logic tests
+│
+├── monitoring/                    # Observability tests
+│   └── test_*.py                 #     Metrics, tracing, logging tests
+│
+├── performance/                   # 📊 Performance regression tests
+│   ├── test_*.py                 #     Percentile-based performance validation
+│   └── *.ipynb                   #     Jupyter notebook analysis
+│
+├── property/                      # 🎲 Property-based tests (Hypothesis)
+│   └── test_*.py                 #     Generative testing with Hypothesis
+│
+├── regression/                    # Regression prevention tests
+│   └── test_*.py                 #     Regression test suite
+│
+├── resilience/                    # Resilience pattern tests
+│   └── test_*.py                 #     Circuit breaker, retry, timeout tests
+│
+├── scripts/                       # Test automation scripts
+│   └── *.py                      #     CI/CD helper scripts
+│
+├── security/                      # 🔒 Security testing
+│   ├── test_api_key_*.py         #     API key security tests
+│   ├── test_authorization_*.py   #     OpenFGA authorization tests
+│   ├── test_rbac_*.py            #     RBAC implementation tests
+│   └── test_secrets_*.py         #     Secret management tests
+│
+├── smoke/                         # 💨 Smoke tests (fast validation)
+│   └── test_*.py                 #     Quick sanity checks
+│
+├── terraform/                     # Terraform IaC tests
+│   └── test_*.py                 #     Terraform plan validation
+│
+├── tools/                         # Tool implementation tests
+│   └── test_*.py                 #     MCP tool logic tests
+│
+├── unit/                          # ⚡ Pure unit tests (no dependencies)
+│   ├── auth/                     #     Authentication logic
+│   ├── config/                   #     Configuration management
+│   ├── core/                     #     Core business logic
+│   ├── documentation/            #     Documentation generation
+│   ├── execution/                #     Execution engine
+│   ├── health/                   #     Health check logic
+│   ├── llm/                      #     LLM integration
+│   ├── observability/            #     Observability logic
+│   ├── resilience/               #     Resilience patterns
+│   ├── session/                  #     Session management
+│   ├── storage/                  #     Storage layer
+│   └── tools/                    #     Tool implementations
+│
+├── utils/                         # Test utilities
+│   └── *.py                      #     Helper functions
+│
+└── validation_lib/                # Validation library tests
+    └── test_*.py                 #     Input validation tests
 ```
+
+### Reorganization Impact
+
+**Before (Phase 1 baseline)**:
+- 55 test files in root directory
+- Difficult to navigate
+- No clear categorization
+- Mixed concerns (unit, integration, meta-validation)
+
+**After (Phase 2 completed November 2025)**:
+- **1 test file in root** (98% reduction)
+- **24 logical subdirectories**
+- **44 files relocated** to appropriate categories
+- Clear separation of concerns
+- Easier navigation and maintenance
+
+**Key Improvements**:
+1. **97% root directory reduction** - Only `test_app_factory.py` remains in root
+2. **Logical categorization** - Tests grouped by domain (api, core, security, etc.)
+3. **Meta-validation separation** - CI/infrastructure tests in `tests/meta/`
+4. **Integration test organization** - 14 subdirectories under `tests/integration/`
+5. **Modular fixtures** - Extracted into `tests/fixtures/` package (Phase 3)
+
+See `docs-internal/TESTING_STRATEGY_VALIDATION_REPORT.md` and `tests/MIGRATION_GUIDE.md` for complete reorganization details and file relocation mappings.
 
 ## 🎯 Quick Start - Testing the New Features
 
