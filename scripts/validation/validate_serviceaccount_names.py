@@ -19,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-REPO_ROOT = Path(__file__).parent.parent.parent.parent
+REPO_ROOT = Path(__file__).parent.parent.parent
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 

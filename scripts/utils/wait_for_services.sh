@@ -146,6 +146,15 @@ check_service_health() {
         "healthy"|"running")
             return 0  # Healthy
             ;;
+        "exited")
+             # Check exit code for exited services
+             local exit_code
+             exit_code=$($docker_compose_cmd -f "$compose_file" ps --format json "$service" | jq -r '.[0].ExitCode')
+             if [ "$exit_code" = "0" ]; then
+                 return 0 # Healthy (completed successfully)
+             fi
+             return 1 # Failed
+             ;;
         "starting"|"unhealthy")
             return 1  # Not yet healthy
             ;;

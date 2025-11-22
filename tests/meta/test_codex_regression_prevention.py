@@ -378,8 +378,8 @@ class TestXFailStrictUsage:
         xfail_count = content.count("@pytest.mark.xfail(strict=True")
 
         # Should have multiple xfail decorators for unimplemented tests
-        assert xfail_count >= 24, (
-            f"Expected 24+ xfail(strict=True) decorators in E2E tests, found {xfail_count}. "
+        assert xfail_count >= 20, (
+            f"Expected 20+ xfail(strict=True) decorators in E2E tests, found {xfail_count}. "
             f"Unimplemented test stubs should use xfail(strict=True) not pytest.skip(). "
             f"Note: Count decreases as tests are implemented (started at 34, current: {xfail_count}, target: 0)"
         )

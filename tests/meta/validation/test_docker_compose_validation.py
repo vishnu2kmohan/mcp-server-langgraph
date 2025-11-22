@@ -25,7 +25,7 @@ import yaml
 pytestmark = pytest.mark.unit
 
 # Root directory of the project
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parents[3]
 
 
 def find_docker_compose_files() -> list[Path]:

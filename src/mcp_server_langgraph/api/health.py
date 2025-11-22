@@ -157,23 +157,27 @@ def validate_database_connectivity() -> tuple[bool, str]:
         raise
 
 
+async def validate_database_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate that PostgreSQL database is accessible (async version).
+
+    Returns:
+        Tuple of (is_healthy, message)
+    """
+    from mcp_server_langgraph.infrastructure.database import check_database_connectivity
+
+    # Parse the postgres URL from settings
+    postgres_url = settings.gdpr_postgres_url
+
+    logger.debug(f"Validating database connectivity to {postgres_url.split('@')[-1]}")
+
+    return await check_database_connectivity(postgres_url, timeout=5.0)
+
+
 def run_startup_validation() -> None:
     """
     Run all startup validations and raise SystemValidationError if critical checks fail.
-
-    This function should be called during application startup to ensure all
-    systems are properly initialized before accepting requests.
-
-    Raises:
-        SystemValidationError: If any critical validation fails
-
-    Example:
-        # In app.py or startup event
-        try:
-            run_startup_validation()
-        except SystemValidationError as e:
-            logger.critical(f"Startup validation failed: {e}")
-            raise
+    ...
     """
     checks = {
         "observability": validate_observability_initialized(),
@@ -182,7 +186,25 @@ def run_startup_validation() -> None:
         "docker_sandbox": validate_docker_sandbox_security(),
         "database_connectivity": validate_database_connectivity(),
     }
+    _process_validation_results(checks)
 
+
+async def run_startup_validation_async() -> None:
+    """
+    Run all startup validations asynchronously.
+    """
+    checks = {
+        "observability": validate_observability_initialized(),
+        "session_store": validate_session_store_registered(),
+        "api_key_cache": validate_api_key_cache_configured(),
+        "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": await validate_database_connectivity_async(),
+    }
+    _process_validation_results(checks)
+
+
+def _process_validation_results(checks: dict[str, tuple[bool, str]]) -> None:
+    """Process validation results and raise error if needed."""
     errors = []
     warnings = []
 

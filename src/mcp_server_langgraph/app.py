@@ -14,6 +14,7 @@ Usage:
 """
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
-from mcp_server_langgraph.api.health import run_startup_validation
+from mcp_server_langgraph.api.health import run_startup_validation_async
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
@@ -31,24 +32,7 @@ from mcp_server_langgraph.observability.telemetry import init_observability, log
 def create_app(settings_override: Settings | None = None, skip_startup_validation: bool = False) -> FastAPI:
     """
     Create and configure the FastAPI application.
-
-    Args:
-        settings_override: Optional settings to use instead of global settings.
-                          Useful for testing with custom configurations.
-        skip_startup_validation: If True, skip database connectivity and startup validation.
-                                Useful for unit tests that don't have infrastructure running.
-                                Default: False (validation runs in production).
-
-    Returns:
-        FastAPI: Configured application instance
-
-    Usage:
-        # Production (uses global settings, runs validation)
-        app = create_app()
-
-        # Testing (uses custom settings, skips validation)
-        test_settings = Settings(environment="test", ...)
-        test_app = create_app(settings_override=test_settings, skip_startup_validation=True)
+    ...
     """
     # Use override settings if provided, otherwise use global settings
     config = settings_override if settings_override is not None else settings
@@ -66,6 +50,28 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
             f"Error: {e}. This is a critical bug - logging will fail throughout the app."
         )
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Run startup validation to ensure all critical systems initialized correctly
+        # This prevents the app from starting if any of the OpenAI Codex findings recur
+        # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency
+        if not skip_startup_validation:
+            try:
+                await run_startup_validation_async()
+            except Exception as e:
+                try:
+                    logger.critical(f"Startup validation failed: {e}")
+                except RuntimeError:
+                    pass  # Graceful degradation if observability not initialized
+                raise
+        else:
+            try:
+                logger.debug("Skipping startup validation (test mode)")
+            except RuntimeError:
+                pass  # Graceful degradation if observability not initialized
+        
+        yield
+
     app = FastAPI(
         title="MCP Server LangGraph API",
         version="2.8.0",
@@ -73,6 +79,7 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
         docs_url="/api/docs",
         redoc_url="/api/redoc",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
 
     # CORS middleware - use config (settings or override) for environment-aware defaults
@@ -123,24 +130,6 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
         logger.info("FastAPI application created with all routers mounted")
     except RuntimeError:
         pass  # Graceful degradation if observability not initialized
-
-    # Run startup validation to ensure all critical systems initialized correctly
-    # This prevents the app from starting if any of the OpenAI Codex findings recur
-    # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency
-    if not skip_startup_validation:
-        try:
-            run_startup_validation()
-        except Exception as e:
-            try:
-                logger.critical(f"Startup validation failed: {e}")
-            except RuntimeError:
-                pass  # Graceful degradation if observability not initialized
-            raise
-    else:
-        try:
-            logger.debug("Skipping startup validation (test mode)")
-        except RuntimeError:
-            pass  # Graceful degradation if observability not initialized
 
     return app
 

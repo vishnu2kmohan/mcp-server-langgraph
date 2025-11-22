@@ -35,7 +35,8 @@ class TestPreCommitConfigSyntax:
 
         After fix, should use block scalar syntax (|) for multiline content.
         """
-        config_file = Path(__file__).parent.parent / ".pre-commit-config-requirements-check.yaml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         assert config_file.exists(), f"Config file not found: {config_file}"
 
@@ -75,7 +76,8 @@ class TestPreCommitConfigSyntax:
 
     def test_all_workflow_yaml_files_valid(self):
         """Test that all GitHub workflow YAML files are valid."""
-        workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+        repo_root = Path(__file__).parents[3]
+        workflows_dir = repo_root / ".github" / "workflows"
 
         if not workflows_dir.exists():
             pytest.skip("Workflows directory not found")
@@ -100,7 +102,8 @@ class TestPreCommitConfigSyntax:
         After using block scalar syntax (|), multiline bash scripts should parse
         correctly as strings with embedded newlines.
         """
-        config_file = Path(__file__).parent.parent / ".pre-commit-config-requirements-check.yaml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         with open(config_file) as f:
             config = yaml.safe_load(f)
@@ -131,7 +134,8 @@ class TestKubernetesYAMLSyntax:
 
     def test_helm_templates_directory_exists(self):
         """Verify Helm templates directory exists."""
-        templates_dir = Path(__file__).parent.parent / "deployments" / "helm" / "mcp-server-langgraph" / "templates"
+        repo_root = Path(__file__).parents[3]
+        templates_dir = repo_root / "deployments" / "helm" / "mcp-server-langgraph" / "templates"
 
         if templates_dir.exists():
             yaml_files = list(templates_dir.glob("*.yaml"))
@@ -141,7 +145,8 @@ class TestKubernetesYAMLSyntax:
 
     def test_kustomize_overlays_valid_yaml(self):
         """Test that Kustomize overlay files are valid YAML."""
-        overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays"
+        repo_root = Path(__file__).parents[3]
+        overlays_dir = repo_root / "deployments" / "overlays"
 
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")
@@ -174,7 +179,7 @@ class TestYAMLFileEncoding:
 
     def test_yaml_files_utf8_no_bom(self):
         """Test that YAML files are UTF-8 without BOM."""
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).parents[3]
 
         yaml_files = (
             list(project_root.glob("*.yaml"))
@@ -201,7 +206,8 @@ class TestYAMLIndentation:
 
     def test_yaml_uses_2_space_indentation(self):
         """Test that YAML files use 2-space indentation (not tabs)."""
-        config_file = Path(__file__).parent.parent / ".pre-commit-config-requirements-check.yaml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         with open(config_file) as f:
             content = f.read()
