@@ -160,7 +160,8 @@ def main() -> int:
 
     # Find repository root
     script_dir = Path(__file__).parent
-    repo_root = script_dir.parent
+    # Navigate up from scripts/validation/ to repo root
+    repo_root = script_dir.parent.parent
 
     # Validate we're at repo root
     if not (repo_root / ".git").exists() and not (repo_root / "pyproject.toml").exists():

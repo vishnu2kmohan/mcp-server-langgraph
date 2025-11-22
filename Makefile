@@ -86,8 +86,6 @@ Testing:
 	@echo ""
 	@echo "Fast Testing (40-70% faster):"
 	@echo "  make test-dev                 🚀 Development mode (parallel, fast-fail) - RECOMMENDED"
-	@echo "  make test-parallel            Run all tests in parallel (no coverage)"
-	@echo "  make test-parallel-unit       Run unit tests in parallel"
 	@echo "  make test-fast-core           Fastest iteration (core tests only, <5s)"
 	@echo "  make test-fast                Run all tests without coverage"
 	@echo ""
@@ -228,7 +226,7 @@ test:
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
-	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
+	@echo "Tip: Use 'make test-fast' or 'make test-dev' for faster iteration"
 
 test-unit:
 	@echo "Running pure unit tests (tests/unit/)..."
@@ -242,12 +240,6 @@ test-local:
 	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit tests/cli tests/deployment tests/infrastructure tests/ci
 	@echo "✓ Local tests complete"
 
-test-unit-fast:
-	@echo "Running unit tests without coverage (fast iteration)..."
-	@echo "⚠️  DEPRECATED: Use 'make test-parallel-unit' or 'make test-dev' instead"
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit --tb=short
-	@echo "✓ Fast unit tests complete"
-
 test-ci:
 	@echo "Running tests exactly as CI does (parallel execution)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
@@ -258,12 +250,6 @@ test-integration:
 	@echo "Running integration tests in Docker environment (matches CI)..."
 	./scripts/test-integration.sh --build
 	@echo "✓ Integration tests complete"
-
-test-integration-local:
-	@echo "⚠️  Running integration tests locally (parallel execution, requires services running)..."
-	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m integration --no-cov --tb=short
-	@echo "✓ Local integration tests complete"
 
 test-integration-services:
 	@echo "Starting integration test services only..."
@@ -1241,22 +1227,6 @@ test-fast:
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage (parallel)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit --tb=short
-
-# ==============================================================================
-# Parallel Testing (40-60% faster)
-# ==============================================================================
-
-test-parallel:
-	@echo "⚡⚡ Running all tests in parallel (pytest-xdist)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --tb=short
-	@echo "✓ Parallel tests complete"
-	@echo ""
-	@echo "Speedup: ~40-60% faster than sequential execution"
-
-test-parallel-unit:
-	@echo "⚡⚡ Running unit tests in parallel..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit -n auto --tb=short
-	@echo "✓ Parallel unit tests complete"
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."

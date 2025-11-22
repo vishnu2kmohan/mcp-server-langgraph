@@ -45,6 +45,7 @@ VERBOSE=false
 SERVICES_ONLY=false
 
 # Parse command line arguments
+PYTEST_ARGS=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         --build)
@@ -70,6 +71,11 @@ while [[ $# -gt 0 ]]; do
         --help)
             grep "^#" "$0" | sed 's/^# //'
             exit 0
+            ;;
+        --)
+            shift
+            PYTEST_ARGS+=("$@")
+            break
             ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
@@ -280,6 +286,12 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
     # Set PostgreSQL connection parameters inline (MUST match docker-compose.test.yml and CI)
     # This ensures local/CI parity and prevents connection failures
     # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
+    #
+    # NOTE: Default to "-m integration -v --tb=short" if no args provided
+    if [ ${#PYTEST_ARGS[@]} -eq 0 ]; then
+        PYTEST_ARGS=(-m integration -v --tb=short)
+    fi
+
     if TESTING=true \
        OTEL_SDK_DISABLED=true \
        POSTGRES_HOST=localhost \
@@ -287,8 +299,9 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
        POSTGRES_DB=gdpr_test \
        POSTGRES_USER=postgres \
        POSTGRES_PASSWORD=postgres \
-       uv run pytest -m integration -v --tb=short; then
+       uv run pytest "${PYTEST_ARGS[@]}"; then
         END_TIME=$(date +%s)
+
         DURATION=$((END_TIME - START_TIME))
 
         echo ""
