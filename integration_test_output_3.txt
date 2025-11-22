@@ -529,3 +529,68 @@ Running integration tests in Docker environment (matches CI)...
 
 #19 exporting to image
 #19 exporting layers
+#19 exporting layers 228.7s done
+#19 exporting manifest sha256:6db404b22233e8ac786b439340f8fffefd6482f61d67547523696a42f798b7d2 0.0s done
+#19 exporting config sha256:b539cc97edc1c512a6606ae797125d803abdab02ff90d42db1531c0f16722463 0.0s done
+#19 exporting attestation manifest sha256:87a46ed4434877f587a50adb4ec3808dbbae7a118c859133d666890a5c1d97f5 0.1s done
+#19 exporting manifest list sha256:478bd170ca4dfc78536ed634dd340ac389c16f3ff261679e158337c5a89023b8
+#19 exporting manifest list sha256:478bd170ca4dfc78536ed634dd340ac389c16f3ff261679e158337c5a89023b8 0.0s done
+#19 naming to docker.io/library/mcp-server-langgraph-session-20251118-221044-mcp-server-test:latest done
+#19 unpacking to docker.io/library/mcp-server-langgraph-session-20251118-221044-mcp-server-test:latest
+#19 unpacking to docker.io/library/mcp-server-langgraph-session-20251118-221044-mcp-server-test:latest 64.0s done
+#19 DONE 293.0s
+
+#20 resolving provenance for metadata file
+#20 DONE 0.0s
+ mcp-server-langgraph-session-20251118-221044-mcp-server-test  Built
+ Network mcp-test-network  Creating
+ Network mcp-test-network  Created
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-mcp-server-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-mcp-server-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Exited
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Healthy

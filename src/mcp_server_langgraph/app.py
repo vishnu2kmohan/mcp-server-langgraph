@@ -148,7 +148,8 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
 # Create the application instance
 # Skip validation when running under pytest to avoid DB dependency in unit tests
 # This is detected via PYTEST_CURRENT_TEST environment variable set by pytest
-_is_pytest_session = os.getenv("PYTEST_CURRENT_TEST") is not None
+# Also skip if TESTING env var is set (used by integration tests)
+_is_pytest_session = os.getenv("PYTEST_CURRENT_TEST") is not None or os.getenv("TESTING") == "true"
 app = create_app(skip_startup_validation=_is_pytest_session)
 
 

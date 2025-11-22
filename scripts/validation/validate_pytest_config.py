@@ -131,7 +131,8 @@ def validate_pytest_config(repo_root: Path) -> tuple[bool, list[tuple[str, str]]
 
 def main() -> int:
     """Main entry point."""
-    repo_root = Path(__file__).parent.parent
+    # scripts/validation/validate_pytest_config.py -> scripts/validation -> scripts -> root
+    repo_root = Path(__file__).parents[2]
 
     print("🔍 Validating pytest configuration...")
     print(f"   Repository: {repo_root}")
