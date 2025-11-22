@@ -13,6 +13,8 @@ Usage:
     uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,24 +28,27 @@ from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
-def create_app(settings_override: Settings | None = None) -> FastAPI:
+def create_app(settings_override: Settings | None = None, skip_startup_validation: bool = False) -> FastAPI:
     """
     Create and configure the FastAPI application.
 
     Args:
         settings_override: Optional settings to use instead of global settings.
                           Useful for testing with custom configurations.
+        skip_startup_validation: If True, skip database connectivity and startup validation.
+                                Useful for unit tests that don't have infrastructure running.
+                                Default: False (validation runs in production).
 
     Returns:
         FastAPI: Configured application instance
 
     Usage:
-        # Production (uses global settings)
+        # Production (uses global settings, runs validation)
         app = create_app()
 
-        # Testing (uses custom settings)
+        # Testing (uses custom settings, skips validation)
         test_settings = Settings(environment="test", ...)
-        test_app = create_app(settings_override=test_settings)
+        test_app = create_app(settings_override=test_settings, skip_startup_validation=True)
     """
     # Use override settings if provided, otherwise use global settings
     config = settings_override if settings_override is not None else settings
@@ -121,20 +126,30 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
 
     # Run startup validation to ensure all critical systems initialized correctly
     # This prevents the app from starting if any of the OpenAI Codex findings recur
-    try:
-        run_startup_validation()
-    except Exception as e:
+    # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency
+    if not skip_startup_validation:
         try:
-            logger.critical(f"Startup validation failed: {e}")
+            run_startup_validation()
+        except Exception as e:
+            try:
+                logger.critical(f"Startup validation failed: {e}")
+            except RuntimeError:
+                pass  # Graceful degradation if observability not initialized
+            raise
+    else:
+        try:
+            logger.debug("Skipping startup validation (test mode)")
         except RuntimeError:
             pass  # Graceful degradation if observability not initialized
-        raise
 
     return app
 
 
 # Create the application instance
-app = create_app()
+# Skip validation when running under pytest to avoid DB dependency in unit tests
+# This is detected via PYTEST_CURRENT_TEST environment variable set by pytest
+_is_pytest_session = os.getenv("PYTEST_CURRENT_TEST") is not None
+app = create_app(skip_startup_validation=_is_pytest_session)
 
 
 @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
