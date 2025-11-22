@@ -457,7 +457,7 @@ repos:
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
   - id: validate-documentation-integrity
     name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-    entry: uv run pytest tests/test_documentation_integrity.py -v --tb=short
+    entry: uv run pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
     language: system
     files: \.(md|mdx|json)$|^monitoring/.*README\.md$
     pass_filenames: false
@@ -635,7 +635,7 @@ repos:
       '
   - id: prevent-local-config-commits
     name: Prevent Local Config Files from Being Committed
-    entry: uv run pytest tests/test_gitignore_validation.py -v
+    entry: uv run pytest tests/meta/validation/test_gitignore_validation.py -v
     language: system
     pass_filenames: false
     always_run: true
@@ -807,7 +807,7 @@ repos:
       '
   - id: validate-fixture-organization
     name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/test_fixture_organization.py -v --tb=short
+    entry: uv run pytest tests/meta/test_fixture_organization.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^tests/.*\.py$
@@ -938,12 +938,12 @@ repos:
       - Prevents FileNotFoundError in tests
 
 
-      See: tests/test_path_validation.py for meta-tests
+      See: tests/meta/validation/test_path_validation.py for meta-tests
 
       '
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
-    entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
+    entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
