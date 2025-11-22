@@ -79,12 +79,11 @@ class TestFixtureScopeValidation:
         openfga_client_real) must have matching scope to prevent ScopeMismatch.
 
         References:
-        - tests/conftest.py:988 - postgres_connection_real
-        - tests/conftest.py:1014 - redis_client_real
-        - tests/conftest.py:1044 - openfga_client_real
+        - tests/fixtures/database_fixtures.py - database fixtures location
         """
-        conftest_path = Path(__file__).parent.parent / "conftest.py"
-        content = conftest_path.read_text()
+        # Fixtures are now in tests/fixtures/database_fixtures.py
+        fixtures_path = Path(__file__).parent.parent / "fixtures" / "database_fixtures.py"
+        content = fixtures_path.read_text()
 
         # Parse AST
         tree = ast.parse(content)
@@ -110,7 +109,7 @@ class TestFixtureScopeValidation:
 
         # Validate all fixtures found and are session-scoped
         for fixture_name in required_fixtures:
-            assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in conftest.py"
+            assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in database_fixtures.py"
             assert fixture_scopes[fixture_name] == "session", (
                 f"Fixture '{fixture_name}' must be session-scoped, " f"found scope='{fixture_scopes[fixture_name]}'"
             )

@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 # Add project root to path to enable imports from tests/
-_project_root = Path(__file__).parent.parent
+_project_root = Path(__file__).parent.parent.parent
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
@@ -48,7 +48,7 @@ def main() -> int:
         files_to_check = [f for f in sys.argv[1:] if f.endswith(".py") and "test_" in f]
     else:
         # Standalone mode: check all test files
-        repo_root = Path(__file__).parent.parent
+        repo_root = Path(__file__).parent.parent.parent
         files_to_check = memory_safety.find_test_files(str(repo_root / "tests"))
 
     if not files_to_check:

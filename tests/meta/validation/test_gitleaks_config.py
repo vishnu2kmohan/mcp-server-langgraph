@@ -33,12 +33,15 @@ class TestGitleaksConfig:
         This test will initially FAIL because the config doesn't exist yet.
         After fix, gitleaks should use this config to avoid false positives.
         """
-        config_file = Path(__file__).parent.parent / ".gitleaks.toml"
-        assert config_file.exists(), "gitlea ks.toml configuration should exist"
+        # Resolve repo root from tests/meta/validation/test_gitleaks_config.py
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".gitleaks.toml"
+        assert config_file.exists(), ".gitleaks.toml configuration should exist"
 
     def test_gitleaks_config_valid_toml(self):
         """Test that .gitleaks.toml is valid TOML syntax."""
-        config_file = Path(__file__).parent.parent / ".gitleaks.toml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
@@ -84,7 +87,8 @@ class TestGitleaksConfig:
 
     def test_gitleaks_ignores_venv_directories(self):
         """Test that gitleaks config excludes .venv and similar directories."""
-        config_file = Path(__file__).parent.parent / ".gitleaks.toml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
@@ -112,7 +116,8 @@ class TestGitleaksConfig:
 
     def test_gitleaks_ignores_generated_clients(self):
         """Test that gitleaks config excludes generated client code."""
-        config_file = Path(__file__).parent.parent / ".gitleaks.toml"
+        repo_root = Path(__file__).parents[3]
+        config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")

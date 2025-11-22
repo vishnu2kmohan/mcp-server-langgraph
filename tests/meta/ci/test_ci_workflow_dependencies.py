@@ -89,7 +89,7 @@ def test_dev_extras_complete():
     except ModuleNotFoundError:
         import tomli as tomllib
 
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parents[3]
     pyproject_path = project_root / "pyproject.toml"
 
     assert pyproject_path.exists(), "pyproject.toml not found"

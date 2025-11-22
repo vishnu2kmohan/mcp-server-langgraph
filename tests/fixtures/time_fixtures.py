@@ -39,3 +39,20 @@ def frozen_time():
 
     with freeze_time("2024-01-01 00:00:00", tz_offset=0):
         yield
+
+
+@pytest.fixture
+def virtual_clock():
+    """
+    Fixture providing a VirtualClock instance for testing time-dependent logic.
+    Allows deterministic control over time without relying on system clock.
+    """
+    try:
+        from mcp_server_langgraph.core.time_provider import VirtualClock
+        return VirtualClock()
+    except ImportError:
+        # Fallback mock if core module not available
+        class MockVirtualClock:
+            def time(self): return 0.0
+            def sleep(self, seconds): pass
+        return MockVirtualClock()

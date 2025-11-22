@@ -66,9 +66,9 @@ class TestE2EOrganization:
         file was actually at tests/integration/e2e/test_full_user_journey.py.
 
         References:
-        - scripts/check_e2e_completion.py:17 - E2E_TEST_FILE path constant
+        - scripts/validation/check_e2e_completion.py:17 - E2E_TEST_FILE path constant
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "check_e2e_completion.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_e2e_completion.py"
 
         assert script_path.exists(), f"check_e2e_completion.py not found at {script_path}"
 

@@ -128,7 +128,7 @@ secrets = [
     # See: requirements-infisical.txt for installation options
     # Docker builds: Automatically installed
     # Local builds: See docs/deployment/infisical-installation.md
-    "infisical-python>=2.1.7,<=2.3.6",
+    "infisical-python>=2.1.7,<=2.3.5",
 ]
 
 cli = [

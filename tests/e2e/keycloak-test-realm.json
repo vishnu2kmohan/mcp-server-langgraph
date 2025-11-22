@@ -12,7 +12,7 @@
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
       "enabled": true,
-      "publicClient": false,
+      "publicClient": true,
       "secret": "test-client-secret-for-e2e-tests",
       "directAccessGrantsEnabled": true,
       "standardFlowEnabled": true,

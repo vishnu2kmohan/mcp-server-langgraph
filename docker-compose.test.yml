@@ -74,10 +74,11 @@ services:
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 20  # Increased from 10 to allow more time for migrations (60s max)
-      start_period: 10s  # Increased from 5s to allow schema initialization
     # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - postgres
 
   # ==============================================================================
   # AUTHORIZATION SERVICES
@@ -122,7 +123,9 @@ services:
       start_period: 5s
     # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - openfga
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
@@ -178,7 +181,9 @@ services:
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - keycloak
 
   # ==============================================================================
   # CACHE & SESSION STORAGE
@@ -206,7 +211,9 @@ services:
           cpus: '0.05'
           memory: 64M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - redis
 
   redis-sessions-test:
     image: redis:7-alpine
@@ -230,7 +237,9 @@ services:
           cpus: '0.05'
           memory: 32M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - redis-sessions
 
   # ==============================================================================
   # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)
@@ -265,7 +274,9 @@ services:
           cpus: '0.1'
           memory: 128M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - qdrant
 
   # ==============================================================================
   # MCP SERVER (for E2E tests)
@@ -352,7 +363,9 @@ services:
           cpus: '0.25'
           memory: 512M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - mcp-server
 
   # ==============================================================================
   # OBSERVABILITY SERVICES
@@ -368,12 +381,6 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
       - LOG_LEVEL=warn
       - SPAN_STORAGE_TYPE=memory
-    healthcheck:
-      # wget is available in the official Jaeger all-in-one image
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
     deploy:
       resources:
         limits:
@@ -383,7 +390,9 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - jaeger
 
   prometheus-test:
     image: prom/prometheus:v3.7.1
@@ -395,7 +404,7 @@ services:
     ports:
       - "19090:9090"  # Prometheus UI (offset by 10000)
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     healthcheck:
       # wget is available in the official Prometheus image (prom/prometheus)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
@@ -411,7 +420,9 @@ services:
           cpus: '0.1'
           memory: 256M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - prometheus
 
   alertmanager-test:
     image: prom/alertmanager:v0.28.1
@@ -422,13 +433,7 @@ services:
     ports:
       - "19093:9093"  # AlertManager UI (offset by 10000)
     volumes:
-      - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    healthcheck:
-      # wget is available in the official Alertmanager image (prom/alertmanager)
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     deploy:
       resources:
         limits:
@@ -438,7 +443,9 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - alertmanager
 
   grafana-test:
     image: grafana/grafana:12.2.0
@@ -453,9 +460,9 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://localhost:13001
     volumes:
-      - ../monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-      - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
-      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
     healthcheck:
       # wget is available in the official Grafana image (grafana/grafana)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
@@ -471,7 +478,9 @@ services:
           cpus: '0.05'
           memory: 128M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - grafana
 
 networks:
   mcp-test-network:

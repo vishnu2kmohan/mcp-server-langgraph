@@ -1,0 +1,7 @@
+src/mcp_server_langgraph/resilience/circuit_breaker.py:241: error: Unused "type: ignore" comment  [unused-ignore]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:244: error: Unused "type: ignore" comment  [unused-ignore]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:277: error: Incompatible types in assignment (expression has type "CBListenerType", variable has type "CBListenerType")  [assignment]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:278: error: Unused "type: ignore" comment  [unused-ignore]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:295: error: Incompatible types in assignment (expression has type "CBListenerType", variable has type "CBListenerType")  [assignment]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:296: error: Unused "type: ignore" comment  [unused-ignore]
+src/mcp_server_langgraph/resilience/circuit_breaker.py:309: error: Incompatible types in assignment (expression has type "CBListenerType", variable has type "CBListenerType")  [assignment]

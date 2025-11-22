@@ -261,18 +261,17 @@ class LLMFactory:
             elif isinstance(msg, SystemMessage):
                 content = msg.content if isinstance(msg.content, str) else str(msg.content)
                 formatted.append({"role": "system", "content": content})
-            # elif isinstance(msg, dict):
-            #     # Handle dict messages (already in correct format or need conversion)
-            #     # Note: Technically unreachable since msg is BaseMessage, but kept for defensive programming
-            #     if "role" in msg and "content" in msg:
-            #         # Already formatted dict
-            #         formatted.append(msg)
-            #     elif "content" in msg:
-            #         # Dict with content but no role
-            #         formatted.append({"role": "user", "content": str(msg["content"])})
-            #     else:
-            #         # Malformed dict, convert to string
-            #         formatted.append({"role": "user", "content": str(msg)})
+            elif isinstance(msg, dict):
+                # Handle dict messages (already in correct format or need conversion)
+                if "role" in msg and "content" in msg:
+                    # Already formatted dict
+                    formatted.append(msg)
+                elif "content" in msg:
+                    # Dict with content but no role
+                    formatted.append({"role": "user", "content": str(msg["content"])})
+                else:
+                    # Malformed dict, convert to string
+                    formatted.append({"role": "user", "content": str(msg)})
             else:
                 # Fallback for other types - check if it has content attribute
                 if hasattr(msg, "content"):

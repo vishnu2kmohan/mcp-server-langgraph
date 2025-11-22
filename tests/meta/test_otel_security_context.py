@@ -342,6 +342,7 @@ def test_otel_drops_all_capabilities(repo_root: Path):
     )
 
 
+@pytest.mark.requires_kubectl
 @requires_tool("kustomize")
 def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
     """

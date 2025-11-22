@@ -29,7 +29,7 @@ class TestWorkflowValidation:
     @pytest.fixture
     def workflows_dir(self) -> Path:
         """Get the workflows directory path."""
-        repo_root = Path(__file__).parent.parent
+        repo_root = Path(__file__).parents[3]
         return repo_root / ".github" / "workflows"
 
     @pytest.fixture

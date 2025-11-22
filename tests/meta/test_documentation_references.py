@@ -22,8 +22,8 @@ OBSOLETE_SCRIPTS = {
 
 # Current valid scripts that SHOULD be referenced
 CURRENT_SCRIPTS = {
-    "scripts/check_test_memory_safety.py": "Memory safety enforcement",
-    "scripts/validate_pre_push_hook.py": "Pre-push hook validation",
+    "scripts/validation/check_test_memory_safety.py": "Memory safety enforcement",
+    "scripts/validation/validate_pre_push_hook.py": "Pre-push hook validation",
 }
 
 

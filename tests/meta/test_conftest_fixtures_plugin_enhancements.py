@@ -56,15 +56,15 @@ class TestConfTestFixturesPluginEnhancements:
         This is the EXISTING functionality that we're building on.
         """
         # The existing plugin functionality is tested in:
-        # tests/test_fixture_organization.py - verify that test module exists
+        # tests/meta/test_fixture_organization.py - verify that test module exists
         import importlib
         import importlib.util
 
-        spec = importlib.util.find_spec("tests.test_fixture_organization")
-        assert spec is not None, "test_fixture_organization.py module not found"
+        spec = importlib.util.find_spec("tests.meta.test_fixture_organization")
+        assert spec is not None, "test_fixture_organization.py module not found in tests/meta/"
 
         # Verify the module can be imported (contains fixture validation tests)
-        module = importlib.import_module("tests.test_fixture_organization")
+        module = importlib.import_module("tests.meta.test_fixture_organization")
         assert module is not None, "Failed to import test_fixture_organization module"
 
     def test_bearer_scheme_validation_documentation(self):

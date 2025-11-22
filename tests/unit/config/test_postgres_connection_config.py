@@ -50,7 +50,8 @@ class TestPostgresConnectionConfig:
         postgres_password = compose_config["services"]["postgres-test"]["environment"]["POSTGRES_PASSWORD"]
 
         # Read conftest.py to check default password
-        conftest_file = Path("tests/conftest.py")
+        # Read database_fixtures.py to check default password
+        conftest_file = Path("tests/fixtures/database_fixtures.py")
         conftest_content = conftest_file.read_text()
 
         # Check for password defaults in asyncpg.connect and create_pool calls
@@ -81,7 +82,8 @@ class TestPostgresConnectionConfig:
         host_port = int(port_mapping.split(":")[0])
 
         # Check conftest.py uses same port
-        conftest_file = Path("tests/conftest.py")
+        # Read database_fixtures.py to check default password
+        conftest_file = Path("tests/fixtures/database_fixtures.py")
         conftest_content = conftest_file.read_text()
 
         assert (
@@ -100,7 +102,8 @@ class TestPostgresConnectionConfig:
 
         postgres_user = compose_config["services"]["postgres-test"]["environment"]["POSTGRES_USER"]
 
-        conftest_file = Path("tests/conftest.py")
+        # Read database_fixtures.py to check default password
+        conftest_file = Path("tests/fixtures/database_fixtures.py")
         conftest_content = conftest_file.read_text()
 
         user_patterns = [
@@ -124,7 +127,8 @@ class TestPostgresConnectionConfig:
         # Conftest should use gdpr_test for GDPR compliance tests
         expected_db = "gdpr_test"
 
-        conftest_file = Path("tests/conftest.py")
+        # Read database_fixtures.py to check default password
+        conftest_file = Path("tests/fixtures/database_fixtures.py")
         conftest_content = conftest_file.read_text()
 
         # Check that gdpr_test is used as default in connection pool

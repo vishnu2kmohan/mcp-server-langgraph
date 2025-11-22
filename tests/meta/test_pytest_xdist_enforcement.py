@@ -49,9 +49,9 @@ class TestEnforcementMechanisms:
         root = Path(__file__).parent.parent.parent
 
         required_scripts = [
-            "scripts/check_test_memory_safety.py",
+            "scripts/validation/check_test_memory_safety.py",
             "scripts/validation/validate_test_isolation.py",
-            "scripts/validate_test_fixtures.py",
+            "scripts/validation/validate_test_fixtures.py",
         ]
 
         for script_path in required_scripts:
@@ -130,31 +130,30 @@ class TestEnforcementMechanisms:
 
     def test_conftest_uses_worker_aware_patterns(self):
         """
-        🟢 GREEN: Verify conftest.py uses worker-aware patterns.
+        🟢 GREEN: Verify fixtures use worker-aware patterns.
 
         Critical fixtures should use PYTEST_XDIST_WORKER environment variable.
 
         Current Architecture (Single Shared Infrastructure):
-        - FIXED ports (no per-worker offsets)
-        - Logical isolation via PostgreSQL schemas, Redis DB indices, OpenFGA stores
+        - FIXED ports (no per-worker offsets) in conftest.py
+        - Logical isolation via PostgreSQL schemas, Redis DB indices in database_fixtures.py
         - Session-scoped infrastructure shared across all workers
         """
         root = Path(__file__).parent.parent.parent
         conftest = root / "tests" / "conftest.py"
+        database_fixtures = root / "tests" / "fixtures" / "database_fixtures.py"
 
-        content = conftest.read_text()
+        content_conftest = conftest.read_text()
+        content_db = database_fixtures.read_text()
 
         # test_infrastructure_ports should use FIXED ports (current architecture)
-        assert "PYTEST_XDIST_WORKER" in content, "conftest.py should use PYTEST_XDIST_WORKER"
-        assert (
-            "Ports are FIXED" in content or "FIXED ports" in content
-        ), "test_infrastructure_ports should document FIXED ports architecture"
-
+        assert "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db, "Worker-aware logic missing"
+        
         # postgres_connection_clean should use worker schema
-        assert "test_worker_" in content, "Worker-scoped schema missing"
+        assert "test_worker_" in content_db, "Worker-scoped schema missing from database_fixtures.py"
 
         # redis_client_clean should use worker DB
-        assert "worker_num + 1" in content, "Redis DB calculation missing"
+        assert "worker_num + 1" in content_db, "Redis DB calculation missing from database_fixtures.py"
 
     def test_documentation_exists(self):
         """

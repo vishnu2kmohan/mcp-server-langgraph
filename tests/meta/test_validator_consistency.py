@@ -63,7 +63,7 @@ class TestValidatorConsistency:
         lib_violations = memory_safety.check_file(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_test_memory_safety.py"
+        script_path = project_root / "scripts" / "validation" / "check_test_memory_safety.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should detect violations
@@ -97,7 +97,7 @@ class TestValidatorConsistency:
         lib_violations = memory_safety.check_file(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_test_memory_safety.py"
+        script_path = project_root / "scripts" / "validation" / "check_test_memory_safety.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should pass
@@ -124,7 +124,7 @@ class TestValidatorConsistency:
         lib_violations = test_ids.find_hardcoded_ids(test_file)
 
         # Run script
-        script_path = project_root / "scripts" / "validate_test_ids.py"
+        script_path = project_root / "scripts" / "validation" / "validate_test_ids.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should detect violations
@@ -151,7 +151,7 @@ class TestValidatorConsistency:
         lib_violations = test_ids.find_hardcoded_ids(test_file)
 
         # Run script
-        script_path = project_root / "scripts" / "validate_test_ids.py"
+        script_path = project_root / "scripts" / "validation" / "validate_test_ids.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should pass
@@ -179,7 +179,7 @@ class TestValidatorConsistency:
         lib_issues = async_mocks.check_async_mock_configuration(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_async_mock_configuration.py"
+        script_path = project_root / "scripts" / "validation" / "check_async_mock_configuration.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should detect issues
@@ -206,7 +206,7 @@ class TestValidatorConsistency:
         lib_issues = async_mocks.check_async_mock_configuration(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_async_mock_configuration.py"
+        script_path = project_root / "scripts" / "validation" / "check_async_mock_configuration.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should pass
@@ -234,7 +234,7 @@ class TestValidatorConsistency:
         lib_issues = async_mocks.check_async_mock_usage(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_async_mock_usage.py"
+        script_path = project_root / "scripts" / "validation" / "check_async_mock_usage.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should detect issues
@@ -261,7 +261,7 @@ class TestValidatorConsistency:
         lib_issues = async_mocks.check_async_mock_usage(str(test_file))
 
         # Run script
-        script_path = project_root / "scripts" / "check_async_mock_usage.py"
+        script_path = project_root / "scripts" / "validation" / "check_async_mock_usage.py"
         result = subprocess.run([sys.executable, str(script_path), str(test_file)], capture_output=True, text=True, timeout=30)
 
         # Both should pass

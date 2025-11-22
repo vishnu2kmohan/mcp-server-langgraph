@@ -61,13 +61,13 @@ class TestIDPollutionPreventionHook:
     @pytest.fixture
     def validation_script(self, project_root: Path) -> Path:
         """Path to ID validation script."""
-        return project_root / "scripts" / "validate_test_ids.py"
+        return project_root / "scripts" / "validation" / "validate_test_ids.py"
 
     def test_validation_script_exists(self, validation_script: Path) -> None:
         """Test that validation script exists."""
         assert validation_script.exists(), (
             f"Validation script not found: {validation_script}\n"
-            f"Create scripts/validate_test_ids.py to enforce ID pollution prevention"
+            f"Create scripts/validation/validate_test_ids.py to enforce ID pollution prevention"
         )
 
     def test_validation_script_is_executable(self, validation_script: Path) -> None:
