@@ -21,6 +21,8 @@ from mcp_server_langgraph.compliance.gdpr.storage import (
 )
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_audit_log_store():

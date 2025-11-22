@@ -11,6 +11,8 @@ import logging
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testobservabilitysafefallback")

@@ -17,27 +17,26 @@ repos:
   - id: check-json
   - id: check-toml
   - id: mixed-line-ending
+  - id: check-ast
+    name: Check Python AST (Syntax Validation)
+    description: 'Validates Python files can be parsed (no SyntaxError).
+
+      Prevents commits of syntactically invalid Python code.
+
+      Regression prevention for commit a57fcc95 (pytestmark inside imports).
+      '
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.8.4
   hooks:
   - id: ruff
-    name: Ruff Linter (replaces isort)
+    name: Ruff Linter (replaces isort + flake8)
     args:
     - --fix
+    exclude: ^clients/(python|go|typescript)/
   - id: ruff-format
     name: Ruff Formatter (replaces Black)
     args:
     - --line-length=127
-- repo: https://github.com/pycqa/flake8
-  rev: 7.3.0
-  hooks:
-  - id: flake8
-    args:
-    - --max-line-length=127
-    - --max-complexity=20
-    - --extend-ignore=E203,W503,E501
-    additional_dependencies:
-    - flake8-docstrings
     exclude: ^clients/(python|go|typescript)/
 - repo: https://github.com/pycqa/bandit
   rev: 1.8.6
@@ -45,8 +44,6 @@ repos:
   - id: bandit
     args:
     - -lll
-    - -x
-    - tests
     - --skip
     - B608
 - repo: https://github.com/pre-commit/mirrors-mypy
@@ -113,7 +110,6 @@ repos:
       '
     entry: python .pre-commit-hooks/check_subprocess_timeout.py
     language: python
-    additional_dependencies: []
     types: [python]
     files: ^tests/.*\.py$
     stages:
@@ -131,7 +127,6 @@ repos:
       '
     entry: python .pre-commit-hooks/check_banned_imports.py
     language: python
-    additional_dependencies: []
     types: [python]
     stages:
     - pre-commit
@@ -265,9 +260,8 @@ repos:
       '
   - id: check-test-sleep-duration
     name: Check Test Sleep Durations
-    entry: uv run python scripts/check_test_sleep_duration.py
+    entry: uv run python scripts/validation/check_test_sleep_duration.py
     language: python
-    additional_dependencies: []
     files: ^tests/.*\.py$
     exclude: ^tests/meta/test_sleep_duration_linter\.py$
     pass_filenames: true
@@ -286,9 +280,8 @@ repos:
       '
   - id: validate-pytest-config
     name: Validate Pytest Configuration Compatibility
-    entry: uv run python scripts/validate_pytest_config.py
+    entry: uv run python scripts/validation/validate_pytest_config.py
     language: python
-    additional_dependencies: []
     files: ^pyproject\.toml$
     pass_filenames: false
     always_run: false
@@ -302,9 +295,8 @@ repos:
       \nReference: Codex finding - pytest addopts compatibility validation\n"
   - id: validate-pre-push-hook
     name: Validate Pre-Push Hook Configuration
-    entry: uv run python scripts/validate_pre_push_hook.py
+    entry: uv run python scripts/validation/validate_pre_push_hook.py
     language: python
-    additional_dependencies: []
     files: ^\.git/hooks/pre-push$
     pass_filenames: false
     always_run: true
@@ -345,9 +337,8 @@ repos:
       '
   - id: validate-mdx-extensions
     name: Validate MDX File Extensions in docs/
-    entry: uv run python scripts/validators/mdx_extension_validator.py
+    entry: uv run python scripts/validation/mdx_extension_validator.py
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -378,14 +369,12 @@ repos:
     name: Check Frontmatter Quote Style
     entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: \.mdx$
     pass_filenames: false
     always_run: false
   - id: validate-file-naming-conventions
     name: Validate Documentation File Naming Conventions
-    entry: uv run python scripts/validators/file_naming_validator.py --path docs
+    entry: uv run python scripts/validation/file_naming_validator.py --path docs
     language: python
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
@@ -405,9 +394,8 @@ repos:
       Tests: tests/unit/documentation/test_file_naming_validator.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
-    entry: uv run python scripts/validators/todo_audit.py --quiet
+    entry: uv run python scripts/validation/todo_audit.py --quiet
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -415,13 +403,12 @@ repos:
     - manual
     description: "Audits documentation for TODO/FIXME/XXX markers (TDD):\n- Finds all TODO and FIXME comments\n- Detects XXX\
       \ placeholders in examples\n- Reports location and content\n- Tracks outstanding work items\n\nNote: This is informational\
-      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validators/todo_audit.py --docs-dir docs\nTests:\
+      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validation/todo_audit.py --docs-dir docs\nTests:\
       \ tests/unit/documentation/test_todo_audit.py (14 tests \u2705)\n"
   - id: validate-adr-sync
     name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
-    entry: uv run python scripts/validators/adr_sync_validator.py
+    entry: uv run python scripts/validation/adr_sync_validator.py
     language: python
-    additional_dependencies: []
     files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
     pass_filenames: false
     always_run: false
@@ -438,7 +425,7 @@ repos:
 
       Ensures Architecture Decision Records stay synchronized.
 
-      Run: python scripts/validators/adr_sync_validator.py
+      Run: python scripts/validation/adr_sync_validator.py
 
       Exit code 1 if out of sync, 0 if synchronized
 
@@ -447,7 +434,7 @@ repos:
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
       bash -c 'if command -v npm >/dev/null 2>&1; then
-      cd docs && npm ci --silent && npm exec -- mintlify broken-links;
+      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links;
       else echo "Skipping: npm/Node.js not installed (install from https://nodejs.org/)";
       exit 0; fi'
     language: system
@@ -470,7 +457,7 @@ repos:
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
   - id: validate-documentation-integrity
     name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-    entry: uv run pytest tests/test_documentation_integrity.py -v --tb=short
+    entry: uv run pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
     language: system
     files: \.(md|mdx|json)$|^monitoring/.*README\.md$
     pass_filenames: false
@@ -532,7 +519,6 @@ repos:
     name: Validate ADR Index is Up-to-Date
     entry: python scripts/generate_adr_index.py --check
     language: python
-    additional_dependencies: []
     files: ^adr/.*\.md$
     pass_filenames: false
     always_run: false
@@ -633,9 +619,8 @@ repos:
       '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
-    entry: uv run python scripts/check_mermaid_styling.py
+    entry: uv run python scripts/validation/check_mermaid_styling.py
     language: python
-    additional_dependencies: []
     files: ^docs/.*\.mdx$
     pass_filenames: true
     always_run: false
@@ -650,7 +635,7 @@ repos:
       '
   - id: prevent-local-config-commits
     name: Prevent Local Config Files from Being Committed
-    entry: uv run pytest tests/test_gitignore_validation.py -v
+    entry: uv run pytest tests/meta/validation/test_gitignore_validation.py -v
     language: system
     pass_filenames: false
     always_run: true
@@ -667,7 +652,7 @@ repos:
       '
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
-    entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
+    entry: uv run python scripts/validation/validate_github_workflows.py
     language: system
     files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
@@ -689,7 +674,7 @@ repos:
       Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
-    entry: uv run python scripts/validate_gke_autopilot_compliance.py
+    entry: uv run python scripts/validation/validate_gke_autopilot_compliance.py
     language: system
     files: ^deployments/.*\.ya?ml$
     pass_filenames: false
@@ -704,7 +689,6 @@ repos:
     name: Validate Dependency Injection Configuration
     entry: python3 .githooks/pre-commit-dependency-validation
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
     always_run: false
@@ -727,9 +711,8 @@ repos:
       '
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
-    entry: uv run python scripts/validate_test_fixtures.py
+    entry: uv run python scripts/validation/validate_test_fixtures.py
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -765,20 +748,66 @@ repos:
 
       '
   - id: validate-pytest-markers
-    name: Validate Pytest Markers
-    entry: uv run python scripts/validate_pytest_markers.py
+    name: Validate Pytest Markers & Placement
+    entry: uv run python scripts/validation/validate_pytest_markers.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
-    description: 'Validates that all pytest.mark.* decorators used in tests are registered
+    description: 'Validates pytest marker registration and pytestmark placement.
 
-      in pyproject.toml. Prevents "PytestUnknownMarkWarning" errors in CI.
+
+      1. Checks all pytest.mark.* decorators are registered in pyproject.toml
+
+         (prevents "PytestUnknownMarkWarning" errors)
+
+
+      2. Validates pytestmark appears AFTER all imports (prevents SyntaxError)
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside import blocks causing SyntaxError
+
+      - Uses AST parsing to detect misplaced module-level pytestmark
+
+      - See: docs-internal/PYTESTMARK_GUIDELINES.md for placement rules
+
+      '
+  - id: validate-test-collection
+    name: Validate Pytest Can Collect All Tests
+    entry: bash -c 'uv run pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: false
+    description: 'Validates that pytest can successfully collect all test files.
+
+      Prevents test collection failures from:
+
+      - SyntaxError in test files
+
+      - ImportError from missing modules
+
+      - Invalid pytest markers
+
+
+      Runs test collection without executing tests (fast check).
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside imports causing collection failure
+
+      - Prevents ImportError from module relocations
+
+      - Ensures test suite integrity before commit
+
+
+      Regression prevention for commit a57fcc95.
 
       '
   - id: validate-fixture-organization
     name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/test_fixture_organization.py -v --tb=short
+    entry: uv run pytest tests/meta/test_fixture_organization.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^tests/.*\.py$
@@ -803,9 +832,118 @@ repos:
       See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
 
       '
+  - id: validate-async-fixture-scope
+    name: Validate Async Fixture Event Loop Scope
+    entry: uv run python scripts/validation/validate_async_fixture_scope.py
+    language: python
+    pass_filenames: false
+    files: ^pyproject\.toml$
+    description: 'Validates asyncio_default_fixture_loop_scope is set to "session".
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      Prevents ScopeMismatch errors with session-scoped async fixtures.
+
+      34 integration tests failed before this configuration was fixed.
+
+
+      Session-scoped fixtures: postgres_connection_real, redis_client_real,
+
+      openfga_client_real all require session-scoped event loop.
+
+
+      Fix: asyncio_default_fixture_loop_scope = "session" in pyproject.toml
+
+      '
+  - id: validate-migration-idempotency
+    name: Validate SQL Migration Idempotency
+    entry: uv run python scripts/validation/validate_migration_idempotency.py
+    language: python
+    pass_filenames: true
+    files: ^migrations/.*\.sql$
+    description: 'Validates SQL migrations use idempotent patterns for triggers.
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      PostgreSQL does not support CREATE TRIGGER IF NOT EXISTS.
+
+      Migrations must use DROP TRIGGER IF EXISTS before CREATE TRIGGER.
+
+
+      Issue fixed: DuplicateObjectError when running migrations multiple times.
+
+
+      Required pattern:
+
+        DROP TRIGGER IF EXISTS trigger_name ON table_name;
+
+        CREATE TRIGGER trigger_name ...
+
+      '
+  - id: validate-repo-root-calculations
+    name: Validate Repository Root Path Calculations
+    entry: uv run --active python scripts/validation/validate_repo_root_calculations.py
+    language: python
+    pass_filenames: false
+    files: ^tests/.*\.py$
+    description: 'Prevents hardcoded .parents[N] path calculations without marker validation.
+
+
+      PATH CALCULATION ANTI-PATTERN PREVENTION:
+
+      Hardcoded .parents[N] breaks when files are moved between directories.
+
+
+      Issue fixed: test_keycloak_readonly_filesystem.py used .parents[2] which
+
+      should have been .parents[3], causing FileNotFoundError.
+
+
+      Required patterns:
+
+      1. Use project_root fixture from tests/conftest.py:
+
+         def test_something(project_root):
+
+             config = project_root / "config.yaml"
+
+
+      2. Use get_repo_root() function with marker validation:
+
+         def get_repo_root() -> Path:
+
+             current = Path(__file__).parent
+
+             markers = [".git", "pyproject.toml"]
+
+             while current != current.parent:
+
+                 if any((current / m).exists() for m in markers):
+
+                     return current
+
+                 current = current.parent
+
+             raise RuntimeError("Cannot find repo root")
+
+
+      Benefits:
+
+      - Paths remain valid when files are moved
+
+      - Marker files provide reliable repo root detection
+
+      - Prevents FileNotFoundError in tests
+
+
+      See: tests/meta/validation/test_path_validation.py for meta-tests
+
+      '
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
-    entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
+    entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
@@ -839,7 +977,6 @@ repos:
     name: Detect Dead Code in Test Fixtures (Codex P0)
     entry: uv run python scripts/detect_dead_test_code.py tests/
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -853,9 +990,8 @@ repos:
       \ tests/meta/test_codex_regression_prevention.py::TestDeadCodeInFixtures\n"
   - id: validate-api-schemas
     name: Validate API Response Schemas
-    entry: uv run python scripts/validate_api_schemas.py
+    entry: uv run python scripts/validation/validate_api_schemas.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
     always_run: false
@@ -889,9 +1025,8 @@ repos:
       '
   - id: validate-test-time-bombs
     name: Detect Test Time Bombs (Future Dates/Models)
-    entry: uv run python scripts/validate_test_time_bombs.py
+    entry: uv run python scripts/validation/validate_test_time_bombs.py
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
     always_run: false
@@ -928,9 +1063,8 @@ repos:
       '
   - id: check-e2e-completion
     name: Check E2E Test Implementation Progress
-    entry: uv run python scripts/check_e2e_completion.py --min-percent 25
+    entry: uv run python scripts/validation/check_e2e_completion.py --min-percent 25
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/e2e/test_full_user_journey\.py$
     always_run: false
@@ -942,9 +1076,8 @@ repos:
       \ | Target: 80%\n"
   - id: check-test-sleep-budget
     name: Monitor Test Wall-Clock Sleep Time Budget
-    entry: uv run python scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+    entry: uv run python scripts/validation/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
     language: python
-    additional_dependencies: []
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
     always_run: false
@@ -1078,10 +1211,8 @@ repos:
       '
   - id: validate-serviceaccount-naming
     name: Validate ServiceAccount Naming Consistency
-    entry: uv run python scripts/validate_serviceaccount_names.py
+    entry: uv run python scripts/validation/validate_serviceaccount_names.py
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
     pass_filenames: false
     always_run: false
@@ -1156,7 +1287,7 @@ repos:
       '
   - id: validate-docker-compose-health-checks
     name: Validate Docker Compose health check configurations
-    entry: uv run pytest tests/test_docker_compose_validation.py::TestDockerComposeQdrantSpecific::test_qdrant_uses_grpc_health_probe
+    entry: uv run pytest tests/security/test_deployment_security_regression.py::TestQdrantHealthCheckSecurity::test_qdrant_uses_tcp_health_check
       -v --tb=short
     language: system
     files: ^.*docker-compose.*\.(yaml|yml)$
@@ -1188,10 +1319,8 @@ repos:
       '
   - id: validate-keycloak-config
     name: Validate Keycloak service configuration in docker-compose.test.yml
-    entry: uv run python scripts/validate_keycloak_config.py docker/docker-compose.test.yml
+    entry: uv run python scripts/validation/validate_keycloak_config.py docker/docker-compose.test.yml
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^docker/docker-compose\.test\.yml$
     pass_filenames: false
     always_run: false
@@ -1222,7 +1351,7 @@ repos:
       '
   - id: validate-docker-image-contents
     name: Validate Docker image contents in Dockerfile (final-test stage)
-    entry: uv run python scripts/validate_docker_image_contents.py docker/Dockerfile
+    entry: uv run python scripts/validation/validate_docker_image_contents.py docker/Dockerfile
     language: python
     files: ^docker/Dockerfile$
     pass_filenames: false
@@ -1234,7 +1363,6 @@ repos:
 
       - src/ (application source code)
 
-      - tests/ (test suite)
 
       - pyproject.toml (project configuration)
 
@@ -1364,9 +1492,8 @@ repos:
       '
   - id: check-test-memory-safety
     name: Check Test Memory Safety (pytest-xdist OOM prevention)
-    entry: python scripts/check_test_memory_safety.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_test_memory_safety.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1409,9 +1536,8 @@ repos:
       '
   - id: check-async-mock-usage
     name: Check Async Mock Usage (prevent hanging tests)
-    entry: python scripts/check_async_mock_usage.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_async_mock_usage.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1448,9 +1574,8 @@ repos:
       '
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
-    entry: python scripts/check_async_mock_configuration.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_async_mock_configuration.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1496,11 +1621,48 @@ repos:
       Meta-test: tests/meta/test_async_mock_configuration.py validates this
 
       '
+  - id: check-asyncmock-instantiation
+    name: Check AsyncMock Instantiation (prevent class assignment)
+    entry: uv run python scripts/validation/check_asyncmock_usage.py
+    language: system
+    files: ^tests/.*test_.*\.py$
+    exclude: ^tests/meta/test_asyncmock_validation\.py$
+    pass_filenames: true
+    always_run: false
+    description: 'Prevents AsyncMock class assignment instead of instance creation.
+
+      Issue prevented:
+
+      - Assigning AsyncMock class instead of AsyncMock() instance
+
+      - Causes "object AsyncMock can''t be used in ''await'' expression" errors
+
+      - Often appears with noqa comments documenting intended config but not applied
+
+
+      Required pattern:
+
+      - CORRECT: mock.method = AsyncMock(return_value=1)
+
+      - CORRECT: mock.method = AsyncMock()
+
+      - WRONG: mock.method = AsyncMock  # noqa: async-mock-config(return_value=1)
+
+
+      This hook catches the specific bug where developers put the configuration
+
+      in a noqa comment but forget to actually instantiate the AsyncMock.
+
+
+      See: tests/unit/health/test_database_checks.py (fixed instances)
+
+      Meta-test: tests/meta/test_asyncmock_validation.py validates this
+
+      '
   - id: validate-test-ids
     name: Validate Test IDs (prevent pytest-xdist pollution)
-    entry: python scripts/validate_test_ids.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/validate_test_ids.py
+    language: system
     files: ^tests/.*\.py$
     pass_filenames: true
     always_run: false
@@ -1520,7 +1682,6 @@ repos:
     name: Validate Test Isolation for Pytest-xdist
     entry: python scripts/validation/validate_test_isolation.py tests/
     language: python
-    additional_dependencies: []
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -1582,11 +1743,10 @@ repos:
     name: Validate Workflow Test Dependencies
     entry: uv run python scripts/validation/validate_workflow_test_deps.py
     language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
     always_run: false
+    additional_dependencies: ['pyyaml>=6.0.0']
     stages:
     - pre-push
     description: "Validates that GitHub Actions workflows installing dependencies for tests\ninclude the required 'dev' extras.\n\

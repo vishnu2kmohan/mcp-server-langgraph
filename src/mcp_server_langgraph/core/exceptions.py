@@ -8,7 +8,7 @@ See ADR-0029 for design rationale.
 """
 
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from opentelemetry import trace
 
@@ -56,15 +56,15 @@ class MCPServerException(Exception):
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        error_code: Optional[str] = None,
-        status_code: Optional[int] = None,
-        category: Optional[ErrorCategory] = None,
-        retry_policy: Optional[RetryPolicy] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        trace_id: Optional[str] = None,
-        user_message: Optional[str] = None,
-        cause: Optional[Exception] = None,
+        message: str | None = None,
+        error_code: str | None = None,
+        status_code: int | None = None,
+        category: ErrorCategory | None = None,
+        retry_policy: RetryPolicy | None = None,
+        metadata: dict[str, Any] | None = None,
+        trace_id: str | None = None,
+        user_message: str | None = None,
+        cause: Exception | None = None,
     ):
         self.message = message or self.default_message
         self.error_code = error_code or self.default_error_code
@@ -79,7 +79,7 @@ class MCPServerException(Exception):
         # Call parent constructor
         super().__init__(self.message)
 
-    def _get_current_trace_id(self) -> Optional[str]:
+    def _get_current_trace_id(self) -> str | None:
         """Get current OpenTelemetry trace ID"""
         try:
             span = trace.get_current_span()
@@ -100,7 +100,7 @@ class MCPServerException(Exception):
         else:
             return "An unexpected error occurred. Please try again later."
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON response"""
         return {
             "error": {

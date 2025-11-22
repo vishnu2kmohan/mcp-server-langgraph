@@ -78,15 +78,14 @@ help:
 	@echo "  make setup-keycloak   Initialize Keycloak"
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
-	@echo "Testing:"
+Testing:
 	@echo "  make test                     Run all automated tests with coverage"
-	@echo "  make test-unit                Run unit tests with coverage"
+	@echo "  make test-unit                Run pure unit tests (tests/unit/)"
+	@echo "  make test-local               Run all local tests (Unit + CLI + Validation)"
 	@echo "  make test-integration         Run integration tests in Docker"
 	@echo ""
 	@echo "Fast Testing (40-70% faster):"
 	@echo "  make test-dev                 🚀 Development mode (parallel, fast-fail) - RECOMMENDED"
-	@echo "  make test-parallel            Run all tests in parallel (no coverage)"
-	@echo "  make test-parallel-unit       Run unit tests in parallel"
 	@echo "  make test-fast-core           Fastest iteration (core tests only, <5s)"
 	@echo "  make test-fast                Run all tests without coverage"
 	@echo ""
@@ -227,19 +226,19 @@ test:
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
-	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
+	@echo "Tip: Use 'make test-fast' or 'make test-dev' for faster iteration"
 
 test-unit:
-	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
+	@echo "Running pure unit tests (tests/unit/)..."
 	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
-	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
-test-unit-fast:
-	@echo "Running unit tests without coverage (fast iteration)..."
-	@echo "⚠️  DEPRECATED: Use 'make test-parallel-unit' or 'make test-dev' instead"
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit --tb=short
-	@echo "✓ Fast unit tests complete"
+test-local:
+	@echo "Running all local tests (Unit + CLI + Validation)..."
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit tests/cli tests/deployment tests/infrastructure tests/ci
+	@echo "✓ Local tests complete"
 
 test-ci:
 	@echo "Running tests exactly as CI does (parallel execution)..."
@@ -251,12 +250,6 @@ test-integration:
 	@echo "Running integration tests in Docker environment (matches CI)..."
 	./scripts/test-integration.sh --build
 	@echo "✓ Integration tests complete"
-
-test-integration-local:
-	@echo "⚠️  Running integration tests locally (parallel execution, requires services running)..."
-	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m integration --no-cov --tb=short
-	@echo "✓ Local integration tests complete"
 
 test-integration-services:
 	@echo "Starting integration test services only..."
@@ -461,7 +454,7 @@ test-e2e:
 	$(MAKE) test-infra-up
 	@echo ""
 	@echo "Waiting for services to be healthy..."
-	@sleep 10
+	@bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 	@echo ""
 	@echo "Running E2E tests..."
 	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m e2e -v --tb=short
@@ -655,7 +648,7 @@ validate-pre-push:
 	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
 	@echo ""
 	@echo "▶ Workflow Validation Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 2: Type Checking (Critical - matches CI)"
@@ -668,23 +661,8 @@ validate-pre-push:
 	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Unit Tests (with coverage)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Unit tests passed (coverage collected)" || (echo "✗ Unit tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Smoke Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Integration Tests (Last Failed)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/integration/ -x --tb=short --lf && echo "✓ Integration tests passed" || echo "⚠ Integration tests failed (non-blocking)"
-	@echo ""
-	@echo "▶ API Endpoint Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m 'api and unit and not llm' -v --tb=short && echo "✓ API tests passed" || (echo "✗ API tests failed" && exit 1)
-	@echo ""
-	@echo "▶ MCP Server Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit/test_mcp_stdio_server.py -m 'not llm' -v --tb=short && echo "✓ MCP tests passed" || (echo "✗ MCP tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Property Tests (100 examples)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
+	@echo "▶ Consolidated Test Suite (Unit, Smoke, API, MCP, Property)..."
+	@OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci $(UV_RUN) pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Consolidated tests passed (coverage collected)" || (echo "✗ Tests failed" && exit 1)
 	@echo ""
 	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
 	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
@@ -960,7 +938,8 @@ quick-start:
 	@$(MAKE) install-dev -s
 	@echo "Starting infrastructure..."
 	@$(MAKE) setup-infra -s
-	@sleep 5
+	@echo "Waiting for services to be healthy..."
+	@bash scripts/utils/wait_for_services.sh docker-compose.yml
 	@echo ""
 	@echo "✓ Quick start complete!"
 	@echo ""
@@ -1172,10 +1151,10 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 	@echo "🔧 SUPPLEMENTARY: Specialized validators"
 	@echo "   Note: Code block validation disabled (caused more trouble than it's worth)"
 	@echo "🔍 Validating ADR synchronization..."
-	@python scripts/validators/adr_sync_validator.py || \
+	@python scripts/validation/adr_sync_validator.py || \
 		(echo "❌ ADR synchronization failed." && exit 1)
 	@echo "🔍 Validating MDX file extensions..."
-	@python scripts/validators/mdx_extension_validator.py --docs-dir docs || \
+	@python scripts/validation/mdx_extension_validator.py --docs-dir docs || \
 		(echo "❌ MDX extension validation failed." && exit 1)
 	@echo "✅ Specialized validators passed"
 
@@ -1187,7 +1166,7 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."
-	@python3 scripts/check_version_consistency.py || \
+	@python3 scripts/validation/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
 
 docs-fix-mdx:
@@ -1216,11 +1195,11 @@ generate-reports:  ## Regenerate all test infrastructure scan reports
 	@echo "📊 Regenerating test infrastructure reports..."
 	@echo ""
 	@echo "🔍 Running AsyncMock configuration scan..."
-	@$(UV_RUN) python scripts/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
 	@echo "✅ AsyncMock scan complete"
 	@echo ""
 	@echo "🔍 Running memory safety scan..."
-	@$(UV_RUN) python scripts/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
 	@echo "✅ Memory safety scan complete"
 	@echo ""
 	@echo "📈 Generating test suite statistics..."
@@ -1248,22 +1227,6 @@ test-fast:
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage (parallel)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit --tb=short
-
-# ==============================================================================
-# Parallel Testing (40-60% faster)
-# ==============================================================================
-
-test-parallel:
-	@echo "⚡⚡ Running all tests in parallel (pytest-xdist)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --tb=short
-	@echo "✓ Parallel tests complete"
-	@echo ""
-	@echo "Speedup: ~40-60% faster than sequential execution"
-
-test-parallel-unit:
-	@echo "⚡⚡ Running unit tests in parallel..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit -n auto --tb=short
-	@echo "✓ Parallel unit tests complete"
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."

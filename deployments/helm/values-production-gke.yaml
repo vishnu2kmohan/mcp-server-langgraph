@@ -35,6 +35,8 @@ image:
   registry: us-central1-docker.pkg.dev
   # Image path will be: {registry}/{projectId}/mcp-production/mcp-server-langgraph
   repository: ""  # Auto-generated from projectId: {projectId}/mcp-production/mcp-server-langgraph
+  # NOTE: Image tag is managed by CI/CD pipeline - updated automatically on deployment
+  # Do not edit manually - use --set image.tag=X.Y.Z in helm install/upgrade commands
   tag: "2.8.0"
   pullPolicy: IfNotPresent
 
@@ -58,7 +60,7 @@ resources:
 autoscaling:
   enabled: true
   minReplicas: 3
-  maxReplicas: 10
+  maxReplicas: 20  # Increased from 10 to match default values.yaml for better scaling capacity
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 

@@ -5,7 +5,7 @@ GDPR Data Export Service - Article 15 (Right to Access) & Article 20 (Data Porta
 import csv
 import io
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,13 +26,13 @@ class UserDataExport(BaseModel):
     user_id: str = Field(..., description="User identifier")
     username: str = Field(..., description="Username")
     email: str = Field(..., description="User email address")
-    profile: Dict[str, Any] = Field(default_factory=dict, description="User profile data")
-    sessions: List[Dict[str, Any]] = Field(default_factory=list, description="Active and recent sessions")
-    conversations: List[Dict[str, Any]] = Field(default_factory=list, description="Conversation history")
-    preferences: Dict[str, Any] = Field(default_factory=dict, description="User preferences and settings")
-    audit_log: List[Dict[str, Any]] = Field(default_factory=list, description="User activity audit log")
-    consents: List[Dict[str, Any]] = Field(default_factory=list, description="Consent records")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    profile: dict[str, Any] = Field(default_factory=dict, description="User profile data")
+    sessions: list[dict[str, Any]] = Field(default_factory=list, description="Active and recent sessions")
+    conversations: list[dict[str, Any]] = Field(default_factory=list, description="Conversation history")
+    preferences: dict[str, Any] = Field(default_factory=dict, description="User preferences and settings")
+    audit_log: list[dict[str, Any]] = Field(default_factory=list, description="User activity audit log")
+    consents: list[dict[str, Any]] = Field(default_factory=list, description="Consent records")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -62,8 +62,8 @@ class DataExportService:
 
     def __init__(
         self,
-        session_store: Optional[SessionStore] = None,
-        gdpr_storage: Optional[GDPRStorage] = None,
+        session_store: SessionStore | None = None,
+        gdpr_storage: GDPRStorage | None = None,
     ):
         """
         Initialize data export service
@@ -239,7 +239,7 @@ class DataExportService:
 
         return output.getvalue().encode("utf-8")
 
-    async def _get_user_profile(self, user_id: str) -> Dict[str, Any]:
+    async def _get_user_profile(self, user_id: str) -> dict[str, Any]:
         """Get user profile data"""
         if not self.gdpr_storage:
             # Return minimal data if no storage configured
@@ -264,7 +264,7 @@ class DataExportService:
             logger.error(f"Failed to retrieve user profile: {e}", exc_info=True)
             return {"user_id": user_id, "error": "Failed to retrieve profile"}
 
-    async def _get_user_sessions(self, user_id: str) -> List[Dict[str, Any]]:
+    async def _get_user_sessions(self, user_id: str) -> list[dict[str, Any]]:
         """Get all user sessions"""
         if not self.session_store:
             return []
@@ -287,7 +287,7 @@ class DataExportService:
             logger.error(f"Failed to retrieve user sessions: {e}", exc_info=True)
             return []
 
-    async def _get_user_conversations(self, user_id: str) -> List[Dict[str, Any]]:
+    async def _get_user_conversations(self, user_id: str) -> list[dict[str, Any]]:
         """Get user conversation history"""
         if not self.gdpr_storage:
             return []
@@ -299,7 +299,7 @@ class DataExportService:
             logger.error(f"Failed to retrieve user conversations: {e}", exc_info=True)
             return []
 
-    async def _get_user_preferences(self, user_id: str) -> Dict[str, Any]:
+    async def _get_user_preferences(self, user_id: str) -> dict[str, Any]:
         """Get user preferences"""
         if not self.gdpr_storage:
             return {}
@@ -313,7 +313,7 @@ class DataExportService:
             logger.error(f"Failed to retrieve user preferences: {e}", exc_info=True)
             return {}
 
-    async def _get_user_audit_log(self, user_id: str) -> List[Dict[str, Any]]:
+    async def _get_user_audit_log(self, user_id: str) -> list[dict[str, Any]]:
         """Get user audit log entries"""
         if not self.gdpr_storage:
             return []
@@ -325,7 +325,7 @@ class DataExportService:
             logger.error(f"Failed to retrieve user audit logs: {e}", exc_info=True)
             return []
 
-    async def _get_user_consents(self, user_id: str) -> List[Dict[str, Any]]:
+    async def _get_user_consents(self, user_id: str) -> list[dict[str, Any]]:
         """Get user consent records"""
         if not self.gdpr_storage:
             return []

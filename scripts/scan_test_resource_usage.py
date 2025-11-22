@@ -21,7 +21,6 @@ Returns:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 class ResourcePatternDetector:
@@ -29,9 +28,9 @@ class ResourcePatternDetector:
 
     def __init__(self, tests_dir: Path):
         self.tests_dir = tests_dir
-        self.violations: List[Tuple[str, int, str, str]] = []  # (file, line, severity, message)
+        self.violations: list[tuple[str, int, str, str]] = []  # (file, line, severity, message)
 
-    def scan_all_tests(self) -> List[Tuple[str, int, str, str]]:
+    def scan_all_tests(self) -> list[tuple[str, int, str, str]]:
         """Scan all test files for resource-intensive patterns"""
         for test_file in self.tests_dir.rglob("test_*.py"):
             # Skip meta tests (they scan other tests)

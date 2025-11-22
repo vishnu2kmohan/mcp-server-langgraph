@@ -16,12 +16,11 @@ Related: GitHub Issues #75-80
 import gc
 import json
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 # Project root is 3 levels up from this file
@@ -140,7 +139,7 @@ class TestDocumentationNavigation:
             + "\n\nRemove duplicate entries from docs/docs.json."
         )
 
-    def _extract_navigation_pages(self, nav_obj: Dict, return_list: bool = False):
+    def _extract_navigation_pages(self, nav_obj: dict, return_list: bool = False):
         """Extract all page references from navigation object."""
         pages = []
 

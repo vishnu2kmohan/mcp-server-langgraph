@@ -6,8 +6,6 @@ and returns structured PasswordVerification responses with appropriate error han
 """
 
 import gc
-import os
-from typing import Any, Dict
 
 import pytest
 
@@ -159,7 +157,7 @@ class TestUserProviderVerifyPassword:
         # Add user with hashed password
         import bcrypt
 
-        hashed = bcrypt.hashpw("secure-password".encode("utf-8"), bcrypt.gensalt())
+        hashed = bcrypt.hashpw(b"secure-password", bcrypt.gensalt())
 
         provider.users_db["secure-alice"] = {
             "user_id": get_user_id("secure-alice"),

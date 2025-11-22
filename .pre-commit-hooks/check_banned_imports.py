@@ -21,7 +21,6 @@ Exit codes:
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Banned import patterns with replacement suggestions
 BANNED_IMPORTS = {
@@ -54,7 +53,7 @@ class BannedImportChecker(ast.NodeVisitor):
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.violations: List[Tuple[int, str, str]] = []  # (line_no, module, message)
+        self.violations: list[tuple[int, str, str]] = []  # (line_no, module, message)
 
     def visit_Import(self, node: ast.Import) -> None:
         """Check regular import statements"""
@@ -87,7 +86,7 @@ class BannedImportChecker(ast.NodeVisitor):
         self.violations.append((line_no, module, message))
 
 
-def check_file(filepath: Path) -> List[str]:
+def check_file(filepath: Path) -> list[str]:
     """
     Check a single Python file for banned imports
 
@@ -115,7 +114,7 @@ def check_file(filepath: Path) -> List[str]:
         return []
 
 
-def main(argv: List[str] = None) -> int:
+def main(argv: list[str] = None) -> int:
     """
     Main entry point for pre-commit hook
 

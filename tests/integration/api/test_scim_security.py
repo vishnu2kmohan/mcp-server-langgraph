@@ -8,7 +8,6 @@ These tests validate that SCIM identity management endpoints require admin autho
 """
 
 import gc
-from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import HTTPException
@@ -16,6 +15,8 @@ from fastapi import HTTPException
 from mcp_server_langgraph.api.scim import create_group, create_user, delete_user, update_user
 from tests.conftest import get_user_id
 from tests.helpers.async_mock_helpers import configured_async_mock
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.xdist_group(name="scim_security_tests")

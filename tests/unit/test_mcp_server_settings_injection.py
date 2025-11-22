@@ -7,8 +7,7 @@ allowing runtime configuration of features like code execution without module re
 
 import gc
 import os
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 

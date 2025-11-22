@@ -27,7 +27,7 @@ from pathlib import Path
 def extract_coverage_percentage(coverage_json_path):
     """Extract coverage percentage from coverage.json"""
     try:
-        with open(coverage_json_path, "r") as f:
+        with open(coverage_json_path) as f:
             data = json.load(f)
         coverage = data["totals"]["percent_covered"]
         return round(coverage, 1)
@@ -63,7 +63,7 @@ def save_coverage_to_history(coverage, history_dir):
         f.write(entry)
 
     # Keep only last 100 entries
-    with open(history_file, "r") as f:
+    with open(history_file) as f:
         lines = f.readlines()
 
     if len(lines) > 100:
@@ -80,7 +80,7 @@ def get_previous_coverage(history_dir):
     if not history_file.exists():
         return None
 
-    with open(history_file, "r") as f:
+    with open(history_file) as f:
         lines = f.readlines()
 
     if len(lines) < 2:

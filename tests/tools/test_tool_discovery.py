@@ -6,7 +6,6 @@ and formatting at different detail levels following Anthropic's MCP best practic
 """
 
 import gc
-import json
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,6 +22,8 @@ from mcp_server_langgraph.tools.tool_discovery import (
     _format_tool_standard,
     search_tools,
 )
+
+pytestmark = [pytest.mark.unit]
 
 # ==============================================================================
 # Test Fixtures

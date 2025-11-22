@@ -26,6 +26,8 @@ import pytest
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
+pytestmark = pytest.mark.integration
+
 # Docker is an optional dependency - mock if not available
 try:
     import docker  # noqa: F401

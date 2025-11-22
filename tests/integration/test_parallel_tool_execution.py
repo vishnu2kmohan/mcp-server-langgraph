@@ -13,6 +13,8 @@ import pytest
 
 from mcp_server_langgraph.core.config import Settings
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testparalleltoolexecution")

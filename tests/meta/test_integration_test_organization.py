@@ -26,15 +26,14 @@ References:
 import ast
 import gc
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
-def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
+def find_pytest_markers_in_file(file_path: Path) -> set[str]:
     """
     Extract all pytest markers from a test file using AST parsing.
 
@@ -82,7 +81,7 @@ def find_pytest_markers_in_file(file_path: Path) -> Set[str]:
     return markers
 
 
-def find_all_test_files(root: Path, pattern: str = "test_*.py") -> List[Path]:
+def find_all_test_files(root: Path, pattern: str = "test_*.py") -> list[Path]:
     """Find all test files matching pattern recursively."""
     return sorted(root.rglob(pattern))
 
@@ -117,7 +116,7 @@ class TestIntegrationTestOrganization:
         all_test_files = find_all_test_files(tests_dir)
 
         # Find files with integration marker outside tests/integration/
-        misplaced_integration_tests: List[Tuple[Path, str]] = []
+        misplaced_integration_tests: list[tuple[Path, str]] = []
 
         for test_file in all_test_files:
             # Skip __init__.py files
@@ -173,7 +172,7 @@ class TestIntegrationTestOrganization:
         integration_files = find_all_test_files(integration_dir)
 
         # Check each file has integration marker
-        missing_marker: List[str] = []
+        missing_marker: list[str] = []
 
         for test_file in integration_files:
             # Skip __init__.py files
@@ -212,7 +211,7 @@ class TestIntegrationTestOrganization:
         unit_files = find_all_test_files(unit_dir)
 
         # Check for integration marker
-        integration_in_unit: List[str] = []
+        integration_in_unit: list[str] = []
 
         for test_file in unit_files:
             if test_file.name == "__init__.py":
@@ -247,7 +246,7 @@ class TestIntegrationTestOrganization:
         root_test_files = sorted(tests_dir.glob("test_*.py"))
 
         # Check for integration marker
-        integration_in_root: List[str] = []
+        integration_in_root: list[str] = []
 
         for test_file in root_test_files:
             if test_file.name == "__init__.py":

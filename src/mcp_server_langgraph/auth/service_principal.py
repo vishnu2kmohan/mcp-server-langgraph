@@ -14,7 +14,6 @@ See ADR-0033 for architectural decisions.
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Optional
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -28,18 +27,18 @@ class ServicePrincipal:
     name: str
     description: str
     authentication_mode: str  # "client_credentials" or "service_account_user"
-    associated_user_id: Optional[str] = None  # e.g., "user:alice"
-    owner_user_id: Optional[str] = None  # e.g., "user:bob"
+    associated_user_id: str | None = None  # e.g., "user:alice"
+    owner_user_id: str | None = None  # e.g., "user:bob"
     inherit_permissions: bool = False
     enabled: bool = True
-    created_at: Optional[str] = None
-    client_secret: Optional[str] = None  # Only returned on creation/rotation
+    created_at: str | None = None
+    client_secret: str | None = None  # Only returned on creation/rotation
 
 
 class ServicePrincipalManager:
     """Manage service principal lifecycle"""
 
-    def __init__(self, keycloak_client: KeycloakClient, openfga_client: Optional[OpenFGAClient]):
+    def __init__(self, keycloak_client: KeycloakClient, openfga_client: OpenFGAClient | None):
         """
         Initialize service principal manager
 
@@ -56,8 +55,8 @@ class ServicePrincipalManager:
         name: str,
         description: str,
         authentication_mode: str = "client_credentials",
-        associated_user_id: Optional[str] = None,
-        owner_user_id: Optional[str] = None,
+        associated_user_id: str | None = None,
+        owner_user_id: str | None = None,
         inherit_permissions: bool = False,
     ) -> ServicePrincipal:
         """
@@ -129,8 +128,8 @@ class ServicePrincipalManager:
         service_id: str,
         name: str,
         description: str,
-        associated_user_id: Optional[str],
-        owner_user_id: Optional[str],
+        associated_user_id: str | None,
+        owner_user_id: str | None,
         inherit_permissions: bool,
     ) -> str:
         """Create Keycloak client with service account enabled"""
@@ -166,8 +165,8 @@ class ServicePrincipalManager:
         service_id: str,
         name: str,
         description: str,
-        associated_user_id: Optional[str],
-        owner_user_id: Optional[str],
+        associated_user_id: str | None,
+        owner_user_id: str | None,
         inherit_permissions: bool,
     ) -> str:
         """Create Keycloak user marked as service account"""
@@ -197,8 +196,8 @@ class ServicePrincipalManager:
     async def _sync_to_openfga(
         self,
         service_id: str,
-        associated_user_id: Optional[str],
-        owner_user_id: Optional[str],
+        associated_user_id: str | None,
+        owner_user_id: str | None,
         inherit_permissions: bool,
     ) -> None:
         """
@@ -287,7 +286,7 @@ class ServicePrincipalManager:
 
         return new_secret
 
-    async def list_service_principals(self, owner_user_id: Optional[str] = None) -> List[ServicePrincipal]:
+    async def list_service_principals(self, owner_user_id: str | None = None) -> list[ServicePrincipal]:
         """
         List all service principals, optionally filtered by owner
 
@@ -355,7 +354,7 @@ class ServicePrincipalManager:
 
         return service_principals
 
-    async def get_service_principal(self, service_id: str) -> Optional[ServicePrincipal]:
+    async def get_service_principal(self, service_id: str) -> ServicePrincipal | None:
         """
         Get specific service principal by ID
 

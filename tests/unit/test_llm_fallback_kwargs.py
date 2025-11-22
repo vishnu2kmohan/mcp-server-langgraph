@@ -5,26 +5,18 @@ Ensures that provider-specific kwargs (api_base, aws_secret_access_key, etc.)
 are properly forwarded to fallback models.
 """
 
-import gc
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.messages import HumanMessage
 
+# Import LLMFactory
 from mcp_server_langgraph.llm.factory import LLMFactory
 
 # Use shared circuit breaker config from conftest.py
 # Mark as llm tests (expensive, require API keys, skipped in CI)
-pytestmark = [
-    pytest.mark.unit,
-    pytest.mark.llm,
-    pytest.mark.skipif(
-        os.getenv("CI") == "true",
-        reason="LLM tests require real API keys and are expensive for CI - run in scheduled workflow",
-    ),
-    pytest.mark.usefixtures("test_circuit_breaker_config"),
-]
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
@@ -36,6 +28,39 @@ def mock_litellm_responses():
     response.usage = MagicMock()
     response.usage.total_tokens = 10
     return response
+
+
+@pytest.fixture(autouse=True)
+def reset_circuit_breakers():
+    """Reset circuit breakers before each test to ensure clean state."""
+    # Reset all circuit breakers to avoid interference from other tests
+    import mcp_server_langgraph.resilience.circuit_breaker as cb_module
+
+    if hasattr(cb_module, "_circuit_breakers"):
+        cb_module._circuit_breakers.clear()
+    yield
+    # Clean up after test
+    if hasattr(cb_module, "_circuit_breakers"):
+        cb_module._circuit_breakers.clear()
+
+
+@pytest.fixture(autouse=True)
+def mock_http_clients():
+    """
+    Mock HTTP clients to prevent real network calls in LLM fallback tests.
+
+    Without this, tests would attempt real network connections to:
+    - Azure OpenAI endpoints
+    - AWS Bedrock endpoints
+    - Ollama (localhost:11434)
+
+    This causes httpcore.ConnectError: [Errno -2] Name or service not known
+    """
+    from unittest.mock import patch
+
+    with patch("httpx.Client"):
+        with patch("httpx.AsyncClient"):
+            yield
 
 
 @pytest.mark.unit
@@ -67,10 +92,11 @@ def test_fallback_forwards_kwargs_sync(mock_litellm_responses):
         messages = [HumanMessage(content="test message")]
 
         # Mock completion to fail on primary, succeed on fallback
+        # Patch where it's imported in the factory module
         with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
-            # First call (primary) fails
+            # First call (primary) fails with a generic exception
             # Second call (fallback) succeeds
-            mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+            mock_completion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
             result = factory.invoke(messages)  # noqa: F841
 
@@ -121,10 +147,11 @@ async def test_fallback_forwards_kwargs_async(mock_litellm_responses):
         messages = [HumanMessage(content="test message")]
 
         # Mock acompletion to fail on primary, succeed on fallback
+        # Patch where it's imported in the factory module
         with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
-            # First call (primary) fails
+            # First call (primary) fails with a generic exception
             # Second call (fallback) succeeds
-            mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+            mock_acompletion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
             result = await factory.ainvoke(messages)  # noqa: F841
 
@@ -162,7 +189,7 @@ def test_fallback_forwards_ollama_kwargs_sync(mock_litellm_responses):
     messages = [HumanMessage(content="test message")]
 
     with patch("mcp_server_langgraph.llm.factory.completion") as mock_completion:
-        mock_completion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+        mock_completion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
         result = factory.invoke(messages)  # noqa: F841
 
@@ -192,7 +219,7 @@ async def test_fallback_forwards_ollama_kwargs_async(mock_litellm_responses):
     messages = [HumanMessage(content="test message")]
 
     with patch("mcp_server_langgraph.llm.factory.acompletion", new_callable=AsyncMock) as mock_acompletion:
-        mock_acompletion.side_effect = [Exception("Primary failed"), mock_litellm_responses]
+        mock_acompletion.side_effect = [RuntimeError("Primary model failed"), mock_litellm_responses]
 
         result = await factory.ainvoke(messages)  # noqa: F841
 

@@ -9,6 +9,8 @@ import pytest
 from openfga_sdk import OpenFgaClient
 from openfga_sdk.client.models import ClientWriteRequest
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.unit
 @pytest.mark.openfga

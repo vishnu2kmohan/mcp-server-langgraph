@@ -26,3 +26,16 @@ spec:
           capabilities:
             drop:
             - ALL
+        # Volume mounts for readOnlyRootFilesystem
+        # PostgreSQL requires writable /tmp for temp files, locks, and sockets
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: run-postgresql
+          mountPath: /var/run/postgresql
+      # Volumes for writable paths when readOnlyRootFilesystem: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: run-postgresql
+        emptyDir: {}

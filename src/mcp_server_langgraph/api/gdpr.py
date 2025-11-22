@@ -11,16 +11,15 @@ Implements data subject rights under GDPR:
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.auth.session import SessionStore, get_session_store
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
-from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage
+from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage, get_gdpr_storage_dependency
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord as GDPRConsentRecord
 from mcp_server_langgraph.core.security import sanitize_header_value
 from mcp_server_langgraph.observability.telemetry import logger, tracer
@@ -34,9 +33,9 @@ router = APIRouter(prefix="/api/v1/users", tags=["GDPR Compliance"])
 class UserProfileUpdate(BaseModel):
     """User profile update model (GDPR Article 16 - Right to Rectification)"""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=100, description="User's full name")
-    email: Optional[str] = Field(None, description="User's email address")
-    preferences: Optional[Dict[str, Any]] = Field(None, description="User preferences")
+    name: str | None = Field(None, min_length=1, max_length=100, description="User's full name")
+    email: str | None = Field(None, description="User's email address")
+    preferences: dict[str, Any] | None = Field(None, description="User preferences")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -63,9 +62,9 @@ class ConsentRecord(BaseModel):
 
     consent_type: ConsentType = Field(..., description="Type of consent")
     granted: bool = Field(..., description="Whether consent is granted")
-    timestamp: Optional[str] = Field(None, description="ISO timestamp (auto-generated)")
-    ip_address: Optional[str] = Field(None, description="IP address (auto-captured)")
-    user_agent: Optional[str] = Field(None, description="User agent (auto-captured)")
+    timestamp: str | None = Field(None, description="ISO timestamp (auto-generated)")
+    ip_address: str | None = Field(None, description="IP address (auto-captured)")
+    user_agent: str | None = Field(None, description="User agent (auto-captured)")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -81,7 +80,7 @@ class ConsentResponse(BaseModel):
     """Response for consent operations"""
 
     user_id: str
-    consents: Dict[str, dict[str, Any]] = Field(description="Current consent status for all types")
+    consents: dict[str, dict[str, Any]] = Field(description="Current consent status for all types")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -107,11 +106,11 @@ class ConsentResponse(BaseModel):
 # ==================== Endpoints ====================
 
 
-@router.get("/me/data", response_model=UserDataExport)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/data", response_model=UserDataExport)
 async def get_user_data(
-    user: Dict[str, Any] = Depends(get_current_user),
+    request: Request,
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> UserDataExport:
     """
     Export all user data (GDPR Article 15 - Right to Access)
@@ -131,7 +130,15 @@ async def get_user_data(
     - Consents
     """
     with tracer.start_as_current_span("gdpr.get_user_data"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         username = user.get("username")
 
@@ -162,12 +169,12 @@ async def get_user_data(
         return export
 
 
-@router.get("/me/export", response_model=None)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/export", response_model=None)
 async def export_user_data(
-    user: Dict[str, Any] = Depends(get_current_user),
+    request: Request,
     format: str = Query("json", pattern="^(json|csv)$", description="Export format: json or csv"),
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> Response:
     """
     Export user data in portable format (GDPR Article 20 - Right to Data Portability)
@@ -181,7 +188,15 @@ async def export_user_data(
     **Response**: File download in requested format
     """
     with tracer.start_as_current_span("gdpr.export_user_data"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = str(user.get("user_id") or "")
         username = str(user.get("username") or "")
         email = str(user.get("email", f"{username}@example.com"))
@@ -215,11 +230,11 @@ async def export_user_data(
         return Response(content=data_bytes, media_type=content_type, headers=headers)
 
 
-@router.patch("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.patch("/me")
 async def update_user_profile(
+    request: Request,
     profile_update: UserProfileUpdate,
-    user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Update user profile (GDPR Article 16 - Right to Rectification)
 
@@ -232,7 +247,15 @@ async def update_user_profile(
     **Response**: Updated user profile
     """
     with tracer.start_as_current_span("gdpr.update_user_profile"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         username = user.get("username")
 
@@ -272,13 +295,13 @@ async def update_user_profile(
         return updated_profile
 
 
-@router.delete("/me")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.delete("/me")
 async def delete_user_account(
-    user: Dict[str, Any] = Depends(get_current_user),
+    request: Request,
     confirm: bool = Query(..., description="Must be true to confirm account deletion"),
     session_store: SessionStore = Depends(get_session_store),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
-) -> Dict[str, Any]:
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
+) -> dict[str, Any]:
     """
     Delete user account and all data (GDPR Article 17 - Right to Erasure)
 
@@ -309,7 +332,15 @@ async def delete_user_account(
                 detail="Account deletion requires confirmation. Set confirm=true to proceed.",
             )
 
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = str(user.get("user_id") or "")
         username = str(user.get("username") or "")
 
@@ -366,11 +397,11 @@ async def delete_user_account(
         }
 
 
-@router.post("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/me/consent")
 async def update_consent(
+    request: Request,
     consent: ConsentRecord,
-    user: Dict[str, Any] = Depends(get_current_user),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> ConsentResponse:
     """
     Update user consent preferences (GDPR Article 21 - Right to Object)
@@ -383,7 +414,15 @@ async def update_consent(
     **Response**: Current consent status for all types
     """
     with tracer.start_as_current_span("gdpr.update_consent"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         if not user_id:
             raise HTTPException(
@@ -440,10 +479,10 @@ async def update_consent(
         return ConsentResponse(user_id=user_id, consents=consents_dict)
 
 
-@router.get("/me/consent")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/me/consent")
 async def get_consent_status(
-    user: Dict[str, Any] = Depends(get_current_user),
-    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage),
+    request: Request,
+    gdpr_storage: GDPRStorage = Depends(get_gdpr_storage_dependency),
 ) -> ConsentResponse:
     """
     Get current consent status (GDPR Article 21 - Right to Object)
@@ -453,7 +492,15 @@ async def get_consent_status(
     **Response**: Current consent status for all consent types
     """
     with tracer.start_as_current_span("gdpr.get_consent_status"):
-        # Get authenticated user
+        # Get authenticated user from request state (set by AuthRequestMiddleware)
+        user = getattr(request.state, "user", None)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         user_id = user.get("user_id")
         if not user_id:
             raise HTTPException(

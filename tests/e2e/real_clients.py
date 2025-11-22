@@ -18,8 +18,9 @@ Usage:
 """
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Dict
+from typing import Any
 
 import httpx
 
@@ -41,9 +42,12 @@ class RealKeycloakAuth:
         self.base_url = base_url or os.getenv("KEYCLOAK_URL", "http://localhost:9082")
         self.realm = os.getenv("KEYCLOAK_REALM", "master")
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
+        # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
+        # Keycloak requires client authentication for introspection endpoint
+        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
         self.client = httpx.AsyncClient(timeout=30.0)
 
-    async def login(self, username: str, password: str) -> Dict[str, str]:
+    async def login(self, username: str, password: str) -> dict[str, str]:
         """
         Login user and get real JWT tokens from Keycloak.
 
@@ -89,7 +93,7 @@ class RealKeycloakAuth:
                 f"Keycloak auth failed: {e.response.status_code} - {e.response.text[:200]} " f"(URL: {token_url})"
             ) from e
 
-    async def refresh(self, refresh_token: str) -> Dict[str, str]:
+    async def refresh(self, refresh_token: str) -> dict[str, str]:
         """
         Refresh access token using refresh token.
 
@@ -130,25 +134,35 @@ class RealKeycloakAuth:
             },
         )
 
-    async def introspect(self, token: str) -> Dict[str, Any]:
+    async def introspect(self, token: str) -> dict[str, Any]:
         """
         Introspect token to get metadata.
+
+        CODEX FINDING FIX (2025-11-20): Added client_secret for proper Keycloak authentication.
+        Previous issue: Missing client_secret caused 403 Forbidden errors.
 
         Args:
             token: Access token to introspect
 
         Returns:
             Dict with token metadata (active, sub, username, etc.)
+
+        Raises:
+            httpx.HTTPStatusError: If introspection fails (e.g., 403 without client_secret)
         """
         introspect_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token/introspect"
 
-        response = await self.client.post(
-            introspect_url,
-            data={
-                "client_id": self.client_id,
-                "token": token,
-            },
-        )
+        # Keycloak requires client authentication for introspection
+        # Use client_secret if available, otherwise try public client introspection
+        data = {
+            "client_id": self.client_id,
+            "token": token,
+        }
+
+        if self.client_secret:
+            data["client_secret"] = self.client_secret
+
+        response = await self.client.post(introspect_url, data=data)
         response.raise_for_status()
 
         return response.json()
@@ -182,7 +196,7 @@ class RealMCPClient:
 
         self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0)
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """
         Initialize MCP session.
 
@@ -208,7 +222,7 @@ class RealMCPClient:
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"MCP initialize failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
-    async def list_tools(self) -> Dict[str, Any]:
+    async def list_tools(self) -> dict[str, Any]:
         """
         List available tools.
 
@@ -230,7 +244,7 @@ class RealMCPClient:
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"MCP list_tools failed: {e.response.status_code} - {e.response.text[:200]}") from e
 
-    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """
         Call a tool.
 
@@ -274,7 +288,7 @@ class RealMCPClient:
         data = response.json()
         return data["conversation_id"]
 
-    async def send_message(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    async def send_message(self, conversation_id: str, content: str) -> dict[str, Any]:
         """
         Send message to conversation.
 
@@ -296,7 +310,7 @@ class RealMCPClient:
 
         return response.json()
 
-    async def get_conversation(self, conversation_id: str) -> Dict[str, Any]:
+    async def get_conversation(self, conversation_id: str) -> dict[str, Any]:
         """
         Get conversation details.
 

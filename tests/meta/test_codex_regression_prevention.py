@@ -12,12 +12,11 @@ import ast
 import gc
 import subprocess
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 TESTS_DIR = REPO_ROOT / "tests"
@@ -54,7 +53,7 @@ class TestUnconditionalSkipDetection:
             + "\n".join(f"  - {v}" for v in violations[:10])
         )
 
-    def _find_unconditional_skips(self, filepath: Path) -> List[Tuple[str, int]]:
+    def _find_unconditional_skips(self, filepath: Path) -> list[tuple[str, int]]:
         """
         Find unconditional pytest.skip() calls using AST.
 
@@ -144,7 +143,7 @@ class TestStateIsolationPatterns:
             f"Use monkeypatch fixture instead:\n" + "\n".join(f"  - {v}" for v in violations[:10])
         )
 
-    def _find_manual_settings_cleanup(self, filepath: Path) -> List[Tuple[str, int]]:
+    def _find_manual_settings_cleanup(self, filepath: Path) -> list[tuple[str, int]]:
         """Find try/finally blocks that save/restore settings"""
         with open(filepath) as f:
             try:
@@ -219,7 +218,7 @@ class TestCLIToolGuards:
             f"Use @requires_tool decorator or tool_available fixtures:\n" + "\n".join(f"  - {v}" for v in violations[:10])
         )
 
-    def _find_unguarded_cli_calls(self, filepath: Path, cli_tools: List[str]) -> List[Tuple[str, int, str]]:
+    def _find_unguarded_cli_calls(self, filepath: Path, cli_tools: list[str]) -> list[tuple[str, int, str]]:
         """Find subprocess.run() calls to CLI tools without guards"""
         with open(filepath) as f:
             try:
@@ -261,7 +260,7 @@ class TestCLIToolGuards:
                     return True
         return False
 
-    def _extract_cli_tool(self, call_node: ast.Call, cli_tools: List[str]) -> str:
+    def _extract_cli_tool(self, call_node: ast.Call, cli_tools: list[str]) -> str:
         """Extract CLI tool name from subprocess.run([tool, ...]) call"""
         if not call_node.args:
             return None
@@ -314,7 +313,7 @@ class TestPrivateAPIUsage:
             + "\n".join(f"  - {v}" for v in violations[:10])
         )
 
-    def _find_private_method_calls(self, filepath: Path) -> List[Tuple[str, int, str]]:
+    def _find_private_method_calls(self, filepath: Path) -> list[tuple[str, int, str]]:
         """Find calls to private methods (leading underscore) in tests"""
         with open(filepath) as f:
             try:
@@ -379,8 +378,8 @@ class TestXFailStrictUsage:
         xfail_count = content.count("@pytest.mark.xfail(strict=True")
 
         # Should have multiple xfail decorators for unimplemented tests
-        assert xfail_count >= 24, (
-            f"Expected 24+ xfail(strict=True) decorators in E2E tests, found {xfail_count}. "
+        assert xfail_count >= 20, (
+            f"Expected 20+ xfail(strict=True) decorators in E2E tests, found {xfail_count}. "
             f"Unimplemented test stubs should use xfail(strict=True) not pytest.skip(). "
             f"Note: Count decreases as tests are implemented (started at 34, current: {xfail_count}, target: 0)"
         )
@@ -516,7 +515,7 @@ class TestDeadCodeInFixtures:
             + "\n".join(f"  - {v}" for v in violations[:10])
         )
 
-    def _find_dead_code_in_fixtures(self, filepath: Path) -> List[Tuple[str, int, List[int]]]:
+    def _find_dead_code_in_fixtures(self, filepath: Path) -> list[tuple[str, int, list[int]]]:
         """
         Find code after return statements in pytest fixtures.
 

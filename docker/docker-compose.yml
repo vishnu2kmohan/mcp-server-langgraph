@@ -44,7 +44,7 @@ services:
   # ==============================================================================
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.8-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -107,7 +107,7 @@ services:
   # ==============================================================================
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.0
+    image: quay.io/keycloak/keycloak:26.4.2
     command: start-dev
     depends_on:
       postgres:
@@ -132,6 +132,7 @@ services:
       - KC_HEALTH_ENABLED=true
       - KC_METRICS_ENABLED=true
     healthcheck:
+      # curl is available in the official Keycloak image (quay.io/keycloak/keycloak)
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 10s
       timeout: 5s
@@ -193,7 +194,7 @@ services:
   # ==============================================================================
 
   qdrant:
-    image: qdrant/qdrant:v1.15.1
+    image: qdrant/qdrant:v1.15.5
     ports:
       - "6333:6333"  # HTTP API
       - "6334:6334"  # gRPC API
@@ -273,6 +274,7 @@ services:
       - PROMETHEUS_METRICS_ENABLED=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
     healthcheck:
+      # wget is available in the API service image (built from our Dockerfile)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
@@ -304,6 +306,7 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
       - LOG_LEVEL=info
     healthcheck:
+      # wget is available in the official Jaeger all-in-one image
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
       interval: 10s
       timeout: 5s
@@ -335,6 +338,7 @@ services:
       - ../monitoring/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     healthcheck:
+      # wget is available in the official Prometheus image (prom/prometheus)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 10s
       timeout: 5s
@@ -363,6 +367,7 @@ services:
       - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
     healthcheck:
+      # wget is available in the official Alertmanager image (prom/alertmanager)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
       interval: 10s
       timeout: 5s
@@ -391,6 +396,7 @@ services:
       - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     healthcheck:
+      # wget is available in the official Grafana image (grafana/grafana)
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s

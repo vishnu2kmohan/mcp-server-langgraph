@@ -14,6 +14,8 @@ import gc
 
 import pytest
 
+pytestmark = pytest.mark.e2e
+
 
 @pytest.mark.e2e
 @pytest.mark.infrastructure

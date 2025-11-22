@@ -10,11 +10,26 @@ from pathlib import Path
 
 import pytest
 
+# Mark all tests in this file as integration and contract tests
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def openapi_schema():
-    """Load OpenAPI schema"""
-    schema_path = Path(__file__).parent.parent.parent / "openapi.json"
+    """
+    Load OpenAPI schema from project root.
+
+    CODEX FINDING FIX (2025-11-20): Corrected path to use 4 parent levels instead of 3.
+    Previous: Path(__file__).parent.parent.parent (tests/) ❌
+    Fixed: Path(__file__).parent.parent.parent.parent (project root) ✅
+
+    File path: tests/integration/api/test_openapi_compliance.py
+    - parent (1) → tests/integration/api/
+    - parent (2) → tests/integration/
+    - parent (3) → tests/
+    - parent (4) → / (project root with openapi.json)
+    """
+    schema_path = Path(__file__).parent.parent.parent.parent / "openapi.json"
 
     if not schema_path.exists():
         pytest.skip("OpenAPI schema not found. Run: python scripts/validate_openapi.py")

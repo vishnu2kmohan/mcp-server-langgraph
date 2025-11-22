@@ -46,8 +46,9 @@ For details, see:
 - tests/conftest.py - Test infrastructure fixtures
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Dict
+from typing import Any
 
 import pytest
 
@@ -61,7 +62,7 @@ class MockKeycloakAuth:
         self.users = {}
         self.tokens = {}
 
-    async def login(self, username: str, password: str) -> Dict[str, str]:
+    async def login(self, username: str, password: str) -> dict[str, str]:
         """Mock login that returns JWT tokens"""
         # Simulate successful login
         access_token = f"mock_access_token_{username}"
@@ -77,7 +78,7 @@ class MockKeycloakAuth:
 
         return self.tokens[username]
 
-    async def refresh(self, refresh_token: str) -> Dict[str, str]:
+    async def refresh(self, refresh_token: str) -> dict[str, str]:
         """Mock token refresh"""
         # Extract username from mock token
         username = refresh_token.replace("mock_refresh_token_", "")
@@ -105,7 +106,7 @@ class MockKeycloakAuth:
         if username in self.tokens:
             del self.tokens[username]
 
-    async def introspect(self, token: str) -> Dict[str, Any]:
+    async def introspect(self, token: str) -> dict[str, Any]:
         """Mock token introspection"""
         # Check if token exists
         for username, token_data in self.tokens.items():
@@ -133,7 +134,7 @@ class MockMCPClient:
         ]
         self.conversations = {}
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """Mock MCP initialization"""
         return {
             "protocol_version": "2024-11-05",
@@ -141,11 +142,11 @@ class MockMCPClient:
             "capabilities": {"tools": True, "prompts": True, "resources": False},
         }
 
-    async def list_tools(self) -> Dict[str, Any]:
+    async def list_tools(self) -> dict[str, Any]:
         """Mock tool listing"""
         return {"tools": self.tools}
 
-    async def call_tool(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """Mock tool invocation"""
         if name not in [t["name"] for t in self.tools]:
             raise ValueError(f"Tool {name} not found")
@@ -159,7 +160,7 @@ class MockMCPClient:
         self.conversations[conv_id] = {"id": conv_id, "user_id": user_id, "messages": []}
         return conv_id
 
-    async def send_message(self, conv_id: str, message: str) -> Dict[str, Any]:
+    async def send_message(self, conv_id: str, message: str) -> dict[str, Any]:
         """Mock message sending"""
         if conv_id not in self.conversations:
             raise ValueError(f"Conversation {conv_id} not found")
@@ -172,7 +173,7 @@ class MockMCPClient:
 
         return {"role": "assistant", "content": response}
 
-    async def get_conversation(self, conv_id: str) -> Dict[str, Any]:
+    async def get_conversation(self, conv_id: str) -> dict[str, Any]:
         """Mock conversation retrieval"""
         if conv_id not in self.conversations:
             raise ValueError(f"Conversation {conv_id} not found")
@@ -213,7 +214,7 @@ async def mock_mcp_client() -> AsyncGenerator[MockMCPClient, None]:
 
 
 async def mock_api_request(
-    method: str, url: str, headers: Dict[str, str] = None, json: Dict[str, Any] = None
+    method: str, url: str, headers: dict[str, str] = None, json: dict[str, Any] = None
 ) -> httpx.Response:
     """
     Mock API request for testing without actual HTTP calls.

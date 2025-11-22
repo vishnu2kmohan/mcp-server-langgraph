@@ -9,7 +9,6 @@ Usage:
 """
 
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -103,9 +102,9 @@ def generate_report():
     # Coverage (quick estimate)
     print("## Code Coverage")
     print()
-    print(f"**Current coverage:** ~65-70% (based on recent runs)")
-    print(f"**Target coverage:** 80%")
-    print(f"**Gap:** ~15%")
+    print("**Current coverage:** ~65-70% (based on recent runs)")
+    print("**Target coverage:** 80%")
+    print("**Gap:** ~15%")
     print()
     print("*Note: Run `make test-coverage` for exact coverage report*")
     print()

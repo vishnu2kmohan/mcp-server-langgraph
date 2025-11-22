@@ -3,7 +3,7 @@ LangSmith configuration and integration for LangGraph agent observability
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from mcp_server_langgraph.core.config import settings
 
@@ -36,8 +36,8 @@ def configure_langsmith() -> bool:
 
 
 def get_run_metadata(
-    user_id: Optional[str] = None, request_id: Optional[str] = None, additional_metadata: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    user_id: str | None = None, request_id: str | None = None, additional_metadata: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """
     Create metadata for LangSmith runs.
 
@@ -69,7 +69,7 @@ def get_run_metadata(
     return metadata
 
 
-def get_run_tags(user_id: Optional[str] = None, additional_tags: Optional[list[str]] = None) -> list[str]:
+def get_run_tags(user_id: str | None = None, additional_tags: list[str] | None = None) -> list[str]:
     """
     Create tags for LangSmith runs.
 
@@ -105,7 +105,7 @@ class LangSmithConfig:
         """Check if LangSmith is enabled"""
         return self.enabled
 
-    def get_client_kwargs(self) -> Dict[str, Any]:
+    def get_client_kwargs(self) -> dict[str, Any]:
         """
         Get kwargs for LangSmith Client initialization.
 
@@ -123,11 +123,11 @@ class LangSmithConfig:
     def create_run_config(
         self,
         run_name: str,
-        user_id: Optional[str] = None,
-        request_id: Optional[str] = None,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        user_id: str | None = None,
+        request_id: str | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Create a run configuration for LangChain/LangGraph execution.
 

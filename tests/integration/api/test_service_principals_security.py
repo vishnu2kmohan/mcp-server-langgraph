@@ -20,6 +20,8 @@ from mcp_server_langgraph.api.service_principals import (
 )
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.xdist_group(name="service_principal_security_tests")
 class TestServicePrincipalSecurity:

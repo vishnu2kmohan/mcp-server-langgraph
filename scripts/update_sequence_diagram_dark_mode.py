@@ -7,7 +7,6 @@ Replaces the old theme (with #333 text) with new dual-mode theme.
 
 import sys
 from pathlib import Path
-from typing import Tuple
 
 # Old theme patterns to find
 OLD_THEME_PATTERNS = [
@@ -21,7 +20,7 @@ NEW_THEME = """%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd
 # fmt: on
 
 
-def update_sequence_theme(content: str) -> Tuple[str, bool]:
+def update_sequence_theme(content: str) -> tuple[str, bool]:
     """
     Replace old sequence diagram theme with dark-mode compatible version.
 

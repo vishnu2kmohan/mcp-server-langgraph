@@ -24,15 +24,12 @@ Related:
 """
 
 import gc
-import os
 from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import patch
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.meta
@@ -61,6 +58,7 @@ class TestInfrastructureSingleton:
             "openfga_http": 9080,
             "openfga_grpc": 9081,
             "keycloak": 9082,
+            "keycloak_management": 9900,
         }
 
         # Test current worker's ports

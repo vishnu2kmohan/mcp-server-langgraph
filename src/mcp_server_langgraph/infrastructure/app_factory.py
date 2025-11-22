@@ -10,8 +10,9 @@ Separates infrastructure concerns from business logic.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_app(
-    container: Optional[ApplicationContainer] = None,
-    settings: Optional[Settings] = None,
-    environment: Optional[str] = None,
+    container: ApplicationContainer | None = None,
+    settings: Settings | None = None,
+    environment: str | None = None,
 ) -> FastAPI:
     """
     Create a FastAPI application with proper configuration.
@@ -72,15 +73,18 @@ def create_app(
     # Get settings from container
     app_settings = container.settings
 
-    # Create lifespan context
-    lifespan_ctx = create_lifespan(container=container)
+    # Create lifespan wrapper to inject container
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        async with create_lifespan(container=container):
+            yield
 
     # Create FastAPI app
     app = FastAPI(
         title=app_settings.service_name,
         description="MCP Server with LangGraph",
         version="1.0.0",
-        lifespan=lifespan_ctx,
+        lifespan=lifespan,
     )
 
     # Add CORS middleware
@@ -93,7 +97,7 @@ def create_app(
     )
 
     # Add health check endpoint
-    @app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+    @app.get("/health")
     async def health_check() -> dict[str, str]:
         """Health check endpoint"""
         return {"status": "healthy", "service": app_settings.service_name}
@@ -105,7 +109,7 @@ def create_app(
 
 
 @asynccontextmanager
-async def create_lifespan(container: Optional[ApplicationContainer] = None) -> AsyncIterator[None]:
+async def create_lifespan(container: ApplicationContainer | None = None) -> AsyncIterator[None]:
     """
     Create application lifespan context manager.
 
@@ -139,11 +143,32 @@ async def create_lifespan(container: Optional[ApplicationContainer] = None) -> A
             # Re-raise to prevent application from starting with invalid config
             raise
 
+        # Initialize GDPR storage at startup (fail-fast)
+        from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage
+
+        try:
+            logger.info(f"Initializing GDPR storage (backend: {container.settings.gdpr_storage_backend})")
+            await initialize_gdpr_storage(
+                backend=container.settings.gdpr_storage_backend,  # type: ignore[arg-type]
+                postgres_url=container.settings.gdpr_postgres_url,
+            )
+            logger.info("GDPR storage initialized successfully")
+        except Exception as e:
+            logger.error(f"GDPR storage initialization failed: {e}")
+            # Re-raise to prevent application from starting without GDPR storage
+            raise
+
     yield
 
     # Shutdown
     if container:
         logger.info("Application shutting down")
+
+        # Reset GDPR storage on shutdown
+        from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
+
+        reset_gdpr_storage()
+        logger.info("GDPR storage reset")
 
 
 def customize_openapi(app: FastAPI) -> dict[str, Any]:
@@ -161,8 +186,10 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
         schema = customize_openapi(app)
         app.openapi_schema = schema
     """
+    from typing import cast
+
     if app.openapi_schema:
-        return app.openapi_schema
+        return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]
 
     from fastapi.openapi.utils import get_openapi
 
@@ -177,4 +204,4 @@ def customize_openapi(app: FastAPI) -> dict[str, Any]:
     openapi_schema["info"]["x-logo"] = {"url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"}
 
     app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    return cast(dict[str, Any], app.openapi_schema)  # type: ignore[redundant-cast]

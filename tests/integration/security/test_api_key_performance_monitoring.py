@@ -25,6 +25,8 @@ from redis.asyncio import Redis
 
 from mcp_server_langgraph.auth.api_keys import APIKeyManager
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit

@@ -13,7 +13,7 @@ import sys
 
 def fix_code_fences(filepath):
     """Fix code fence closures in a single file."""
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         lines = f.readlines()
 
     modified = False

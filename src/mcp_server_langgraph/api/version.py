@@ -5,8 +5,6 @@ Provides version information for API clients to determine compatibility and feat
 Supports semantic versioning and breaking change detection.
 """
 
-from typing import Dict, List, Optional
-
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
@@ -27,19 +25,19 @@ class APIVersionInfo(BaseModel):
 
     version: str = Field(description="Application version (semantic versioning: MAJOR.MINOR.PATCH)", examples=["2.8.0"])
     api_version: str = Field(description="Current API version (e.g., 'v1')", examples=["v1"])
-    supported_versions: List[str] = Field(description="List of supported API versions", examples=[["v1"]])
-    deprecated_versions: List[str] = Field(
+    supported_versions: list[str] = Field(description="List of supported API versions", examples=[["v1"]])
+    deprecated_versions: list[str] = Field(
         description="List of deprecated API versions (still functional but will be removed)",
         default_factory=list,
         examples=[[]],
     )
-    sunset_dates: Dict[str, str] = Field(
+    sunset_dates: dict[str, str] = Field(
         description="Sunset dates for deprecated versions (ISO 8601 format)", default_factory=dict, examples=[{}]
     )
-    changelog_url: Optional[str] = Field(
+    changelog_url: str | None = Field(
         None, description="URL to API changelog", examples=["https://docs.example.com/api/changelog"]
     )
-    documentation_url: Optional[str] = Field(
+    documentation_url: str | None = Field(
         None, description="URL to API documentation", examples=["https://docs.example.com/api/v1"]
     )
 
@@ -94,7 +92,7 @@ class APIVersionInfo(BaseModel):
         }
     },
     operation_id="get_api_version_metadata",
-)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+)
 async def get_version() -> APIVersionInfo:
     """
     Get API version metadata

@@ -35,12 +35,12 @@ def fix_yaml_file(file_path: Path) -> bool:
         yaml.width = 120
 
         # Load all documents (handles multi-document YAML files)
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             documents = list(yaml.load_all(f))
 
         # Skip empty files
         if not documents or all(doc is None for doc in documents):
-            print(f"  ⚠️  Skipped (empty file)")
+            print("  ⚠️  Skipped (empty file)")
             return False
 
         # Rewrite with proper indentation
@@ -52,7 +52,7 @@ def fix_yaml_file(file_path: Path) -> bool:
                         f.write("---\n")
                     yaml.dump(doc, f)
 
-        print(f"  ✅ Fixed")
+        print("  ✅ Fixed")
         return True
 
     except Exception as e:
@@ -108,7 +108,7 @@ def main():
         if fix_yaml_file(file_path):
             fixed_count += 1
 
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  ✅ Fixed: {fixed_count}")
     print(f"  ❌ Errors: {error_count}")
     print(f"  📁 Total: {len(files_to_fix)}")

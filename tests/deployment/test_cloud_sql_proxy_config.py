@@ -12,9 +12,8 @@ attempt to connect to port 9801 but the proxy doesn't expose it,
 causing continuous container restarts.
 """
 
-import gc
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import yaml
@@ -32,13 +31,13 @@ PROXY_PATCH_FILES = [
 ]
 
 
-def load_yaml_file(file_path: Path) -> Dict[str, Any]:
+def load_yaml_file(file_path: Path) -> dict[str, Any]:
     """Load a YAML file and return parsed content."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         return yaml.safe_load(f)
 
 
-def find_cloud_sql_proxy_container(manifest: Dict[str, Any]) -> Dict[str, Any] | None:
+def find_cloud_sql_proxy_container(manifest: dict[str, Any]) -> dict[str, Any] | None:
     """Find the cloud-sql-proxy container in a deployment manifest."""
     if manifest.get("kind") != "Deployment":
         return None

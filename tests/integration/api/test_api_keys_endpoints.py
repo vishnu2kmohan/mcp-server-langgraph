@@ -15,6 +15,8 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_api_key_manager():
@@ -544,7 +546,6 @@ class TestAPIKeyEndpointAuthorization:
 
     def test_create_without_auth(self, monkeypatch):
         """Test creating API key without authentication fails"""
-        import os
 
         from fastapi import FastAPI
 

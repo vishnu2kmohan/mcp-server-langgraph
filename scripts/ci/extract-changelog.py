@@ -34,7 +34,7 @@ def extract_changelog_section(version, changelog_path="CHANGELOG.md"):
         print(f"⚠️  CHANGELOG file not found: {changelog_path}")
         return None, False
 
-    with open(changelog_file, "r", encoding="utf-8") as f:
+    with open(changelog_file, encoding="utf-8") as f:
         content = f.read()
 
     # Extract section between "## [VERSION]" and next "---"

@@ -20,6 +20,8 @@ from mcp_server_langgraph.resilience.bulkhead import (
     with_bulkhead,
 )
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.fixture
 def reset_bulkheads():

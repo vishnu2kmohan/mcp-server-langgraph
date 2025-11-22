@@ -1,0 +1,409 @@
+---
+title: Google Vertex AI Setup
+description: Complete guide to using Anthropic Claude and Google Gemini models via
+  Google Vertex AI
+icon: book-open
+contentType: how-to
+seoTitle: Google Vertex AI Setup - Claude & Gemini Integration | MCP Server LangGraph
+seoDescription: Enterprise-grade guide for accessing Anthropic Claude and Google Gemini models via Vertex AI with unified billing, workload identity, and VPC-SC
+keywords: [vertex ai, anthropic claude, google gemini, workload identity, gcp, enterprise llm, unified billing, vpc-sc]
+---
+
+# Google Vertex AI Setup
+
+This guide covers how to use both **Anthropic Claude** and **Google Gemini** models via Google Cloud's Vertex AI platform.
+
+## Overview
+
+Vertex AI provides enterprise-grade access to multiple LLM providers through a unified API, offering:
+
+- **Unified Billing**: Single GCP invoice for all model usage
+- **Workload Identity**: Keyless authentication on GKE (most secure)
+- **Enterprise Features**: VPC-SC, audit logging, IAM integration
+- **Multi-Provider**: Access both Anthropic Claude AND Google Gemini models
+
+## Supported Models
+
+### Anthropic Claude (via Vertex AI)
+
+Latest models (November 2025):
+
+```bash
+# Claude Sonnet 4.5 (Balanced performance)
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929
+# Pricing: $3/1M input tokens, $15/1M output tokens
+
+# Claude Haiku 4.5 (Fast, cost-effective)
+MODEL_NAME=vertex_ai/claude-haiku-4-5@20251001
+# Pricing: $1/1M input tokens, $5/1M output tokens
+
+# Claude Opus 4.1 (Most powerful)
+MODEL_NAME=vertex_ai/claude-opus-4-1@20250805
+# Pricing: $15/1M input tokens, $75/1M output tokens
+```
+
+### Google Gemini (via Vertex AI)
+
+Latest models (November 2025):
+
+```bash
+# Gemini 3.0 Pro (Latest, 1M context window)
+MODEL_NAME=vertex_ai/gemini-3-pro-preview
+# Pricing: $2/1M input tokens, $12/1M output tokens
+
+# Gemini 2.5 Flash (Fast, cost-effective)
+MODEL_NAME=vertex_ai/gemini-2.5-flash
+# Pricing: $0.15/1M input tokens, $0.60/1M output tokens
+
+# Gemini 2.5 Pro (Stable production)
+MODEL_NAME=vertex_ai/gemini-2.5-pro
+# Pricing: $1.25/1M input tokens, $10/1M output tokens (≤200K context)
+```
+
+## Prerequisites
+
+1. **GCP Project** with Vertex AI API enabled
+2. **Service Account** with `Vertex AI User` role (for local development)
+3. **Workload Identity** configured (for GKE deployments)
+
+## Setup Options
+
+### Option 1: Workload Identity on GKE (Recommended)
+
+**Most secure** - No API keys, automatic credential rotation, follows Google Cloud best practices.
+
+#### Step 1: Enable Workload Identity on Your GKE Cluster
+
+```bash
+# If creating a new cluster
+gcloud container clusters create my-cluster \
+  --workload-pool=PROJECT_ID.svc.id.goog \
+  --region=us-central1
+
+# If updating existing cluster
+gcloud container clusters update my-cluster \
+  --workload-pool=PROJECT_ID.svc.id.goog \
+  --region=us-central1
+```
+
+#### Step 2: Create GCP Service Account
+
+```bash
+# Create service account
+gcloud iam service-accounts create vertex-ai-user \
+  --display-name="Vertex AI User for MCP Server"
+
+# Grant Vertex AI User role
+gcloud projects add-iam-policy-binding PROJECT_ID \
+  --member="serviceAccount:vertex-ai-user@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+#### Step 3: Bind Kubernetes Service Account
+
+```bash
+# Allow Kubernetes SA to impersonate GCP SA
+gcloud iam service-accounts add-iam-policy-binding \
+  vertex-ai-user@PROJECT_ID.iam.gserviceaccount.com \
+  --role=roles/iam.workloadIdentityUser \
+  --member="serviceAccount:PROJECT_ID.svc.id.goog[default/mcp-server]"
+```
+
+#### Step 4: Annotate Kubernetes Service Account
+
+```yaml
+# kubernetes/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-server
+  annotations:
+    iam.gke.io/gcp-service-account: vertex-ai-user@PROJECT_ID.iam.gserviceaccount.com
+```
+
+#### Step 5: Configure Environment Variables
+
+```bash
+# .env or Kubernetes ConfigMap
+LLM_PROVIDER=vertex_ai
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929  # Or any Vertex AI model
+VERTEX_PROJECT=your-gcp-project-id
+VERTEX_LOCATION=us-central1
+
+# No GOOGLE_APPLICATION_CREDENTIALS needed - Workload Identity handles auth!
+```
+
+### Option 2: Service Account Key (Local Development)
+
+For local development or non-GKE environments.
+
+#### Step 1: Create Service Account
+
+```bash
+gcloud iam service-accounts create vertex-ai-dev \
+  --display-name="Vertex AI Development"
+
+gcloud projects add-iam-policy-binding PROJECT_ID \
+  --member="serviceAccount:vertex-ai-dev@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+#### Step 2: Download Service Account Key
+
+```bash
+gcloud iam service-accounts keys create ~/vertex-ai-key.json \
+  --iam-account=vertex-ai-dev@PROJECT_ID.iam.gserviceaccount.com
+```
+
+⚠️ **Security Warning**: Service account keys are long-lived credentials. Protect them like passwords!
+
+#### Step 3: Configure Environment Variables
+
+```bash
+# .env
+LLM_PROVIDER=vertex_ai
+MODEL_NAME=vertex_ai/gemini-3-pro-preview  # Or any Vertex AI model
+VERTEX_PROJECT=your-gcp-project-id
+VERTEX_LOCATION=us-central1
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/vertex-ai-key.json
+```
+
+## Usage Examples
+
+### Example 1: Claude Sonnet 4.5 via Vertex AI
+
+```bash
+# .env
+LLM_PROVIDER=vertex_ai
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929
+VERTEX_PROJECT=my-gcp-project
+VERTEX_LOCATION=us-central1
+```
+
+```python
+# Python code (automatic via LLMFactory)
+from mcp_server_langgraph.llm.factory import LLMFactory
+
+llm = LLMFactory(
+    provider="vertex_ai",
+    model_name="vertex_ai/claude-sonnet-4-5@20250929",
+    vertex_project="my-gcp-project",
+    vertex_location="us-central1",
+)
+
+response = await llm.ainvoke([{"role": "user", "content": "Hello!"}])
+print(response.content)
+```
+
+### Example 2: Gemini 3.0 Pro via Vertex AI
+
+```bash
+# .env
+LLM_PROVIDER=vertex_ai
+MODEL_NAME=vertex_ai/gemini-3-pro-preview
+VERTEX_PROJECT=my-gcp-project
+VERTEX_LOCATION=us-central1
+```
+
+### Example 3: Mixed Providers with Fallback
+
+```bash
+# .env
+LLM_PROVIDER=vertex_ai
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929
+ENABLE_FALLBACK=true
+FALLBACK_MODELS=["vertex_ai/claude-haiku-4-5@20251001","vertex_ai/gemini-2.5-flash","gpt-5"]
+
+# Configure both Vertex AI and fallback providers
+VERTEX_PROJECT=my-gcp-project
+VERTEX_LOCATION=us-central1
+OPENAI_API_KEY=sk-...  # For GPT-5 fallback
+```
+
+## Configuration Reference
+
+### Environment Variables
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `LLM_PROVIDER` | Yes | Set to `vertex_ai` | `vertex_ai` |
+| `MODEL_NAME` | Yes | Vertex AI model identifier | `vertex_ai/gemini-3-pro-preview` |
+| `VERTEX_PROJECT` | Yes | GCP project ID | `my-gcp-project` |
+| `VERTEX_LOCATION` | Yes | Vertex AI region | `us-central1` |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No* | Path to service account key | `/path/to/key.json` |
+
+*Not required on GKE with Workload Identity
+
+### Available Regions
+
+Common Vertex AI regions:
+
+- `us-central1` (Iowa, USA)
+- `us-east4` (Northern Virginia, USA)
+- `europe-west1` (Belgium)
+- `asia-southeast1` (Singapore)
+
+Check [Vertex AI locations](https://cloud.google.com/vertex-ai/docs/general/locations) for full list.
+
+## Cost Optimization
+
+### 1. Use Appropriate Model Sizes
+
+```bash
+# Development/Testing
+MODEL_NAME=vertex_ai/gemini-2.5-flash  # $0.15/$0.60 per 1M tokens
+
+# Production (balanced)
+MODEL_NAME=vertex_ai/claude-haiku-4-5@20251001  # $1/$5 per 1M tokens
+
+# Complex tasks only
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929  # $3/$15 per 1M tokens
+```
+
+### 2. Enable Prompt Caching (Claude Models)
+
+Claude models on Vertex AI support prompt caching for up to 90% cost savings on repeated prompts.
+
+### 3. Use Dedicated Models
+
+Configure cheaper models for specific tasks:
+
+```bash
+# Main model (for chat)
+MODEL_NAME=vertex_ai/claude-sonnet-4-5@20250929
+
+# Summarization (lighter/cheaper)
+USE_DEDICATED_SUMMARIZATION_MODEL=true
+SUMMARIZATION_MODEL_NAME=vertex_ai/gemini-2.5-flash
+SUMMARIZATION_MODEL_PROVIDER=vertex_ai
+```
+
+## Troubleshooting
+
+### Error: "Permission denied"
+
+**Problem**: Service account lacks Vertex AI permissions
+
+**Solution**:
+```bash
+gcloud projects add-iam-policy-binding PROJECT_ID \
+  --member="serviceAccount:YOUR-SA@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+### Error: "Model not found"
+
+**Problem**: Model not available in your region or incorrect model name
+
+**Solution**:
+1. Verify model name format: `vertex_ai/claude-sonnet-4-5@20250929`
+2. Check model availability in your region
+3. Try different region: `VERTEX_LOCATION=us-east4`
+
+### Error: "Workload Identity not working"
+
+**Problem**: Kubernetes SA not properly linked to GCP SA
+
+**Solution**:
+```bash
+# Verify annotation
+kubectl get serviceaccount mcp-server -o yaml
+
+# Check IAM binding
+gcloud iam service-accounts get-iam-policy \
+  vertex-ai-user@PROJECT_ID.iam.gserviceaccount.com
+
+# Test from pod
+kubectl run -it test --image=google/cloud-sdk:slim \
+  --serviceaccount=mcp-server \
+  --rm -- gcloud auth list
+```
+
+### Error: "Quota exceeded"
+
+**Problem**: Exceeded Vertex AI quota limits
+
+**Solution**:
+1. Check quotas: [GCP Console > IAM & Admin > Quotas](https://console.cloud.google.com/iam-admin/quotas)
+2. Request quota increase for Vertex AI
+3. Use fallback models: `ENABLE_FALLBACK=true`
+
+## Security Best Practices
+
+### 1. Use Workload Identity (GKE)
+
+✅ **Best**: Workload Identity (keyless authentication)
+⚠️ **Acceptable**: Service Account Key (local dev only)
+❌ **Avoid**: Committing keys to git
+
+### 2. Principle of Least Privilege
+
+Grant minimum required permissions:
+
+```bash
+# Good: Specific Vertex AI role
+--role="roles/aiplatform.user"
+
+# Bad: Overly broad permissions
+--role="roles/owner"
+```
+
+### 3. Audit Logging
+
+Enable Cloud Audit Logs for Vertex AI:
+
+```bash
+gcloud projects get-iam-policy PROJECT_ID \
+  --flatten="bindings[].members" \
+  --format="table(bindings.role)" \
+  --filter="bindings.members:serviceAccount:vertex-ai-user@*"
+```
+
+### 4. Rotate Keys Regularly
+
+For service account keys (local dev):
+
+```bash
+# List keys
+gcloud iam service-accounts keys list \
+  --iam-account=vertex-ai-dev@PROJECT_ID.iam.gserviceaccount.com
+
+# Delete old keys (older than 90 days)
+gcloud iam service-accounts keys delete KEY_ID \
+  --iam-account=vertex-ai-dev@PROJECT_ID.iam.gserviceaccount.com
+```
+
+## Monitoring & Observability
+
+### View Vertex AI Metrics
+
+```bash
+# View API requests
+gcloud logging read "resource.type=aiplatform.googleapis.com/Endpoint" \
+  --limit=10 \
+  --format=json
+
+# View costs
+gcloud billing accounts describe ACCOUNT_ID
+```
+
+### Enable LangSmith Tracing
+
+```bash
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your-api-key
+LANGSMITH_PROJECT=mcp-server-langgraph
+```
+
+## Next Steps
+
+- [Multi-LLM Setup](./multi-llm-setup.mdx) - Configure fallbacks across providers
+- [Cost Optimization](./anthropic-claude.mdx#cost-optimization) - Advanced cost reduction strategies
+- [Observability](./observability.mdx) - Monitor LLM performance and costs
+
+## Related Resources
+
+- [Vertex AI Documentation](https://cloud.google.com/vertex-ai/docs)
+- [Workload Identity Guide](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- [Anthropic on Vertex AI](https://cloud.google.com/vertex-ai/docs/partner-models/claude)
+- [Gemini on Vertex AI](https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini)

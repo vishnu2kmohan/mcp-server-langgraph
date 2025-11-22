@@ -21,7 +21,7 @@ Usage:
     print(result["response"])
 """
 
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
@@ -42,8 +42,8 @@ class SupportState(BaseModel):
     priority: Literal["low", "medium", "high", "urgent"] = Field(default="medium", description="Support priority")
     response: str = Field(default="", description="Agent response")
     escalated: bool = Field(default=False, description="Whether escalated to human")
-    faq_matches: List[Dict[str, str]] = Field(default_factory=list, description="Matching FAQ entries")
-    metadata: Dict[str, str] = Field(default_factory=dict, description="Additional metadata")
+    faq_matches: list[dict[str, str]] = Field(default_factory=list, description="Matching FAQ entries")
+    metadata: dict[str, str] = Field(default_factory=dict, description="Additional metadata")
 
 
 # ------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ def route_by_intent(state: SupportState) -> str:
 # ------------------------------------------------------------------------------
 
 
-def create_support_agent(knowledge_base_path: Optional[str] = None, escalation_webhook: Optional[str] = None):
+def create_support_agent(knowledge_base_path: str | None = None, escalation_webhook: str | None = None):
     """
     Create customer support agent.
 

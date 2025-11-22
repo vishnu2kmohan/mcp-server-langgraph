@@ -14,6 +14,8 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from mcp_server_langgraph.core.context_manager import ContextManager
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_llm():

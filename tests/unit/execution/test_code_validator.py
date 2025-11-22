@@ -11,6 +11,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+pytestmark = pytest.mark.unit
+
 # This import will fail initially - that's expected in TDD!
 # We'll implement the module to make tests pass
 try:

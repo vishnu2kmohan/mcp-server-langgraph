@@ -14,7 +14,6 @@ Note: Only required if processing Protected Health Information (PHI)
 import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -44,7 +43,7 @@ class EmergencyAccessGrant(BaseModel):
     expires_at: str  # ISO timestamp
     access_level: str
     revoked: bool = False
-    revoked_at: Optional[str] = None
+    revoked_at: str | None = None
 
 
 class PHIAuditLog(BaseModel):
@@ -54,12 +53,12 @@ class PHIAuditLog(BaseModel):
     user_id: str
     action: str
     phi_accessed: bool
-    patient_id: Optional[str] = None
-    resource_id: Optional[str] = None
+    patient_id: str | None = None
+    resource_id: str | None = None
     ip_address: str
     user_agent: str
     success: bool
-    failure_reason: Optional[str] = None
+    failure_reason: str | None = None
 
 
 class DataIntegrityCheck(BaseModel):
@@ -81,8 +80,8 @@ class HIPAAControls:
 
     def __init__(
         self,
-        session_store: Optional[SessionStore] = None,
-        integrity_secret: Optional[str] = None,
+        session_store: SessionStore | None = None,
+        integrity_secret: str | None = None,
     ):
         """
         Initialize HIPAA controls
@@ -119,7 +118,7 @@ class HIPAAControls:
         self.integrity_secret = integrity_secret
 
         # In-memory storage for emergency access grants (replace with database)
-        self._emergency_grants: Dict[str, EmergencyAccessGrant] = {}
+        self._emergency_grants: dict[str, EmergencyAccessGrant] = {}
 
     async def grant_emergency_access(
         self,
@@ -268,7 +267,7 @@ class HIPAAControls:
 
             return True
 
-    async def check_emergency_access(self, user_id: str) -> Optional[EmergencyAccessGrant]:
+    async def check_emergency_access(self, user_id: str) -> EmergencyAccessGrant | None:
         """
         Check if user has active emergency access
 
@@ -292,12 +291,12 @@ class HIPAAControls:
         self,
         user_id: str,
         action: str,
-        patient_id: Optional[str],
-        resource_id: Optional[str],
+        patient_id: str | None,
+        resource_id: str | None,
         ip_address: str,
         user_agent: str,
         success: bool = True,
-        failure_reason: Optional[str] = None,
+        failure_reason: str | None = None,
     ):
         """
         Log PHI access (HIPAA 164.312(b) - Audit Controls)
@@ -433,7 +432,7 @@ class HIPAAControls:
 
 
 # Global HIPAA controls instance
-_hipaa_controls: Optional[HIPAAControls] = None
+_hipaa_controls: HIPAAControls | None = None
 
 
 def get_hipaa_controls() -> HIPAAControls:

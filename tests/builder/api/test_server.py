@@ -14,7 +14,6 @@ Tests cover:
 - GET / - API information
 """
 
-import gc
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -403,7 +402,7 @@ def test_save_workflow_with_io_error_returns_500(client, valid_workflow):
     request = {"workflow": valid_workflow, "output_path": output_path}
 
     # Mock file operations to raise exception
-    with patch("builtins.open", side_effect=IOError("Permission denied")):
+    with patch("builtins.open", side_effect=OSError("Permission denied")):
         # Act
         response = client.post("/api/builder/save", json=request)
 

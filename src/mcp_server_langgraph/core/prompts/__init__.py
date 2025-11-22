@@ -28,7 +28,7 @@ __all__ = [
 
 # Prompt version registry
 # Format: {prompt_name: {version: prompt_string}}
-_PROMPT_VERSIONS: Dict[str, Dict[str, str]] = {
+_PROMPT_VERSIONS: dict[str, dict[str, str]] = {
     "router": {
         "v1": ROUTER_SYSTEM_PROMPT,
         "latest": ROUTER_SYSTEM_PROMPT,
@@ -44,14 +44,14 @@ _PROMPT_VERSIONS: Dict[str, Dict[str, str]] = {
 }
 
 # Current version metadata
-_PROMPT_METADATA: Dict[str, Dict[str, str]] = {
+_PROMPT_METADATA: dict[str, dict[str, str]] = {
     "router": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
     "response": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
     "verification": {"current_version": "v1", "created": "2025-01-15", "last_updated": "2025-01-15"},
 }
 
 
-def get_prompt(prompt_name: str, version: Optional[str] = None) -> str:
+def get_prompt(prompt_name: str, version: str | None = None) -> str:
     """
     Get a prompt by name with optional versioning.
 

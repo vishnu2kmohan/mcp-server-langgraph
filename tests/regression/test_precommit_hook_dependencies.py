@@ -28,12 +28,11 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 try:
@@ -42,7 +41,7 @@ except ImportError:
     yaml = None
 
 
-def load_precommit_config() -> Dict:
+def load_precommit_config() -> dict:
     """Load .pre-commit-config.yaml configuration."""
     config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
     if not config_path.exists():
@@ -55,7 +54,7 @@ def load_precommit_config() -> Dict:
         return yaml.safe_load(f)
 
 
-def extract_imports_from_python_file(file_path: Path) -> Set[str]:
+def extract_imports_from_python_file(file_path: Path) -> set[str]:
     """
     Extract all import statements from a Python file.
 

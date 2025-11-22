@@ -11,7 +11,7 @@ Provides OpenTelemetry metrics for all resilience patterns:
 These metrics integrate with the existing observability stack.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from opentelemetry import metrics
 
@@ -153,7 +153,7 @@ resilience_pattern_effectiveness_gauge = meter.create_gauge(
 def record_circuit_breaker_event(
     service: str,
     event_type: str,
-    exception_type: Optional[str] = None,
+    exception_type: str | None = None,
 ) -> None:
     """
     Record a circuit breaker event.
@@ -178,8 +178,8 @@ def record_circuit_breaker_event(
 def record_retry_event(
     function: str,
     event_type: str,
-    attempt_number: Optional[int] = None,
-    exception_type: Optional[str] = None,
+    attempt_number: int | None = None,
+    exception_type: str | None = None,
 ) -> None:
     """
     Record a retry event.
@@ -231,8 +231,8 @@ def record_timeout_event(
 def record_bulkhead_event(
     resource_type: str,
     event_type: str,
-    active_count: Optional[int] = None,
-    queue_depth: Optional[int] = None,
+    active_count: int | None = None,
+    queue_depth: int | None = None,
 ) -> None:
     """
     Record a bulkhead event.
@@ -283,7 +283,7 @@ def record_fallback_event(
 # ==============================================================================
 
 
-def get_resilience_metrics_summary() -> Dict[str, Any]:
+def get_resilience_metrics_summary() -> dict[str, Any]:
     """
     Get summary of resilience metrics (for health checks, debugging).
 

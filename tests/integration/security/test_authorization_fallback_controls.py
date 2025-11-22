@@ -26,6 +26,8 @@ from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 from mcp_server_langgraph.core.config import Settings
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.auth

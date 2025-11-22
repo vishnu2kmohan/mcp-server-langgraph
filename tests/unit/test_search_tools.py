@@ -12,6 +12,8 @@ import pytest
 
 from mcp_server_langgraph.tools.search_tools import search_knowledge_base, web_search
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="search_tools")
 class TestSearchKnowledgeBase:

@@ -201,9 +201,9 @@ class TestQdrantHealthCheckSecurity:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_qdrant_uses_grpc_health_probe(self):
+    def test_qdrant_uses_tcp_health_check(self):
         """
-        Test that Qdrant health check uses TCP-based check (not wget/curl).
+        Test that Qdrant health check uses TCP-based check (not wget/curl/grpc_health_probe).
 
         Qdrant v1.15.1 image does not include wget, curl, or grpc_health_probe binaries.
         For security and reliability, use TCP port check via /dev/tcp instead.

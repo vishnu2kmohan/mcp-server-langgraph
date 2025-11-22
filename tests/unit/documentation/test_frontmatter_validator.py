@@ -20,7 +20,6 @@ sys.path.insert(0, str(_scripts_dir))
 
 
 from validators.frontmatter_validator import (  # noqa: E402
-    FrontmatterError,
     FrontmatterValidator,
     InvalidYAMLError,
     MissingFrontmatterError,

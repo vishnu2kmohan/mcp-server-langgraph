@@ -119,13 +119,13 @@ jobs:
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          uv run pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
+          uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
       - name: Validate pytest configuration compatibility
         run: |
           echo "🔍 Validating pytest addopts against installed plugins..."
-          uv run python scripts/validate_pytest_config.py
+          uv run python scripts/validation/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
   validate-local-ci-parity:
@@ -266,6 +266,25 @@ jobs:
           exit 1
         }
         echo "✓ Lockfile is current and valid"
+
+    - name: Build Helm chart dependencies
+      run: |
+        # Build Helm chart dependencies if helm is available
+        # Required for tests in tests/deployment/test_helm_templates.py
+        if command -v helm &> /dev/null; then
+          echo "🔨 Adding Helm repositories..."
+          helm repo add openfga https://openfga.github.io/helm-charts
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+          echo "🔨 Building Helm chart dependencies..."
+          helm dependency build deployments/helm/mcp-server-langgraph
+          echo "✓ Helm dependencies built successfully"
+        else
+          echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
+        fi
 
     - name: Run unit tests
       run: |

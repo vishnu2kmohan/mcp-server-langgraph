@@ -13,10 +13,11 @@
       "name": "MCP Server Test Client",
       "enabled": true,
       "publicClient": true,
+      "secret": "test-client-secret-for-e2e-tests",
       "directAccessGrantsEnabled": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": false,
+      "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
         "http://localhost:*",

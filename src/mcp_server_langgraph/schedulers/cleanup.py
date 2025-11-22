@@ -6,7 +6,7 @@ Runs daily at configured time (default: 3 AM UTC).
 """
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -30,7 +30,7 @@ class CleanupScheduler:
 
     def __init__(
         self,
-        session_store: Optional[SessionStore] = None,
+        session_store: SessionStore | None = None,
         config_path: str = "config/retention_policies.yaml",
         dry_run: bool = False,
     ):
@@ -46,7 +46,7 @@ class CleanupScheduler:
         self.config_path = config_path
         self.dry_run = dry_run
         self.scheduler = AsyncIOScheduler()
-        self.retention_service: Optional[DataRetentionService] = None
+        self.retention_service: DataRetentionService | None = None
 
     async def start(self) -> None:
         """
@@ -229,11 +229,11 @@ class CleanupScheduler:
 
 
 # Global scheduler instance
-_cleanup_scheduler: Optional[CleanupScheduler] = None
+_cleanup_scheduler: CleanupScheduler | None = None
 
 
 async def start_cleanup_scheduler(  # type: ignore[no-untyped-def]
-    session_store: Optional[SessionStore] = None,
+    session_store: SessionStore | None = None,
     config_path: str = "config/retention_policies.yaml",
     dry_run: bool = False,
 ):
@@ -279,6 +279,6 @@ async def stop_cleanup_scheduler() -> None:
     _cleanup_scheduler = None
 
 
-def get_cleanup_scheduler() -> Optional[CleanupScheduler]:
+def get_cleanup_scheduler() -> CleanupScheduler | None:
     """Get the global cleanup scheduler instance"""
     return _cleanup_scheduler

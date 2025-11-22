@@ -21,6 +21,8 @@ from mcp_server_langgraph.resilience.fallback import (
     with_fallback,
 )
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.mark.xdist_group(name="testbasicfallback")
 class TestBasicFallback:

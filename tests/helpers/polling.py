@@ -31,7 +31,7 @@ Usage:
 
 import asyncio
 import time
-from typing import Awaitable, Callable, Union
+from collections.abc import Awaitable, Callable
 
 
 def poll_until(

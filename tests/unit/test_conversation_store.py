@@ -11,6 +11,8 @@ import pytest
 from mcp_server_langgraph.core.storage.conversation_store import ConversationMetadata, ConversationStore
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testconversationstore")

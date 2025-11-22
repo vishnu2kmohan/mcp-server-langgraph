@@ -1,58 +1,31 @@
 """Pytest configuration and shared fixtures"""
 
-# Import fixture organization enforcement plugin
+# Import fixture modules and enforcement plugin
 # Must be defined before imports (pytest requirement)
-pytest_plugins = ["tests.conftest_fixtures_plugin"]
-
-import atexit  # noqa: E402
-
-# ==============================================================================
-# LiteLLM Atexit Handler Prevention (OpenAI Codex Finding 2025-11-17)
-# ==============================================================================
-# CRITICAL: Must be done BEFORE any litellm imports
-# Monkey-patch litellm's atexit registration to prevent RuntimeWarnings
-import sys  # noqa: E402
-
-# Store original atexit.register
-_original_atexit_register = atexit.register
-_litellm_handlers = []
-
-
-def _filtered_atexit_register(func, *args, **kwargs):
-    """
-    Intercept atexit.register calls and block litellm's cleanup_wrapper.
-
-    This prevents litellm from registering an atexit handler that causes
-    RuntimeWarning: coroutine 'close_litellm_async_clients' was never awaited
-    """
-    # Check if this is litellm's cleanup_wrapper
-    if hasattr(func, "__name__") and func.__name__ == "cleanup_wrapper":
-        # Check if it's from litellm module
-        if hasattr(func, "__module__") and func.__module__ and "litellm" in func.__module__:
-            # Store reference but don't register it
-            _litellm_handlers.append((func, args, kwargs))
-            return func  # Return func to maintain compatibility
-        # Also check via closure variables (litellm uses nested functions)
-        if hasattr(func, "__code__"):
-            code_consts = str(func.__code__.co_consts)
-            if "close_litellm_async_clients" in code_consts or "litellm" in code_consts:
-                _litellm_handlers.append((func, args, kwargs))
-                return func
-    # For all other functions, use original atexit.register
-    return _original_atexit_register(func, *args, **kwargs)
-
-
-# Replace atexit.register before any litellm imports
-atexit.register = _filtered_atexit_register
+#
+# Phase 3: conftest.py Modularization (Testing Strategy Remediation)
+# Extracted non-autouse fixtures into separate modules for improved maintainability:
+# - docker_fixtures: Docker Compose lifecycle, port waiting, schema verification
+# - time_fixtures: Time freezing for deterministic tests
+#
+# Note: Autouse fixtures (observability, singleton reset) must remain in conftest.py
+# per fixture organization enforcement rules (see tests/meta/test_fixture_organization.py)
+pytest_plugins = [
+    "tests.conftest_fixtures_plugin",
+    "tests.fixtures.litellm_patch",
+    "tests.fixtures.docker_fixtures",
+    "tests.fixtures.time_fixtures",
+    "tests.fixtures.database_fixtures",
+]
 
 import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
+import sys  # noqa: E402
 import socket  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
-from typing import AsyncGenerator, Generator  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
@@ -94,12 +67,6 @@ os.environ.setdefault("OTEL_SDK_DISABLED", "true")  # Disable OpenTelemetry SDK
 # Suppress gRPC logging noise in tests
 warnings.filterwarnings("ignore", message=".*failed to connect to all addresses.*")
 warnings.filterwarnings("ignore", message=".*Connection refused.*")
-
-# Suppress litellm async cleanup warning (OpenAI Codex Finding 2025-11-15)
-# Root cause: litellm's atexit handler calls loop.create_task() without awaiting
-# Our pytest_sessionfinish hook already handles cleanup properly
-# This must be set at import time to catch warnings during atexit phase
-warnings.filterwarnings("ignore", category=RuntimeWarning, module="litellm.llms.custom_httpx.async_client_cleanup")
 
 # Also suppress grpc library logs
 logging.getLogger("grpc").setLevel(logging.CRITICAL)
@@ -264,6 +231,7 @@ def init_test_observability():
     - No file logging (console only)
     - LangSmith tracing disabled
     - OpenTelemetry backend for tracing
+    - Default test environment variables to suppress warnings
 
     Session scope ensures observability is initialized exactly once per test run,
     avoiding duplicate initialization and improving test performance.
@@ -274,8 +242,16 @@ def init_test_observability():
     IMPORTANT: Properly shuts down OpenTelemetry exporters and processors after
     test session to prevent thread leaks and memory bloat.
     """
+    import os
+
     from mcp_server_langgraph.core.config import Settings
     from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
+
+    # Set default test environment variables to suppress warnings
+    # These are only set if not already defined (allowing tests to override)
+    os.environ.setdefault("OPENFGA_STORE_ID", "test-store-id")
+    os.environ.setdefault("OPENFGA_MODEL_ID", "test-model-id")
+    os.environ.setdefault("GOOGLE_API_KEY", "test-google-api-key")
 
     if not is_initialized():
         test_settings = Settings(
@@ -336,22 +312,19 @@ def ensure_observability_initialized():
 @pytest.fixture(autouse=True)
 def reset_dependency_singletons():
     """
-    Reset all dependency singletons after each test for complete isolation.
+    Reset all dependency singletons before AND after each test for complete isolation.
 
     Tests that modify singletons (_keycloak_client, _openfga_client, _api_key_manager,
     _service_principal_manager, _global_auth_middleware) can cause state pollution
     affecting subsequent tests.
 
-    This fixture ensures clean singleton state by resetting all to None after each test.
-    The next test that needs these dependencies will create fresh instances.
+    This fixture ensures clean singleton state by resetting all to None before each test
+    (to clean up pollution from previous tests) and after each test (to clean up the
+    current test's changes).
 
     See: tests/regression/test_auth_middleware_isolation.py
     """
-    yield
-
-    import sys
-
-    # Reset all dependency singletons to ensure clean state for next test
+    # BEFORE test: Reset to clean up pollution from previous tests
     try:
         # Only import if already loaded (don't pollute import cache for lazy import tests)
         if "mcp_server_langgraph.core.dependencies" in sys.modules:
@@ -372,6 +345,55 @@ def reset_dependency_singletons():
             import mcp_server_langgraph.auth.middleware as middleware
 
             middleware._global_auth_middleware = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    # Reset GDPR storage singleton (only if already loaded)
+    try:
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.compliance.gdpr.factory" in sys.modules:
+            import mcp_server_langgraph.compliance.gdpr.factory as gdpr_factory
+
+            gdpr_factory._gdpr_storage = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    yield
+
+    # AFTER test: Reset all dependency singletons to ensure clean state for next test
+    try:
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.core.dependencies" in sys.modules:
+            import mcp_server_langgraph.core.dependencies as deps
+
+            deps._keycloak_client = None
+            deps._openfga_client = None
+            deps._api_key_manager = None
+            deps._service_principal_manager = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    # Reset global auth middleware singleton (only if already loaded)
+    try:
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.auth.middleware" in sys.modules:
+            import mcp_server_langgraph.auth.middleware as middleware
+
+            middleware._global_auth_middleware = None
+    except Exception:
+        # If module not loaded or reset fails, continue (defensive)
+        pass
+
+    # Reset GDPR storage singleton (only if already loaded)
+    try:
+        # Only import if already loaded (don't pollute import cache for lazy import tests)
+        if "mcp_server_langgraph.compliance.gdpr.factory" in sys.modules:
+            import mcp_server_langgraph.compliance.gdpr.factory as gdpr_factory
+
+            gdpr_factory._gdpr_storage = None
     except Exception:
         # If module not loaded or reset fails, continue (defensive)
         pass
@@ -484,7 +506,7 @@ def _wait_for_port(host: str, port: int, timeout: float = 30.0) -> bool:
             sock.close()
             if result == 0:
                 return True
-        except socket.error:
+        except OSError:
             pass
         time.sleep(0.5)
     return False
@@ -499,6 +521,93 @@ def _check_http_health(url: str, timeout: float = 2.0) -> bool:
         return response.status_code == 200
     except Exception:
         return False
+
+
+async def _verify_schema_ready(host: str, port: int, timeout: float = 30.0) -> bool:
+    """
+    Verify database schema is fully initialized with all required tables.
+
+    This function prevents integration test failures where tests start before
+    the schema migration completes. The PostgreSQL health check (pg_isready)
+    only verifies the server accepts connections, not that tables exist.
+
+    Root Cause (OpenAI Codex Finding 2025-11-20):
+    - Docker container runs migrations/001_gdpr_schema.sql automatically
+    - Health check passes before migration completes
+    - Tests fail with "relation does not exist" errors
+
+    Args:
+        host: PostgreSQL host (default: localhost)
+        port: PostgreSQL port (default: 9432)
+        timeout: Maximum time to wait for schema (default: 30s)
+
+    Returns:
+        True if all required tables exist, False if timeout reached
+
+    Required tables (GDPR schema):
+    - user_profiles
+    - user_preferences
+    - consent_records
+    - conversations
+    - audit_logs
+    """
+    try:
+        import asyncpg
+    except ImportError:
+        logging.warning("asyncpg not installed - skipping schema verification")
+        return False
+
+    start_time = time.time()
+    required_tables = ["user_profiles", "user_preferences", "consent_records", "conversations", "audit_logs"]
+
+    while time.time() - start_time < timeout:
+        try:
+            # Connect to gdpr_test database
+            conn = await asyncpg.connect(
+                host=host,
+                port=port,
+                database=os.getenv("POSTGRES_DB", "gdpr_test"),
+                user=os.getenv("POSTGRES_USER", "postgres"),
+                password=os.getenv("POSTGRES_PASSWORD", "postgres"),
+                timeout=5,
+            )
+
+            try:
+                # Query for all GDPR tables
+                tables = await conn.fetch(
+                    """
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_name IN ('user_profiles', 'user_preferences',
+                                          'consent_records', 'conversations', 'audit_logs')
+                    """
+                )
+
+                table_names = [row["table_name"] for row in tables]
+
+                # Check if all required tables exist
+                if len(table_names) == 5:
+                    missing = set(required_tables) - set(table_names)
+                    if not missing:
+                        logging.info(f"✓ GDPR schema ready: all {len(required_tables)} tables exist")
+                        return True
+                    else:
+                        logging.debug(f"GDPR schema incomplete: missing {missing}")
+                else:
+                    logging.debug(f"GDPR schema incomplete: found {len(table_names)}/5 tables: {table_names}")
+
+            finally:
+                await conn.close()
+
+        except Exception as e:
+            logging.debug(f"Schema verification attempt failed: {e}")
+
+        # Wait before retry
+        await asyncio.sleep(1)
+
+    logging.error(f"GDPR schema not ready after {timeout}s timeout")
+    return False
 
 
 @pytest.fixture(scope="session")
@@ -823,7 +932,8 @@ def test_infrastructure_ports():
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
         "openfga_grpc": 9081,
-        "keycloak": 9082,
+        "keycloak": 9082,  # HTTP API port
+        "keycloak_management": 9900,  # Management/health port (Keycloak 26.x best practice)
     }
 
 
@@ -943,71 +1053,88 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
     # all workers to enable test infrastructure detection.
     os.environ["TESTING"] = "true"
 
-    # Check if python-on-whales is available
-    try:
-        from python_on_whales import DockerClient
-    except ImportError:
-        pytest.skip("python-on-whales not installed - infrastructure tests require Docker support")
+    # Detect existing test infrastructure (started by make test-integration script)
+    # This approach removes the need for python-on-whales dependency and avoids
+    # redundant docker-compose operations
+    logging.info("Detecting existing test infrastructure...")
 
-    try:
-        docker = DockerClient(compose_files=[docker_compose_file])
+    # Wait for critical services to be ready
+    logging.info("Waiting for test infrastructure health checks...")
 
-        # Start services
-        logging.info("Starting test infrastructure via docker-compose...")
-        docker.compose.up(detach=True, wait=False)
+    # PostgreSQL
+    if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
+        pytest.skip(
+            "PostgreSQL test service not available - run 'make test-integration' or start docker-compose.test.yml manually"
+        )
+    logging.info("✓ PostgreSQL port ready")
 
-        # Wait for critical services to be ready
-        logging.info("Waiting for test infrastructure health checks...")
+    # Verify GDPR schema is fully initialized (not just port open)
+    # This prevents race conditions where tests start before tables exist
+    logging.info("Verifying GDPR schema initialization...")
+    schema_ready = asyncio.run(_verify_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
+    if not schema_ready:
+        pytest.skip("GDPR schema not initialized in time - run migrations/001_gdpr_schema.sql")
+    logging.info("✓ PostgreSQL ready with GDPR schema")
 
-        # PostgreSQL
-        if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
-            pytest.skip("PostgreSQL test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ PostgreSQL ready")
+    # Redis (checkpoints)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
+        pytest.skip("Redis checkpoints test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (checkpoints) ready")
 
-        # Redis (checkpoints)
-        if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
-            pytest.skip("Redis checkpoints test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Redis (checkpoints) ready")
+    # Redis (sessions)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
+        pytest.skip("Redis sessions test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (sessions) ready")
 
-        # Redis (sessions)
-        if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
-            pytest.skip("Redis sessions test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Redis (sessions) ready")
+    # OpenFGA HTTP
+    if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
+        pytest.skip("OpenFGA test service not available - run 'make test-integration'")
+    # Additional check for OpenFGA
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
+        pytest.skip("OpenFGA health check failed - ensure openfga-test container is healthy")
+    logging.info("✓ OpenFGA ready")
 
-        # OpenFGA HTTP
-        if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
-            pytest.skip("OpenFGA test service did not become ready in time - skipping infrastructure tests")
-        # Additional check for OpenFGA
-        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
-            pytest.skip("OpenFGA health check failed - skipping infrastructure tests")
-        logging.info("✓ OpenFGA ready")
+    # Keycloak (takes longer to start - needs DB migration + realm import + JIT compilation)
+    # Note: Keycloak uses Java and requires JIT warmup, which adds ~30-60s to first startup
+    if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
+        pytest.skip("Keycloak test service not available - run 'make test-integration'")
 
-        # Keycloak (takes longer to start)
-        if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
-            pytest.skip("Keycloak test service did not become ready in time - skipping infrastructure tests")
-        # Additional check for Keycloak
-        if not _check_http_health(f"http://localhost:{test_infrastructure_ports['keycloak']}/health/ready", timeout=10):
-            pytest.skip("Keycloak health check failed - skipping infrastructure tests")
-        logging.info("✓ Keycloak ready")
+    # Best Practice: Use /health/ready endpoint on management port (9000)
+    # Reference: https://www.keycloak.org/observability/health
+    # Keycloak 26.x exposes health endpoints on port 9000 (management port)
+    # This is more reliable than /realms/master as it's purpose-built for health checks
+    # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
+    # This accounts for:
+    #   1. Database schema migration
+    #   2. Realm import from keycloak-test-realm.json
+    #   3. JIT compilation of Java bytecode
+    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
+    keycloak_ready = False
+    for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
+        if _check_http_health(keycloak_health_url, timeout=5):
+            keycloak_ready = True
+            break
+        time.sleep(2)
 
-        # Qdrant
-        if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
-            pytest.skip("Qdrant test service did not become ready in time - skipping infrastructure tests")
-        logging.info("✓ Qdrant ready")
+    if not keycloak_ready:
+        logging.error("Keycloak /health/ready endpoint not responding after 60s additional wait")
+        pytest.skip("Keycloak health check failed - /health/ready endpoint not responding (port 9900)")
+    logging.info("✓ Keycloak ready")
 
-        logging.info("✅ All test infrastructure services ready")
+    # Qdrant
+    if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
+        pytest.skip("Qdrant test service not available - run 'make test-integration'")
+    # Additional check for Qdrant - use /readyz endpoint (official health check endpoint)
+    # Qdrant exposes /healthz, /livez, and /readyz for Kubernetes-style health checks
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['qdrant']}/readyz", timeout=5):
+        pytest.skip("Qdrant health check failed - ensure qdrant-test container is healthy")
+    logging.info("✓ Qdrant ready")
 
-        # Return infrastructure info
-        yield {"ports": test_infrastructure_ports, "docker": docker, "ready": True}
+    logging.info("✅ All test infrastructure services ready")
 
-    finally:
-        # Cleanup: Stop and remove services
-        logging.info("Tearing down test infrastructure...")
-        try:
-            docker.compose.down(volumes=True, remove_orphans=True, timeout=30)
-            logging.info("✅ Test infrastructure cleaned up")
-        except Exception as e:
-            logging.error(f"Error during infrastructure cleanup: {e}")
+    # Return infrastructure info
+    # NOTE: No cleanup needed - infrastructure is managed externally by make test-integration
+    yield {"ports": test_infrastructure_ports, "ready": True}
 
 
 # ==============================================================================
@@ -1299,437 +1426,30 @@ def integration_test_env(test_infrastructure):
     return test_infrastructure["ready"]
 
 
-@pytest.fixture(scope="session")
-async def postgres_connection_real(integration_test_env):
-    """Real PostgreSQL connection for integration tests"""
-    if not integration_test_env:
-        pytest.skip("Integration test environment not available (requires Docker)")
-
-    try:
-        import asyncpg
-    except ImportError:
-        pytest.skip("asyncpg not installed")
-
-    # Connection params from environment (set in docker-compose.test.yml)
-    # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
-    conn = await asyncpg.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "9432")),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),  # Match docker-compose.test.yml
-    )
-
-    yield conn
-
-    await conn.close()
-
-
-@pytest.fixture(scope="session")
-async def redis_client_real(integration_test_env):
-    """Real Redis client for integration tests"""
-    if not integration_test_env:
-        pytest.skip("Integration test environment not available (requires Docker)")
-
-    try:
-        import redis.asyncio as redis
-    except ImportError:
-        pytest.skip("redis not installed")
-
-    client = redis.Redis(
-        host=os.getenv("REDIS_HOST", "localhost"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
-        decode_responses=True,
-    )
-
-    # Test connection
-    try:
-        await client.ping()
-    except Exception as e:
-        pytest.skip(f"Redis not available: {e}")
-
-    yield client
-
-    # Cleanup test data
-    await client.flushdb()
-    await client.aclose()
-
-
-@pytest.fixture(scope="session")
-async def openfga_client_real(integration_test_env, test_infrastructure_ports):
-    """Real OpenFGA client for integration tests with auto-initialization"""
-    if not integration_test_env:
-        pytest.skip("Integration test environment not available (requires Docker)")
-
-    from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store
-
-    # OpenFGA test URL - use infrastructure port from fixture (ensures consistency)
-    api_url = os.getenv("OPENFGA_API_URL", f"http://localhost:{test_infrastructure_ports['openfga_http']}")
-
-    # Create client without store/model initially
-    client = OpenFGAClient(api_url=api_url, store_id=None, model_id=None)
-
-    # Initialize OpenFGA store and authorization model for tests
-    try:
-        logging.info("Initializing OpenFGA test store and authorization model...")
-        store_id = await initialize_openfga_store(client)
-        model_id = client.model_id
-
-        # Set environment variables so all tests can access the configured store
-        os.environ["OPENFGA_STORE_ID"] = store_id
-        os.environ["OPENFGA_MODEL_ID"] = model_id
-
-        logging.info(f"✓ OpenFGA initialized: store_id={store_id}, model_id={model_id}")
-
-        # Update client with store and model IDs
-        client.store_id = store_id
-        client.model_id = model_id
-    except Exception as e:
-        logging.warning(f"Failed to initialize OpenFGA for tests (will use fallback auth): {e}")
-        # Tests will fall back to inmemory auth provider
-
-    yield client
-
-    # Cleanup happens per-test
-
-
 # =============================================================================
-# PER-TEST CLEANUP FIXTURES
+# DATABASE FIXTURES - EXTRACTED TO tests/fixtures/database_fixtures.py
 # =============================================================================
-# These function-scoped fixtures wrap the session-scoped infrastructure
-# fixtures and provide automatic cleanup between tests for isolation.
-
-
-@pytest.fixture
-async def postgres_connection_clean(postgres_connection_real):
-    """
-    PostgreSQL connection with per-test cleanup and worker-scoped isolation.
-
-    **Worker-Scoped Schema Isolation (pytest-xdist support):**
-    - Each xdist worker gets its own PostgreSQL schema
-    - Worker gw0: schema test_worker_gw0
-    - Worker gw1: schema test_worker_gw1
-    - Worker gw2: schema test_worker_gw2
-    - Non-xdist: schema test_worker_gw0 (default)
-
-    This prevents race conditions where one worker's TRUNCATE affects another
-    worker's in-progress test data.
-
-    Usage:
-        @pytest.mark.asyncio
-        async def test_my_feature(postgres_connection_clean):
-            await postgres_connection_clean.execute("INSERT INTO ...")
-            # Automatic cleanup after test
-
-    References:
-    - tests/regression/test_pytest_xdist_worker_database_isolation.py
-    - OpenAI Codex Finding: conftest.py:1042
-    """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-    schema_name = f"test_worker_{worker_id}"
-
-    # Create worker-scoped schema if it doesn't exist
-    try:
-        await postgres_connection_real.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
-        # Set search_path to worker schema for all subsequent queries
-        await postgres_connection_real.execute(f"SET search_path TO {schema_name}, public")
-    except Exception as e:
-        # Log but don't fail - some tests may not need the schema
-        import warnings
-
-        warnings.warn(f"Failed to create worker schema {schema_name}: {e}")
-
-    yield postgres_connection_real
-
-    # Cleanup: Drop entire worker schema (safe, isolated to this worker)
-    # This is faster and more thorough than TRUNCATE
-    try:
-        await postgres_connection_real.execute(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
-    except Exception:
-        # If cleanup fails, don't fail the test
-        # The schema will be recreated on next test run
-        pass
-
-
-@pytest.fixture
-async def redis_client_clean(redis_client_real):
-    """
-    Redis client with per-test cleanup and worker-scoped isolation.
-
-    **Worker-Scoped DB Index Isolation (pytest-xdist support):**
-    - Each xdist worker gets its own Redis database index
-    - Worker gw0: DB 1 (DB 0 reserved for non-xdist)
-    - Worker gw1: DB 2
-    - Worker gw2: DB 3
-    - Worker gw3: DB 4
-    - Non-xdist: DB 1 (default)
-
-    This prevents race conditions where one worker's FLUSHDB affects another
-    worker's test data.
-
-    Redis has 16 databases by default (0-15), supporting up to 15 concurrent
-    xdist workers.
-
-    Usage:
-        @pytest.mark.asyncio
-        async def test_my_feature(redis_client_clean):
-            await redis_client_clean.set("key", "value")
-            # Automatic cleanup after test
-
-    References:
-    - tests/regression/test_pytest_xdist_worker_database_isolation.py
-    - OpenAI Codex Finding: conftest.py:1092
-    """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-
-    # Calculate worker-scoped DB index: gw0→1, gw1→2, gw2→3, etc.
-    # DB 0 is reserved for non-xdist usage
-    worker_num = int(worker_id.replace("gw", "")) if worker_id.startswith("gw") else 0
-    db_index = worker_num + 1
-
-    # Select worker-scoped database
-    try:
-        await redis_client_real.select(db_index)
-    except Exception as e:
-        # Log but don't fail - some tests may not need Redis
-        import warnings
-
-        warnings.warn(f"Failed to select Redis DB {db_index} for worker {worker_id}: {e}")
-
-    yield redis_client_real
-
-    # Cleanup: Flush worker-scoped database (safe, isolated to this worker)
-    # This is fast (O(N) where N is number of keys, but typically < 1ms for tests)
-    try:
-        await redis_client_real.flushdb()
-    except Exception:
-        # If cleanup fails, don't fail the test
-        pass
-
-
-@pytest.fixture
-async def openfga_client_clean(openfga_client_real):
-    """
-    OpenFGA client with per-test cleanup and worker-scoped isolation.
-
-    **Worker-Scoped Store Isolation (pytest-xdist support):**
-    - Each xdist worker gets its own OpenFGA store
-    - Worker gw0: store test_store_gw0
-    - Worker gw1: store test_store_gw1
-    - Worker gw2: store test_store_gw2
-    - Non-xdist: store test_store_gw0 (default)
-
-    This prevents race conditions where one worker's tuple deletion affects
-    another worker's test data.
-
-    **Important:** This fixture requires tests to use `xdist_group` markers
-    to serialize OpenFGA tests if they share stores. For better isolation,
-    tests should use unique object IDs or worker-scoped stores.
-
-    Usage:
-        @pytest.mark.asyncio
-        @pytest.mark.xdist_group(name="openfga_tests")
-        async def test_my_feature(openfga_client_clean):
-            await openfga_client_clean.write_tuples([...])
-            # Automatic cleanup after test
-
-    References:
-    - tests/regression/test_pytest_xdist_worker_database_isolation.py
-    - OpenAI Codex Finding: conftest.py:1116
-    """
-    # Get worker ID from environment (set by pytest-xdist)
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
-    _store_name = f"test_store_{worker_id}"  # noqa: F841 Reserved for future use
-
-    # Note: Worker-scoped store creation would require OpenFGA API calls.
-    # For now, we track tuples and delete them (existing pattern).
-    # Tests using OpenFGA should use @pytest.mark.xdist_group to serialize
-    # if they share stores, or use unique object IDs for isolation.
-
-    # Track tuples written during this test for cleanup
-    written_tuples = []
-
-    # Wrap write_tuples to track writes
-    original_write = openfga_client_real.write_tuples
-
-    async def tracked_write_tuples(tuples):
-        written_tuples.extend(tuples)
-        return await original_write(tuples)
-
-    # Monkey-patch for test duration
-    openfga_client_real.write_tuples = tracked_write_tuples
-
-    yield openfga_client_real
-
-    # Restore original method
-    openfga_client_real.write_tuples = original_write
-
-    # Cleanup: Delete all tuples written during test
-    # This is safe if tests use unique object IDs or run serially via xdist_group
-    if written_tuples:
-        try:
-            await openfga_client_real.delete_tuples(written_tuples)
-        except Exception:
-            # If cleanup fails, don't fail the test
-            # Tuples will be cleaned up eventually or won't affect other tests
-            # if using different object IDs
-            pass
-
-
-@pytest.fixture(scope="session")
-async def postgres_with_schema(postgres_connection_real):
-    """
-    PostgreSQL connection with GDPR schema initialized.
-
-    Runs the GDPR schema migration once per test session.
-    Required for testing PostgreSQL storage backends.
-
-    Usage:
-        @pytest.mark.asyncio
-        async def test_postgres_storage(postgres_with_schema):
-            # Schema already created (audit_logs, consent_records, etc.)
-    """
-    from pathlib import Path
-
-    # Find schema file
-    project_root = Path(__file__).parent.parent
-    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-
-    if not schema_file.exists():
-        pytest.skip(f"Schema file not found: {schema_file}")
-
-    # Read and execute schema
-    schema_sql = schema_file.read_text()
-
-    try:
-        await postgres_connection_real.execute(schema_sql)
-    except Exception:
-        # Schema might already exist (idempotent CREATE TABLE IF NOT EXISTS)
-        pass
-
-    yield postgres_connection_real
-
-    # No cleanup - schema persists for all tests in session
-
-
-@pytest.fixture
-async def db_pool_gdpr(integration_test_env):
-    """
-    PostgreSQL connection pool with GDPR schema for integration/security tests.
-
-    Creates a connection pool and initializes GDPR schema tables.
-    Used by security tests and GDPR compliance tests that need pool-based access.
-
-    OpenAI Codex Finding Fix (2025-11-16):
-    =======================================
-    This fixture replaces the Alembic-based approach in test_sql_injection_gdpr.py
-    which failed due to asyncio.run() conflicts in pytest-asyncio context.
-
-    Executes schema SQL directly using async connection pool.
-    """
-    if not integration_test_env:
-        pytest.skip("Integration test environment not available (requires Docker)")
-
-    try:
-        import asyncpg
-    except ImportError:
-        pytest.skip("asyncpg not installed")
-
-    from pathlib import Path
-
-    # Create connection pool
-    # Note: Postgres test port is 9432 (offset from standard 5432 to avoid conflicts)
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "9432")),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        min_size=1,
-        max_size=5,
-    )
-
-    # Execute GDPR schema SQL directly
-    project_root = Path(__file__).parent.parent
-    schema_file = project_root / "migrations" / "001_gdpr_schema.sql"
-
-    if schema_file.exists():
-        schema_sql = schema_file.read_text()
-
-        async with pool.acquire() as conn:
-            try:
-                await conn.execute(schema_sql)
-            except Exception:
-                # Schema might already exist (CREATE TABLE IF NOT EXISTS makes this idempotent)
-                pass
-
-    yield pool
-
-    # Cleanup
-    await pool.close()
-
-
-@pytest.fixture(scope="session")
-def qdrant_available():
-    """Check if Qdrant is available for testing."""
-    qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
-
-    try:
-        import httpx
-
-        # Quick check if Qdrant is accessible
-        response = httpx.get(f"http://{qdrant_url}:{qdrant_port}/", timeout=2.0)
-        return response.status_code == 200
-    except Exception:
-        return False
-
-
-@pytest.fixture
-def qdrant_client():
-    """Qdrant client for integration tests with vector search."""
-    try:
-        from qdrant_client import QdrantClient
-    except ImportError:
-        pytest.skip("Qdrant client not installed")
-
-    qdrant_url = os.getenv("QDRANT_URL", "localhost")
-    qdrant_port = int(os.getenv("QDRANT_PORT", "6333"))
-
-    # Check if Qdrant is available
-    try:
-        import httpx
-
-        response = httpx.get(f"http://{qdrant_url}:{qdrant_port}/", timeout=2.0)
-        if response.status_code != 200:
-            pytest.skip("Qdrant instance not available")
-    except Exception as e:
-        pytest.skip(f"Qdrant instance not available: {e}")
-
-    # Create client
-    client = QdrantClient(url=qdrant_url, port=qdrant_port)
-
-    # Test connection
-    try:
-        client.get_collections()
-    except Exception as e:
-        pytest.skip(f"Cannot connect to Qdrant: {e}")
-
-    yield client
-
-    # Cleanup: Delete test collections
-    try:
-        collections = client.get_collections().collections
-        test_collections = [c.name for c in collections if c.name.startswith("test_")]
-        for collection_name in test_collections:
-            try:
-                client.delete_collection(collection_name)
-            except Exception:
-                pass  # Best effort cleanup
-    except Exception:
-        pass  # Ignore cleanup errors
+# Phase 1.1: Infrastructure Improvements (2025-11-22)
+# Fixtures for PostgreSQL, Redis, OpenFGA, and Qdrant extracted to improve
+# conftest.py maintainability (target: < 500 lines from 2,559 lines).
+#
+# All fixtures now loaded via pytest_plugins["tests.fixtures.database_fixtures"]
+#
+# Extracted fixtures:
+# - postgres_connection_real: Session-scoped PostgreSQL connection pool
+# - redis_client_real: Session-scoped Redis client
+# - openfga_client_real: Session-scoped OpenFGA client with auto-initialization
+# - postgres_connection_clean: Function-scoped Postgres with per-test cleanup
+# - redis_client_clean: Function-scoped Redis with per-test cleanup
+# - openfga_client_clean: Function-scoped OpenFGA with per-test cleanup
+# - db_pool_gdpr: PostgreSQL pool with GDPR schema for security tests
+# - qdrant_available: Check if Qdrant is available
+# - qdrant_client: Qdrant client for vector search tests
+#
+# References:
+# - CODEX_FINDINGS_VALIDATION_REPORT_2025-11-21.md: conftest.py bloat issue
+# - tests/fixtures/database_fixtures.py: Extracted fixture module
+# =============================================================================
 
 
 @pytest.fixture(scope="session")

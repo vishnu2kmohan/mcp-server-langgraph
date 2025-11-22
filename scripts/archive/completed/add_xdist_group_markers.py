@@ -23,7 +23,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 def determine_group_name(file_path: Path) -> str:
@@ -92,7 +91,7 @@ def needs_xdist_group(class_def: str) -> bool:
     return True
 
 
-def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> Tuple[bool, int]:
+def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> tuple[bool, int]:
     """
     Add xdist_group markers to test classes in a file.
 
@@ -170,7 +169,7 @@ def add_xdist_marker_to_file(file_path: Path, dry_run: bool = False) -> Tuple[bo
             return False, 0
 
 
-def find_test_files_needing_markers(repo_root: Path) -> List[Path]:
+def find_test_files_needing_markers(repo_root: Path) -> list[Path]:
     """
     Find all test files that need xdist_group markers.
 

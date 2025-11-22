@@ -21,6 +21,8 @@ from fastapi.testclient import TestClient
 from mcp_server_langgraph.builder.api.server import SaveWorkflowRequest, app, save_workflow
 from mcp_server_langgraph.builder.codegen.generator import CodeGenerator, WorkflowDefinition
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.security

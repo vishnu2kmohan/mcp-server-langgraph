@@ -13,6 +13,8 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
+pytestmark = pytest.mark.integration
+
 
 # Helper to run async code in sync tests with proper event loop cleanup
 def run_async(coro):

@@ -11,7 +11,8 @@ import asyncio
 import functools
 import logging
 import sys
-from typing import Any, Callable, Optional, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
 from opentelemetry import trace
 
@@ -70,8 +71,8 @@ def get_timeout_for_operation(operation_type: str) -> int:
 
 
 def with_timeout(
-    seconds: Optional[int] = None,
-    operation_type: Optional[str] = None,
+    seconds: int | None = None,
+    operation_type: str | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to enforce timeout on async functions.
@@ -191,8 +192,8 @@ class TimeoutContext:
 
     def __init__(
         self,
-        seconds: Optional[int] = None,
-        operation_type: Optional[str] = None,
+        seconds: int | None = None,
+        operation_type: str | None = None,
     ):
         if seconds is not None:
             self.timeout_value = seconds
@@ -254,8 +255,8 @@ class TimeoutContext:
 # Convenience functions for common timeout patterns
 async def run_with_timeout(  # type: ignore[no-untyped-def]
     coro,
-    seconds: Optional[int] = None,
-    operation_type: Optional[str] = None,
+    seconds: int | None = None,
+    operation_type: str | None = None,
 ):
     """
     Run a coroutine with timeout.

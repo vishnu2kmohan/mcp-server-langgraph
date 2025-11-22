@@ -19,6 +19,8 @@ from fastapi.testclient import TestClient
 from tests.conftest import get_user_id
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.integration
+
 
 @dataclass
 class MockServicePrincipal:

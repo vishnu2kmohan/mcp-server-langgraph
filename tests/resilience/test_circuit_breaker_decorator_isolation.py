@@ -41,6 +41,8 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
     reset_circuit_breaker,
 )
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.mark.xdist_group(name="circuit_breaker_isolation")
 class TestCircuitBreakerDecoratorIsolation:

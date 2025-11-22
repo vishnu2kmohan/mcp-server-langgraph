@@ -22,6 +22,8 @@ import pytest
 
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit

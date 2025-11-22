@@ -438,7 +438,7 @@ class TestServiceMeshConfig:
         if not istio_config.exists():
             pytest.skip("Istio config not found")
 
-        with open(istio_config, "r") as f:
+        with open(istio_config) as f:
             content = f.read()
 
         # Parse YAML

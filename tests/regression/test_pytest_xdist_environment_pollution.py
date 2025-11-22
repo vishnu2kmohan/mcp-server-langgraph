@@ -35,11 +35,11 @@ References:
 
 import gc
 import os
-from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.regression
 
 
 @pytest.mark.unit

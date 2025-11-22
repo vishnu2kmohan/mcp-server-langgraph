@@ -11,7 +11,7 @@ See ADR-0034 for API key to JWT exchange pattern.
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import bcrypt
 
@@ -30,7 +30,7 @@ class APIKey:
     name: str
     created: str
     expires_at: str
-    last_used: Optional[str] = None
+    last_used: str | None = None
 
 
 class APIKeyManager:
@@ -44,7 +44,7 @@ class APIKeyManager:
     def __init__(
         self,
         keycloak_client: KeycloakClient,
-        redis_client: Optional["Redis[bytes]"] = None,
+        redis_client: Optional["Redis[str]"] = None,
         cache_ttl: int = 3600,
         cache_enabled: bool = True,
     ):
@@ -109,7 +109,7 @@ class APIKeyManager:
         user_id: str,
         name: str,
         expires_days: int = 365,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create new API key for user
 
@@ -169,7 +169,7 @@ class APIKeyManager:
             "expires_at": expires_at.isoformat(),
         }
 
-    async def _get_from_cache(self, api_key_hash: str) -> Optional[Dict[str, Any]]:
+    async def _get_from_cache(self, api_key_hash: str) -> dict[str, Any] | None:
         """
         Get user info from Redis cache using API key hash
 
@@ -195,7 +195,7 @@ class APIKeyManager:
 
         return None
 
-    async def _set_in_cache(self, api_key_hash: str, user_info: Dict[str, Any]) -> None:
+    async def _set_in_cache(self, api_key_hash: str, user_info: dict[str, Any]) -> None:
         """
         Store user info in Redis cache
 
@@ -249,7 +249,7 @@ class APIKeyManager:
 
         return hashlib.sha256(api_key.encode()).hexdigest()
 
-    async def validate_and_get_user(self, api_key: str) -> Optional[Dict[str, Any]]:
+    async def validate_and_get_user(self, api_key: str) -> dict[str, Any] | None:
         """
         Validate API key and return user information
 
@@ -408,7 +408,7 @@ class APIKeyManager:
 
         await self.keycloak.update_user_attributes(user_id, attributes)
 
-    async def list_api_keys(self, user_id: str) -> List[Dict[str, Any]]:
+    async def list_api_keys(self, user_id: str) -> list[dict[str, Any]]:
         """
         List all API keys for user (without showing actual keys)
 
@@ -445,7 +445,7 @@ class APIKeyManager:
 
         return keys
 
-    async def rotate_api_key(self, user_id: str, key_id: str, grace_period_days: int = 0) -> Dict[str, Any]:
+    async def rotate_api_key(self, user_id: str, key_id: str, grace_period_days: int = 0) -> dict[str, Any]:
         """
         Rotate API key (generate new key, keeping same key_id)
 

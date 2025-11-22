@@ -25,7 +25,9 @@ def create_cors_middleware() -> type[CORSMiddleware]:
         middleware = create_cors_middleware()
         app.add_middleware(middleware, allow_origins=["*"])
     """
-    return CORSMiddleware
+    from typing import cast
+
+    return cast(type[Any], CORSMiddleware)
 
 
 def create_rate_limit_middleware(settings: Settings) -> Any:

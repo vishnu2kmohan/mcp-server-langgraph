@@ -14,7 +14,9 @@ from textwrap import dedent
 
 import pytest
 
-from tests.validation_lib import test_ids
+from scripts.validation import validate_ids as test_ids
+
+pytestmark = pytest.mark.meta
 
 
 @pytest.mark.unit

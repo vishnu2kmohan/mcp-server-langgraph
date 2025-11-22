@@ -1,0 +1,34 @@
+Running end-to-end tests (parallel execution, requires test infrastructure)...
+Ensuring test infrastructure is running...
+make test-infra-up
+make[1]: Entering directory '/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251118-221044'
+Starting test infrastructure (docker-compose.test.yml)...
+docker compose -f docker-compose.test.yml up -d
+ Container mcp-server-langgraph-session-20251118-221044-prometheus-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-jaeger-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-qdrant-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-redis-sessions-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-alertmanager-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-redis-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-keycloak-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-openfga-test-1  Running
+ Container mcp-server-langgraph-session-20251118-221044-alertmanager-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-jaeger-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-prometheus-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-grafana-test-1  Creating
+ Container mcp-server-langgraph-session-20251118-221044-grafana-test-1  Created
+ Container mcp-server-langgraph-session-20251118-221044-alertmanager-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-prometheus-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Waiting
+ Container mcp-server-langgraph-session-20251118-221044-jaeger-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-jaeger-test-1  Started
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-postgres-test-1  Healthy
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Starting
+ Container mcp-server-langgraph-session-20251118-221044-openfga-migrate-test-1  Started
+Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251118-221044/prometheus.yml" to rootfs at "/etc/prometheus/prometheus.yml": create mountpoint for /etc/prometheus/prometheus.yml mount: cannot create subdirectories in "/var/lib/docker/rootfs/overlayfs/38c07d1a8f3fc8dfae4b3ed3e8aec2897cfe4e82e9047110313bd1434e067ebc/etc/prometheus/prometheus.yml": not a directory: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+make[1]: *** [Makefile:438: test-infra-up] Error 1
+make[1]: Leaving directory '/home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251118-221044'
+make: *** [Makefile:461: test-e2e] Error 2

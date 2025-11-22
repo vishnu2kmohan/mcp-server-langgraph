@@ -22,14 +22,27 @@ Example:
 """
 
 from decimal import Decimal
-from typing import Dict
 
 # ==============================================================================
-# Pricing Table - Updated: 2025-11-02
+# Pricing Table - Updated: 2025-11-20
 # ==============================================================================
 
-PRICING_TABLE: Dict[str, Dict[str, Dict[str, Decimal]]] = {
+PRICING_TABLE: dict[str, dict[str, dict[str, Decimal]]] = {
     "anthropic": {
+        # Latest Claude 4.5 models (2025)
+        "claude-sonnet-4-5-20250929": {
+            "input": Decimal("0.003"),  # $3.00 per 1M tokens
+            "output": Decimal("0.015"),  # $15.00 per 1M tokens
+        },
+        "claude-haiku-4-5-20251001": {
+            "input": Decimal("0.001"),  # $1.00 per 1M tokens
+            "output": Decimal("0.005"),  # $5.00 per 1M tokens
+        },
+        "claude-opus-4-1-20250805": {
+            "input": Decimal("0.015"),  # $15.00 per 1M tokens
+            "output": Decimal("0.075"),  # $75.00 per 1M tokens
+        },
+        # Older Claude 3.x models (kept for backward compatibility)
         "claude-3-5-sonnet-20241022": {
             "input": Decimal("0.003"),  # $3.00 per 1M tokens
             "output": Decimal("0.015"),  # $15.00 per 1M tokens
@@ -41,6 +54,34 @@ PRICING_TABLE: Dict[str, Dict[str, Dict[str, Decimal]]] = {
         "claude-3-opus-20240229": {
             "input": Decimal("0.015"),  # $15.00 per 1M tokens
             "output": Decimal("0.075"),  # $75.00 per 1M tokens
+        },
+    },
+    "vertex_ai": {
+        # Anthropic Claude models via Vertex AI (same pricing as direct API)
+        "claude-sonnet-4-5@20250929": {
+            "input": Decimal("0.003"),  # $3.00 per 1M tokens
+            "output": Decimal("0.015"),  # $15.00 per 1M tokens
+        },
+        "claude-haiku-4-5@20251001": {
+            "input": Decimal("0.001"),  # $1.00 per 1M tokens
+            "output": Decimal("0.005"),  # $5.00 per 1M tokens
+        },
+        "claude-opus-4-1@20250805": {
+            "input": Decimal("0.015"),  # $15.00 per 1M tokens
+            "output": Decimal("0.075"),  # $75.00 per 1M tokens
+        },
+        # Google Gemini models via Vertex AI
+        "gemini-3-pro-preview": {
+            "input": Decimal("0.002"),  # $2.00 per 1M tokens
+            "output": Decimal("0.012"),  # $12.00 per 1M tokens
+        },
+        "gemini-2.5-flash": {
+            "input": Decimal("0.00015"),  # $0.15 per 1M tokens
+            "output": Decimal("0.0006"),  # $0.60 per 1M tokens
+        },
+        "gemini-2.5-pro": {
+            "input": Decimal("0.00125"),  # $1.25 per 1M tokens (≤200K)
+            "output": Decimal("0.010"),  # $10.00 per 1M tokens (≤200K)
         },
     },
     "openai": {
@@ -66,10 +107,25 @@ PRICING_TABLE: Dict[str, Dict[str, Dict[str, Decimal]]] = {
         },
     },
     "google": {
+        # Latest Gemini 3.0 (Nov 2025)
+        "gemini-3-pro-preview": {
+            "input": Decimal("0.002"),  # $2.00 per 1M tokens
+            "output": Decimal("0.012"),  # $12.00 per 1M tokens
+        },
+        # Gemini 2.5 (current stable)
+        "gemini-2.5-pro": {
+            "input": Decimal("0.00125"),  # $1.25 per 1M tokens (≤200K)
+            "output": Decimal("0.010"),  # $10.00 per 1M tokens (≤200K)
+        },
+        "gemini-2.5-flash": {
+            "input": Decimal("0.00015"),  # $0.15 per 1M tokens
+            "output": Decimal("0.0006"),  # $0.60 per 1M tokens
+        },
         "gemini-2.5-flash-preview-001": {
             "input": Decimal("0.000075"),  # $0.075 per 1M tokens (free tier)
             "output": Decimal("0.0003"),  # $0.30 per 1M tokens (free tier)
         },
+        # Older Gemini 1.5 (backward compatibility)
         "gemini-1.5-pro": {
             "input": Decimal("0.00125"),  # $1.25 per 1M tokens
             "output": Decimal("0.005"),  # $5.00 per 1M tokens
@@ -126,7 +182,7 @@ def calculate_cost(
     return input_cost + output_cost
 
 
-def get_all_models() -> Dict[str, list[str]]:
+def get_all_models() -> dict[str, list[str]]:
     """
     Get all available models grouped by provider.
 
@@ -141,7 +197,7 @@ def get_all_models() -> Dict[str, list[str]]:
     return {provider: list(models.keys()) for provider, models in PRICING_TABLE.items()}
 
 
-def get_model_pricing(provider: str, model: str) -> Dict[str, Decimal]:
+def get_model_pricing(provider: str, model: str) -> dict[str, Decimal]:
     """
     Get pricing information for a specific model.
 

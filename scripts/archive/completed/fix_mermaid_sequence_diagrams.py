@@ -8,10 +8,9 @@ This script removes these invalid statements from all sequence diagram blocks.
 
 import sys
 from pathlib import Path
-from typing import Tuple
 
 
-def fix_sequence_diagram(content: str) -> Tuple[str, bool]:
+def fix_sequence_diagram(content: str) -> tuple[str, bool]:
     """
     Remove classDef and class statements from sequenceDiagram blocks.
 

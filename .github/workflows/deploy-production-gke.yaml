@@ -90,6 +90,42 @@ jobs:
           kubectl kustomize deployments/overlays/production-gke | ./kubeconform -strict -summary -ignore-missing-schemas
           echo "✅ Manifest validation passed"
 
+      - name: Validate service version consistency
+        run: |
+          echo "🔍 Validating service versions across deployment configs..."
+
+          # Check for 'latest' tags in docker-compose files (should not exist in prod/test)
+          echo "Checking for 'latest' tags in docker-compose files..."
+          if grep -r "image:.*:latest" docker-compose.yml docker-compose.test.yml docker/docker-compose.yml 2>/dev/null; then
+            echo "❌ ERROR: Found 'latest' tags in production/test docker-compose files"
+            echo "Please use specific version tags for production and test environments"
+            exit 1
+          fi
+          echo "✅ No 'latest' tags in production/test configs"
+
+          # Check that service versions match between docker-compose files
+          echo "Checking version consistency across docker-compose files..."
+          declare -A versions=(
+            ["postgres"]="16.8-alpine"
+            ["keycloak"]="26.4.2"
+            ["openfga"]="v1.10.2"
+            ["qdrant"]="v1.15.5"
+            ["jaeger"]="1.62.0"
+          )
+
+          for service in "${!versions[@]}"; do
+            expected="${versions[$service]}"
+            echo "Validating $service version: $expected"
+
+            # Check production docker-compose.yml
+            if ! grep -q "$service.*:$expected" docker-compose.yml 2>/dev/null; then
+              echo "❌ ERROR: $service version mismatch in docker-compose.yml"
+              echo "Expected: $expected"
+              exit 1
+            fi
+          done
+          echo "✅ Service versions are consistent across deployment configs"
+
       - name: Security scan manifests
         uses: aquasecurity/trivy-action@0.33.1
         with:

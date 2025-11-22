@@ -24,13 +24,13 @@ Example:
     workflow = import_from_code(python_code_string)
 """
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
 from .graph_extractor import GraphExtractor
 from .layout_engine import LayoutEngine
 
 
-def import_from_code(code: str, layout_algorithm: Literal["hierarchical", "force", "grid"] = "hierarchical") -> Dict[str, Any]:
+def import_from_code(code: str, layout_algorithm: Literal["hierarchical", "force", "grid"] = "hierarchical") -> dict[str, Any]:
     """
     Import workflow from Python code string.
 
@@ -66,7 +66,7 @@ def import_from_code(code: str, layout_algorithm: Literal["hierarchical", "force
 
 def import_from_file(
     file_path: str, layout_algorithm: Literal["hierarchical", "force", "grid"] = "hierarchical"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Import workflow from Python file.
 
@@ -82,13 +82,13 @@ def import_from_file(
         >>> # Load into visual builder
         >>> builder.load_workflow(workflow)
     """
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         code = f.read()
 
     return import_from_code(code, layout_algorithm)
 
 
-def validate_import(workflow: Dict[str, Any]) -> Dict[str, Any]:
+def validate_import(workflow: dict[str, Any]) -> dict[str, Any]:
     """
     Validate imported workflow.
 

@@ -31,13 +31,11 @@ References:
 """
 
 import gc
-from pathlib import Path
-from typing import List, Set
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.meta

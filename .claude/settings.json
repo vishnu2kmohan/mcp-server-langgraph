@@ -29,19 +29,25 @@
     "Bash": {
       "auto_approve_patterns": [
         "pytest tests/ -x --lf",
+        "pytest tests/**",
         "make test-unit",
         "make test-integration",
         "make test-coverage",
         "make lint",
         "make format",
         "git status",
-        "git log",
-        "git diff",
-        "git show",
-        "ls",
-        "cat",
-        "grep",
-        "find"
+        "git log**",
+        "git diff**",
+        "git show**",
+        "git branch**",
+        "ls -**",
+        "cat pyproject.toml",
+        "cat .claude/**",
+        "cat tests/**",
+        "cat src/**/*.py",
+        "ruff check**",
+        "ruff format --check**",
+        "mypy**"
       ]
     }
   },
@@ -64,13 +70,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run black --check src/ --line-length=127 && uv run isort --check src/ --profile=black --line-length=127",
+            "command": "uv run ruff format --check src/ && uv run ruff check src/",
             "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics",
-            "timeout": 60
           },
           {
             "type": "command",
@@ -86,23 +87,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚙️  Auto-formatting code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "command": "echo '⚙️  Auto-formatting and linting...' && uv run ruff format --diff --quiet {{file_path}} 2>/dev/null && uv run ruff check --fix --quiet {{file_path}} 2>/dev/null || true",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "echo '🔍 Linting...' && uv run flake8 {{file_path}} --max-line-length=127 --max-complexity=15 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "echo '📝 TDD Reminder: Ensure corresponding tests are written/updated in tests/ directory'",
-            "timeout": 1
           }
         ]
       },
@@ -111,23 +97,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚙️  Auto-formatting code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
+            "command": "echo '⚙️  Auto-formatting and linting...' && uv run ruff format --diff --quiet {{file_path}} 2>/dev/null && uv run ruff check --fix --quiet {{file_path}} 2>/dev/null || true",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "echo '🔍 Linting...' && uv run flake8 {{file_path}} --max-line-length=127 --max-complexity=15 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "echo '📝 TDD Reminder: Write tests FIRST in tests/ directory before implementation'",
-            "timeout": 1
           }
         ]
       },
@@ -136,12 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚙️  Auto-formatting test code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "command": "echo '⚙️  Auto-formatting test code...' && uv run ruff format --diff --quiet {{file_path}} 2>/dev/null && uv run ruff check --fix --quiet {{file_path}} 2>/dev/null || true",
             "timeout": 10
           },
           {
@@ -156,12 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚙️  Auto-formatting test code...' && uv run black --diff --quiet {{file_path}} --line-length=127 2>/dev/null || true",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "uv run isort --diff --quiet {{file_path}} --profile=black --line-length=127 2>/dev/null || true",
+            "command": "echo '⚙️  Auto-formatting test code...' && uv run ruff format --diff --quiet {{file_path}} 2>/dev/null && uv run ruff check --fix --quiet {{file_path}} 2>/dev/null || true",
             "timeout": 10
           },
           {
@@ -178,6 +139,36 @@
             "type": "command",
             "command": "python scripts/workflow/update-context-files.py --recent-work --quiet",
             "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(**git pull**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status | grep -q 'both modified' && echo '⚠️  Merge conflicts detected! Run: git status' || true",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(**git checkout**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📍 Branch: '$(git branch --show-current) && git status --short",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(**git merge**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git diff --name-only --diff-filter=U 2>/dev/null | sed 's/^/⚠️  Conflict: /' || echo '✅ Clean merge'",
+            "timeout": 5
           }
         ]
       }

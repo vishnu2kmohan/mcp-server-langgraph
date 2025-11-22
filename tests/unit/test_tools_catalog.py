@@ -11,6 +11,8 @@ from langchain_core.tools import BaseTool
 
 from mcp_server_langgraph.tools import ALL_TOOLS, CALCULATOR_TOOLS, FILESYSTEM_TOOLS, SEARCH_TOOLS, get_tool_by_name, get_tools
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testtoolscatalog")

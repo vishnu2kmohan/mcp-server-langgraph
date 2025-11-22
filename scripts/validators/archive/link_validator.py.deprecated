@@ -19,7 +19,6 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set
 from urllib.parse import urlparse
 
 
@@ -52,9 +51,9 @@ class ValidationResult:
     """Result of link validation."""
 
     is_valid: bool
-    errors: List[LinkError] = field(default_factory=list)
-    warnings: List[Exception] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    errors: list[LinkError] = field(default_factory=list)
+    warnings: list[Exception] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -95,8 +94,8 @@ class LinkValidator:
         Returns:
             ValidationResult with errors and statistics
         """
-        errors: List[LinkError] = []
-        stats: Dict[str, int] = {
+        errors: list[LinkError] = []
+        stats: dict[str, int] = {
             "total_files": 0,
             "total_links": 0,
             "internal_links": 0,
@@ -124,7 +123,7 @@ class LinkValidator:
             stats=stats,
         )
 
-    def _find_mdx_files(self) -> Set[Path]:
+    def _find_mdx_files(self) -> set[Path]:
         """Find all MDX files."""
         files = set()
 
@@ -137,7 +136,7 @@ class LinkValidator:
 
         return files
 
-    def _validate_file(self, file_path: Path, relative_path: str, stats: Dict[str, int]) -> List[LinkError]:
+    def _validate_file(self, file_path: Path, relative_path: str, stats: dict[str, int]) -> list[LinkError]:
         """Validate links in a single file."""
         errors = []
 
@@ -169,7 +168,7 @@ class LinkValidator:
 
         return errors
 
-    def _extract_links(self, content: str) -> List[str]:
+    def _extract_links(self, content: str) -> list[str]:
         """Extract all links from content."""
         links = []
 

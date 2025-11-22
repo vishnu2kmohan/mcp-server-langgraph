@@ -12,13 +12,12 @@ The suppression should be documented and scoped to avoid hiding real security is
 Reference: Deploy to GKE Staging workflow Trivy false positives
 """
 
-import gc
 from pathlib import Path
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def test_trivyignore_exists_for_staging():
@@ -28,9 +27,8 @@ def test_trivyignore_exists_for_staging():
     This file should contain documented suppressions for false positive findings.
     Per user requirement: Suppress with .trivyignore (recommended approach).
     """
-    trivyignore_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/overlays/staging-gke/.trivyignore"
-    )
+    repo_root = Path(__file__).parent.parent.parent
+    trivyignore_file = repo_root / "deployments/overlays/staging-gke/.trivyignore"
 
     assert trivyignore_file.exists(), (
         f".trivyignore file not found: {trivyignore_file}\n"
@@ -64,9 +62,8 @@ def test_trivyignore_documents_configmap_false_positive():
 
     This prevents confusion and ensures future maintainers understand the decision.
     """
-    trivyignore_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/overlays/staging-gke/.trivyignore"
-    )
+    repo_root = Path(__file__).parent.parent.parent
+    trivyignore_file = repo_root / "deployments/overlays/staging-gke/.trivyignore"
 
     with open(trivyignore_file) as f:
         content = f.read()
@@ -111,7 +108,8 @@ def test_trivyignore_workflow_integration():
 
     The Trivy action should reference the trivyignores file so suppressions are applied.
     """
-    workflow_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" ".github/workflows/deploy-staging-gke.yaml")
+    repo_root = Path(__file__).parent.parent.parent
+    workflow_file = repo_root / ".github/workflows/deploy-staging-gke.yaml"
 
     assert workflow_file.exists(), f"Workflow file not found: {workflow_file}"
 

@@ -28,11 +28,12 @@ See: tests/PYTEST_XDIST_BEST_PRACTICES.md for detailed explanation.
 """
 
 import gc
-from typing import Any, Dict
 
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.regression
 
 
 @pytest.fixture
@@ -338,7 +339,6 @@ class TestCodexReloadScenario:
         This test validates that even after a reload, the pattern works correctly.
         """
         import importlib
-        import sys
         from unittest.mock import AsyncMock
 
         # Step 1: Reload middleware (simulates the Codex scenario)

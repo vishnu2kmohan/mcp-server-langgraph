@@ -27,6 +27,8 @@ from fastapi import HTTPException
 from mcp_server_langgraph.api.scim import _require_admin_or_scim_role
 from mcp_server_langgraph.api.service_principals import _validate_user_association_permission
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit
@@ -61,7 +63,9 @@ class TestSCIMOpenFGAIntegration:
         # Current implementation checks roles, new implementation should check OpenFGA
         try:
             await _require_admin_or_scim_role(
-                current_user=current_user, openfga=mock_openfga, resource="scim:users"  # Should use this
+                current_user=current_user,
+                openfga=mock_openfga,
+                resource="scim:users",  # Should use this
             )
             # If OpenFGA is used, should succeed because mock returns True
             # If roles are used, should fail because user lacks roles

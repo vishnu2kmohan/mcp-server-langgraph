@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="agent_tests")

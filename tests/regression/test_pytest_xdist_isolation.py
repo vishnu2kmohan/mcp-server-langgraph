@@ -17,13 +17,15 @@ Key Learnings:
 """
 
 import gc
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.regression
 
 # ==============================================================================
 # Test Fixtures and Mock Dependencies
@@ -68,7 +70,7 @@ def create_test_app_with_dependencies():
     # Simulated dependency functions (would be imported in real app)
     async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Async dependency - requires authentication"""
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,7 +87,7 @@ def create_test_app_with_dependencies():
     # Test endpoint that uses both dependencies
     @app.get("/test")
     async def test_endpoint(
-        current_user: Dict[str, Any] = Depends(get_current_user),
+        current_user: dict[str, Any] = Depends(get_current_user),
         manager=Depends(get_manager),
     ):
         return {
@@ -127,9 +129,7 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_async_dependency
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock()
-        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
+        app.dependency_overrides[get_manager] = lambda: AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -167,9 +167,7 @@ class TestPytestXdistIsolation:
         }
 
         # Mock the manager dependency
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock()
-        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
+        app.dependency_overrides[get_manager] = lambda: AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -199,9 +197,7 @@ class TestPytestXdistIsolation:
         app.dependency_overrides[get_current_user] = mock_user
 
         # ✅ Sync dependency overridden with sync function
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock()
-        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
+        app.dependency_overrides[get_manager] = lambda: AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         client = TestClient(app)
         response = client.get("/test")
@@ -226,9 +222,7 @@ class TestPytestXdistIsolation:
             return {"user_id": "user:test", "username": "testuser"}
 
         app.dependency_overrides[get_current_user] = mock_user
-        app.dependency_overrides[get_manager] = (
-            lambda: AsyncMock()
-        )  # noqa: async-mock-config - Generic test mock for dependency injection testing
+        app.dependency_overrides[get_manager] = lambda: AsyncMock()  # noqa: async-mock-config - Generic test mock for dependency injection testing
 
         # Verify overrides are set
         assert len(app.dependency_overrides) == 2
@@ -312,7 +306,7 @@ class TestFastAPIPatterns:
 
         @app.post("/test")
         async def test_endpoint(
-            current_user: Dict[str, Any] = Depends(get_current_user),
+            current_user: dict[str, Any] = Depends(get_current_user),
             manager=Depends(get_manager),
         ):
             return {"user_id": current_user.get("user_id")}

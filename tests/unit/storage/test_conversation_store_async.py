@@ -32,7 +32,6 @@ These tests validate the ASYNC INTERFACE works correctly with memory backend.
 Full async Redis migration deferred to future PR (lower priority fallback feature).
 """
 
-import gc
 from unittest.mock import AsyncMock, patch
 
 import pytest

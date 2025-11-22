@@ -11,6 +11,8 @@ import pytest
 
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def executor():

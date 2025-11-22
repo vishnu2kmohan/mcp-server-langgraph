@@ -10,6 +10,8 @@ import pytest
 
 from mcp_server_langgraph.tools.calculator_tools import add, calculator, divide, multiply, subtract
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testcalculatortool")

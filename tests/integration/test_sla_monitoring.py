@@ -12,6 +12,8 @@ import pytest
 
 from mcp_server_langgraph.monitoring.sla import SLAMeasurement, SLAMetric, SLAMonitor, SLAReport, SLAStatus, SLATarget
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def sla_monitor():

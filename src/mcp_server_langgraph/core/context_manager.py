@@ -10,8 +10,6 @@ References:
 - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 """
 
-from typing import Optional
-
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
@@ -246,7 +244,8 @@ Focus on high-signal information that maintains conversation context.
             try:
                 # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
                 response = await self.llm.ainvoke([HumanMessage(content=summarization_prompt)])
-                summary = response.content if hasattr(response, "content") else str(response)
+                content = response.content if hasattr(response, "content") else str(response)
+                summary = str(content) if not isinstance(content, str) else content
 
                 logger.info("Messages summarized", extra={"message_count": len(messages), "summary_length": len(summary)})
 
@@ -568,9 +567,7 @@ PREFERENCES:
 
 
 # Convenience functions for easy import
-async def compact_if_needed(
-    messages: list[BaseMessage], context_manager: Optional[ContextManager] = None
-) -> list[BaseMessage]:
+async def compact_if_needed(messages: list[BaseMessage], context_manager: ContextManager | None = None) -> list[BaseMessage]:
     """
     Compact conversation if needed, otherwise return unchanged.
 

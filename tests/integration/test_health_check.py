@@ -1,12 +1,14 @@
 """Unit tests for health_check.py - Health Check Endpoints"""
 
 import gc
+from collections.abc import Generator
 from datetime import datetime
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture

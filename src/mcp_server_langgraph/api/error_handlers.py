@@ -8,7 +8,7 @@ See ADR-0029 for design rationale.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -33,7 +33,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         register_exception_handlers(app)
     """
 
-    @app.exception_handler(MCPServerException)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+    @app.exception_handler(MCPServerException)
     async def mcp_exception_handler(request: Request, exc: MCPServerException) -> JSONResponse:
         """
         Handle MCP server exceptions.
@@ -94,7 +94,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             headers=headers,
         )
 
-    @app.exception_handler(Exception)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+    @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """
         Handle unexpected exceptions.
@@ -134,9 +134,9 @@ def create_error_response(
     error_code: str,
     message: str,
     status_code: int = 500,
-    metadata: Optional[Dict[str, Any]] = None,
-    trace_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    metadata: dict[str, Any] | None = None,
+    trace_id: str | None = None,
+) -> dict[str, Any]:
     """
     Create a standardized error response dictionary.
 

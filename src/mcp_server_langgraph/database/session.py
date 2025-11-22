@@ -6,8 +6,8 @@ and automatic cleanup.
 """
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -16,8 +16,8 @@ from mcp_server_langgraph.database.models import Base
 logger = logging.getLogger(__name__)
 
 # Global engine instance (lazy-initialized)
-_engine: Optional[AsyncEngine] = None
-_async_session_maker: Optional[async_sessionmaker[AsyncSession]] = None
+_engine: AsyncEngine | None = None
+_async_session_maker: async_sessionmaker[AsyncSession] | None = None
 
 
 def get_engine(database_url: str, echo: bool = False) -> AsyncEngine:

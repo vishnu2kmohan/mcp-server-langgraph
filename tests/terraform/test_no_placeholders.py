@@ -83,7 +83,7 @@ class TestTerraformPlaceholders:
         violations = []
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 for line_num, line in enumerate(f, start=1):
                     # Skip comments
                     if line.strip().startswith("#") or line.strip().startswith("//"):
@@ -194,7 +194,7 @@ class TestEKSEndpointSecurity:
                 continue
 
             try:
-                with open(tf_file, "r", encoding="utf-8") as f:
+                with open(tf_file, encoding="utf-8") as f:
                     content = f.read()
                     lines = content.split("\n")
 
@@ -247,7 +247,7 @@ class TestEKSEndpointSecurity:
         if not eks_module_vars.exists():
             pytest.skip(f"EKS module variables not found: {eks_module_vars}")
 
-        with open(eks_module_vars, "r", encoding="utf-8") as f:
+        with open(eks_module_vars, encoding="utf-8") as f:
             content = f.read()
 
         # Check for validation block in cluster_endpoint_public_access_cidrs variable
@@ -278,7 +278,7 @@ class TestGKENetworkSecurity:
         if not gke_prod_vars.exists():
             pytest.skip(f"GKE prod variables not found: {gke_prod_vars}")
 
-        with open(gke_prod_vars, "r", encoding="utf-8") as f:
+        with open(gke_prod_vars, encoding="utf-8") as f:
             content = f.read()
             lines = content.split("\n")
 
@@ -315,7 +315,7 @@ class TestGKENetworkSecurity:
         if not gke_prod_vars.exists():
             pytest.skip(f"GKE prod variables not found: {gke_prod_vars}")
 
-        with open(gke_prod_vars, "r", encoding="utf-8") as f:
+        with open(gke_prod_vars, encoding="utf-8") as f:
             lines = f.readlines()
 
         # Check for overly broad CIDR blocks in actual configuration (not comments)
@@ -354,7 +354,7 @@ class TestGKENetworkSecurity:
         if not gke_module_vars.exists():
             pytest.skip(f"GKE module variables not found: {gke_module_vars}")
 
-        with open(gke_module_vars, "r", encoding="utf-8") as f:
+        with open(gke_module_vars, encoding="utf-8") as f:
             content = f.read()
 
         # Check for validation block for master_authorized_networks_cidrs

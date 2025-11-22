@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Any, Dict, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from mcp_server_langgraph.core.config import Settings
 
@@ -82,7 +82,7 @@ class AuthProvider(Protocol):
         """Validate authentication token"""
         ...
 
-    def get_current_user(self, token: str) -> Dict[str, Any]:
+    def get_current_user(self, token: str) -> dict[str, Any]:
         """Get current user from token"""
         ...
 
@@ -91,7 +91,7 @@ class AuthProvider(Protocol):
 class StorageProvider(Protocol):
     """Protocol for storage providers"""
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value by key"""
         ...
 
@@ -179,7 +179,7 @@ class NoOpAuthProvider:
         """Accept any token in test mode"""
         return True
 
-    def get_current_user(self, token: str) -> Dict[str, Any]:
+    def get_current_user(self, token: str) -> dict[str, Any]:
         """Return mock user"""
         return {"user_id": "test-user", "username": "testuser", "email": "test@example.com"}
 
@@ -188,9 +188,9 @@ class MemoryStorageProvider:
     """In-memory storage provider for testing"""
 
     def __init__(self) -> None:
-        self._store: Dict[str, Any] = {}
+        self._store: dict[str, Any] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         return self._store.get(key)
 
     def set(self, key: str, value: Any) -> None:
@@ -210,9 +210,9 @@ class ProductionTelemetryProvider:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self._logger: Optional[logging.Logger] = None
-        self._metrics: Optional[Any] = None
-        self._tracer: Optional[Any] = None
+        self._logger: logging.Logger | None = None
+        self._metrics: Any | None = None
+        self._tracer: Any | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -246,7 +246,7 @@ class InMemoryAuthProvider:
     """In-memory auth provider for development"""
 
     def __init__(self) -> None:
-        self._tokens: Dict[str, Dict[str, Any]] = {}
+        self._tokens: dict[str, dict[str, Any]] = {}
 
     def create_token(self, user_id: str, username: str, **kwargs: Any) -> str:
         """Create a simple token (NOT cryptographically secure - dev only!)"""
@@ -259,7 +259,7 @@ class InMemoryAuthProvider:
     def validate_token(self, token: str) -> bool:
         return token in self._tokens
 
-    def get_current_user(self, token: str) -> Dict[str, Any]:
+    def get_current_user(self, token: str) -> dict[str, Any]:
         return self._tokens.get(token, {})
 
 
@@ -268,7 +268,7 @@ class RedisStorageProvider:
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self._client: Optional[Any] = None
+        self._client: Any | None = None
 
     def _get_client(self) -> Any:
         """Lazy Redis client initialization"""
@@ -278,7 +278,7 @@ class RedisStorageProvider:
             self._client = redis.Redis(host=self.settings.redis_host, port=self.settings.redis_port, decode_responses=True)
         return self._client
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         import json
 
         value = self._get_client().get(key)
@@ -327,7 +327,7 @@ class ApplicationContainer:
         auth = container.get_auth()
     """
 
-    def __init__(self, config: ContainerConfig, settings: Optional[Settings] = None):
+    def __init__(self, config: ContainerConfig, settings: Settings | None = None):
         """
         Initialize the container
 
@@ -392,7 +392,7 @@ class ApplicationContainer:
 # ==============================================================================
 
 
-def create_test_container(settings: Optional[Settings] = None) -> ApplicationContainer:
+def create_test_container(settings: Settings | None = None) -> ApplicationContainer:
     """
     Create a container for testing
 

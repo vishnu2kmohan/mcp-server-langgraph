@@ -12,26 +12,37 @@ Following TDD RED-GREEN-REFACTOR cycle to fix E2E test failures caused by:
 Reference: E2E Tests workflow failures with 401 authentication errors
 """
 
-import gc
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
-def test_keycloak_realm_import_file_exists():
+@pytest.fixture(scope="module")
+def repo_root() -> Path:
+    """Get repository root directory (shared across all tests in module)."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
+    return Path(result.stdout.strip())
+
+
+def test_keycloak_realm_import_file_exists(repo_root: Path):
     """
     Verify that keycloak-test-realm.json exists in tests/e2e/.
 
     This file should contain the realm configuration with pre-configured
     client and test users for E2E testing.
     """
-    # Use Path(__file__) to get the current test file location, then navigate to repo root
-    repo_root = Path(__file__).parent.parent.parent
     realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
 
     assert realm_file.exists(), (
@@ -56,7 +67,7 @@ def test_keycloak_realm_import_file_exists():
     assert isinstance(realm_config, dict), f"Realm file must contain a JSON object, got: {type(realm_config)}"
 
 
-def test_realm_json_has_mcp_server_client():
+def test_realm_json_has_mcp_server_client(repo_root: Path):
     """
     Verify that the realm configuration includes the 'mcp-server' client.
 
@@ -65,7 +76,7 @@ def test_realm_json_has_mcp_server_client():
     - publicClient: true
     - directAccessGrantsEnabled: true (for password grant flow)
     """
-    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "tests/e2e/keycloak-test-realm.json")
+    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -105,7 +116,7 @@ def test_realm_json_has_mcp_server_client():
     ), "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
 
 
-def test_realm_json_has_test_users():
+def test_realm_json_has_test_users(repo_root: Path):
     """
     Verify that the realm configuration includes test user 'alice'.
 
@@ -114,7 +125,7 @@ def test_realm_json_has_test_users():
     - enabled: true
     - credentials: password = alice123
     """
-    realm_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "tests/e2e/keycloak-test-realm.json")
+    realm_file = repo_root / "tests" / "e2e" / "keycloak-test-realm.json"
 
     with open(realm_file) as f:
         realm_config = json.load(f)
@@ -165,7 +176,7 @@ def test_realm_json_has_test_users():
     assert password_cred.get("value") == "alice123", "User 'alice' password must be 'alice123'"
 
 
-def test_docker_compose_imports_realm():
+def test_docker_compose_imports_realm(repo_root: Path):
     """
     Verify that docker-compose.test.yml is configured to import the realm.
 
@@ -173,7 +184,7 @@ def test_docker_compose_imports_realm():
     - Mount the realm JSON file to /opt/keycloak/data/import/realm.json
     - Use command: start-dev --import-realm
     """
-    docker_compose_file = Path("/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "docker-compose.test.yml")
+    docker_compose_file = repo_root / "docker-compose.test.yml"
 
     assert docker_compose_file.exists(), f"docker-compose.test.yml not found: {docker_compose_file}"
 

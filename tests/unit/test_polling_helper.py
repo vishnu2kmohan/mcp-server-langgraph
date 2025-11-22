@@ -9,7 +9,6 @@ TDD: These tests are written FIRST (RED phase) before implementing poll_until().
 
 import gc
 import time
-from typing import Callable
 
 import pytest
 

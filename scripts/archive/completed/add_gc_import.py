@@ -7,7 +7,7 @@ from pathlib import Path
 
 def add_gc_import(file_path):
     """Add 'import gc' to a test file if not already present."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         content = f.read()
 
     # Check if gc is already imported

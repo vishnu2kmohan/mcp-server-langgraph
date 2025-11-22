@@ -37,7 +37,7 @@ def find_broken_links(root_dir, exclude_patterns=None):
             continue
 
         try:
-            with open(md_file, "r", encoding="utf-8") as f:
+            with open(md_file, encoding="utf-8") as f:
                 content = f.read()
 
             # Find markdown links [text](path)

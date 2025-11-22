@@ -13,8 +13,12 @@ contentType: "how-to"
 Google Gemini provides state-of-the-art multimodal AI models through two access methods: **Google AI Studio** (direct API) and **Vertex AI** (enterprise platform). This guide covers both approaches with the MCP Server.
 
 <Info>
-**Gemini 2.5 Flash** and **Gemini 2.5 Pro** are production-grade models recommended for enterprise deployments. Both offer enhanced capabilities including native tool use, multimodal understanding, and improved reasoning.
+**Gemini 3.0 Pro** (Nov 2025) is the latest model with a 1M token context window and advanced reasoning. For production workloads, **Gemini 2.5 Flash** and **Gemini 2.5 Pro** are stable, production-grade models.
 </Info>
+
+<Note>
+**New:** Anthropic Claude models are also available via Vertex AI! See the [Vertex AI Setup Guide](./vertex-ai-setup.mdx) for unified access to both Claude and Gemini models.
+</Note>
 
 ### Available Models
 
@@ -22,8 +26,14 @@ The following models are **production-ready** and suitable for enterprise use:
 
 | Model | Context Window | Use Case | Pricing (per 1M tokens) | Status |
 |-------|---------------|----------|-------------------------|--------|
+| gemini-3-pro-preview | 1M tokens | Latest, advanced reasoning | $2 input / $12 output | 🆕 Preview (Nov 2025) |
 | gemini-2.5-flash | 1M tokens | Fast responses, chat | $0.15 input / $0.60 output | ✅ Production |
 | gemini-2.5-pro | 2M tokens | Complex reasoning | $1.25 input / $10.00 output | ✅ Production |
+
+**Vertex AI models** (use `vertex_ai/` prefix):
+- `vertex_ai/gemini-3-pro-preview` - Latest Gemini 3.0 Pro via Vertex AI
+- `vertex_ai/gemini-2.5-flash` - Gemini 2.5 Flash via Vertex AI
+- `vertex_ai/gemini-2.5-pro` - Gemini 2.5 Pro via Vertex AI
 
 ### Quick Start
 
@@ -74,6 +84,10 @@ The following models are **production-ready** and suitable for enterprise use:
 
   <Tab title="Vertex AI">
     **Best for**: Production, enterprise, private data
+
+    <Note>
+    **Complete Guide**: See the [Vertex AI Setup Guide](./vertex-ai-setup.mdx) for comprehensive instructions including Workload Identity (GKE), multi-provider access (Claude + Gemini), and enterprise deployment.
+    </Note>
 
     <Steps>
       <Step title="Setup GCP Project">

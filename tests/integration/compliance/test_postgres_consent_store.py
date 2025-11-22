@@ -6,8 +6,8 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest
@@ -16,7 +16,7 @@ from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsen
 from mcp_server_langgraph.compliance.gdpr.storage import ConsentRecord, UserProfile
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_consent_tests")]
+pytestmark = pytest.mark.integration
 
 
 def teardown_module():
@@ -32,22 +32,14 @@ def teardown_method_consent_store():
 
 
 @pytest.fixture
-async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
+async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None]:
     """
-    Create test database pool with environment-based configuration.
+    Use shared test database pool with cleanup.
 
-    Supports both local development and CI/CD environments by using
-    environment variables with sensible defaults.
+    CODEX FINDING FIX (2025-11-20): Use shared pool to prevent
+    "asyncpg.exceptions.InterfaceError: another operation is in progress"
     """
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        min_size=1,
-        max_size=5,
-    )
+    pool = postgres_connection_real
 
     # Clean up test data
     async with pool.acquire() as conn:
@@ -61,7 +53,7 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
         await conn.execute("DELETE FROM consent_records WHERE user_id LIKE 'test_%'")
         await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
 
-    await pool.close()
+    # Note: Don't close the pool - it's session-scoped and shared across all tests
 
 
 @pytest.fixture

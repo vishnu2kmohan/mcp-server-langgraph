@@ -24,6 +24,8 @@ import pytest
 from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry, ConsentRecord
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -40,12 +42,12 @@ class TestPostgresAuditLogStore:
         gc.collect()
 
     @pytest.fixture
-    async def audit_store(self, postgres_with_schema, postgres_connection_clean):
+    async def audit_store(self, postgres_connection_clean):
         """Create PostgresAuditLogStore with real database and schema"""
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresAuditLogStore
 
-        # Ensure schema is initialized
-        _ = postgres_with_schema
+        # Schema already initialized via docker-entrypoint-initdb.d
+        # test_infrastructure fixture verifies schema is ready before tests start
 
         # Create a pool from the connection (simplified for testing)
         # In production, this would be a real connection pool
@@ -293,12 +295,12 @@ class TestPostgresConsentStore:
         gc.collect()
 
     @pytest.fixture
-    async def consent_store(self, postgres_with_schema, postgres_connection_clean):
+    async def consent_store(self, postgres_connection_clean):
         """Create PostgresConsentStore with real database and schema"""
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConsentStore
 
-        # Ensure schema is initialized
-        _ = postgres_with_schema
+        # Schema already initialized via docker-entrypoint-initdb.d
+        # test_infrastructure fixture verifies schema is ready before tests start
 
         class SimplePool:
             def __init__(self, conn):

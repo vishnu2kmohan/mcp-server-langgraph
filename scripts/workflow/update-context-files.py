@@ -24,7 +24,6 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 def get_repo_root() -> Path:
@@ -43,7 +42,7 @@ def get_repo_root() -> Path:
         sys.exit(1)
 
 
-def run_git_command(args: List[str], timeout: int = 10) -> str:
+def run_git_command(args: list[str], timeout: int = 10) -> str:
     """Run git command and return output."""
     try:
         result = subprocess.run(
@@ -59,7 +58,7 @@ def run_git_command(args: List[str], timeout: int = 10) -> str:
         return ""
 
 
-def get_recent_commits(count: int = 15) -> List[Dict[str, str]]:
+def get_recent_commits(count: int = 15) -> list[dict[str, str]]:
     """Get recent commits with metadata."""
     log_format = "%H|%an|%ae|%ad|%s"
     log_output = run_git_command(
@@ -116,7 +115,7 @@ def categorize_commit(message: str) -> str:
         return "🔹 Other"
 
 
-def get_recent_files(since_days: int = 7) -> List[Tuple[str, int]]:
+def get_recent_files(since_days: int = 7) -> list[tuple[str, int]]:
     """Get recently modified files with change frequency."""
     log_output = run_git_command(
         [
@@ -128,7 +127,7 @@ def get_recent_files(since_days: int = 7) -> List[Tuple[str, int]]:
     )
 
     # Count file modifications
-    file_counts: Dict[str, int] = {}
+    file_counts: dict[str, int] = {}
     for line in log_output.split("\n"):
         if line and not line.startswith(" "):
             file_counts[line] = file_counts.get(line, 0) + 1
@@ -138,7 +137,7 @@ def get_recent_files(since_days: int = 7) -> List[Tuple[str, int]]:
     return sorted_files[:20]  # Top 20
 
 
-def get_git_stats() -> Dict[str, any]:
+def get_git_stats() -> dict[str, any]:
     """Get repository statistics."""
     # Total commits
     total_commits = run_git_command(["rev-list", "--count", "HEAD"])
@@ -166,7 +165,7 @@ def get_git_stats() -> Dict[str, any]:
     }
 
 
-def get_test_stats() -> Dict[str, int]:
+def get_test_stats() -> dict[str, int]:
     """Get test suite statistics."""
     # Try multiple methods to count tests, in order of preference
 
@@ -214,7 +213,7 @@ def get_test_stats() -> Dict[str, int]:
         if tests_dir.exists():
             test_count = 0
             for test_file in tests_dir.rglob("test_*.py"):
-                with open(test_file, "r") as f:
+                with open(test_file) as f:
                     for line in f:
                         if line.strip().startswith("def test_") or line.strip().startswith("async def test_"):
                             test_count += 1

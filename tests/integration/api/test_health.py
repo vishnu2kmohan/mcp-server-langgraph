@@ -21,6 +21,8 @@ from mcp_server_langgraph.api.health import (
     validate_session_store_registered,
 )
 
+pytestmark = [pytest.mark.integration]
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="api_health_tests")
@@ -179,8 +181,11 @@ class TestStartupValidation:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        # Should not raise
-                        run_startup_validation()
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            # Should not raise
+                            run_startup_validation()
 
     def test_run_startup_validation_fails_on_critical_error(self):
         """Test startup validation raises SystemValidationError on failure"""
@@ -191,8 +196,11 @@ class TestStartupValidation:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        with pytest.raises(SystemValidationError, match="Startup validation failed"):
-                            run_startup_validation()
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            with pytest.raises(SystemValidationError, match="Startup validation failed"):
+                                run_startup_validation()
 
     def test_run_startup_validation_logs_warnings(self):
         """Test startup validation logs warnings for non-critical issues"""
@@ -203,8 +211,11 @@ class TestStartupValidation:
                         "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
                         return_value=(True, "Docker sandbox warnings: Network allowlist not implemented"),
                     ):
-                        # Should not raise, but will log warning
-                        run_startup_validation()
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            # Should not raise, but will log warning
+                            run_startup_validation()
 
 
 @pytest.mark.unit
@@ -229,13 +240,16 @@ class TestHealthCheckEndpoint:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        response = client.get("/api/v1/health")
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            response = client.get("/api/v1/health")
 
-                        assert response.status_code == 200
-                        data = response.json()
-                        assert data["status"] == "healthy"
-                        assert all(data["checks"].values())
-                        assert data["errors"] == []
+                            assert response.status_code == 200
+                            data = response.json()
+                            assert data["status"] == "healthy"
+                            assert all(data["checks"].values())
+                            assert data["errors"] == []
 
     def test_health_endpoint_shows_degraded_with_warnings(self, client):
         """Test health endpoint shows degraded status with warnings"""
@@ -246,12 +260,15 @@ class TestHealthCheckEndpoint:
                         "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
                         return_value=(True, "Warning: Network allowlist not implemented"),
                     ):
-                        response = client.get("/api/v1/health")
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            response = client.get("/api/v1/health")
 
-                        assert response.status_code == 200
-                        data = response.json()
-                        assert data["status"] == "degraded"
-                        assert len(data["warnings"]) > 0
+                            assert response.status_code == 200
+                            data = response.json()
+                            assert data["status"] == "degraded"
+                            assert len(data["warnings"]) > 0
 
     def test_health_endpoint_shows_unhealthy_with_errors(self, client):
         """Test health endpoint shows unhealthy status with errors"""
@@ -262,13 +279,16 @@ class TestHealthCheckEndpoint:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch("mcp_server_langgraph.api.health.validate_docker_sandbox_security", return_value=(True, "OK")):
-                        response = client.get("/api/v1/health")
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity", return_value=(True, "OK")
+                        ):
+                            response = client.get("/api/v1/health")
 
-                        assert response.status_code == 200  # Endpoint still works
-                        data = response.json()
-                        assert data["status"] == "unhealthy"
-                        assert len(data["errors"]) > 0
-                        assert data["checks"]["observability"] is False
+                            assert response.status_code == 200  # Endpoint still works
+                            data = response.json()
+                            assert data["status"] == "unhealthy"
+                            assert len(data["errors"]) > 0
+                            assert data["checks"]["observability"] is False
 
 
 @pytest.mark.integration

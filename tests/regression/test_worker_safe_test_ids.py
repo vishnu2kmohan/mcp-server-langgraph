@@ -28,6 +28,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.unit
 @pytest.mark.regression

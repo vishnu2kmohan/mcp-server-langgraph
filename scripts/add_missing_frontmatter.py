@@ -12,7 +12,6 @@ Usage:
 import re
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 # Icon mapping based on directory/file patterns
 ICON_MAP = {
@@ -118,7 +117,7 @@ def get_content_type_for_file(file_path: Path) -> str:
     return CONTENT_TYPE_MAP["_default"]
 
 
-def parse_frontmatter(content: str) -> Tuple[Dict[str, str], int, int]:
+def parse_frontmatter(content: str) -> tuple[dict[str, str], int, int]:
     """
     Parse YAML frontmatter from MDX content.
 

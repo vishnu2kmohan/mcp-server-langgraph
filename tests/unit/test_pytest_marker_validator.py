@@ -11,13 +11,12 @@ Following TDD: Tests ensure validator prevents marker registration issues.
 
 import gc
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
 
 # Add scripts directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validation"))
 
 
 from validate_pytest_markers import get_registered_markers, get_used_markers  # noqa: E402

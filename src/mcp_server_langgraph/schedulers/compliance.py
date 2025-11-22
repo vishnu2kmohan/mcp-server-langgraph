@@ -12,7 +12,7 @@ Uses APScheduler for cron-based job scheduling.
 import asyncio
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -29,9 +29,9 @@ class AccessReviewItem(BaseModel):
 
     user_id: str
     username: str
-    roles: List[str]
+    roles: list[str]
     active_sessions: int
-    last_login: Optional[str] = None
+    last_login: str | None = None
     account_status: str = Field(..., description="active, inactive, locked")
     review_status: str = Field(default="pending", description="approved, revoked, pending")
     review_notes: str = Field(default="", description="Review notes")
@@ -47,9 +47,9 @@ class AccessReviewReport(BaseModel):
     total_users: int
     active_users: int
     inactive_users: int
-    users_reviewed: List[AccessReviewItem] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
-    actions_required: List[str] = Field(default_factory=list)
+    users_reviewed: list[AccessReviewItem] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    actions_required: list[str] = Field(default_factory=list)
 
 
 class ComplianceScheduler:
@@ -64,9 +64,9 @@ class ComplianceScheduler:
 
     def __init__(
         self,
-        evidence_collector: Optional[EvidenceCollector] = None,
-        session_store: Optional[SessionStore] = None,
-        evidence_dir: Optional[Path] = None,
+        evidence_collector: EvidenceCollector | None = None,
+        session_store: SessionStore | None = None,
+        evidence_dir: Path | None = None,
         enabled: bool = True,
     ):
         """
@@ -148,7 +148,7 @@ class ComplianceScheduler:
 
             logger.info("Compliance scheduler stopped")
 
-    async def trigger_daily_check(self) -> Dict[str, Any]:
+    async def trigger_daily_check(self) -> dict[str, Any]:
         """
         Manually trigger daily compliance check
 
@@ -166,7 +166,7 @@ class ComplianceScheduler:
         """
         return await self._run_weekly_access_review()
 
-    async def trigger_monthly_report(self) -> Dict[str, Any]:
+    async def trigger_monthly_report(self) -> dict[str, Any]:
         """
         Manually trigger monthly compliance report
 
@@ -177,7 +177,7 @@ class ComplianceScheduler:
 
     # --- Scheduled Jobs ---
 
-    async def _run_daily_compliance_check(self) -> Dict[str, Any]:
+    async def _run_daily_compliance_check(self) -> dict[str, Any]:
         """
         Run daily compliance check
 
@@ -357,7 +357,7 @@ class ComplianceScheduler:
 
                 raise
 
-    async def _run_monthly_compliance_report(self) -> Dict[str, Any]:
+    async def _run_monthly_compliance_report(self) -> dict[str, Any]:
         """
         Run monthly compliance report
 
@@ -408,7 +408,7 @@ class ComplianceScheduler:
 
     # --- Notification Helpers ---
 
-    async def _send_compliance_alert(self, severity: str, message: str, details: Dict[str, Any]) -> None:
+    async def _send_compliance_alert(self, severity: str, message: str, details: dict[str, Any]) -> None:
         """
         Send compliance alert
 
@@ -520,12 +520,12 @@ class ComplianceScheduler:
 
 
 # Global scheduler instance
-_compliance_scheduler: Optional[ComplianceScheduler] = None
+_compliance_scheduler: ComplianceScheduler | None = None
 
 
 async def start_compliance_scheduler(
-    session_store: Optional[SessionStore] = None,
-    evidence_dir: Optional[Path] = None,
+    session_store: SessionStore | None = None,
+    evidence_dir: Path | None = None,
     enabled: bool = True,
 ) -> ComplianceScheduler:
     """
@@ -564,7 +564,7 @@ async def stop_compliance_scheduler() -> None:
         _compliance_scheduler = None
 
 
-def get_compliance_scheduler() -> Optional[ComplianceScheduler]:
+def get_compliance_scheduler() -> ComplianceScheduler | None:
     """
     Get global compliance scheduler instance
 

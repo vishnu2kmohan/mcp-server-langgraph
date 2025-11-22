@@ -7,7 +7,7 @@ for token-efficient tool discovery.
 
 import json
 import logging
-from typing import List, Literal, Optional
+from typing import Literal
 
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
@@ -22,8 +22,8 @@ DetailLevel = Literal["minimal", "standard", "full"]
 class SearchToolsInput(BaseModel):
     """Input schema for search_tools"""
 
-    query: Optional[str] = Field(default=None, description="Search query (keyword or category)")
-    category: Optional[str] = Field(
+    query: str | None = Field(default=None, description="Search query (keyword or category)")
+    category: str | None = Field(
         default=None,
         description="Tool category (calculator, search, filesystem, execution)",
     )
@@ -33,7 +33,7 @@ class SearchToolsInput(BaseModel):
     )
 
 
-def _filter_tools_by_category(category: str) -> List[BaseTool]:
+def _filter_tools_by_category(category: str) -> list[BaseTool]:
     """Filter tools by category."""
     category_lower = category.lower()
     if category_lower == "calculator":
@@ -55,7 +55,7 @@ def _filter_tools_by_category(category: str) -> List[BaseTool]:
     return ALL_TOOLS
 
 
-def _filter_tools_by_query(tools: List[BaseTool], query: str) -> List[BaseTool]:
+def _filter_tools_by_query(tools: list[BaseTool], query: str) -> list[BaseTool]:
     """Filter tools by search query."""
     query_lower = query.lower()
     return [t for t in tools if query_lower in t.name.lower() or query_lower in (t.description or "").lower()]
@@ -71,7 +71,7 @@ def _format_tool_standard(t: BaseTool) -> str:
     result = f"### {t.name}\n{t.description}\n\n"
 
     if hasattr(t, "args_schema") and t.args_schema:
-        schema = t.args_schema.model_json_schema()
+        schema = t.args_schema.model_json_schema()  # type: ignore[union-attr]
         if "properties" in schema:
             result += "**Parameters:**\n"
             for param_name, param_info in schema["properties"].items():
@@ -88,7 +88,7 @@ def _format_tool_full(t: BaseTool) -> str:
     result = f"### {t.name}\n{t.description}\n\n"
 
     if hasattr(t, "args_schema") and t.args_schema:
-        schema = t.args_schema.model_json_schema()
+        schema = t.args_schema.model_json_schema()  # type: ignore[union-attr]
         if "properties" in schema:
             result += "**Parameters:**\n"
             for param_name, param_info in schema["properties"].items():
@@ -105,7 +105,7 @@ def _format_tool_full(t: BaseTool) -> str:
     return result
 
 
-def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
+def _format_tool_results(tools: list[BaseTool], detail_level: str) -> str:
     """Format tool results based on detail level."""
     result = f"Found {len(tools)} tool(s):\n\n"
 
@@ -122,10 +122,10 @@ def _format_tool_results(tools: List[BaseTool], detail_level: str) -> str:
     return result
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
+@tool
 def search_tools(
-    query: Optional[str] = None,
-    category: Optional[str] = None,
+    query: str | None = None,
+    category: str | None = None,
     detail_level: str = "minimal",
 ) -> str:
     """

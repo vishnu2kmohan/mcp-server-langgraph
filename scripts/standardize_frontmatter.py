@@ -11,10 +11,9 @@ Standards:
 import re
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
 
-def parse_frontmatter(content: str) -> Tuple[Optional[dict], str, str]:
+def parse_frontmatter(content: str) -> tuple[dict | None, str, str]:
     """
     Parse YAML frontmatter from .mdx content.
 
@@ -62,7 +61,7 @@ def single_quote(value: str) -> str:
     return f"'{value}'"
 
 
-def standardize_frontmatter(content: str) -> Tuple[str, bool]:
+def standardize_frontmatter(content: str) -> tuple[str, bool]:
     """
     Standardize frontmatter quotes.
 

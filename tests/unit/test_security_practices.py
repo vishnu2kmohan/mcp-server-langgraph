@@ -14,7 +14,6 @@ GREEN Phase: Tests pass after security fixes are applied
 import gc
 import hashlib
 import inspect
-import os
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -22,6 +21,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from tests.helpers.async_mock_helpers import configured_async_mock
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
@@ -109,10 +110,13 @@ class TestTemporaryDirectorySecurity:
         app_temp.mkdir(mode=448, parents=True, exist_ok=True)
         stat_info = app_temp.stat()
         permissions = oct(stat_info.st_mode)[-3:]
-        assert permissions in [
-            "700",
-            "755",
-        ], f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
+        assert (
+            permissions
+            in [
+                "700",
+                "755",
+            ]
+        ), f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
         app_temp.rmdir()
 
     def test_path_validation_prevents_directory_traversal(self):
@@ -123,10 +127,10 @@ class TestTemporaryDirectorySecurity:
         """
         from pathlib import Path
 
-        allowed_base = Path("/tmp/workflows")
+        allowed_base = Path("/tmp/workflows").resolve()
         valid_path = Path("/tmp/workflows/my_workflow.py").resolve()
         assert str(valid_path).startswith(str(allowed_base))
-        evil_path = Path("/tmp/workflows/../../../etc/passwd")
+        evil_path = Path("/tmp/workflows/../../../etc/passwd").resolve()
         assert not str(evil_path).startswith(
             str(allowed_base)
         ), "Path traversal attack not prevented! Validation should reject paths outside allowed base."
@@ -180,10 +184,11 @@ class TestSQLInjectionPrevention:
         PASSES when: Invalid field names are rejected
         """
         mock_pool = MagicMock()
-        mock_pool.acquire = configured_async_mock(return_value=None)
         mock_conn = configured_async_mock(return_value=None)
-        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_pool.acquire.return_value.__aexit__ = configured_async_mock(return_value=None)
+        mock_context_manager = MagicMock()
+        mock_context_manager.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_context_manager.__aexit__ = configured_async_mock(return_value=None)
+        mock_pool.acquire = MagicMock(return_value=mock_context_manager)
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresUserProfileStore
 
         store = PostgresUserProfileStore(mock_pool)
@@ -202,7 +207,6 @@ class TestSQLInjectionPrevention:
         PASSES when: Values are passed as parameters (preventing injection)
         """
         mock_pool = MagicMock()
-        mock_pool.acquire = configured_async_mock(return_value=None)
         mock_conn = configured_async_mock(return_value=None)
         mock_execute_result = MagicMock()
         mock_execute_result.rowcount = 1
@@ -213,8 +217,10 @@ class TestSQLInjectionPrevention:
             return mock_execute_result
 
         mock_conn.execute = mock_execute
-        mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-        mock_pool.acquire.return_value.__aexit__ = configured_async_mock(return_value=None)
+        mock_context_manager = MagicMock()
+        mock_context_manager.__aenter__ = AsyncMock(return_value=mock_conn)
+        mock_context_manager.__aexit__ = configured_async_mock(return_value=None)
+        mock_pool.acquire = MagicMock(return_value=mock_context_manager)
         from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresUserProfileStore
 
         store = PostgresUserProfileStore(mock_pool)

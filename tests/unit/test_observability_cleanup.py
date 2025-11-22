@@ -10,6 +10,8 @@ import pytest
 
 from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="unit_observability_cleanup_tests")

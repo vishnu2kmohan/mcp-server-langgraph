@@ -21,7 +21,7 @@ Usage:
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
@@ -43,7 +43,7 @@ class SerializableLLMMock(BaseChatModel):
         _current_index: Internal index for cycling through responses
     """
 
-    responses: List[str] = Field(default_factory=lambda: ["Mock LLM response"])
+    responses: list[str] = Field(default_factory=lambda: ["Mock LLM response"])
     delay_seconds: float = Field(default=0.0)
 
     # Private attributes (not part of model schema, excluded from serialization)
@@ -70,9 +70,9 @@ class SerializableLLMMock(BaseChatModel):
 
     def _generate(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[Any] = None,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: Any | None = None,
         **kwargs: Any,
     ) -> ChatResult:
         """
@@ -106,9 +106,9 @@ class SerializableLLMMock(BaseChatModel):
 
     async def _agenerate(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[Any] = None,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: Any | None = None,
         **kwargs: Any,
     ) -> ChatResult:
         """
@@ -178,7 +178,7 @@ class SerializableLLMMock(BaseChatModel):
             },
         )
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         """Restore object state during deserialization."""
         # Restore public fields
         self.responses = state.get("responses", ["Mock LLM response"])
@@ -210,7 +210,7 @@ class SerializableToolMock:
     return_value: Any = "Mock tool result"
     execution_time: float = 0.0
     call_count: int = field(default=0, init=False)
-    call_args: List[Dict[str, Any]] = field(default_factory=list, init=False)
+    call_args: list[dict[str, Any]] = field(default_factory=list, init=False)
 
     def __call__(self, **kwargs: Any) -> Any:
         """

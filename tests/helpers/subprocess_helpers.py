@@ -12,12 +12,11 @@ Related: OpenAI Codex Finding #6 - Subprocess test safeguards
 
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Union
 
 
 def run_cli_tool(
-    cmd: List[str],
-    cwd: Optional[Union[str, Path]] = None,
+    cmd: list[str],
+    cwd: str | Path | None = None,
     timeout: int = 60,
     check_returncode: bool = True,
     capture_output: bool = True,
@@ -88,7 +87,7 @@ def run_cli_tool(
 
 def run_helm_command(
     subcmd: str,
-    args: List[str],
+    args: list[str],
     timeout: int = 90,
     **kwargs,
 ) -> subprocess.CompletedProcess:
@@ -116,7 +115,7 @@ def run_helm_command(
 
 def run_kustomize_command(
     subcmd: str,
-    args: List[str],
+    args: list[str],
     timeout: int = 60,
     **kwargs,
 ) -> subprocess.CompletedProcess:
@@ -140,7 +139,7 @@ def run_kustomize_command(
 
 def run_kubectl_command(
     subcmd: str,
-    args: List[str],
+    args: list[str],
     timeout: int = 60,
     **kwargs,
 ) -> subprocess.CompletedProcess:
@@ -164,7 +163,7 @@ def run_kubectl_command(
 
 def run_git_command(
     subcmd: str,
-    args: List[str],
+    args: list[str],
     timeout: int = 30,
     **kwargs,
 ) -> subprocess.CompletedProcess:

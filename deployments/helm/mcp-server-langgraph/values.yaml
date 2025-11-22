@@ -7,6 +7,8 @@ replicaCount: 2  # Optimized from 3 (-33% base cost)
 image:
   repository: ghcr.io/vishnu2kmohan/mcp-server-langgraph
   pullPolicy: IfNotPresent
+  # NOTE: Image tag is managed by CI/CD pipeline - updated automatically on deployment
+  # Do not edit manually - use --set image.tag=X.Y.Z in helm install/upgrade commands
   tag: "2.8.0"
   # Image variant selection (choose based on deployment needs)
   # Variants:

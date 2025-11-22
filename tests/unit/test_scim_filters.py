@@ -24,6 +24,8 @@ import pytest
 from mcp_server_langgraph.api.scim import list_users
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.xdist_group(name="unit_scim_filters_tests")
 class TestSCIMFilterParsing:

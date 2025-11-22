@@ -112,11 +112,7 @@ def check_service_principal_accepts_optional_openfga() -> list[str]:
             )
 
         # Check for guards
-        if (
-            "_sync_to_openfga" in content
-            and "if self.openfga is None" not in content
-            and "if not self.openfga" not in content
-        ):
+        if "_sync_to_openfga" in content and "if self.openfga is None" not in content and "if not self.openfga" not in content:
             errors.append(
                 "⚠️  WARNING: _sync_to_openfga should guard against None OpenFGA\n"
                 "   Recommendation: Add 'if self.openfga is None: return' at start of method"

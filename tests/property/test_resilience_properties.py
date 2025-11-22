@@ -22,7 +22,7 @@ from mcp_server_langgraph.resilience.fallback import fail_closed, fail_open, wit
 from mcp_server_langgraph.resilience.retry import retry_with_backoff, should_retry_exception
 from mcp_server_langgraph.resilience.timeout import with_timeout
 
-pytestmark = [pytest.mark.unit, pytest.mark.property]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testcircuitbreakerproperties")

@@ -4,7 +4,7 @@ Infisical integration for secure secrets management
 
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Tracer
@@ -46,7 +46,7 @@ def _get_tracer() -> Optional["Tracer"]:
         from mcp_server_langgraph.observability.telemetry import get_tracer, is_initialized
 
         if is_initialized():
-            return get_tracer()
+            return get_tracer()  # type: ignore[no-any-return]
     except (ImportError, RuntimeError):
         pass
     return None
@@ -70,9 +70,9 @@ class SecretsManager:
     def __init__(
         self,
         site_url: str = "https://app.infisical.com",
-        client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        project_id: Optional[str] = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        project_id: str | None = None,
         environment: str = "dev",
     ):
         """
@@ -88,7 +88,7 @@ class SecretsManager:
         self.site_url = site_url
         self.project_id = project_id or os.getenv("INFISICAL_PROJECT_ID")
         self.environment = environment
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
 
         # Use environment variables if not provided
         client_id = client_id or os.getenv("INFISICAL_CLIENT_ID")
@@ -123,7 +123,7 @@ class SecretsManager:
             _get_logger().error(f"Failed to initialize Infisical client: {e}", exc_info=True)
             self.client = None
 
-    def get_secret(self, key: str, path: str = "/", use_cache: bool = True, fallback: Optional[str] = None) -> Optional[str]:
+    def get_secret(self, key: str, path: str = "/", use_cache: bool = True, fallback: str | None = None) -> str | None:
         """
         Get a secret from Infisical
 
@@ -144,7 +144,7 @@ class SecretsManager:
         else:
             return self._get_secret_impl(key, path, use_cache, fallback, None)
 
-    def _get_secret_impl(self, key: str, path: str, use_cache: bool, fallback: Optional[str], span: Any) -> Optional[str]:
+    def _get_secret_impl(self, key: str, path: str, use_cache: bool, fallback: str | None, span: Any) -> str | None:
         """Implementation of get_secret with optional tracing span."""
         if span:
             span.set_attribute("secret.key", key)
@@ -197,7 +197,7 @@ class SecretsManager:
 
             return fallback
 
-    def get_all_secrets(self, path: str = "/", use_cache: bool = True) -> Dict[str, str]:
+    def get_all_secrets(self, path: str = "/", use_cache: bool = True) -> dict[str, str]:
         """
         Get all secrets from a path
 
@@ -215,7 +215,7 @@ class SecretsManager:
         else:
             return self._get_all_secrets_impl(path, use_cache)
 
-    def _get_all_secrets_impl(self, path: str, use_cache: bool) -> Dict[str, str]:
+    def _get_all_secrets_impl(self, path: str, use_cache: bool) -> dict[str, str]:
         """Implementation of get_all_secrets."""
         if not self.client:
             _get_logger().warning("Infisical client not available")
@@ -240,7 +240,7 @@ class SecretsManager:
             _get_logger().error(f"Failed to retrieve secrets from path '{path}': {e}", exc_info=True)
             return {}
 
-    def create_secret(self, key: str, value: str, path: str = "/", secret_comment: Optional[str] = None) -> bool:
+    def create_secret(self, key: str, value: str, path: str = "/", secret_comment: str | None = None) -> bool:
         """
         Create a new secret in Infisical
 
@@ -342,7 +342,7 @@ class SecretsManager:
             _get_logger().error(f"Failed to delete secret '{key}': {e}", exc_info=True)
             return False
 
-    def invalidate_cache(self, key: Optional[str] = None) -> None:
+    def invalidate_cache(self, key: str | None = None) -> None:
         """
         Invalidate secret cache
 
@@ -361,7 +361,7 @@ class SecretsManager:
 
 
 # Singleton instance
-_secrets_manager: Optional[SecretsManager] = None
+_secrets_manager: SecretsManager | None = None
 
 
 def get_secrets_manager() -> SecretsManager:

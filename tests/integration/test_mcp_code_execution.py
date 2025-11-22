@@ -13,6 +13,8 @@ import pytest
 # These imports should work since MCP servers exist
 from mcp_server_langgraph.mcp.server_stdio import MCPAgentServer
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.mcp
@@ -40,7 +42,6 @@ class TestMCPCodeExecutionEndpoint:
         from unittest.mock import MagicMock
 
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
-        from mcp_server_langgraph.core.config import Settings
 
         # Create auth middleware with pre-registered user provider
         auth = AuthMiddleware(
@@ -214,7 +215,6 @@ class TestMCPToolDiscoveryEndpoint:
         from unittest.mock import MagicMock
 
         from mcp_server_langgraph.auth.middleware import AuthMiddleware
-        from mcp_server_langgraph.core.config import Settings
 
         # Create auth middleware with pre-registered user provider
         auth = AuthMiddleware(

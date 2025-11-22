@@ -7,6 +7,9 @@ This module addresses the root causes of common test failures:
 - Missing dependency mocks in FastAPI test clients
 - Incorrect provider configuration for LLM tests
 - Circuit breaker state isolation issues
+- Brittle unit tests coupled to implementation details (50+ @patch decorators)
+
+## Traditional Mock Factories (Phase 1)
 
 Usage:
     from tests.utils.mock_factories import (
@@ -22,16 +25,48 @@ Usage:
     with create_mock_llm_environment(provider="azure"):
         factory = LLMFactory(provider="azure", ...)
 
+## Behavioral Mock Factories (Phase 2 - NEW)
+
+Behavioral mocks test WHAT happens (behavior), not HOW it's implemented.
+This makes tests resilient to refactoring.
+
+Usage:
+    from tests.utils.mock_factories import (
+        create_behavioral_auth_middleware,
+        create_behavioral_agent_graph,
+        create_behavioral_llm_provider,
+        create_behavioral_checkpointer,
+    )
+
+    # Test: Authorized user can chat
+    auth = create_behavioral_auth_middleware(authorized=True, user_id="alice")
+    agent = create_behavioral_agent_graph(response_message="Hi!")
+
+    server = MCPAgentServer(auth_middleware=auth, agent_graph=agent)
+    response = await server.handle_chat(message="Hello", token="valid-token")
+
+    assert "Hi!" in response  # Verify behavior, not implementation
+
+Benefits:
+    - ✅ Tests survive refactoring (no coupling to import paths)
+    - ✅ Self-documenting (behavioral intent is clear)
+    - ✅ Composable (mocks can be combined easily)
+    - ✅ Fewer lines (no @patch decorator boilerplate)
+    - ✅ Reduces 50 @patch decorators to <10 in test_mcp_stdio_server.py
+
 References:
+    - Backlog: TESTING_INFRASTRUCTURE_IMPROVEMENTS_BACKLOG.md (Phase 2)
+    - Problem: tests/unit/test_mcp_stdio_server.py has 50 @patch decorators
     - Root cause analysis: Circuit breaker state pollution (pytest-xdist)
     - Root cause analysis: Missing OpenFGA dependency overrides
     - Root cause analysis: Invalid LLM provider configurations
 """
 
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Literal, Optional
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Literal
+from unittest.mock import AsyncMock
 
 # ==============================================================================
 # OpenFGA Mock Factories
@@ -80,7 +115,7 @@ def create_mock_openfga_client(authorized: bool = True) -> AsyncMock:
 def create_mock_llm_environment(
     provider: Literal["azure", "bedrock", "openai", "ollama"],
     **custom_env_vars: str,
-) -> Generator[Dict[str, str], None, None]:
+) -> Generator[dict[str, str], None, None]:
     """
     Create mock environment variables for LLM provider testing.
 
@@ -110,7 +145,7 @@ def create_mock_llm_environment(
     """
     from unittest.mock import patch
 
-    env_vars: Dict[str, str] = {}
+    env_vars: dict[str, str] = {}
 
     if provider == "azure":
         env_vars = {
@@ -232,12 +267,284 @@ def create_isolated_circuit_breaker(
 
 
 # ==============================================================================
+# Behavioral Mock Factories (Phase 2: Unit Test Refactoring)
+# ==============================================================================
+#
+# Behavioral mocks test WHAT happens (behavior), not HOW it's implemented.
+# This approach makes tests resilient to refactoring - internal changes don't
+# break tests as long as external behavior remains the same.
+#
+# Benefits over @patch decorators:
+# - Tests survive refactoring (no coupling to import paths)
+# - Self-documenting (behavioral intent is clear)
+# - Composable (mocks can be combined easily)
+# - Fewer lines of code (no patch setup boilerplate)
+#
+# References:
+#   - Backlog: TESTING_INFRASTRUCTURE_IMPROVEMENTS_BACKLOG.md (Phase 2)
+#   - Problem: tests/unit/test_mcp_stdio_server.py has 50 @patch decorators
+
+
+def create_behavioral_auth_middleware(
+    *, authorized: bool = True, user_id: str = "alice", token_valid: bool = True, token_payload: dict | None = None
+):
+    """
+    Create behavioral mock for AuthMiddleware.
+
+    Tests BEHAVIOR: "When token is valid, user is authorized"
+    NOT implementation: "verify_token uses JWT library with HS256"
+
+    Args:
+        authorized: Whether authorization checks succeed
+        user_id: User ID returned in token payload
+        token_valid: Whether token validation succeeds
+        token_payload: Custom token payload (overrides user_id)
+
+    Returns:
+        Mock AuthMiddleware that behaves like real middleware
+
+    Example:
+        >>> # Test: Authorized user can access resource
+        >>> auth = create_behavioral_auth_middleware(
+        ...     authorized=True,
+        ...     user_id="alice"
+        ... )
+        >>> server = MCPAgentServer(auth_middleware=auth)
+        >>> response = await server.handle_chat(message="Hello", token="valid-token")
+        >>> # Verify behavior: chat succeeded
+        >>> assert "Hello" in response
+
+        >>> # Test: Unauthorized user is denied
+        >>> auth = create_behavioral_auth_middleware(authorized=False)
+        >>> with pytest.raises(PermissionError):
+        ...     await server.handle_chat(message="Hello", token="valid-token")
+
+    Replaces:
+        @patch("mcp_server_langgraph.mcp.server_stdio.create_auth_middleware")
+        @patch("mcp_server_langgraph.mcp.server_stdio.settings")
+        def test_auth(mock_settings, mock_create_auth):
+            # 10+ lines of setup...
+    """
+    from unittest.mock import MagicMock
+
+    mock = MagicMock()
+
+    # verify_token is async in real middleware
+    if token_valid:
+        verification = MagicMock()
+        verification.valid = True
+        verification.payload = token_payload or {"sub": user_id, "exp": 9999999999}
+        verification.error = None
+        mock.verify_token = AsyncMock(return_value=verification)
+    else:
+        verification = MagicMock()
+        verification.valid = False
+        verification.error = "Invalid token"
+        verification.payload = None
+        mock.verify_token = AsyncMock(return_value=verification)
+
+    # authorize can be async or sync depending on usage
+    mock.authorize = AsyncMock(return_value=authorized)
+
+    return mock
+
+
+def create_behavioral_agent_graph(
+    *,
+    response_message: str = "Hello! How can I help you today?",
+    conversation_exists: bool = False,
+    user_id: str = "alice",
+    messages: list | None = None,
+    next_action: str = "",
+    invoke_error: Exception | None = None,
+):
+    """
+    Create behavioral mock for LangGraph CompiledGraph.
+
+    Tests BEHAVIOR: "Agent responds to user message"
+    NOT implementation: "Graph uses specific checkpointer class"
+
+    Args:
+        response_message: Agent's response to user
+        conversation_exists: Whether conversation has previous messages
+        user_id: User ID for conversation
+        messages: Custom message history (overrides conversation_exists)
+        next_action: Next action after agent response
+        invoke_error: Exception to raise on invoke (for error testing)
+
+    Returns:
+        Mock CompiledGraph that behaves like real agent graph
+
+    Example:
+        >>> # Test: Agent responds to new conversation
+        >>> agent = create_behavioral_agent_graph(
+        ...     response_message="Hi! I'm your AI assistant.",
+        ...     conversation_exists=False
+        ... )
+        >>> result = await agent.ainvoke({"messages": [HumanMessage("Hello")]})
+        >>> assert "AI assistant" in result["messages"][-1].content
+
+        >>> # Test: Agent handles errors gracefully
+        >>> agent = create_behavioral_agent_graph(
+        ...     invoke_error=ValueError("LLM API error")
+        ... )
+        >>> with pytest.raises(ValueError):
+        ...     await agent.ainvoke({"messages": [HumanMessage("Hello")]})
+
+    Replaces:
+        @patch("mcp_server_langgraph.mcp.server_stdio.get_agent_graph")
+        @patch("mcp_server_langgraph.mcp.server_stdio.settings")
+        def test_agent(mock_settings, mock_get_graph):
+            # 15+ lines of setup...
+    """
+    from langchain_core.messages import AIMessage, HumanMessage
+    from unittest.mock import MagicMock
+
+    mock = AsyncMock()
+
+    # Setup state snapshot behavior
+    if conversation_exists or messages:
+        state_snapshot = MagicMock()
+        state_snapshot.values = {"messages": messages or [HumanMessage(content="Previous message")]}
+        mock.aget_state.return_value = state_snapshot
+    else:
+        state_snapshot = MagicMock()
+        state_snapshot.values = {"messages": []}
+        mock.aget_state.return_value = state_snapshot
+
+    # Setup invoke behavior
+    if invoke_error:
+        mock.ainvoke.side_effect = invoke_error
+    else:
+        mock.ainvoke.return_value = {
+            "messages": [HumanMessage(content="User input"), AIMessage(content=response_message)],
+            "next_action": next_action,
+            "user_id": user_id,
+        }
+
+    # Setup checkpointer (needed for some tests)
+    checkpointer = AsyncMock()
+    mock.checkpointer = checkpointer
+
+    return mock
+
+
+def create_behavioral_llm_provider(
+    *,
+    response: str = "This is a test response.",
+    latency_ms: int = 100,
+    error: Exception | None = None,
+    provider: str = "openai",
+):
+    """
+    Create behavioral mock for LLM provider.
+
+    Tests BEHAVIOR: "LLM returns response to prompt"
+    NOT implementation: "LiteLLM uses specific API endpoint"
+
+    Args:
+        response: LLM response text
+        latency_ms: Simulated latency in milliseconds
+        error: Exception to raise (for error testing)
+        provider: Provider name (openai, anthropic, etc.)
+
+    Returns:
+        Mock LLM provider that behaves like real provider
+
+    Example:
+        >>> # Test: LLM fallback on primary failure
+        >>> primary = create_behavioral_llm_provider(
+        ...     error=ConnectionError("API unavailable")
+        ... )
+        >>> fallback = create_behavioral_llm_provider(
+        ...     response="Fallback response"
+        ... )
+        >>> # Test fallback logic works
+        >>> result = await try_with_fallback(primary, fallback)
+        >>> assert result == "Fallback response"
+
+    Replaces:
+        @patch("mcp_server_langgraph.core.llm.litellm_provider.completion")
+        def test_llm(mock_completion):
+            # 10+ lines of setup...
+    """
+    from unittest.mock import MagicMock
+    import asyncio
+
+    mock = AsyncMock()
+
+    async def invoke_with_latency(*args, **kwargs):
+        if latency_ms > 0:
+            await asyncio.sleep(latency_ms / 1000)
+        if error:
+            raise error
+        return response
+
+    mock.invoke = invoke_with_latency
+    mock.ainvoke = invoke_with_latency
+    mock.provider = provider
+
+    return mock
+
+
+def create_behavioral_checkpointer(*, has_checkpoint: bool = True, checkpoint_data: dict | None = None):
+    """
+    Create behavioral mock for conversation checkpointer.
+
+    Tests BEHAVIOR: "Checkpointer saves/loads conversation state"
+    NOT implementation: "Redis checkpointer uses specific key format"
+
+    Args:
+        has_checkpoint: Whether checkpoint exists
+        checkpoint_data: Custom checkpoint data
+
+    Returns:
+        Mock checkpointer that behaves like real checkpointer
+
+    Example:
+        >>> # Test: Conversation resumes from checkpoint
+        >>> checkpointer = create_behavioral_checkpointer(
+        ...     has_checkpoint=True,
+        ...     checkpoint_data={"messages": [HumanMessage("Previous")]}
+        ... )
+        >>> state = await checkpointer.aget(config)
+        >>> assert state["messages"][0].content == "Previous"
+
+        >>> # Test: New conversation has no checkpoint
+        >>> checkpointer = create_behavioral_checkpointer(
+        ...     has_checkpoint=False
+        ... )
+        >>> state = await checkpointer.aget(config)
+        >>> assert state is None
+
+    Replaces:
+        @patch("mcp_server_langgraph.core.graph.RedisCheckpointer")
+        def test_checkpoint(mock_checkpointer):
+            # 10+ lines of setup...
+    """
+    from unittest.mock import MagicMock
+
+    mock = AsyncMock()
+
+    if has_checkpoint:
+        checkpoint = MagicMock()
+        checkpoint.data = checkpoint_data or {"messages": []}
+        mock.aget.return_value = checkpoint
+    else:
+        mock.aget.return_value = None
+
+    mock.aput = AsyncMock()  # Saving always succeeds
+
+    return mock
+
+
+# ==============================================================================
 # FastAPI Test Client Helpers
 # ==============================================================================
 
 
 def verify_dependency_overrides(
-    app_dependency_overrides: Dict[Any, Any],
+    app_dependency_overrides: dict[Any, Any],
     required_dependencies: list[Any],
 ) -> None:
     """

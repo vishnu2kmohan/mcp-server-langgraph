@@ -16,7 +16,7 @@ Example:
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,7 +33,7 @@ from ..workflow import WorkflowBuilder
 class GenerateCodeRequest(BaseModel):
     """Request to generate code from workflow."""
 
-    workflow: Dict[str, Any]
+    workflow: dict[str, Any]
 
 
 class GenerateCodeResponse(BaseModel):
@@ -41,27 +41,27 @@ class GenerateCodeResponse(BaseModel):
 
     code: str
     formatted: bool
-    warnings: List[str] = []
+    warnings: list[str] = []
 
 
 class ValidateWorkflowRequest(BaseModel):
     """Request to validate workflow."""
 
-    workflow: Dict[str, Any]
+    workflow: dict[str, Any]
 
 
 class ValidateWorkflowResponse(BaseModel):
     """Response with validation results."""
 
     valid: bool
-    errors: List[str] = []
-    warnings: List[str] = []
+    errors: list[str] = []
+    warnings: list[str] = []
 
 
 class SaveWorkflowRequest(BaseModel):
     """Request to save workflow to file."""
 
-    workflow: Dict[str, Any]
+    workflow: dict[str, Any]
     output_path: str
 
     @field_validator("output_path")
@@ -198,8 +198,8 @@ app.add_middleware(
 # ==============================================================================
 
 
-@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-def root() -> Dict[str, Any]:
+@app.get("/")
+def root() -> dict[str, Any]:
     """API information."""
     return {
         "name": "Visual Workflow Builder API",
@@ -214,7 +214,7 @@ def root() -> Dict[str, Any]:
     }
 
 
-@app.post("/api/builder/generate", response_model=GenerateCodeResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/api/builder/generate", response_model=GenerateCodeResponse)
 async def generate_code(
     request: GenerateCodeRequest,
     _auth: None = Depends(verify_builder_auth),
@@ -262,7 +262,7 @@ async def generate_code(
         raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}")
 
 
-@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)
 async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflowResponse:
     """
     Validate workflow structure.
@@ -330,11 +330,11 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
         return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {str(e)}"])
 
 
-@app.post("/api/builder/save")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/api/builder/save")
 async def save_workflow(
     request: SaveWorkflowRequest,
     _auth: None = Depends(verify_builder_auth),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Save workflow to Python file.
 
@@ -372,8 +372,8 @@ async def save_workflow(
         raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
 
 
-@app.get("/api/builder/templates")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-async def list_templates() -> Dict[str, Any]:
+@app.get("/api/builder/templates")
+async def list_templates() -> dict[str, Any]:
     """
     List available workflow templates.
 
@@ -417,8 +417,8 @@ async def list_templates() -> Dict[str, Any]:
     return {"templates": templates}
 
 
-@app.get("/api/builder/templates/{template_id}")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-async def get_template(template_id: str) -> Dict[str, Any]:
+@app.get("/api/builder/templates/{template_id}")
+async def get_template(template_id: str) -> dict[str, Any]:
     """
     Get a specific workflow template.
 
@@ -451,11 +451,11 @@ async def get_template(template_id: str) -> Dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
 
-@app.post("/api/builder/import")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.post("/api/builder/import")
 async def import_workflow(
     request: ImportWorkflowRequest,
     _auth: None = Depends(verify_builder_auth),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Import Python code into visual workflow.
 
@@ -495,8 +495,8 @@ async def import_workflow(
         raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
 
 
-@app.get("/api/builder/node-types")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
-async def list_node_types() -> Dict[str, Any]:
+@app.get("/api/builder/node-types")
+async def list_node_types() -> dict[str, Any]:
     """
     List available node types for the builder.
 
