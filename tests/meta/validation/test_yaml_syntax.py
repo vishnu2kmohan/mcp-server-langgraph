@@ -18,6 +18,17 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
+def get_repo_root() -> Path:
+    """Find repository root with marker validation."""
+    current = Path(__file__).parent
+    markers = [".git", "pyproject.toml"]
+    while current != current.parent:
+        if any((current / m).exists() for m in markers):
+            return current
+        current = current.parent
+    raise RuntimeError("Cannot find repo root")
+
+
 @pytest.mark.xdist_group(name="testprecommitconfigsyntax")
 class TestPreCommitConfigSyntax:
     """Test pre-commit configuration files have valid YAML syntax."""
@@ -35,7 +46,7 @@ class TestPreCommitConfigSyntax:
 
         After fix, should use block scalar syntax (|) for multiline content.
         """
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         assert config_file.exists(), f"Config file not found: {config_file}"
@@ -76,7 +87,7 @@ class TestPreCommitConfigSyntax:
 
     def test_all_workflow_yaml_files_valid(self):
         """Test that all GitHub workflow YAML files are valid."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         workflows_dir = repo_root / ".github" / "workflows"
 
         if not workflows_dir.exists():
@@ -102,7 +113,7 @@ class TestPreCommitConfigSyntax:
         After using block scalar syntax (|), multiline bash scripts should parse
         correctly as strings with embedded newlines.
         """
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         with open(config_file) as f:
@@ -134,7 +145,7 @@ class TestKubernetesYAMLSyntax:
 
     def test_helm_templates_directory_exists(self):
         """Verify Helm templates directory exists."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         templates_dir = repo_root / "deployments" / "helm" / "mcp-server-langgraph" / "templates"
 
         if templates_dir.exists():
@@ -145,7 +156,7 @@ class TestKubernetesYAMLSyntax:
 
     def test_kustomize_overlays_valid_yaml(self):
         """Test that Kustomize overlay files are valid YAML."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         overlays_dir = repo_root / "deployments" / "overlays"
 
         if not overlays_dir.exists():
@@ -179,7 +190,7 @@ class TestYAMLFileEncoding:
 
     def test_yaml_files_utf8_no_bom(self):
         """Test that YAML files are UTF-8 without BOM."""
-        project_root = Path(__file__).parents[3]
+        project_root = get_repo_root()
 
         yaml_files = (
             list(project_root.glob("*.yaml"))
@@ -206,7 +217,7 @@ class TestYAMLIndentation:
 
     def test_yaml_uses_2_space_indentation(self):
         """Test that YAML files use 2-space indentation (not tabs)."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".pre-commit-config-requirements-check.yaml"
 
         with open(config_file) as f:

@@ -18,6 +18,17 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
+def get_repo_root() -> Path:
+    """Find repository root with marker validation."""
+    current = Path(__file__).parent
+    markers = [".git", "pyproject.toml"]
+    while current != current.parent:
+        if any((current / m).exists() for m in markers):
+            return current
+        current = current.parent
+    raise RuntimeError("Cannot find repo root")
+
+
 @pytest.mark.xdist_group(name="testworkflowvalidation")
 class TestWorkflowValidation:
     """Validate GitHub Actions workflows for common issues."""
@@ -29,7 +40,7 @@ class TestWorkflowValidation:
     @pytest.fixture
     def workflows_dir(self) -> Path:
         """Get the workflows directory path."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         return repo_root / ".github" / "workflows"
 
     @pytest.fixture

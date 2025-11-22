@@ -884,7 +884,7 @@ repos:
       '
   - id: validate-repo-root-calculations
     name: Validate Repository Root Path Calculations
-    entry: uv run python scripts/validation/validate_repo_root_calculations.py
+    entry: uv run --active python scripts/validation/validate_repo_root_calculations.py
     language: python
     pass_filenames: false
     files: ^tests/.*\.py$

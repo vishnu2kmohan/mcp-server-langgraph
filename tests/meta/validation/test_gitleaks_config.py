@@ -18,6 +18,17 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def get_repo_root() -> Path:
+    """Find repository root with marker validation."""
+    current = Path(__file__).parent
+    markers = [".git", "pyproject.toml"]
+    while current != current.parent:
+        if any((current / m).exists() for m in markers):
+            return current
+        current = current.parent
+    raise RuntimeError("Cannot find repo root")
+
+
 @pytest.mark.xdist_group(name="testgitleaksconfig")
 class TestGitleaksConfig:
     """Test gitleaks configuration and allowlist."""
@@ -34,13 +45,13 @@ class TestGitleaksConfig:
         After fix, gitleaks should use this config to avoid false positives.
         """
         # Resolve repo root from tests/meta/validation/test_gitleaks_config.py
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".gitleaks.toml"
         assert config_file.exists(), ".gitleaks.toml configuration should exist"
 
     def test_gitleaks_config_valid_toml(self):
         """Test that .gitleaks.toml is valid TOML syntax."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
@@ -64,7 +75,7 @@ class TestGitleaksConfig:
         The .openai/codex-instructions.md file contains example code showing
         what NOT to do (hardcoded secrets). These should be allowlisted.
         """
-        codex_file = Path(__file__).parent.parent / ".openai" / "codex-instructions.md"
+        codex_file = get_repo_root() / ".openai" / "codex-instructions.md"
 
         if not codex_file.exists():
             pytest.skip("Codex instructions file not found")
@@ -72,7 +83,7 @@ class TestGitleaksConfig:
         # Run gitleaks detect with config (should not fail on documentation)
         result = subprocess.run(
             ["gitleaks", "detect", "--config", ".gitleaks.toml", "--no-git", "--source", "."],
-            cwd=Path(__file__).parent.parent,
+            cwd=get_repo_root(),
             capture_output=True,
             text=True,
             timeout=60,
@@ -87,7 +98,7 @@ class TestGitleaksConfig:
 
     def test_gitleaks_ignores_venv_directories(self):
         """Test that gitleaks config excludes .venv and similar directories."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
@@ -116,7 +127,7 @@ class TestGitleaksConfig:
 
     def test_gitleaks_ignores_generated_clients(self):
         """Test that gitleaks config excludes generated client code."""
-        repo_root = Path(__file__).parents[3]
+        repo_root = get_repo_root()
         config_file = repo_root / ".gitleaks.toml"
 
         if not config_file.exists():
@@ -145,7 +156,7 @@ class TestGitleaksConfig:
         # Create a temporary file with a real-looking secret
         # IMPORTANT: Use a filename that is NOT in the .gitleaks.toml allowlist
         # (test_*.tmp is allowlisted, so we use .validation instead)
-        test_file = Path(__file__).parent.parent / "gitleaks-validation-file.txt"
+        test_file = get_repo_root() / "gitleaks-validation-file.txt"
 
         try:
             test_file.write_text(
@@ -159,7 +170,7 @@ DATABASE_PASSWORD=SuperSecretPassword123!
             # Run gitleaks on the entire directory (--source expects a directory, not a file)
             result = subprocess.run(
                 ["gitleaks", "detect", "--config", ".gitleaks.toml", "--no-git"],
-                cwd=Path(__file__).parent.parent,
+                cwd=get_repo_root(),
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -186,7 +197,7 @@ class TestGitleaksWorkflowIntegration:
 
     def test_validate_kubernetes_workflow_uses_gitleaks_config(self):
         """Test that validate-kubernetes.yaml workflow uses .gitleaks.toml."""
-        workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "validate-kubernetes.yaml"
+        workflow_file = get_repo_root() / ".github" / "workflows" / "validate-kubernetes.yaml"
 
         if not workflow_file.exists():
             pytest.skip("Workflow file not found")
@@ -198,7 +209,7 @@ class TestGitleaksWorkflowIntegration:
 
     def test_gcp_compliance_workflow_uses_gitleaks_config(self):
         """Test that gcp-compliance-scan.yaml workflow uses .gitleaks.toml."""
-        workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "gcp-compliance-scan.yaml"
+        workflow_file = get_repo_root() / ".github" / "workflows" / "gcp-compliance-scan.yaml"
 
         if not workflow_file.exists():
             pytest.skip("Workflow file not found")

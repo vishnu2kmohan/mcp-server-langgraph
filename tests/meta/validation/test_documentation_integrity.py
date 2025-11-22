@@ -19,8 +19,20 @@ import pytest
 # Mark this as both unit and meta test to ensure it runs in CI
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
+
+def get_repo_root() -> Path:
+    """Find repository root with marker validation."""
+    current = Path(__file__).parent
+    markers = [".git", "pyproject.toml"]
+    while current != current.parent:
+        if any((current / m).exists() for m in markers):
+            return current
+        current = current.parent
+    raise RuntimeError("Cannot find repo root")
+
+
 # Project root directory
-PROJECT_ROOT = Path(__file__).parents[3]
+PROJECT_ROOT = get_repo_root()
 
 
 @pytest.mark.xdist_group(name="testadrsynchronization")

@@ -24,8 +24,20 @@ import yaml
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
+
+def get_repo_root() -> Path:
+    """Find repository root with marker validation."""
+    current = Path(__file__).parent
+    markers = [".git", "pyproject.toml"]
+    while current != current.parent:
+        if any((current / m).exists() for m in markers):
+            return current
+        current = current.parent
+    raise RuntimeError("Cannot find repo root")
+
+
 # Root directory of the project
-PROJECT_ROOT = Path(__file__).parents[3]
+PROJECT_ROOT = get_repo_root()
 
 
 def find_docker_compose_files() -> list[Path]:
