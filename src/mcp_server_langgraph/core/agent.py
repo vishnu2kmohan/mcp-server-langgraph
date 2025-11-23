@@ -352,8 +352,9 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
                     context_messages = context_loader.to_messages(loaded_contexts)
 
                     # Insert context before user message
-                    messages_before = state["messages"][:-1]
-                    user_message = state["messages"][-1]
+                    current_messages = list(state["messages"])
+                    messages_before = current_messages[:-1]
+                    user_message = current_messages[-1]
                     state["messages"] = messages_before + context_messages + [user_message]
 
                     logger.info(
@@ -382,21 +383,21 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
             # NOTE: Not modifying any state - exclude messages to avoid duplication
             return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
-        messages = state["messages"]
+        messages_list = list(state["messages"])
 
-        if context_manager.needs_compaction(messages):
+        if context_manager.needs_compaction(messages_list):
             try:
                 logger.info("Applying context compaction")
-                result = await context_manager.compact_conversation(messages)
+                result = await context_manager.compact_conversation(messages_list)
 
                 state["messages"] = result.compacted_messages
                 state["compaction_applied"] = True
-                state["original_message_count"] = len(messages)
+                state["original_message_count"] = len(messages_list)
 
                 logger.info(
                     "Context compacted",
                     extra={
-                        "original_messages": len(messages),
+                        "original_messages": len(messages_list),
                         "compacted_messages": len(result.compacted_messages),
                         "compression_ratio": result.compression_ratio,
                     },
@@ -651,6 +652,8 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
         """Generate final response using LLM with Pydantic AI validation"""
         messages = state["messages"]
 
+        messages_list = list(messages)
+
         # Add refinement context if this is a refinement attempt
         refinement_attempts = state.get("refinement_attempts", 0)
         if refinement_attempts > 0 and state.get("verification_feedback"):  # type: ignore[operator]
@@ -660,14 +663,14 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
                 f"{state['verification_feedback']}\n"
                 f"</refinement_guidance>"
             )
-            messages = [refinement_prompt] + messages
+            messages_list = [refinement_prompt] + messages_list
 
         # Use Pydantic AI for structured response if available
         if pydantic_agent:
             try:
                 # Generate type-safe response
                 typed_response = await pydantic_agent.generate_response(
-                    messages,
+                    messages_list,
                     context={
                         "user_id": state.get("user_id", "unknown"),
                         "routing_confidence": str(state.get("routing_confidence", 0.0)),
@@ -690,10 +693,10 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
             except Exception as e:
                 logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
                 # Fallback to standard LLM (use async invoke)
-                response = await model.ainvoke(messages)
+                response = await model.ainvoke(messages_list)
         else:
             # Standard LLM response (use async invoke)
-            response = await model.ainvoke(messages)
+            response = await model.ainvoke(messages_list)
 
         # NOTE: Returning [response] (not state["messages"] + [response]) is correct here.
         # Lang Graph's operator.add annotation on AgentState.messages (line 77) automatically
@@ -722,7 +725,7 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
         user_request = state.get("user_request") or ""
 
         # Get conversation context (excluding the response we're verifying)
-        conversation_context = state["messages"][:-1]
+        conversation_context = list(state["messages"])[:-1]
 
         try:
             logger.info("Verifying response quality")
