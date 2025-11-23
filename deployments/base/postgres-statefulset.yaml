@@ -214,6 +214,10 @@ spec:
         - name: gdpr-schema
           mountPath: /docker-entrypoint-initdb.d/001_gdpr_schema.sql
           subPath: 001_gdpr_schema.sql
+        - name: tmp
+          mountPath: /tmp
+        - name: run
+          mountPath: /var/run/postgresql
         startupProbe:
           exec:
             command:
@@ -255,8 +259,7 @@ spec:
             ephemeral-storage: 1Gi
         securityContext:
           allowPrivilegeEscalation: false
-          # trivy:ignore:AVD-KSV-0014
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:
@@ -272,6 +275,10 @@ spec:
         configMap:
           name: postgres-gdpr-schema
           defaultMode: 420
+      - name: tmp
+        emptyDir: {}
+      - name: run
+        emptyDir: {}
   volumeClaimTemplates:
   - metadata:
       name: postgres-data

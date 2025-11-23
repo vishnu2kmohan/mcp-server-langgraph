@@ -6,6 +6,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tests.conftest import get_user_id
 from openfga_sdk import OpenFgaClient
 from openfga_sdk.client.models import ClientWriteRequest
 
@@ -50,7 +51,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient(api_url="http://localhost:8080", store_id="test-store", model_id="test-model")
 
-        result = await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
+        result = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
 
         assert result is True
         mock_instance.check.assert_called_once()
@@ -69,7 +70,7 @@ class TestOpenFGAClient:
         mock_sdk_client.return_value = mock_instance
 
         client = OpenFGAClient()
-        result = await client.check_permission(user="user:bob", relation="admin", object="organization:acme")
+        result = await client.check_permission(user=get_user_id("bob"), relation="admin", object="organization:acme")
 
         assert result is False
 
@@ -88,7 +89,7 @@ class TestOpenFGAClient:
 
         # After resilience decorators, exceptions are wrapped in RetryExhaustedError
         with pytest.raises(RetryExhaustedError, match="Retry exhausted after 3 attempts"):
-            await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
+            await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
@@ -103,8 +104,8 @@ class TestOpenFGAClient:
         client = OpenFGAClient()
 
         tuples = [
-            {"user": "user:alice", "relation": "executor", "object": "tool:chat"},
-            {"user": "user:bob", "relation": "member", "object": "organization:acme"},
+            {"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"},
+            {"user": get_user_id("bob"), "relation": "member", "object": "organization:acme"},
         ]
 
         await client.write_tuples(tuples)
@@ -127,7 +128,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
+        tuples = [{"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"}]
 
         # After resilience decorators, exceptions are wrapped in RetryExhaustedError
         with pytest.raises(RetryExhaustedError, match="Retry exhausted after 3 attempts"):
@@ -145,7 +146,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
+        tuples = [{"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"}]
 
         await client.delete_tuples(tuples)
 
@@ -166,7 +167,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        tuples = [{"user": "user:alice", "relation": "executor", "object": "tool:chat"}]
+        tuples = [{"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"}]
 
         with pytest.raises(Exception, match="Delete failed"):
             await client.delete_tuples(tuples)
@@ -186,7 +187,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        result = await client.list_objects(user="user:alice", relation="executor", object_type="tool")
+        result = await client.list_objects(user=get_user_id("alice"), relation="executor", object_type="tool")
 
         assert len(result) == 3
         assert "tool:chat" in result
@@ -208,7 +209,7 @@ class TestOpenFGAClient:
 
         client = OpenFGAClient()
 
-        result = await client.list_objects(user="user:bob", relation="admin", object_type="organization")
+        result = await client.list_objects(user=get_user_id("bob"), relation="admin", object_type="organization")
 
         assert result == []
 
@@ -225,7 +226,7 @@ class TestOpenFGAClient:
         client = OpenFGAClient()
 
         with pytest.raises(Exception, match="List failed"):
-            await client.list_objects(user="user:alice", relation="executor", object_type="tool")
+            await client.list_objects(user=get_user_id("alice"), relation="executor", object_type="tool")
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
@@ -235,7 +236,7 @@ class TestOpenFGAClient:
 
         mock_tree = MagicMock()
         mock_tree.model_dump.return_value = {
-            "root": {"name": "tool:chat#executor", "leaf": {"users": {"users": ["user:alice", "user:bob"]}}}
+            "root": {"name": "tool:chat#executor", "leaf": {"users": {"users": [get_user_id("alice"), get_user_id("bob")]}}}
         }
 
         mock_response = MagicMock()
@@ -462,21 +463,21 @@ class TestOpenFGAIntegration:
         )
 
         # Write relationship
-        await client.write_tuples([{"user": "user:alice", "relation": "executor", "object": "tool:chat"}])
+        await client.write_tuples([{"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"}])
 
         # Check permission
-        allowed = await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
+        allowed = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
         assert allowed is True
 
         # List objects
-        tools = await client.list_objects(user="user:alice", relation="executor", object_type="tool")
+        tools = await client.list_objects(user=get_user_id("alice"), relation="executor", object_type="tool")
         assert "tool:chat" in tools
 
         # Delete relationship
-        await client.delete_tuples([{"user": "user:alice", "relation": "executor", "object": "tool:chat"}])
+        await client.delete_tuples([{"user": get_user_id("alice"), "relation": "executor", "object": "tool:chat"}])
 
         # Verify permission removed
-        allowed = await client.check_permission(user="user:alice", relation="executor", object="tool:chat")
+        allowed = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:chat")
         assert allowed is False
 
 
@@ -548,7 +549,9 @@ class TestOpenFGACircuitBreakerCriticality:
         # Trigger circuit breaker to open (10 failures)
         for _ in range(15):
             try:
-                await client.check_permission(user="user:alice", relation="admin", object="system:critical", critical=True)
+                await client.check_permission(
+                    user=get_user_id("alice"), relation="admin", object="system:critical", critical=True
+                )
             except Exception:
                 pass  # Ignore errors, just trigger circuit breaker
 
@@ -560,7 +563,9 @@ class TestOpenFGACircuitBreakerCriticality:
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
 
         # Now check permission for critical resource - should return False (fail-closed)
-        result = await client.check_permission(user="user:alice", relation="admin", object="system:critical", critical=True)
+        result = await client.check_permission(
+            user=get_user_id("alice"), relation="admin", object="system:critical", critical=True
+        )
 
         assert result is False  # CRITICAL: Must deny access when circuit is open
 
@@ -596,7 +601,9 @@ class TestOpenFGACircuitBreakerCriticality:
         # Trigger circuit breaker to open (10 failures)
         for _ in range(15):
             try:
-                await client.check_permission(user="user:alice", relation="viewer", object="content:public", critical=False)
+                await client.check_permission(
+                    user=get_user_id("alice"), relation="viewer", object="content:public", critical=False
+                )
             except Exception:
                 pass  # Ignore errors, just trigger circuit breaker
 
@@ -608,7 +615,9 @@ class TestOpenFGACircuitBreakerCriticality:
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
 
         # Now check permission for non-critical resource - should return True (fail-open)
-        result = await client.check_permission(user="user:alice", relation="viewer", object="content:public", critical=False)
+        result = await client.check_permission(
+            user=get_user_id("alice"), relation="viewer", object="content:public", critical=False
+        )
 
         assert result is True  # Allow access for non-critical resources
 
@@ -645,7 +654,7 @@ class TestOpenFGACircuitBreakerCriticality:
         for _ in range(15):
             try:
                 # Call without critical parameter (should default to True)
-                await client.check_permission(user="user:alice", relation="executor", object="tool:sensitive")
+                await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:sensitive")
             except Exception:
                 pass  # Ignore errors, just trigger circuit breaker
 
@@ -657,7 +666,7 @@ class TestOpenFGACircuitBreakerCriticality:
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
 
         # Check permission without specifying critical parameter
-        result = await client.check_permission(user="user:alice", relation="executor", object="tool:sensitive")
+        result = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:sensitive")
 
         # Should default to critical=True (fail-closed)
         assert result is False
@@ -689,10 +698,10 @@ class TestOpenFGACircuitBreakerCriticality:
 
         # Check both critical and non-critical - both should return OpenFGA response
         result_critical = await client.check_permission(
-            user="user:alice", relation="admin", object="system:critical", critical=True
+            user=get_user_id("alice"), relation="admin", object="system:critical", critical=True
         )
         result_non_critical = await client.check_permission(
-            user="user:alice", relation="viewer", object="content:public", critical=False
+            user=get_user_id("alice"), relation="viewer", object="content:public", critical=False
         )
 
         assert result_critical is True  # OpenFGA allowed
@@ -720,13 +729,13 @@ class TestOpenFGAExpansionTree:
         from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
 
         # Given: Leaf expansion (single user) - direct structure, no tree/root wrapper
-        expansion = {"leaf": {"users": {"users": ["user:alice"]}}}
+        expansion = {"leaf": {"users": {"users": [get_user_id("alice")]}}}
 
         # When: Extract users
         users = _extract_users_from_expansion(expansion)
 
         # Then: Should extract alice
-        assert "user:alice" in users
+        assert get_user_id("alice") in users
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -740,8 +749,8 @@ class TestOpenFGAExpansionTree:
         expansion = {
             "union": {
                 "nodes": [
-                    {"leaf": {"users": {"users": ["user:alice"]}}},
-                    {"leaf": {"users": {"users": ["user:bob"]}}},
+                    {"leaf": {"users": {"users": [get_user_id("alice")]}}},
+                    {"leaf": {"users": {"users": [get_user_id("bob")]}}},
                 ]
             }
         }
@@ -750,8 +759,8 @@ class TestOpenFGAExpansionTree:
         users = _extract_users_from_expansion(expansion)
 
         # Then: Should extract both users
-        assert "user:alice" in users
-        assert "user:bob" in users
+        assert get_user_id("alice") in users
+        assert get_user_id("bob") in users
 
     @pytest.mark.asyncio
     @pytest.mark.unit
@@ -768,8 +777,8 @@ class TestOpenFGAExpansionTree:
                     {
                         "union": {
                             "nodes": [
-                                {"leaf": {"users": {"users": ["user:alice"]}}},
-                                {"leaf": {"users": {"users": ["user:bob"]}}},
+                                {"leaf": {"users": {"users": [get_user_id("alice")]}}},
+                                {"leaf": {"users": {"users": [get_user_id("bob")]}}},
                             ]
                         }
                     },
@@ -782,8 +791,8 @@ class TestOpenFGAExpansionTree:
         users = _extract_users_from_expansion(expansion)
 
         # Then: Should extract all users from nested tree
-        assert "user:alice" in users
-        assert "user:bob" in users
+        assert get_user_id("alice") in users
+        assert get_user_id("bob") in users
         assert "user:charlie" in users
 
     @pytest.mark.asyncio

@@ -11,7 +11,7 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 """
 
 import operator
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Annotated, Any, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -74,7 +74,7 @@ class AgentState(TypedDict):
     - Metadata: user_id, request_id
     """
 
-    messages: Annotated[list[BaseMessage], operator.add]
+    messages: Annotated[Sequence[BaseMessage], operator.add]
     next_action: str
     user_id: str | None
     request_id: str | None

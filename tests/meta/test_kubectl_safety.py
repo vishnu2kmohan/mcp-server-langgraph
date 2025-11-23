@@ -20,28 +20,35 @@ pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
+def _is_marker_node(node, marker_name: str) -> bool:
+    """Check if an AST node represents a specific pytest marker."""
+    # Case 1: @pytest.mark.marker_name(...) (Call)
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Attribute)
+        and node.func.value.attr == "mark"
+        and node.func.attr == marker_name
+    ):
+        return True
+    # Case 2: @pytest.mark.marker_name (Attribute)
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "mark"
+        and node.attr == marker_name
+    ):
+        return True
+    # Case 3: @marker_name (Name)
+    if isinstance(node, ast.Name) and node.id == marker_name:
+        return True
+    return False
+
+
 def _has_pytest_marker(node, marker_name: str) -> bool:
     """Check if an AST node (FunctionDef or ClassDef) has a specific pytest marker."""
     for dec in node.decorator_list:
-        # Case 1: @pytest.mark.marker_name
-        if (
-            isinstance(dec, ast.Call)
-            and isinstance(dec.func, ast.Attribute)
-            and isinstance(dec.func.value, ast.Attribute)
-            and dec.func.value.attr == "mark"
-            and dec.func.attr == marker_name
-        ):
-            return True
-        # Case 2: @pytest.mark.marker_name (no parenthesis)
-        if (
-            isinstance(dec, ast.Attribute)
-            and isinstance(dec.value, ast.Attribute)
-            and dec.value.attr == "mark"
-            and dec.attr == marker_name
-        ):
-            return True
-        # Case 3: @marker_name (if imported directly, e.g., from pytest import fixture, mark)
-        if isinstance(dec, ast.Name) and dec.id == marker_name:
+        if _is_marker_node(dec, marker_name):
             return True
     return False
 
@@ -113,7 +120,7 @@ class TestKubectlSafetyEnforcement:
                             import re
 
                             # Pattern for list-style commands: ["kubectl", "apply"
-                            list_pattern = rf'\\["kubectl",\s*"{operation.split()[1]}"'
+                            list_pattern = rf'\["kubectl",\s*"{operation.split()[1]}"'
                             # Pattern for string commands: "kubectl apply" or 'kubectl apply'
                             string_pattern = rf'["\"]kubectl\s+{operation.split()[1]}["\"]'
 
@@ -185,7 +192,7 @@ class TestKubectlSafetyEnforcement:
                         if isinstance(target, ast.Name) and target.id == "pytestmark":
                             if isinstance(item.value, (ast.List, ast.Tuple)):
                                 for element in item.value.elts:
-                                    if _has_pytest_marker(element, "requires_kubectl"):
+                                    if _is_marker_node(element, "requires_kubectl"):
                                         has_module_level_marker = True
                                         break
                     if has_module_level_marker:

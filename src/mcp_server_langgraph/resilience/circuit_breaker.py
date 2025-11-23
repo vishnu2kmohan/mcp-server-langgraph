@@ -257,9 +257,11 @@ def circuit_breaker(  # noqa: C901
                         if fallback:
                             logger.info(f"Using fallback for {name}")
                             if asyncio.iscoroutinefunction(fallback):
-                                return await fallback(*args, **kwargs)
+                                res = await fallback(*args, **kwargs)
+                                return cast(T, res)
                             else:
-                                return fallback(*args, **kwargs)  # type: ignore[no-any-return]
+                                res = fallback(*args, **kwargs)
+                                return cast(T, res)
                         else:
                             # Raise our custom exception
                             from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
@@ -335,7 +337,8 @@ def circuit_breaker(  # noqa: C901
                 return result
             except pybreaker.CircuitBreakerError as e:
                 if fallback:
-                    return fallback(*args, **kwargs)  # type: ignore[no-any-return]
+                    res = fallback(*args, **kwargs)
+                    return cast(T, res)
                 else:
                     from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError
 

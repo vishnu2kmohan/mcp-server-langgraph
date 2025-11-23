@@ -6,6 +6,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tests.conftest import get_user_id
 from langchain_core.messages import AIMessage, HumanMessage
 
 pytestmark = pytest.mark.integration
@@ -27,13 +28,13 @@ class TestAgentState:
         state: AgentState = {
             "messages": [HumanMessage(content="Hello")],
             "next_action": "respond",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-123",
         }
 
         assert len(state["messages"]) == 1
         assert state["next_action"] == "respond"
-        assert state["user_id"] == "user:alice"
+        assert state["user_id"] == get_user_id("alice")
         assert state["request_id"] == "req-123"
 
 
@@ -75,7 +76,7 @@ class TestAgentGraph:
         initial_state = {
             "messages": [HumanMessage(content="Hello, what can you do?")],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-123",
         }
 
@@ -100,7 +101,7 @@ class TestAgentGraph:
         initial_state = {
             "messages": [HumanMessage(content="Please search for information about Python")],
             "next_action": "",
-            "user_id": "user:bob",
+            "user_id": get_user_id("bob"),
             "request_id": "req-456",
         }
 
@@ -124,7 +125,7 @@ class TestAgentGraph:
         initial_state = {
             "messages": [HumanMessage(content="Calculate 2 + 2")],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-789",
         }
 
@@ -151,7 +152,7 @@ class TestAgentGraph:
                 HumanMessage(content="Tell me more"),
             ],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-999",
         }
 
@@ -177,7 +178,7 @@ class TestAgentGraph:
         state1 = {
             "messages": [HumanMessage(content="First message")],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-1",
         }
         result1 = await graph.ainvoke(state1, config={"configurable": {"thread_id": thread_id}})
@@ -186,7 +187,7 @@ class TestAgentGraph:
         state2 = {
             "messages": [HumanMessage(content="Second message")],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-2",
         }
         result2 = await graph.ainvoke(state2, config={"configurable": {"thread_id": thread_id}})
@@ -204,7 +205,7 @@ class TestAgentGraph:
         state: AgentState = {
             "messages": [HumanMessage(content="First")],
             "next_action": "respond",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-1",
         }
 
@@ -231,7 +232,7 @@ class TestAgentGraph:
         initial_state = {
             "messages": [HumanMessage(content="Test message")],
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "req-test",
         }
 
@@ -255,7 +256,7 @@ class TestAgentGraph:
         initial_state = {
             "messages": [HumanMessage(content="Test message")],
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "req-test",
         }
 
@@ -279,7 +280,7 @@ class TestAgentGraph:
         state_search = {
             "messages": [HumanMessage(content="Please search for information")],
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "req-test",
         }
 
@@ -306,7 +307,7 @@ class TestAgentGraph:
         state_empty = {
             "messages": [HumanMessage(content="")],
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "req-empty",
         }
 
@@ -370,7 +371,7 @@ class TestAgentGraph:
         state_long = {
             "messages": long_history,
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "req-long",
         }
 
@@ -411,7 +412,7 @@ class TestAgentIntegration:
         initial_state = {
             "messages": [HumanMessage(content="Test message")],
             "next_action": "",
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "request_id": "req-lazy-test",
         }
 
@@ -452,7 +453,7 @@ class TestAgentIntegration:
         state = {
             "messages": [HumanMessage(content="What is 2+2?")],
             "next_action": "",
-            "user_id": "user:test",
+            "user_id": get_user_id("test"),
             "request_id": "integration-test",
         }
 

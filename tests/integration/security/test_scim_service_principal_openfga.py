@@ -22,6 +22,7 @@ import gc
 from unittest.mock import AsyncMock
 
 import pytest
+from tests.conftest import get_user_id
 from fastapi import HTTPException
 
 from mcp_server_langgraph.api.scim import _require_admin_or_scim_role
@@ -54,7 +55,7 @@ class TestSCIMOpenFGAIntegration:
 
         # User with OpenFGA relation but not admin/scim-provisioner role
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],  # NOT admin or scim-provisioner
         }
@@ -85,7 +86,7 @@ class TestSCIMOpenFGAIntegration:
         mock_openfga.check_permission.return_value = False  # Deny
 
         current_user = {
-            "user_id": "user:bob",
+            "user_id": get_user_id("bob"),
             "username": "bob",
             "roles": ["user", "premium"],  # Has roles but not authorized
         }
@@ -140,7 +141,7 @@ class TestServicePrincipalOpenFGAIntegration:
 
         # User trying to create SP for another user
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],  # NOT admin
         }
@@ -149,8 +150,7 @@ class TestServicePrincipalOpenFGAIntegration:
         try:
             await _validate_user_association_permission(
                 current_user=current_user,
-                target_user_id="user:bob",
-                openfga=mock_openfga,
+                target_user_id=get_user_id("bob"),
             )
             # Should succeed if OpenFGA is integrated (returns True)
         except (HTTPException, TypeError):
@@ -171,7 +171,7 @@ class TestServicePrincipalOpenFGAIntegration:
         mock_openfga.check_permission.return_value = False  # Deny delegation
 
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],  # Not admin
         }
@@ -196,7 +196,7 @@ class TestServicePrincipalOpenFGAIntegration:
         This should work regardless of OpenFGA (basic user self-service).
         """
         current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "roles": ["user"],
         }
@@ -205,7 +205,7 @@ class TestServicePrincipalOpenFGAIntegration:
         try:
             await _validate_user_association_permission(
                 current_user=current_user,
-                target_user_id="user:alice",  # Same user
+                target_user_id=get_user_id("alice"),  # Same user
                 openfga=None,  # Not needed for self-association
             )
             # Should succeed

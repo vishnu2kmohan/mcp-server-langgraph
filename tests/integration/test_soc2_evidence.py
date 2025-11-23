@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tests.conftest import get_user_id
 
 from mcp_server_langgraph.compliance.soc2.evidence import (
     ComplianceReport,
@@ -440,7 +441,7 @@ class TestAccessReview:
     async def test_access_review_item_validation(self):
         """Test access review item validation"""
         item = AccessReviewItem(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             roles=["admin", "user"],
             active_sessions=2,
@@ -449,7 +450,7 @@ class TestAccessReview:
             review_status="approved",
         )
 
-        assert item.user_id == "user:alice"
+        assert item.user_id == get_user_id("alice")
         assert "admin" in item.roles
         assert item.active_sessions == 2
         assert item.account_status == "active"
