@@ -146,6 +146,21 @@ class TestDockerComposeHealthChecks:
         },
     }
 
+    # Commands known to be available in specific images or services
+    # These are exceptions to the PROBLEMATIC_COMMANDS warning
+    ALLOWED_COMMANDS = {
+        # Image pattern -> allowed commands
+        "openfga/openfga": ["wget"],
+        "keycloak/keycloak": ["curl"],
+        "jaegertracing/all-in-one": ["wget", "nc"],
+        "prom/prometheus": ["wget"],
+        "prom/alertmanager": ["wget"],
+        "grafana/grafana": ["wget"],
+        # Service name -> allowed commands (for local builds or alias)
+        "agent": ["wget"],
+        "mcp-server-test": ["curl"],
+    }
+
     @pytest.mark.parametrize("compose_file", find_docker_compose_files())
     def test_health_checks_avoid_problematic_commands(self, compose_file: Path):
         """
@@ -173,6 +188,22 @@ class TestDockerComposeHealthChecks:
 
             # Extract base command (e.g., "/usr/bin/wget" -> "wget")
             base_command = Path(command).name
+
+            # Check if command is allowed for this specific service/image
+            image = service_config.get("image", "")
+            allowed_for_service = []
+
+            # Check by service name
+            if service_name in self.ALLOWED_COMMANDS:
+                allowed_for_service.extend(self.ALLOWED_COMMANDS[service_name])
+
+            # Check by image name
+            for image_pattern, allowed_cmds in self.ALLOWED_COMMANDS.items():
+                if image_pattern in image:
+                    allowed_for_service.extend(allowed_cmds)
+
+            if base_command in allowed_for_service:
+                continue
 
             if base_command in self.PROBLEMATIC_COMMANDS:
                 reason = self.PROBLEMATIC_COMMANDS[base_command]
