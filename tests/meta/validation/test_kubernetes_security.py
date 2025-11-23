@@ -46,19 +46,29 @@ class TestSecurityContexts:
         This test will initially FAIL because security contexts are missing.
         After fix, all containers should have this critical security setting.
 
-        **EXCEPTION: Keycloak**
+        **EXCEPTION: Keycloak (staging-gke overlay only)**
         Keycloak requires readOnlyRootFilesystem: false due to Quarkus JIT compilation.
-        This is documented in deployments/overlays/staging-gke/.trivyignore (AVD-KSV-0014).
+
+        Current Status:
+        - staging-gke: readOnlyRootFilesystem: false ✅ (deployed and working)
+        - base: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
+        - production-gke: readOnlyRootFilesystem: true ❌ (not deployed, needs fix)
+
+        This is documented in:
+        - deployments/overlays/staging-gke/.trivyignore (comprehensive AVD-KSV-0014 documentation)
+        - .trivyignore (root - staging-gke exception only)
 
         Security mitigations for Keycloak:
         - emptyDir volumes (ephemeral, isolated per pod)
-        - runAsNonRoot: true, runAsUser: 1000
+        - runAsNonRoot: true, runAsUser: 10000
         - allowPrivilegeEscalation: false
         - capabilities.drop: ALL
 
         See: https://github.com/keycloak/keycloak/issues/10150 (upstream tracking)
         """
         # Documented exceptions (see .trivyignore for detailed justification)
+        # Note: This exception should apply to ALL environments when they are deployed,
+        # but currently only staging-gke is configured correctly
         READONLY_FILESYSTEM_EXCEPTIONS = {
             "keycloak": "Quarkus JIT compilation requires writable filesystem (AVD-KSV-0014)",
         }

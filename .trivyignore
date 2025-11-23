@@ -12,14 +12,19 @@ AVD-KSV-0109: deployments/argocd/gcp-production-app.yaml
 # dynamic_context_max_tokens and model_max_tokens are configuration, not secrets.
 AVD-KSV-0109: deployments/base/configmap.yaml
 
-# Suppress readOnlyRootFilesystem findings for now, as they are addressed programmatically
+# Suppress readOnlyRootFilesystem findings for overlays/patches
 # AVD-KSV-0014: Container should set 'securityContext.readOnlyRootFilesystem' to true
+#
+# Note: Base deployments (deployments/base/*) all have readOnlyRootFilesystem: true
+# with appropriate volume mounts (tmpfs/emptyDir for writable paths, persistent volumes for data).
+#
+# The following suppressions are for Kustomize overlay patches which may override
+# base settings. Most patches don't change readOnlyRootFilesystem, so these suppressions
+# prevent false positives when Trivy scans patch files in isolation.
 
-# Keycloak (See internal documentation/comments for justification - JIT compilation)
-AVD-KSV-0014: deployments/base/keycloak-deployment.yaml
-
-# Postgres (Needs writable data directory)
-AVD-KSV-0014: deployments/base/postgres-statefulset.yaml
+# Keycloak staging-gke: Requires readOnlyRootFilesystem: false for Quarkus JIT compilation
+# See deployments/overlays/staging-gke/.trivyignore for comprehensive security justification
+AVD-KSV-0014: deployments/overlays/staging-gke/keycloak-patch.yaml
 
 # Existing patch ignores
 AVD-KSV-0014: deployments/overlays/production-gke/deployment-patch.yaml

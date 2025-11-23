@@ -4,6 +4,14 @@ Deployment Validation: Keycloak readOnlyRootFilesystem Configuration
 Tests that Keycloak deployment correctly uses `readOnlyRootFilesystem: false` across
 all environments (base, staging, production) to support Quarkus JIT compilation.
 
+CURRENT STATUS (as of 2025-11-23):
+- Staging-gke: readOnlyRootFilesystem: false ✅ (DEPLOYED and PASSING)
+- Base: readOnlyRootFilesystem: true ❌ (NOT deployed, FAILING test - needs fix)
+- Production-gke: readOnlyRootFilesystem: true ❌ (NOT deployed, FAILING test - needs fix)
+
+These tests define the INTENDED configuration. Base and production-gke deployments
+need to be updated to match staging-gke's working configuration.
+
 Context:
 - Keycloak uses Quarkus framework which performs JIT compilation at runtime
 - JIT compilation requires write access to filesystem (cannot use readOnlyRootFilesystem: true)
@@ -11,16 +19,17 @@ Context:
 - See deployments/base/.trivyignore (AVD-KSV-0014) for full security justification
 
 Test Coverage:
-1. Base deployment has readOnlyRootFilesystem: false in securityContext
-2. Production overlay has readOnlyRootFilesystem: false in securityContext
-3. Staging overlay has readOnlyRootFilesystem: false in securityContext (if exists)
-4. All deployments have comprehensive inline documentation explaining why
-5. All deployments have proper security mitigations (emptyDir volumes, runAsNonRoot, etc.)
+1. Base deployment SHOULD have readOnlyRootFilesystem: false (currently true - needs fix)
+2. Production overlay SHOULD have readOnlyRootFilesystem: false (currently true - needs fix)
+3. Staging overlay HAS readOnlyRootFilesystem: false ✅ (correct)
+4. All deployments should have comprehensive inline documentation
+5. All deployments should have proper security mitigations (emptyDir volumes, runAsNonRoot, etc.)
 
 References:
 - ADR-0056: Database Architecture and Naming Convention
 - GitHub issue #10150: Keycloak/Quarkus readOnlyRootFilesystem incompatibility
 - deployments/base/.trivyignore: AVD-KSV-0014 suppression documentation
+- deployments/overlays/staging-gke/.trivyignore: Comprehensive security justification
 """
 
 import gc
