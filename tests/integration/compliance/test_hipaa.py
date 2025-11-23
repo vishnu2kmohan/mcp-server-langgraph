@@ -10,6 +10,7 @@ Covers HIPAA Security Rule technical safeguards:
 import gc
 
 import pytest
+from tests.conftest import get_user_id
 
 pytestmark = pytest.mark.integration
 
@@ -40,15 +41,15 @@ class TestEmergencyAccess:
         controls = HIPAAControls()
 
         grant = await controls.grant_emergency_access(
-            user_id="user:doctor_smith",
+            user_id=get_user_id("doctor_smith"),
             reason="Patient emergency - cardiac arrest in ER requiring immediate access",
-            approver_id="user:supervisor_jones",
+            approver_id=get_user_id("supervisor_jones"),
             duration_hours=2,
             access_level="PHI",
         )
 
-        assert grant.user_id == "user:doctor_smith"
-        assert grant.approver_id == "user:supervisor_jones"
+        assert grant.user_id == get_user_id("doctor_smith")
+        assert grant.approver_id == get_user_id("supervisor_jones")
         assert grant.access_level == "PHI"
         assert grant.revoked is False
         assert grant.revoked_at is None
@@ -65,9 +66,9 @@ class TestEmergencyAccess:
         # Reason too short (< 10 characters)
         with pytest.raises(Exception):  # Pydantic validation error
             await controls.grant_emergency_access(
-                user_id="user:doctor",
+                user_id=get_user_id("doctor"),
                 reason="urgent",  # Too short
-                approver_id="user:supervisor",
+                approver_id=get_user_id("supervisor"),
                 duration_hours=2,
             )
 
@@ -78,25 +79,25 @@ class TestEmergencyAccess:
 
         # Test minimum duration (1 hour)
         grant1 = await controls.grant_emergency_access(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Emergency case requiring immediate access to patient records",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=1,
         )
         # Verify grant was created with proper structure
         assert grant1.grant_id.startswith("emergency_")
-        assert grant1.user_id == "user:doctor"
+        assert grant1.user_id == get_user_id("doctor")
 
         # Test maximum duration (24 hours)
         grant2 = await controls.grant_emergency_access(
-            user_id="user:doctor2",
+            user_id=get_user_id("doctor2"),
             reason="Extended emergency coverage for 24-hour shift rotation",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=24,
         )
         # Verify grant was created
         assert grant2.grant_id.startswith("emergency_")
-        assert grant2.user_id == "user:doctor2"
+        assert grant2.user_id == get_user_id("doctor2")
 
     @pytest.mark.asyncio
     async def test_revoke_emergency_access(self):
@@ -105,14 +106,14 @@ class TestEmergencyAccess:
 
         # Grant access
         grant = await controls.grant_emergency_access(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Patient emergency requiring immediate access to medical history",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=2,
         )
 
         # Revoke access
-        result = await controls.revoke_emergency_access(grant.grant_id, "user:admin")
+        result = await controls.revoke_emergency_access(grant.grant_id, get_user_id("admin"))
 
         assert result is True
         assert controls._emergency_grants[grant.grant_id].revoked is True
@@ -123,7 +124,7 @@ class TestEmergencyAccess:
         """Test revoking non-existent grant"""
         controls = HIPAAControls()
 
-        result = await controls.revoke_emergency_access("invalid_grant_id", "user:admin")
+        result = await controls.revoke_emergency_access("invalid_grant_id", get_user_id("admin"))
 
         assert result is False
 
@@ -134,17 +135,17 @@ class TestEmergencyAccess:
 
         # Grant access
         await controls.grant_emergency_access(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Patient emergency requiring access to complete medical records",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=2,
         )
 
         # Check access
-        grant = await controls.check_emergency_access("user:doctor")
+        grant = await controls.check_emergency_access(get_user_id("doctor"))
 
         assert grant is not None
-        assert grant.user_id == "user:doctor"
+        assert grant.user_id == get_user_id("doctor")
         assert grant.revoked is False
 
     @pytest.mark.asyncio
@@ -154,15 +155,15 @@ class TestEmergencyAccess:
 
         # Grant and revoke access
         grant = await controls.grant_emergency_access(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Emergency access for critical patient care situation",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=2,
         )
-        await controls.revoke_emergency_access(grant.grant_id, "user:admin")
+        await controls.revoke_emergency_access(grant.grant_id, get_user_id("admin"))
 
         # Check access
-        active_grant = await controls.check_emergency_access("user:doctor")
+        active_grant = await controls.check_emergency_access(get_user_id("doctor"))
 
         assert active_grant is None
 
@@ -171,7 +172,7 @@ class TestEmergencyAccess:
         """Test checking emergency access with no grants"""
         controls = HIPAAControls()
 
-        grant = await controls.check_emergency_access("user:unknown")
+        grant = await controls.check_emergency_access(get_user_id("unknown"))
 
         assert grant is None
 
@@ -191,7 +192,7 @@ class TestPHIAuditLogging:
         controls = HIPAAControls()
 
         await controls.log_phi_access(
-            user_id="user:doctor_smith",
+            user_id=get_user_id("doctor_smith"),
             action="read",
             patient_id="patient:12345",
             resource_id="medical_record:67890",
@@ -226,7 +227,7 @@ class TestPHIAuditLogging:
         controls = HIPAAControls()
 
         await controls.log_phi_access(
-            user_id="user:admin",
+            user_id=get_user_id("admin"),
             action="list",
             patient_id=None,  # Optional
             resource_id=None,  # Optional
@@ -360,22 +361,22 @@ class TestPydanticModels:
         """Test EmergencyAccessRequest validation"""
         # Valid request
         request = EmergencyAccessRequest(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Patient emergency requiring immediate medical record access",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=2,
         )
 
-        assert request.user_id == "user:doctor"
+        assert request.user_id == get_user_id("doctor")
         assert len(request.reason) >= 10
 
     def test_emergency_access_request_reason_too_short(self):
         """Test validation fails for short reason"""
         with pytest.raises(Exception):  # Pydantic validation error
             EmergencyAccessRequest(
-                user_id="user:doctor",
+                user_id=get_user_id("doctor"),
                 reason="urgent",  # < 10 characters
-                approver_id="user:supervisor",
+                approver_id=get_user_id("supervisor"),
                 duration_hours=2,
             )
 
@@ -383,33 +384,33 @@ class TestPydanticModels:
         """Test duration validation (1-24 hours)"""
         # Valid durations
         EmergencyAccessRequest(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Emergency access required for patient care",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=1,  # Minimum
         )
 
         EmergencyAccessRequest(
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             reason="Emergency access required for patient care",
-            approver_id="user:supervisor",
+            approver_id=get_user_id("supervisor"),
             duration_hours=24,  # Maximum
         )
 
         # Invalid durations
         with pytest.raises(Exception):
             EmergencyAccessRequest(
-                user_id="user:doctor",
+                user_id=get_user_id("doctor"),
                 reason="Emergency access required for patient care",
-                approver_id="user:supervisor",
+                approver_id=get_user_id("supervisor"),
                 duration_hours=0,  # Too low
             )
 
         with pytest.raises(Exception):
             EmergencyAccessRequest(
-                user_id="user:doctor",
+                user_id=get_user_id("doctor"),
                 reason="Emergency access required for patient care",
-                approver_id="user:supervisor",
+                approver_id=get_user_id("supervisor"),
                 duration_hours=25,  # Too high
             )
 
@@ -417,7 +418,7 @@ class TestPydanticModels:
         """Test PHIAuditLog model"""
         log = PHIAuditLog(
             timestamp="2025-10-13T12:00:00Z",
-            user_id="user:doctor",
+            user_id=get_user_id("doctor"),
             action="read",
             phi_accessed=True,
             patient_id="patient:123",

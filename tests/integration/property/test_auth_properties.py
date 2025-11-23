@@ -278,7 +278,7 @@ class TestAuthorizationProperties:
         # No OpenFGA client - fallback mode
 
         # Property: Admin should have access to everything in test environment with fallback enabled
-        authorized = await auth.authorize("user:admin", "executor", resource)
+        authorized = await auth.authorize(get_user_id("admin"), "executor", resource)
 
         assert authorized is True
 
@@ -523,7 +523,7 @@ class TestAuthorizationEdgeCases:
         auth = AuthMiddleware()
 
         async def run_test():
-            return await auth.authorize("user:alice", "executor", resource)
+            return await auth.authorize(get_user_id("alice"), "executor", resource)
 
         try:
             result = run_async(run_test())
