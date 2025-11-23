@@ -54,7 +54,7 @@ Production JWT secrets must be:
 
 # JWT secret for test token signing and verification
 # IMPORTANT: This MUST match the value in:
-#   - docker/docker-compose.test.yml (JWT_SECRET_KEY environment variable)
+#   - docker-compose.test.yml (JWT_SECRET_KEY environment variable)
 #   - .github/workflows/*.yaml (JWT_SECRET_KEY environment variable)
 #   - tests/conftest.py (mock_jwt_token fixture)
 TEST_JWT_SECRET = "test-secret-key-for-integration-tests"

@@ -530,9 +530,20 @@ class TestMakefileValidationTarget:
         assert target_match, "Could not find validate-pre-push target"
 
         target_content = target_match.group(0)
-        assert "HYPOTHESIS_PROFILE=ci" in target_content, "validate-pre-push must set HYPOTHESIS_PROFILE=ci"
 
-        assert "property" in target_content, "validate-pre-push must run property tests"
+        # Check for direct setting OR use of the consolidated script (which handles it)
+        has_ci_profile = "HYPOTHESIS_PROFILE=ci" in target_content
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
+
+        assert (
+            has_ci_profile or uses_consolidated_script
+        ), "validate-pre-push must set HYPOTHESIS_PROFILE=ci (or use run_pre_push_tests.py)"
+
+        # Same for property tests check
+        has_property = "property" in target_content
+        # run_pre_push_tests.py includes property tests
+
+        assert has_property or uses_consolidated_script, "validate-pre-push must run property tests"
 
     def test_validate_pre_push_in_help_output(self, makefile_content: str):
         """Test that validate-pre-push is documented in help target."""
@@ -1939,7 +1950,7 @@ class TestPreCommitHookStageFlag:
 class TestContractTestMarkerParity:
     """Validate that contract test markers are consistent between local and CI.
 
-    CRITICAL: Codex finding #1 - Contract tests have both @pytest.mark.unit and
+    CRITICAL: Codex finding #1 - Contract tests have both @pytest.mark.meta and
     @pytest.mark.contract markers. Local pre-push uses '-m unit and not contract'
     which excludes them, but CI uses '-m unit and not llm' which includes them.
     This creates a CI surprise where tests pass locally but fail in CI.
@@ -2063,7 +2074,7 @@ class TestContractTestMarkerParity:
                     f"Current issue (Codex finding #1):\n"
                     f"  - Pre-push uses: -m 'unit and not contract'\n"
                     f"  - CI uses: -m 'unit and not llm'\n"
-                    f"  - Contract tests have BOTH @pytest.mark.unit and @pytest.mark.contract\n"
+                    f"  - Contract tests have BOTH @pytest.mark.meta and @pytest.mark.contract\n"
                     f"  - Result: Contract tests run in CI but NOT in local pre-push\n"
                     f"\n"
                     f"Impact:\n"

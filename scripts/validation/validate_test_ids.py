@@ -94,23 +94,33 @@ def main() -> int:
         # Validate file using shared library
         if not test_ids.validate_test_file(file_path):
             all_passed = False
-            # Print violations
+
+            # Check for hardcoded ID violations
             violations = test_ids.find_hardcoded_ids(file_path)
-            print(f"\n❌ VALIDATION FAILED: {file_path}", file=sys.stderr)
-            print(f"\nFound {len(violations)} hardcoded ID(s):\n", file=sys.stderr)
+            if violations:
+                print(f"\n❌ VALIDATION FAILED: {file_path}", file=sys.stderr)
+                print(f"\nFound {len(violations)} hardcoded ID(s):\n", file=sys.stderr)
 
-            for line_num, line_content, description in violations:
-                print(f"  Line {line_num}: {description}", file=sys.stderr)
-                print(f"    {line_content}", file=sys.stderr)
+                for line_num, line_content, description in violations:
+                    print(f"  Line {line_num}: {description}", file=sys.stderr)
+                    print(f"    {line_content}", file=sys.stderr)
 
-            print("\n💡 How to fix:", file=sys.stderr)
-            print("  Use worker-safe ID helpers instead of hardcoded IDs:\n", file=sys.stderr)
-            print("    from tests.conftest import get_user_id, get_api_key_id\n", file=sys.stderr)
-            print("    def test_something():", file=sys.stderr)
-            print("        user_id = get_user_id()  # ✅ Worker-safe", file=sys.stderr)
-            print("        apikey_id = get_api_key_id()  # ✅ Worker-safe\n", file=sys.stderr)
-            print("  See: tests/conftest.py for helper function documentation", file=sys.stderr)
-            print("  See: tests/meta/test_id_pollution_prevention.py for examples\n", file=sys.stderr)
+                print("\n💡 How to fix:", file=sys.stderr)
+                print("  Use worker-safe ID helpers instead of hardcoded IDs:\n", file=sys.stderr)
+                print("    from tests.conftest import get_user_id, get_api_key_id\n", file=sys.stderr)
+                print("    def test_something():", file=sys.stderr)
+                print("        user_id = get_user_id()  # ✅ Worker-safe", file=sys.stderr)
+                print("        apikey_id = get_api_key_id()  # ✅ Worker-safe\n", file=sys.stderr)
+                print("  See: tests/conftest.py for helper function documentation", file=sys.stderr)
+                print("  See: tests/meta/test_id_pollution_prevention.py for examples\n", file=sys.stderr)
+
+            # Check for integration test strictness violations
+            integration_violations = test_ids.get_integration_violations(file_path)
+            if integration_violations:
+                print(f"\n❌ INTEGRATION POLICY FAILED: {file_path}", file=sys.stderr)
+                for violation in integration_violations:
+                    print(f"  - {violation}", file=sys.stderr)
+                print()
         else:
             # Check if using helpers
             uses_helpers = test_ids.check_worker_safe_usage(file_path)

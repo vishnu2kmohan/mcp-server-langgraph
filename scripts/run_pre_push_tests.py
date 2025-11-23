@@ -72,9 +72,8 @@ def main() -> int:
         "-n",
         "auto",  # Parallel execution with pytest-xdist
         "-x",  # Stop on first failure (fail-fast)
+        "--testmon",  # Optimize test execution with pytest-testmon
         "--tb=short",  # Short traceback format
-        "--cov=src/mcp_server_langgraph",  # Collect coverage
-        "--cov-report=",  # No report to terminal/xml/html (just .coverage file)
     ]
 
     # Combined marker expression that covers all 5 original hooks:

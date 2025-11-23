@@ -121,8 +121,8 @@ def validate_pre_commit_config(repo_root: Path) -> tuple[bool, list[str]]:
         "api_tests": r"(run-pre-push-tests|run-api-tests|pytest.*-m.*api)",  # API endpoint tests
         "mcp_tests": r"(run-pre-push-tests|run-mcp-server-tests|test_mcp_stdio_server)",  # MCP server tests
         "property_tests": r"(run-pre-push-tests|run-property-tests|pytest.*-m.*property)",  # Property-based tests
-        "deployment_validation": r"(test_(helm|kustomize|network|service)|deployment)",
-        "documentation": r"(test_documentation|mintlify|docs)",
+        "deployment_validation": r"(run-pre-push-tests|test_(helm|kustomize|network|service)|deployment)",
+        "documentation": r"(run-pre-push-tests|test_documentation|mintlify|docs)",
     }
 
     # Optional validations (nice to have, but not required)

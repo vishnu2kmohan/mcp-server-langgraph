@@ -26,7 +26,7 @@ class TestMakefileParallelization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_ci_uses_parallel_execution(self):
         """
         test-ci should use -n auto for parallel execution to match CI behavior.
@@ -53,7 +53,7 @@ class TestMakefileParallelization:
             f"Expected: Should contain '-n auto'"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_mcp_server_uses_parallel_execution(self):
         """
         test-mcp-server should use -n auto for parallel execution.
@@ -76,7 +76,7 @@ class TestMakefileParallelization:
             f"test-mcp-server should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_new_uses_parallel_execution(self):
         """
         test-new should use -n auto for parallel execution.
@@ -97,7 +97,7 @@ class TestMakefileParallelization:
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_integration_local_uses_parallel_execution(self):
         """
         test-integration-local should use -n auto for parallel execution.
@@ -120,7 +120,7 @@ class TestMakefileParallelization:
             f"test-integration-local should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_e2e_uses_parallel_execution(self):
         """
         test-e2e should use -n auto for parallel execution.
@@ -141,7 +141,7 @@ class TestMakefileParallelization:
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_parallelized_targets_mention_parallel_in_output(self):
         """
         Parallelized targets should mention 'parallel' in their echo messages for clarity.
@@ -184,7 +184,7 @@ class TestMakefileParallelizationBestPractices:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_all_unit_test_targets_are_parallelized(self):
         """
         All test targets that run unit tests should use -n auto.

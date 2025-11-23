@@ -27,7 +27,7 @@ pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="validator_consistency")
 class TestValidatorConsistency:
     """Ensure scripts and library produce identical results."""
@@ -270,7 +270,7 @@ class TestValidatorConsistency:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="validator_consistency")
 class TestValidationLibraryVersion:
     """Test that validation library has proper versioning."""
@@ -300,7 +300,7 @@ class TestValidationLibraryVersion:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="validator_consistency")
 class TestValidationLibraryExports:
     """Test that validation library properly exports modules."""

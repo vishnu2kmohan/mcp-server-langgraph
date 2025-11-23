@@ -135,7 +135,7 @@ class TestComposeFileConsolidation:
         # Find test-integration targets
         integration_targets = [
             "test-integration:",
-            "test-integration-local:",
+            "test-integration-debug:",
             "test-integration-cleanup:",
         ]
 
@@ -144,7 +144,7 @@ class TestComposeFileConsolidation:
 
         # Verify compose file references
         # Look for docker-compose commands
-        compose_commands = re.findall(r"docker-compose.*?-f\s+([^\s]+)", content, re.MULTILINE)
+        compose_commands = re.findall(r"docker[- ]compose.*?-f\s+([^\s]+)", content, re.MULTILINE)
 
         for compose_path in compose_commands:
             if "docker-compose.test.yml" in compose_path:

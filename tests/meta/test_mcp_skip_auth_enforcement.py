@@ -25,7 +25,7 @@ pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testmcpskipauthfixtureenforcement")
 class TestMCPSkipAuthFixtureEnforcement:
     """Validate that API test fixtures explicitly set MCP_SKIP_AUTH="false"."""

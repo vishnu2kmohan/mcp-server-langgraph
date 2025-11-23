@@ -43,7 +43,7 @@ pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.precommit
 @pytest.mark.xdist_group(name="id_pollution_prevention")
 class TestIDPollutionPreventionHook:
@@ -163,7 +163,7 @@ def test_openfga_format():
             """
 import pytest
 
-@pytest.mark.unit
+@pytest.mark.meta
 class TestUserProfile:
     '''Test UserProfile data model with InMemory storage.'''
 
@@ -195,7 +195,7 @@ class TestUserProfile:
 from unittest.mock import Mock, AsyncMock
 import pytest
 
-@pytest.mark.unit
+@pytest.mark.meta
 class TestWithMocks:
     def test_mock_user_response(self):
         # ✅ Mock configuration - isolates test from external state

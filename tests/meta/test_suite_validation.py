@@ -33,7 +33,7 @@ class TestMarkerConsistency:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_no_conflicting_unit_and_integration_markers(self):
         """
         TDD REGRESSION TEST: Ensure no test class has both unit and integration markers
@@ -57,7 +57,7 @@ class TestMarkerConsistency:
             error_msg += "\nTests should be categorized as either 'unit', 'integration', or 'e2e', not multiple."
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_unimplemented_features_use_xfail_strict(self):
         """
         TDD REGRESSION TEST: Ensure unimplemented features use xfail(strict=True) not skip
@@ -83,7 +83,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_integration_tests_properly_marked(self):
         """
         TDD REGRESSION TEST: Ensure integration tests are consistently marked
@@ -110,7 +110,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_integration_tests_use_conditional_skips_not_hard_skips(self):
         """
         TDD REGRESSION TEST: Integration tests should use conditional skips, not hard skips
@@ -319,7 +319,7 @@ class TestMarkerConsistency:
         Extract marker name from a decorator node
 
         Handles:
-        - @pytest.mark.unit
+        - @pytest.mark.meta
         - @pytest.mark.integration
         - @pytest.mark.slow
 
@@ -330,7 +330,7 @@ class TestMarkerConsistency:
             Marker name or empty string if not a pytest marker
         """
         if isinstance(decorator, ast.Attribute):
-            # @pytest.mark.unit
+            # @pytest.mark.meta
             if (
                 isinstance(decorator.value, ast.Attribute)
                 and isinstance(decorator.value.value, ast.Name)
@@ -481,7 +481,7 @@ class TestImportGuards:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_optional_imports_use_guards(self):
         """
         TDD REGRESSION TEST: Ensure optional imports use pytest.importorskip or try/except
@@ -560,7 +560,7 @@ class TestInfrastructureFixtures:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_infrastructure_fixtures_use_skip_not_fail(self):
         """
         TDD REGRESSION TEST: Ensure infrastructure fixtures use pytest.skip, not pytest.fail
@@ -604,7 +604,7 @@ class TestCLIToolGuards:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_cli_tool_tests_have_skipif_guards(self):
         """
         TDD REGRESSION TEST: Ensure tests using CLI tools have proper skipif guards.
@@ -846,7 +846,7 @@ class TestCLIToolGuards:
         Extract marker name from a decorator node.
 
         Handles:
-        - @pytest.mark.unit
+        - @pytest.mark.meta
         - @pytest.mark.integration
         - @pytest.mark.requires_kubectl
         - @pytest.mark.requires_kustomize
@@ -858,7 +858,7 @@ class TestCLIToolGuards:
             Marker name or empty string if not a pytest marker
         """
         if isinstance(decorator, ast.Attribute):
-            # @pytest.mark.unit
+            # @pytest.mark.meta
             if (
                 isinstance(decorator.value, ast.Attribute)
                 and isinstance(decorator.value.value, ast.Name)

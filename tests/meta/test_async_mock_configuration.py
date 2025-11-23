@@ -18,7 +18,7 @@ pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_all_async_mocks_have_return_values():
     """
     Verify all AsyncMock instances have explicit configuration.
@@ -92,7 +92,7 @@ def test_all_async_mocks_have_return_values():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_async_mock_guidelines_exist():
     """Verify AsyncMock guidelines documentation exists."""
     guidelines_path = Path(__file__).parent.parent / "ASYNC_MOCK_GUIDELINES.md"
@@ -100,7 +100,7 @@ def test_async_mock_guidelines_exist():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_async_mock_checker_script_exists():
     """Verify AsyncMock configuration checker script exists."""
     script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_async_mock_configuration.py"

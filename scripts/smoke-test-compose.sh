@@ -87,7 +87,7 @@ case $STACK in
         COMPOSE_FILES="-f docker/docker-compose.yml -f docker/docker-compose.dev.yml"
         ;;
     test)
-        COMPOSE_FILES="-f docker/docker-compose.test.yml"
+        COMPOSE_FILES="-f docker-compose.test.yml"
         ;;
     *)
         echo -e "${RED}Invalid stack: $STACK${NC}"

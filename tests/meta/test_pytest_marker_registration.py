@@ -99,7 +99,7 @@ def get_used_markers() -> set[str]:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_all_used_markers_are_registered():
     """
     CRITICAL: Verify all pytest markers used in tests are registered in pyproject.toml
@@ -144,7 +144,7 @@ def test_all_used_markers_are_registered():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_no_unused_marker_registrations():
     """
     Optional: Warn about registered markers that are never used
@@ -167,7 +167,7 @@ def test_no_unused_marker_registrations():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_marker_naming_conventions():
     """
     Validate marker naming follows conventions

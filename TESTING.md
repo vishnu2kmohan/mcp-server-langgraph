@@ -113,7 +113,7 @@ pytest tests/deployment/test_helm_configuration.py -v
 pytest tests/deployment/test_deployment_e2e.py -v
 
 # Validate all deployment configs (comprehensive script)
-./scripts/validate-deployments.sh
+make validate-deployments
 
 # Check deployed cluster health (requires kubectl)
 ./scripts/check-deployment-health.sh production-mcp-server-langgraph mcp

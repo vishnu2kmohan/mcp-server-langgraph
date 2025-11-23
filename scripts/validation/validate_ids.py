@@ -242,15 +242,83 @@ def check_worker_safe_usage(file_path: Path) -> bool:
     return False
 
 
+def is_integration_test(file_path: Path) -> bool:
+    """
+    Check if file is an integration test.
+
+    Criteria:
+    - Located in tests/integration/ directory
+    - OR Marked with @pytest.mark.integration
+
+    Args:
+        file_path: Path to test file
+
+    Returns:
+        True if file is an integration test
+    """
+    # Check path
+    if "tests/integration" in str(file_path):
+        return True
+
+    # Check content for marker
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        return "@pytest.mark.integration" in content or "pytest.mark.integration" in content
+    except Exception:
+        return False
+
+
+def get_integration_violations(file_path: Path) -> list[str]:
+    """
+    Check if integration test violates worker isolation rules.
+
+    Rule: Integration tests interacting with DB/Auth MUST use worker-safe ID helpers.
+
+    Args:
+        file_path: Path to test file
+
+    Returns:
+        List of violation messages
+    """
+    if not is_integration_test(file_path):
+        return []
+
+    if is_file_exempt(file_path):
+        return []
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+
+        # Heuristic: Does the test involve users, api keys, or auth?
+        # If so, it should use the helpers.
+        needs_isolation = any(term in content for term in ["user", "apikey", "auth", "login", "token"])
+
+        if not needs_isolation:
+            return []
+
+        # Check if helpers are used
+        if not check_worker_safe_usage(file_path):
+            return [
+                "Integration test involves users/auth but does not use worker-safe ID helpers.",
+                "Must import and use: get_user_id(), get_api_key_id()",
+                "Fix: Replace hardcoded IDs or generic strings with helper calls.",
+            ]
+
+    except Exception:
+        pass
+
+    return []
+
+
 def validate_test_file(file_path: Path) -> bool:
     """
-    Validate a single test file for hardcoded IDs.
+    Validate a single test file for hardcoded IDs and integration rules.
 
     Args:
         file_path: Path to test file to validate
 
     Returns:
-        True if validation passes (no hardcoded IDs), False otherwise
+        True if validation passes, False otherwise
     """
     # Skip exempt files (conftest.py, meta-tests)
     if is_file_exempt(file_path):
@@ -260,9 +328,14 @@ def validate_test_file(file_path: Path) -> bool:
     if is_unit_test_with_inmemory(file_path):
         return True
 
+    # Check for hardcoded IDs
     violations = find_hardcoded_ids(file_path)
-
     if violations:
+        return False
+
+    # Check for integration test strictness
+    integration_violations = get_integration_violations(file_path)
+    if integration_violations:
         return False
 
     # Validation passed

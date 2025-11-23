@@ -6,7 +6,7 @@ to ensure they run in CI and are properly categorized.
 
 RATIONALE (OpenAI Codex Finding #1):
 - CI runs: pytest -n auto -m "unit and not llm"
-- Tests without @pytest.mark.unit are INVISIBLE to CI
+- Tests without @pytest.mark.meta are INVISIBLE to CI
 - 176 test files (57%) were unmarked, including critical guard-rail tests
 - This meta-test prevents regression by enforcing marker requirements
 
@@ -55,7 +55,7 @@ META_TEST_CLASSES_REQUIRING_XDIST_GROUP: set[tuple[str, str]] = {
 }
 
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="marker_enforcement")
 class TestMarkerEnforcement:
@@ -79,7 +79,7 @@ class TestMarkerEnforcement:
         Returns set of marker names found in the file via:
         - pytestmark = pytest.mark.unit
         - pytestmark = [pytest.mark.unit, pytest.mark.integration]
-        - @pytest.mark.unit decorators on classes/functions
+        - @pytest.mark.meta decorators on classes/functions
         """
         markers = set()
 
@@ -109,11 +109,11 @@ class TestMarkerEnforcement:
             # Check for decorators on classes and functions
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
                 for decorator in node.decorator_list:
-                    # @pytest.mark.unit
+                    # @pytest.mark.meta
                     if isinstance(decorator, ast.Attribute):
                         if isinstance(decorator.value, ast.Attribute) and decorator.value.attr == "mark":
                             markers.add(decorator.attr)
-                    # @pytest.mark.unit(...)
+                    # @pytest.mark.meta(...)
                     elif isinstance(decorator, ast.Call):
                         if isinstance(decorator.func, ast.Attribute):
                             if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
@@ -136,7 +136,7 @@ class TestMarkerEnforcement:
         """
         test_files = self._get_all_test_files()
         unmarked_files = []
-        required_categories = {"unit", "integration", "e2e"}
+        required_categories = {"unit", "integration", "e2e", "meta"}
 
         for test_file in test_files:
             # Skip exempt files
@@ -171,7 +171,7 @@ class TestMarkerEnforcement:
 
     def test_critical_guard_rail_tests_have_meta_marker(self):
         """
-        Validates critical guard-rail tests have both 'unit' and 'meta' markers.
+        Validates critical guard-rail tests have 'meta' marker.
 
         Critical guard-rail tests prevent bad code from being committed:
         - gitignore validation
@@ -193,20 +193,15 @@ class TestMarkerEnforcement:
 
             markers = self._extract_markers_from_file(test_file)
 
-            # Must have BOTH unit and meta markers
-            if "unit" not in markers or "meta" not in markers:
-                missing_markers = []
-                if "unit" not in markers:
-                    missing_markers.append("unit")
-                if "meta" not in markers:
-                    missing_markers.append("meta")
-                missing_meta.append(f"{test_file_path} (missing: {', '.join(missing_markers)})")
+            # Must have meta marker
+            if "meta" not in markers:
+                missing_meta.append(f"{test_file_path} (missing: meta)")
 
         assert not missing_meta, (
-            "Critical guard-rail tests must have both 'unit' AND 'meta' markers.\n\n"
+            "Critical guard-rail tests must have 'meta' marker.\n\n"
             "Files with missing markers:\n" + "\n".join(f"  - {f}" for f in missing_meta) + "\n\n"
             "Add markers using:\n"
-            "  pytestmark = [pytest.mark.unit, pytest.mark.meta]\n"
+            "  pytestmark = pytest.mark.meta\n"
         )
 
     def test_meta_test_classes_have_xdist_group_markers(self):

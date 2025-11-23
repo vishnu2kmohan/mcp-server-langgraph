@@ -40,7 +40,7 @@ XFAIL_STRICT_EXEMPT_FILES: set[str] = {
 }
 
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="xfail_strict_enforcement")
 class TestXfailStrictEnforcement:

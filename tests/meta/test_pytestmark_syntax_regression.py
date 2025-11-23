@@ -21,7 +21,7 @@ pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testpytestmarkplacementregression")
 class TestPytestmarkPlacementRegression:
     """Prevent pytestmark from being placed inside import blocks.
@@ -208,7 +208,7 @@ class TestPytestmarkPlacementRegression:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testpytestmarkdocumentation")
 class TestPytestmarkDocumentation:
     """Validate pytestmark placement guidelines are documented.
@@ -238,7 +238,7 @@ class TestPytestmarkDocumentation:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testautomationscriptfix")
 class TestAutomationScriptFix:
     """Validate the automation script bug is fixed.

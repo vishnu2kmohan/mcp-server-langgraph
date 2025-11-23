@@ -30,7 +30,7 @@ class TestSleepDurationLinter:
 import time
 import pytest
 
-@pytest.mark.unit
+@pytest.mark.meta
 def test_something():
     time.sleep(1.0)  # ❌ Too long for unit test
     assert True
@@ -99,7 +99,7 @@ def test_something():
 import asyncio
 import pytest
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.asyncio
 async def test_something():
     await asyncio.sleep(2.0)  # ❌ Too long for unit test

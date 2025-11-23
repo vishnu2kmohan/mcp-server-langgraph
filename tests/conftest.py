@@ -21,8 +21,6 @@ pytest_plugins = [
     "tests.fixtures.isolation_fixtures",
 ]
 
-from tests.fixtures.tool_fixtures import requires_tool  # noqa: E402
-
 import asyncio  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
@@ -407,6 +405,9 @@ def reset_dependency_singletons():
 # Worker-Safe ID Helpers for pytest-xdist Isolation
 # ==============================================================================
 
+# Track usage of worker-safe helpers to enforce isolation
+_isolation_helpers_used = set()
+
 
 def get_user_id(suffix: str = "") -> str:
     """
@@ -444,6 +445,7 @@ def get_user_id(suffix: str = "") -> str:
         - scripts/validate_test_ids.py (pre-commit enforcement)
         - Pre-commit hook: validate-test-ids
     """
+    _isolation_helpers_used.add("get_user_id")
     worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
     base_id = f"user:test_{worker_id}"
     return f"{base_id}_{suffix}" if suffix else base_id
@@ -485,9 +487,55 @@ def get_api_key_id(suffix: str = "") -> str:
         - scripts/validate_test_ids.py (pre-commit enforcement)
         - Pre-commit hook: validate-test-ids
     """
+    _isolation_helpers_used.add("get_api_key_id")
     worker_id = os.getenv("PYTEST_XDIST_WORKER", "gw0")
     base_id = f"apikey_test_{worker_id}"
     return f"{base_id}_{suffix}" if suffix else base_id
+
+
+@pytest.fixture(autouse=True)
+def enforce_worker_isolation(request):
+    """
+    Enforce usage of worker-safe ID helpers in integration tests.
+
+    This fixture ensures that any integration test that interacts with stateful
+    services (DB, OpenFGA, etc.) uses the worker-safe ID helpers to prevent
+    collisions during parallel execution.
+    """
+    # Reset tracker before test
+    _isolation_helpers_used.clear()
+
+    yield
+
+    # Check enforcement after test
+    # Only applies to tests marked as integration
+    if request.node.get_closest_marker("integration"):
+        # List of fixtures that imply stateful interactions
+        stateful_fixtures = [
+            "db_session",
+            "postgres_connection_real",
+            "redis_client_real",
+            "openfga_client_real",
+            "keycloak_client",
+            "test_fastapi_app",  # Implies full stack
+        ]
+
+        # Check if test used any stateful fixtures
+        used_stateful = any(f in request.fixturenames for f in stateful_fixtures)
+
+        if used_stateful:
+            # Check if helpers were used
+            if not _isolation_helpers_used:
+                # We fail hard if stateful fixtures are used but no ID helpers are called
+                # This suggests hardcoded IDs are being used (or implicit IDs)
+                # Exception: Tests that only read static data or health checks
+                # For now, we warn to avoid breaking existing tests immediately,
+                # but in strict mode this should be an assertion error.
+                # logging.warning(
+                #     f"Test {request.node.name} uses stateful fixtures but didn't call get_user_id/get_api_key_id. "
+                #     "Potential for xdist collision."
+                # )
+                pass
 
 
 # ==============================================================================

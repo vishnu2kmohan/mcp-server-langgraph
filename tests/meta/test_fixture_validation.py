@@ -32,7 +32,7 @@ class TestFixtureDecorators:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_no_placeholder_tests_with_only_pass(self):
         """
         TDD REGRESSION TEST: Ensure test functions don't have only 'pass' statement
@@ -59,7 +59,7 @@ class TestFixtureDecorators:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_generator_functions_have_fixture_decorator(self):
         """
         TDD REGRESSION TEST: Ensure Generator-returning functions have @pytest.fixture decorator
@@ -85,7 +85,7 @@ class TestFixtureDecorators:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_fixture_parameters_have_valid_fixtures(self):
         """
         TDD REGRESSION TEST: Ensure test functions only reference valid fixtures
@@ -531,7 +531,7 @@ class TestFixtureDecorators:
 
         return False
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_fixture_scope_dependencies_are_compatible(self):
         """
         TDD REGRESSION TEST: Ensure fixture scopes are compatible with their dependencies

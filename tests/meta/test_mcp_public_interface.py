@@ -16,7 +16,7 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="mcp_public_interface")
 class TestMCPPublicInterface:
     """Validate MCPAgentServer public interface"""

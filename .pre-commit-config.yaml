@@ -1553,6 +1553,39 @@ repos:
       Regression prevention for Phase 2 (2025-11-15)
 
       '
+  - id: check-test-memory-safety
+    name: Check Test Memory Safety
+    entry: uv run python scripts/validation/check_test_memory_safety.py
+    language: python
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates memory safety in tests (gc.collect in teardown)."
+
+  - id: check-async-mock-usage
+    name: Check Async Mock Usage
+    entry: uv run python scripts/validation/check_async_mock_usage.py
+    language: python
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates that AsyncMock is used correctly."
+
+  - id: validate-test-ids
+    name: Validate Test IDs (xdist isolation)
+    entry: uv run python scripts/validation/validate_test_ids.py
+    language: python
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates that integration tests use worker-safe ID helpers."
+
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2
   hooks:

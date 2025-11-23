@@ -205,7 +205,9 @@ class TestDatabaseStartupValidation:
         from mcp_server_langgraph.api.health import health_check
 
         # Mock database validation
-        with patch("mcp_server_langgraph.api.health.validate_database_connectivity") as mock_validate:
+        with patch(
+            "mcp_server_langgraph.api.health.validate_database_connectivity_async", new_callable=AsyncMock
+        ) as mock_validate:
             mock_validate.return_value = (True, "All databases accessible")
 
             # Call the async endpoint

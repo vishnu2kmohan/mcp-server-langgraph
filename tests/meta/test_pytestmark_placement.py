@@ -276,7 +276,7 @@ class TestPytestmarkPlacementEdgeCases:
             "\n"
             "import pytest\n"
             "\n"
-            "@pytest.mark.unit\n"
+            "@pytest.mark.meta\n"
             "def test_something():\n"
             "    assert True\n"
         )

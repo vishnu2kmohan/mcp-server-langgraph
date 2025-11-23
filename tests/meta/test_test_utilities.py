@@ -212,7 +212,7 @@ class TestFixtureScoping:
                 assert any(fd.scope == "session" for fd in fixturedef), f"{name} should be session-scoped"
 
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="utilities_tests")
 @pytest.mark.requires_kubectl
 class TestUtilityDocumentation:

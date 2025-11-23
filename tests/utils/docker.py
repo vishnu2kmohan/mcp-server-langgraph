@@ -10,7 +10,7 @@ import time
 
 def wait_for_service(
     service_name: str,
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
     timeout: int = 60,
     interval: int = 2,
 ) -> bool:
@@ -60,7 +60,7 @@ def wait_for_service(
 
 def wait_for_services(
     service_names: list[str],
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
     timeout: int = 120,
 ) -> bool:
     """
@@ -82,7 +82,7 @@ def wait_for_services(
 
 def get_service_logs(
     service_name: str,
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
     tail: int | None = 100,
 ) -> str:
     """
@@ -108,7 +108,7 @@ def get_service_logs(
         return f"Error retrieving logs: {e}"
 
 
-def cleanup_test_containers(compose_file: str = "docker/docker-compose.test.yml") -> bool:
+def cleanup_test_containers(compose_file: str = "docker-compose.test.yml") -> bool:
     """
     Stop and remove all containers from docker-compose file
 
@@ -132,7 +132,7 @@ def cleanup_test_containers(compose_file: str = "docker/docker-compose.test.yml"
 
 def is_service_running(
     service_name: str,
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
 ) -> bool:
     """
     Check if a Docker Compose service is running
@@ -161,7 +161,7 @@ def is_service_running(
 def get_service_port(
     service_name: str,
     internal_port: int,
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
 ) -> int | None:
     """
     Get the host port mapped to a service's internal port
@@ -195,7 +195,7 @@ def get_service_port(
 def exec_in_service(
     service_name: str,
     command: list[str],
-    compose_file: str = "docker/docker-compose.test.yml",
+    compose_file: str = "docker-compose.test.yml",
 ) -> tuple[str, str, int]:
     """
     Execute a command inside a running service container
@@ -223,7 +223,7 @@ class TestEnvironment:
     Context manager for Docker Compose test environment
 
     Example:
-        with TestEnvironment("docker/docker-compose.test.yml") as env:
+        with TestEnvironment("docker-compose.test.yml") as env:
             # Services are started and healthy
             env.wait_for_services(["postgres-test", "redis-test"])
             # Run tests
@@ -232,7 +232,7 @@ class TestEnvironment:
 
     def __init__(
         self,
-        compose_file: str = "docker/docker-compose.test.yml",
+        compose_file: str = "docker-compose.test.yml",
         services: list[str] | None = None,
         timeout: int = 120,
     ):

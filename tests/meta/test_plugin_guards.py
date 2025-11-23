@@ -27,7 +27,7 @@ class TestPluginCLIModeGuards:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_plugin_allows_help_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --help
@@ -49,7 +49,7 @@ class TestPluginCLIModeGuards:
         # Should exit successfully
         assert result.returncode == 0
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_plugin_allows_version_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --version
@@ -71,7 +71,7 @@ class TestPluginCLIModeGuards:
         # Should exit successfully
         assert result.returncode == 0
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_plugin_allows_markers_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --markers
@@ -96,7 +96,7 @@ class TestPluginCLIModeGuards:
         # Should exit successfully
         assert result.returncode == 0
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_plugin_allows_fixtures_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --fixtures
@@ -121,7 +121,7 @@ class TestPluginCLIModeGuards:
         # Should exit successfully
         assert result.returncode == 0
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_plugin_allows_collect_only_command(self):
         """
         TDD REGRESSION TEST: Ensure plugin doesn't block --collect-only

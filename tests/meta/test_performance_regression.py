@@ -28,7 +28,7 @@ class TestTimeoutTestPerformance:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_timeout_tests_complete_within_2_seconds(self):
         """
         CODEX FINDING #2: Timeout tests should not use real long sleeps.
@@ -90,7 +90,7 @@ class TestTimeoutTestPerformance:
             f"Actual test execution is much faster."
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_timeout_tests_use_short_sleep_values(self):
         """
         CODEX FINDING #2: Ensure timeout tests don't use sleep values > 1 second.
@@ -128,7 +128,7 @@ class TestTimeBudgets:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_unit_tests_complete_within_budget(self):
         """
         Unit tests should complete quickly (< 100ms per test on average).
@@ -139,7 +139,7 @@ class TestTimeBudgets:
         # In practice, this would be enforced by pytest-timeout or CI monitoring
         pytest.skip("Time budget enforcement is handled by pytest-timeout and sleep linter")
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_integration_tests_have_reasonable_budgets(self):
         """
         Integration tests should complete within reasonable time (< 5s per test).
@@ -158,7 +158,7 @@ class TestPropertyTestBudgets:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_property_tests_have_reasonable_deadlines(self):
         """
         Property tests should have deadline < 3000ms per example.
@@ -198,7 +198,7 @@ class TestBulkheadPerformance:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_bulkhead_tests_use_short_sleeps(self):
         """
         Bulkhead tests should use sleep values < 0.5s.
@@ -236,7 +236,7 @@ class TestPollingOptimizations:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_kubernetes_sandbox_uses_polling(self):
         """
         Kubernetes sandbox cleanup should use poll_until() instead of fixed sleep.
@@ -274,7 +274,7 @@ class TestPollingOptimizations:
             f"Use poll_until() instead of fixed sleeps for cleanup waits."
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_docker_sandbox_uses_polling(self):
         """
         Docker sandbox cleanup should use poll_until() instead of fixed sleep.
@@ -303,7 +303,7 @@ class TestVirtualClockAvailability:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_virtual_clock_exists_and_works(self):
         """
         VirtualClock should be available for instant time advancement in tests.
@@ -321,7 +321,7 @@ class TestVirtualClockAvailability:
         assert elapsed < 0.1, f"VirtualClock.sleep() should be instant, took {elapsed:.3f}s"
         assert clock.time() == 10.0, "VirtualClock should advance time instantly"
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_time_fixtures_available(self):
         """
         Time fixtures should be available for test use.
