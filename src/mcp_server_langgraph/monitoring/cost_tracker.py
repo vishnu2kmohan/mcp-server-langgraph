@@ -361,7 +361,7 @@ class CostMetricsCollector:
                 async with get_async_session(self._database_url) as session:
                     stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)
                     result = await session.execute(stmt)
-                    db_deleted = result.rowcount  # type: ignore[attr-defined]  # SQLAlchemy Result has rowcount
+                    db_deleted = result.rowcount or 0  # type: ignore[attr-defined]
                     deleted_count += db_deleted
 
                     import logging

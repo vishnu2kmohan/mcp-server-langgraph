@@ -27,8 +27,8 @@ try:
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
-    OTLPMetricExporterGRPC = None  # type: ignore[assignment,misc]
-    OTLPSpanExporterGRPC = None  # type: ignore[assignment,misc]
+    OTLPMetricExporterGRPC = None  # type: ignore[misc, assignment]
+    OTLPSpanExporterGRPC = None  # type: ignore[misc, assignment]
 
 try:
     from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as OTLPMetricExporterHTTP
@@ -37,8 +37,8 @@ try:
     HTTP_AVAILABLE = True
 except ImportError:
     HTTP_AVAILABLE = False
-    OTLPMetricExporterHTTP = None  # type: ignore[assignment,misc]
-    OTLPSpanExporterHTTP = None  # type: ignore[assignment,misc]
+    OTLPMetricExporterHTTP = None  # type: ignore[misc, assignment]
+    OTLPSpanExporterHTTP = None  # type: ignore[misc, assignment]
 
 from mcp_server_langgraph.observability.json_logger import CustomJSONFormatter
 

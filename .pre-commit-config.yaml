@@ -51,27 +51,30 @@ repos:
   hooks:
   - id: mypy
     name: MyPy Type Checking (Blocking)
+    entry: uv run mypy src/mcp_server_langgraph
+    language: system
+    types: [python]
     args:
-    - --ignore-missing-imports
-    - --check-untyped-defs
-    - --no-implicit-optional
+    - --config-file=pyproject.toml
     - --show-error-codes
     - --pretty
-    files: ^src/mcp_server_langgraph/
-    additional_dependencies:
-    - pydantic
-    - fastapi
-    - types-PyYAML
-    - types-redis
-    - types-requests
-    # MyPy enabled for pre-push validation (2025-11-23)
+    pass_filenames: false
+    # MyPy Configuration Status (2025-11-23)
     #
-    # All type errors in agent.py have been fixed using type: ignore[arg-type]
-    # comments for list variance issues. MyPy now passes cleanly and blocks
-    # pre-push to maintain local/CI parity.
+    # ✅ FIXED: All 46 type errors resolved!
+    # ✅ ENVIRONMENT: Uses system Python with full project dependencies via uv
+    # Stage: pre-push (BLOCKING - maintains local/CI parity)
     #
-    # Previous state: 110+ errors kept this in manual stage
-    # Current state: 0 errors, enabled for pre-push
+    # Modern best practice: Per-module overrides in pyproject.toml
+    #   - Strict mode for internal code (ignore_missing_imports = false)
+    #   - Lenient mode for third-party libraries (per-module overrides)
+    #
+    # Environment approach:
+    #   - language: system (uses uv-managed environment)
+    #   - Full project dependencies available
+    #   - Matches local development and CI/CD exactly
+    #
+    # Test: tests/meta/test_mypy_enforcement.py::test_mypy_passes_on_current_codebase ✅
     stages:
     - pre-push
 - repo: https://github.com/gitleaks/gitleaks

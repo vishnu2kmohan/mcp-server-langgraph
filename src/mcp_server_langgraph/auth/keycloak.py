@@ -386,6 +386,7 @@ class KeycloakClient:
         # Check if we have a valid cached token
         if self._admin_token and self._admin_token_expiry:
             if datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1):
+                assert self._admin_token is not None  # Guaranteed by condition above
                 return self._admin_token
 
         # Get new admin token
@@ -411,6 +412,7 @@ class KeycloakClient:
                     self._admin_token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
                     logger.info("Admin token obtained")
+                    assert self._admin_token is not None  # Just set on line above
                     return self._admin_token
 
                 except httpx.HTTPError as e:

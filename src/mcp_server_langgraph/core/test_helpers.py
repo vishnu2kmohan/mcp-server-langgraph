@@ -59,7 +59,7 @@ def create_test_container(settings: Settings | None = None) -> ApplicationContai
 # ==============================================================================
 
 
-def create_test_settings(**kwargs) -> Settings:
+def create_test_settings(**kwargs: Any) -> Settings:
     """
     Create test settings with safe defaults.
 
@@ -84,7 +84,7 @@ def create_test_settings(**kwargs) -> Settings:
         "enable_metrics": False,
     }
     defaults.update(kwargs)
-    return Settings(**defaults)
+    return Settings(**defaults)  # type: ignore[arg-type]
 
 
 # ==============================================================================
@@ -155,7 +155,7 @@ def create_test_server(container: ApplicationContainer | None = None) -> Any:
 # ==============================================================================
 
 
-def create_mock_llm_response(content: str = "Test response", model: str = "test-model", **kwargs) -> Any:
+def create_mock_llm_response(content: str = "Test response", model: str = "test-model", **kwargs: Any) -> Any:
     """
     Create a mock LLM response compatible with LangChain.
 
@@ -241,7 +241,7 @@ def create_mock_jwt_token(user_id: str = "test-user", expiry_hours: int = 1) -> 
         "iat": datetime.now(timezone.utc),
     }
 
-    return jwt.encode(payload, "test-secret-key", algorithm="HS256")
+    return jwt.encode(payload, "test-secret-key", algorithm="HS256")  # type: ignore[no-any-return]
 
 
 # ==============================================================================

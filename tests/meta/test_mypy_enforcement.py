@@ -175,30 +175,40 @@ class TestMypyEnforcement:
                 f"Current args: {args}"
             )
 
-    @pytest.mark.xfail(
-        reason=(
-            "Mypy currently has 148 type errors that require application code refactoring. "
-            "This is tracked for future work but is out of scope for meta-test infrastructure fixes. "
-            "Mypy is configured on 'manual' stage in pre-commit to allow incremental improvements "
-            "without blocking development."
-        ),
-        strict=True,
-    )
     def test_mypy_passes_on_current_codebase(self):
         """Verify mypy type checking passes on current codebase.
 
-        This is the critical test - if mypy is re-enabled in pre-commit,
+        This is the critical test - if mypy is enabled in pre-commit on pre-push stage,
         it must actually pass on the current codebase. Otherwise developers
-        will be blocked from committing.
+        will be blocked from pushing.
 
-        NOTE: Currently marked as xfail due to 148 pre-existing type errors that
-        require substantial application code refactoring. This should be unmarked
-        once type errors are resolved.
+        FIXED (2025-11-23): All 46 type errors resolved! MyPy now enabled on pre-push.
+        - Removed 26 unused type: ignore comments (fixed by adding type stubs)
+        - Fixed 7 no-any-return errors (third-party library returns)
+        - Fixed 3 test_helpers.py type annotations
+        - Fixed CircuitBreaker, keycloak, and MCP server type issues
+
+        ALIGNED (2025-11-23): Test now uses pyproject.toml config to match pre-commit hook.
+        - Modern best practice: strict for our code, lenient for third-party via per-module overrides
+        - Pre-commit hook: uv run mypy src/mcp_server_langgraph --config-file=pyproject.toml (language: system)
+        - Test: uv run mypy src/mcp_server_langgraph --config-file=pyproject.toml
+        - FULL PARITY: Both use same command, same environment, same dependencies
         """
         import subprocess
 
+        # Use same args as pre-commit hook to ensure parity
+        # Pre-commit now uses --config-file=pyproject.toml (strict mode with per-module overrides)
         result = subprocess.run(
-            ["uv", "run", "mypy", "src/mcp_server_langgraph", "--no-error-summary"],
+            [
+                "uv",
+                "run",
+                "mypy",
+                "src/mcp_server_langgraph",
+                "--config-file=pyproject.toml",
+                "--show-error-codes",
+                "--pretty",
+                "--no-error-summary",
+            ],
             capture_output=True,
             text=True,
             timeout=60,

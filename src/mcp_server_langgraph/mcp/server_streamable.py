@@ -337,7 +337,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc,no-untyped-call]  # MCP decorator lacks type stubs
+        @self.server.list_tools()  # type: ignore[misc, no-untyped-call]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -538,7 +538,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc,no-untyped-call]  # MCP decorator lacks type stubs
+        @self.server.list_resources()  # type: ignore[misc, no-untyped-call]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

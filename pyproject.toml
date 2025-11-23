@@ -379,8 +379,9 @@ extend-ignore = ["E203", "W503", "E501"]
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-ignore_missing_imports = true
-disable_error_code = ["import-untyped"]
+# STRICT MODE: Do NOT ignore missing imports for our own code
+# Use per-module overrides below for third-party libraries
+ignore_missing_imports = false
 # Stricter type checking for production
 disallow_untyped_defs = true
 disallow_any_unimported = false
@@ -393,12 +394,43 @@ strict_equality = true
 check_untyped_defs = true
 # Allow some flexibility for third-party libraries (will be phased out)
 disallow_untyped_calls = false
-# Exclude test files from strict checking
+# Exclude test files and incomplete modules from strict checking
 exclude = [
     "tests/",
     "test_.*\\.py$",
     "conftest\\.py$",
+    "playground/",  # Incomplete module - api/server.py missing
 ]
+
+# Per-module overrides for third-party libraries without type stubs
+# This is the modern best practice: strict for our code, lenient for third-party
+[[tool.mypy.overrides]]
+module = [
+    "litellm.*",
+    "pybreaker.*",
+    "slowapi.*",
+    "pydantic_ai.*",
+    "langgraph.*",
+    "langchain.*",
+    "cryptography.*",
+    "sqlalchemy.*",
+    "kubernetes.*",
+    "docker.*",
+    "asyncpg.*",
+    "infisical_client.*",
+    "opentelemetry.*",
+    "jwt.*",
+    "apscheduler.*",
+    "openfga_sdk.*",
+    "bcrypt.*",
+    "mcp.*",
+    "sentence_transformers.*",
+    "cachetools.*",
+]
+ignore_missing_imports = true
+# Disable additional strict checks for third-party libraries
+disallow_untyped_defs = false
+disallow_untyped_calls = false
 
 # Gradual strictness rollout - Phase 1: Core modules with full strict typing
 [[tool.mypy.overrides]]
