@@ -660,9 +660,10 @@ validate-pre-push:
 	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Running Unit, API, Property Tests (Optimized)..."
-	@# Runs unit tests (including smoke tests) and API tests (api marker)
-	@# Also runs xdist enforcement: pytest -n auto tests/meta/test_pytest_xdist_enforcement.py
+	@echo "▶ Running Unit, API, Property, and Smoke Tests (Optimized)..."
+	@# Runs: unit tests + API tests + property tests + smoke tests (11 critical startup tests)
+	@# Includes: 19 xdist enforcement tests (validates pytest-xdist isolation patterns)
+	@# Includes: Smoke tests (validate app startup, dependency injection, configuration)
 	@$(UV_RUN) python scripts/run_pre_push_tests.py && echo "✓ Fast tests passed" || (echo "✗ Fast tests failed" && exit 1)
 	@echo ""
 	@echo "▶ Running Integration Tests (Docker)..."
