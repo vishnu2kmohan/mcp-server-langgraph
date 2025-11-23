@@ -14,6 +14,7 @@ Usage:
 """
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -51,7 +52,7 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
         )
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         # Run startup validation to ensure all critical systems initialized correctly
         # This prevents the app from starting if any of the OpenAI Codex findings recur
         # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency

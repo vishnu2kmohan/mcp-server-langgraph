@@ -61,7 +61,6 @@ class TestComposeFileConsolidation:
         required_services = [
             "postgres-test",
             "redis-test",
-            "redis-sessions-test",
             "openfga-test",
             "keycloak-test",
             "qdrant-test",

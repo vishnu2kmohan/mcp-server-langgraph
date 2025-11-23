@@ -240,7 +240,7 @@ class LLMFactory:
                         f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
                     )
 
-    def _format_messages(self, messages: list[BaseMessage]) -> list[dict[str, str]]:
+    def _format_messages(self, messages: list[BaseMessage | dict[str, Any]]) -> list[dict[str, str]]:
         """
         Convert LangChain messages to LiteLLM format
 
@@ -282,7 +282,7 @@ class LLMFactory:
 
         return formatted
 
-    def invoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    def invoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
         Synchronous LLM invocation
 
@@ -345,7 +345,7 @@ class LLMFactory:
     @retry_with_backoff(max_attempts=3, exponential_base=2)
     @with_timeout(operation_type="llm")
     @with_bulkhead(resource_type="llm")
-    async def ainvoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    async def ainvoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
         Asynchronous LLM invocation with full resilience protection.
 
@@ -443,7 +443,7 @@ class LLMFactory:
                         cause=e,
                     )
 
-    def _try_fallback(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    def _try_fallback(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models if primary fails"""
         for fallback_model in self.fallback_models:
             if fallback_model == self.model_name:
@@ -478,7 +478,7 @@ class LLMFactory:
 
         raise RuntimeError("All models failed including fallbacks")
 
-    async def _try_fallback_async(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    async def _try_fallback_async(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models asynchronously"""
         for fallback_model in self.fallback_models:
             if fallback_model == self.model_name:

@@ -238,7 +238,7 @@ def circuit_breaker(  # noqa: C901
                     try:
                         with breaker._lock:
                             # This will transition to HALF_OPEN if timeout elapsed, or raise if still OPEN
-                            state_any = breaker.state  # type: ignore
+                            state_any = breaker.state
                             state_any.before_call(func, *args, **kwargs)
                             # Also notify listeners
                             for listener in cast(list[Any], breaker.listeners):
@@ -257,7 +257,7 @@ def circuit_breaker(  # noqa: C901
                         if fallback:
                             logger.info(f"Using fallback for {name}")
                             if asyncio.iscoroutinefunction(fallback):
-                                return await fallback(*args, **kwargs)  # type: ignore[no-any-return]
+                                return await fallback(*args, **kwargs)
                             else:
                                 return fallback(*args, **kwargs)  # type: ignore[no-any-return]
                         else:
@@ -277,7 +277,7 @@ def circuit_breaker(  # noqa: C901
                         with breaker._lock:
                             breaker._state_storage.increment_counter()
                             for listener in cast(list[Any], breaker.listeners):
-                                cast(Any, listener).success(breaker)  # type: ignore[no-any-return]
+                                cast(Any, listener).success(breaker)
                             breaker.state.on_success()
 
                         span.set_attribute("circuit_breaker.success", True)
@@ -295,7 +295,7 @@ def circuit_breaker(  # noqa: C901
                                     )
                                     breaker._inc_counter()
                                     for listener in cast(list[Any], breaker.listeners):
-                                        cast(Any, listener).failure(breaker, e)  # type: ignore[no-any-return]
+                                        cast(Any, listener).failure(breaker, e)
                                     breaker.state.on_failure(e)
                                     logger.debug(
                                         f"Circuit breaker {breaker.name}: after on_failure, "

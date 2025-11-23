@@ -140,19 +140,13 @@ class TestPostgresConnectionConfig:
             f"Fix: Update POSTGRES_DB defaults in conftest.py to '{expected_db}'"
         )
 
-    def test_integration_test_workflow_sets_postgres_env_vars(self):
-        """Test: CI workflow must set all required PostgreSQL environment variables."""
-        workflow_file = Path(".github/workflows/integration-tests.yaml")
-        with open(workflow_file) as f:
-            workflow_content = f.read()
+    def test_integration_test_script_sets_postgres_env_vars(self):
+        """Test: Integration test script must set all required PostgreSQL environment variables."""
+        script_file = Path("scripts/test-integration.sh")
+        script_content = script_file.read_text()
 
-        # Check that pytest execution includes environment variables
-        pytest_step_start = workflow_content.find("Run Integration Tests")
-        pytest_step = workflow_content[pytest_step_start : pytest_step_start + 2000]
-
-        # At minimum, POSTGRES_DB should be set (others have defaults in conftest)
-        # But better to be explicit in CI
-        assert "POSTGRES_DB=" in pytest_step, (
-            "Integration test workflow must set POSTGRES_DB environment variable.\n"
-            "Fix: Add environment variables to pytest command in .github/workflows/integration-tests.yaml"
+        # At minimum, POSTGRES_DB should be set
+        assert "POSTGRES_DB=" in script_content, (
+            "Integration test script must set POSTGRES_DB environment variable.\n"
+            "Fix: Add POSTGRES_DB definition to scripts/test-integration.sh"
         )
