@@ -43,7 +43,7 @@ def mock_get_current_user(mock_auth_user):
 
 
 @pytest.fixture
-def test_app(mock_get_current_user, monkeypatch):
+def test_app(mock_get_current_user, monkeypatch, mock_auth_user):
     """
     Create test FastAPI app with mocked auth.
 

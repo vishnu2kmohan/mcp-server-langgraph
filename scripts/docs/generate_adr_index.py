@@ -460,7 +460,7 @@ Examples:
     args = parser.parse_args()
 
     # Change to repo root
-    repo_root = Path(__file__).parent.parent
+    repo_root = Path(__file__).parent.parent.parent
     import os
 
     os.chdir(repo_root)

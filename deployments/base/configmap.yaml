@@ -14,6 +14,7 @@ data:
   llm_provider: "anthropic"  # google, anthropic, openai, azure, bedrock, ollama
   model_name: "claude-sonnet-4-5"
   model_temperature: "0.7"
+  # trivy:ignore:AVD-KSV-0109
   model_max_tokens: "4096"
   model_timeout: "60"
 
@@ -76,6 +77,7 @@ data:
   qdrant_url: "qdrant"  # Qdrant service name
   qdrant_port: "6333"  # Qdrant HTTP API port
   qdrant_collection_name: "mcp_context"  # Collection for context storage
+  # trivy:ignore:AVD-KSV-0109
   dynamic_context_max_tokens: "2000"  # Max tokens from dynamic context
   dynamic_context_top_k: "3"  # Top semantic search results
   embedding_model: "all-MiniLM-L6-v2"  # SentenceTransformer model

@@ -28,6 +28,7 @@ import requests
 # Skip if health check URL not configured (indicates no K8s/MCP server running)
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.requires_kubectl,
     pytest.mark.skipif(
         os.getenv("HEALTH_CHECK_URL") is None,
         reason="Kubernetes health probe tests require HEALTH_CHECK_URL environment variable. "
@@ -37,6 +38,7 @@ pytestmark = [
 
 
 @pytest.mark.xdist_group(name="kubernetes_health_probes")
+@pytest.mark.requires_kubectl
 class TestKubernetesHealthProbes:
     """Integration tests for Kubernetes health probes."""
 

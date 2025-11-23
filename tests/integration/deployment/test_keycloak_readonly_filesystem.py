@@ -30,6 +30,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.conftest import requires_tool
+
 # Mark as integration test (requires kubectl/kustomize tools)
 pytestmark = pytest.mark.integration
 
@@ -132,6 +134,7 @@ def get_keycloak_container_security_context(deployment: dict) -> dict | None:
 @pytest.mark.deployment
 @pytest.mark.kubernetes
 @pytest.mark.xdist_group(name="keycloak_deployment_tests")
+@requires_tool("kubectl")
 class TestKeycloakReadOnlyFilesystemConfiguration:
     """Test Keycloak readOnlyRootFilesystem configuration across all environments"""
 

@@ -295,7 +295,7 @@ services:
       echo 'Waiting for dependencies to be ready...' &&
       sleep 5 &&
       echo 'Starting MCP server...' &&
-      uv run uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
+      uv run uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
       "
     depends_on:
       postgres-test:
@@ -317,6 +317,7 @@ services:
       - ENVIRONMENT=test
       - TESTING=true
       - LOG_LEVEL=INFO
+      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
 
       # Database
       - POSTGRES_HOST=postgres-test
@@ -326,10 +327,13 @@ services:
       - POSTGRES_PASSWORD=postgres
 
       # Authentication
-      - KEYCLOAK_URL=http://keycloak-test:8080
+      - AUTH_PROVIDER=keycloak
+      # WORKAROUND: Use host network loopback because internal bridge networking with httpx is flaky
+      - KEYCLOAK_URL=http://host.docker.internal:9082
       - KEYCLOAK_REALM=master
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
+      - KEYCLOAK_ADMIN_PASSWORD=admin
 
       # Authorization
       - OPENFGA_API_URL=http://openfga-test:8080
@@ -349,11 +353,12 @@ services:
       # GDPR
       - GDPR_STORAGE_BACKEND=postgres
     healthcheck:
-      test: ["CMD", "sh", "-c", "wget -q --spider http://localhost:8000/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 30s  # Allow time for all dependencies to initialize
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
@@ -381,6 +386,11 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
       - LOG_LEVEL=warn
       - SPAN_STORAGE_TYPE=memory
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "16686"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -434,6 +444,12 @@ services:
       - "19093:9093"  # AlertManager UI (offset by 10000)
     volumes:
       - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    healthcheck:
+      # wget is available in the official Alertmanager image (prom/alertmanager)
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:

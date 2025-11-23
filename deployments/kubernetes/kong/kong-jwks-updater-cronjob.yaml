@@ -1,126 +1,66 @@
----
-# ConfigMap containing the JWKS updater script
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kong-jwks-updater-script
   namespace: mcp-server-langgraph
 data:
-  update_kong_jwks.py: |
-    #!/usr/bin/env python3
-    import os
-    import sys
-    import asyncio
-    import base64
-    import httpx
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.backends import default_backend
-
-    KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://keycloak:8080")
-    KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "langgraph-agent")
-    KONG_ADMIN_URL = os.getenv("KONG_ADMIN_URL", "http://kong-admin:8001")
-    KONG_CONSUMER = os.getenv("KONG_CONSUMER", "keycloak-users")
-
-    async def fetch_jwks():
-        jwks_url = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
-        print(f"Fetching JWKS from: {jwks_url}")
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(jwks_url)
-            response.raise_for_status()
-            return response.json()
-
-    def jwk_to_pem(jwk):
-        def b64url_decode(data):
-            data += "=" * (4 - len(data) % 4)
-            return base64.urlsafe_b64decode(data)
-        n = int.from_bytes(b64url_decode(jwk["n"]), "big")
-        e = int.from_bytes(b64url_decode(jwk["e"]), "big")
-        public_numbers = rsa.RSAPublicNumbers(e, n)
-        public_key = public_numbers.public_key(default_backend())
-        pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-        return pem.decode("utf-8")
-
-    async def update_kong_jwt_credential(kid, pem, issuer):
-        url = f"{KONG_ADMIN_URL}/consumers/{KONG_CONSUMER}/jwt"
-        print(f"Updating Kong JWT credential for consumer: {KONG_CONSUMER}")
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            credentials = response.json().get("data", [])
-            existing_cred = None
-            for cred in credentials:
-                if cred.get("key") == issuer:
-                    existing_cred = cred
-                    break
-            credential_data = {
-                "key": issuer,
-                "algorithm": "RS256",
-                "rsa_public_key": pem,
-            }
-            if existing_cred:
-                cred_id = existing_cred["id"]
-                update_url = f"{url}/{cred_id}"
-                print(f"Updating existing JWT credential: {cred_id}")
-                response = await client.patch(update_url, json=credential_data)
-            else:
-                print("Creating new JWT credential")
-                response = await client.post(url, json=credential_data)
-            response.raise_for_status()
-            print("✓ Kong JWT credential updated successfully")
-            return response.json()
-
-    async def main():
-        try:
-            print("=" * 60)
-            print("Kong JWKS Updater")
-            print("=" * 60)
-            jwks = await fetch_jwks()
-            keys = jwks.get("keys", [])
-            if not keys:
-                print("ERROR: No keys found in JWKS")
-                sys.exit(1)
-            print(f"Found {len(keys)} keys in JWKS")
-            rs256_key = None
-            for key in keys:
-                if key.get("alg") == "RS256" and key.get("use") == "sig":
-                    rs256_key = key
-                    break
-            if not rs256_key:
-                print("ERROR: No RS256 signing key found in JWKS")
-                sys.exit(1)
-            kid = rs256_key["kid"]
-            print(f"Using key ID: {kid}")
-            pem = jwk_to_pem(rs256_key)
-            print(f"Converted JWK to PEM format ({len(pem)} bytes)")
-            issuer = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
-            await update_kong_jwt_credential(kid, pem, issuer)
-            print("=" * 60)
-            print("✓ JWKS update completed successfully")
-            print("=" * 60)
-            return 0
-        except Exception as e:
-            print(f"ERROR: {e}")
-            import traceback
-            traceback.print_exc()
-            return 1
-
-    if __name__ == "__main__":
-        exit_code = asyncio.run(main())
-        sys.exit(exit_code)
-
+  update_kong_jwks.py: "#!/usr/bin/env python3\nimport os\nimport sys\nimport asyncio\n\
+    import base64\nimport httpx\nfrom cryptography.hazmat.primitives.asymmetric import\
+    \ rsa\nfrom cryptography.hazmat.primitives import serialization\nfrom cryptography.hazmat.backends\
+    \ import default_backend\n\nKEYCLOAK_URL = os.getenv(\"KEYCLOAK_URL\", \"http://keycloak:8080\"\
+    )\nKEYCLOAK_REALM = os.getenv(\"KEYCLOAK_REALM\", \"langgraph-agent\")\nKONG_ADMIN_URL\
+    \ = os.getenv(\"KONG_ADMIN_URL\", \"http://kong-admin:8001\")\nKONG_CONSUMER =\
+    \ os.getenv(\"KONG_CONSUMER\", \"keycloak-users\")\n\nasync def fetch_jwks():\n\
+    \    jwks_url = f\"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs\"\
+    \n    print(f\"Fetching JWKS from: {jwks_url}\")\n    async with httpx.AsyncClient(timeout=30.0)\
+    \ as client:\n        response = await client.get(jwks_url)\n        response.raise_for_status()\n\
+    \        return response.json()\n\ndef jwk_to_pem(jwk):\n    def b64url_decode(data):\n\
+    \        data += \"=\" * (4 - len(data) % 4)\n        return base64.urlsafe_b64decode(data)\n\
+    \    n = int.from_bytes(b64url_decode(jwk[\"n\"]), \"big\")\n    e = int.from_bytes(b64url_decode(jwk[\"\
+    e\"]), \"big\")\n    public_numbers = rsa.RSAPublicNumbers(e, n)\n    public_key\
+    \ = public_numbers.public_key(default_backend())\n    pem = public_key.public_bytes(\n\
+    \        encoding=serialization.Encoding.PEM,\n        format=serialization.PublicFormat.SubjectPublicKeyInfo,\n\
+    \    )\n    return pem.decode(\"utf-8\")\n\nasync def update_kong_jwt_credential(kid,\
+    \ pem, issuer):\n    url = f\"{KONG_ADMIN_URL}/consumers/{KONG_CONSUMER}/jwt\"\
+    \n    print(f\"Updating Kong JWT credential for consumer: {KONG_CONSUMER}\")\n\
+    \    async with httpx.AsyncClient(timeout=30.0) as client:\n        response =\
+    \ await client.get(url)\n        response.raise_for_status()\n        credentials\
+    \ = response.json().get(\"data\", [])\n        existing_cred = None\n        for\
+    \ cred in credentials:\n            if cred.get(\"key\") == issuer:\n        \
+    \        existing_cred = cred\n                break\n        credential_data\
+    \ = {\n            \"key\": issuer,\n            \"algorithm\": \"RS256\",\n \
+    \           \"rsa_public_key\": pem,\n        }\n        if existing_cred:\n \
+    \           cred_id = existing_cred[\"id\"]\n            update_url = f\"{url}/{cred_id}\"\
+    \n            print(f\"Updating existing JWT credential: {cred_id}\")\n      \
+    \      response = await client.patch(update_url, json=credential_data)\n     \
+    \   else:\n            print(\"Creating new JWT credential\")\n            response\
+    \ = await client.post(url, json=credential_data)\n        response.raise_for_status()\n\
+    \        print(\"\u2713 Kong JWT credential updated successfully\")\n        return\
+    \ response.json()\n\nasync def main():\n    try:\n        print(\"=\" * 60)\n\
+    \        print(\"Kong JWKS Updater\")\n        print(\"=\" * 60)\n        jwks\
+    \ = await fetch_jwks()\n        keys = jwks.get(\"keys\", [])\n        if not\
+    \ keys:\n            print(\"ERROR: No keys found in JWKS\")\n            sys.exit(1)\n\
+    \        print(f\"Found {len(keys)} keys in JWKS\")\n        rs256_key = None\n\
+    \        for key in keys:\n            if key.get(\"alg\") == \"RS256\" and key.get(\"\
+    use\") == \"sig\":\n                rs256_key = key\n                break\n \
+    \       if not rs256_key:\n            print(\"ERROR: No RS256 signing key found\
+    \ in JWKS\")\n            sys.exit(1)\n        kid = rs256_key[\"kid\"]\n    \
+    \    print(f\"Using key ID: {kid}\")\n        pem = jwk_to_pem(rs256_key)\n  \
+    \      print(f\"Converted JWK to PEM format ({len(pem)} bytes)\")\n        issuer\
+    \ = f\"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}\"\n        await update_kong_jwt_credential(kid,\
+    \ pem, issuer)\n        print(\"=\" * 60)\n        print(\"\u2713 JWKS update\
+    \ completed successfully\")\n        print(\"=\" * 60)\n        return 0\n   \
+    \ except Exception as e:\n        print(f\"ERROR: {e}\")\n        import traceback\n\
+    \        traceback.print_exc()\n        return 1\n\nif __name__ == \"__main__\"\
+    :\n    exit_code = asyncio.run(main())\n    sys.exit(exit_code)\n"
 ---
-# CronJob to run JWKS updater every 6 hours
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: kong-jwks-updater
   namespace: mcp-server-langgraph
 spec:
-  schedule: "0 */6 * * *"  # Every 6 hours
+  schedule: 0 */6 * * *
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
@@ -137,29 +77,31 @@ spec:
             command:
             - /bin/bash
             - -c
-            - |
-              pip install --quiet httpx cryptography
+            - 'pip install --quiet httpx cryptography
+
               python /scripts/update_kong_jwks.py
+
+              '
             env:
             - name: KEYCLOAK_URL
-              value: "http://keycloak.mcp-server-langgraph.svc.cluster.local:8080"
+              value: http://keycloak.mcp-server-langgraph.svc.cluster.local:8080
             - name: KEYCLOAK_REALM
-              value: "langgraph-agent"
+              value: langgraph-agent
             - name: KONG_ADMIN_URL
-              value: "http://kong-admin.kong.svc.cluster.local:8001"
+              value: http://kong-admin.kong.svc.cluster.local:8001
             - name: KONG_CONSUMER
-              value: "keycloak-users"
+              value: keycloak-users
             volumeMounts:
             - name: scripts
               mountPath: /scripts
+            securityContext:
+              readOnlyRootFilesystem: true
           volumes:
           - name: scripts
             configMap:
               name: kong-jwks-updater-script
-              defaultMode: 0755
-
+              defaultMode: 493
 ---
-# Optional: Run immediately on deployment (as a Job)
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -178,23 +120,27 @@ spec:
         command:
         - /bin/bash
         - -c
-        - |
-          pip install --quiet httpx cryptography
+        - 'pip install --quiet httpx cryptography
+
           python /scripts/update_kong_jwks.py
+
+          '
         env:
         - name: KEYCLOAK_URL
-          value: "http://keycloak.mcp-server-langgraph.svc.cluster.local:8080"
+          value: http://keycloak.mcp-server-langgraph.svc.cluster.local:8080
         - name: KEYCLOAK_REALM
-          value: "langgraph-agent"
+          value: langgraph-agent
         - name: KONG_ADMIN_URL
-          value: "http://kong-admin.kong.svc.cluster.local:8001"
+          value: http://kong-admin.kong.svc.cluster.local:8001
         - name: KONG_CONSUMER
-          value: "keycloak-users"
+          value: keycloak-users
         volumeMounts:
         - name: scripts
           mountPath: /scripts
+        securityContext:
+          readOnlyRootFilesystem: true
       volumes:
       - name: scripts
         configMap:
           name: kong-jwks-updater-script
-          defaultMode: 0755
+          defaultMode: 493

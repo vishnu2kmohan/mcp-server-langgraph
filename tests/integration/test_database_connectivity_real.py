@@ -42,6 +42,8 @@ class TestDatabaseConnectivityReal:
 
         This test validates the actual I/O layer, not mocked behavior.
         """
+        from mcp_server_langgraph.infrastructure.database import check_database_connectivity
+
         postgres_url = os.getenv("GDPR_POSTGRES_URL", "postgresql://postgres:postgres@localhost:9432/gdpr")
 
         is_healthy, message = await check_database_connectivity(postgres_url, timeout=5.0)

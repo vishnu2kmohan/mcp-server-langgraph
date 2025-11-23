@@ -25,8 +25,15 @@ from tests.utils.mock_factories import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="testmcpserverbehavioralpattern")
 class TestMCPServerBehavioralPattern:
     """Sample test class demonstrating behavioral mock pattern."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_handle_chat_authorized_user_gets_response(self):

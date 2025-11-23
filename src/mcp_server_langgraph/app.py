@@ -69,7 +69,7 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
                 logger.debug("Skipping startup validation (test mode)")
             except RuntimeError:
                 pass  # Graceful degradation if observability not initialized
-        
+
         yield
 
     app = FastAPI(

@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 pytestmark = pytest.mark.integration
 

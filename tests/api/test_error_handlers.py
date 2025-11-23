@@ -306,13 +306,15 @@ class TestErrorHandlerEdgeCases:
         """
         Test that error responses handle complex nested metadata correctly
         """
+        from tests.conftest import get_user_id
+
         # Given: Complex nested metadata
         metadata = {
             "resource": {
                 "type": "document",
                 "id": "doc-123",
                 "permissions": ["read", "write"],
-                "owner": {"user_id": "user:alice", "roles": ["admin"]},
+                "owner": {"user_id": get_user_id("alice"), "roles": ["admin"]},
             },
             "attempted_action": "delete",
         }

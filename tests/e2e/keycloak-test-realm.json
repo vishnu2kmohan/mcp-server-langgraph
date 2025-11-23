@@ -12,7 +12,7 @@
       "clientId": "mcp-server",
       "name": "MCP Server Test Client",
       "enabled": true,
-      "publicClient": true,
+      "publicClient": false,
       "secret": "test-client-secret-for-e2e-tests",
       "directAccessGrantsEnabled": true,
       "standardFlowEnabled": true,
@@ -39,6 +39,19 @@
         "phone",
         "offline_access",
         "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "Client Audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "mcp-server",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
       ]
     }
   ],

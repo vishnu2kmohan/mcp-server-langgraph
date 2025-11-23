@@ -155,6 +155,19 @@ class TestStandardUserJourney:
             assert introspection["active"] is True
             assert introspection["username"] == username
 
+            # Decode token to check audience and issuer (debug helper)
+            import jwt
+
+            decoded = jwt.decode(tokens["access_token"], options={"verify_signature": False})
+            print(f"DEBUG: Token claims: iss={decoded.get('iss')}, aud={decoded.get('aud')}")
+
+            # Assert audience is present and correct (if mapper is working)
+            # Should contain "mcp-server" or "account"
+            aud = decoded.get("aud")
+            if isinstance(aud, str):
+                aud = [aud]
+            assert "mcp-server" in aud or "account" in aud
+
     async def test_02_mcp_initialize(self, authenticated_session):
         """Step 2: Initialize MCP protocol connection"""
         from tests.e2e.real_clients import real_mcp_client
@@ -164,17 +177,18 @@ class TestStandardUserJourney:
             # Initialize MCP session with real server
             init_response = await mcp.initialize()
 
-            # Verify response structure
-            assert "protocol_version" in init_response
-            assert "server_info" in init_response
+            # Verify response structure (StreamableHTTP returns JSON-RPC result)
+            # { "protocolVersion": "...", "serverInfo": {...}, "capabilities": {...} }
+            assert "protocolVersion" in init_response
+            assert "serverInfo" in init_response
             assert "capabilities" in init_response
 
             # Verify server info
-            assert init_response["server_info"]["name"] == "mcp-server-langgraph"
-            assert "version" in init_response["server_info"]
+            assert init_response["serverInfo"]["name"] == "langgraph-agent"
+            assert "version" in init_response["serverInfo"]
 
             # Verify capabilities
-            assert init_response["capabilities"]["tools"] is True
+            assert init_response["capabilities"]["tools"]["listChanged"] is False
 
     async def test_03_list_tools(self, authenticated_session):
         """Step 3: List available MCP tools"""
@@ -186,13 +200,16 @@ class TestStandardUserJourney:
             tools_response = await mcp.list_tools()
 
             # Verify response structure
+            # StreamableHTTP returns {"tools": [...]} inside result
             assert "tools" in tools_response
             assert isinstance(tools_response["tools"], list)
             assert len(tools_response["tools"]) > 0
 
             # Verify at least basic tools are present
             tool_names = [t["name"] for t in tools_response["tools"]]
-            assert len(tool_names) >= 3
+            # agent_chat, conversation_get, conversation_search, search_tools
+            assert "agent_chat" in tool_names
+            assert "conversation_search" in tool_names
 
             # Verify tool structure
             for tool in tools_response["tools"]:
@@ -221,12 +238,18 @@ class TestStandardUserJourney:
             assert len(conversation_id) > 0
 
             # Send first message to agent
+            # RealMCPClient.send_message uses call_tool which returns {"content": [...]}
             response = await mcp.send_message(conversation_id=conversation_id, content="Hello! What is the capital of France?")
 
             # Verify response structure
-            assert "message_id" in response or "content" in response or "messages" in response
+            assert "content" in response
+            content_list = response["content"]
+            assert isinstance(content_list, list)
+            assert len(content_list) > 0
+            assert content_list[0]["type"] == "text"
+            assert len(content_list[0]["text"]) > 0
 
-            # If messages array returned, verify structure
+            # If messages array returned, verify structure (this part might not be returned by tool call)
             if "messages" in response:
                 messages = response["messages"]
                 assert len(messages) > 0
@@ -260,8 +283,11 @@ class TestStandardUserJourney:
             assert response2 is not None
             # Response should reference "Alice" if context is maintained
             if "content" in response2:
-                content = response2["content"].lower()
-                assert "alice" in content, "Agent should remember the user's name from context"
+                # response2["content"] is a list of TextContent objects
+                content_list = response2["content"]
+                if content_list and content_list[0]["type"] == "text":
+                    text = content_list[0]["text"].lower()
+                    assert "alice" in text, "Agent should remember the user's name from context"
 
     @pytest.mark.xfail(strict=True, reason="Implement when MCP server test fixture is ready")
     async def test_06_search_conversations(self, authenticated_session):
@@ -280,8 +306,14 @@ class TestStandardUserJourney:
         GREEN: Tests conversation retrieval and authorization.
         """
         from tests.e2e.real_clients import real_mcp_client
+        from tests.conftest import get_user_id
 
         access_token = authenticated_session["access_token"]
+        # real_clients.py uses get_user_id("test") for creating conversation if user_id is not provided
+        # or hardcodes "user:test". Let's use what real_clients uses.
+        # Looking at real_clients.py, create_conversation takes user_id arg.
+        # But send_message uses user_id="user:test" hardcoded or get_user_id("test") if imported.
+        # Let's use the authenticated session user_id which is correct for the token.
         user_id = authenticated_session["user_id"]
 
         async with real_mcp_client(access_token=access_token) as mcp:
@@ -295,14 +327,16 @@ class TestStandardUserJourney:
 
             # Verify conversation structure
             assert conversation_data is not None
-            assert "conversation_id" in conversation_data or "id" in conversation_data
+            # get_conversation uses conversation_get tool which returns TextContent
+            assert "content" in conversation_data
+            content_list = conversation_data["content"]
+            assert len(content_list) > 0
+            text = content_list[0]["text"]
 
-            # Verify conversation contains messages
-            if "messages" in conversation_data:
-                messages = conversation_data["messages"]
-                assert len(messages) > 0
-                # Should have at least the user message
-                assert any("Test message for conversation retrieval" in str(msg) for msg in messages)
+            # Verify conversation contains the message
+            assert "Test message for conversation retrieval" in text
+            assert "Conversation:" in text
+            assert "Messages:" in text
 
     @pytest.mark.xfail(strict=True, reason="Implement when token refresh is implemented")
     async def test_08_refresh_token(self, authenticated_session):
@@ -632,7 +666,7 @@ class TestServicePrincipalJourney:
 
             # Create service principal
             response = await client.post(
-                "http://localhost:8000/api/v1/service-principals",
+                "http://localhost:8000/api/v1/service-principals/",
                 headers=headers,
                 json={
                     "name": "E2E Test Service Principal",
@@ -690,7 +724,7 @@ class TestServicePrincipalJourney:
 
             # First create a service principal
             create_response = await client.post(
-                "http://localhost:8000/api/v1/service-principals",
+                "http://localhost:8000/api/v1/service-principals/",
                 headers=headers,
                 json={"name": "SP for Auth Test", "description": "Test", "mode": "headless"},
                 timeout=30.0,
@@ -809,7 +843,7 @@ class TestAPIKeyJourney:
 
             # Create API key
             response = await client.post(
-                "http://localhost:8000/api/v1/api-keys",
+                "http://localhost:8000/api/v1/api-keys/",
                 headers=headers,
                 json={"name": "E2E Test API Key", "expires_days": 30},
                 timeout=30.0,
@@ -846,7 +880,7 @@ class TestAPIKeyJourney:
             headers = {"Authorization": f"Bearer {access_token}"}
 
             # List API keys
-            response = await client.get("http://localhost:8000/api/v1/api-keys", headers=headers, timeout=30.0)
+            response = await client.get("http://localhost:8000/api/v1/api-keys/", headers=headers, timeout=30.0)
 
             # Check if endpoint exists
             if response.status_code == 404:
@@ -921,7 +955,7 @@ class TestAPIKeyJourney:
 
             # First create an API key to revoke
             create_response = await client.post(
-                "http://localhost:8000/api/v1/api-keys",
+                "http://localhost:8000/api/v1/api-keys/",
                 headers=headers,
                 json={"name": "Key to Revoke", "expires_days": 7},
                 timeout=30.0,

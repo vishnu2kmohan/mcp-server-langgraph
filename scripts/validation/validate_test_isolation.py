@@ -51,7 +51,8 @@ class TestIsolationValidator(ast.NodeVisitor):
         self.has_gc_collect = False
 
         # Check for test class markers
-        if node.name.startswith("Test"):
+        # Only validate top-level Test classes, or those not defined within a function
+        if self.current_function is None and node.name.startswith("Test"):
             # Check for xdist_group marker
             for decorator in node.decorator_list:
                 if self._is_xdist_group_marker(decorator):
@@ -106,11 +107,8 @@ class TestIsolationValidator(ast.NodeVisitor):
 
         # Check if this is a pytest fixture
         is_fixture = any(
-            isinstance(dec, ast.Call)
-            and isinstance(dec.func, ast.Attribute)
-            and dec.func.attr == "fixture"
-            or isinstance(dec, ast.Name)
-            and dec.name == "fixture"
+            (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture")
+            or (isinstance(dec, ast.Name) and dec.id == "fixture")
             for dec in node.decorator_list
         )
 

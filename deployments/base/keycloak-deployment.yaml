@@ -161,6 +161,7 @@ spec:
         # See: deployments/base/.trivyignore (AVD-KSV-0014) for full justification
         securityContext:
           allowPrivilegeEscalation: false
+          # trivy:ignore:AVD-KSV-0014
           readOnlyRootFilesystem: false
           runAsNonRoot: true
           runAsUser: 10000

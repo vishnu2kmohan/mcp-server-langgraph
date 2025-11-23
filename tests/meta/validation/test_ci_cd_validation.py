@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit

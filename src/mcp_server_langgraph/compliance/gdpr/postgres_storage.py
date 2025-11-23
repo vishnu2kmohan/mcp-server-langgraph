@@ -86,8 +86,8 @@ class PostgresUserProfileStore(UserProfileStore):
                     profile.email,
                     profile.full_name,
                     # Convert ISO string timestamps to datetime objects for asyncpg
-                    datetime.fromisoformat(profile.created_at.replace("Z", "+00:00")),
-                    datetime.fromisoformat(profile.last_updated.replace("Z", "+00:00")),
+                    datetime.fromisoformat(profile.created_at),
+                    datetime.fromisoformat(profile.last_updated),
                     json.dumps(profile.metadata),
                 )
                 return True
@@ -356,7 +356,7 @@ class PostgresConsentStore(ConsentStore):
                 record.consent_type,
                 record.granted,
                 # Convert ISO string timestamp to datetime object for asyncpg
-                datetime.fromisoformat(record.timestamp.replace("Z", "+00:00")),
+                datetime.fromisoformat(record.timestamp),
                 record.ip_address,
                 record.user_agent,
                 json.dumps(record.metadata),
@@ -494,8 +494,8 @@ class PostgresConversationStore(ConversationStore):
                 conversation.title,
                 json.dumps(conversation.messages),
                 # Convert ISO string timestamps to datetime objects for asyncpg
-                datetime.fromisoformat(conversation.created_at.replace("Z", "+00:00")),
-                datetime.fromisoformat(conversation.last_message_at.replace("Z", "+00:00")),
+                datetime.fromisoformat(conversation.created_at),
+                datetime.fromisoformat(conversation.last_message_at),
                 conversation.archived,
                 json.dumps(conversation.metadata),
             )
@@ -591,7 +591,7 @@ class PostgresConversationStore(ConversationStore):
             if key == "last_message_at":
                 set_clauses.append(f"{key} = ${param_num}")
                 # Convert ISO string timestamp to datetime object for asyncpg
-                values.append(datetime.fromisoformat(value.replace("Z", "+00:00")))
+                values.append(datetime.fromisoformat(value))
                 param_num += 1
             elif key in ["title", "archived"]:
                 set_clauses.append(f"{key} = ${param_num}")
@@ -703,7 +703,7 @@ class PostgresAuditLogStore(AuditLogStore):
                 entry.resource_type,
                 entry.resource_id,
                 # Convert ISO string timestamp to datetime object for asyncpg
-                datetime.fromisoformat(entry.timestamp.replace("Z", "+00:00")),
+                datetime.fromisoformat(entry.timestamp),
                 entry.ip_address,
                 entry.user_agent,
                 json.dumps(entry.metadata),

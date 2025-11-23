@@ -469,6 +469,7 @@ asyncio_mode = "auto"
 # CODEX FINDING FIX (2025-11-20): Set to "session" to support session-scoped async fixtures
 # (postgres_connection_real, redis_client_real, openfga_client_real) without ScopeMismatch errors
 asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 # Filter warnings to reduce test output noise
 filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",

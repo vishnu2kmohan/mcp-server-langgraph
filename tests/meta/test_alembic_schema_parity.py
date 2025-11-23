@@ -55,8 +55,15 @@ def get_alembic_dsn(db_name: str) -> str:
 
 
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testalembicschemaparity")
 class TestAlembicSchemaParity:
     """Validate Alembic migrations match raw SQL schema."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     async def _create_test_database(self, db_name: str):
         """Create a test database."""

@@ -18,6 +18,7 @@ data:
   statusbadge.enabled: "true"
 
   # Repository credentials template (optional)
+  # trivy:ignore:AVD-KSV-0109
   repository.credentials: |
     - url: https://github.com/vishnu2kmohan
       usernameSecret:
@@ -132,6 +133,7 @@ metadata:
     trivy.aquasecurity.com/ignore: AVD-KSV-0109
 data:
   # Service configuration (Slack example)
+  # trivy:ignore:AVD-KSV-0109
   service.slack: |
     token: $slack-token
 

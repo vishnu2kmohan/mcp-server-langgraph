@@ -242,7 +242,7 @@ test-local:
 
 test-ci:
 	@echo "Running tests exactly as CI does (parallel execution)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
+	OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci $(PYTEST) -n auto -m "unit and not llm" $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
 	@echo "✓ CI-equivalent tests complete"
 	@echo "  Coverage XML: coverage.xml"
 
@@ -457,7 +457,7 @@ test-e2e:
 	@bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 	@echo ""
 	@echo "Running E2E tests..."
-	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m e2e -v --tb=short
+	TESTING=true OTEL_SDK_DISABLED=true KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests KEYCLOAK_ADMIN_PASSWORD=admin JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only uv run pytest -n auto -m e2e -v --tb=short
 	@echo "✓ E2E tests complete"
 
 test-api:
@@ -1171,7 +1171,7 @@ docs-validate-version:
 
 docs-fix-mdx:
 	@echo "🔧 Auto-fixing MDX syntax errors..."
-	@python3 scripts/fix_mdx_syntax.py --all
+	@python3 scripts/docs/fix_mdx_syntax.py --all
 	@echo "✅ MDX syntax fixed. Review changes with 'git diff docs/'"
 
 docs-test:

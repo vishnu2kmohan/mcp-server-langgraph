@@ -131,7 +131,7 @@ receivers:
   # PagerDuty for critical alerts
   - name: 'pagerduty'
     pagerduty_configs:
-      - routing_key: '<YOUR_PAGERDUTY_INTEGRATION_KEY>'
+      - routing_key: 'dummy_key'
         severity: '{{ .GroupLabels.severity }}'
         description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
         details:
@@ -146,7 +146,7 @@ receivers:
   # Slack for critical alerts
   - name: 'slack-critical'
     slack_configs:
-      - api_url: '<YOUR_SLACK_WEBHOOK_URL_CRITICAL>'
+      - api_url: 'http://example.com/slack'
         channel: '#alerts-critical'
         title: ':fire: Critical Alert: {{ .GroupLabels.alertname }}'
         text: |
@@ -164,7 +164,7 @@ receivers:
   # Slack for warnings
   - name: 'slack-warnings'
     slack_configs:
-      - api_url: '<YOUR_SLACK_WEBHOOK_URL_WARNINGS>'
+      - api_url: 'http://example.com/slack'
         channel: '#alerts-warnings'
         title: ':warning: Warning: {{ .GroupLabels.alertname }}'
         text: |
@@ -177,7 +177,7 @@ receivers:
   # Slack for security alerts
   - name: 'slack-security'
     slack_configs:
-      - api_url: '<YOUR_SLACK_WEBHOOK_URL_SECURITY>'
+      - api_url: 'http://example.com/slack'
         channel: '#security-alerts'
         title: ':rotating_light: Security Alert: {{ .GroupLabels.alertname }}'
         text: |
@@ -193,7 +193,7 @@ receivers:
   # Slack for SLA alerts
   - name: 'slack-sla'
     slack_configs:
-      - api_url: '<YOUR_SLACK_WEBHOOK_URL_SLA>'
+      - api_url: 'http://example.com/slack'
         channel: '#sla-monitoring'
         title: ':chart_with_downwards_trend: SLA Alert: {{ .GroupLabels.alertname }}'
         text: |

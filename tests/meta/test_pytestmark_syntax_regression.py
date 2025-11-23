@@ -22,11 +22,18 @@ pytestmark = pytest.mark.meta
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpytestmarkplacementregression")
 class TestPytestmarkPlacementRegression:
     """Prevent pytestmark from being placed inside import blocks.
 
     Regression prevention for commit a57fcc95 (2025-11-20).
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_pytestmark_not_inside_imports(self):
         """Test that pytestmark is never placed inside import parentheses.
@@ -202,11 +209,18 @@ class TestPytestmarkPlacementRegression:
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testpytestmarkdocumentation")
 class TestPytestmarkDocumentation:
     """Validate pytestmark placement guidelines are documented.
 
     Test ID: TEST-META-PYTESTMARK-002
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_pytestmark_guidelines_exist(self):
         """Test that PYTESTMARK_GUIDELINES.md exists with placement rules.
@@ -225,11 +239,18 @@ class TestPytestmarkDocumentation:
 
 @pytest.mark.meta
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="testautomationscriptfix")
 class TestAutomationScriptFix:
     """Validate the automation script bug is fixed.
 
     Test ID: TEST-META-PYTESTMARK-003
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_fix_missing_pytestmarks_uses_end_lineno(self):
         """Test that fix_missing_pytestmarks.py uses end_lineno correctly.

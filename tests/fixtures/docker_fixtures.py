@@ -178,3 +178,156 @@ def docker_services_available(docker_compose_file):
         pytest.skip("Docker not installed or not responding")
 
     return True
+
+
+@pytest.fixture(scope="session")
+def test_infrastructure_ports():
+    """
+    Define test infrastructure ports (offset by 1000 from production).
+
+    **Single Shared Infrastructure (Session-Scoped)**:
+    All pytest-xdist workers connect to the SAME infrastructure instance on FIXED ports.
+    This provides a single docker-compose stack shared across all workers, with logical
+    isolation via PostgreSQL schemas, Redis DB indices, OpenFGA stores, etc.
+
+    Port Allocation:
+    - All workers use base ports: postgres=9432, redis=9379, openfga=9080, etc.
+    - Ports are FIXED (no worker-based offsets)
+    - Maps directly to docker-compose.test.yml port bindings
+
+    Logical Isolation Strategy:
+    - PostgreSQL: Separate schemas per worker (test_worker_gw0, test_worker_gw1, ...)
+    - Redis: Separate DB indices per worker (1, 2, 3, ...)
+    - OpenFGA: Separate stores per worker (test_store_gw0, test_store_gw1, ...)
+    - Qdrant: Separate collections per worker
+    - Keycloak: Separate realms per worker
+
+    This is faster and simpler than per-worker infrastructure with dynamic port allocation,
+    avoiding "address already in use" errors through logical isolation instead of port offsets.
+    """
+    # Return FIXED base ports for all workers
+    # All xdist workers (gw0, gw1, gw2, ...) connect to the same ports
+    # Isolation is achieved via schemas, DB indices, stores, not port offsets
+    return {
+        "postgres": 9432,
+        "redis_checkpoints": 9379,
+        "redis_sessions": 9380,
+        "qdrant": 9333,
+        "qdrant_grpc": 9334,
+        "openfga_http": 9080,
+        "openfga_grpc": 9081,
+        "keycloak": 9082,  # HTTP API port
+        "keycloak_management": 9900,  # Management/health port (Keycloak 26.x best practice)
+    }
+
+
+@pytest.fixture(scope="session")
+def test_infrastructure(docker_services_available, docker_compose_file, test_infrastructure_ports):
+    """
+    Automated test infrastructure lifecycle management.
+
+    This fixture:
+    1. Starts all services via docker-compose.test.yml
+    2. Waits for health checks to pass
+    3. Yields control to tests
+    4. Automatically tears down services after session
+
+    Replaces manual:
+        docker compose -f docker-compose.test.yml up -d
+        docker compose -f docker-compose.test.yml down -v
+
+    Usage:
+        @pytest.mark.e2e
+        def test_with_infrastructure(test_infrastructure):
+            # All services are running and healthy
+            ...
+    """
+    # Set TESTING environment variable for services
+    # NOTE: This is intentionally session-scoped and not cleaned up.
+    # Worker isolation is achieved via port offsets and schema/DB separation,
+    # not separate Docker instances. The TESTING env var is shared across
+    # all workers to enable test infrastructure detection.
+    os.environ["TESTING"] = "true"
+
+    # Detect existing test infrastructure (started by make test-integration script)
+    # This approach removes the need for python-on-whales dependency and avoids
+    # redundant docker-compose operations
+    logging.info("Detecting existing test infrastructure...")
+
+    # Wait for critical services to be ready
+    logging.info("Waiting for test infrastructure health checks...")
+
+    # PostgreSQL
+    if not _wait_for_port("localhost", test_infrastructure_ports["postgres"], timeout=30):
+        pytest.skip(
+            "PostgreSQL test service not available - run 'make test-integration' or start docker-compose.test.yml manually"
+        )
+    logging.info("✓ PostgreSQL port ready")
+
+    # Verify GDPR schema is fully initialized (not just port open)
+    # This prevents race conditions where tests start before tables exist
+    logging.info("Verifying GDPR schema initialization...")
+    schema_ready = asyncio.run(_verify_schema_ready("localhost", test_infrastructure_ports["postgres"], timeout=30))
+    if not schema_ready:
+        pytest.skip("GDPR schema not initialized in time - run migrations/001_gdpr_schema.sql")
+    logging.info("✓ PostgreSQL ready with GDPR schema")
+
+    # Redis (checkpoints)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_checkpoints"], timeout=20):
+        pytest.skip("Redis checkpoints test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (checkpoints) ready")
+
+    # Redis (sessions)
+    if not _wait_for_port("localhost", test_infrastructure_ports["redis_sessions"], timeout=20):
+        pytest.skip("Redis sessions test service not available - run 'make test-integration'")
+    logging.info("✓ Redis (sessions) ready")
+
+    # OpenFGA HTTP
+    if not _wait_for_port("localhost", test_infrastructure_ports["openfga_http"], timeout=40):
+        pytest.skip("OpenFGA test service not available - run 'make test-integration'")
+    # Additional check for OpenFGA
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['openfga_http']}/healthz", timeout=5):
+        pytest.skip("OpenFGA health check failed - ensure openfga-test container is healthy")
+    logging.info("✓ OpenFGA ready")
+
+    # Keycloak (takes longer to start - needs DB migration + realm import + JIT compilation)
+    # Note: Keycloak uses Java and requires JIT warmup, which adds ~30-60s to first startup
+    if not _wait_for_port("localhost", test_infrastructure_ports["keycloak"], timeout=90):
+        pytest.skip("Keycloak test service not available - run 'make test-integration'")
+
+    # Best Practice: Use /health/ready endpoint on management port (9000)
+    # Reference: https://www.keycloak.org/observability/health
+    # Keycloak 26.x exposes health endpoints on port 9000 (management port)
+    # This is more reliable than /realms/master as it's purpose-built for health checks
+    # Retry with backoff since Keycloak HTTP server may take time to initialize after port opens
+    # This accounts for:
+    #   1. Database schema migration
+    #   2. Realm import from keycloak-test-realm.json
+    #   3. JIT compilation of Java bytecode
+    keycloak_health_url = f"http://localhost:{test_infrastructure_ports['keycloak_management']}/health/ready"
+    keycloak_ready = False
+    for attempt in range(30):  # 30 attempts * 2s = 60s max additional wait
+        if _check_http_health(keycloak_health_url, timeout=5):
+            keycloak_ready = True
+            break
+        time.sleep(2)
+
+    if not keycloak_ready:
+        logging.error("Keycloak /health/ready endpoint not responding after 60s additional wait")
+        pytest.skip("Keycloak health check failed - /health/ready endpoint not responding (port 9900)")
+    logging.info("✓ Keycloak ready")
+
+    # Qdrant
+    if not _wait_for_port("localhost", test_infrastructure_ports["qdrant"], timeout=30):
+        pytest.skip("Qdrant test service not available - run 'make test-integration'")
+    # Additional check for Qdrant - use /readyz endpoint (official health check endpoint)
+    # Qdrant exposes /healthz, /livez, and /readyz for Kubernetes-style health checks
+    if not _check_http_health(f"http://localhost:{test_infrastructure_ports['qdrant']}/readyz", timeout=5):
+        pytest.skip("Qdrant health check failed - ensure qdrant-test container is healthy")
+    logging.info("✓ Qdrant ready")
+
+    logging.info("✅ All test infrastructure services ready")
+
+    # Return infrastructure info
+    # NOTE: No cleanup needed - infrastructure is managed externally by make test-integration
+    yield {"ports": test_infrastructure_ports, "ready": True}

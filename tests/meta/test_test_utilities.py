@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from mcp_server_langgraph.core.config import settings
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 pytestmark = pytest.mark.unit
 
@@ -35,7 +35,7 @@ class TestRequiresToolDecorator:
         monkeypatch.setattr(shutil, "which", lambda x: None)
 
         # Import the decorator (will be implemented in conftest)
-        from tests.conftest import requires_tool
+        from tests.fixtures.tool_fixtures import requires_tool
 
         # Define a test function with the decorator
         @requires_tool("nonexistent-tool")
@@ -56,7 +56,7 @@ class TestRequiresToolDecorator:
 
         monkeypatch.setattr(shutil, "which", lambda x: "/usr/bin/mock-tool")
 
-        from tests.conftest import requires_tool
+        from tests.fixtures.tool_fixtures import requires_tool
 
         # Define a test function with the decorator
         executed = False
@@ -77,7 +77,7 @@ class TestRequiresToolDecorator:
 
         monkeypatch.setattr(shutil, "which", lambda x: None)
 
-        from tests.conftest import requires_tool
+        from tests.fixtures.tool_fixtures import requires_tool
 
         @requires_tool("custom-tool", skip_reason="Custom skip message")
         def dummy_test():
@@ -224,7 +224,7 @@ class TestUtilityDocumentation:
 
     def test_requires_tool_has_docstring(self):
         """Verify @requires_tool decorator has comprehensive docstring."""
-        from tests.conftest import requires_tool
+        from tests.fixtures.tool_fixtures import requires_tool
 
         assert requires_tool.__doc__ is not None
         assert len(requires_tool.__doc__) > 50  # Meaningful documentation

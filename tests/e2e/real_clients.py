@@ -18,11 +18,13 @@ Usage:
 """
 
 import os
+import httpx
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
-import httpx
+# Import helper for worker-safe IDs
+from tests.conftest import get_user_id
 
 
 class RealKeycloakAuth:
@@ -63,15 +65,19 @@ class RealKeycloakAuth:
         """
         token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
 
+        data = {
+            "grant_type": "password",
+            "client_id": self.client_id,
+            "username": username,
+            "password": password,
+        }
+        if self.client_secret:
+            data["client_secret"] = self.client_secret
+
         try:
             response = await self.client.post(
                 token_url,
-                data={
-                    "grant_type": "password",
-                    "client_id": self.client_id,
-                    "username": username,
-                    "password": password,
-                },
+                data=data,
             )
             response.raise_for_status()
             return response.json()
@@ -105,13 +111,17 @@ class RealKeycloakAuth:
         """
         token_url = f"{self.base_url}/realms/{self.realm}/protocol/openid-connect/token"
 
+        data = {
+            "grant_type": "refresh_token",
+            "client_id": self.client_id,
+            "refresh_token": refresh_token,
+        }
+        if self.client_secret:
+            data["client_secret"] = self.client_secret
+
         response = await self.client.post(
             token_url,
-            data={
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": refresh_token,
-            },
+            data=data,
         )
         response.raise_for_status()
 
@@ -202,14 +212,21 @@ class RealMCPClient:
 
         Returns:
             Dict with protocol_version, server_info, capabilities
-
-        Raises:
-            RuntimeError: If initialization fails (with specific error context)
         """
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "initialize",
+            "id": 1,
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "clientInfo": {"name": "test-client", "version": "1.0"},
+                "capabilities": {},
+            },
+        }
         try:
-            response = await self.client.post("/mcp/initialize", json={"protocol_version": "2024-11-05"})
+            response = await self.client.post("/message", json=payload)
             response.raise_for_status()
-            return response.json()
+            return response.json().get("result", {})
 
         except httpx.TimeoutException as e:
             raise RuntimeError(
@@ -228,14 +245,12 @@ class RealMCPClient:
 
         Returns:
             Dict with tools array
-
-        Raises:
-            RuntimeError: If listing tools fails (with specific error context)
         """
+        payload = {"jsonrpc": "2.0", "method": "tools/list", "id": 2, "params": {}}
         try:
-            response = await self.client.get("/mcp/tools/list")
+            response = await self.client.post("/message", json=payload)
             response.raise_for_status()
-            return response.json()
+            return response.json().get("result", {})
 
         except httpx.TimeoutException as e:
             raise RuntimeError(f"MCP list_tools timeout after 30s at {self.base_url}") from e
@@ -255,20 +270,33 @@ class RealMCPClient:
         Returns:
             Dict with tool result
         """
-        response = await self.client.post(
-            "/mcp/tools/call",
-            json={
+        # Ensure token is in arguments if available
+        if self.access_token and "token" not in arguments:
+            arguments["token"] = self.access_token
+
+        payload = {
+            "jsonrpc": "2.0",
+            "method": "tools/call",
+            "id": 3,
+            "params": {
                 "name": tool_name,
                 "arguments": arguments,
             },
-        )
+        }
+        response = await self.client.post("/message", json=payload)
         response.raise_for_status()
 
-        return response.json()
+        result = response.json().get("result", {})
+        error = response.json().get("error")
+        if error:
+            raise RuntimeError(f"MCP call_tool failed: {error}")
+
+        # MCP returns {content: [...]}
+        return result
 
     async def create_conversation(self, user_id: str = "test-user") -> str:
         """
-        Create a new conversation.
+        Create a new conversation (Generate ID, actual creation is implicit).
 
         Args:
             user_id: User ID for conversation
@@ -276,21 +304,13 @@ class RealMCPClient:
         Returns:
             Conversation ID
         """
-        response = await self.client.post(
-            "/conversations",
-            json={
-                "user_id": user_id,
-                "title": "E2E Test Conversation",
-            },
-        )
-        response.raise_for_status()
+        import uuid
 
-        data = response.json()
-        return data["conversation_id"]
+        return f"conv_{uuid.uuid4().hex[:8]}"
 
     async def send_message(self, conversation_id: str, content: str) -> dict[str, Any]:
         """
-        Send message to conversation.
+        Send message to conversation using agent_chat tool.
 
         Args:
             conversation_id: Conversation ID
@@ -299,20 +319,20 @@ class RealMCPClient:
         Returns:
             Dict with message response
         """
-        response = await self.client.post(
-            f"/conversations/{conversation_id}/messages",
-            json={
-                "role": "user",
-                "content": content,
-            },
-        )
-        response.raise_for_status()
+        arguments = {
+            "message": content,
+            "thread_id": conversation_id,
+            "user_id": get_user_id(),
+        }
+        if self.access_token:
+            arguments["token"] = self.access_token
 
-        return response.json()
+        result = await self.call_tool("agent_chat", arguments)
+        return result
 
     async def get_conversation(self, conversation_id: str) -> dict[str, Any]:
         """
-        Get conversation details.
+        Get conversation details using conversation_get tool.
 
         Args:
             conversation_id: Conversation ID
@@ -320,10 +340,12 @@ class RealMCPClient:
         Returns:
             Dict with conversation data
         """
-        response = await self.client.get(f"/conversations/{conversation_id}")
-        response.raise_for_status()
+        arguments = {"thread_id": conversation_id, "user_id": get_user_id("test")}
+        if self.access_token:
+            arguments["token"] = self.access_token
 
-        return response.json()
+        result = await self.call_tool("conversation_get", arguments)
+        return result
 
     async def close(self):
         """Close HTTP client"""

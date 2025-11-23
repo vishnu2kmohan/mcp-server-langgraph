@@ -5,78 +5,57 @@ metadata:
 spec:
   template:
     spec:
-      # Remove init container - Cloud SQL Proxy sidecar starts simultaneously
-      # and has its own readiness probe
       initContainers: []
-
-      # Main container array - merge with base
       containers:
       - name: keycloak
-        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
-        # Add management port for health endpoints
+        imagePullPolicy: Always
         ports:
         - name: management
           containerPort: 9000
           protocol: TCP
-
-        # Security context for Keycloak container
-        # NOTE: readOnlyRootFilesystem: false required for Quarkus JIT compilation
-        # Reason: Keycloak uses Quarkus which performs JIT compilation at runtime
-        # Issue: https://github.com/keycloak/keycloak/issues/10150
-        # Alternative: Native image (GraalVM) not officially supported by Keycloak
-        # Mitigation: emptyDir volumes + runAsNonRoot + drop ALL capabilities
-        # See: deployments/base/.trivyignore (AVD-KSV-0014) for full justification
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 10000
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
-              - ALL
-
-        # Resource limits - explicit specification to ensure consistency
+            - ALL
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
-            ephemeral-storage: "1Gi"
+            memory: 512Mi
+            cpu: 250m
+            ephemeral-storage: 1Gi
           limits:
-            memory: "1Gi"
-            cpu: "1000m"
-            ephemeral-storage: "2Gi"
-
-        # Volume mounts for writable directories
+            memory: 1Gi
+            cpu: 1000m
+            ephemeral-storage: 2Gi
         volumeMounts:
         - name: tmp
           mountPath: /tmp
         - name: var-tmp
-          mountPath: /var/tmp  # Required for Quarkus with readOnlyRootFilesystem
+          mountPath: /var/tmp
         - name: cache
-          mountPath: /opt/keycloak/data/tmp  # Keycloak temp directory
+          mountPath: /opt/keycloak/data/tmp
         - name: work-dir
-          mountPath: /opt/keycloak/data  # Keycloak work directory
+          mountPath: /opt/keycloak/data
         - name: providers
-          mountPath: /opt/keycloak/providers  # Keycloak providers directory
+          mountPath: /opt/keycloak/providers
         - name: themes
-          mountPath: /opt/keycloak/themes  # Keycloak themes directory
-
+          mountPath: /opt/keycloak/themes
         env:
-        # Update database connection to use Cloud SQL via localhost
         - name: KC_DB_URL
-          value: "jdbc:postgresql://127.0.0.1:5432/keycloak"
+          value: jdbc:postgresql://127.0.0.1:5432/keycloak
         - name: KC_DB_USERNAME
           valueFrom:
             secretKeyRef:
               name: staging-mcp-server-langgraph-secrets
-              key: postgres-username  # Will use 'keycloak' user
+              key: postgres-username
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: staging-mcp-server-langgraph-secrets
               key: keycloak-db-password
-
-        # Fix health probes to use management port (9000) instead of http port (8080)
         startupProbe:
           httpGet:
             path: /health
@@ -85,7 +64,6 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 60
-
         livenessProbe:
           httpGet:
             path: /health
@@ -94,7 +72,6 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-
         readinessProbe:
           httpGet:
             path: /health/ready
@@ -103,20 +80,17 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-
-      # Cloud SQL Proxy sidecar - append to containers array
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
-        imagePullPolicy: Always  # Security: Always pull latest image for staging environment
+        imagePullPolicy: Always
         args:
-          - "--structured-logs"
-          - "--port=5432"
-          - "--http-port=9801"
-          - "--http-address=0.0.0.0"
-          - "--health-check"
-          - "--private-ip"
-          - "vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres"
-
+        - --structured-logs
+        - --port=5432
+        - --http-port=9801
+        - --http-address=0.0.0.0
+        - --health-check
+        - --private-ip
+        - vishnu-sandbox-20250310:us-central1:staging-mcp-slg-postgres
         securityContext:
           runAsNonRoot: true
           runAsUser: 65532
@@ -124,21 +98,17 @@ spec:
           readOnlyRootFilesystem: true
           capabilities:
             drop:
-              - ALL
-
+            - ALL
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
+            memory: 128Mi
+            cpu: 100m
           limits:
-            memory: "256Mi"
-            cpu: "200m"
-
-        # Volume mount for /tmp required by Cloud SQL proxy for credential caching
+            memory: 256Mi
+            cpu: 200m
         volumeMounts:
         - name: tmp
           mountPath: /tmp
-
         livenessProbe:
           httpGet:
             path: /liveness
@@ -146,7 +116,6 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
-
         readinessProbe:
           httpGet:
             path: /readiness
@@ -154,8 +123,6 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
-
-      # Volumes for writable directories
       volumes:
       - name: tmp
         emptyDir: {}

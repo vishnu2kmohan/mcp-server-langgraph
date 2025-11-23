@@ -230,7 +230,8 @@ log_success "Services started"
 # Wait for services to be healthy
 log_info "Waiting for services to be healthy..."
 # Use smart wait utility instead of hardcoded sleep loops
-if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
+# Only wait for critical services to prevent optional services (observability) from blocking tests
+if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloak-test openfga-test redis-test redis-sessions-test qdrant-test mcp-server-test; then
     log_success "All services healthy"
     echo ""
 
@@ -299,7 +300,8 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE"; then
        POSTGRES_DB=gdpr_test \
        POSTGRES_USER=postgres \
        POSTGRES_PASSWORD=postgres \
-       uv run pytest "${PYTEST_ARGS[@]}"; then
+       KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests \
+       uv run pytest -m integration -v --tb=short; then
         END_TIME=$(date +%s)
 
         DURATION=$((END_TIME - START_TIME))

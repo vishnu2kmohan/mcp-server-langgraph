@@ -6,8 +6,6 @@ spec:
   template:
     spec:
       serviceAccountName: mcp-server-langgraph
-
-      # Production-grade security context
       securityContext:
         runAsNonRoot: true
         runAsUser: 10000
@@ -15,8 +13,6 @@ spec:
         fsGroup: 10000
         seccompProfile:
           type: RuntimeDefault
-
-      # Init containers - Add resource limits for kube-score compliance
       initContainers:
       - name: wait-for-openfga
         imagePullPolicy: Always
@@ -32,7 +28,7 @@ spec:
         securityContext:
           runAsUser: 10000
           runAsGroup: 10000
-
+          readOnlyRootFilesystem: true
       - name: wait-for-keycloak
         imagePullPolicy: Always
         resources:
@@ -47,8 +43,7 @@ spec:
         securityContext:
           runAsUser: 10000
           runAsGroup: 10000
-
-      # Topology spread for high availability
+          readOnlyRootFilesystem: true
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: topology.kubernetes.io/zone
@@ -62,11 +57,8 @@ spec:
         labelSelector:
           matchLabels:
             app: mcp-server-langgraph
-
       containers:
-      # Main application container
       - name: mcp-server-langgraph
-        # Production resource allocation
         resources:
           requests:
             cpu: 500m
@@ -76,8 +68,6 @@ spec:
             cpu: 2000m
             memory: 2Gi
             ephemeral-storage: 2Gi
-
-        # Strict security context
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -88,18 +78,13 @@ spec:
             - ALL
             add:
             - NET_BIND_SERVICE
-
-        # Environment variables
         env:
-        # LLM Provider Configuration
         - name: LLM_PROVIDER
-          value: "google"
-          valueFrom:       # Remove valueFrom from base to avoid conflict
+          value: google
+          valueFrom: null
         - name: MODEL_NAME
-          value: "gemini-2.0-flash-exp"  # Production model
-          valueFrom:       # Remove valueFrom from base to avoid conflict
-
-        # Vertex AI Configuration (Workload Identity)
+          value: gemini-2.0-flash-exp
+          valueFrom: null
         - name: VERTEX_PROJECT
           valueFrom:
             configMapKeyRef:
@@ -110,8 +95,6 @@ spec:
             configMapKeyRef:
               name: mcp-server-langgraph-config
               key: gcp_region
-
-        # API Keys (from External Secrets / Secret Manager)
         - name: ANTHROPIC_API_KEY
           valueFrom:
             secretKeyRef:
@@ -127,8 +110,6 @@ spec:
             secretKeyRef:
               name: production-mcp-server-langgraph-secrets
               key: openai-api-key
-
-        # Authentication & Secrets
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -139,8 +120,6 @@ spec:
             secretKeyRef:
               name: production-mcp-server-langgraph-secrets
               key: api-key
-
-        # Redis Configuration (from Secret Manager)
         - name: REDIS_HOST
           valueFrom:
             secretKeyRef:
@@ -157,14 +136,12 @@ spec:
               name: production-mcp-server-langgraph-secrets
               key: redis-password
         - name: REDIS_SSL
-          value: "true"
-          valueFrom:       # Remove valueFrom from base to avoid conflict
-
-        # PostgreSQL Configuration (via Cloud SQL Proxy)
+          value: 'true'
+          valueFrom: null
         - name: POSTGRES_HOST
-          value: "127.0.0.1"  # Cloud SQL Proxy
+          value: 127.0.0.1
         - name: POSTGRES_PORT
-          value: "5432"
+          value: '5432'
         - name: POSTGRES_DATABASE
           valueFrom:
             secretKeyRef:
@@ -181,19 +158,15 @@ spec:
               name: production-mcp-server-langgraph-secrets
               key: postgres-password
         - name: POSTGRES_SSL_MODE
-          value: "disable"  # Proxy handles TLS
-
-        # Production-specific settings
+          value: disable
         - name: ENVIRONMENT
-          value: "production"
-          valueFrom:       # Remove valueFrom from base to avoid conflict
+          value: production
+          valueFrom: null
         - name: LOG_LEVEL
-          value: "INFO"
-          valueFrom:       # Remove valueFrom from base to avoid conflict
+          value: INFO
+          valueFrom: null
         - name: ENABLE_DEBUG
-          value: "false"
-
-        # Stricter health checks for production
+          value: 'false'
         readinessProbe:
           httpGet:
             path: /health/ready
@@ -204,7 +177,6 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
-
         livenessProbe:
           httpGet:
             path: /health/live
@@ -214,8 +186,6 @@ spec:
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
-
-        # Startup probe for slow-starting applications
         startupProbe:
           httpGet:
             path: /health/startup
@@ -223,27 +193,23 @@ spec:
           initialDelaySeconds: 0
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 30  # 5 minutes max startup time
-
-      # Cloud SQL Proxy sidecar
+          failureThreshold: 30
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.1
         args:
-        - "--structured-logs"
-        - "--port=5432"
-        - "--private-ip"
-        - "$(CLOUDSQL_CONNECTION_NAME)"
-        - "--health-check"
-        - "--http-port=9801"
-        - "--http-address=0.0.0.0"
-
+        - --structured-logs
+        - --port=5432
+        - --private-ip
+        - $(CLOUDSQL_CONNECTION_NAME)
+        - --health-check
+        - --http-port=9801
+        - --http-address=0.0.0.0
         env:
         - name: CLOUDSQL_CONNECTION_NAME
           valueFrom:
             secretKeyRef:
               name: production-mcp-server-langgraph-secrets
               key: cloudsql-connection-name
-
         securityContext:
           runAsNonRoot: true
           runAsUser: 65532
@@ -252,17 +218,15 @@ spec:
           capabilities:
             drop:
             - ALL
-
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "250m"
-            ephemeral-storage: "100Mi"
+            memory: 256Mi
+            cpu: 250m
+            ephemeral-storage: 100Mi
           limits:
-            memory: "512Mi"
-            cpu: "500m"
-            ephemeral-storage: "200Mi"
-
+            memory: 512Mi
+            cpu: 500m
+            ephemeral-storage: 200Mi
         livenessProbe:
           httpGet:
             path: /liveness
@@ -271,7 +235,6 @@ spec:
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
-
         readinessProbe:
           httpGet:
             path: /readiness
@@ -280,10 +243,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-
-      # Affinity rules for high availability
       affinity:
-        # Prefer spreading pods across zones
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
@@ -293,7 +253,6 @@ spec:
                 values:
                 - mcp-server-langgraph
             topologyKey: topology.kubernetes.io/zone
-
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100
             podAffinityTerm:
@@ -304,17 +263,9 @@ spec:
                   values:
                   - mcp-server-langgraph
               topologyKey: kubernetes.io/hostname
-
-      # Priority class (create via kubectl apply)
       priorityClassName: high-priority-apps
-
-      # DNS policy
       dnsPolicy: ClusterFirst
-
-      # Termination grace period
       terminationGracePeriodSeconds: 60
-
-      # Volumes for Cloud SQL Proxy and app cache
       volumes:
       - name: tmp
         emptyDir: {}

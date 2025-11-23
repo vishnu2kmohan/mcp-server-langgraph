@@ -278,63 +278,16 @@ repos:
       Use VirtualClock for instant time advancement instead of real sleep.
 
       '
-  - id: validate-pytest-config
-    name: Validate Pytest Configuration Compatibility
-    entry: uv run python scripts/validation/validate_pytest_config.py
-    language: python
-    files: ^pyproject\.toml$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Validates that pytest addopts flags match installed plugin dependencies.\n\nPrevents CI failures from:\n\
-      - Adding pytest flags without required plugins\n- Removing plugins that addopts still references\n- Dependency cleanup\
-      \ accidentally breaking pytest options\n\nCommon failure scenario:\n1. Add --timeout to addopts\n2. Forget to add pytest-timeout\
-      \ to dependencies\n3. CI fails: \"pytest: error: unrecognized arguments: --timeout\"\n\nValidated mappings:\n- --dist,\
-      \ -n \u2192 pytest-xdist\n- --timeout \u2192 pytest-timeout\n- --cov \u2192 pytest-cov\n- --benchmark \u2192 pytest-benchmark\n\
-      \nReference: Codex finding - pytest addopts compatibility validation\n"
-  - id: validate-pre-push-hook
-    name: Validate Pre-Push Hook Configuration
-    entry: uv run python scripts/validation/validate_pre_push_hook.py
-    language: python
-    files: ^\.git/hooks/pre-push$
+  - id: validate-fast
+    name: Run Fast Validators (Consolidated)
+    entry: uv run python scripts/validation/validate_fast.py
+    language: system
     pass_filenames: false
     always_run: true
     stages:
     - pre-push
-    description: 'Validates that .git/hooks/pre-push contains all required validation steps.
+    description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
 
-
-      Prevents regressions where:
-
-      - Pre-push hook is accidentally modified or removed
-
-      - Local validation diverges from CI requirements
-
-      - Required validation steps are missing
-
-
-      Required validations:
-
-      - Lockfile validation (uv lock --check)
-
-      - Workflow validation tests
-
-      - MyPy type checking
-
-      - Pre-commit hooks on ALL files
-
-      - Property tests with CI profile (100 examples)
-
-
-      This ensures local validation always matches CI exactly, preventing
-
-      surprises after push.
-
-
-      Fix: Run ''make git-hooks'' to restore proper configuration
-
-      '
   - id: validate-mdx-extensions
     name: Validate MDX File Extensions in docs/
     entry: uv run python scripts/validation/mdx_extension_validator.py
@@ -367,7 +320,7 @@ repos:
       '
   - id: check-frontmatter-quotes
     name: Check Frontmatter Quote Style
-    entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
+    entry: uv run python scripts/docs/standardize_frontmatter.py docs --dry-run
     language: python
     files: \.mdx$
     pass_filenames: false
@@ -517,7 +470,7 @@ repos:
       '
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
-    entry: python scripts/generate_adr_index.py --check
+    entry: python scripts/docs/generate_adr_index.py --check
     language: python
     files: ^adr/.*\.md$
     pass_filenames: false
@@ -832,115 +785,9 @@ repos:
       See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
 
       '
-  - id: validate-async-fixture-scope
-    name: Validate Async Fixture Event Loop Scope
-    entry: uv run python scripts/validation/validate_async_fixture_scope.py
-    language: python
-    pass_filenames: false
-    files: ^pyproject\.toml$
-    description: 'Validates asyncio_default_fixture_loop_scope is set to "session".
 
 
-      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
 
-      Prevents ScopeMismatch errors with session-scoped async fixtures.
-
-      34 integration tests failed before this configuration was fixed.
-
-
-      Session-scoped fixtures: postgres_connection_real, redis_client_real,
-
-      openfga_client_real all require session-scoped event loop.
-
-
-      Fix: asyncio_default_fixture_loop_scope = "session" in pyproject.toml
-
-      '
-  - id: validate-migration-idempotency
-    name: Validate SQL Migration Idempotency
-    entry: uv run python scripts/validation/validate_migration_idempotency.py
-    language: python
-    pass_filenames: true
-    files: ^migrations/.*\.sql$
-    description: 'Validates SQL migrations use idempotent patterns for triggers.
-
-
-      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
-
-      PostgreSQL does not support CREATE TRIGGER IF NOT EXISTS.
-
-      Migrations must use DROP TRIGGER IF EXISTS before CREATE TRIGGER.
-
-
-      Issue fixed: DuplicateObjectError when running migrations multiple times.
-
-
-      Required pattern:
-
-        DROP TRIGGER IF EXISTS trigger_name ON table_name;
-
-        CREATE TRIGGER trigger_name ...
-
-      '
-  - id: validate-repo-root-calculations
-    name: Validate Repository Root Path Calculations
-    entry: uv run --active python scripts/validation/validate_repo_root_calculations.py
-    language: python
-    pass_filenames: false
-    files: ^tests/.*\.py$
-    description: 'Prevents hardcoded .parents[N] path calculations without marker validation.
-
-
-      PATH CALCULATION ANTI-PATTERN PREVENTION:
-
-      Hardcoded .parents[N] breaks when files are moved between directories.
-
-
-      Issue fixed: test_keycloak_readonly_filesystem.py used .parents[2] which
-
-      should have been .parents[3], causing FileNotFoundError.
-
-
-      Required patterns:
-
-      1. Use project_root fixture from tests/conftest.py:
-
-         def test_something(project_root):
-
-             config = project_root / "config.yaml"
-
-
-      2. Use get_repo_root() function with marker validation:
-
-         def get_repo_root() -> Path:
-
-             current = Path(__file__).parent
-
-             markers = [".git", "pyproject.toml"]
-
-             while current != current.parent:
-
-                 if any((current / m).exists() for m in markers):
-
-                     return current
-
-                 current = current.parent
-
-             raise RuntimeError("Cannot find repo root")
-
-
-      Benefits:
-
-      - Paths remain valid when files are moved
-
-      - Marker files provide reliable repo root detection
-
-      - Prevents FileNotFoundError in tests
-
-
-      See: tests/meta/validation/test_path_validation.py for meta-tests
-
-      '
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
     entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
@@ -988,79 +835,8 @@ repos:
       \ prefix.\n\nRegression prevention for Codex P0 finding:\n- test_code_generator.py:33-64 had 18 lines of dead code\n\
       - test_server.py:75-99 had 9 lines of dead code\nThese tests never executed, losing critical test coverage.\n\nMeta-test:\
       \ tests/meta/test_codex_regression_prevention.py::TestDeadCodeInFixtures\n"
-  - id: validate-api-schemas
-    name: Validate API Response Schemas
-    entry: uv run python scripts/validation/validate_api_schemas.py
-    language: python
-    pass_filenames: false
-    files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that API endpoint responses match their documented Pydantic schemas.
-
-      Prevents bugs where implementations store data but don''t return it in responses.
 
 
-      Regression prevention for Codex Finding (2025-11-10):
-
-      - API key "created" timestamp was stored in Keycloak but omitted from response
-
-      - Violated CreateAPIKeyResponse schema contract
-
-      - Clients received empty string instead of actual timestamp
-
-
-      Detection strategy:
-
-      - Validates response model field definitions
-
-      - Checks that return statements include all required schema fields
-
-      - Warns when model instantiation might be missing fields
-
-
-      See: TESTING.md "Regression Test Patterns - Pattern 1: API Contract Violations"
-
-      '
-  - id: validate-test-time-bombs
-    name: Detect Test Time Bombs (Future Dates/Models)
-    entry: uv run python scripts/validation/validate_test_time_bombs.py
-    language: python
-    pass_filenames: false
-    files: ^tests/.*test_.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Detects hard-coded future dates, versions, and model names in tests that
-
-      will break when those futures become reality.
-
-
-      Regression prevention for Codex Finding (2025-11-10):
-
-      - Tests used "gpt-5" which will break when OpenAI releases GPT-5
-
-      - Tests used "gemini-2.5-flash" and other future model names
-
-      - Created time-bomb test failures
-
-
-      Patterns detected:
-
-      - Future AI model names (gpt-5, claude-5, gemini-3+)
-
-      - Future year references (beyond current year + 2)
-
-      - High version numbers (v5.0+) that might become real
-
-
-      Best practice: Use clearly fake constants like TEST_NONEXISTENT_MODEL = "gpt-999-test-nonexistent"
-
-
-      See: TESTING.md "Regression Test Patterns - Pattern 3: Test Time Bombs"
-
-      '
   - id: check-e2e-completion
     name: Check E2E Test Implementation Progress
     entry: uv run python scripts/validation/check_e2e_completion.py --min-percent 25

@@ -19,8 +19,15 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="testasyncmockvalidation")
 class TestAsyncMockValidation:
     """Tests for AsyncMock usage validation"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_detects_asyncmock_class_assignment(self):
         """Should detect and reject AsyncMock class assignments"""

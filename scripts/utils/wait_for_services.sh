@@ -139,8 +139,8 @@ check_service_health() {
     # Get container status using docker compose ps
     # Returns: "running (healthy)", "running (unhealthy)", "running (starting)", etc.
     local status
-    status=$($docker_compose_cmd -f "$compose_file" ps --format json "$service" 2>/dev/null | \
-             jq -r '.[0].Health // .[0].State' 2>/dev/null || echo "unknown")
+    status=$($docker_compose_cmd -f "$compose_file" ps -a --format json "$service" 2>/dev/null | \
+             jq -rs 'if length > 0 then (if (.[0].Health == "" or .[0].Health == null) then .[0].State else .[0].Health end) else "unknown" end' 2>/dev/null || echo "unknown")
 
     case "$status" in
         "healthy"|"running")
@@ -149,7 +149,7 @@ check_service_health() {
         "exited")
              # Check exit code for exited services
              local exit_code
-             exit_code=$($docker_compose_cmd -f "$compose_file" ps --format json "$service" | jq -r '.[0].ExitCode')
+             exit_code=$($docker_compose_cmd -f "$compose_file" ps -a --format json "$service" | jq -rs 'if length > 0 then .[0].ExitCode else 1 end')
              if [ "$exit_code" = "0" ]; then
                  return 0 # Healthy (completed successfully)
              fi

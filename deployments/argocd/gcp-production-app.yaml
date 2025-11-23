@@ -61,6 +61,7 @@ metadata:
   name: argocd-notifications-cm
   namespace: argocd
 data:
+  # trivy:ignore:AVD-KSV-0109
   service.slack: |
     token: $slack-token
 

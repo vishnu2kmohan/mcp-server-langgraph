@@ -20,6 +20,32 @@ pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
+def _has_pytest_marker(node, marker_name: str) -> bool:
+    """Check if an AST node (FunctionDef or ClassDef) has a specific pytest marker."""
+    for dec in node.decorator_list:
+        # Case 1: @pytest.mark.marker_name
+        if (
+            isinstance(dec, ast.Call)
+            and isinstance(dec.func, ast.Attribute)
+            and isinstance(dec.func.value, ast.Attribute)
+            and dec.func.value.attr == "mark"
+            and dec.func.attr == marker_name
+        ):
+            return True
+        # Case 2: @pytest.mark.marker_name (no parenthesis)
+        if (
+            isinstance(dec, ast.Attribute)
+            and isinstance(dec.value, ast.Attribute)
+            and dec.value.attr == "mark"
+            and dec.attr == marker_name
+        ):
+            return True
+        # Case 3: @marker_name (if imported directly, e.g., from pytest import fixture, mark)
+        if isinstance(dec, ast.Name) and dec.id == marker_name:
+            return True
+    return False
+
+
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="testkubectlsafetyenforcement")
 class TestKubectlSafetyEnforcement:
@@ -87,9 +113,9 @@ class TestKubectlSafetyEnforcement:
                             import re
 
                             # Pattern for list-style commands: ["kubectl", "apply"
-                            list_pattern = rf'\["kubectl",\s*"{operation.split()[1]}"'
+                            list_pattern = rf'\\["kubectl",\s*"{operation.split()[1]}"'
                             # Pattern for string commands: "kubectl apply" or 'kubectl apply'
-                            string_pattern = rf'["\']kubectl\s+{operation.split()[1]}["\']'
+                            string_pattern = rf'["\"]kubectl\s+{operation.split()[1]}["\"]'
 
                             has_operation = re.search(list_pattern, func_source) or re.search(string_pattern, func_source)
 
@@ -151,6 +177,20 @@ class TestKubectlSafetyEnforcement:
 
             tree = ast.parse(source)
 
+            # Check module-level pytestmark first
+            has_module_level_marker = False
+            for item in tree.body:
+                if isinstance(item, ast.Assign):
+                    for target in item.targets:
+                        if isinstance(target, ast.Name) and target.id == "pytestmark":
+                            if isinstance(item.value, (ast.List, ast.Tuple)):
+                                for element in item.value.elts:
+                                    if _has_pytest_marker(element, "requires_kubectl"):
+                                        has_module_level_marker = True
+                                        break
+                    if has_module_level_marker:
+                        break
+
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
                     if isinstance(node, ast.FunctionDef) and not node.name.startswith("test_"):
@@ -162,31 +202,28 @@ class TestKubectlSafetyEnforcement:
 
                     # Check if uses kubectl
                     if "kubectl" in func_or_class_source:
-                        # Check for marker
-                        has_marker = any(
-                            (isinstance(dec, ast.Name) and dec.id == "pytest")
-                            or (isinstance(dec, ast.Attribute) and dec.attr == "requires_kubectl")
-                            for dec in node.decorator_list
-                        )
+                        # If module-level marker is present, consider it marked
+                        if has_module_level_marker:
+                            continue
 
-                        # Also check for class-level marker
-                        if not has_marker and isinstance(node, ast.FunctionDef):
-                            # Check parent class
+                        # Check for marker on the current node (function or class)
+                        has_node_level_marker = _has_pytest_marker(node, "requires_kubectl")
+
+                        # If it's a function, also check its parent class
+                        if not has_node_level_marker and isinstance(node, ast.FunctionDef):
                             for parent in ast.walk(tree):
                                 if isinstance(parent, ast.ClassDef):
+                                    # Check if the function belongs to this class
                                     if any(child == node for child in ast.walk(parent)):
-                                        has_marker = any(
-                                            isinstance(dec, ast.Attribute) and dec.attr == "requires_kubectl"
-                                            for dec in parent.decorator_list
-                                        )
+                                        has_node_level_marker = _has_pytest_marker(parent, "requires_kubectl")
                                         break
 
-                        if not has_marker:
+                        if not has_node_level_marker:
                             violations.append(
                                 f"{test_file.name}::{node.name}\n"
                                 f"  Location: {test_file.relative_to(REPO_ROOT)}:{node.lineno}\n"
                                 f"  Issue: Uses kubectl but lacks @pytest.mark.requires_kubectl marker\n"
-                                f"  Fix: Add marker to test or test class"
+                                f"  Fix: Add marker to test or test class or module-level pytestmark"
                             )
 
         if violations:

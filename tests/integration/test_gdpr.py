@@ -343,8 +343,7 @@ class TestGDPREndpoints:
         class TestAuthMiddleware(BaseHTTPMiddleware):
             async def dispatch(self, request, call_next):
                 request.state.user = mock_current_user
-                response = await call_next(request)
-                return response
+                return await call_next(request)
 
         app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
@@ -737,7 +736,6 @@ class TestGDPRIntegration:
 # ==================== Edge Cases ====================
 
 
-@pytest.mark.unit
 @pytest.mark.gdpr
 @pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPREdgeCases:

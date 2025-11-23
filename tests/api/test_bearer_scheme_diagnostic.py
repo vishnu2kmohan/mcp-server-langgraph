@@ -189,11 +189,12 @@ class TestBearerSchemeOverrideDiagnostic:
         from src.mcp_server_langgraph.auth.keycloak import KeycloakClient
         from src.mcp_server_langgraph.auth.openfga import OpenFGAClient
         from src.mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+        from tests.conftest import get_user_id
 
         mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
         mock_keycloak = AsyncMock(spec=KeycloakClient)
         mock_current_user = {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "username": "alice",
             "email": "alice@example.com",
         }
@@ -248,8 +249,8 @@ class TestBearerSchemeOverrideDiagnostic:
             name: str = "Test SP"
             description: str = "Test"
             authentication_mode: str = "client_credentials"
-            associated_user_id: str = "user:alice"
-            owner_user_id: str = "user:alice"
+            associated_user_id: str = get_user_id("alice")
+            owner_user_id: str = get_user_id("alice")
             inherit_permissions: bool = True
             enabled: bool = True
             created_at: str = datetime.now(timezone.utc).isoformat()

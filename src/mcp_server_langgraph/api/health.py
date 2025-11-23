@@ -263,7 +263,7 @@ async def health_check() -> HealthCheckResult:
         "session_store": validate_session_store_registered(),
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
-        "database_connectivity": validate_database_connectivity(),
+        "database_connectivity": await validate_database_connectivity_async(),
     }
 
     # Convert to bool dict and collect errors/warnings

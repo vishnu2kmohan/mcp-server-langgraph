@@ -349,7 +349,7 @@ def test_auth_override_sanity_pattern_documentation():
     assert "dependency_overrides.clear()" in documentation, "Documents cleanup"
 
 
-@pytest.mark.xdist_group(name="auth_override_sanity_tests")
+@pytest.mark.xdist_group(name="testauthoverridesanitypattern")
 class TestAuthOverrideSanityPattern:
     """
     Tests demonstrating the auth override sanity pattern for various scenarios.
@@ -357,6 +357,8 @@ class TestAuthOverrideSanityPattern:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
         gc.collect()
 
     def test_pattern_works_with_minimal_mock(self):

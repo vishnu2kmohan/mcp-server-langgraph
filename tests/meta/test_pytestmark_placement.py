@@ -24,6 +24,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.meta]
 
 
+@pytest.mark.xdist_group(name="testpytestmarkplacement")
 class TestPytestmarkPlacement:
     """
     Validate that pytestmark declarations appear AFTER all module-level imports.
@@ -77,6 +78,12 @@ class TestPytestmarkPlacement:
     - scripts/fix_missing_pytestmarks.py:108-129 - Correct placement logic
     - ADR-0XXX: Pytestmark Placement Validation
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_pytestmark_appears_after_all_imports(self):
         """
@@ -209,8 +216,15 @@ class TestPytestmarkPlacement:
         )
 
 
+@pytest.mark.xdist_group(name="testpytestmarkplacementedgecases")
 class TestPytestmarkPlacementEdgeCases:
     """Test edge cases for pytestmark placement validation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        import gc
+
+        gc.collect()
 
     def test_files_without_imports_are_valid(self, tmp_path):
         """
