@@ -153,9 +153,19 @@ spec:
             memory: 2Gi
             ephemeral-storage: 1Gi
         # Security context for Keycloak container
+        # NOTE: readOnlyRootFilesystem: false required for Quarkus JIT compilation
+        # Keycloak uses Quarkus framework which performs JIT compilation at runtime,
+        # requiring write access to filesystem. Native images (GraalVM) not officially
+        # supported by Keycloak (GitHub issue #10150).
+        # Compensating security controls:
+        #   - runAsNonRoot: true (UID 10000)
+        #   - allowPrivilegeEscalation: false
+        #   - capabilities.drop: ALL
+        #   - emptyDir volumes for writable paths (/tmp, /var/tmp, /opt/keycloak/data)
+        # Security exception documented in deployments/base/.trivyignore (AVD-KSV-0014)
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: false  # Required for Quarkus JIT compilation (issue #10150)
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:

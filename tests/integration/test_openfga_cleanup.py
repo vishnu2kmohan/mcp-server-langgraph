@@ -43,6 +43,9 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         # Mock the OpenFGA SDK calls
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:
@@ -85,6 +88,9 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         with patch.object(client.client, "expand") as mock_expand:
             # Simulate no tuples found (empty expansion)
             mock_expand.return_value = Mock(tree=Mock(model_dump=lambda: {}))
@@ -106,6 +112,9 @@ class TestOpenFGATupleCleanup:
             store_id="test-store",
             model_id="test-model",
         )
+
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
 
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:
@@ -142,6 +151,9 @@ class TestOpenFGATupleCleanup:
             store_id="test-store",
             model_id="test-model",
         )
+
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
 
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:

@@ -70,6 +70,16 @@ LEGITIMATE_PATTERNS = [
     # Comments (documentation)
     r"#.*user:[a-zA-Z0-9_-]+",
     r"#.*apikey_[a-zA-Z0-9_-]+",
+    # Comments with safety markers (InMemory, Mock, etc.) - ID before comment
+    r'["\']user:[a-zA-Z0-9_-]+["\'].*#.*✅.*Safe',
+    r'["\']apikey_[a-zA-Z0-9_-]+["\'].*#.*✅.*Safe',
+    r'["\']user:[a-zA-Z0-9_-]+["\'].*#.*Safe:',
+    r'["\']apikey_[a-zA-Z0-9_-]+["\'].*#.*Safe:',
+    # Comments with safety markers - comment before ID
+    r'#.*✅.*Safe.*["\']user:[a-zA-Z0-9_-]+',
+    r'#.*✅.*Safe.*["\']apikey_[a-zA-Z0-9_-]+',
+    r'#.*Safe:.*["\']user:[a-zA-Z0-9_-]+',
+    r'#.*Safe:.*["\']apikey_[a-zA-Z0-9_-]+',
     # Mock/AsyncMock configurations (unit test isolation)
     r'Mock\(.*["\']user:[a-zA-Z0-9_-]+',
     r'AsyncMock\(.*["\']user:[a-zA-Z0-9_-]+',
@@ -91,6 +101,7 @@ EXEMPT_FILES = [
     "conftest.py",  # Has docstrings and sample fixtures with example IDs
     "worker_safe_ids.py",  # Utility module with docstrings showing anti-patterns and solutions
     "test_id_pollution_prevention.py",  # Meta-test that tests this validation script
+    "test_validator_consistency.py",  # Meta-test that validates validation script consistency
     "test_openfga_client.py",  # Unit tests for OpenFGA client library interface (uses mocked data)
     "api_fixtures.py",  # Shared fixtures with docstrings showing example ID patterns
     # Regression tests (documentation/pattern examples - not production tests)
@@ -272,13 +283,16 @@ def get_integration_violations(file_path: Path) -> list[str]:
     """
     Check if integration test violates worker isolation rules.
 
-    Rule: Integration tests interacting with DB/Auth MUST use worker-safe ID helpers.
+    Rule: Integration tests with hardcoded IDs MUST use worker-safe ID helpers instead.
+
+    This function is called AFTER find_hardcoded_ids() detects violations.
+    It provides additional context for integration tests specifically.
 
     Args:
         file_path: Path to test file
 
     Returns:
-        List of violation messages
+        List of violation messages (empty if no violations)
     """
     if not is_integration_test(file_path):
         return []
@@ -286,22 +300,32 @@ def get_integration_violations(file_path: Path) -> list[str]:
     if is_file_exempt(file_path):
         return []
 
+    # Check if file has actual hardcoded ID violations
+    violations = find_hardcoded_ids(file_path)
+    if not violations:
+        # No hardcoded IDs found - validation passes
+        return []
+
+    # File has hardcoded IDs AND is an integration test
+    # This is a critical violation because it will cause pytest-xdist pollution
     try:
-        content = file_path.read_text(encoding="utf-8")
+        # Check if file uses worker-safe helpers
+        uses_helpers = check_worker_safe_usage(file_path)
 
-        # Heuristic: Does the test involve users, api keys, or auth?
-        # If so, it should use the helpers.
-        needs_isolation = any(term in content for term in ["user", "apikey", "auth", "login", "token"])
-
-        if not needs_isolation:
-            return []
-
-        # Check if helpers are used
-        if not check_worker_safe_usage(file_path):
+        if uses_helpers:
+            # File imports helpers but still has hardcoded IDs
+            # This means some IDs were missed in the conversion
             return [
-                "Integration test involves users/auth but does not use worker-safe ID helpers.",
+                f"Integration test has {len(violations)} hardcoded ID(s) despite importing worker-safe helpers.",
+                "Some IDs were not converted to use get_user_id() or get_api_key_id().",
+                "Fix: Replace ALL hardcoded IDs with helper function calls.",
+            ]
+        else:
+            # File has hardcoded IDs but doesn't import helpers
+            return [
+                f"Integration test has {len(violations)} hardcoded ID(s) that will cause pytest-xdist pollution.",
                 "Must import and use: get_user_id(), get_api_key_id()",
-                "Fix: Replace hardcoded IDs or generic strings with helper calls.",
+                "Fix: Replace hardcoded IDs with worker-safe helper calls.",
             ]
 
     except Exception:

@@ -48,9 +48,12 @@ spec:
             cpu: 2000m
             memory: 2Gi
             ephemeral-storage: 2Gi
+        # Security context: readOnlyRootFilesystem: false required for Quarkus JIT compilation
+        # See deployments/base/.trivyignore (AVD-KSV-0014) for full security justification
+        # Compensating controls: runAsNonRoot, no privilege escalation, capabilities dropped
         securityContext:
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: false  # Required for Quarkus JIT compilation (issue #10150)
           runAsNonRoot: true
           runAsUser: 10000
           capabilities:

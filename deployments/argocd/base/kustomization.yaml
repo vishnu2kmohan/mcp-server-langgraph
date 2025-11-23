@@ -8,7 +8,8 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.9.3/manifests/install.yaml
   - namespace.yaml
   - ingress.yaml
-  - secret.yaml
+  # NOTE: secret.yaml removed - ArgoCD install.yaml already includes argocd-notifications-secret
+  # To customize notifications, use a strategic merge patch instead
 
 # TODO: Fix ArgoCD server patch - command field doesn't exist in base manifest
 # This patch fails with: "add operation does not apply: doc is missing path"

@@ -122,14 +122,14 @@ def main() -> int:
                     print(f"  - {violation}", file=sys.stderr)
                 print()
         else:
-            # Check if using helpers
-            uses_helpers = test_ids.check_worker_safe_usage(file_path)
-            if uses_helpers:
-                print(f"✅ {file_path} - Uses worker-safe ID helpers")
-            elif test_ids.is_file_exempt(file_path):
+            # Validation passed - provide informative message about why
+            # Check in priority order: exempt files, unit tests with InMemory, worker-safe helpers, clean files
+            if test_ids.is_file_exempt(file_path):
                 print(f"⏭️  {file_path} - Exempt (special case)")
             elif test_ids.is_unit_test_with_inmemory(file_path):
                 print(f"⏭️  {file_path} - Unit test with InMemory backend (no pollution risk)")
+            elif test_ids.check_worker_safe_usage(file_path):
+                print(f"✅ {file_path} - Uses worker-safe ID helpers")
             else:
                 print(f"✅ {file_path} - No hardcoded IDs found")
 

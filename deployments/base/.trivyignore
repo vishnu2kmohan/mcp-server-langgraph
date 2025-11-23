@@ -107,6 +107,29 @@
 exp:2026-02-20 AVD-KSV-0014
 
 # ==============================================================================
+# AVD-KSV-0109: ConfigMaps should not store secrets
+# ==============================================================================
+# Finding: ConfigMap 'mcp-server-langgraph-config' stores secrets in key(s) or value(s)
+# Severity: HIGH
+#
+# Affected Component: Application ConfigMap (configmap.yaml)
+#
+# Justification:
+# False positive - the detected keys are configuration values, not secrets:
+# - dynamic_context_max_tokens: Token limit for context loading (integer)
+# - model_max_tokens: Maximum tokens for model inference (integer)
+#
+# These are public configuration parameters that control application behavior,
+# not sensitive credentials. Trivy's heuristic matches on the word "token" but
+# these refer to LLM tokens (text chunks), not authentication tokens.
+#
+# Risk Assessment: FALSE POSITIVE (no actual secrets stored)
+# Review: 2026-11-23 (annually)
+# Owner: @platform-team
+# ==============================================================================
+AVD-KSV-0109: configmap.yaml
+
+# ==============================================================================
 # Future Suppressions
 # ==============================================================================
 # Additional security exceptions should be documented here with the same level

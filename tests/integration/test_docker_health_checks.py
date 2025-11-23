@@ -405,11 +405,15 @@ class TestDockerComposeHealthChecksIntegration:
             if cleanup_result.returncode != 0:
                 print(f"Warning: Cleanup had issues:\n{cleanup_result.stderr}")
 
+    @pytest.mark.timeout(150)  # Override global 60s timeout - Postgres may need up to 90s to become healthy
     def test_minimal_compose_health_checks(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test health checks in docker-compose.minimal.yml if it exists.
 
         This ensures minimal/production configurations also have working health checks.
+
+        Timeout Note: Test waits up to 90s for service health (line 447), so pytest timeout
+        must be > 90s to avoid premature termination. Set to 150s for safety margin.
         """
         compose_file = PROJECT_ROOT / "docker-compose.minimal.yml"
 

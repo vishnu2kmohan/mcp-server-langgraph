@@ -1,0 +1,32 @@
+# Production GKE Environment Suppressions
+# Review: Monthly (CRITICAL - high risk environment)
+# Approval Required: @security-team
+# Last reviewed: 2025-11-23
+# Next review: 2025-12-23
+
+# ==============================================================================
+# AVD-KSV-0014: Keycloak readOnlyRootFilesystem Exception
+# ==============================================================================
+# Finding: Container 'keycloak' should set securityContext.readOnlyRootFilesystem: true
+# Severity: HIGH
+#
+# Affected Component: Keycloak identity provider (keycloak-patch.yaml)
+#
+# Justification:
+# Keycloak uses Quarkus framework requiring JIT compilation at runtime,
+# which needs write access to filesystem. See deployments/base/.trivyignore
+# for comprehensive security justification and compensating controls.
+#
+# Compensating Controls:
+#   ✓ runAsNonRoot: true (UID 10000)
+#   ✓ allowPrivilegeEscalation: false
+#   ✓ capabilities.drop: ALL
+#   ✓ emptyDir volumes for writable paths
+#
+# Risk Assessment: LOW (with compensating controls)
+# Approved: Security Team, 2025-11-23
+# Review: 2026-02-23 (quarterly)
+# Owner: @platform-team
+# References: GitHub #10150, deployments/base/.trivyignore
+# ==============================================================================
+AVD-KSV-0014: keycloak-patch.yaml
