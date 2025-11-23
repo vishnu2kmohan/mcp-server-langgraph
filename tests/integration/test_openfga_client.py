@@ -25,7 +25,7 @@ class TestOpenFGAClient:
 
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
     def test_init(self, mock_sdk_client):
-        """Test OpenFGA client initialization"""
+        """Test OpenFGA client initialization (lazy pattern)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
         client = OpenFGAClient(api_url="http://localhost:8080", store_id="test-store", model_id="test-model")
@@ -33,7 +33,8 @@ class TestOpenFGAClient:
         assert client.api_url == "http://localhost:8080"
         assert client.store_id == "test-store"
         assert client.model_id == "test-model"
-        mock_sdk_client.assert_called_once()
+        # Lazy init: SDK client should NOT be created until first async call
+        mock_sdk_client.assert_not_called()
 
     @pytest.mark.asyncio
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")

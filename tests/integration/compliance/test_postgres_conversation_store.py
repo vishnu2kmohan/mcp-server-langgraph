@@ -14,6 +14,7 @@ import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConversationStore, PostgresUserProfileStore
 from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserProfile
+from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
 pytestmark = pytest.mark.integration
@@ -70,17 +71,18 @@ async def store(db_pool: asyncpg.Pool) -> PostgresConversationStore:
 
 @pytest.fixture
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
-    """Create test user"""
+    """Create test user (worker-safe for pytest-xdist)"""
+    user_id = get_user_id("conv_user")  # Worker-safe ID for parallel execution
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
-        user_id="test_conv_user",
+        user_id=user_id,
         username="convuser",
         email="conv@example.com",
         created_at=now,
         last_updated=now,
     )
     await profile_store.create(profile)
-    return "test_conv_user"
+    return user_id
 
 
 # ============================================================================

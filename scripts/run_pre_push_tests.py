@@ -5,12 +5,10 @@ Pre-push test orchestrator - consolidates 5 separate pytest sessions into one.
 This script addresses OpenAI Codex Finding 2a: Duplicate pytest sessions.
 
 Problem:
-  .pre-commit-config.yaml had 5 separate pytest invocations:
-  1. run-unit-tests: pytest -m "unit and not llm"
-  2. run-smoke-tests: pytest tests/smoke/
-  3. run-api-tests: pytest -m "api and unit and not llm"
-  4. run-mcp-server-tests: pytest tests/unit/test_mcp_stdio_server.py -m "not llm"
-  5. run-property-tests: pytest -m property
+  .pre-commit-config.yaml had 5 separate pytest invocations which caused:
+  - 5x test discovery overhead (10-25s wasted)
+  - 5 separate Python interpreter processes
+  - Lock contention on .pytest_cache and .coverage files
 
   Each session performed full test discovery, causing:
   - 5x test discovery overhead (10-25s wasted)

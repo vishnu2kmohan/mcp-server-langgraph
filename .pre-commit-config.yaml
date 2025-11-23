@@ -50,7 +50,7 @@ repos:
   rev: v1.13.0
   hooks:
   - id: mypy
-    name: MyPy Type Checking (Non-blocking)
+    name: MyPy Type Checking (Blocking)
     args:
     - --ignore-missing-imports
     - --check-untyped-defs
@@ -64,40 +64,26 @@ repos:
     - types-PyYAML
     - types-redis
     - types-requests
-    # MyPy set to manual stage (non-blocking) due to extensive pre-existing type errors.
+    # MyPy enabled for pre-push validation (2025-11-23)
     #
-    # Background: --strict mode reveals 110+ type errors across 37 files that would
-    # block all development. Moving to manual stage allows incremental type safety
-    # improvements without blocking productive work.
+    # All type errors in agent.py have been fixed using type: ignore[arg-type]
+    # comments for list variance issues. MyPy now passes cleanly and blocks
+    # pre-push to maintain local/CI parity.
     #
-    # To run manually: SKIP= pre-commit run mypy --all-files --hook-stage manual
+    # Previous state: 110+ errors kept this in manual stage
+    # Current state: 0 errors, enabled for pre-push
     stages:
-    - manual
+    - pre-push
 - repo: https://github.com/gitleaks/gitleaks
   rev: v8.28.0
   hooks:
   - id: gitleaks
 - repo: local
   hooks:
-  - id: mypy-non-blocking
-    name: MyPy Type Checking (Warning Only - Non-blocking)
-    description: 'Runs MyPy type checking but does not block pushes on errors.
-
-
-      Warning-only mode allows type errors to be visible without blocking development.
-
-      CI can be configured to fail builds on type errors separately.
-
-      '
-    entry: ./.githooks/mypy-non-blocking
-    language: system
-    types: [python]
-    files: ^src/mcp_server_langgraph/
-    # Temporarily moved to manual stage to match main mypy hook
-    # (both hooks moved to manual due to 110+ pre-existing type errors)
-    stages:
-    - manual
-    pass_filenames: false
+  # NOTE: mypy-non-blocking hook REMOVED (2025-11-23)
+  # Reason: Redundant now that main MyPy hook is enabled and blocking
+  # Main MyPy hook runs on pre-push stage and fails on type errors
+  # This maintains local/CI parity (no more non-blocking warnings)
   - id: check-subprocess-timeout
     name: Enforce subprocess timeout parameters
     description: 'Ensures all subprocess.run() calls include timeout parameter to prevent test hangs.
@@ -151,15 +137,11 @@ repos:
 
       Combines 5 separate pytest sessions into 1 for efficiency:
 
-      - Unit tests: -m "unit and not llm"
+      - Combined marker: -m "(unit or api or property) and not llm"
 
-      - Smoke tests: tests/smoke/
+      - This covers: unit tests, smoke tests, API tests, MCP server tests, property tests
 
-      - API tests: -m "api and unit and not llm"
-
-      - MCP server tests: tests/unit/test_mcp_stdio_server.py
-
-      - Property tests: -m property (dev profile: 25 examples)
+      - Property tests use dev profile (25 examples) locally, ci profile (100 examples) in CI
 
 
       Time savings: 10-25 seconds vs separate sessions (no duplicate test discovery)

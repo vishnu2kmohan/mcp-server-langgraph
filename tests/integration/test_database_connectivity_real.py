@@ -36,7 +36,7 @@ class TestDatabaseConnectivityReal:
         Integration test: Verify database connectivity with real PostgreSQL
 
         Requires:
-        - PostgreSQL running on localhost:5432
+        - PostgreSQL running on localhost:9432 (test port, configurable via POSTGRES_PORT)
         - Database 'gdpr' exists
         - User 'postgres' with password 'postgres'
 
@@ -61,7 +61,7 @@ class TestDatabaseConnectivityReal:
         Integration test: Verify connection pool creation with real PostgreSQL
 
         Requires:
-        - PostgreSQL running on localhost:5432
+        - PostgreSQL running on localhost:9432 (test port, configurable via POSTGRES_PORT)
         - Database 'gdpr' exists
         - User 'postgres' with password 'postgres'
 
@@ -70,7 +70,9 @@ class TestDatabaseConnectivityReal:
         from mcp_server_langgraph.infrastructure.database import create_connection_pool
 
         # Use real PostgreSQL connection (assumes Docker Compose is running)
-        postgres_url = os.getenv("GDPR_POSTGRES_URL", "postgresql://postgres:postgres@localhost:5432/gdpr_test")
+        # Use POSTGRES_PORT env var (default 9432 for tests, not production 5432)
+        postgres_port = os.getenv("POSTGRES_PORT", "9432")
+        postgres_url = os.getenv("GDPR_POSTGRES_URL", f"postgresql://postgres:postgres@localhost:{postgres_port}/gdpr_test")
 
         pool = await create_connection_pool(
             postgres_url,

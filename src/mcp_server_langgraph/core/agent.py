@@ -693,10 +693,12 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
             except Exception as e:
                 logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
                 # Fallback to standard LLM (use async invoke)
-                response = await model.ainvoke(messages_list)
+                # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
+                response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
         else:
             # Standard LLM response (use async invoke)
-            response = await model.ainvoke(messages_list)
+            # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
+            response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
 
         # NOTE: Returning [response] (not state["messages"] + [response]) is correct here.
         # Lang Graph's operator.add annotation on AgentState.messages (line 77) automatically

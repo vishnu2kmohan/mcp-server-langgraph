@@ -214,7 +214,9 @@ class TestDependencyInjectionWiring:
         monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "admin")
         monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "admin-password")
         monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        # Leave OpenFGA store/model unset to test graceful degradation
+        # Explicitly unset OpenFGA store/model to test graceful degradation
+        monkeypatch.setenv("OPENFGA_STORE_ID", "")
+        monkeypatch.setenv("OPENFGA_MODEL_ID", "")
 
         # Reload config to pick up monkeypatched env vars
         import importlib
