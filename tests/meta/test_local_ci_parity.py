@@ -1179,8 +1179,9 @@ class TestMakefilePrePushParity:
 
         target_content = target_match.group(0)
 
-        # Should run unit tests - check for unit marker in any format
-        has_unit_tests = "unit" in target_content and "-m" in target_content
+        # Should run unit tests (or use consolidated script)
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
+        has_unit_tests = ("unit" in target_content and "-m" in target_content) or uses_consolidated_script
 
         assert has_unit_tests, (
             "Makefile validate-pre-push must run unit tests to match pre-push hook\n"
@@ -1236,8 +1237,9 @@ class TestMakefilePrePushParity:
 
         target_content = target_match.group(0)
 
-        # Should run API/MCP tests
-        has_api_tests = "api" in target_content or "test_mcp_stdio_server" in target_content
+        # Should run API/MCP tests (or use consolidated script)
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
+        has_api_tests = "api" in target_content or "test_mcp_stdio_server" in target_content or uses_consolidated_script
 
         assert has_api_tests, (
             "Makefile validate-pre-push must run API/MCP tests to match pre-push hook\n"
@@ -1258,8 +1260,10 @@ class TestMakefilePrePushParity:
 
         target_content = target_match.group(0)
 
-        # If it runs pytest, it should use -n auto
-        if "pytest" in target_content:
+        # If it runs pytest, it should use -n auto (or delegate to script)
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
+
+        if "pytest" in target_content and not uses_consolidated_script:
             assert "-n auto" in target_content, (
                 "Makefile validate-pre-push must use '-n auto' to match pre-push hook\n"
                 "All pytest commands in validate-pre-push should include -n auto\n"

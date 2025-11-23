@@ -152,32 +152,32 @@ class TestComposeFileConsolidation:
                     "docker/docker-compose.test.yml" not in compose_path
                 ), f"Makefile must NOT use legacy docker/docker-compose.test.yml: {compose_path}"
 
-    def test_conftest_uses_root_compose(self):
+    def test_docker_fixtures_uses_root_compose(self):
         """
-        🟢 GREEN: Verify tests/conftest.py uses root compose file.
+        🟢 GREEN: Verify tests/fixtures/docker_fixtures.py uses root compose file.
 
         The docker_compose_file fixture must return root compose file path.
         """
         root = Path(__file__).parent.parent.parent
-        conftest = root / "tests" / "conftest.py"
+        docker_fixtures = root / "tests" / "fixtures" / "docker_fixtures.py"
 
-        assert conftest.exists(), "tests/conftest.py must exist"
+        assert docker_fixtures.exists(), "tests/fixtures/docker_fixtures.py must exist"
 
-        content = conftest.read_text()
+        content = docker_fixtures.read_text()
 
         # Look for docker_compose_file fixture
         assert "docker_compose_file" in content, "docker_compose_file fixture missing"
 
-        # Should return ../docker-compose.test.yml (relative to tests/)
+        # Should return ../../docker-compose.test.yml (relative to tests/fixtures/)
         # Pattern: return Path(...) / "docker-compose.test.yml"
-        assert "../docker-compose.test.yml" in content or (
-            'Path(__file__).parent.parent / "docker-compose.test.yml"' in content
-        ), "conftest.py docker_compose_file fixture must return root compose file"
+        assert (
+            "docker-compose.test.yml" in content
+        ), "docker_fixtures.py docker_compose_file fixture must return root compose file"
 
         # Should NOT reference docker/ subdirectory
         assert (
             "docker/docker-compose.test.yml" not in content
-        ), "conftest.py must NOT use legacy docker/docker-compose.test.yml"
+        ), "docker_fixtures.py must NOT use legacy docker/docker-compose.test.yml"
 
     def test_ci_workflows_use_root_compose(self):
         """

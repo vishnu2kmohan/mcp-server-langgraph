@@ -1553,6 +1553,17 @@ repos:
       Regression prevention for Phase 2 (2025-11-15)
 
       '
+  - id: validate-pytest-config
+    name: Validate Pytest Configuration
+    entry: uv run python scripts/validation/validate_pytest_config.py
+    language: python
+    files: ^pyproject\.toml$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates pytest configuration in pyproject.toml."
+
   - id: check-test-memory-safety
     name: Check Test Memory Safety
     entry: uv run python scripts/validation/check_test_memory_safety.py

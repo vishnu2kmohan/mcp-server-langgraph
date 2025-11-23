@@ -121,7 +121,7 @@ def test_no_worker_based_port_offsets():
 
     import inspect
 
-    from tests.conftest import test_infrastructure_ports as fixture_func
+    from tests.fixtures.docker_fixtures import test_infrastructure_ports as fixture_func
 
     source = inspect.getsource(fixture_func)
 
@@ -206,7 +206,7 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
     """
     import inspect
 
-    from tests.conftest import test_infrastructure_ports as fixture_func
+    from tests.fixtures.docker_fixtures import test_infrastructure_ports as fixture_func
 
     # Get docstring
     docstring = inspect.getdoc(fixture_func)
