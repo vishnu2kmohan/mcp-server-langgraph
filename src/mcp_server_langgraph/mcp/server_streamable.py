@@ -1292,7 +1292,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
-                        "protocolVersion": "0.1.0",
+                        "protocolVersion": "2024-11-05",
                         "serverInfo": {"name": "langgraph-agent", "version": settings.service_version},
                         "capabilities": {
                             "tools": {"listChanged": False},

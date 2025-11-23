@@ -73,13 +73,18 @@ This directory contains optimized workflow resources for Claude Code sessions.
 │   ├── recent-work.md               # Last 15 commits + current state (auto)
 │   ├── coding-standards.md          # Quick coding standards cheat sheet
 │   ├── code-patterns.md             # Design patterns library (10 patterns)
-│   ├── testing-patterns.md          # Test patterns (437+ tests)
-│   └── tdd-workflow.md              # TDD workflow guide
+│   ├── testing-patterns.md          # Test patterns (437+ tests, async, meta)
+│   ├── tdd-workflow.md              # TDD workflow guide
+│   ├── pytest-markers.md            # 🆕 67 pytest markers catalog
+│   ├── xdist-safety-patterns.md     # 🆕 Memory safety (prevents 217GB→1.8GB OOM)
+│   └── test-constants-pattern.md    # 🆕 Centralized test constants
 │
 ├── memory/                           # Persistent guidance (MANDATORY reading)
 │   ├── python-environment-usage.md  # Virtual environment usage (CRITICAL!)
 │   ├── task-spawn-error-prevention-strategy.md  # Error patterns & solutions
-│   └── lint-workflow.md             # Linting workflow
+│   ├── lint-workflow.md             # Linting workflow
+│   ├── pre-commit-hooks-catalog.md  # 🆕 78 hooks, 3-tier validation
+│   └── make-targets.md              # 🆕 122 Make targets reference
 │
 ├── handoff/                          # Session continuity
 │   ├── last-session.md              # What we were working on
@@ -92,9 +97,11 @@ This directory contains optimized workflow resources for Claude Code sessions.
         └── ...                      # Archived implementation summaries
 ```
 
-**Total Files**: 62 files (~15,000 lines of documentation and automation)
+**Total Files**: 67 files (~20,000 lines of documentation and automation)
 **Command Count**: 38 slash commands across 7 categories
 **Template Count**: 6 professional-grade templates
+**Context Files**: 8 files (3 new: markers, xdist-safety, test-constants)
+**Memory Files**: 5 files (2 new: pre-commit-hooks, make-targets)
 **Time Savings**: ~607 hours annually (~15 work weeks)
 **ROI**: 45x
 
@@ -316,13 +323,44 @@ Read these at session start for quick context:
 
 **`testing-patterns.md`** (900 lines):
 - 7 major test patterns with full examples
+- **NEW**: Advanced async patterns (event loop management, fixture loop scope)
+- **NEW**: Meta-test patterns (90+ meta-tests validating test suite)
 - Async tests, mocking, property-based, parametrized, integration, error handling
 - Common mock patterns (Redis, OpenFGA, LLM, Prometheus)
 - Test markers and naming conventions
 - Given-When-Then structure
-- Quick reference for all 437+ tests
 
 **Purpose**: Write tests faster with proven patterns
+
+**`pytest-markers.md`** 🆕 (2,800 lines):
+- Complete catalog of all 67 pytest markers
+- Organized by category (core, feature, methodology, compliance, infrastructure)
+- Usage examples for each marker
+- Marker combinations for smart filtering
+- Quick reference tables
+- Common workflows
+
+**Purpose**: Optimal test filtering and marker usage
+
+**`xdist-safety-patterns.md`** 🆕 (1,800 lines):
+- Three-part safety pattern (xdist_group + teardown + gc.collect)
+- Three-tier fixture architecture
+- Memory-aware worker tuning
+- Prevents 217GB → 1.8GB memory explosion
+- AsyncMock configuration best practices
+- Complete troubleshooting guide
+
+**Purpose**: Prevent memory leaks and test failures in parallel execution
+
+**`test-constants-pattern.md`** 🆕 (1,100 lines):
+- Centralized test constants pattern
+- Fixes Codex Finding: JWT secret mismatch (2025-11-16)
+- Single source of truth for test configuration
+- Synchronization across fixtures, Docker Compose, CI/CD
+- Import-time validation
+- Pre-commit hook enforcement
+
+**Purpose**: Prevent configuration drift across test environments
 
 **`code-patterns.md`** (700 lines):
 - 10 core design patterns from codebase
@@ -338,12 +376,32 @@ Read these at session start for quick context:
 
 Persistent guidance that must be followed in all sessions:
 
-**`python-environment-usage.md`** (mandatory):
+**`python-environment-usage.md`** (MANDATORY):
 - **Always use** project virtual environment (`.venv`)
 - **Never use** bare `python`, `pytest`, or `pip` commands
 - Preferred methods: `uv run`, `.venv/bin/python`, or activation
 - Complete troubleshooting guide and examples
 - Ensures consistency with Python 3.13.7 and project dependencies
+
+**`pre-commit-hooks-catalog.md`** 🆕 (1,600 lines):
+- Complete catalog of all 78 pre-commit hooks
+- Organized by stage (pre-commit, pre-push, manual)
+- Two-stage validation strategy (< 30s / 8-12 min)
+- Hook configuration reference
+- When to skip hooks (and when NOT to)
+- Hook development guide
+
+**Purpose**: Understand validation workflow and hook usage
+
+**`make-targets.md`** 🆕 (2,200 lines):
+- Complete reference for all 122 Make targets
+- Three-tier validation system (< 30s / 3-5min / 12-15min)
+- Organized by category (install, test, validate, deploy, etc.)
+- Parallel execution patterns
+- Common workflows
+- Troubleshooting guide
+
+**Purpose**: Efficient use of development tooling
 
 **`task-spawn-error-prevention-strategy.md`**:
 - Comprehensive error pattern analysis
