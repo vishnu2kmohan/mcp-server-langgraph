@@ -22,11 +22,10 @@ SCRIPTS = [
     "scripts/validation/validate_async_fixture_scope.py",
     "scripts/validation/validate_migration_idempotency.py",
     "scripts/validation/validate_api_schemas.py",
-    # scripts/validation/validate_test_ids.py requires specific file arguments in some contexts?
-    # Let's check its docstring again. It says it wraps tests.validation_lib.test_ids.
-    # The usage example showed passing a file. If run without args, does it scan all?
-    # pre-commit hook passed files.
-    # For now, I'll exclude validate_test_ids.py from this consolidated list as it likely needs file args from pre-commit.
+    "scripts/validation/check_async_mock_usage.py",
+    "scripts/validation/check_test_memory_safety.py",
+    "scripts/validation/validate_serviceaccount_names.py",
+    "scripts/validation/validate_test_ids.py",
 ]
 
 

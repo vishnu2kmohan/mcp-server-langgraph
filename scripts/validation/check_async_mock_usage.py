@@ -38,39 +38,39 @@ if str(_project_root) not in sys.path:
 from tests.validation_lib import async_mocks  # noqa: E402
 
 
-def main():
+def main() -> int:
     """Main entry point."""
-    # Get test files from command line or scan tests/ directory
+    # Determine which files to check
     if len(sys.argv) > 1:
-        test_files = [Path(arg) for arg in sys.argv[1:]]
+        # Pre-commit mode: check specific files
+        files_to_check = [f for f in sys.argv[1:] if f.endswith(".py")]
     else:
-        test_files = list(Path("tests").rglob("test_*.py"))
+        # Standalone mode: check all test files
+        repo_root = Path(__file__).parent.parent.parent
+        files_to_check = [str(p) for p in (repo_root / "tests").rglob("*.py")]
 
-    if not test_files:
-        print("No test files found.")
+    if not files_to_check:
+        print("No test files to check.")
         return 0
 
-    print(f"🔍 Checking {len(test_files)} test files for async mock issues...\n")
-
     all_issues = []
-    files_with_issues = []
 
-    for filepath in test_files:
-        if not filepath.exists():
-            print(f"⚠️  File not found: {filepath}", file=sys.stderr)
+    for filepath in files_to_check:
+        # Only check Python files
+        if not filepath.endswith(".py"):
             continue
 
-        issues = async_mocks.check_async_mock_usage(str(filepath))
+        issues = async_mocks.check_async_mock_usage(filepath)
         if issues:
             all_issues.extend([(filepath, line, msg) for line, msg in issues])
-            files_with_issues.append(filepath)
 
     if all_issues:
         print("❌ Found async mock issues:\n")
         for filepath, line, msg in all_issues:
             print(f"{filepath}:{line} - {msg}")
 
-        print(f"\n❌ {len(all_issues)} issues found in {len(files_with_issues)} files")
+        unique_files = {issue[0] for issue in all_issues}
+        print(f"\n❌ {len(all_issues)} issues found in {len(unique_files)} files")
         print("\n💡 Fix: Import AsyncMock and add new_callable=AsyncMock to patch calls")
         print("   Example: patch.object(obj, 'async_method', new_callable=AsyncMock)")
         return 1

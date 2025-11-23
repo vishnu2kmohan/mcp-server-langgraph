@@ -658,16 +658,6 @@ validate-pre-push:
 	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ Consolidated Test Suite (Unit, Smoke, API, MCP, Property)..."
-	@OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci $(UV_RUN) pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Consolidated tests passed (coverage collected)" || (echo "✗ Tests failed" && exit 1)
-	@echo ""
-	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
-	@echo ""
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""

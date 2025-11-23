@@ -58,12 +58,22 @@ def main() -> int:
         Exit code: 0 if all files pass, 1 if any file fails
     """
     parser = argparse.ArgumentParser(description="Validate test files for hardcoded IDs (prevents pytest-xdist pollution)")
-    parser.add_argument("files", nargs="+", type=Path, help="Test file(s) to validate")
+    parser.add_argument("files", nargs="*", type=Path, help="Test file(s) to validate")
     args = parser.parse_args()
+
+    files_to_check = args.files
+    if not files_to_check:
+        # Scan all python files in tests/
+        repo_root = Path(__file__).parent.parent.parent
+        files_to_check = sorted((repo_root / "tests").rglob("*.py"))
+
+    if not files_to_check:
+        print("No test files to check.")
+        return 0
 
     all_passed = True
 
-    for file_path in args.files:
+    for file_path in files_to_check:
         if not file_path.exists():
             print(f"❌ File not found: {file_path}", file=sys.stderr)
             all_passed = False

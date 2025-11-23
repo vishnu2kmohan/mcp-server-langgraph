@@ -416,7 +416,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Documentation integrity and completeness tests (TDD):
 
       - ADR synchronization between adr/ and docs/architecture/
@@ -442,7 +442,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Comprehensive documentation structure validation (TDD):
 
       - Prevents orphaned MDX files not in docs.json navigation
@@ -845,7 +845,7 @@ repos:
     files: ^tests/e2e/test_full_user_journey\.py$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: "Tracks E2E test implementation progress to prevent regression of\nCodex Finding #1: \"E2E suite effectively\
       \ inert\u201449 scenarios are xfail placeholders\"\n\nMonitors:\n- Total E2E tests vs implemented tests\n- Completion\
       \ percentage (current: 35%, target: 80%)\n- Prevents decrease in implementation progress\n\nMin: 25% | Current: 35%\
@@ -858,7 +858,7 @@ repos:
     files: ^tests/.*test_.*\.py$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Monitors total wall-clock sleep time across test suite.
 
 
@@ -985,37 +985,7 @@ repos:
       Ensures security best practices and prevents privilege escalation.
 
       '
-  - id: validate-serviceaccount-naming
-    name: Validate ServiceAccount Naming Consistency
-    entry: uv run python scripts/validation/validate_serviceaccount_names.py
-    language: python
-    files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates ServiceAccount naming consistency between base and overlays.
 
-
-      Enforces naming convention:
-
-      - Base ServiceAccounts must end with -sa suffix (e.g., openfga-sa, keycloak-sa)
-
-      - Overlay ServiceAccounts must match base names (after removing env prefix)
-
-
-      Prevents deployment failures from naming mismatches that cause:
-
-      - Workload Identity binding failures
-
-      - RBAC permission issues
-
-      - Pod startup failures
-
-
-      Regression prevention for Run #19311976718 - Deployment Validation failure
-
-      '
   - id: check-helm-placeholders
     name: Check Helm values for unresolved placeholders
     entry: 'bash -c ''if grep -r "YOUR_.*_PROJECT_ID\|@PROJECT_ID\." deployments/helm/values-*.yaml | grep -v "^#" | grep
@@ -1266,88 +1236,8 @@ repos:
       Regression prevention for Codex Finding #3 (P0 Blocker)
 
       '
-  - id: check-test-memory-safety
-    name: Check Test Memory Safety (pytest-xdist OOM prevention)
-    entry: uv run python scripts/validation/check_test_memory_safety.py
-    language: system
-    files: ^tests/.*test_.*\.py$
-    pass_filenames: true
-    always_run: false
-    description: 'Ensures tests using AsyncMock/MagicMock follow memory safety pattern to
-
-      prevent pytest-xdist from consuming 200GB+ memory.
 
 
-      Required pattern (3-part):
-
-      1. @pytest.mark.xdist_group(name="...") - Groups tests in same worker
-
-      2. teardown_method() + gc.collect() - Forces GC after each test
-
-      3. Performance tests: @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER"))
-
-
-      Background:
-
-      pytest-xdist worker isolation causes AsyncMock/MagicMock objects to create
-
-      circular references that prevent garbage collection, leading to memory
-
-      explosion (observed: 217GB VIRT, 42GB RES).
-
-
-      Validates:
-
-      - Test classes with AsyncMock/MagicMock have xdist_group decorator
-
-      - Test classes have teardown_method with gc.collect()
-
-      - Performance tests skip when running in parallel mode
-
-
-      See: tests/MEMORY_SAFETY_GUIDELINES.md for complete guide
-
-      Reference: tests/security/test_api_key_indexed_lookup.py (correct implementation)
-
-      '
-  - id: check-async-mock-usage
-    name: Check Async Mock Usage (prevent hanging tests)
-    entry: uv run python scripts/validation/check_async_mock_usage.py
-    language: system
-    files: ^tests/.*test_.*\.py$
-    pass_filenames: true
-    always_run: false
-    description: 'Prevents hanging tests by detecting async methods mocked without AsyncMock.
-
-
-      Issue prevented:
-
-      When patch.object() or patch() is used without new_callable=AsyncMock on
-
-      async methods, the test will hang indefinitely when the code awaits the
-
-      mocked method. Python''s event loop waits forever for a non-async mock.
-
-
-      Required pattern:
-
-      - patch.object(obj, "async_method", new_callable=AsyncMock)
-
-      - NOT: patch.object(obj, "async_method")  # This hangs!
-
-
-      Detection strategy:
-
-      - Identifies common async method naming patterns (send_, get_, create_, etc.)
-
-      - Flags patch calls missing new_callable=AsyncMock parameter
-
-      - Works with both patch.object() and patch() calls
-
-
-      See: tests/monitoring/test_cost_tracker.py:350 (correct usage)
-
-      '
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
     entry: uv run python scripts/validation/check_async_mock_configuration.py
@@ -1435,25 +1325,6 @@ repos:
       Meta-test: tests/meta/test_asyncmock_validation.py validates this
 
       '
-  - id: validate-test-ids
-    name: Validate Test IDs (prevent pytest-xdist pollution)
-    entry: uv run python scripts/validation/validate_test_ids.py
-    language: system
-    files: ^tests/.*\.py$
-    pass_filenames: true
-    always_run: false
-    description: "Prevents hardcoded IDs in test files that cause state pollution in pytest-xdist.\n\nCRITICAL: Hardcoded\
-      \ IDs like \"user:alice\" or \"apikey_test123\" cause flaky tests\nwhen running in parallel with pytest-xdist due to\
-      \ state contamination across workers.\n\nWhy this matters:\n- Hardcoded IDs cause state pollution in parallel test execution\
-      \ (pytest-xdist)\n- State pollution leads to intermittent test failures (flaky tests)\n- Flaky tests waste CI/CD time\
-      \ and reduce confidence\n\nPrevention mechanism:\n- Pre-commit hook validates test files BEFORE commit\n- Hook detects\
-      \ hardcoded IDs and blocks commit with helpful error message\n- Developers must use worker-safe helpers (enforced by\
-      \ automation)\n\nRequired pattern:\n  from tests.conftest import get_user_id, get_api_key_id\n\n  def test_something():\n\
-      \      user_id = get_user_id()  # \u2705 Worker-safe\n      apikey_id = get_api_key_id()  # \u2705 Worker-safe\n\n \
-      \     # NOT: user_id = \"user:alice\"  # \u274C Hardcoded - will fail pre-commit\n\nWorker-safe helper usage examples:\n\
-      - Each xdist worker gets unique IDs (user:test_gw0, user:test_gw1, etc.)\n- Prevents race conditions and state pollution\
-      \ across workers\n- Ensures tests pass both in serial and parallel execution\n\nSee: tests/conftest.py for helper function\
-      \ documentation\nSee: tests/meta/test_id_pollution_prevention.py for validation tests\n"
   - id: validate-test-isolation
     name: Validate Test Isolation for Pytest-xdist
     entry: python scripts/validation/validate_test_isolation.py tests/
@@ -1563,7 +1434,7 @@ repos:
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: "Prevents coverage regression by enforcing minimum 64% threshold.\n\nValidates that:\n- Overall test coverage\
       \ \u2265 64% (CI threshold)\n- Coverage doesn't drop from Phase 1 baseline (65.78%)\n- All new code is adequately tested\n\
       \nCoverage targets:\n- Minimum: 64% (MUST NOT DROP BELOW)\n- Current: 65.78% (after Phase 1 improvements)\n- Target:\

@@ -26,7 +26,7 @@ except ImportError:
 
 def main() -> int:
     """Validate async fixture scope configuration."""
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     pyproject_path = project_root / "pyproject.toml"
 
     if not pyproject_path.exists():

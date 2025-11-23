@@ -248,3 +248,4 @@ poetry.lock
 terraform/environments/staging/.terraform/
 terraform/**/.terraform/
 terraform/**/.terraform.lock.hcl
+.ruff_cache/

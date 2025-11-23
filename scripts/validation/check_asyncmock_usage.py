@@ -66,14 +66,15 @@ def check_file(file_path: Path) -> list[tuple[int, str]]:
 def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("Usage: check_asyncmock_usage.py <file> [<file> ...]", file=sys.stderr)
-        return 1
+        # Default to scanning tests/ directory
+        repo_root = Path(__file__).parent.parent.parent
+        files_to_check = list((repo_root / "tests").rglob("*.py"))
+    else:
+        files_to_check = [Path(f) for f in sys.argv[1:]]
 
     all_violations = []
 
-    for file_arg in sys.argv[1:]:
-        file_path = Path(file_arg)
-
+    for file_path in files_to_check:
         if not file_path.exists():
             print(f"Warning: File not found: {file_path}", file=sys.stderr)
             continue

@@ -41,15 +41,25 @@ from tests.validation_lib import async_mocks  # noqa: E402
 
 def main() -> int:
     """Main entry point."""
-    if len(sys.argv) < 2:
-        print("Usage: check_async_mock_configuration.py <file> [<file> ...]", file=sys.stderr)
-        return 1
+    # Determine which files to check
+    if len(sys.argv) > 1:
+        # Pre-commit mode: check specific files
+        files_to_check = [f for f in sys.argv[1:] if f.endswith(".py")]
+    else:
+        # Standalone mode: check all test files
+        # We can't use memory_safety.find_test_files directly as it's in a different module
+        # But we can use pathlib to find all .py files in tests/
+        repo_root = Path(__file__).parent.parent.parent
+        files_to_check = [str(p) for p in (repo_root / "tests").rglob("*.py")]
 
-    files = sys.argv[1:]
+    if not files_to_check:
+        print("No test files to check.")
+        return 0
+
     all_issues = []
 
-    for filepath in files:
-        # Only check Python files
+    for filepath in files_to_check:
+        # Only check Python files (redundant check but safe)
         if not filepath.endswith(".py"):
             continue
 
