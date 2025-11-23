@@ -259,16 +259,20 @@ class TestHealthCheckEndpoint:
             with patch("mcp_server_langgraph.api.health.validate_session_store_registered", return_value=(True, "OK")):
                 with patch("mcp_server_langgraph.api.health.validate_api_key_cache_configured", return_value=(True, "OK")):
                     with patch(
-                        "mcp_server_langgraph.api.health.validate_database_connectivity_async",
-                        new_callable=AsyncMock,
-                        return_value=(True, "OK"),
+                        "mcp_server_langgraph.api.health.validate_docker_sandbox_security",
+                        return_value=(True, "Docker sandbox warnings: Network allowlist not implemented"),
                     ):
-                        response = client.get("/api/v1/health")
+                        with patch(
+                            "mcp_server_langgraph.api.health.validate_database_connectivity_async",
+                            new_callable=AsyncMock,
+                            return_value=(True, "OK"),
+                        ):
+                            response = client.get("/api/v1/health")
 
-                        assert response.status_code == 200
-                        data = response.json()
-                        assert data["status"] == "degraded"
-                        assert len(data["warnings"]) > 0
+                            assert response.status_code == 200
+                            data = response.json()
+                            assert data["status"] == "degraded"
+                            assert len(data["warnings"]) > 0
 
     def test_health_endpoint_shows_unhealthy_with_errors(self, client):
         """Test health endpoint shows unhealthy status with errors"""

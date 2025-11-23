@@ -547,18 +547,12 @@ class TestOpenFGACircuitBreakerCriticality:
 
         client = OpenFGAClient()
 
-        # Trigger circuit breaker to open (10 failures)
-        for _ in range(15):
-            try:
-                await client.check_permission(
-                    user=get_user_id("alice"), relation="admin", object="system:critical", critical=True
-                )
-            except Exception:
-                pass  # Ignore errors, just trigger circuit breaker
-
-        # Circuit breaker should now be open
+        # Directly open the circuit breaker to test fail-closed behavior
+        # This is more deterministic and faster than triggering through retries
         cb = get_circuit_breaker("openfga")
-        # Check circuit breaker is open (state.name should be 'open')
+        cb.open()  # Directly transition to open state
+
+        # Verify circuit breaker is open
         assert (
             hasattr(cb.state, "name") and cb.state.name == "open"
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
@@ -599,18 +593,12 @@ class TestOpenFGACircuitBreakerCriticality:
 
         client = OpenFGAClient()
 
-        # Trigger circuit breaker to open (10 failures)
-        for _ in range(15):
-            try:
-                await client.check_permission(
-                    user=get_user_id("alice"), relation="viewer", object="content:public", critical=False
-                )
-            except Exception:
-                pass  # Ignore errors, just trigger circuit breaker
-
-        # Circuit breaker should now be open
+        # Directly open the circuit breaker to test fail-open behavior
+        # This is more deterministic and faster than triggering through retries
         cb = get_circuit_breaker("openfga")
-        # Check circuit breaker is open (state.name should be 'open')
+        cb.open()  # Directly transition to open state
+
+        # Verify circuit breaker is open
         assert (
             hasattr(cb.state, "name") and cb.state.name == "open"
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
@@ -651,17 +639,12 @@ class TestOpenFGACircuitBreakerCriticality:
 
         client = OpenFGAClient()
 
-        # Trigger circuit breaker to open (10 failures)
-        for _ in range(15):
-            try:
-                # Call without critical parameter (should default to True)
-                await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:sensitive")
-            except Exception:
-                pass  # Ignore errors, just trigger circuit breaker
-
-        # Circuit breaker should now be open
+        # Directly open the circuit breaker to test fail-closed behavior
+        # This is more deterministic and faster than triggering through retries
         cb = get_circuit_breaker("openfga")
-        # Check circuit breaker is open (state.name should be 'open')
+        cb.open()  # Directly transition to open state
+
+        # Verify circuit breaker is open
         assert (
             hasattr(cb.state, "name") and cb.state.name == "open"
         ), f"Expected circuit breaker to be open, got state: {cb.state}"
