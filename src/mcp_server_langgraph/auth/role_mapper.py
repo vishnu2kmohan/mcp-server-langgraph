@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from mcp_server_langgraph.auth.keycloak import KeycloakUser

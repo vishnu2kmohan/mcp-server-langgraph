@@ -27,8 +27,8 @@ try:
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
-    OTLPMetricExporterGRPC = None  # type: ignore[misc, assignment]
-    OTLPSpanExporterGRPC = None  # type: ignore[misc, assignment]
+    OTLPMetricExporterGRPC = None
+    OTLPSpanExporterGRPC = None
 
 try:
     from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as OTLPMetricExporterHTTP
@@ -112,7 +112,7 @@ class ObservabilityConfig:
             otlp_exporter = OTLPSpanExporterGRPC(endpoint=self.otlp_endpoint)
             provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
         elif HTTP_AVAILABLE and OTLPSpanExporterHTTP is not None:
-            otlp_exporter = OTLPSpanExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))  # type: ignore[assignment]
+            otlp_exporter = OTLPSpanExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
             provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
         elif OBSERVABILITY_VERBOSE:
             print("⚠ OTLP exporters not available, using console-only tracing")
@@ -141,7 +141,7 @@ class ObservabilityConfig:
             otlp_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
             readers.append(otlp_reader)
         elif HTTP_AVAILABLE and OTLPMetricExporterHTTP is not None:
-            otlp_metric_exporter = OTLPMetricExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))  # type: ignore[assignment]
+            otlp_metric_exporter = OTLPMetricExporterHTTP(endpoint=self.otlp_endpoint.replace(":4317", ":4318"))
             otlp_reader = PeriodicExportingMetricReader(otlp_metric_exporter, export_interval_millis=5000)
             readers.append(otlp_reader)
         elif OBSERVABILITY_VERBOSE:

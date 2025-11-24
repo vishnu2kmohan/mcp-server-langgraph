@@ -38,7 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # Optional black formatter - gracefully degrade if not available
 try:
-    import black
+    import black  # type: ignore[import-not-found]
 
     BLACK_AVAILABLE = True
 except ImportError:
@@ -445,7 +445,7 @@ if __name__ == "__main__":
         if BLACK_AVAILABLE:
             try:
                 formatted_code = black.format_str(code, mode=black.FileMode())
-                return formatted_code
+                return formatted_code  # type: ignore[no-any-return]
             except Exception:
                 # If black formatting fails, return unformatted
                 return code
