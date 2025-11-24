@@ -9,6 +9,10 @@ Usage:
     python scripts/profiling/profile_hooks.py --scenario typical --iterations 10
     python scripts/profiling/profile_hooks.py --all-scenarios --format json
     python scripts/profiling/profile_hooks.py --hook-id ruff-format --iterations 50
+
+Performance Target:
+- Commit stage: <2 seconds (fast feedback for developers)
+- Pre-push stage: 8-12 minutes (comprehensive validation before push)
 """
 
 import argparse
@@ -331,3 +335,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+# Test comment
