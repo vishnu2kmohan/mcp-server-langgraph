@@ -3,8 +3,8 @@ Manual Python + UV Setup Migration Report
 ================================================================================
 
 📊 Summary
-  Workflows with manual setup: 10
-  Total jobs to migrate: 18
+  Workflows with manual setup: 2
+  Total jobs to migrate: 5
 
 🔄 Workflows to Migrate
 
@@ -13,27 +13,6 @@ Manual Python + UV Setup Migration Report
     • coverage-merge (8 steps)
     • pre-commit (8 steps)
     • push-stage-validators (7 steps)
-  docs-validation.yaml (2 jobs)
-    • specialized-validation (7 steps)
-    • documentation-tests (7 steps)
-  dora-metrics.yaml (1 jobs)
-    • calculate-metrics (7 steps)
-  e2e-tests.yaml (1 jobs)
-    • e2e-tests (13 steps)
-  integration-tests.yaml (1 jobs)
-    • integration-tests (9 steps)
-  local-preflight-check.yaml (3 jobs)
-    • validate-file-references (5 steps)
-    • code-quality (7 steps)
-    • unit-tests-fast (5 steps)
-  performance-regression.yaml (2 jobs)
-    • run-benchmarks (10 steps)
-    • update-baseline (7 steps)
-  release.yaml (1 jobs)
-    • publish-pypi (6 steps)
-  security-validation.yml (2 jobs)
-    • terraform-security (5 steps)
-    • kubernetes-security (5 steps)
   weekly-reports.yaml (1 jobs)
     • regenerate-reports (10 steps)
 

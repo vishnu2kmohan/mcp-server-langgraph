@@ -228,35 +228,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    # OPTIMIZATION: Use uv sync for lockfile-based installation (no resolution)
-    - name: Install dependencies (fast path)
-      run: |
-        # CRITICAL FIX: uv sync respects UV_PYTHON but recreates venv if not compatible
-        # Solution: Use --python flag on uv sync to force specific Python version
-        # This ensures venv is created with correct Python and not recreated
-
-        # Install from lockfile (no resolution, 60s faster)
-        # --python: Force specific Python version (prevents venv recreation with wrong Python)
-        # --frozen: Fail if lock file is out of sync (prevents dependency drift)
-        # Include dev and builder dependencies:
-        #   dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)
-        #   builder: Visual workflow builder (black, jinja2, ast-comments)
-        # Both required because unit tests import builder modules
-        uv sync --python ${{ matrix.python-version }} --frozen --extra dev --extra builder
-
-        # Verify correct Python version is active
-        .venv/bin/python --version
-        echo "✓ Dependencies installed from lockfile with dev+builder extras for Python ${{ matrix.python-version }}"
+        extras: 'dev builder'
+        cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
       run: |
@@ -351,17 +328,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Set up uv
-      uses: astral-sh/setup-uv@v7
-
-    - name: Install coverage tools
-      run: |
-        uv pip install --system -e .[coverage-tools]
+        extras: 'coverage-tools'
+        cache-key-prefix: 'coverage-merge'
 
     - name: Download unit test coverage
       uses: actions/download-artifact@v6
@@ -428,13 +400,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
+        extras: 'dev'
+        cache-key-prefix: 'pre-commit'
 
     - name: Install Terraform for pre-commit hooks
       uses: hashicorp/setup-terraform@v3
@@ -491,22 +462,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        cache: 'pip'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7.1.0
-      with:
-        enable-cache: true
-        cache-dependency-glob: "uv.lock"
-
-    - name: Install dependencies
-      run: |
-        uv sync --frozen --extra dev --extra builder
-        echo "✓ Dependencies installed"
+        extras: 'dev builder'
+        cache-key-prefix: 'push-validators'
 
     - name: Install pre-commit
       run: |
