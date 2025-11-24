@@ -82,9 +82,18 @@ class TestMakefilePrePushParity:
         validate-pre-push is a router that delegates to sub-targets:
         - validate-pre-push-full (with integration tests)
         - validate-pre-push-quick (without integration tests)
+        - _validate-pre-push-phases-1-2-4 (shared Phase 1 & 2)
+        - _validate-pre-push-phase-4 (shared Phase 4)
 
-        This fixture returns the combined content of both sub-targets.
+        This fixture returns the combined content of all targets.
         """
+        # Extract shared targets (after Makefile consolidation)
+        shared_phases_12_pattern = r"^_validate-pre-push-phases-1-2-4:.*?(?=^##|\Z)"
+        shared_phases_12_match = re.search(shared_phases_12_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        shared_phase_4_pattern = r"^_validate-pre-push-phase-4:.*?(?=^\S|\Z)"
+        shared_phase_4_match = re.search(shared_phase_4_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
         # Extract validate-pre-push-full target
         full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
         full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
@@ -95,8 +104,12 @@ class TestMakefilePrePushParity:
 
         assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
 
-        # Combine both sub-targets
+        # Combine all targets (shared + quick + full)
         combined = ""
+        if shared_phases_12_match:
+            combined += shared_phases_12_match.group(0) + "\n"
+        if shared_phase_4_match:
+            combined += shared_phase_4_match.group(0) + "\n"
         if full_match:
             combined += full_match.group(0) + "\n"
         if quick_match:
