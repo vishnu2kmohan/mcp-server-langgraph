@@ -5,6 +5,7 @@ Tests the _get_network_mode method to ensure it fails closed when allowlist is n
 These tests don't require Docker to be installed.
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,127 +14,132 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-def test_allowlist_mode_fails_closed_with_domains():
-    """
-    🟢 GREEN: Test that allowlist mode returns "none" when domains are specified.
+@pytest.mark.xdist_group(name="network_mode_logic")
+class TestNetworkModeLogic:
+    """Test network mode logic in DockerSandbox."""
 
-    SECURITY: Unimplemented allowlist must fail closed, not fall back to bridge (unrestricted).
-    """
-    # Mock the docker imports to avoid import errors
-    with patch.dict(
-        "sys.modules",
-        {
-            "docker": MagicMock(),
-            "docker.models": MagicMock(),
-            "docker.models.containers": MagicMock(),
-            "docker.errors": MagicMock(),
-            "docker.types": MagicMock(),
-        },
-    ):
-        from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-        from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
-        # Create limits with allowlist mode and domains
-        limits = ResourceLimits(
-            network_mode="allowlist",
-            allowed_domains=("httpbin.org", "example.com"),
-        )
+    def test_allowlist_mode_fails_closed_with_domains(self):
+        """
+        🟢 GREEN: Test that allowlist mode returns "none" when domains are specified.
 
-        # Create sandbox (mock docker client)
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
-            mock_client = MagicMock()
-            mock_docker.return_value = mock_client
+        SECURITY: Unimplemented allowlist must fail closed, not fall back to bridge (unrestricted).
+        """
+        # Mock the docker imports to avoid import errors
+        with patch.dict(
+            "sys.modules",
+            {
+                "docker": MagicMock(),
+                "docker.models": MagicMock(),
+                "docker.models.containers": MagicMock(),
+                "docker.errors": MagicMock(),
+                "docker.types": MagicMock(),
+            },
+        ):
+            from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+            from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
-            sandbox = DockerSandbox(limits=limits)
+            # Create limits with allowlist mode and domains
+            limits = ResourceLimits(
+                network_mode="allowlist",
+                allowed_domains=("httpbin.org", "example.com"),
+            )
 
-            # Call _get_network_mode
-            network_mode = sandbox._get_network_mode()
+            # Create sandbox (mock docker client)
+            with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
+                mock_client = MagicMock()
+                mock_docker.return_value = mock_client
 
-            # Should fail closed to "none", NOT "bridge"
-            assert network_mode == "none", f"Allowlist mode with domains must fail closed to 'none'. Got: {network_mode}"
+                sandbox = DockerSandbox(limits=limits)
 
+                # Call _get_network_mode
+                network_mode = sandbox._get_network_mode()
 
-def test_allowlist_mode_with_no_domains_returns_none():
-    """
-    Test that allowlist mode with no domains returns "none".
-    """
-    with patch.dict(
-        "sys.modules",
-        {
-            "docker": MagicMock(),
-            "docker.models": MagicMock(),
-            "docker.models.containers": MagicMock(),
-            "docker.errors": MagicMock(),
-            "docker.types": MagicMock(),
-        },
-    ):
-        from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-        from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+                # Should fail closed to "none", NOT "bridge"
+                assert network_mode == "none", f"Allowlist mode with domains must fail closed to 'none'. Got: {network_mode}"
 
-        limits = ResourceLimits(
-            network_mode="allowlist",
-            allowed_domains=(),  # Empty tuple
-        )
+    def test_allowlist_mode_with_no_domains_returns_none(self):
+        """
+        Test that allowlist mode with no domains returns "none".
+        """
+        with patch.dict(
+            "sys.modules",
+            {
+                "docker": MagicMock(),
+                "docker.models": MagicMock(),
+                "docker.models.containers": MagicMock(),
+                "docker.errors": MagicMock(),
+                "docker.types": MagicMock(),
+            },
+        ):
+            from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+            from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
-            mock_client = MagicMock()
-            mock_docker.return_value = mock_client
+            limits = ResourceLimits(
+                network_mode="allowlist",
+                allowed_domains=(),  # Empty tuple
+            )
 
-            sandbox = DockerSandbox(limits=limits)
-            network_mode = sandbox._get_network_mode()
+            with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
+                mock_client = MagicMock()
+                mock_docker.return_value = mock_client
 
-            assert network_mode == "none"
+                sandbox = DockerSandbox(limits=limits)
+                network_mode = sandbox._get_network_mode()
 
+                assert network_mode == "none"
 
-def test_network_mode_none_returns_none():
-    """Test that network_mode="none" returns "none"."""
-    with patch.dict(
-        "sys.modules",
-        {
-            "docker": MagicMock(),
-            "docker.models": MagicMock(),
-            "docker.models.containers": MagicMock(),
-            "docker.errors": MagicMock(),
-            "docker.types": MagicMock(),
-        },
-    ):
-        from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-        from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+    def test_network_mode_none_returns_none(self):
+        """Test that network_mode="none" returns "none"."""
+        with patch.dict(
+            "sys.modules",
+            {
+                "docker": MagicMock(),
+                "docker.models": MagicMock(),
+                "docker.models.containers": MagicMock(),
+                "docker.errors": MagicMock(),
+                "docker.types": MagicMock(),
+            },
+        ):
+            from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+            from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
-        limits = ResourceLimits(network_mode="none")
+            limits = ResourceLimits(network_mode="none")
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
-            mock_client = MagicMock()
-            mock_docker.return_value = mock_client
+            with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
+                mock_client = MagicMock()
+                mock_docker.return_value = mock_client
 
-            sandbox = DockerSandbox(limits=limits)
-            network_mode = sandbox._get_network_mode()
+                sandbox = DockerSandbox(limits=limits)
+                network_mode = sandbox._get_network_mode()
 
-            assert network_mode == "none"
+                assert network_mode == "none"
 
+    def test_network_mode_unrestricted_returns_bridge(self):
+        """Test that network_mode="unrestricted" returns "bridge"."""
+        with patch.dict(
+            "sys.modules",
+            {
+                "docker": MagicMock(),
+                "docker.models": MagicMock(),
+                "docker.models.containers": MagicMock(),
+                "docker.errors": MagicMock(),
+                "docker.types": MagicMock(),
+            },
+        ):
+            from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+            from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
-def test_network_mode_unrestricted_returns_bridge():
-    """Test that network_mode="unrestricted" returns "bridge"."""
-    with patch.dict(
-        "sys.modules",
-        {
-            "docker": MagicMock(),
-            "docker.models": MagicMock(),
-            "docker.models.containers": MagicMock(),
-            "docker.errors": MagicMock(),
-            "docker.types": MagicMock(),
-        },
-    ):
-        from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-        from mcp_server_langgraph.execution.resource_limits import ResourceLimits
+            limits = ResourceLimits(network_mode="unrestricted")
 
-        limits = ResourceLimits(network_mode="unrestricted")
+            with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
+                mock_client = MagicMock()
+                mock_docker.return_value = mock_client
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.from_env") as mock_docker:
-            mock_client = MagicMock()
-            mock_docker.return_value = mock_client
+                sandbox = DockerSandbox(limits=limits)
+                network_mode = sandbox._get_network_mode()
 
-            sandbox = DockerSandbox(limits=limits)
-            network_mode = sandbox._get_network_mode()
-
-            assert network_mode == "bridge"
+                assert network_mode == "bridge"
