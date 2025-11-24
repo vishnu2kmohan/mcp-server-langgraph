@@ -157,7 +157,7 @@ repos:
       '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
-    entry: scripts/run_pre_push_tests.py
+    entry: python -u scripts/run_pre_push_tests.py
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$

@@ -228,6 +228,8 @@ def main() -> int:
     # Ensure OTEL_SDK_DISABLED and HYPOTHESIS_PROFILE for consistent environment
     env = os.environ.copy()
     env["OTEL_SDK_DISABLED"] = "true"
+    # Prevent BlockingIOError when pre-commit captures massive output
+    env["PYTHONUNBUFFERED"] = "1"
 
     # Codex Finding #4 Fix (2025-11-23): Environment-aware Hypothesis profiles
     # Use dev profile (25 examples) locally for faster iteration
