@@ -117,7 +117,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest pyyaml
+          # Pin pytest to <9.0 to avoid breaking change with [tool.pytest.ini_options]
+          # pytest 9.0+ prohibits [tool.pytest.ini_options] + [tool.pytest.benchmark] combination
+          # See: https://github.com/pytest-dev/pytest/releases/tag/9.0.0
+          pip install 'pytest>=8.4.2,<9.0' pyyaml
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
