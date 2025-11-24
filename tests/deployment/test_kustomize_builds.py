@@ -145,7 +145,7 @@ class TestStagingGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency(self):
+    def test_namespace_consistency_for_staging_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 
@@ -248,7 +248,7 @@ class TestProductionGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency(self):
+    def test_namespace_consistency_for_production_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 

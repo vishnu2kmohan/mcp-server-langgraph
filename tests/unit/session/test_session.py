@@ -486,7 +486,7 @@ class TestSessionStoreFactory:
         assert store.sliding_window is False
 
     @pytest.mark.unit
-    def test_invalid_backend(self):
+    def test_invalid_backend_creation_with_unknown_type_raises_value_error(self):
         """Test error handling for invalid backend"""
         with pytest.raises(ValueError, match="Unknown session backend"):
             create_session_store(backend="invalid")

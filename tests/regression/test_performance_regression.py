@@ -379,7 +379,7 @@ class TestRegressionReporting:
         assert result["regression"] is False
         assert result["reason"] == "within_baseline"
 
-    def test_improvement_detected(self):
+    def test_improvement_detected_with_faster_time_records_improvement(self):
         """Performance improvements are recorded"""
         result = check_regression("agent_response", 3.0, unit="seconds")  # Faster than baseline
 

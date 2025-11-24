@@ -157,7 +157,7 @@ class TestEnforcementMechanisms:
         # redis_client_clean should use worker DB
         assert "worker_num + 1" in content_db, "Redis DB calculation missing from database_fixtures.py"
 
-    def test_documentation_exists(self):
+    def test_pytest_xdist_documentation_files_exist_in_tests_directory(self):
         """
         🟢 GREEN: Verify all documentation exists.
 

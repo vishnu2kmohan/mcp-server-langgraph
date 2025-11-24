@@ -32,7 +32,7 @@ def teardown_method_swarm():
 
 
 @pytest.mark.unit
-def test_swarm_initialization():
+def test_swarm_initialization_with_agents_stores_agents():
     """Test swarm can be initialized with agents."""
 
     def agent1(query: str) -> str:
@@ -237,7 +237,7 @@ def test_voting_strategy_majority():
 
 @pytest.mark.performance
 @pytest.mark.benchmark
-def test_swarm_performance(benchmark):
+def test_swarm_performance_with_multiple_agents_executes_quickly(benchmark):
     """Benchmark swarm execution time."""
 
     def fast_agent(q: str) -> str:
@@ -287,7 +287,7 @@ def test_swarm_with_memory_checkpointer():
 
 @pytest.mark.property
 @pytest.mark.parametrize("num_agents", [1, 2, 5, 10, 20])
-def test_swarm_scalability(num_agents: int):
+def test_swarm_scalability_with_varying_agents_executes_all(num_agents: int):
     """Test swarm scales with varying number of agents."""
     agents = {f"agent{i}": lambda q, i=i: f"Result {i}" for i in range(num_agents)}
 

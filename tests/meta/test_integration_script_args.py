@@ -35,7 +35,7 @@ class TestIntegrationScriptArgPropagation:
         repo_root = Path(__file__).parent.parent.parent
         return repo_root / "scripts" / "test-integration.sh"
 
-    def test_script_exists(self):
+    def test_integration_script_file_exists_at_expected_location(self):
         """Verify the integration test script exists."""
         assert self.script_path.exists(), f"Integration script not found: {self.script_path}"
 

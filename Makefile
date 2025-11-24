@@ -32,8 +32,8 @@ help-common:
 	@echo "📝 Daily Development:"
 	@echo "  make test-dev              🚀 Run tests (fast, parallel, recommended)"
 	@echo "  make validate-pre-push     ✅ Validate before push (matches CI exactly)"
-	@echo "  make format                Format code (black, isort)"
-	@echo "  make lint-check            Check code quality"
+	@echo "  make format                Format code (Ruff)"
+	@echo "  make lint-check            Check code quality (Ruff, MyPy)"
 	@echo "  make run-streamable        Start HTTP server"
 	@echo ""
 	@echo "🧪 Essential Testing:"
@@ -142,8 +142,8 @@ Testing:
 	@echo "  make test-helm-deployment     Test Helm deployment (kind)"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  make lint                Run linters (flake8, mypy)"
-	@echo "  make format              Format code (black, isort)"
+	@echo "  make lint                Alias for lint-check (Ruff linter + MyPy)"
+	@echo "  make format              Alias for lint-fix (Ruff formatter)"
 	@echo "  make security-check      Run security scans"
 	@echo "  make lint-check          Run comprehensive lint checks (non-destructive)"
 	@echo "  make lint-fix            Auto-fix formatting issues"
@@ -239,6 +239,14 @@ test-local:
 	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
 	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit tests/cli tests/deployment tests/infrastructure tests/ci
 	@echo "✓ Local tests complete"
+
+test-meta:  ## Run meta-tests (infrastructure validation) - Codex Finding #5 Fix (2025-11-23)
+	@echo "Running meta-tests (test infrastructure validation)..."
+	@echo "  These tests validate git hooks, CI workflows, Docker configs, etc."
+	@echo "  They are excluded from regular unit test runs (pre-push) to reduce overhead."
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m meta -v
+	@echo "✓ Meta-tests complete"
 
 test-ci:
 	@echo "Running tests exactly as CI does (parallel execution)..."
@@ -570,8 +578,8 @@ validate-commit:  ## Tier 1: Fast validation (<30s) - formatters, linters, basic
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "Running pre-commit hooks (staged files only)..."
-	@echo "Hooks: trailing-whitespace, end-of-file-fixer, black, isort,"
-	@echo "       flake8, bandit, gitleaks, check-yaml/json/toml, etc."
+	@echo "Hooks: trailing-whitespace, end-of-file-fixer, Ruff (linter + formatter),"
+	@echo "       bandit, gitleaks, check-yaml/json/toml, etc."
 	@echo ""
 	@pre-commit run --show-diff-on-failure
 	@echo ""
@@ -707,8 +715,10 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo ""
 	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
 	@# Skip hooks already run in manual phases to avoid duplicate work
-	@# Also skip validation hooks redundant with pytest tests (30-60s savings)
-	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests,validate-pytest-config,check-test-memory-safety,check-async-mock-usage,validate-test-ids pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
+	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
+	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed (QUICK)!"
@@ -759,8 +769,10 @@ validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integr
 	@echo ""
 	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
 	@# Skip hooks already run in manual phases to avoid duplicate work
-	@# Also skip validation hooks redundant with pytest tests (30-60s savings)
-	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests,validate-pytest-config,check-test-memory-safety,check-async-mock-usage,validate-test-ids pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
+	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
+	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed (FULL)!"
@@ -775,12 +787,12 @@ act-dry-run:
 	@act push --list
 
 # Code quality
-# REMOVED 2025-11-16: Deprecated targets removed as part of CI/CD optimization
-# Old targets: lint, format
-# Replacements:
-#   - make lint     → make lint-check (comprehensive linting with all tools)
-#   - make format   → make lint-fix (auto-fix formatting issues)
-# See: VALIDATION_STRATEGY.md for modern validation approach
+# Modern tooling: Ruff (replaces black/isort/flake8)
+# Aliases provided for backward compatibility (2025-11-23 - Codex Finding #3)
+
+lint: lint-check  ## Alias for lint-check (Ruff linter + MyPy)
+
+format: lint-fix  ## Alias for lint-fix (Ruff formatter)
 
 security-check:
 	@echo "Running bandit security scan..."
@@ -875,7 +887,7 @@ lint-install:
 	@$(UV_RUN) pre-commit install
 	@chmod +x .git/hooks/pre-push
 	@echo "✓ Hooks installed:"
-	@echo "  • pre-commit (auto-fix black/isort, run flake8/mypy/bandit)"
+	@echo "  • pre-commit (auto-fix Ruff formatter, run Ruff linter/MyPy/bandit)"
 	@echo "  • pre-push (comprehensive validation before push)"
 	@echo ""
 	@echo "Test hooks:"
@@ -1149,19 +1161,18 @@ pre-commit-setup:
 	fi
 	@echo ""
 	@echo "Hooks installed:"
-	@echo "  • black (code formatting)"
-	@echo "  • isort (import sorting)"
-	@echo "  • flake8 (linting)"
-	@echo "  • bandit (security)"
+	@echo "  • Ruff (code formatting + linting, replaces black/isort/flake8)"
+	@echo "  • bandit (security scanning)"
+	@echo "  • MyPy (type checking - runs in pre-push stage)"
 	@echo ""
-	@echo "Note: MyPy runs separately in pre-push hook (disabled in pre-commit due to 145+ existing errors)"
+	@echo "Note: MyPy runs at pre-push stage for comprehensive type checking"
 	@echo "Run manually: pre-commit run --all-files"
 
 git-hooks: pre-commit-setup
 	@echo "✅ Git hooks installed successfully:"
 	@echo ""
 	@echo "  • pre-commit   - Format, lint, and basic validation on commit"
-	@echo "                   Runs: black, isort, flake8, bandit, etc."
+	@echo "                   Runs: Ruff (formatter + linter), bandit, etc."
 	@echo "                   Timing: < 30 seconds"
 	@echo ""
 	@echo "  • pre-push     - Comprehensive CI-equivalent validation before push"

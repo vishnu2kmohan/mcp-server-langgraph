@@ -82,7 +82,7 @@ class TestAuthMiddleware:
             del os.environ["MCP_SKIP_AUTH"]
         gc.collect()
 
-    def test_init(self, auth_middleware_with_users):
+    def test_auth_middleware_initialization_with_users_creates_expected_config(self, auth_middleware_with_users):
         """Test AuthMiddleware initialization"""
         auth = auth_middleware_with_users
         assert auth.secret_key == "test-key"

@@ -100,7 +100,7 @@ def test_all_manifests_have_required_fields(overlay_dir: Path):
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for namespace validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
-def test_namespace_consistency(overlay_dir: Path):
+def test_namespace_consistency_across_all_resources_matches_overlay(overlay_dir: Path):
     """Test that all namespaced resources use the correct namespace."""
     stdout, _, returncode = build_kustomize(overlay_dir)
     assert returncode == 0

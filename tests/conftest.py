@@ -132,6 +132,7 @@ def pytest_configure(config):
 
     # Enhancement #3: Memory-Aware Worker Tuning
     # Auto-tune pytest-xdist workers based on available RAM to prevent OOM
+    # Codex Finding #6 Fix (2025-11-23): Hard cap at 15 workers (Redis DB index limit)
     if hasattr(config.option, "numprocesses") and config.option.numprocesses == "auto":
         try:
             import psutil
@@ -147,6 +148,18 @@ def pytest_configure(config):
             cpu_count = os.cpu_count() or 4
             max_workers = min(max_workers_by_memory, cpu_count)
 
+            # Hard cap at 15 workers (Redis DB index limit: 1-15)
+            # Redis has 16 databases by default (0-15), DB 0 reserved for non-xdist
+            # See: tests/fixtures/database_fixtures.py:296-314 for DB index allocation
+            MAX_WORKERS_REDIS = 15
+            if max_workers > MAX_WORKERS_REDIS:
+                logging.warning(
+                    f"Worker count capped at {MAX_WORKERS_REDIS} (Redis DB index limit). "
+                    f"Memory/CPU would allow {max_workers} workers. "
+                    f"See tests/fixtures/database_fixtures.py:296-314 for DB index allocation."
+                )
+                max_workers = MAX_WORKERS_REDIS
+
             # Ensure at least 1 worker
             max_workers = max(1, max_workers)
 
@@ -154,7 +167,8 @@ def pytest_configure(config):
 
             logging.info(
                 f"Memory-aware worker tuning: {available_gb:.1f}GB available → "
-                f"{max_workers} workers (CPU: {cpu_count}, Memory limit: {max_workers_by_memory})"
+                f"{max_workers} workers (CPU: {cpu_count}, Memory limit: {max_workers_by_memory}, "
+                f"Redis limit: {MAX_WORKERS_REDIS})"
             )
         except ImportError:
             # psutil not available - fallback to CPU count

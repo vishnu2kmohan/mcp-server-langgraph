@@ -119,7 +119,7 @@ class TestExecutePythonTool:
 
     @patch("mcp_server_langgraph.tools.code_execution_tools.settings")
     @patch("mcp_server_langgraph.tools.code_execution_tools._get_sandbox")
-    def test_timeout_handling(self, mock_get_sandbox, mock_settings):
+    def test_timeout_handling_with_long_running_code_returns_timeout_error(self, mock_get_sandbox, mock_settings):
         """Test handling of timeout"""
         mock_settings.enable_code_execution = True
         mock_settings.code_execution_allowed_imports = ["json", "math", "time"]  # Add 'time'
@@ -141,7 +141,7 @@ class TestExecutePythonTool:
 
     @patch("mcp_server_langgraph.tools.code_execution_tools.settings")
     @patch("mcp_server_langgraph.tools.code_execution_tools._get_sandbox")
-    def test_output_truncation(self, mock_get_sandbox, mock_settings):
+    def test_output_truncation_with_large_result_limits_to_maximum_length(self, mock_get_sandbox, mock_settings):
         """Test that long output is truncated"""
         mock_settings.enable_code_execution = True
         mock_settings.code_execution_allowed_imports = ["json", "math"]
@@ -165,7 +165,9 @@ class TestExecutePythonTool:
 
     @patch("mcp_server_langgraph.tools.code_execution_tools.settings")
     @patch("mcp_server_langgraph.tools.code_execution_tools._get_sandbox")
-    def test_custom_timeout(self, mock_get_sandbox, mock_settings, mock_sandbox):
+    def test_custom_timeout_configuration_with_override_value_applies_correctly(
+        self, mock_get_sandbox, mock_settings, mock_sandbox
+    ):
         """Test executing with custom timeout"""
         mock_settings.enable_code_execution = True
         mock_settings.code_execution_allowed_imports = ["json", "math"]

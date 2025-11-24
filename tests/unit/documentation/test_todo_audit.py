@@ -207,7 +207,7 @@ FIXME: Task 2
         assert result.stats["by_type"]["TODO"] == 2
         assert result.stats["by_type"]["FIXME"] == 1
 
-    def test_nonexistent_directory(self):
+    def test_nonexistent_directory_handling_with_invalid_path_returns_empty_results(self):
         """Test behavior with nonexistent directory."""
         auditor = TodoAuditor(Path("/nonexistent/path"))
         result = auditor.audit()
@@ -226,7 +226,7 @@ FIXME: Task 2
 class TestTodoMarker:
     """Test suite for TodoMarker dataclass."""
 
-    def test_marker_attributes(self):
+    def test_marker_attributes_initialization_with_values_creates_valid_marker(self):
         """Test TodoMarker attributes."""
         marker = TodoMarker(
             marker_type="TODO",

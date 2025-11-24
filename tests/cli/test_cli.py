@@ -43,7 +43,7 @@ class TestCLISmoke:
         assert "add-tool" in result.output
         assert "migrate" in result.output
 
-    def test_cli_version(self, runner):
+    def test_cli_version_command_displays_version_info(self, runner):
         """Test that version command works."""
         result = runner.invoke(cli, ["--version"])
 

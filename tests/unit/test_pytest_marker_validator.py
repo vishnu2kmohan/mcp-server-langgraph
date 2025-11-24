@@ -207,7 +207,7 @@ class TestSpecificMarkerCategories:
         for marker in test_types:
             assert marker in registered, f"Test type marker '{marker}' should be registered"
 
-    def test_performance_markers(self):
+    def test_performance_markers_registration_with_config_includes_all_expected(self):
         """Performance-related markers"""
         registered = get_registered_markers()
 
@@ -221,7 +221,7 @@ class TestSpecificMarkerCategories:
         for marker in perf_markers:
             assert marker in registered, f"Performance marker '{marker}' should be registered"
 
-    def test_environment_markers(self):
+    def test_environment_markers_registration_with_config_includes_all_expected(self):
         """Environment-specific markers"""
         registered = get_registered_markers()
 

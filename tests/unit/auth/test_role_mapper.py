@@ -201,7 +201,7 @@ class TestConditionalMapping:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_equality_condition(self):
+    def test_equality_condition_evaluation_with_matching_attribute_generates_tuples(self):
         """Test conditional mapping with equality operator"""
         config = {
             "condition": {"attribute": "department", "operator": "==", "value": "finance"},
@@ -229,7 +229,7 @@ class TestConditionalMapping:
         objects = {t["object"] for t in tuples}
         assert objects == {"resource:financial-reports", "resource:audit-logs"}
 
-    def test_inequality_condition(self):
+    def test_inequality_condition_evaluation_with_different_attribute_generates_tuples(self):
         """Test conditional mapping with != operator"""
         config = {
             "condition": {"attribute": "region", "operator": "!=", "value": "US"},
@@ -250,7 +250,7 @@ class TestConditionalMapping:
         tuples = mapping.generate_tuples(user)
         assert len(tuples) == 1
 
-    def test_in_condition(self):
+    def test_in_condition_evaluation_with_value_in_list_returns_true(self):
         """Test conditional mapping with 'in' operator"""
         config = {
             "condition": {
@@ -313,7 +313,7 @@ class TestConditionalMapping:
         tuples = mapping.generate_tuples(user)
         assert len(tuples) == 0
 
-    def test_missing_attribute(self):
+    def test_missing_attribute_evaluation_with_undefined_attribute_returns_false(self):
         """Test conditional mapping with missing attribute"""
         config = {
             "condition": {"attribute": "missing_attr", "operator": "==", "value": "test"},

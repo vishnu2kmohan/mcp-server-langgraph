@@ -100,16 +100,16 @@ class TestInterruptConfig:
         assert config.notification_channels == []
         assert config.auto_resume is False
 
-    def test_interrupt_config_all_fields(self):
+    def test_interrupt_config_all_fields_stores_configuration(self):
         """Test creation with all fields."""
 
-        def test_condition(state: dict[str, Any]) -> bool:
+        def high_amount_condition(state: dict[str, Any]) -> bool:
             return state.get("amount", 0) > 1000
 
         config = InterruptConfig(
             interrupt_type=InterruptType.CONDITIONAL,
             node_name="payment_node",
-            condition=test_condition,
+            condition=high_amount_condition,
             timeout_seconds=300,
             notification_channels=["email", "slack"],
             auto_resume=True,

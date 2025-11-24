@@ -83,7 +83,7 @@ class TestHostnameHandling:
             # Should fall back to "unknown"
             assert log_data["hostname"] == "unknown"
 
-    def test_hostname_disabled(self):
+    def test_hostname_disabled_with_flag_excludes_hostname_from_output(self):
         """Test that hostname is not included when include_hostname=False"""
         formatter = CustomJSONFormatter(
             service_name="test-service",
@@ -251,7 +251,7 @@ class TestAddFieldsCustomization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_timestamp_override(self):
+    def test_timestamp_override_prevention_with_existing_timestamp_preserves_value(self):
         """Test that existing timestamp is not overridden"""
         formatter = CustomJSONFormatter(service_name="test")
         record = logging.LogRecord(
@@ -338,7 +338,7 @@ class TestFormatterInitialization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_custom_datefmt(self):
+    def test_custom_datefmt_configuration_with_format_string_applies_correctly(self):
         """Test formatter with custom date format"""
         formatter = CustomJSONFormatter(
             datefmt="%Y-%m-%d",

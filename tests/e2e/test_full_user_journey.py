@@ -25,7 +25,7 @@ pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture(scope="module")
-def test_infrastructure_check(test_infrastructure):
+def test_infrastructure_check_verifies_services_running(test_infrastructure):
     """
     Check that required test infrastructure is running.
 

@@ -455,7 +455,7 @@ class TestEdgeCases:
         assert isinstance(position, int)
         assert position >= 0
 
-    def test_empty_file(self, tmp_path):
+    def test_empty_file_with_no_content_returns_zero_position(self, tmp_path):
         """Test handling of empty file.
 
         Test ID: TEST-SCR-001-13

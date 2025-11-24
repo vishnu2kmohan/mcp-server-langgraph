@@ -45,7 +45,7 @@ class TestValidatePrePushEfficiency:
         repo_root = Path(__file__).parent.parent.parent
         return repo_root / ".pre-commit-config.yaml"
 
-    def test_makefile_exists(self):
+    def test_makefile_file_exists_in_repo_root(self):
         """Verify Makefile exists."""
         assert self.makefile_path.exists(), f"Makefile not found: {self.makefile_path}"
 

@@ -50,7 +50,7 @@ class TestCleanupSchedulerInit:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization_default(self):
+    def test_initialization_default_with_no_arguments_creates_valid_scheduler(self):
         """Test default initialization"""
         scheduler = CleanupScheduler()
 

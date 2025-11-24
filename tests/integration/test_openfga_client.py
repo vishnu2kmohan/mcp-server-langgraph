@@ -24,7 +24,7 @@ class TestOpenFGAClient:
         gc.collect()
 
     @patch("mcp_server_langgraph.auth.openfga.OpenFgaClient")
-    def test_init(self, mock_sdk_client):
+    def test_init_with_valid_config_stores_credentials(self, mock_sdk_client):
         """Test OpenFGA client initialization (lazy pattern)"""
         from mcp_server_langgraph.auth.openfga import OpenFGAClient
 
@@ -325,7 +325,7 @@ class TestOpenFGAAuthorizationModel:
         assert "conversation" in types
         assert "role" in types
 
-    def test_organization_relations(self):
+    def test_organization_relations_include_member_and_admin(self):
         """Test organization type has correct relations"""
         from mcp_server_langgraph.auth.openfga import OpenFGAAuthorizationModel
 
@@ -335,7 +335,7 @@ class TestOpenFGAAuthorizationModel:
         assert "member" in org_type["relations"]
         assert "admin" in org_type["relations"]
 
-    def test_tool_relations(self):
+    def test_tool_relations_include_usage_permissions(self):
         """Test tool type has correct relations"""
         from mcp_server_langgraph.auth.openfga import OpenFGAAuthorizationModel
 
@@ -346,7 +346,7 @@ class TestOpenFGAAuthorizationModel:
         assert "executor" in tool_type["relations"]
         assert "organization" in tool_type["relations"]
 
-    def test_conversation_relations(self):
+    def test_conversation_relations_include_owner_and_viewer(self):
         """Test conversation type has correct relations"""
         from mcp_server_langgraph.auth.openfga import OpenFGAAuthorizationModel
 

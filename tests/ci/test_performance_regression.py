@@ -166,7 +166,7 @@ class TestPerformanceBenchmarking:
         assert len(results) == 1
         assert results[0]["endpoint"] == "/api/health"
 
-    def test_calculate_percentiles(self):
+    def test_calculate_percentiles_with_measurements_returns_p50_p95_p99(self):
         """Test percentile calculation for response times"""
         # Given: response time measurements
         measurements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]

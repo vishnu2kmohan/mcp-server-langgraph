@@ -248,7 +248,7 @@ class TestDataIntegrity:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_generate_checksum(self):
+    def test_generate_checksum_with_sample_data_produces_consistent_hash(self):
         """Test generating HMAC checksum"""
         controls = HIPAAControls(integrity_secret="test-secret-key")
 

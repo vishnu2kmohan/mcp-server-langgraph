@@ -184,7 +184,7 @@ class TestMDXExtensionValidator:
         # Assert
         assert result.exit_code != 0  # Should fail with .md file
 
-    def test_statistics_accurate(self, tmp_path):
+    def test_statistics_collection_with_mixed_extensions_reports_accurate_counts(self, tmp_path):
         """Test that statistics are accurately collected."""
         # Arrange
         docs_dir = tmp_path / "docs"

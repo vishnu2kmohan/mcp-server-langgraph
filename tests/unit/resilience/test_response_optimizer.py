@@ -32,7 +32,7 @@ class TestResponseOptimizer:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization(self):
+    def test_response_optimizer_initialization_with_defaults_creates_valid_instance(self):
         """Test ResponseOptimizer initialization."""
         optimizer = ResponseOptimizer()
         assert optimizer.model is not None
@@ -230,14 +230,14 @@ class TestEdgeCases:
         # Should be under max tokens (with some overhead for truncation message)
         assert token_count <= MAX_RESPONSE_TOKENS + 100
 
-    def test_unicode_text(self):
+    def test_unicode_text_handling_with_international_characters_counts_correctly(self):
         """Test with Unicode characters."""
         optimizer = ResponseOptimizer()
         text = "Hello 世界! 🌍 Émojis and spëcial çharacters"
         token_count = optimizer.count_tokens(text)
         assert token_count > 0
 
-    def test_special_characters(self):
+    def test_special_characters_handling_with_markdown_syntax_counts_correctly(self):
         """Test with special characters and markdown."""
         optimizer = ResponseOptimizer()
         text = """
@@ -284,7 +284,7 @@ class TestPerformance:
         # Should complete 100 iterations in less than 1 second
         assert elapsed < 1.0, f"Token counting too slow: {elapsed:.2f}s for 100 iterations"
 
-    def test_truncation_performance(self):
+    def test_truncation_performance_with_large_text_completes_quickly(self):
         """Test that truncation is reasonably fast."""
         import time
 

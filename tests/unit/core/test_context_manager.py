@@ -73,7 +73,7 @@ class TestContextManager:
         gc.collect()
 
     @pytest.mark.unit
-    def test_initialization(self, context_manager):
+    def test_context_manager_initialization_with_config_sets_correct_values(self, context_manager):
         """Test ContextManager initializes with correct config."""
         assert context_manager.compaction_threshold == 1000
         assert context_manager.target_after_compaction == 500

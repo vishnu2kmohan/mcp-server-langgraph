@@ -89,7 +89,7 @@ class TestCustomJSONFormatter:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_basic_formatting(self, json_formatter, log_record):
+    def test_basic_formatting_with_log_record_produces_valid_json_output(self, json_formatter, log_record):
         """Test basic JSON formatting without trace context"""
         formatted = json_formatter.format(log_record)
         log_data = json.loads(formatted)
@@ -107,7 +107,7 @@ class TestCustomJSONFormatter:
         assert log_data["service"] == "test-service"
         assert log_data["message"] == "Test message"
 
-    def test_timestamp_format(self, json_formatter, log_record):
+    def test_timestamp_format_with_log_record_produces_iso8601_with_milliseconds(self, json_formatter, log_record):
         """Test ISO 8601 timestamp with milliseconds"""
         formatted = json_formatter.format(log_record)
         log_data = json.loads(formatted)
@@ -155,7 +155,7 @@ class TestCustomJSONFormatter:
         assert log_data["thread"]["id"] == 5678
         assert log_data["thread"]["name"] == "TestThread"
 
-    def test_location_info(self, json_formatter, log_record):
+    def test_location_info_extraction_with_log_record_includes_file_and_line(self, json_formatter, log_record):
         """Test file location information"""
         formatted = json_formatter.format(log_record)
         log_data = json.loads(formatted)
@@ -180,7 +180,7 @@ class TestCustomJSONFormatter:
         assert log_data["ip_address"] == "192.168.1.100"
         assert log_data["request_id"] == "req-123"
 
-    def test_exception_handling(self, json_formatter):
+    def test_exception_handling_with_error_record_captures_stacktrace(self, json_formatter):
         """Test exception stack trace capture"""
         import sys
 
@@ -221,7 +221,7 @@ class TestCustomJSONFormatter:
         assert "\n" in formatted
         assert "  " in formatted  # Contains indentation
 
-    def test_compact_formatting(self, json_formatter, log_record):
+    def test_compact_formatting_with_log_record_produces_single_line_output(self, json_formatter, log_record):
         """Test compact JSON formatting (no indentation)"""
         formatted = json_formatter.format(log_record)
 
@@ -233,7 +233,7 @@ class TestCustomJSONFormatter:
         assert "\n" not in formatted
         assert "  " not in formatted  # No indentation
 
-    def test_hostname_inclusion(self):
+    def test_hostname_inclusion_with_formatter_setting_adds_hostname_field(self):
         """Test hostname field inclusion"""
         formatter_with_hostname = CustomJSONFormatter(
             service_name="test-service",
@@ -288,7 +288,7 @@ class TestSetupJSONLogging:
         handler = logger.handlers[0]
         assert isinstance(handler.formatter, CustomJSONFormatter)
 
-    def test_logger_output(self):
+    def test_logger_output_integration_with_setup_produces_valid_json(self):
         """Test actual logger output is valid JSON"""
         logger = logging.getLogger("test_output_logger")
         setup_json_logging(logger, service_name="test-service", indent=None)
@@ -353,7 +353,7 @@ class TestEdgeCases:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_empty_message(self, json_formatter):
+    def test_empty_message_handling_with_blank_string_produces_valid_json(self, json_formatter):
         """Test handling of empty log message"""
         record = logging.LogRecord(
             name="test_logger",
@@ -371,7 +371,7 @@ class TestEdgeCases:
         assert log_data["message"] == ""
         assert "level" in log_data
 
-    def test_unicode_message(self, json_formatter):
+    def test_unicode_message_handling_with_international_characters_preserves_content(self, json_formatter):
         """Test handling of Unicode characters"""
         record = logging.LogRecord(
             name="test_logger",
@@ -420,7 +420,7 @@ class TestPerformance:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_formatting_performance(self, json_formatter, log_record, benchmark):
+    def test_formatting_performance_with_benchmark_measures_execution_speed(self, json_formatter, log_record, benchmark):
         """Benchmark JSON formatting performance"""
 
         def format_log():

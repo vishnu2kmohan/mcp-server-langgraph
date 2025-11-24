@@ -718,6 +718,7 @@ repos:
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
+    exclude: ^tests/(conftest\.py|validation_lib/.*\.py)$
     description: 'Validates pytest marker registration and pytestmark placement.
 
 

@@ -72,7 +72,7 @@ def test_telemetry_version_matches():
 
 
 @pytest.mark.unit
-def test_version_format():
+def test_version_format_validation_with_semver_ensures_correct_structure():
     """Test that version follows semantic versioning format."""
     from mcp_server_langgraph import __version__
 

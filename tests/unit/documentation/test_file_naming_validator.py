@@ -45,7 +45,7 @@ class TestFileNamingValidator:
             errors = validate_filename_convention(file_path)
             assert len(errors) == 0, f"{file_path} should be valid"
 
-    def test_uppercase_detected(self):
+    def test_uppercase_detection_with_invalid_filenames_reports_violations(self):
         """UPPERCASE filenames should be detected."""
         invalid_files = [
             Path("docs/development/COMMANDS.mdx"),
@@ -222,7 +222,7 @@ class TestEdgeCases:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_empty_filename(self):
+    def test_empty_filename_handling_with_hidden_file_allows_validation(self):
         """Empty filename should be handled gracefully."""
         # Note: .mdx is treated as a hidden file (valid), so we don't validate it
         # This test verifies hidden files starting with . are allowed

@@ -33,7 +33,7 @@ class TestPreCommitCrossPlatformCompatibility:
         repo_root = Path(__file__).parent.parent.parent
         return repo_root / ".pre-commit-config.yaml"
 
-    def test_config_exists(self):
+    def test_precommit_config_file_exists_in_repo_root(self):
         """Verify .pre-commit-config.yaml exists."""
         assert self.precommit_config_path.exists(), f"Pre-commit config not found: {self.precommit_config_path}"
 

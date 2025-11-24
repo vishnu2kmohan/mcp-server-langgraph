@@ -181,7 +181,7 @@ import httpx
         )
         assert not consecutive_python, "Should not have ```\\n```python pattern"
 
-    def test_authentication_pattern(self):
+    def test_code_block_closing_pattern_in_authentication_mdx_is_fixed_correctly(self):
         """Test the pattern found in authentication.mdx."""
         content = """{
   "token": "abc123"

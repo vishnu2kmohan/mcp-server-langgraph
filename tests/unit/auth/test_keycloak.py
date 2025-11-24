@@ -98,23 +98,23 @@ class TestKeycloakConfig:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_realm_url(self, keycloak_config):
+    def test_realm_url_construction_with_base_url_returns_correct_endpoint(self, keycloak_config):
         """Test realm URL construction"""
         assert keycloak_config.realm_url == "http://localhost:9082/realms/test-realm"
 
-    def test_admin_url(self, keycloak_config):
+    def test_admin_url_construction_with_realm_name_returns_correct_endpoint(self, keycloak_config):
         """Test admin API URL construction"""
         assert keycloak_config.admin_url == "http://localhost:9082/admin/realms/test-realm"
 
-    def test_token_endpoint(self, keycloak_config):
+    def test_token_endpoint_construction_with_realm_returns_openid_connect_url(self, keycloak_config):
         """Test token endpoint URL"""
         assert keycloak_config.token_endpoint == "http://localhost:9082/realms/test-realm/protocol/openid-connect/token"
 
-    def test_userinfo_endpoint(self, keycloak_config):
+    def test_userinfo_endpoint_construction_with_realm_returns_openid_connect_url(self, keycloak_config):
         """Test userinfo endpoint URL"""
         assert keycloak_config.userinfo_endpoint == "http://localhost:9082/realms/test-realm/protocol/openid-connect/userinfo"
 
-    def test_jwks_uri(self, keycloak_config):
+    def test_jwks_uri_construction_with_realm_returns_certificate_endpoint(self, keycloak_config):
         """Test JWKS URI"""
         assert keycloak_config.jwks_uri == "http://localhost:9082/realms/test-realm/protocol/openid-connect/certs"
 

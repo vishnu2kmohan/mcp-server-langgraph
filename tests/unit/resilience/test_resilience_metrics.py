@@ -438,7 +438,7 @@ class TestMetricsIntegration:
             assert mock_success.call_count == 5
             assert mock_failure.call_count == 2
 
-    def test_retry_workflow(self):
+    def test_retry_workflow_tracking_with_multiple_attempts_records_all_events(self):
         """Test complete retry workflow metrics"""
         with (
             patch.object(metrics.retry_attempt_counter, "add") as mock_attempt,
@@ -463,7 +463,7 @@ class TestMetricsIntegration:
             assert mock_attempt.call_count == 3
             mock_success.assert_called_once()
 
-    def test_bulkhead_lifecycle(self):
+    def test_bulkhead_lifecycle_tracking_with_operations_records_state_changes(self):
         """Test bulkhead full lifecycle metrics"""
         with (
             patch.object(metrics.bulkhead_active_operations_gauge, "set") as mock_active,

@@ -62,7 +62,7 @@ def test_workflow_syntax_valid(workflow_file):
 
 
 @requires_tool("actionlint", skip_reason="actionlint not installed (only required in workflow validation job)")
-def test_actionlint_installed():
+def test_actionlint_command_when_required_is_available_in_system_path():
     """
     Verify that actionlint is installed and available.
 

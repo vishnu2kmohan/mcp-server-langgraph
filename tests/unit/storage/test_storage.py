@@ -88,7 +88,7 @@ class TestConversation:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_conversation_creation(self):
+    def test_conversation_creation_with_all_fields_initializes_correctly(self):
         """Test creating conversation"""
         conversation = Conversation(
             conversation_id="conv_123",
@@ -107,7 +107,7 @@ class TestConversation:
         assert len(conversation.messages) == 1
         assert conversation.archived is False
 
-    def test_conversation_defaults(self):
+    def test_conversation_defaults_with_minimal_fields_uses_expected_values(self):
         """Test conversation default values"""
         conversation = Conversation(
             conversation_id="conv_456",
@@ -121,7 +121,7 @@ class TestConversation:
         assert conversation.archived is False
         assert conversation.metadata == {}
 
-    def test_conversation_archived(self):
+    def test_conversation_archived_status_with_flag_set_marks_correctly(self):
         """Test archived conversation"""
         conversation = Conversation(
             conversation_id="conv_789",

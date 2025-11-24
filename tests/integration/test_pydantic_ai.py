@@ -118,7 +118,7 @@ def test_get_pydantic_model_name_unknown_provider(mock_settings, mock_pydantic_a
 
 
 @pytest.mark.unit
-def test_format_conversation(mock_settings, mock_pydantic_agent_class):
+def test_format_conversation_with_messages_returns_formatted_list(mock_settings, mock_pydantic_agent_class):
     """Test conversation formatting."""
     from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
@@ -451,7 +451,7 @@ def test_agent_response_defaults():
 
 # Tests for LLM Validators
 @pytest.mark.unit
-def test_validated_response():
+def test_validated_response_with_data_stores_validation_metadata():
     """Test ValidatedResponse container."""
     from mcp_server_langgraph.llm.pydantic_agent import AgentResponse
     from mcp_server_langgraph.llm.validators import ValidatedResponse

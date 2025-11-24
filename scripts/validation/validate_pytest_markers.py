@@ -104,8 +104,8 @@ def get_test_files_without_markers() -> list[Path]:
     files_without_markers = []
 
     for test_file in tests_dir.rglob("test_*.py"):
-        # Skip __init__.py and conftest.py
-        if test_file.name in ["__init__.py", "conftest.py"]:
+        # Skip __init__.py, conftest.py, and validation_lib files
+        if test_file.name in ["__init__.py", "conftest.py"] or "validation_lib" in str(test_file):
             continue
 
         content = test_file.read_text()

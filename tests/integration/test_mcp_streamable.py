@@ -126,7 +126,7 @@ class TestMCPStreamableHTTP:
         assert "authentication" in data["capabilities"]
         assert data["capabilities"]["authentication"]["tokenRefresh"] is True
 
-    def test_health_endpoint(self, client):
+    def test_health_endpoint_returns_status_and_timestamp(self, client):
         """Test GET /health/ returns healthy status"""
         # Health is mounted at /health/, test the root health endpoint
         response = client.get("/health/")
@@ -139,7 +139,7 @@ class TestMCPStreamableHTTP:
             data = response.json()
             assert "status" in data or "healthy" in str(data).lower()
 
-    def test_login_success(self, client):
+    def test_login_success_with_valid_credentials_returns_jwt(self, client):
         """Test successful login returns JWT token"""
         response = client.post("/auth/login", json={"username": "alice", "password": "alice123"})
 
@@ -186,7 +186,7 @@ class TestMCPStreamableHTTP:
         # Should fail validation or authentication
         assert response.status_code in [401, 422]
 
-    def test_initialize_method(self, client):
+    def test_initialize_method_with_valid_params_returns_server_info(self, client):
         """Test MCP initialize method"""
         request = {
             "jsonrpc": "2.0",
@@ -327,7 +327,7 @@ class TestMCPStreamableHTTP:
         # May be application/x-ndjson or application/json depending on implementation
         assert "application/" in content_type
 
-    def test_invalid_method(self, client):
+    def test_invalid_method_with_unknown_name_returns_error(self, client):
         """Test invalid MCP method returns error"""
         request = {
             "jsonrpc": "2.0",
@@ -344,7 +344,7 @@ class TestMCPStreamableHTTP:
         assert "error" in data
         assert data["error"]["code"] in [-32601, -32603]  # Method not found or internal error
 
-    def test_malformed_request(self):
+    def test_malformed_request_with_invalid_jsonrpc_returns_error(self):
         """Test malformed JSON-RPC request"""
         from mcp_server_langgraph.mcp.server_streamable import app
 

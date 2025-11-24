@@ -244,7 +244,7 @@ class TestFilenamConvention:
             errors = [i for i in report.issues if i.severity == "error"]
             assert len(errors) == 0, f"Valid filename '{name}' should not have errors"
 
-    def test_invalid_filenames(self):
+    def test_invalid_filename_patterns_are_detected_by_validator(self):
         """Test that invalid filenames are detected."""
         invalid_cases = [
             ("SCREAMING_SNAKE_CASE.mdx", "error"),  # Uppercase + underscore

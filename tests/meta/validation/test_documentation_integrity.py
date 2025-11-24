@@ -53,7 +53,7 @@ class TestADRSynchronization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_adr_synchronization(self):
+    def test_adr_files_synchronized_between_source_and_docs_directories(self):
         """
         Test that ADRs are synchronized between adr/ and docs/architecture/.
 

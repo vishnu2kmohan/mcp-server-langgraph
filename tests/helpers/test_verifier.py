@@ -96,7 +96,7 @@ class TestOutputVerifier:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization(self, output_verifier):
+    def test_initialization_with_criteria_sets_threshold(self, output_verifier):
         """Test OutputVerifier initializes with correct config."""
         assert len(output_verifier.criteria) == 3
         assert output_verifier.quality_threshold == 0.7
@@ -387,7 +387,7 @@ class TestVerificationCriterion:
         assert VerificationCriterion.SAFETY in criteria
         assert VerificationCriterion.SOURCES in criteria
 
-    def test_criterion_values(self):
+    def test_criterion_values_match_string_representation(self):
         """Test criterion enum values."""
         assert VerificationCriterion.ACCURACY.value == "accuracy"
         assert VerificationCriterion.COMPLETENESS.value == "completeness"

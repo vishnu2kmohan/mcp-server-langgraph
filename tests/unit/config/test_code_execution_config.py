@@ -186,7 +186,7 @@ class TestCodeExecutionSettingsValidation:
             settings = Settings(code_execution_network_mode=mode)
             assert settings.code_execution_network_mode == mode
 
-    def test_backend_validation(self):
+    def test_backend_validation_with_valid_backends_accepts_all_options(self):
         """Test backend must be valid value"""
         # Valid backends should work
         for backend in ["docker-engine", "kubernetes", "process"]:
@@ -263,7 +263,7 @@ class TestCodeExecutionSettingsDefaults:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_development_defaults(self, monkeypatch):
+    def test_development_defaults_with_environment_variable_disables_code_execution(self, monkeypatch):
         """Test development environment defaults"""
         monkeypatch.setenv("ENVIRONMENT", "development")
         settings = Settings()
@@ -272,7 +272,7 @@ class TestCodeExecutionSettingsDefaults:
         # But code execution should still be disabled by default
         assert settings.enable_code_execution is False
 
-    def test_production_defaults(self, monkeypatch):
+    def test_production_defaults_with_strict_settings_enforces_security(self, monkeypatch):
         """Test production environment defaults"""
         monkeypatch.setenv("ENVIRONMENT", "production")
         monkeypatch.setenv("AUTH_PROVIDER", "keycloak")
@@ -285,7 +285,7 @@ class TestCodeExecutionSettingsDefaults:
         # Network should be restrictive
         assert settings.code_execution_network_mode in ["none", "allowlist"]
 
-    def test_test_defaults(self, monkeypatch):
+    def test_test_defaults_with_testing_environment_disables_code_execution(self, monkeypatch):
         """Test testing environment defaults"""
         monkeypatch.setenv("ENVIRONMENT", "test")
         settings = Settings()

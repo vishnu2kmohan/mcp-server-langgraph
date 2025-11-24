@@ -552,7 +552,7 @@ class TestOWASPTop10:
     def validator(self):
         return CodeValidator(allowed_imports=["json", "math"])
 
-    def test_injection_prevention(self, validator):
+    def test_injection_prevention_blocks_eval_exec_and_system_calls(self, validator):
         """A01:2021 - Injection prevention"""
         # SQL injection (if allowed imports include DB)
         # Command injection (os, subprocess)
@@ -578,7 +578,7 @@ class TestOWASPTop10:
             result = validator.validate(code)
             assert result.is_valid is False
 
-    def test_ssrf_prevention(self, validator):
+    def test_ssrf_prevention_blocks_network_access_attempts(self, validator):
         """Test SSRF (Server-Side Request Forgery) prevention"""
         # Block network access that could be used for SSRF
         ssrf_codes = [

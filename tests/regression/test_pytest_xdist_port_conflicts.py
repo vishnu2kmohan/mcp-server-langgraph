@@ -226,7 +226,7 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
 
 
 @pytest.mark.regression
-def test_regression_documentation():
+def test_regression_documentation_explains_port_conflict_resolution():
     """
     📚 Document the regression and its resolution.
 

@@ -73,7 +73,7 @@ class TestInMemoryUserProvider:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization(self):
+    def test_inmemory_provider_initialization_without_default_users_creates_empty_database(self):
         """Test provider initialization (post Finding #2 fix: no default users)"""
         provider = InMemoryUserProvider(secret_key="test-secret", use_password_hashing=False)
         assert provider.secret_key == "test-secret"
@@ -237,7 +237,7 @@ class TestKeycloakUserProvider:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization(self, keycloak_config):
+    def test_keycloak_provider_initialization_with_config_creates_client_successfully(self, keycloak_config):
         """Test provider initialization"""
         provider = KeycloakUserProvider(config=keycloak_config)
         assert provider.config == keycloak_config

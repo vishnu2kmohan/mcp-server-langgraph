@@ -551,7 +551,7 @@ class TestGDPREndpoints:
         # FastAPI should reject missing required query param
         assert response.status_code == 422
 
-    def test_update_consent(self, test_client, mock_current_user):
+    def test_update_consent_with_valid_data_updates_preferences(self, test_client, mock_current_user):
         """Test POST /api/v1/users/me/consent - GDPR Article 21 (Right to Object)"""
         consent_data = {"consent_type": "analytics", "granted": True}
 

@@ -195,7 +195,7 @@ class TestAgentGraph:
         # Second result should have more messages due to checkpointing
         assert len(result2["messages"]) > len(result1["messages"])
 
-    def test_state_accumulation(self):
+    def test_state_accumulation_with_operator_add_aggregates_messages(self):
         """Test that messages accumulate in state"""
         import operator
 
