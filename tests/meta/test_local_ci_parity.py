@@ -1461,7 +1461,10 @@ class TestMyPyBlockingParity:
     def test_mypy_comment_reflects_blocking_behavior(self, shared_precommit_config: dict):
         """Test that MyPy configuration includes appropriate documentation.
 
-        Validates that MyPy hook has description explaining non-blocking policy.
+        Validates that MyPy hook has description explaining BLOCKING policy.
+
+        Since 2025-11-23, MyPy runs on pre-push stage and is BLOCKING (fails on type errors).
+        This maintains local/CI parity - type errors block commits both locally and in CI.
         """
         # Find mypy hooks
         mypy_hooks = []
@@ -1471,16 +1474,19 @@ class TestMyPyBlockingParity:
                     mypy_hooks.append(hook)
 
         if mypy_hooks:
-            # At least one mypy hook should have name/description mentioning non-blocking
+            # At least one mypy hook should have name/description mentioning blocking behavior
             has_documentation = any(
-                "non-blocking" in hook.get("name", "").lower() or "warning" in hook.get("name", "").lower()
+                "blocking" in hook.get("name", "").lower()
+                or "blocking" in hook.get("description", "").lower()
+                or ("pre-push" in str(hook.get("stages", [])).lower() and "mypy" in hook.get("name", "").lower())
                 for hook in mypy_hooks
             )
 
             assert has_documentation, (
-                "MyPy hook should document non-blocking behavior in name or description\n"
-                "This helps developers understand why type errors don't fail pre-commit\n"
-                "Fix: Add 'Non-blocking' or 'Warning Only' to mypy hook name in .pre-commit-config.yaml"
+                "MyPy hook should document BLOCKING behavior in name or run on pre-push stage\n"
+                "Since 2025-11-23, MyPy is BLOCKING to maintain local/CI parity\n"
+                "Expected: Name contains 'Blocking' OR runs on 'pre-push' stage\n"
+                "Fix: Add 'Blocking' to mypy hook name or ensure it runs on pre-push stage in .pre-commit-config.yaml"
             )
 
     def test_ci_mypy_is_blocking(self, ci_workflow_content: str):
