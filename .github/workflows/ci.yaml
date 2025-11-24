@@ -534,7 +534,7 @@ jobs:
         df -h
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: ./.github/actions/setup-docker-buildx
       with:
         driver-opts: network=host
         # Increase build timeout for network resilience
@@ -681,11 +681,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3.7.0
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+    - name: Set up Docker Buildx (multiplatform)
+      uses: ./.github/actions/setup-docker-buildx
+      with:
+        enable-qemu: 'true'
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3.6.0
@@ -733,7 +732,7 @@ jobs:
         variant: [base, full]
     steps:
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3.11.1
+      uses: ./.github/actions/setup-docker-buildx
 
     - name: Log in to Container Registry
       uses: docker/login-action@v3.6.0
