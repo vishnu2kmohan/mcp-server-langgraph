@@ -64,6 +64,8 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Prevent BlockingIOError when capturing large test output
+  PYTHONUNBUFFERED: "1"
 
 jobs:
   # ============================================================================

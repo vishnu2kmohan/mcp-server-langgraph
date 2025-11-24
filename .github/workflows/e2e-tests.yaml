@@ -50,6 +50,10 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  # Prevent BlockingIOError when capturing large test output
+  PYTHONUNBUFFERED: "1"
+
 jobs:
   # ============================================================================
   # E2E Tests with Test Infrastructure

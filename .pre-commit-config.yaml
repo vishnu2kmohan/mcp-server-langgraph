@@ -99,7 +99,7 @@ repos:
       Fix: Add timeout=60 parameter to subprocess.run() calls.
 
       '
-    entry: python .pre-commit-hooks/check_subprocess_timeout.py
+    entry: python -u .pre-commit-hooks/check_subprocess_timeout.py
     language: system
     types: [python]
     files: ^tests/.*\.py$
@@ -115,7 +115,7 @@ repos:
       - import imp (removed in Python 3.12+)
 
       '
-    entry: python .pre-commit-hooks/check_banned_imports.py
+    entry: python -u .pre-commit-hooks/check_banned_imports.py
     language: system
     types: [python]
     stages:
@@ -205,7 +205,7 @@ repos:
       '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/ -v --tb=short'
+    entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/integration/.*\.py)$
@@ -484,7 +484,7 @@ repos:
       '
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
-    entry: python scripts/docs/generate_adr_index.py --check
+    entry: python -u scripts/docs/generate_adr_index.py --check
     language: system
     files: ^adr/.*\.md$
     pass_filenames: false
@@ -705,7 +705,7 @@ repos:
       \ Staging failure\n"
   - id: validate-dependency-injection
     name: Validate Dependency Injection Configuration
-    entry: python3 .githooks/pre-commit-dependency-validation
+    entry: python3 -u .githooks/pre-commit-dependency-validation
     language: system
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
@@ -1395,7 +1395,7 @@ repos:
       '
   - id: validate-test-isolation
     name: Validate Test Isolation for Pytest-xdist
-    entry: python scripts/validators/validate_test_isolation.py tests/
+    entry: python -u scripts/validators/validate_test_isolation.py tests/
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
