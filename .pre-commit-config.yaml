@@ -1595,6 +1595,27 @@ repos:
     - pre-push
     description: "Validates that AsyncMock is used correctly."
 
+  - id: check-test-naming
+    name: Check Test Naming Conventions
+    entry: uv run python scripts/validation/check_test_naming.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates test naming conventions.
+
+      Test files must use test_*.py pattern.
+
+      Test functions must use descriptive names: test_<function>_<scenario>_<expected_result>.
+
+      Prevents generic names like test_1, test_case_1, test_function.
+
+      See: CLAUDE.md for complete test naming conventions.
+
+      '
+
   - id: validate-test-ids
     name: Validate Test IDs (xdist isolation)
     entry: uv run python scripts/validation/validate_test_ids.py
