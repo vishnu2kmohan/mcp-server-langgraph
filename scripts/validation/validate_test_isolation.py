@@ -19,10 +19,8 @@ See: tests/PYTEST_XDIST_BEST_PRACTICES.md
 
 import argparse
 import ast
-import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 class TestIsolationValidator(ast.NodeVisitor):
@@ -30,8 +28,8 @@ class TestIsolationValidator(ast.NodeVisitor):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.violations: List[Tuple[int, str, str]] = []
-        self.warnings: List[Tuple[int, str, str]] = []
+        self.violations: list[tuple[int, str, str]] = []
+        self.warnings: list[tuple[int, str, str]] = []
         self.current_class = None
         self.current_function = None
         self.has_xdist_group_marker = False
@@ -53,7 +51,8 @@ class TestIsolationValidator(ast.NodeVisitor):
         self.has_gc_collect = False
 
         # Check for test class markers
-        if node.name.startswith("Test"):
+        # Only validate top-level Test classes, or those not defined within a function
+        if self.current_function is None and node.name.startswith("Test"):
             # Check for xdist_group marker
             for decorator in node.decorator_list:
                 if self._is_xdist_group_marker(decorator):
@@ -102,17 +101,14 @@ class TestIsolationValidator(ast.NodeVisitor):
         self.has_gc_collect = old_gc
 
     def visit_FunctionDef(self, node):
-        """Visit function definitions to check for fixtures and dependency overrides"""
+        """Visit function definitions to check for fixtures, dependency overrides, and function-level tests"""
         old_function = self.current_function
         self.current_function = node.name
 
         # Check if this is a pytest fixture
         is_fixture = any(
-            isinstance(dec, ast.Call)
-            and isinstance(dec.func, ast.Attribute)
-            and dec.func.attr == "fixture"
-            or isinstance(dec, ast.Name)
-            and dec.name == "fixture"
+            (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute) and dec.func.attr == "fixture")
+            or (isinstance(dec, ast.Name) and dec.id == "fixture")
             for dec in node.decorator_list
         )
 
@@ -137,6 +133,27 @@ class TestIsolationValidator(ast.NodeVisitor):
                         f"Fixture '{node.name}' uses dependency_overrides but doesn't call .clear() in teardown",
                     )
                 )
+
+        # NEW: Check for function-level tests (not in a class) with AsyncMock/MagicMock
+        # Only check top-level test functions (not fixtures, not methods inside classes)
+        is_test_function = node.name.startswith("test_") and self.current_class is None and not is_fixture
+
+        if is_test_function:
+            # Check if function uses AsyncMock or MagicMock
+            uses_async_or_magic_mock = self._function_uses_async_or_magic_mock(node)
+
+            if uses_async_or_magic_mock:
+                # Check for xdist_group marker
+                has_xdist_marker = any(self._is_xdist_group_marker(dec) for dec in node.decorator_list)
+
+                if not has_xdist_marker:
+                    self.violations.append(
+                        (
+                            node.lineno,
+                            "missing_xdist_marker",
+                            f"Function '{node.name}' uses AsyncMock/MagicMock but lacks @pytest.mark.xdist_group marker",
+                        )
+                    )
 
         # Check for async dependency override patterns
         for stmt in ast.walk(node):
@@ -181,8 +198,29 @@ class TestIsolationValidator(ast.NodeVisitor):
                 return True
         return False
 
+    def _function_uses_async_or_magic_mock(self, node: ast.FunctionDef) -> bool:
+        """
+        Check if a function uses AsyncMock or MagicMock.
 
-def validate_file(file_path: Path) -> Tuple[List, List]:
+        Args:
+            node: FunctionDef AST node
+
+        Returns:
+            True if function uses AsyncMock or MagicMock
+        """
+        for stmt in ast.walk(node):
+            # Check for direct instantiation: AsyncMock() or MagicMock()
+            if isinstance(stmt, ast.Call):
+                if isinstance(stmt.func, ast.Name) and stmt.func.id in ("AsyncMock", "MagicMock"):
+                    return True
+                # Check for qualified names: mock.AsyncMock(), unittest.mock.MagicMock()
+                if isinstance(stmt.func, ast.Attribute) and stmt.func.attr in ("AsyncMock", "MagicMock"):
+                    return True
+
+        return False
+
+
+def validate_file(file_path: Path) -> tuple[list, list]:
     """Validate a single test file"""
     try:
         with open(file_path) as f:

@@ -22,15 +22,26 @@
 #   - Reduced resource limits for parallel execution
 #   - TESTING=true environment variables
 #   - Observability services optional (can be disabled)
+#   - No hard-coded container names (allows multiple isolated test stacks)
 #
 # PORTS (offset by +1000 or +3000 to avoid conflicts with dev environment):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
-#   9379  - Redis checkpoints (test, offset +3000 from standard 6379)
-#   9380  - Redis sessions (test, offset +3001 from standard 6379)
+#   9379  - Redis (test, offset +3000 from standard 6379, consolidated for both checkpoints and sessions)
 #   9333  - Qdrant (test, offset +3000 from standard 6333)
 #   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
 #   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
 #   9082  - Keycloak (test, offset +1002 from standard 8080)
+#
+# IMPORTANT - Container Naming:
+#   Container names are NOT hard-coded (no container_name: directives) to allow
+#   multiple isolated test stacks to run simultaneously. Docker Compose will use
+#   project-scoped names like "{PROJECT_NAME}_postgres-test_1". This prevents:
+#   - "container name already in use" conflicts during parallel tests
+#   - Network teardown issues when isolated test projects clean up
+#
+#   To reference containers, use service names (postgres-test, openfga-test, etc.)
+#   or docker compose commands:
+#     docker compose -f docker-compose.test.yml exec postgres-test psql -U postgres
 
 services:
   # ==============================================================================
@@ -38,8 +49,7 @@ services:
   # ==============================================================================
 
   postgres-test:
-    image: postgres:16-alpine
-    container_name: mcp-postgres-test
+    image: postgres:16.8-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -52,17 +62,22 @@ services:
       # Mount migration scripts for database initialization
       - ./migrations:/docker-entrypoint-initdb.d:ro
     # No persistent volumes - ephemeral storage for test isolation
+    # OpenAI Codex Finding Fix (2025-11-20): Increased from 256m to 512m
+    # Reason: Multiple worker schemas (test_worker_gw0, gw1, gw2...) need more space
+    # Previous: 256MB caused OOM with 4+ parallel workers
+    # Current: 512MB supports 8+ workers safely
     tmpfs:
-      - /var/lib/postgresql/data:rw,noexec,nosuid,size=256m
+      - /var/lib/postgresql/data:rw,noexec,nosuid,size=512m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s  # Codex Fix: interval must be >= timeout
       timeout: 3s
       retries: 20  # Increased from 10 to allow more time for migrations (60s max)
-      start_period: 10s  # Increased from 5s to allow schema initialization
     # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - postgres
 
   # ==============================================================================
   # AUTHORIZATION SERVICES
@@ -70,7 +85,6 @@ services:
 
   openfga-migrate-test:
     image: openfga/openfga:v1.10.2
-    container_name: mcp-openfga-migrate-test
     command: migrate --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -84,7 +98,6 @@ services:
 
   openfga-test:
     image: openfga/openfga:v1.10.2
-    container_name: mcp-openfga-test
     command: run --datastore-engine=postgres --datastore-uri='postgres://postgres:postgres@postgres-test:5432/openfga_test?sslmode=disable'
     depends_on:
       postgres-test:
@@ -109,21 +122,23 @@ services:
       start_period: 5s
     # Note: deploy.resources.limits not supported in GitHub Actions
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - openfga
 
   # ==============================================================================
   # AUTHENTICATION SERVICES
   # ==============================================================================
 
   keycloak-test:
-    image: quay.io/keycloak/keycloak:26.0.0
-    container_name: mcp-keycloak-test
+    image: quay.io/keycloak/keycloak:26.4.2
     command: start-dev --import-realm
     depends_on:
       postgres-test:
         condition: service_healthy
     ports:
-      - "9082:8080"
+      - "9082:8080"    # HTTP API
+      - "9900:9000"    # Management/health port
     volumes:
       # Import test realm with pre-configured client and users
       # This eliminates the need for manual setup and prevents E2E test auth failures
@@ -143,24 +158,31 @@ services:
       - KC_HTTP_ENABLED=true
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
-      - KC_HEALTH_ENABLED=true
-      - KC_METRICS_ENABLED=false  # Disabled for test speed
-      - KC_LOG_LEVEL=warn  # Reduced logging
+
+      # Health and management settings (Best Practice: Official Keycloak documentation)
+      - KC_HEALTH_ENABLED=true          # Enable health endpoints
+      - KC_MANAGEMENT_ENABLED=true      # Enable management port (9000)
+      - KC_METRICS_ENABLED=false        # Disabled for test speed
+      - KC_LOG_LEVEL=warn               # Reduced logging
 
       # Test-specific
       - TESTING=true
     healthcheck:
-      # Use Keycloak's built-in health command instead of curl (not available in image)
-      # Codex Fix: curl doesn't exist in Keycloak image, use native kc.sh command
-      test: ["CMD-SHELL", "/opt/keycloak/bin/kc.sh show-config | grep -q 'kc.db' || exit 1"]
+      # Best Practice: Use /health/ready endpoint on management port 9000
+      # Reference: https://www.keycloak.org/observability/health
+      # Keycloak 26.x exposes health endpoints on port 9000 (management port)
+      # curl is not available in image, use bash TCP redirect
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9000' && timeout 5 bash -c 'echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\" > /dev/tcp/localhost/9000' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 40
-      start_period: 60s  # Minimum required per ADR-0053 (Keycloak initialization time)
+      start_period: 60s  # Accounts for DB migration + realm import + JIT compilation
     # Note: deploy.resources.limits not supported in GitHub Actions
     # See: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - keycloak
 
   # ==============================================================================
   # CACHE & SESSION STORAGE
@@ -168,7 +190,6 @@ services:
 
   redis-test:
     image: redis:7-alpine
-    container_name: mcp-redis-checkpoints-test
     command: redis-server --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
     ports:
       - "9379:6379"
@@ -189,40 +210,16 @@ services:
           cpus: '0.05'
           memory: 64M
     networks:
-      - mcp-test-network
-
-  redis-sessions-test:
-    image: redis:7-alpine
-    container_name: mcp-redis-sessions-test
-    command: redis-server --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
-    ports:
-      - "9380:6379"
-    # No volumes - ephemeral storage
-    tmpfs:
-      - /data:rw,noexec,nosuid,size=64m
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 3s  # Codex Fix: interval must be >= timeout
-      timeout: 2s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 128M
-        reservations:
-          cpus: '0.05'
-          memory: 32M
-    networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - redis
 
   # ==============================================================================
   # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)
   # ==============================================================================
 
   qdrant-test:
-    image: qdrant/qdrant:v1.15.1
-    container_name: mcp-qdrant-test
+    image: qdrant/qdrant:v1.15.5
     ports:
       - "9333:6333"  # HTTP API
       - "9334:6334"  # gRPC API
@@ -234,9 +231,9 @@ services:
       - QDRANT__LOG_LEVEL=WARN  # Reduced logging
       - TESTING=true
     healthcheck:
-      # Use bash explicitly for /dev/tcp support (CMD-SHELL defaults to /bin/sh which doesn't support it)
-      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature
-      test: ["CMD", "/bin/bash", "-c", "(echo > /dev/tcp/localhost/6333) >/dev/null 2>&1"]
+      # Use CMD-SHELL with timeout for robust health checking
+      # Qdrant image lacks wget/curl, so we use bash's /dev/tcp feature with timeout
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/6333' || exit 1"]
       interval: 3s
       timeout: 3s
       retries: 15  # Increased from 10 to allow more startup time (45s max)
@@ -250,40 +247,228 @@ services:
           cpus: '0.1'
           memory: 128M
     networks:
-      - mcp-test-network
+      mcp-test-network:
+        aliases:
+          - qdrant
 
   # ==============================================================================
-  # OBSERVABILITY SERVICES (Optional - comment out if not needed for tests)
+  # MCP SERVER (for E2E tests)
   # ==============================================================================
-  #
-  # Jaeger can be enabled for debugging E2E test flows
-  # Uncomment if you need distributed tracing during tests
-  #
-  # jaeger-test:
-  #   image: jaegertracing/all-in-one:1.62.0
-  #   container_name: mcp-jaeger-test
-  #   ports:
-  #     - "19686:16686"  # Jaeger UI (offset by 3000)
-  #     - "17268:14268"  # Jaeger collector HTTP
-  #   environment:
-  #     - COLLECTOR_OTLP_ENABLED=true
-  #     - LOG_LEVEL=warn
-  #     - SPAN_STORAGE_TYPE=memory
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 5
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: '0.25'
-  #         memory: 256M
-  #       reservations:
-  #         cpus: '0.05'
-  #         memory: 128M
-  #   networks:
-  #     - mcp-test-network
+
+  mcp-server-test:
+    # CODEX FINDING FIX (2025-11-21): MCP Server for E2E Tests
+    # =========================================================
+    # Enables end-to-end testing of MCP protocol and full user journeys
+    # Addresses Bucket 4: E2E MCP journeys missing service dependencies
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    command: >
+      sh -c "
+      echo 'Waiting for dependencies to be ready...' &&
+      sleep 5 &&
+      echo 'Starting MCP server...' &&
+      uv run uvicorn mcp_server_langgraph.mcp.server_streamable:app --host 0.0.0.0 --port 8000
+      "
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      keycloak-test:
+        condition: service_healthy
+      openfga-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+
+      qdrant-test:
+        condition: service_healthy
+    ports:
+      - "8000:8000"  # HTTP API
+    environment:
+      # Application settings
+      - ENVIRONMENT=test
+      - TESTING=true
+      - LOG_LEVEL=INFO
+      - JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only
+
+      # Database
+      - POSTGRES_HOST=postgres-test
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=gdpr_test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+      # Authentication
+      - AUTH_PROVIDER=keycloak
+      # WORKAROUND: Use host network loopback because internal bridge networking with httpx is flaky
+      - KEYCLOAK_URL=http://host.docker.internal:9082
+      - KEYCLOAK_REALM=master
+      - KEYCLOAK_CLIENT_ID=mcp-server
+      - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # Authorization
+      - OPENFGA_API_URL=http://openfga-test:8080
+
+      # Cache & Sessions
+      - REDIS_URL=redis://redis-test:6379/1
+      - REDIS_SESSION_URL=redis://redis-test:6379/0
+
+      # Vector DB
+      - QDRANT_URL=http://qdrant-test:6333
+
+      # Observability
+      - OTEL_SDK_DISABLED=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-test:4318
+      - OTEL_SERVICE_NAME=mcp-server-test
+
+      # GDPR
+      - GDPR_STORAGE_BACKEND=postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    networks:
+      mcp-test-network:
+        aliases:
+          - mcp-server
+
+  # ==============================================================================
+  # OBSERVABILITY SERVICES
+  # ==============================================================================
+
+  jaeger-test:
+    image: jaegertracing/all-in-one:1.62.0
+    ports:
+      - "19686:16686"  # Jaeger UI (offset by 3000)
+      - "17268:14268"  # Jaeger collector HTTP
+      - "17250:14250"  # Jaeger collector gRPC
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=warn
+      - SPAN_STORAGE_TYPE=memory
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "16686"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      mcp-test-network:
+        aliases:
+          - jaeger
+
+  prometheus-test:
+    image: prom/prometheus:v3.7.1
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1d'  # Shorter retention for testing
+      - '--web.enable-lifecycle'
+    ports:
+      - "19090:9090"  # Prometheus UI (offset by 10000)
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      # wget is available in the official Prometheus image (prom/prometheus)
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    networks:
+      mcp-test-network:
+        aliases:
+          - prometheus
+
+  alertmanager-test:
+    image: prom/alertmanager:v0.28.1
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:19093'
+    ports:
+      - "19093:9093"  # AlertManager UI (offset by 10000)
+    volumes:
+      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    healthcheck:
+      # wget is available in the official Alertmanager image (prom/alertmanager)
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      mcp-test-network:
+        aliases:
+          - alertmanager
+
+  grafana-test:
+    image: grafana/grafana:12.2.0
+    depends_on:
+      prometheus-test:
+        condition: service_healthy
+    ports:
+      - "13001:3000"  # Grafana UI (offset by 10000 from prod's 3001)
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:13001
+    volumes:
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    healthcheck:
+      # wget is available in the official Grafana image (grafana/grafana)
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.05'
+          memory: 128M
+    networks:
+      mcp-test-network:
+        aliases:
+          - grafana
 
 networks:
   mcp-test-network:

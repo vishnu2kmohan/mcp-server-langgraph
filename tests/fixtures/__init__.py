@@ -1,20 +1,16 @@
 """
-Test Fixtures Module
+Modular test fixtures for improved maintainability.
 
-Provides reusable, serializable mock objects for testing.
+This package contains extracted non-autouse fixtures from tests/conftest.py
+organized by domain:
+- docker_fixtures: Docker infrastructure and service management
+- time_fixtures: Time manipulation and freezing
 
-Modules:
-- serializable_mocks: LangGraph-compatible mocks that can be msgpack-serialized
-- time_fixtures: Virtual clock fixtures for instant time advancement (no sleep overhead)
+These fixtures are automatically loaded via pytest_plugins in tests/conftest.py.
+
+Note: Autouse fixtures (observability, singleton reset) must remain in
+tests/conftest.py per fixture organization enforcement rules.
+See: tests/meta/test_fixture_organization.py for validation
+
+See: Testing Strategy Remediation Plan - Phase 3
 """
-
-from tests.fixtures.serializable_mocks import SerializableLLMMock, SerializableToolMock
-from tests.fixtures.time_fixtures import virtual_clock, virtual_clock_at_epoch, virtual_clock_at_now
-
-__all__ = [
-    "SerializableLLMMock",
-    "SerializableToolMock",
-    "virtual_clock",
-    "virtual_clock_at_epoch",
-    "virtual_clock_at_now",
-]

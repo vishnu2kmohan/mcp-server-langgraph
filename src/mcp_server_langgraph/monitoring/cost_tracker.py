@@ -22,7 +22,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -45,8 +45,8 @@ class TokenUsage(BaseModel):
     completion_tokens: int = Field(description="Number of output tokens", ge=0)
     total_tokens: int = Field(description="Total tokens (prompt + completion)", ge=0)
     estimated_cost_usd: Decimal = Field(description="Estimated cost in USD")
-    feature: Optional[str] = Field(default=None, description="Feature that triggered the call")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    feature: str | None = Field(default=None, description="Feature that triggered the call")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     model_config = ConfigDict()
 
@@ -104,8 +104,8 @@ except ImportError:
 
         name: str
         description: str
-        labelnames: List[str]
-        _values: Dict[tuple[str, ...], float] = field(default_factory=lambda: defaultdict(float))
+        labelnames: list[str]
+        _values: dict[tuple[str, ...], float] = field(default_factory=lambda: defaultdict(float))
 
         def labels(self, **labels: str) -> "MockCounterChild":
             """Return label-specific counter."""
@@ -124,16 +124,22 @@ except ImportError:
             self.parent._values[self.label_values] += amount
 
     # Mock Prometheus metrics (fallback when prometheus_client not installed)
-    llm_token_usage = MockPrometheusCounter(  # Mock has compatible interface
-        name="llm_token_usage_total",
-        description="Total tokens used by LLM calls",
-        labelnames=["provider", "model", "token_type"],
+    llm_token_usage = cast(
+        Counter,
+        MockPrometheusCounter(
+            name="llm_token_usage_total",
+            description="Total tokens used by LLM calls",
+            labelnames=["provider", "model", "token_type"],
+        ),
     )
 
-    llm_cost = MockPrometheusCounter(  # Mock has compatible interface
-        name="llm_cost_usd_total",
-        description="Total estimated cost in USD",
-        labelnames=["provider", "model"],
+    llm_cost = cast(
+        Counter,
+        MockPrometheusCounter(
+            name="llm_cost_usd_total",
+            description="Total estimated cost in USD",
+            labelnames=["provider", "model"],
+        ),
     )
 
     PROMETHEUS_AVAILABLE = False
@@ -158,7 +164,7 @@ class CostMetricsCollector:
 
     def __init__(
         self,
-        database_url: Optional[str] = None,
+        database_url: str | None = None,
         retention_days: int = 90,
         enable_persistence: bool = True,
     ) -> None:
@@ -171,7 +177,7 @@ class CostMetricsCollector:
             retention_days: Number of days to retain records (default: 90)
             enable_persistence: Whether to enable PostgreSQL persistence
         """
-        self._records: List[TokenUsage] = []
+        self._records: list[TokenUsage] = []
         self._lock = asyncio.Lock()
         self._database_url = database_url
         self._retention_days = retention_days
@@ -191,9 +197,9 @@ class CostMetricsCollector:
         provider: str,
         prompt_tokens: int,
         completion_tokens: int,
-        estimated_cost_usd: Optional[Decimal] = None,
-        feature: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        estimated_cost_usd: Decimal | None = None,
+        feature: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> TokenUsage:
         """
         Record token usage for an LLM call.
@@ -355,7 +361,7 @@ class CostMetricsCollector:
                 async with get_async_session(self._database_url) as session:
                     stmt = delete(TokenUsageRecord).where(TokenUsageRecord.timestamp < cutoff_time)
                     result = await session.execute(stmt)
-                    db_deleted = result.rowcount  # type: ignore[attr-defined]  # SQLAlchemy Result has rowcount
+                    db_deleted = result.rowcount or 0  # type: ignore[attr-defined]
                     deleted_count += db_deleted
 
                     import logging
@@ -373,7 +379,7 @@ class CostMetricsCollector:
 
         return deleted_count
 
-    async def get_latest_record(self) -> Optional[TokenUsage]:
+    async def get_latest_record(self) -> TokenUsage | None:
         """Get the most recent usage record."""
         async with self._lock:
             return self._records[-1] if self._records else None
@@ -381,9 +387,9 @@ class CostMetricsCollector:
     async def get_records(
         self,
         period: str = "day",
-        user_id: Optional[str] = None,
-        model: Optional[str] = None,
-    ) -> List[TokenUsage]:
+        user_id: str | None = None,
+        model: str | None = None,
+    ) -> list[TokenUsage]:
         """
         Get usage records with optional filtering.
 
@@ -411,8 +417,8 @@ class CostMetricsCollector:
 
     async def get_total_cost(
         self,
-        user_id: Optional[str] = None,
-        period: Optional[str] = None,
+        user_id: str | None = None,
+        period: str | None = None,
     ) -> Decimal:
         """
         Calculate total cost with optional filters.
@@ -444,7 +450,7 @@ class CostAggregator:
     - Total cost calculation
     """
 
-    async def aggregate_by_model(self, records: List[Dict[str, Any]]) -> Dict[str, Decimal]:
+    async def aggregate_by_model(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
         Aggregate costs by model.
 
@@ -454,7 +460,7 @@ class CostAggregator:
         Returns:
             Dict mapping model names to total costs
         """
-        aggregated: Dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
+        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
 
         for record in records:
             model = record["model"]
@@ -463,7 +469,7 @@ class CostAggregator:
 
         return dict(aggregated)
 
-    async def aggregate_by_user(self, records: List[Dict[str, Any]]) -> Dict[str, Decimal]:
+    async def aggregate_by_user(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
         Aggregate costs by user.
 
@@ -473,7 +479,7 @@ class CostAggregator:
         Returns:
             Dict mapping user IDs to total costs
         """
-        aggregated: Dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
+        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
 
         for record in records:
             user_id = record["user_id"]
@@ -482,7 +488,7 @@ class CostAggregator:
 
         return dict(aggregated)
 
-    async def aggregate_by_feature(self, records: List[Dict[str, Any]]) -> Dict[str, Decimal]:
+    async def aggregate_by_feature(self, records: list[dict[str, Any]]) -> dict[str, Decimal]:
         """
         Aggregate costs by feature.
 
@@ -492,7 +498,7 @@ class CostAggregator:
         Returns:
             Dict mapping feature names to total costs
         """
-        aggregated: Dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
+        aggregated: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
 
         for record in records:
             feature = record.get("feature", "unknown")
@@ -501,7 +507,7 @@ class CostAggregator:
 
         return dict(aggregated)
 
-    async def calculate_total(self, records: List[Dict[str, Any]]) -> Decimal:
+    async def calculate_total(self, records: list[dict[str, Any]]) -> Decimal:
         """
         Calculate total cost across all records.
 
@@ -524,7 +530,7 @@ class CostAggregator:
 # Singleton Instance
 # ==============================================================================
 
-_collector_instance: Optional[CostMetricsCollector] = None
+_collector_instance: CostMetricsCollector | None = None
 
 
 def get_cost_collector() -> CostMetricsCollector:

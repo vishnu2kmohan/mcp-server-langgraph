@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 # Add scripts directory to path for importing validator
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validation"))
 
 
 from validate_gke_autopilot_compliance import GKEAutopilotValidator  # noqa: E402
@@ -175,12 +175,12 @@ class TestGKEAutopilotConstants:
         """Ensure MAX_MEMORY_RATIO is set to 4.0"""
         assert GKEAutopilotValidator.MAX_MEMORY_RATIO == 4.0
 
-    def test_cpu_limits(self):
+    def test_cpu_limits_validation_with_constants_matches_expected_values(self):
         """Ensure CPU limit constants are correctly defined"""
         assert GKEAutopilotValidator.MIN_CPU_REQUEST == "50m"
         assert GKEAutopilotValidator.MAX_CPU_LIMIT == "4"
 
-    def test_memory_limits(self):
+    def test_memory_limits_validation_with_constants_matches_expected_values(self):
         """Ensure memory limit constants are correctly defined"""
         assert GKEAutopilotValidator.MIN_MEMORY_REQUEST == "64Mi"
         assert GKEAutopilotValidator.MAX_MEMORY_LIMIT == "8Gi"

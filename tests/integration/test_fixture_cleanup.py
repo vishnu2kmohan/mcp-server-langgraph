@@ -14,6 +14,8 @@ import pytest
 
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.integration
 @pytest.mark.xdist_group(name="testpostgresqlcleanup")

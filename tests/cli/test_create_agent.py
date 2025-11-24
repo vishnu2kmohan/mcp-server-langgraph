@@ -19,12 +19,14 @@ import pytest
 
 from mcp_server_langgraph.cli.create_agent import AGENT_TEMPLATES, generate_agent
 
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Test generate_agent Function
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgenerateagent")
 class TestGenerateAgent:
     """Test agent file generation functionality."""
@@ -253,7 +255,7 @@ class TestGenerateAgent:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testagenttemplates")
 class TestAgentTemplates:
     """Test agent template structures."""
@@ -347,7 +349,7 @@ class TestAgentTemplates:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgenerateagentedgecases")
 class TestGenerateAgentEdgeCases:
     """Test edge cases and error scenarios for generate_agent."""

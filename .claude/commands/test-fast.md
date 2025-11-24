@@ -21,7 +21,7 @@ Standard test execution with coverage can be slow:
 Fast testing options provide **40-70% speed improvement** for rapid iteration:
 - `make test-dev`: ~15-20 seconds ⚡
 - `make test-fast-core`: ~3-5 seconds ⚡⚡
-- `make test-parallel`: ~20-30 seconds ⚡
+- `make test-fast`: ~20-30 seconds ⚡
 
 ---
 
@@ -115,10 +115,10 @@ Leverage multiple CPU cores:
 
 ```bash
 # All tests in parallel
-make test-parallel
+make test-fast
 
 # Unit tests only in parallel
-make test-parallel-unit
+make test-fast-unit
 ```
 
 **Features**:
@@ -146,7 +146,7 @@ Speedup: ~40-60% faster than sequential execution
 | `make test` | ~45-60s | ✅ Yes | Pre-merge validation |
 | `make test-unit` | ~30-40s | ✅ Yes | Standard unit tests |
 | `make test-dev` | ~15-20s | ❌ No | **Active development** ⭐ |
-| `make test-parallel` | ~20-30s | ❌ No | Quick full suite |
+| `make test-fast` | ~20-30s | ❌ No | Quick full suite |
 | `make test-fast-core` | ~3-5s | ❌ No | **Rapid iteration** ⚡⚡ |
 
 ---
@@ -170,8 +170,8 @@ Ultra-fast, core functionality only.
 
 ### Pre-Commit
 ```bash
-# Use test-parallel or test-fast
-make test-parallel
+# Use test-fast
+make test-fast
 ```bash
 Full test suite, fast execution.
 

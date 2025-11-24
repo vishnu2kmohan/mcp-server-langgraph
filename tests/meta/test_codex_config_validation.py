@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 # Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
 try:
     import tomllib
@@ -20,7 +22,7 @@ except ModuleNotFoundError:
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testcodexconfigurationrecommendations")
 class TestCodexConfigurationRecommendations:
     """Validate Codex-recommended configuration changes."""

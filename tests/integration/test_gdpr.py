@@ -7,6 +7,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from tests.conftest import get_user_id
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
@@ -15,6 +16,8 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore, SessionData,
 from mcp_server_langgraph.compliance.gdpr.data_deletion import DataDeletionService, DeletionResult
 from mcp_server_langgraph.compliance.gdpr.data_export import DataExportService, UserDataExport
 from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
+
+pytestmark = pytest.mark.integration
 
 # ==================== Test Fixtures ====================
 
@@ -45,7 +48,7 @@ def mock_user_request():
     """Mock authenticated request"""
     request = MagicMock(spec=Request)
     request.state.user = {
-        "user_id": "user:alice",
+        "user_id": get_user_id("alice"),
         "username": "alice",
         "email": "alice@acme.com",
         "roles": ["user"],
@@ -78,7 +81,7 @@ class TestDataExportService:
         mock_session_store.list_user_sessions.return_value = [
             SessionData(
                 session_id="sess_123456789012345678901234567890ab",
-                user_id="user:alice",
+                user_id=get_user_id("alice"),
                 username="alice",
                 roles=["user"],
                 created_at="2025-01-01T10:00:00Z",
@@ -89,14 +92,14 @@ class TestDataExportService:
 
         # Execute
         export = await service.export_user_data(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             email="alice@acme.com",
         )
 
         # Assert
         assert isinstance(export, UserDataExport)
-        assert export.user_id == "user:alice"
+        assert export.user_id == get_user_id("alice")
         assert export.username == "alice"
         assert export.email == "alice@acme.com"
         assert len(export.sessions) == 1
@@ -111,13 +114,13 @@ class TestDataExportService:
         mock_session_store.list_user_sessions.return_value = []
 
         export = await service.export_user_data(
-            user_id="user:bob",
+            user_id=get_user_id("bob"),
             username="bob",
             email="bob@acme.com",
         )
 
         assert len(export.sessions) == 0
-        assert export.user_id == "user:bob"
+        assert export.user_id == get_user_id("bob")
 
     @pytest.mark.asyncio
     async def test_export_portable_json_format(self, mock_session_store):
@@ -126,7 +129,7 @@ class TestDataExportService:
         mock_session_store.list_user_sessions.return_value = []
 
         data_bytes, content_type = await service.export_user_data_portable(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             email="alice@acme.com",
             format="json",
@@ -137,7 +140,7 @@ class TestDataExportService:
 
         # Verify JSON is valid
         data = json.loads(data_bytes.decode("utf-8"))
-        assert data["user_id"] == "user:alice"
+        assert data["user_id"] == get_user_id("alice")
         assert data["username"] == "alice"
 
     @pytest.mark.asyncio
@@ -147,7 +150,7 @@ class TestDataExportService:
         mock_session_store.list_user_sessions.return_value = []
 
         data_bytes, content_type = await service.export_user_data_portable(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             email="alice@acme.com",
             format="csv",
@@ -160,7 +163,7 @@ class TestDataExportService:
         csv_content = data_bytes.decode("utf-8")
         assert "Export Metadata" in csv_content
         assert "User ID" in csv_content
-        assert "user:alice" in csv_content
+        assert get_user_id("alice") in csv_content
 
     @pytest.mark.asyncio
     async def test_export_portable_invalid_format(self, mock_session_store):
@@ -169,7 +172,7 @@ class TestDataExportService:
 
         with pytest.raises(ValueError, match="Unsupported export format"):
             await service.export_user_data_portable(
-                user_id="user:alice",
+                user_id=get_user_id("alice"),
                 username="alice",
                 email="alice@acme.com",
                 format="xml",  # Invalid format
@@ -183,7 +186,7 @@ class TestDataExportService:
 
         # Should not raise, but return empty sessions
         export = await service.export_user_data(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             email="alice@acme.com",
         )
@@ -211,19 +214,19 @@ class TestDataDeletionService:
         mock_session_store.delete_user_sessions.return_value = 3  # Deleted 3 sessions
 
         result = await service.delete_user_account(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             reason="user_request",
         )
 
         assert isinstance(result, DeletionResult)
         assert result.success is True
-        assert result.user_id == "user:alice"
+        assert result.user_id == get_user_id("alice")
         assert result.deleted_items["sessions"] == 3
         assert result.deleted_items["user_profile"] == 1
         assert len(result.errors) == 0
         assert result.audit_record_id is not None
-        mock_session_store.delete_user_sessions.assert_called_once_with("user:alice")
+        mock_session_store.delete_user_sessions.assert_called_once_with(get_user_id("alice"))
 
     @pytest.mark.asyncio
     async def test_delete_user_account_no_sessions(self, mock_session_store):
@@ -232,7 +235,7 @@ class TestDataDeletionService:
         mock_session_store.delete_user_sessions.return_value = 0
 
         result = await service.delete_user_account(
-            user_id="user:bob",
+            user_id=get_user_id("bob"),
             username="bob",
             reason="account_inactive",
         )
@@ -247,7 +250,7 @@ class TestDataDeletionService:
         mock_session_store.delete_user_sessions.side_effect = Exception("Database error")
 
         result = await service.delete_user_account(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             reason="user_request",
         )
@@ -262,7 +265,7 @@ class TestDataDeletionService:
         service = DataDeletionService(session_store=None)
 
         result = await service.delete_user_account(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             reason="user_request",
         )
@@ -278,7 +281,7 @@ class TestDataDeletionService:
         mock_session_store.delete_user_sessions.return_value = 1
 
         result = await service.delete_user_account(
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             reason="gdpr_request",
         )
@@ -328,13 +331,22 @@ class TestGDPREndpoints:
 
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
         from mcp_server_langgraph.auth.session import get_session_store
         from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
+
+        # Add test middleware to set request.state.user (required by GDPR handlers)
+        # This replaces the previous bearer_scheme/get_current_user dependency overrides
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                request.state.user = mock_current_user
+                return await call_next(request)
+
+        app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
 
         # Mock session store with proper return values
@@ -403,9 +415,6 @@ class TestGDPREndpoints:
 
         # Define async override functions for async dependencies
         # CRITICAL: Must use async def for async dependencies (not sync lambdas)
-        async def mock_get_current_user_async():
-            return mock_current_user
-
         async def mock_get_session_store_async():
             return mock_session_store
 
@@ -413,9 +422,7 @@ class TestGDPREndpoints:
             return mock_gdpr_storage
 
         # Override dependencies
-        # CRITICAL: Override bearer_scheme to prevent singleton pollution (per PYTEST_XDIST_BEST_PRACTICES.md)
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        # Note: bearer_scheme and get_current_user no longer needed - TestAuthMiddleware handles auth
         app.dependency_overrides[get_session_store] = mock_get_session_store_async
         app.dependency_overrides[get_gdpr_storage] = mock_get_gdpr_storage_async
 
@@ -544,7 +551,7 @@ class TestGDPREndpoints:
         # FastAPI should reject missing required query param
         assert response.status_code == 422
 
-    def test_update_consent(self, test_client, mock_current_user):
+    def test_update_consent_with_valid_data_updates_preferences(self, test_client, mock_current_user):
         """Test POST /api/v1/users/me/consent - GDPR Article 21 (Right to Object)"""
         consent_data = {"consent_type": "analytics", "granted": True}
 
@@ -635,13 +642,13 @@ class TestGDPRModels:
         export = UserDataExport(
             export_id="exp_123",
             export_timestamp="2025-01-01T12:00:00Z",
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             username="alice",
             email="alice@acme.com",
         )
 
         assert export.export_id == "exp_123"
-        assert export.user_id == "user:alice"
+        assert export.user_id == get_user_id("alice")
         assert len(export.sessions) == 0  # Default empty
         assert len(export.conversations) == 0  # Default empty
 
@@ -649,7 +656,7 @@ class TestGDPRModels:
         """Test DeletionResult model"""
         result = DeletionResult(
             success=True,
-            user_id="user:alice",
+            user_id=get_user_id("alice"),
             deletion_timestamp="2025-01-01T12:00:00Z",
             deleted_items={"sessions": 3, "conversations": 5},
             anonymized_items={"audit_logs": 10},
@@ -682,7 +689,7 @@ class TestGDPRIntegration:
         export_service = DataExportService(session_store=session_store)
         deletion_service = DataDeletionService(session_store=session_store)
 
-        user_id = "user:testuser"
+        user_id = get_user_id("testuser")
         username = "testuser"
         email = "testuser@acme.com"
 
@@ -713,7 +720,7 @@ class TestGDPRIntegration:
         session_store = InMemorySessionStore()
         service = DataExportService(session_store=session_store)
 
-        user_id = "user:testuser"
+        user_id = get_user_id("testuser")
 
         # Export in JSON
         json_data, json_type = await service.export_user_data_portable(user_id, "testuser", "test@acme.com", "json")
@@ -730,7 +737,6 @@ class TestGDPRIntegration:
 # ==================== Edge Cases ====================
 
 
-@pytest.mark.unit
 @pytest.mark.gdpr
 @pytest.mark.xdist_group(name="gdpr_tests")
 class TestGDPREdgeCases:
@@ -749,7 +755,7 @@ class TestGDPREdgeCases:
         many_sessions = [
             SessionData(
                 session_id=f"sess_{i:032d}",  # Pad to 32 chars minimum
-                user_id="user:alice",
+                user_id=get_user_id("alice"),
                 username="alice",
                 roles=["user"],
                 created_at="2025-01-01T10:00:00Z",
@@ -760,7 +766,7 @@ class TestGDPREdgeCases:
         ]
         mock_session_store.list_user_sessions.return_value = many_sessions
 
-        export = await service.export_user_data("user:alice", "alice", "alice@acme.com")
+        export = await service.export_user_data(get_user_id("alice"), "alice", "alice@acme.com")
         assert len(export.sessions) == 100
 
     @pytest.mark.asyncio
@@ -770,7 +776,7 @@ class TestGDPREdgeCases:
         mock_session_store.delete_user_sessions.return_value = 0
 
         result = await service.delete_user_account(
-            user_id="user:nonexistent",
+            user_id=get_user_id("nonexistent"),
             username="nonexistent",
         )
 
@@ -811,9 +817,9 @@ class TestGDPREdgeCases:
 
         # Launch 3 concurrent deletion attempts
         results = await asyncio.gather(
-            service.delete_user_account("user:test", "test"),
-            service.delete_user_account("user:test", "test"),
-            service.delete_user_account("user:test", "test"),
+            service.delete_user_account(get_user_id("test"), "test"),
+            service.delete_user_account(get_user_id("test"), "test"),
+            service.delete_user_account(get_user_id("test"), "test"),
             return_exceptions=False,  # Don't catch exceptions
         )
 

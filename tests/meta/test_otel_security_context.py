@@ -15,20 +15,32 @@ Reference: Deploy to GKE Staging workflow failures with 5 HIGH Trivy findings
 Verified UID: 10001 (from official otel/opentelemetry-collector-contrib:0.137.0 image)
 """
 
-import gc
 import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
-def test_otel_deployment_has_pod_security_context():
+@pytest.fixture(scope="module")
+def repo_root() -> Path:
+    """Get repository root directory (shared across all tests in module)."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
+    return Path(result.stdout.strip())
+
+
+def test_otel_deployment_has_pod_security_context(repo_root: Path):
     """
     Verify that OTel collector deployment has pod-level security context.
 
@@ -38,9 +50,7 @@ def test_otel_deployment_has_pod_security_context():
     - fsGroup: 10001
     - seccompProfile.type: RuntimeDefault
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     assert deployment_file.exists(), f"OTel deployment not found: {deployment_file}"
 
@@ -99,7 +109,7 @@ def test_otel_deployment_has_pod_security_context():
     assert seccomp.get("type") == "RuntimeDefault", f"seccompProfile.type must be RuntimeDefault, got: {seccomp.get('type')}"
 
 
-def test_otel_deployment_has_container_security_context():
+def test_otel_deployment_has_container_security_context(repo_root: Path):
     """
     Verify that OTel collector container has security context.
 
@@ -110,9 +120,7 @@ def test_otel_deployment_has_container_security_context():
     - runAsUser: 10001
     - capabilities.drop: [ALL]
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
@@ -176,16 +184,14 @@ def test_otel_deployment_has_container_security_context():
     assert "ALL" in drop_caps, f"Container securityContext must drop ALL capabilities, got: {drop_caps}"
 
 
-def test_otel_has_readonly_root_filesystem():
+def test_otel_has_readonly_root_filesystem(repo_root: Path):
     """
     Verify that readOnlyRootFilesystem is set to true.
 
     This is the specific finding from Trivy AVD-KSV-0014:
     "Container 'otel-collector' should set 'securityContext.readOnlyRootFilesystem' to true"
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
@@ -209,16 +215,14 @@ def test_otel_has_readonly_root_filesystem():
     )
 
 
-def test_otel_runs_as_nonroot():
+def test_otel_runs_as_nonroot(repo_root: Path):
     """
     Verify that OTel collector runs as non-root user.
 
     Both pod and container levels must specify runAsNonRoot: true.
     This addresses Trivy AVD-KSV-0118 finding about default security context.
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
@@ -240,7 +244,7 @@ def test_otel_runs_as_nonroot():
     assert container_run_as_nonroot is True, "Container-level securityContext must set runAsNonRoot: true"
 
 
-def test_otel_has_tmpfs_volumes():
+def test_otel_has_tmpfs_volumes(repo_root: Path):
     """
     Verify that OTel collector has tmpfs volumes for writable directories.
 
@@ -250,9 +254,7 @@ def test_otel_has_tmpfs_volumes():
 
     These should be emptyDir volumes (tmpfs in memory).
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
@@ -298,23 +300,21 @@ def test_otel_has_tmpfs_volumes():
     mount_paths = [vm.get("mountPath") for vm in volume_mounts]
 
     # Checking for volume mount path "/tmp", not creating temp file
-    assert "/tmp" in mount_paths, "Missing volumeMount for /tmp directory.\n" f"Current mounts: {mount_paths}"  # nosec B108
+    assert "/tmp" in mount_paths, f"Missing volumeMount for /tmp directory.\nCurrent mounts: {mount_paths}"  # nosec B108
 
     assert "/home/otelcol" in mount_paths or "/home" in mount_paths, (
         "Missing volumeMount for /home/otelcol or /home directory.\n" f"Current mounts: {mount_paths}"
     )
 
 
-def test_otel_drops_all_capabilities():
+def test_otel_drops_all_capabilities(repo_root: Path):
     """
     Verify that OTel collector drops all Linux capabilities.
 
     Security best practice: Drop all capabilities unless specifically needed.
     OTel collector doesn't need any special capabilities.
     """
-    deployment_file = Path(
-        "/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph/" "deployments/base/otel-collector-deployment.yaml"
-    )
+    deployment_file = repo_root / "deployments" / "base" / "otel-collector-deployment.yaml"
 
     with open(deployment_file) as f:
         docs = list(yaml.safe_load_all(f))
@@ -342,8 +342,9 @@ def test_otel_drops_all_capabilities():
     )
 
 
+@pytest.mark.requires_kubectl
 @requires_tool("kustomize")
-def test_rendered_staging_manifest_has_otel_security_context():
+def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
     """
     Verify that the rendered staging manifest includes OTel security contexts.
 
@@ -356,7 +357,7 @@ def test_rendered_staging_manifest_has_otel_security_context():
         ["kubectl", "kustomize", "deployments/overlays/staging-gke"],
         capture_output=True,
         text=True,
-        cwd="/home/vishnu/git/vishnu2kmohan/mcp-server-langgraph",
+        cwd=str(repo_root),
         timeout=60,
     )
 

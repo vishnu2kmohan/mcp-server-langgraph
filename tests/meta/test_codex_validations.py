@@ -14,12 +14,11 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testcodexfindingsremediation")
@@ -44,7 +43,7 @@ class TestCodexFindingsRemediation:
     @pytest.fixture
     def e2e_test_file(self, project_root: Path) -> Path:
         """Get E2E test file path."""
-        return project_root / "tests" / "integration" / "e2e" / "test_full_user_journey.py"
+        return project_root / "tests" / "e2e" / "test_full_user_journey.py"
 
     @pytest.fixture
     def helpers_file(self, project_root: Path) -> Path:
@@ -63,11 +62,11 @@ class TestCodexFindingsRemediation:
 
     def _parse_python_file(self, file_path: Path) -> ast.Module:
         """Parse Python file into AST."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
         return ast.parse(content, filename=str(file_path))
 
-    def _find_imports(self, tree: ast.Module) -> List[Tuple[str, List[str]]]:
+    def _find_imports(self, tree: ast.Module) -> list[tuple[str, list[str]]]:
         """
         Find all imports in AST.
 
@@ -86,7 +85,7 @@ class TestCodexFindingsRemediation:
                     imports.append((alias.name, [alias.name]))
         return imports
 
-    def _find_function_calls(self, tree: ast.Module) -> List[str]:
+    def _find_function_calls(self, tree: ast.Module) -> list[str]:
         """Find all function call names in AST."""
         calls = []
         for node in ast.walk(tree):
@@ -97,7 +96,7 @@ class TestCodexFindingsRemediation:
                     calls.append(node.func.attr)
         return calls
 
-    def _find_decorators(self, tree: ast.Module) -> List[Tuple[str, ast.FunctionDef]]:
+    def _find_decorators(self, tree: ast.Module) -> list[tuple[str, ast.FunctionDef]]:
         """
         Find all test function decorators.
 
@@ -213,7 +212,7 @@ class TestCodexFindingsRemediation:
 
         Codex Finding #4: Documentation claims "Migrated" but code uses mocks
         """
-        with open(helpers_file, "r", encoding="utf-8") as f:
+        with open(helpers_file, encoding="utf-8") as f:
             content = f.read()
 
         # Check for completion claims
@@ -350,7 +349,7 @@ class TestCodexFindingsRemediation:
         conftest_file = project_root / "tests" / "conftest.py"
 
         # Read file content for analysis
-        with open(conftest_file, "r", encoding="utf-8") as f:
+        with open(conftest_file, encoding="utf-8") as f:
             content = f.read()
 
         # Verify Hypothesis import has try/except guard with HYPOTHESIS_AVAILABLE flag
@@ -374,7 +373,7 @@ class TestCodexFindingsRemediation:
                     f"AttributeError when Hypothesis is not installed."
                 )
 
-    def _find_availability_guard(self, lines: List[str], current_line: int) -> bool:
+    def _find_availability_guard(self, lines: list[str], current_line: int) -> bool:
         """Helper: Check if line is inside 'if HYPOTHESIS_AVAILABLE:' block."""
         for j in range(current_line - 1, max(0, current_line - 50), -1):
             if re.match(r"^if\s+HYPOTHESIS_AVAILABLE\s*:", lines[j]):
@@ -410,7 +409,7 @@ class TestCodexValidationMetaTest:
         WHEN: Checking documentation
         THEN: Each test should have clear docstring with GIVEN/WHEN/THEN
         """
-        with open(__file__, "r", encoding="utf-8") as f:
+        with open(__file__, encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content)

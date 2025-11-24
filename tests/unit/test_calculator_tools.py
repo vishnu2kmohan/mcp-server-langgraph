@@ -10,6 +10,8 @@ import pytest
 
 from mcp_server_langgraph.tools.calculator_tools import add, calculator, divide, multiply, subtract
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testcalculatortool")
@@ -30,17 +32,17 @@ class TestCalculatorTool:
         result = calculator.invoke({"expression": "(10 * 3) - 5"})
         assert result == "25.0"
 
-    def test_calculator_division(self):
+    def test_calculator_division_with_valid_operands_returns_quotient(self):
         """Test division expression"""
         result = calculator.invoke({"expression": "8 / 2"})
         assert result == "4.0"
 
-    def test_calculator_power(self):
+    def test_calculator_power_with_base_and_exponent_returns_result(self):
         """Test exponentiation"""
         result = calculator.invoke({"expression": "2 ** 3"})
         assert result == "8.0"
 
-    def test_calculator_modulo(self):
+    def test_calculator_modulo_with_dividend_and_divisor_returns_remainder(self):
         """Test modulo operation"""
         result = calculator.invoke({"expression": "10 % 3"})
         assert result == "1.0"
@@ -50,7 +52,7 @@ class TestCalculatorTool:
         result = calculator.invoke({"expression": "-5 + 3"})
         assert result == "-2.0"
 
-    def test_calculator_parentheses(self):
+    def test_calculator_parentheses_with_grouped_operations_respects_precedence(self):
         """Test parentheses precedence"""
         result = calculator.invoke({"expression": "(2 + 3) * 4"})
         assert result == "20.0"
@@ -95,12 +97,12 @@ class TestAddTool:
         result = add.invoke({"a": 10, "b": -3})
         assert result == "7.0"
 
-    def test_add_zero(self):
+    def test_add_zero_with_identity_element_returns_original_value(self):
         """Test adding zero"""
         result = add.invoke({"a": 5, "b": 0})
         assert result == "5.0"
 
-    def test_add_floats(self):
+    def test_add_floats_with_decimal_values_computes_accurately(self):
         """Test adding floating point numbers"""
         result = add.invoke({"a": 2.5, "b": 3.7})
         assert float(result) == pytest.approx(6.2)
@@ -125,7 +127,7 @@ class TestSubtractTool:
         result = subtract.invoke({"a": 3, "b": 10})
         assert result == "-7.0"
 
-    def test_subtract_zero(self):
+    def test_subtract_zero_with_identity_element_returns_original_value(self):
         """Test subtracting zero"""
         result = subtract.invoke({"a": 5, "b": 0})
         assert result == "5.0"

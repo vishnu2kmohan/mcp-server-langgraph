@@ -15,6 +15,8 @@ from mcp_server_langgraph.auth.session import InMemorySessionStore
 from mcp_server_langgraph.compliance.gdpr.storage import InMemoryAuditLogStore, InMemoryConversationStore
 from mcp_server_langgraph.compliance.retention import DataRetentionService, RetentionPolicy, RetentionResult
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_session_store():
@@ -180,7 +182,7 @@ class TestDataRetentionServiceInit:
                 # Should fall back to default config
                 assert "global" in service.config
 
-    def test_default_config(self):
+    def test_default_config_includes_all_retention_periods(self):
         """Test default configuration"""
         service = DataRetentionService()
         config = service._default_config()

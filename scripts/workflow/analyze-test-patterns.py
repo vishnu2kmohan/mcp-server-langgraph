@@ -24,7 +24,6 @@ import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set
 
 
 @dataclass
@@ -33,9 +32,9 @@ class TestPattern:
 
     name: str
     description: str
-    examples: List[str] = field(default_factory=list)
+    examples: list[str] = field(default_factory=list)
     frequency: int = 0
-    files: Set[str] = field(default_factory=set)
+    files: set[str] = field(default_factory=set)
 
 
 class TestPatternAnalyzer:
@@ -43,7 +42,7 @@ class TestPatternAnalyzer:
 
     def __init__(self, test_dir: str = "tests"):
         self.test_dir = Path(test_dir)
-        self.patterns: Dict[str, TestPattern] = {}
+        self.patterns: dict[str, TestPattern] = {}
         self.fixture_usage: Counter = Counter()
         self.marker_usage: Counter = Counter()
         self.mock_patterns: Counter = Counter()
@@ -64,7 +63,7 @@ class TestPatternAnalyzer:
     def _analyze_file(self, file_path: Path):
         """Analyze a single test file"""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 tree = ast.parse(content)
 
@@ -200,7 +199,7 @@ class TestPatternAnalyzer:
 
         return "\n".join(report)
 
-    def identify_new_patterns(self) -> List[str]:
+    def identify_new_patterns(self) -> list[str]:
         """Identify patterns not yet documented"""
         # This would compare against existing testing-patterns.md
         # For now, return commonly used patterns

@@ -411,6 +411,469 @@ def test_fallback_to_env_vars(mock_infisical):
 
 ---
 
+## 🔄 Advanced Async Test Patterns
+
+### Event Loop Management for Property Tests
+
+**Problem**: Hypothesis property tests with async operations can leak event loop descriptors
+
+**Solution**: Custom `run_async()` helper with proper cleanup
+
+**Pattern** (from `tests/integration/property/test_auth_properties.py`):
+```python
+import asyncio
+
+def run_async(coro):
+    """
+    Run async coroutine with proper event loop cleanup.
+
+    CRITICAL: Prevents event loop descriptor leaks in property tests.
+    Hypothesis runs tests multiple times, so proper cleanup is essential.
+    """
+    # Create fresh event loop for each property test
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        result = loop.run_until_complete(coro)
+        return result
+    finally:
+        # CRITICAL: Always close to free file descriptors
+        pending = asyncio.all_tasks(loop)
+        for task in pending:
+            task.cancel()
+
+        # Wait for cancellation to complete
+        loop.run_until_complete(
+            asyncio.gather(*pending, return_exceptions=True)
+        )
+
+        # Close loop and free resources
+        loop.close()
+```
+
+**Why it's needed**:
+- Hypothesis runs each property test multiple times (25-100 examples)
+- Each run creates new event loop if not managed
+- Unclosed loops leak file descriptors
+- Eventually hits OS file descriptor limit
+- Prevents "Too many open files" errors
+
+**Usage**:
+```python
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+@pytest.mark.property
+@pytest.mark.unit
+class TestAuthProperties:
+    @given(username=st.sampled_from(["alice", "bob"]))
+    @settings(max_examples=50)
+    def test_jwt_roundtrip(self, username):
+        """Property: JWT encode/decode should be reversible"""
+        async def test_logic():
+            token = await create_token(username)
+            payload = await verify_token(token)
+            return payload["username"]
+
+        result = run_async(test_logic())
+        assert result == username
+```
+
+---
+
+### Async Fixture Loop Scope Pattern
+
+**Problem**: "Future attached to different loop" errors in async fixtures
+
+**Solution**: Explicit `loop_scope` parameter
+
+**Pattern** (from `tests/conftest.py`):
+```python
+@pytest.fixture(scope="session", loop_scope="session")
+async def postgres_connection_pool():
+    """
+    Session-scoped PostgreSQL connection pool.
+
+    CRITICAL: loop_scope="session" prevents ScopeMismatch errors.
+    Without this, pytest-asyncio creates new loop for function-scoped tests,
+    but fixture is bound to different loop from session scope.
+    """
+    import asyncpg
+
+    pool = await asyncpg.create_pool(
+        host="localhost",
+        port=5432,
+        user="test",
+        password="test",
+        database="test_db",
+        min_size=2,
+        max_size=10,
+    )
+
+    yield pool
+
+    # Cleanup
+    await pool.close()
+
+
+@pytest.fixture
+async def db_connection(postgres_connection_pool):
+    """
+    Function-scoped clean database connection.
+
+    Inherits loop from pool (both session-scoped loop).
+    """
+    async with postgres_connection_pool.acquire() as conn:
+        # Start transaction for test isolation
+        async with conn.transaction():
+            yield conn
+            # Transaction auto-rolls back after test
+```
+
+**Why it's needed**:
+- Pytest-asyncio creates event loops based on fixture scope
+- Session fixture with function loop → "Future attached to different loop"
+- Explicit `loop_scope` ensures fixture uses correct loop
+- Prevents asyncio.InvalidStateError
+
+**Global Configuration** (in `pyproject.toml`):
+```toml
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "session"
+```
+
+**Effect**: All async fixtures default to session loop scope (prevents most errors)
+
+---
+
+### AsyncMock Configuration Best Practices
+
+**Problem**: Unconfigured AsyncMock returns truthy `<AsyncMock>` object, causing logic bugs
+
+**Pattern**:
+```python
+from unittest.mock import AsyncMock
+
+# ❌ WRONG - Unconfigured mock
+mock_openfga = AsyncMock()
+result = await mock_openfga.check_permission("user", "resource")
+if result:  # Always True! (AsyncMock is truthy)
+    grant_access()  # Security bypass!
+
+# ✅ CORRECT - Explicit return value
+mock_openfga = AsyncMock()
+mock_openfga.check_permission.return_value = False  # Explicit False
+
+result = await mock_openfga.check_permission("user", "resource")
+if result:  # Correctly evaluates to False
+    grant_access()  # Not called
+```
+
+**Rule**: ALWAYS configure return values explicitly
+
+**Spec Pattern** (type-safe mocking):
+```python
+from mcp_server_langgraph.auth.openfga import OpenFGAClient
+
+# Use spec to enforce type safety
+mock_openfga = AsyncMock(spec=OpenFGAClient)
+
+# IDE autocomplete works
+mock_openfga.check_permission.return_value = True
+mock_openfga.write_tuples.return_value = None
+mock_openfga.list_objects.return_value = ["tool:agent_chat"]
+
+# Attempting to mock non-existent method raises AttributeError
+# mock_openfga.nonexistent_method  # AttributeError!
+```
+
+**Benefits**:
+- Type safety (catches typos at mock creation time)
+- IDE autocomplete for mock configuration
+- Prevents accidental truthy evaluations
+- Clear documentation of mocked interface
+
+---
+
+## 🧪 Meta-Test Patterns
+
+**Purpose**: Tests that validate the test suite itself
+
+**Category**: Quality assurance for testing infrastructure
+
+**Location**: `tests/meta/` (90+ meta-tests)
+
+---
+
+### Pattern 1: Pytest Configuration Validation
+
+**File**: `tests/meta/test_pytest_markers.py`
+
+**Purpose**: Ensure all markers used in tests are registered in `pyproject.toml`
+
+**Pattern**:
+```python
+import pytest
+import ast
+import glob
+
+@pytest.mark.meta
+def test_all_markers_registered():
+    """Verify all pytest markers used in tests are registered"""
+    import toml
+
+    # Load registered markers from pyproject.toml
+    with open("pyproject.toml") as f:
+        config = toml.load(f)
+
+    registered_markers = set()
+    for marker_def in config["tool"]["pytest"]["ini_options"]["markers"]:
+        # Extract marker name (before colon)
+        marker_name = marker_def.split(":")[0].strip()
+        registered_markers.add(marker_name)
+
+    # Find all markers used in test files
+    used_markers = set()
+    for test_file in glob.glob("tests/**/*.py", recursive=True):
+        with open(test_file) as f:
+            tree = ast.parse(f.read())
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                # Check for @pytest.mark.* decorator
+                if hasattr(node.func, "attr") and node.func.attr == "mark":
+                    # Get marker name from decorator
+                    # ... parsing logic ...
+                    used_markers.add(marker_name)
+
+    # Verify all used markers are registered
+    unregistered = used_markers - registered_markers
+    assert not unregistered, f"Unregistered markers: {unregistered}"
+```
+
+**Benefit**: Catches typos in marker names before CI
+
+---
+
+### Pattern 2: Fixture Organization Validation
+
+**File**: `tests/meta/test_fixture_organization.py`
+
+**Purpose**: Prevent duplicate autouse fixtures across test modules
+
+**Pattern**:
+```python
+import pytest
+import ast
+import glob
+
+@pytest.mark.meta
+def test_no_duplicate_autouse_fixtures():
+    """Verify no duplicate session/module-scoped autouse fixtures"""
+    autouse_fixtures = {}
+
+    for test_file in glob.glob("tests/**/*.py", recursive=True):
+        if "conftest.py" not in test_file:
+            with open(test_file) as f:
+                tree = ast.parse(f.read())
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    # Check for @pytest.fixture decorator
+                    for decorator in node.decorator_list:
+                        if is_autouse_fixture(decorator):
+                            fixture_name = node.name
+
+                            if fixture_name in autouse_fixtures:
+                                pytest.fail(
+                                    f"Duplicate autouse fixture '{fixture_name}':\n"
+                                    f"  - {autouse_fixtures[fixture_name]}\n"
+                                    f"  - {test_file}\n"
+                                    f"All session/module autouse fixtures must be in "
+                                    f"tests/conftest.py only!"
+                                )
+
+                            autouse_fixtures[fixture_name] = test_file
+```
+
+**Benefit**: Enforces fixture organization best practices
+
+---
+
+### Pattern 3: Memory Safety Validation
+
+**File**: `tests/meta/test_memory_safety.py`
+
+**Purpose**: Ensure all tests using AsyncMock/MagicMock have proper cleanup
+
+**Pattern**:
+```python
+import pytest
+import ast
+import glob
+
+@pytest.mark.meta
+def test_async_tests_have_teardown():
+    """Verify async tests using mocks have gc.collect() teardown"""
+    violations = []
+
+    for test_file in glob.glob("tests/**/*.py", recursive=True):
+        with open(test_file) as f:
+            content = f.read()
+            tree = ast.parse(content)
+
+        # Check if file uses AsyncMock or MagicMock
+        uses_mocks = "AsyncMock" in content or "MagicMock" in content
+
+        if uses_mocks:
+            # Find test classes
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+                    # Check for teardown_method
+                    has_teardown = any(
+                        method.name == "teardown_method"
+                        for method in node.body
+                        if isinstance(method, ast.FunctionDef)
+                    )
+
+                    if not has_teardown:
+                        violations.append(
+                            f"{test_file}::{node.name} uses mocks but missing "
+                            f"teardown_method with gc.collect()"
+                        )
+
+    assert not violations, "\n".join(violations)
+```
+
+**Benefit**: Prevents memory leaks before they reach CI
+
+---
+
+### Pattern 4: CI/CD Configuration Validation
+
+**File**: `tests/meta/ci/test_workflow_parity.py`
+
+**Purpose**: Ensure local validation matches CI validation exactly
+
+**Pattern**:
+```python
+import pytest
+import yaml
+
+@pytest.mark.meta
+@pytest.mark.ci
+def test_pre_push_matches_ci():
+    """Verify pre-push hooks run same validation as CI"""
+    # Load GitHub Actions workflow
+    with open(".github/workflows/ci.yaml") as f:
+        ci_workflow = yaml.safe_load(f)
+
+    # Extract test commands from CI
+    ci_test_steps = ci_workflow["jobs"]["test"]["steps"]
+    ci_commands = [
+        step["run"]
+        for step in ci_test_steps
+        if "run" in step and "pytest" in step["run"]
+    ]
+
+    # Load pre-push hook
+    with open(".git/hooks/pre-push") as f:
+        pre_push_content = f.read()
+
+    # Verify pre-push runs same tests
+    for ci_command in ci_commands:
+        assert ci_command in pre_push_content, (
+            f"CI runs '{ci_command}' but pre-push hook doesn't. "
+            f"Update scripts/run_pre_push_tests.py"
+        )
+```
+
+**Benefit**: Catches CI/local validation drift
+
+---
+
+### Pattern 5: Documentation Consistency Validation
+
+**File**: `tests/meta/validation/test_documentation.py`
+
+**Purpose**: Ensure documentation examples are valid and up-to-date
+
+**Pattern**:
+```python
+import pytest
+import re
+import glob
+
+@pytest.mark.meta
+@pytest.mark.documentation
+def test_code_examples_are_valid():
+    """Verify code examples in documentation are syntactically valid"""
+    violations = []
+
+    for doc_file in glob.glob("docs/**/*.md", recursive=True):
+        with open(doc_file) as f:
+            content = f.read()
+
+        # Extract Python code blocks
+        code_blocks = re.findall(r"```python\n(.*?)\n```", content, re.DOTALL)
+
+        for idx, code in enumerate(code_blocks):
+            try:
+                # Attempt to parse as Python
+                compile(code, f"{doc_file}:block-{idx}", "exec")
+            except SyntaxError as e:
+                violations.append(
+                    f"{doc_file} code block {idx} has syntax error: {e}"
+                )
+
+    assert not violations, "\n".join(violations)
+```
+
+**Benefit**: Prevents broken documentation examples
+
+---
+
+### Pattern 6: Dependency Version Validation
+
+**File**: `tests/meta/test_dependencies.py`
+
+**Purpose**: Ensure dependency versions are synchronized across configuration files
+
+**Pattern**:
+```python
+import pytest
+import toml
+
+@pytest.mark.meta
+def test_python_version_consistency():
+    """Verify Python version consistent across pyproject.toml, Dockerfile, CI"""
+    # pyproject.toml
+    with open("pyproject.toml") as f:
+        pyproject = toml.load(f)
+
+    pyproject_python = pyproject["project"]["requires-python"]
+
+    # Dockerfile
+    with open("Dockerfile") as f:
+        dockerfile = f.read()
+
+    dockerfile_python = re.search(r"FROM python:([\d.]+)", dockerfile).group(1)
+
+    # CI workflow
+    with open(".github/workflows/ci.yaml") as f:
+        ci = yaml.safe_load(f)
+
+    ci_python = ci["jobs"]["test"]["strategy"]["matrix"]["python-version"]
+
+    # Verify consistency
+    # (implementation depends on version format)
+```
+
+**Benefit**: Catches version mismatches before deployment
+
+---
+
 ## 🛠️ Common Mock Patterns
 
 ### Redis Mock

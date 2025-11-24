@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.xdist_group(name="testmakefileparallelization")
 class TestMakefileParallelization:
@@ -24,7 +26,7 @@ class TestMakefileParallelization:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_ci_uses_parallel_execution(self):
         """
         test-ci should use -n auto for parallel execution to match CI behavior.
@@ -51,7 +53,7 @@ class TestMakefileParallelization:
             f"Expected: Should contain '-n auto'"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_mcp_server_uses_parallel_execution(self):
         """
         test-mcp-server should use -n auto for parallel execution.
@@ -74,7 +76,7 @@ class TestMakefileParallelization:
             f"test-mcp-server should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_new_uses_parallel_execution(self):
         """
         test-new should use -n auto for parallel execution.
@@ -95,30 +97,30 @@ class TestMakefileParallelization:
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
-    @pytest.mark.unit
-    def test_test_integration_local_uses_parallel_execution(self):
+    @pytest.mark.meta
+    def test_test_precommit_validation_uses_parallel_execution(self):
         """
-        test-integration-local should use -n auto for parallel execution.
+        test-precommit-validation should use -n auto for parallel execution.
 
-        GIVEN: The test-integration-local target in Makefile
+        GIVEN: The test-precommit-validation target in Makefile
         WHEN: Reading the Makefile
-        THEN: test-integration-local should include -n auto flag
+        THEN: test-precommit-validation should include -n auto flag
         """
         makefile = Path("Makefile")
         content = makefile.read_text()
 
-        # Find test-integration-local target
-        pattern = r"test-integration-local:.*?\n\t.*?\$\(PYTEST\)([^\n]+)"
+        # Find test-precommit-validation target
+        pattern = r"test-precommit-validation:.*?\n\t.*?\$\(UV_RUN\) pytest([^\n]+)"
         match = re.search(pattern, content, re.DOTALL)
 
-        assert match, "test-integration-local target not found in Makefile"
+        assert match, "test-precommit-validation target not found in Makefile"
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-integration-local should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+            f"test-precommit-validation should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_test_e2e_uses_parallel_execution(self):
         """
         test-e2e should use -n auto for parallel execution.
@@ -139,7 +141,7 @@ class TestMakefileParallelization:
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_parallelized_targets_mention_parallel_in_output(self):
         """
         Parallelized targets should mention 'parallel' in their echo messages for clarity.
@@ -155,7 +157,7 @@ class TestMakefileParallelization:
             "test-ci",
             "test-mcp-server",
             "test-new",
-            "test-integration-local",
+            "test-precommit-validation",
             "test-e2e",
         ]
 
@@ -182,7 +184,7 @@ class TestMakefileParallelizationBestPractices:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_all_unit_test_targets_are_parallelized(self):
         """
         All test targets that run unit tests should use -n auto.

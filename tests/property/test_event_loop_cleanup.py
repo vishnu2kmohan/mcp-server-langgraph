@@ -15,6 +15,8 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+pytestmark = pytest.mark.property
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="event_loop_cleanup_tests")

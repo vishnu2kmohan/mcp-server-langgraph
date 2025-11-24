@@ -7,7 +7,6 @@ Only adds styling to graphs/flowcharts that lack classDef statements.
 
 import sys
 from pathlib import Path
-from typing import Tuple
 
 # Standard ColorBrewer2 Set3 palette for diagrams
 STANDARD_STYLING = """
@@ -21,7 +20,7 @@ STANDARD_STYLING = """
 """
 
 
-def add_styling_to_diagram(content: str) -> Tuple[str, bool]:
+def add_styling_to_diagram(content: str) -> tuple[str, bool]:
     """
     Add styling to flowchart/graph diagrams that lack it.
 

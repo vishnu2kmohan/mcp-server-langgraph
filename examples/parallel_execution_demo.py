@@ -17,13 +17,13 @@ Usage:
 
 import asyncio
 import time
-from typing import Any, Dict
+from typing import Any
 
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation, ToolResult
 
 
 # Simulated tool implementations
-async def fetch_user_profile(user_id: str) -> Dict[str, Any]:
+async def fetch_user_profile(user_id: str) -> dict[str, Any]:
     """Simulate fetching user profile from database"""
     await asyncio.sleep(0.2)  # Simulate network delay
     return {
@@ -34,7 +34,7 @@ async def fetch_user_profile(user_id: str) -> Dict[str, Any]:
     }
 
 
-async def fetch_user_orders(user_id: str) -> list[Dict[str, Any]]:
+async def fetch_user_orders(user_id: str) -> list[dict[str, Any]]:
     """Simulate fetching user orders"""
     await asyncio.sleep(0.3)  # Simulate database query
     return [
@@ -43,7 +43,7 @@ async def fetch_user_orders(user_id: str) -> list[Dict[str, Any]]:
     ]
 
 
-async def calculate_order_total(orders: list[Dict[str, Any]]) -> float:
+async def calculate_order_total(orders: list[dict[str, Any]]) -> float:
     """Calculate total from orders"""
     await asyncio.sleep(0.1)  # Simulate computation
     return sum(order["amount"] for order in orders)

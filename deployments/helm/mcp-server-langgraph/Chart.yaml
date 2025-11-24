@@ -21,19 +21,19 @@ keywords:
   - observability
 dependencies:
   - name: openfga
-    version: "0.2.12"
+    version: "0.2.49"
     repository: "https://openfga.github.io/helm-charts"
     condition: openfga.enabled
   - name: postgresql
-    version: "16.6.2"
+    version: "18.1.11"
     repository: "https://charts.bitnami.com/bitnami"
     condition: postgresql.enabled
   - name: redis
-    version: "20.6.2"
+    version: "23.2.12"
     repository: "https://charts.bitnami.com/bitnami"
     condition: redis.enabled
   - name: keycloak
-    version: "24.2.2"
+    version: "25.2.0"
     repository: "https://charts.bitnami.com/bitnami"
     condition: keycloak.enabled
   - name: grafana
@@ -45,6 +45,6 @@ dependencies:
     repository: "https://jaegertracing.github.io/helm-charts"
     condition: jaeger.enabled
   - name: kube-prometheus-stack
-    version: "78.3.2"
+    version: "79.6.1"
     repository: "https://prometheus-community.github.io/helm-charts"
     condition: kube-prometheus-stack.enabled

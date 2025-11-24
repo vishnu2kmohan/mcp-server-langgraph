@@ -11,6 +11,8 @@ import pytest
 from mcp_server_langgraph.core.storage.conversation_store import ConversationMetadata, ConversationStore
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testconversationstore")
@@ -184,7 +186,7 @@ class TestConversationMetadata:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_metadata_creation(self):
+    def test_metadata_creation_with_all_fields_initializes_correctly(self):
         """Test creating metadata"""
         metadata = ConversationMetadata(
             thread_id="test", user_id=get_user_id("alice"), created_at=1000.0, last_activity=1001.0, message_count=5

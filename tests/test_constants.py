@@ -17,7 +17,6 @@ Solution:
 - This test validates consistency is maintained
 """
 
-import os
 import re
 from pathlib import Path
 
@@ -39,7 +38,6 @@ def test_jwt_secret_constant_exists():
 
 def test_mock_jwt_token_uses_constant():
     """Verify mock_jwt_token fixture uses TEST_JWT_SECRET."""
-    from tests import constants
 
     conftest_path = Path(__file__).parent / "conftest.py"
     conftest_content = conftest_path.read_text()

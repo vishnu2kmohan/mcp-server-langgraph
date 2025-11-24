@@ -7,9 +7,10 @@ preventing ModuleNotFoundError for minimal installations.
 
 import gc
 import sys
-from unittest.mock import MagicMock
 
 import pytest
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
@@ -139,7 +140,7 @@ class TestLazyImports:
 
         # When using getattr(), we get AttributeError directly
         with pytest.raises(AttributeError, match="has no attribute 'NonExistentClass'"):
-            getattr(mcp_server_langgraph, "NonExistentClass")
+            mcp_server_langgraph.NonExistentClass
 
         # When using 'from ... import ...', Python converts AttributeError to ImportError
         with pytest.raises(ImportError, match="cannot import name 'NonExistentClass'"):

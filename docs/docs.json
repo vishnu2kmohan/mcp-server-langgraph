@@ -65,7 +65,10 @@
           {
             "group": "Development",
             "pages": [
+              "development/onboarding",
+              "development/naming-conventions",
               "advanced/contributing",
+              "contributing/mdx-syntax-guide",
               "advanced/testing",
               "advanced/development-setup",
               "advanced/troubleshooting",
@@ -79,6 +82,13 @@
             ]
           },
           {
+            "group": "Testing",
+            "pages": [
+              "testing/overview",
+              "testing/hypothesis-profiles"
+            ]
+          },
+          {
             "group": "Troubleshooting",
             "pages": [
               "troubleshooting/overview"
@@ -87,6 +97,7 @@
           {
             "group": "Reference",
             "pages": [
+              "quick-reference",
               "references/sources",
               "references/mermaid-guide",
               "references/documentation-authoring-guide",
@@ -106,7 +117,22 @@
               "reference/development/ci-cd/testing",
               "reference/development/ci-cd/deployment",
               "reference/development/ci-cd/troubleshooting",
-              "reference/development/development"
+              "reference/development/development",
+              "reference/ai-tools-compatibility",
+              "reference/mcp-registry",
+              "reference/pydantic-ai",
+              "reference/recommendations"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/gemini",
+              "integrations/keycloak",
+              "integrations/kong",
+              "integrations/langsmith",
+              "integrations/litellm",
+              "integrations/openfga-infisical"
             ]
           },
           {
@@ -131,7 +157,8 @@
           {
             "group": "Configuration",
             "pages": [
-              "workflows/secrets"
+              "workflows/secrets",
+              "ci-cd/github-secrets"
             ]
           },
           {
@@ -176,6 +203,8 @@
             "group": "Deployment",
             "pages": [
               "deployment/overview",
+              "deployment/deployment-checklist",
+              "deployment/environments",
               "deployment/langgraph-platform",
               "deployment/cloud-run",
               "deployment/docker",
@@ -284,9 +313,11 @@
           {
             "group": "Guides",
             "pages": [
+              "guides/agent-architecture",
               "guides/multi-llm-setup",
               "guides/versioning-strategy",
               "guides/google-gemini",
+              "guides/vertex-ai-setup",
               "guides/anthropic-claude",
               "guides/openai-gpt",
               "guides/local-models",
@@ -349,8 +380,16 @@
             "group": "Architecture Decision Records",
             "pages": [
               "architecture/overview",
+              "architecture/repository-structure",
               "architecture/keycloak-jwt-architecture-overview",
               "architecture/infrastructure-layer"
+            ]
+          },
+          {
+            "group": "Project",
+            "pages": [
+              "project/roadmap",
+              "project/migration-guides"
             ]
           },
           {

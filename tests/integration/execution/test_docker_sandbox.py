@@ -12,6 +12,8 @@ import os
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 # These imports will fail initially - that's expected in TDD!
 try:
     from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
@@ -49,7 +51,7 @@ class TestDockerSandbox:
         limits = ResourceLimits.testing()  # Use testing profile
         return DockerSandbox(limits=limits)
 
-    def test_sandbox_initialization(self, sandbox):
+    def test_sandbox_initialization_with_defaults_creates_valid_instance(self, sandbox):
         """Test sandbox initializes correctly"""
         assert sandbox is not None
         assert isinstance(sandbox, Sandbox)
@@ -109,7 +111,7 @@ print(data)
         assert result.success is True
         assert '{"key": "value"}' in result.stdout
 
-    def test_multiple_executions(self, sandbox):
+    def test_multiple_executions_with_same_sandbox_succeed_independently(self, sandbox):
         """Test multiple sequential executions"""
         results = []
         for i in range(3):
@@ -131,7 +133,7 @@ class TestDockerSandboxResourceLimits:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_timeout_enforcement(self, docker_available):
+    def test_timeout_enforcement_with_long_running_code_terminates_execution(self, docker_available):
         """Test that timeout is enforced"""
         limits = ResourceLimits(timeout_seconds=1)
         sandbox = DockerSandbox(limits=limits)
@@ -218,7 +220,7 @@ class TestDockerSandboxNetworkIsolation:
             "Users must explicitly enable network access."
         )
 
-    def test_network_disabled(self, docker_available):
+    def test_network_disabled_mode_with_external_request_blocks_connection(self, docker_available):
         """Test that network is disabled by default"""
         limits = ResourceLimits(network_mode="none")
         sandbox = DockerSandbox(limits=limits)
@@ -236,7 +238,7 @@ except Exception as e:
         assert result.success is True
         assert "Network blocked" in result.stdout
 
-    def test_network_allowlist(self, docker_available):
+    def test_network_allowlist_mode_with_allowed_domain_permits_connection(self, docker_available):
         """Test network allowlist mode"""
         limits = ResourceLimits(network_mode="allowlist", allowed_domains=tuple(["httpbin.org"]))
         sandbox = DockerSandbox(limits=limits)
@@ -298,7 +300,7 @@ class TestDockerSandboxSecurity:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_filesystem_isolation(self, docker_available):
+    def test_filesystem_isolation_with_container_prevents_host_access(self, docker_available):
         """Test that filesystem is isolated"""
         limits = ResourceLimits.testing()
         sandbox = DockerSandbox(limits=limits)
@@ -318,7 +320,7 @@ print('Filesystem isolated')
         assert result.success is True
         assert "Filesystem isolated" in result.stdout
 
-    def test_process_isolation(self, docker_available):
+    def test_process_isolation_with_container_limits_system_visibility(self, docker_available):
         """Test that processes are isolated"""
         limits = ResourceLimits.testing()
         sandbox = DockerSandbox(limits=limits)
@@ -469,7 +471,7 @@ class TestDockerSandboxConfiguration:
 
         assert result.success is True
 
-    def test_working_directory(self, docker_available):
+    def test_working_directory_setup_with_default_path_configured_correctly(self, docker_available):
         """Test setting working directory in container"""
         limits = ResourceLimits.testing()
         sandbox = DockerSandbox(limits=limits)
@@ -502,7 +504,7 @@ class TestDockerSandboxErrorHandling:
             sandbox = DockerSandbox(limits=limits, socket_path="/nonexistent/docker.sock")
             sandbox.execute("print('test')")
 
-    def test_invalid_image(self, docker_available):
+    def test_invalid_image_specification_with_nonexistent_image_raises_error(self, docker_available):
         """Test handling of invalid Docker image"""
         limits = ResourceLimits.testing()
 
@@ -510,7 +512,7 @@ class TestDockerSandboxErrorHandling:
             sandbox = DockerSandbox(limits=limits, image="nonexistent-image:latest")
             sandbox.execute("print('test')")
 
-    def test_empty_code(self, docker_available):
+    def test_empty_code_execution_with_blank_input_returns_error(self, docker_available):
         """Test handling of empty code"""
         limits = ResourceLimits.testing()
         sandbox = DockerSandbox(limits=limits)

@@ -24,7 +24,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 
 @dataclass
@@ -69,9 +68,9 @@ class TodoTracker:
 
     def __init__(self, root_dir: str = "src"):
         self.root_dir = Path(root_dir)
-        self.todos: List[TodoItem] = []
+        self.todos: list[TodoItem] = []
 
-    def scan(self) -> List[TodoItem]:
+    def scan(self) -> list[TodoItem]:
         """Scan source directory for TODO items"""
         self.todos = []
 
@@ -102,7 +101,7 @@ class TodoTracker:
     def _scan_file(self, file_path: Path):
         """Scan a single file for TODOs"""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
             for line_num, line in enumerate(lines, 1):
@@ -143,21 +142,21 @@ class TodoTracker:
                 return category
         return "uncategorized"
 
-    def group_by_file(self) -> Dict[str, List[TodoItem]]:
+    def group_by_file(self) -> dict[str, list[TodoItem]]:
         """Group TODOs by file"""
         grouped = defaultdict(list)
         for todo in self.todos:
             grouped[todo.file_path].append(todo)
         return dict(grouped)
 
-    def group_by_category(self) -> Dict[str, List[TodoItem]]:
+    def group_by_category(self) -> dict[str, list[TodoItem]]:
         """Group TODOs by category"""
         grouped = defaultdict(list)
         for todo in self.todos:
             grouped[todo.category].append(todo)
         return dict(grouped)
 
-    def group_by_priority(self) -> Dict[str, List[TodoItem]]:
+    def group_by_priority(self) -> dict[str, list[TodoItem]]:
         """Group TODOs by priority"""
         grouped = defaultdict(list)
         for todo in self.todos:
@@ -230,7 +229,7 @@ class TodoTracker:
 
         return "\n".join(report)
 
-    def compare_with_catalog(self, catalog_path: str = "docs-internal/TODO_CATALOG.md") -> Dict:
+    def compare_with_catalog(self, catalog_path: str = "docs-internal/TODO_CATALOG.md") -> dict:
         """Compare current TODOs with catalog"""
         catalog_path = Path(catalog_path)
 
@@ -243,7 +242,7 @@ class TodoTracker:
             }
 
         # Parse catalog (simplified - would need more robust parsing)
-        with open(catalog_path, "r") as f:
+        with open(catalog_path) as f:
             catalog_content = f.read()
 
         # Count items in catalog (count lines starting with ###)

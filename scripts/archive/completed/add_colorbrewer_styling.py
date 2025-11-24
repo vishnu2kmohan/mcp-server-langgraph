@@ -9,10 +9,9 @@ semantic ColorBrewer2 Set3 palette styling for visual consistency.
 import re
 import sys
 from pathlib import Path
-from typing import Set
 
 
-def extract_node_ids(content: str) -> Set[str]:
+def extract_node_ids(content: str) -> set[str]:
     """
     Extract all node IDs from a flowchart diagram.
 
@@ -45,7 +44,7 @@ def extract_node_ids(content: str) -> Set[str]:
     return node_ids
 
 
-def categorize_nodes(node_ids: Set[str]) -> dict:
+def categorize_nodes(node_ids: set[str]) -> dict:
     """
     Categorize nodes by semantic meaning based on naming conventions.
 

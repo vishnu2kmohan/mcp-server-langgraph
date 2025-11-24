@@ -181,7 +181,7 @@ check_required_files() {
         "docker-compose.yml"
         "docker/docker-compose.yml"
         "docker/docker-compose.dev.yml"
-        "docker/docker-compose.test.yml"
+        "docker-compose.test.yml"
         "docker/Dockerfile"
         "docker/prometheus.yml"
         "docker/grafana-datasources.yml"
@@ -239,7 +239,7 @@ check_docker_compose() {
     local compose_files=(
         "docker/docker-compose.yml"
         "docker/docker-compose.dev.yml"
-        "docker/docker-compose.test.yml"
+        "docker-compose.test.yml"
     )
 
     for compose_file in "${compose_files[@]}"; do

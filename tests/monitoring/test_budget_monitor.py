@@ -16,7 +16,6 @@ Tests cover:
 """
 
 import gc
-import smtplib
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
@@ -25,7 +24,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetAlert, BudgetMonitor, BudgetPeriod, BudgetStatus
+from mcp_server_langgraph.monitoring.budget_monitor import AlertLevel, BudgetMonitor, BudgetPeriod
+
+pytestmark = pytest.mark.unit
 
 # ==============================================================================
 # Test Fixtures

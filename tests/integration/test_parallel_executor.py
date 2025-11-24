@@ -11,6 +11,8 @@ import pytest
 
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def executor():
@@ -38,7 +40,7 @@ class TestParallelToolExecutor:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_initialization(self, executor):
+    def test_initialization_with_max_parallelism_sets_semaphore(self, executor):
         """Test executor initialization"""
         assert executor.max_parallelism == 5
         assert executor.semaphore._value == 5
@@ -288,7 +290,7 @@ class TestParallelToolExecutor:
         assert graph["inv_1"] == []  # No dependencies
         assert graph["inv_2"] == ["inv_1"]  # Depends on inv_1
 
-    def test_topological_sort(self, executor):
+    def test_topological_sort_with_dependencies_orders_correctly(self, executor):
         """Test topological sorting of dependency graph"""
         # Graph: A → B → C, D (independent)
         graph = {

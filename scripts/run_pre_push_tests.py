@@ -5,12 +5,10 @@ Pre-push test orchestrator - consolidates 5 separate pytest sessions into one.
 This script addresses OpenAI Codex Finding 2a: Duplicate pytest sessions.
 
 Problem:
-  .pre-commit-config.yaml had 5 separate pytest invocations:
-  1. run-unit-tests: pytest -m "unit and not llm"
-  2. run-smoke-tests: pytest tests/smoke/
-  3. run-api-tests: pytest -m "api and unit and not llm"
-  4. run-mcp-server-tests: pytest tests/unit/test_mcp_stdio_server.py -m "not llm"
-  5. run-property-tests: pytest -m property
+  .pre-commit-config.yaml had 5 separate pytest invocations which caused:
+  - 5x test discovery overhead (10-25s wasted)
+  - 5 separate Python interpreter processes
+  - Lock contention on .pytest_cache and .coverage files
 
   Each session performed full test discovery, causing:
   - 5x test discovery overhead (10-25s wasted)
@@ -72,6 +70,7 @@ def main() -> int:
         "-n",
         "auto",  # Parallel execution with pytest-xdist
         "-x",  # Stop on first failure (fail-fast)
+        "--testmon",  # Optimize test execution with pytest-testmon
         "--tb=short",  # Short traceback format
     ]
 
@@ -87,9 +86,13 @@ def main() -> int:
     # Note: API tests are marked as "api and unit", so covered by "api"
     # Note: MCP server tests are in tests/unit/, marked as unit
     #
-    # Final expression: (unit or api or property) and not llm
-    # This covers ALL tests from the 5 original hooks
-    marker_expression = "(unit or api or property) and not llm"
+    # Codex Finding #5 Fix (2025-11-23): Exclude meta-tests from pre-push
+    # Meta-tests validate infrastructure (git hooks, CI workflows, etc.)
+    # They shell out to external processes and should run separately in CI
+    #
+    # Final expression: (unit or api or property) and not llm and not meta
+    # This covers ALL tests from the 5 original hooks, excluding meta-tests
+    marker_expression = "(unit or api or property) and not llm and not meta"
     pytest_args.extend(["-m", marker_expression])
 
     # Specify test directory
@@ -101,23 +104,39 @@ def main() -> int:
         # User requested CI-equivalent validation
         if check_docker_available():
             print("▶ CI_PARITY=1 detected: Including integration tests (Docker available)")
-            # Add integration marker to expression
-            # (unit or api or property or integration) and not llm
-            marker_expression = "(unit or api or property or integration) and not llm"
-            pytest_args[pytest_args.index("(unit or api or property) and not llm")] = marker_expression
+            # Add integration marker to expression (but still exclude meta-tests)
+            # (unit or api or property or integration) and not llm and not meta
+            marker_expression = "(unit or api or property or integration) and not llm and not meta"
+            pytest_args[pytest_args.index("(unit or api or property) and not llm and not meta")] = marker_expression
         else:
             print("⚠ CI_PARITY=1 detected but Docker not available")
             print("  Integration tests require Docker daemon")
             print("  Start Docker and retry, or omit CI_PARITY=1 for faster pre-push")
             print("  Continuing with standard test suite...")
 
-    # Ensure OTEL_SDK_DISABLED for consistent environment
+    # Ensure OTEL_SDK_DISABLED and HYPOTHESIS_PROFILE for consistent environment
     env = os.environ.copy()
     env["OTEL_SDK_DISABLED"] = "true"
+
+    # Codex Finding #4 Fix (2025-11-23): Environment-aware Hypothesis profiles
+    # Use dev profile (25 examples) locally for faster iteration
+    # Use ci profile (100 examples) in CI or when explicitly requested
+    if "HYPOTHESIS_PROFILE" not in env:
+        # Auto-detect: Use CI profile in CI/CD or when CI_PARITY requested
+        if env.get("CI") or env.get("CI_PARITY") == "1":
+            env["HYPOTHESIS_PROFILE"] = "ci"
+        else:
+            env["HYPOTHESIS_PROFILE"] = "dev"  # Fast iteration for local dev
+
+    hypothesis_profile = env["HYPOTHESIS_PROFILE"]
+    examples_count = "100" if hypothesis_profile == "ci" else "25"
 
     # Run pytest via uv run (auto-syncs if needed)
     print(f"▶ Running consolidated pre-push tests: {' '.join(pytest_args)}")
     print(f"  Marker expression: {marker_expression}")
+    print(f"  Hypothesis profile: {hypothesis_profile} ({examples_count} examples)")
+    if hypothesis_profile == "dev":
+        print("  💡 Tip: Use CI_PARITY=1 git push for full CI validation (100 examples)")
     print()
 
     result = subprocess.run(

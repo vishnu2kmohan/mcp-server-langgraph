@@ -14,7 +14,6 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import gc
 import sys
 import tempfile
 from pathlib import Path

@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 def test_get_integration_test_file_returns_valid_path():
@@ -182,7 +182,6 @@ def test_regression_path_references_are_valid():
     - test_bearer_scheme_override_diagnostic.py:52, 325
     - test_uv_lockfile_sync.py:273, 294
     """
-    import ast
     import re
 
     regression_dir = Path(__file__).parent.parent / "regression"

@@ -20,6 +20,8 @@ from mcp_server_langgraph.resilience.bulkhead import (
     with_bulkhead,
 )
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.fixture
 def reset_bulkheads():
@@ -236,7 +238,7 @@ class TestBulkheadConfiguration:
         # Should use provided limit
 
     @pytest.mark.unit
-    def test_reset_bulkhead(self, reset_bulkheads):
+    def test_reset_bulkhead_with_name_creates_new_instance(self, reset_bulkheads):
         """Test manual bulkhead reset"""
         bulkhead1 = get_bulkhead("test", limit=10)
 

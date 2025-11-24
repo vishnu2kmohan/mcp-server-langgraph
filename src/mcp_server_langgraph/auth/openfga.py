@@ -8,7 +8,7 @@ Enhanced with resilience patterns (ADR-0026):
 - Bulkhead isolation (50 concurrent auth checks max)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from openfga_sdk import ClientConfiguration, OpenFgaClient
 from openfga_sdk.client.models import ClientCheckRequest, ClientTuple, ClientWriteRequest
@@ -27,8 +27,8 @@ class OpenFGAConfig(BaseModel):
     """
 
     api_url: str = Field(default="http://localhost:8080", description="OpenFGA server API URL")
-    store_id: Optional[str] = Field(default=None, description="Authorization store ID")
-    model_id: Optional[str] = Field(default=None, description="Authorization model ID")
+    store_id: str | None = Field(default=None, description="Authorization store ID")
+    model_id: str | None = Field(default=None, description="Authorization model ID")
 
     model_config = ConfigDict(
         frozen=False,
@@ -37,12 +37,12 @@ class OpenFGAConfig(BaseModel):
         json_schema_extra={"example": {"api_url": "http://localhost:8080", "store_id": "01H...", "model_id": "01H..."}},
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
         return self.model_dump(exclude_none=True)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "OpenFGAConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "OpenFGAConfig":
         """Create OpenFGAConfig from dictionary"""
         return cls(**data)
 
@@ -57,13 +57,19 @@ class OpenFGAClient:
 
     def __init__(
         self,
-        config: Optional[OpenFGAConfig] = None,
-        api_url: Optional[str] = None,
-        store_id: Optional[str] = None,
-        model_id: Optional[str] = None,
+        config: OpenFGAConfig | None = None,
+        api_url: str | None = None,
+        store_id: str | None = None,
+        model_id: str | None = None,
     ):
         """
-        Initialize OpenFGA client
+        Initialize OpenFGA client (lazy async initialization pattern)
+
+        NOTE: This __init__ is sync-safe and doesn't create async resources.
+        The actual OpenFgaClient is created lazily on first async method call.
+
+        This prevents "RuntimeError: no running event loop" when instantiating
+        from synchronous code or module imports.
 
         Args:
             config: OpenFGAConfig instance (recommended)
@@ -80,16 +86,48 @@ class OpenFGAClient:
         self.store_id = config.store_id
         self.model_id = config.model_id
 
-        # Configure client
-        configuration = ClientConfiguration(
-            api_url=config.api_url, store_id=config.store_id, authorization_model_id=config.model_id
-        )
+        # Lazy initialization: Store configuration, don't create OpenFgaClient yet
+        # This prevents creating aiohttp resources which require an event loop
+        self._client: OpenFgaClient | None = None
+        self._initialized = False
 
-        self.client = OpenFgaClient(configuration)
-        logger.info("OpenFGA client initialized", extra={"api_url": config.api_url})
+        logger.info("OpenFGA client wrapper created (lazy init)", extra={"api_url": config.api_url})
+
+    async def _ensure_initialized(self) -> None:
+        """
+        Ensure OpenFgaClient is initialized (lazy async initialization)
+
+        This method creates the actual OpenFgaClient on first async call.
+        Called by all async methods before performing operations.
+        """
+        if not self._initialized:
+            configuration = ClientConfiguration(
+                api_url=self.config.api_url,
+                store_id=self.config.store_id,
+                authorization_model_id=self.config.model_id,
+            )
+            self._client = OpenFgaClient(configuration)
+            self._initialized = True
+            logger.info("OpenFGA SDK client initialized", extra={"api_url": self.config.api_url})
+
+    @property
+    def client(self) -> OpenFgaClient:
+        """
+        Get OpenFgaClient instance
+
+        NOTE: This property should only be accessed from async methods
+        after calling _ensure_initialized().
+        """
+        if self._client is None:
+            raise RuntimeError(
+                "OpenFgaClient not initialized. "
+                "Call await _ensure_initialized() before accessing client. "
+                "This is a bug - all async methods should call _ensure_initialized()."
+            )
+        return self._client
 
     def _circuit_breaker_fallback(
-        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+        self, user: str, relation: str, object: str, context: dict[str, Any] | None = None, critical: bool = True
     ) -> bool:
         """
         Circuit breaker fallback for check_permission.
@@ -131,7 +169,7 @@ class OpenFGAClient:
     @with_timeout(operation_type="auth")
     @with_bulkhead(resource_type="openfga")
     async def check_permission(
-        self, user: str, relation: str, object: str, context: Optional[Dict[str, Any]] = None, critical: bool = True
+        self, user: str, relation: str, object: str, context: dict[str, Any] | None = None, critical: bool = True
     ) -> bool:
         """
         Check if user has permission via relationship (with resilience protection).
@@ -160,6 +198,7 @@ class OpenFGAClient:
             OpenFGATimeoutError: If check exceeds 5s timeout
             OpenFGAError: For other OpenFGA errors
         """
+        await self._ensure_initialized()  # Lazy initialization
         with tracer.start_as_current_span("openfga.check") as span:
             span.set_attribute("user", user)
             span.set_attribute("relation", relation)
@@ -218,7 +257,7 @@ class OpenFGAClient:
     @circuit_breaker(name="openfga")
     @retry_with_backoff()  # Uses global config (prod: 3 attempts, test: 1 attempt for fast tests)
     @with_timeout(operation_type="auth")
-    async def write_tuples(self, tuples: List[Dict[str, str]]) -> None:
+    async def write_tuples(self, tuples: list[dict[str, str]]) -> None:
         """
         Write relationship tuples to OpenFGA (with resilience protection).
 
@@ -235,6 +274,7 @@ class OpenFGAClient:
             CircuitBreakerOpenError: If circuit breaker is open
             OpenFGAError: For OpenFGA errors
         """
+        await self._ensure_initialized()  # Lazy initialization
         with tracer.start_as_current_span("openfga.write_tuples"):
             try:
                 client_tuples = [ClientTuple(user=t["user"], relation=t["relation"], object=t["object"]) for t in tuples]
@@ -256,13 +296,14 @@ class OpenFGAClient:
                     cause=e,
                 )
 
-    async def delete_tuples(self, tuples: List[Dict[str, str]]) -> None:
+    async def delete_tuples(self, tuples: list[dict[str, str]]) -> None:
         """
         Delete relationship tuples from OpenFGA
 
         Args:
             tuples: List of relationship tuples to delete
         """
+        await self._ensure_initialized()  # Lazy initialization
         with tracer.start_as_current_span("openfga.delete_tuples"):
             try:
                 client_tuples = [ClientTuple(user=t["user"], relation=t["relation"], object=t["object"]) for t in tuples]
@@ -292,6 +333,7 @@ class OpenFGAClient:
         3. Expands each relation to find all users with permissions
         4. Deletes tuples in batches (100 per batch) with retry logic
         """
+        await self._ensure_initialized()  # Lazy initialization
         logger.info(f"Deleting tuples for object: {object_id}")
 
         # Extract object type from object_id (e.g., "service_principal:batch-job" -> "service_principal")
@@ -315,7 +357,7 @@ class OpenFGAClient:
             return
 
         # Collect all tuples to delete across all relations
-        tuples_to_delete: List[Dict[str, str]] = []
+        tuples_to_delete: list[dict[str, str]] = []
 
         for relation_name in relations.keys():
             try:
@@ -372,7 +414,7 @@ class OpenFGAClient:
                 # Note: Continue with next batch even if one fails
                 # This ensures partial cleanup is better than no cleanup
 
-    async def list_objects(self, user: str, relation: str, object_type: str) -> List[str]:
+    async def list_objects(self, user: str, relation: str, object_type: str) -> list[str]:
         """
         List all objects of a type that user has relation to
 
@@ -384,6 +426,7 @@ class OpenFGAClient:
         Returns:
             List of object identifiers
         """
+        await self._ensure_initialized()  # Lazy initialization
         with tracer.start_as_current_span("openfga.list_objects"):
             try:
                 response = await self.client.list_objects(user=user, relation=relation, type=object_type)
@@ -401,7 +444,7 @@ class OpenFGAClient:
                 logger.error(f"Failed to list objects: {e}", exc_info=True)
                 raise
 
-    async def expand_relation(self, relation: str, object: str) -> Dict[str, Any]:
+    async def expand_relation(self, relation: str, object: str) -> dict[str, Any]:
         """
         Expand a relation to see all users with access
 
@@ -412,6 +455,7 @@ class OpenFGAClient:
         Returns:
             Tree structure showing all users with access
         """
+        await self._ensure_initialized()  # Lazy initialization
         with tracer.start_as_current_span("openfga.expand"):
             try:
                 response = await self.client.expand(relation=relation, object=object)
@@ -423,7 +467,7 @@ class OpenFGAClient:
                 raise
 
 
-def _extract_users_from_expansion(expansion: Dict[str, Any]) -> List[str]:
+def _extract_users_from_expansion(expansion: dict[str, Any]) -> list[str]:
     """
     Extract all user IDs from an OpenFGA expansion tree.
 
@@ -443,7 +487,7 @@ def _extract_users_from_expansion(expansion: Dict[str, Any]) -> List[str]:
     if not expansion:
         return []
 
-    users: List[str] = []
+    users: list[str] = []
 
     # Handle leaf nodes (direct user lists)
     if "leaf" in expansion:
@@ -493,7 +537,7 @@ class OpenFGAAuthorizationModel:
     """
 
     @staticmethod
-    def get_model_definition() -> Dict[str, Any]:
+    def get_model_definition() -> dict[str, Any]:
         """
         Get the authorization model definition
 
@@ -606,6 +650,7 @@ async def initialize_openfga_store(client: OpenFGAClient) -> str:
     Returns:
         Store ID
     """
+    await client._ensure_initialized()  # Lazy initialization
     with tracer.start_as_current_span("openfga.initialize_store"):
         try:
             # Create store

@@ -28,7 +28,7 @@ Environment Variables:
 import asyncio
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 import httpx
 
@@ -57,7 +57,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_component(self, realm: str, component_config: Dict[str, Any]):
+    async def create_component(self, realm: str, component_config: dict[str, Any]):
         """Create a component (user federation provider)"""
         if not self.access_token:
             await self.get_admin_token()
@@ -80,7 +80,7 @@ class KeycloakAdminClient:
 async def configure_ldap_user_federation(
     keycloak_admin: KeycloakAdminClient,
     realm_name: str,
-    ldap_config: Dict[str, str],
+    ldap_config: dict[str, str],
 ) -> str:
     """
     Configure LDAP user federation
@@ -139,7 +139,7 @@ async def configure_ldap_user_federation(
     }
 
     component_id = await keycloak_admin.create_component(realm_name, component_config)
-    print(f"✓ LDAP user federation configured")
+    print("✓ LDAP user federation configured")
 
     return component_id
 

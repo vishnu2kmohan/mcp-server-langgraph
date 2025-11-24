@@ -16,7 +16,7 @@ Tests cover:
 """
 
 import gc
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -35,6 +35,8 @@ from mcp_server_langgraph.core.interrupts.interrupts import (
     create_interrupt_handler,
     create_timeout_interrupt,
 )
+
+pytestmark = [pytest.mark.unit]
 
 # ==============================================================================
 # InterruptType Enum Tests
@@ -98,16 +100,16 @@ class TestInterruptConfig:
         assert config.notification_channels == []
         assert config.auto_resume is False
 
-    def test_interrupt_config_all_fields(self):
+    def test_interrupt_config_all_fields_stores_configuration(self):
         """Test creation with all fields."""
 
-        def test_condition(state: Dict[str, Any]) -> bool:
+        def high_amount_condition(state: dict[str, Any]) -> bool:
             return state.get("amount", 0) > 1000
 
         config = InterruptConfig(
             interrupt_type=InterruptType.CONDITIONAL,
             node_name="payment_node",
-            condition=test_condition,
+            condition=high_amount_condition,
             timeout_seconds=300,
             notification_channels=["email", "slack"],
             auto_resume=True,
@@ -125,7 +127,7 @@ class TestInterruptConfig:
     def test_interrupt_config_condition_callable(self):
         """Test condition field accepts callable."""
 
-        def my_condition(state: Dict[str, Any]) -> bool:
+        def my_condition(state: dict[str, Any]) -> bool:
             return state.get("risk_level") == "high"
 
         config = InterruptConfig(
@@ -225,7 +227,7 @@ class TestInterruptHandler:
     def test_should_interrupt_no_interrupts_registered(self):
         """Test should_interrupt returns False when no interrupts registered."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
 
         result = handler.should_interrupt("any_node", state)
 
@@ -237,7 +239,7 @@ class TestInterruptHandler:
         config = InterruptConfig(interrupt_type=InterruptType.APPROVAL, node_name="target_node")
         handler.register_interrupt(config)
 
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
         result = handler.should_interrupt("target_node", state)
 
         assert result is True
@@ -248,7 +250,7 @@ class TestInterruptHandler:
         config = InterruptConfig(interrupt_type=InterruptType.APPROVAL, node_name="target_node")
         handler.register_interrupt(config)
 
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
         result = handler.should_interrupt("different_node", state)
 
         assert result is False
@@ -257,7 +259,7 @@ class TestInterruptHandler:
         """Test should_interrupt with condition that returns True."""
         handler = InterruptHandler()
 
-        def high_value_check(state: Dict[str, Any]) -> bool:
+        def high_value_check(state: dict[str, Any]) -> bool:
             return state.get("amount", 0) > 5000
 
         config = InterruptConfig(
@@ -267,7 +269,7 @@ class TestInterruptHandler:
         )
         handler.register_interrupt(config)
 
-        state: Dict[str, Any] = {"amount": 10000}
+        state: dict[str, Any] = {"amount": 10000}
         result = handler.should_interrupt("payment", state)
 
         assert result is True
@@ -276,7 +278,7 @@ class TestInterruptHandler:
         """Test should_interrupt with condition that returns False."""
         handler = InterruptHandler()
 
-        def high_value_check(state: Dict[str, Any]) -> bool:
+        def high_value_check(state: dict[str, Any]) -> bool:
             return state.get("amount", 0) > 5000
 
         config = InterruptConfig(
@@ -286,7 +288,7 @@ class TestInterruptHandler:
         )
         handler.register_interrupt(config)
 
-        state: Dict[str, Any] = {"amount": 100}  # Below threshold
+        state: dict[str, Any] = {"amount": 100}  # Below threshold
         result = handler.should_interrupt("payment", state)
 
         assert result is False
@@ -301,7 +303,7 @@ class TestInterruptHandler:
         )
         handler.register_interrupt(config)
 
-        state: Dict[str, Any] = {}
+        state: dict[str, Any] = {}
         result = handler.should_interrupt("always_interrupt", state)
 
         assert result is True
@@ -310,7 +312,7 @@ class TestInterruptHandler:
     def test_handle_interrupt_updates_state(self):
         """Test handle_interrupt adds interrupt metadata to state."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {"user": "john", "action": "transfer"}
+        state: dict[str, Any] = {"user": "john", "action": "transfer"}
 
         result_state = handler.handle_interrupt("test_node", state)
 
@@ -321,7 +323,7 @@ class TestInterruptHandler:
     def test_handle_interrupt_preserves_original_data(self):
         """Test handle_interrupt preserves original state data."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {"user_id": "user_123", "data": {"key": "value"}}
+        state: dict[str, Any] = {"user_id": "user_123", "data": {"key": "value"}}
 
         result_state = handler.handle_interrupt("node", state)
 
@@ -332,7 +334,7 @@ class TestInterruptHandler:
     def test_handle_interrupt_adds_to_history(self):
         """Test handle_interrupt adds entry to interrupt history."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {"action": "test"}
+        state: dict[str, Any] = {"action": "test"}
 
         handler.handle_interrupt("node1", state)
 
@@ -359,7 +361,7 @@ class TestInterruptHandler:
     def test_resume_clears_interrupted_flag(self):
         """Test resume clears interrupted flag and adds timestamp."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {"interrupted": True, "interrupt_node": "test"}
+        state: dict[str, Any] = {"interrupted": True, "interrupt_node": "test"}
 
         result_state = handler.resume("interrupt_123", state)
 
@@ -369,7 +371,7 @@ class TestInterruptHandler:
     def test_resume_preserves_state(self):
         """Test resume preserves original state data."""
         handler = InterruptHandler()
-        state: Dict[str, Any] = {
+        state: dict[str, Any] = {
             "interrupted": True,
             "user": "john",
             "data": {"important": "value"},
@@ -427,7 +429,7 @@ class TestCreateConditionalInterrupt:
     def test_create_conditional_interrupt_returns_config(self):
         """Test create_conditional_interrupt returns InterruptConfig."""
 
-        def my_condition(state: Dict[str, Any]) -> bool:
+        def my_condition(state: dict[str, Any]) -> bool:
             return True
 
         config = create_conditional_interrupt(my_condition, "test_node")
@@ -437,7 +439,7 @@ class TestCreateConditionalInterrupt:
     def test_create_conditional_interrupt_sets_type(self):
         """Test interrupt type is set to CONDITIONAL."""
 
-        def condition(state: Dict[str, Any]) -> bool:
+        def condition(state: dict[str, Any]) -> bool:
             return False
 
         config = create_conditional_interrupt(condition, "node")
@@ -447,7 +449,7 @@ class TestCreateConditionalInterrupt:
     def test_create_conditional_interrupt_sets_condition(self):
         """Test condition function is stored correctly."""
 
-        def risk_check(state: Dict[str, Any]) -> bool:
+        def risk_check(state: dict[str, Any]) -> bool:
             return state.get("risk") == "high"
 
         config = create_conditional_interrupt(risk_check, "risk_node")
@@ -459,7 +461,7 @@ class TestCreateConditionalInterrupt:
     def test_create_conditional_interrupt_sets_node_name(self):
         """Test node_name is set correctly."""
 
-        def cond(state: Dict[str, Any]) -> bool:
+        def cond(state: dict[str, Any]) -> bool:
             return True
 
         config = create_conditional_interrupt(cond, "my_special_node")
@@ -469,7 +471,7 @@ class TestCreateConditionalInterrupt:
     def test_create_conditional_interrupt_with_complex_condition(self):
         """Test conditional interrupt with complex business logic."""
 
-        def complex_condition(state: Dict[str, Any]) -> bool:
+        def complex_condition(state: dict[str, Any]) -> bool:
             """Interrupt if high-value transaction in restricted country."""
             amount = state.get("amount", 0)
             country = state.get("country", "")
@@ -559,7 +561,7 @@ class TestInterruptWorkflowIntegration:
         interrupt_id = handler.register_interrupt(config)
 
         # Step 2: Check if should interrupt
-        state: Dict[str, Any] = {"user": "john", "action": "delete_data"}
+        state: dict[str, Any] = {"user": "john", "action": "delete_data"}
         should_stop = handler.should_interrupt("sensitive_operation", state)
         assert should_stop is True
 
@@ -579,18 +581,18 @@ class TestInterruptWorkflowIntegration:
         """Test conditional interrupt only fires when condition met."""
         handler = create_interrupt_handler()
 
-        def amount_threshold(state: Dict[str, Any]) -> bool:
+        def amount_threshold(state: dict[str, Any]) -> bool:
             return state.get("amount", 0) > 1000
 
         config = create_conditional_interrupt(amount_threshold, "payment")
         handler.register_interrupt(config)
 
         # Low amount - should not interrupt
-        low_state: Dict[str, Any] = {"amount": 500}
+        low_state: dict[str, Any] = {"amount": 500}
         assert handler.should_interrupt("payment", low_state) is False
 
         # High amount - should interrupt
-        high_state: Dict[str, Any] = {"amount": 5000}
+        high_state: dict[str, Any] = {"amount": 5000}
         assert handler.should_interrupt("payment", high_state) is True
 
     def test_multiple_nodes_with_different_interrupts(self):
@@ -613,7 +615,7 @@ class TestInterruptWorkflowIntegration:
         handler.register_interrupt(config2)
         handler.register_interrupt(config3)
 
-        state: Dict[str, Any] = {"flag": False}
+        state: dict[str, Any] = {"flag": False}
 
         # Node 1: Should always interrupt
         assert handler.should_interrupt("node1", state) is True
@@ -659,7 +661,7 @@ class TestInterruptEdgeCases:
         """Test conditional interrupt with empty state."""
         handler = create_interrupt_handler()
 
-        def safe_condition(state: Dict[str, Any]) -> bool:
+        def safe_condition(state: dict[str, Any]) -> bool:
             return state.get("value", 0) > 100
 
         config = create_conditional_interrupt(safe_condition, "test")
@@ -691,7 +693,7 @@ class TestInterruptEdgeCases:
     def test_interrupt_history_state_isolation(self):
         """Test interrupt history stores state copy, not reference."""
         handler = create_interrupt_handler()
-        original_state: Dict[str, Any] = {"value": "original"}
+        original_state: dict[str, Any] = {"value": "original"}
 
         handler.handle_interrupt("node", original_state)
 
@@ -706,10 +708,10 @@ class TestInterruptEdgeCases:
         """Test registering multiple interrupts for same node with different conditions."""
         handler = create_interrupt_handler()
 
-        def condition1(state: Dict[str, Any]) -> bool:
+        def condition1(state: dict[str, Any]) -> bool:
             return state.get("flag1") is True
 
-        def condition2(state: Dict[str, Any]) -> bool:
+        def condition2(state: dict[str, Any]) -> bool:
             return state.get("flag2") is True
 
         config1 = InterruptConfig(
@@ -727,10 +729,10 @@ class TestInterruptEdgeCases:
         handler.register_interrupt(config2)
 
         # If either condition is true, should interrupt (first match wins)
-        state_both_false: Dict[str, Any] = {"flag1": False, "flag2": False}
+        state_both_false: dict[str, Any] = {"flag1": False, "flag2": False}
         assert handler.should_interrupt("same_node", state_both_false) is False
 
-        state_first_true: Dict[str, Any] = {"flag1": True, "flag2": False}
+        state_first_true: dict[str, Any] = {"flag1": True, "flag2": False}
         assert handler.should_interrupt("same_node", state_first_true) is True
 
     def test_notification_channels_stored(self):

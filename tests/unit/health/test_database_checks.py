@@ -36,8 +36,14 @@ from mcp_server_langgraph.health.database_checks import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testenvironmentdetection")
 class TestEnvironmentDetection:
     """Tests for environment detection logic"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_detect_environment_from_ENVIRONMENT_variable(self):
         """Should detect environment from ENVIRONMENT variable"""
@@ -118,9 +124,14 @@ class TestEnvironmentDetection:
             assert validator.environment == Environment.TEST
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testexpecteddatabasesconfiguration")
 class TestExpectedDatabasesConfiguration:
     """Tests for expected database configuration"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_expected_databases_dev_environment(self):
         """Should return databases without _test suffix in dev environment"""
@@ -219,6 +230,7 @@ class TestExpectedDatabasesConfiguration:
         assert keycloak_db.managed_by == "keycloak"
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="testdatabasevalidation")
 class TestDatabaseValidation:
     """Tests for database validation logic"""
@@ -247,12 +259,12 @@ class TestDatabaseValidation:
 
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
-        mock_postgres_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
+        mock_postgres_conn.close = AsyncMock()
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
-        mock_db_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)  # All tables exist
-        mock_db_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_db_conn.fetchval = AsyncMock(return_value=1)  # All tables exist
+        mock_db_conn.close = AsyncMock()
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]
@@ -285,8 +297,8 @@ class TestDatabaseValidation:
 
         # Mock PostgreSQL connection
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
-        mock_postgres_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=None)  # Database doesn't exist
-        mock_postgres_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_postgres_conn.fetchval = AsyncMock(return_value=None)  # Database doesn't exist
+        mock_postgres_conn.close = AsyncMock()
 
         with patch("asyncpg.connect", return_value=mock_postgres_conn):
             result = await validator.validate_database(db_info)
@@ -317,13 +329,13 @@ class TestDatabaseValidation:
 
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
-        mock_postgres_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
+        mock_postgres_conn.close = AsyncMock()
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
         # First call returns 1 (user_profiles exists), second call returns None (audit_logs missing)
-        mock_db_conn.fetchval = AsyncMock  # noqa: async-mock-config(side_effect=[1, None])
-        mock_db_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_db_conn.fetchval = AsyncMock(side_effect=[1, None])
+        mock_db_conn.close = AsyncMock()
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]
@@ -357,13 +369,13 @@ class TestDatabaseValidation:
 
         # Mock PostgreSQL connections
         mock_postgres_conn = AsyncMock(spec=asyncpg.Connection)
-        mock_postgres_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)  # Database exists
-        mock_postgres_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_postgres_conn.fetchval = AsyncMock(return_value=1)  # Database exists
+        mock_postgres_conn.close = AsyncMock()
 
         mock_db_conn = AsyncMock(spec=asyncpg.Connection)
         # Both tables missing
-        mock_db_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=None)
-        mock_db_conn.close = AsyncMock  # noqa: async-mock-config()
+        mock_db_conn.fetchval = AsyncMock(return_value=None)
+        mock_db_conn.close = AsyncMock()
 
         with patch("asyncpg.connect") as mock_connect:
             mock_connect.side_effect = [mock_postgres_conn, mock_db_conn]
@@ -408,9 +420,14 @@ class TestDatabaseValidation:
             assert "Failed to connect" in result.errors[0]
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testoverallvalidation")
 class TestOverallValidation:
     """Tests for overall validation of all databases"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.mark.asyncio
     async def test_validate_all_databases_when_all_valid(self):
@@ -488,9 +505,14 @@ class TestOverallValidation:
             assert "openfga warning 1" in result.warnings
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testvalidationresultserialization")
 class TestValidationResultSerialization:
     """Tests for validation result serialization"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_validation_result_to_dict(self):
         """Should serialize validation result to dictionary"""
@@ -528,6 +550,7 @@ class TestValidationResultSerialization:
         assert len(result_dict["warnings"]) == 1
 
 
+@pytest.mark.unit
 @pytest.mark.xdist_group(name="testconveniencefunction")
 class TestConvenienceFunction:
     """Tests for the convenience function"""
@@ -587,12 +610,13 @@ class TestConvenienceFunction:
             assert result.is_valid
 
 
-@pytest.mark.xdist_group(name="database_checks")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testdatabasevalidationresultproperty")
 class TestDatabaseValidationResultProperty:
     """Tests for DatabaseValidationResult.is_valid property"""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
     def test_is_valid_when_exists_and_no_errors(self):

@@ -15,7 +15,7 @@ Run with:
 
 import gc
 import os
-from typing import AsyncGenerator, Dict
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 import pytest
@@ -23,18 +23,12 @@ import pytest
 httpx = pytest.importorskip("httpx", reason="httpx required for SCIM E2E tests")
 
 
-from fastapi.testclient import TestClient  # noqa: E402
-
 # Test configuration
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
-KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:8180")
+KEYCLOAK_TEST_URL = os.getenv("KEYCLOAK_TEST_URL", "http://localhost:9082")
 SCIM_BASE_URL = f"{API_BASE_URL}/scim/v2"
 
-pytestmark = [
-    pytest.mark.e2e,
-    pytest.mark.scim,
-    pytest.mark.xdist_group(name="e2e_scim"),  # Prevent concurrent E2E runs
-]
+pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture(scope="module")
@@ -104,7 +98,7 @@ async def authenticated_client() -> AsyncGenerator[httpx.AsyncClient, None]:
 
 
 @pytest.fixture
-def unique_scim_user() -> Dict[str, any]:
+def unique_scim_user() -> dict[str, any]:
     """Generate unique SCIM user payload for test isolation"""
     unique_id = uuid4().hex[:8]
     return {
@@ -125,7 +119,7 @@ def unique_scim_user() -> Dict[str, any]:
 
 
 @pytest.fixture
-def unique_scim_group() -> Dict[str, any]:
+def unique_scim_group() -> dict[str, any]:
     """Generate unique SCIM group payload for test isolation"""
     unique_id = uuid4().hex[:8]
     return {
@@ -148,7 +142,7 @@ class TestSCIMUserProvisioning:
     async def test_create_user_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """
@@ -179,7 +173,7 @@ class TestSCIMUserProvisioning:
     async def test_get_user_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """
@@ -211,7 +205,7 @@ class TestSCIMUserProvisioning:
     async def test_put_replace_user_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """
@@ -252,7 +246,7 @@ class TestSCIMUserProvisioning:
     async def test_patch_update_user_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """
@@ -307,7 +301,7 @@ class TestSCIMUserProvisioning:
     async def test_delete_user_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """
@@ -396,7 +390,7 @@ class TestSCIMGroupProvisioning:
     async def test_create_group_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_group: Dict,
+        unique_scim_group: dict,
         skip_if_no_services: None,
     ):
         """
@@ -421,7 +415,7 @@ class TestSCIMGroupProvisioning:
     async def test_get_group_scim_endpoint(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_group: Dict,
+        unique_scim_group: dict,
         skip_if_no_services: None,
     ):
         """
@@ -448,8 +442,8 @@ class TestSCIMGroupProvisioning:
     async def test_create_group_with_members(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
-        unique_scim_group: Dict,
+        unique_scim_user: dict,
+        unique_scim_group: dict,
         skip_if_no_services: None,
     ):
         """
@@ -644,7 +638,7 @@ class TestSCIMErrorHandling:
     async def test_duplicate_user_creation(
         self,
         authenticated_client: httpx.AsyncClient,
-        unique_scim_user: Dict,
+        unique_scim_user: dict,
         skip_if_no_services: None,
     ):
         """Test creating duplicate user returns proper error"""

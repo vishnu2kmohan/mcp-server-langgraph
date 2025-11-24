@@ -193,6 +193,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger: Auto-update user_preferences.updated_at
+-- CODEX FINDING FIX (2025-11-20): Use DROP IF EXISTS for idempotent migrations
+-- PostgreSQL doesn't support CREATE TRIGGER IF NOT EXISTS, so we use DROP + CREATE pattern
+DROP TRIGGER IF EXISTS trigger_user_preferences_updated_at ON user_preferences;
 CREATE TRIGGER trigger_user_preferences_updated_at
     BEFORE UPDATE ON user_preferences
     FOR EACH ROW
@@ -208,6 +211,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger: Auto-update user_profiles.last_updated
+-- CODEX FINDING FIX (2025-11-20): Use DROP IF EXISTS for idempotent migrations
+DROP TRIGGER IF EXISTS trigger_user_profiles_last_updated ON user_profiles;
 CREATE TRIGGER trigger_user_profiles_last_updated
     BEFORE UPDATE ON user_profiles
     FOR EACH ROW

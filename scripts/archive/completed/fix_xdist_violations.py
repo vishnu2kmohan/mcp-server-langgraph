@@ -13,7 +13,7 @@ from pathlib import Path
 
 def add_xdist_marker_and_teardown(file_path):
     """Add xdist_group marker and teardown_method to test classes."""
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         content = f.read()
 
     original_content = content

@@ -6,10 +6,12 @@ tuples when a resource is deleted, ensuring no orphaned permissions remain.
 """
 
 import gc
-from typing import Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
+from tests.conftest import get_user_id
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.mark.integration
@@ -41,6 +43,9 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         # Mock the OpenFGA SDK calls
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:
@@ -48,13 +53,13 @@ class TestOpenFGATupleCleanup:
                 # Each relation has 1-2 users with permissions
                 mock_expand.side_effect = [
                     # owner relation
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:alice"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("alice")]}}})),
                     # acts_as relation
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:bob"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("bob")]}}})),
                     # viewer relation (computed from owner)
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:alice"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("alice")]}}})),
                     # editor relation (computed from owner)
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:alice"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("alice")]}}})),
                 ]
 
                 # Act: Delete all tuples for service principal
@@ -83,6 +88,9 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         with patch.object(client.client, "expand") as mock_expand:
             # Simulate no tuples found (empty expansion)
             mock_expand.return_value = Mock(tree=Mock(model_dump=lambda: {}))
@@ -105,10 +113,13 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:
                 # Simulate 250 users with permissions (exceeds typical batch size of 100)
-                large_user_list = [f"user:user{i}" for i in range(250)]
+                large_user_list = [get_user_id(f"user{i}") for i in range(250)]
 
                 mock_expand.side_effect = [
                     # owner relation with many users
@@ -141,13 +152,16 @@ class TestOpenFGATupleCleanup:
             model_id="test-model",
         )
 
+        # Initialize the client first (lazy initialization)
+        await client._ensure_initialized()
+
         with patch.object(client.client, "expand") as mock_expand:
             with patch.object(client.client, "write") as mock_write:
                 # Simulate partial failure: first relation succeeds, second fails, third succeeds
                 mock_expand.side_effect = [
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:alice"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("alice")]}}})),
                     Exception("Network error"),  # This relation fails
-                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": ["user:bob"]}}})),
+                    Mock(tree=Mock(model_dump=lambda: {"leaf": {"users": {"users": [get_user_id("bob")]}}})),
                     Mock(tree=Mock(model_dump=lambda: {})),
                 ]
 
@@ -172,15 +186,15 @@ class TestTupleExtractionHelpers:
         Test extracting users from simple leaf node.
 
         Expansion tree structure:
-        {"leaf": {"users": {"users": ["user:alice", "user:bob"]}}}
+        {"leaf": {"users": {"users": [get_user_id("alice"), get_user_id("bob")]}}}
         """
         from mcp_server_langgraph.auth.openfga import _extract_users_from_expansion
 
-        expansion = {"leaf": {"users": {"users": ["user:alice", "user:bob"]}}}
+        expansion = {"leaf": {"users": {"users": [get_user_id("alice"), get_user_id("bob")]}}}
 
         users = _extract_users_from_expansion(expansion)
 
-        assert set(users) == {"user:alice", "user:bob"}
+        assert set(users) == {get_user_id("alice"), get_user_id("bob")}
 
     def test_extract_users_from_empty_expansion(self):
         """Test extracting from empty expansion returns empty list"""
@@ -202,12 +216,12 @@ class TestTupleExtractionHelpers:
         expansion = {
             "union": {
                 "nodes": [
-                    {"leaf": {"users": {"users": ["user:alice"]}}},
-                    {"leaf": {"users": {"users": ["user:bob"]}}},
+                    {"leaf": {"users": {"users": [get_user_id("alice")]}}},
+                    {"leaf": {"users": {"users": [get_user_id("bob")]}}},
                 ]
             }
         }
 
         users = _extract_users_from_expansion(expansion)
 
-        assert set(users) == {"user:alice", "user:bob"}
+        assert set(users) == {get_user_id("alice"), get_user_id("bob")}

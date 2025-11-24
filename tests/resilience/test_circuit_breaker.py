@@ -22,6 +22,8 @@ from mcp_server_langgraph.resilience.circuit_breaker import (
     reset_circuit_breaker,
 )
 
+pytestmark = [pytest.mark.unit]
+
 
 @pytest.fixture
 def reset_breakers():

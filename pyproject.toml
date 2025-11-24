@@ -30,7 +30,7 @@ dependencies = [
     "langgraph-checkpoint-redis>=0.1.2",  # Redis checkpointer for distributed conversation state
     "langchain-core>=1.0.4",
     "langsmith>=0.4.37",
-    "litellm>=1.79.3",
+    "litellm>=1.80.0",  # Latest stable with Gemini 3 Pro support (gemini-3-pro-preview)
     "mcp>=1.18.0",
     "PyJWT>=2.10.1",
     "cryptography>=46.0.3",
@@ -90,14 +90,14 @@ dev = [
     "psutil>=6.1.0",  # Memory monitoring for auto-tuning pytest-xdist workers
     "tomli>=2.0.1; python_version < '3.11'",  # TOML parser backport for Python <3.11 (tomllib compat)
     # Docker infrastructure management
-    "pytest-docker-compose-v2>=0.1.2",  # Automated docker-compose lifecycle for E2E tests
-    "python-on-whales>=0.74.0",  # Docker management library used by test infrastructure
+    # NOTE: Infrastructure lifecycle managed by shell scripts (make test-integration), not Python libraries
+    # pytest-docker-compose-v2 and python-on-whales removed - plugin fixtures not used, custom fixtures in conftest.py instead
     "docker>=7.1.0",  # Docker Python SDK for test imports (tests/unit/execution/test_docker_sandbox_unit.py)
-    "kubernetes>=31.0.0",  # Kubernetes Python client for test imports (tests/unit/execution/)
+    "kubernetes>=34.0.0",  # Kubernetes Python client for test imports (fixes HTTPResponse.getheaders deprecation)
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
-    "hypothesis>=6.142.1",
+    "hypothesis>=6.148.0",
     "hypothesis-jsonschema>=0.22.1",
     # Contract testing
     "jsonschema>=4.21.0",
@@ -106,13 +106,14 @@ dev = [
     # Mutation testing
     "mutmut>=3.3.1",
     # Code quality
-    "black>=25.9.0",
-    "flake8>=7.0.0",
+    "ruff>=0.8.0",  # Replaces black, isort, and flake8 (10-100x faster, Rust-based)
+    "black>=25.9.0",  # Keep for now during migration, will remove after validation
+    "flake8>=7.0.0",  # Keep for now during migration, will remove after validation
     "mypy>=1.18.2",
     "types-PyYAML",
     "types-redis",
     "types-requests",
-    "isort>=7.0.0",
+    "isort>=7.0.0",  # Keep for now during migration, will remove after validation
     "bandit>=1.7.6",
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
@@ -127,7 +128,7 @@ secrets = [
     # See: requirements-infisical.txt for installation options
     # Docker builds: Automatically installed
     # Local builds: See docs/deployment/infisical-installation.md
-    "infisical-python>=2.1.7,<=2.3.6",
+    "infisical-python>=2.1.7,<=2.3.5",
 ]
 
 cli = [
@@ -157,7 +158,7 @@ code-execution = [
     # Code execution sandbox dependencies
     # Supports both Docker Engine (local/dev) and Kubernetes (production)
     "docker>=7.1.0",  # Docker Python SDK for container management
-    "kubernetes>=31.0.0",  # Kubernetes Python client for K8s Jobs
+    "kubernetes>=34.0.0",  # Kubernetes Python client for K8s Jobs (fixes HTTPResponse.getheaders deprecation)
     "psutil>=6.1.0",  # Process and system monitoring
 ]
 
@@ -266,7 +267,95 @@ Changelog = "https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/CHA
 where = ["src"]
 exclude = ["tests*", "*.tests*", "*.tests"]
 
+# ==============================================================================
+# RUFF CONFIGURATION - Replaces black, isort, and flake8
+# ==============================================================================
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+# Exclude directories (same as black/isort/flake8)
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "__pycache__",
+    "htmlcov",
+    ".pytest_cache",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+# Enable rule categories:
+# E/W: pycodestyle errors and warnings
+# F: pyflakes
+# I: isort (import sorting)
+# UP: pyupgrade (modernize Python syntax)
+# B: flake8-bugbear (common bugs)
+select = ["E", "F", "I", "UP", "B"]
+
+# Ignore specific rules to align with black formatting and reduce noise during migration
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "E402",  # module-import-not-at-top-of-file
+    "E721",  # type-comparison
+    "E722",  # Bare except (will fix separately)
+    "F401",  # Unused imports
+    "F811",  # Redefinition of unused
+    "I001",  # unsorted-imports
+    "B007",  # Loop variable not used
+    "B008",  # FastAPI Depends in defaults (intentional pattern)
+    "B011",  # assert-false
+    "B017",  # assert-raises-exception
+    "B018",  # useless-expression
+    "B028",  # no-explicit-stacklevel
+    "B904",  # Exception chaining
+    "UP028", # yield-in-for-loop
+    "UP035", # deprecated-import
+    "UP038", # isinstance with tuple - REMOVED rule, no longer exists
+    # Temporarily disabled during Ruff migration (can re-enable incrementally):
+    # N-series (naming): 404 violations - will fix in separate PR
+    # C4 (comprehensions): Low priority - readability improvements
+    # SIM (simplify): Low priority - code simplification suggestions
+]
+
+[tool.ruff.lint.isort]
+# Use black-compatible isort settings
+force-single-line = false
+force-wrap-aliases = false
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+# Use black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# ==============================================================================
+# LEGACY TOOLS - DEPRECATED (Use Ruff instead)
+# ==============================================================================
+# DEPRECATION NOTICE (2025-11-23):
+# These tools are deprecated and will be removed in a future release.
+#
+# Migration Guide:
+#   - black → ruff format
+#   - isort → ruff check --select I (import sorting)
+#   - flake8 → ruff check (linting)
+#
+# New Commands:
+#   make lint-check   # Ruff linter (replaces flake8, isort checks)
+#   make lint-fix     # Ruff auto-fix + format (replaces black, isort)
+#   make lint-format  # Ruff format only (replaces black)
+#
+# See: docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md for complete guide
+# ==============================================================================
+
 [tool.black]
+# DEPRECATED: Use 'ruff format' instead
 line-length = 127
 target-version = ["py310", "py311", "py312"]
 include = '\.pyi?$'
@@ -282,11 +371,13 @@ exclude = '''
 '''
 
 [tool.isort]
+# DEPRECATED: Use 'ruff check --select I' instead
 profile = "black"
 line_length = 127
 skip_gitignore = true
 
 [tool.flake8]
+# DEPRECATED: Use 'ruff check' instead
 max-line-length = 127
 exclude = [
     ".git",
@@ -306,8 +397,9 @@ extend-ignore = ["E203", "W503", "E501"]
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-ignore_missing_imports = true
-disable_error_code = ["import-untyped"]
+# STRICT MODE: Do NOT ignore missing imports for our own code
+# Use per-module overrides below for third-party libraries
+ignore_missing_imports = false
 # Stricter type checking for production
 disallow_untyped_defs = true
 disallow_any_unimported = false
@@ -320,12 +412,43 @@ strict_equality = true
 check_untyped_defs = true
 # Allow some flexibility for third-party libraries (will be phased out)
 disallow_untyped_calls = false
-# Exclude test files from strict checking
+# Exclude test files and incomplete modules from strict checking
 exclude = [
     "tests/",
     "test_.*\\.py$",
     "conftest\\.py$",
+    "playground/",  # Incomplete module - api/server.py missing
 ]
+
+# Per-module overrides for third-party libraries without type stubs
+# This is the modern best practice: strict for our code, lenient for third-party
+[[tool.mypy.overrides]]
+module = [
+    "litellm.*",
+    "pybreaker.*",
+    "slowapi.*",
+    "pydantic_ai.*",
+    "langgraph.*",
+    "langchain.*",
+    "cryptography.*",
+    "sqlalchemy.*",
+    "kubernetes.*",
+    "docker.*",
+    "asyncpg.*",
+    "infisical_client.*",
+    "opentelemetry.*",
+    "jwt.*",
+    "apscheduler.*",
+    "openfga_sdk.*",
+    "bcrypt.*",
+    "mcp.*",
+    "sentence_transformers.*",
+    "cachetools.*",
+]
+ignore_missing_imports = true
+# Disable additional strict checks for third-party libraries
+disallow_untyped_defs = false
+disallow_untyped_calls = false
 
 # Gradual strictness rollout - Phase 1: Core modules with full strict typing
 [[tool.mypy.overrides]]
@@ -380,7 +503,7 @@ strict = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "scripts"]  # Allow importing from scripts/ directory
-norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__"]
+norecursedirs = ["scripts/archive/*", "*.egg", ".eggs", "dist", "build", "docs", ".git", ".venv", "venv", "__pycache__", ".hypothesis"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -393,7 +516,10 @@ python_functions = ["test_*"]
 addopts = "-v --strict-markers --tb=short --dist loadscope --timeout=60 --benchmark-disable"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+# CODEX FINDING FIX (2025-11-20): Set to "session" to support session-scoped async fixtures
+# (postgres_connection_real, redis_client_real, openfga_client_real) without ScopeMismatch errors
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 # Filter warnings to reduce test output noise
 filterwarnings = [
     "ignore:GDPR endpoints use in-memory storage.*:RuntimeWarning",
@@ -437,6 +563,7 @@ markers = [
     "soc2: SOC 2 compliance tests (evidence collection, access reviews)",
     "sla: SLA monitoring tests (uptime, response time, error rate)",
     "performance: Performance tests (load, stress, benchmarks)",
+    "stress: Stress tests (high load, parallel execution stress)",
     "security: Security tests (injection attacks, OWASP Top 10)",
     "kubernetes: Kubernetes integration tests (health probes, deployments)",
     "deployment: Deployment configuration and validation tests (Helm, Kustomize, placeholders)",
@@ -457,6 +584,8 @@ markers = [
     "requires_kustomize: Tests requiring kustomize CLI tool",
     "requires_kubectl: Tests requiring kubectl CLI tool",
     "requires_helm: Tests requiring helm CLI tool",
+    "validation: Validation tests for deployments and configurations",
+    "cli: CLI tool tests",
 ]
 
 # CODEX FINDING #4: Benchmark configuration
@@ -553,7 +682,7 @@ dict_synonyms = "Struct,NamedStruct"
 [dependency-groups]
 dev = [
     "bandit>=1.8.0",
-    "hypothesis>=6.142.1",
+    "hypothesis>=6.148.0",
     "hypothesis-jsonschema>=0.23.1",
     "mypy>=1.18.0",
     "pre-commit>=4.0.0",

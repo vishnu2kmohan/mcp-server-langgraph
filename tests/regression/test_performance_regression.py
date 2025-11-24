@@ -16,7 +16,7 @@ import pytest
 from langchain_core.messages import HumanMessage
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 # ============================================================================
 # Fixtures for Performance Tests
@@ -379,7 +379,7 @@ class TestRegressionReporting:
         assert result["regression"] is False
         assert result["reason"] == "within_baseline"
 
-    def test_improvement_detected(self):
+    def test_improvement_detected_with_faster_time_records_improvement(self):
         """Performance improvements are recorded"""
         result = check_regression("agent_response", 3.0, unit="seconds")  # Faster than baseline
 

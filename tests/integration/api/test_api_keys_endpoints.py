@@ -12,8 +12,11 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock
 
 import pytest
+from tests.conftest import get_user_id
 from fastapi import status
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -68,7 +71,7 @@ def mock_api_key_manager():
 
     # Mock validate_and_get_user
     manager.validate_and_get_user.return_value = {
-        "user_id": "user:alice",  # OpenFGA format
+        "user_id": get_user_id("alice"),  # OpenFGA format
         "keycloak_id": "8c7b4e5d-1234-5678-abcd-ef1234567890",  # Keycloak UUID
         "username": "alice",
         "email": "alice@example.com",
@@ -452,7 +455,7 @@ class TestValidateAPIKey:
         assert "access_token" in data
         assert data["access_token"].startswith("eyJ")  # JWT format
         assert data["expires_in"] == 900
-        assert data["user_id"] == "user:alice"  # OpenFGA format from user_info["user_id"]
+        assert data["user_id"] == get_user_id("alice")  # OpenFGA format from user_info["user_id"]
         assert data["username"] == "alice"
 
         # Verify validation was called
@@ -544,7 +547,6 @@ class TestAPIKeyEndpointAuthorization:
 
     def test_create_without_auth(self, monkeypatch):
         """Test creating API key without authentication fails"""
-        import os
 
         from fastapi import FastAPI
 

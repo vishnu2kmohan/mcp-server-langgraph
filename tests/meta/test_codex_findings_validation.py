@@ -15,13 +15,12 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 import yaml
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testfixturescopevalidation")
@@ -80,12 +79,11 @@ class TestFixtureScopeValidation:
         openfga_client_real) must have matching scope to prevent ScopeMismatch.
 
         References:
-        - tests/conftest.py:988 - postgres_connection_real
-        - tests/conftest.py:1014 - redis_client_real
-        - tests/conftest.py:1044 - openfga_client_real
+        - tests/fixtures/database_fixtures.py - database fixtures location
         """
-        conftest_path = Path(__file__).parent.parent / "conftest.py"
-        content = conftest_path.read_text()
+        # Fixtures are now in tests/fixtures/database_fixtures.py
+        fixtures_path = Path(__file__).parent.parent / "fixtures" / "database_fixtures.py"
+        content = fixtures_path.read_text()
 
         # Parse AST
         tree = ast.parse(content)
@@ -96,7 +94,7 @@ class TestFixtureScopeValidation:
             "openfga_client_real",
         }
 
-        fixture_scopes: Dict[str, str] = {}
+        fixture_scopes: dict[str, str] = {}
 
         for node in ast.walk(tree):
             # Check both regular and async function definitions
@@ -111,7 +109,7 @@ class TestFixtureScopeValidation:
 
         # Validate all fixtures found and are session-scoped
         for fixture_name in required_fixtures:
-            assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in conftest.py"
+            assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in database_fixtures.py"
             assert fixture_scopes[fixture_name] == "session", (
                 f"Fixture '{fixture_name}' must be session-scoped, " f"found scope='{fixture_scopes[fixture_name]}'"
             )
@@ -135,7 +133,7 @@ class TestFixtureScopeValidation:
         tree = ast.parse(content)
 
         # Find all test classes
-        test_classes: List[str] = []
+        test_classes: list[str] = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
                 test_classes.append(node.name)
@@ -151,6 +149,57 @@ class TestFixtureScopeValidation:
                 f"Test class '{class_name}' must have @pytest.mark.xdist_group marker "
                 "for pytest-xdist isolation to prevent ScopeMismatch"
             )
+
+    def test_pytest_asyncio_event_loop_scope_matches_session_fixtures(self):
+        """
+        Validate pytest-asyncio default event loop scope is session-scoped.
+
+        CODEX FINDING (2025-11-20): 34 integration tests fail with ScopeMismatch
+        because session-scoped async fixtures (postgres_connection_real, redis_client_real,
+        openfga_client_real) require session-scoped event loop.
+
+        Problem:
+        - pyproject.toml sets asyncio_default_fixture_loop_scope = "function"
+        - Session-scoped async fixtures try to use function-scoped event loop
+        - pytest-asyncio 1.2.0 raises ScopeMismatch error
+
+        Solution: Set asyncio_default_fixture_loop_scope = "session"
+
+        References:
+        - pyproject.toml:469 - asyncio_default_fixture_loop_scope configuration
+        - tests/conftest.py:1404 - postgres_connection_real (session-scoped)
+        - tests/conftest.py:1453 - redis_client_real (session-scoped)
+        - tests/conftest.py:1483 - openfga_client_real (session-scoped)
+        - pytest-asyncio docs: https://pytest-asyncio.readthedocs.io/en/latest/concepts.html#event-loop-scope
+        """
+        import tomli
+
+        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+        assert pyproject_path.exists(), "pyproject.toml not found"
+
+        with open(pyproject_path, "rb") as f:
+            config = tomli.load(f)
+
+        # Navigate to pytest configuration
+        assert "tool" in config, "No [tool] section in pyproject.toml"
+        assert "pytest" in config["tool"], "No [tool.pytest] section in pyproject.toml"
+        assert "ini_options" in config["tool"]["pytest"], "No [tool.pytest.ini_options] section"
+
+        pytest_config = config["tool"]["pytest"]["ini_options"]
+
+        # Validate asyncio_default_fixture_loop_scope is set to "session"
+        assert "asyncio_default_fixture_loop_scope" in pytest_config, (
+            "asyncio_default_fixture_loop_scope must be configured in pyproject.toml [tool.pytest.ini_options]. "
+            "Required for session-scoped async fixtures to work with pytest-asyncio 1.2.0+"
+        )
+
+        loop_scope = pytest_config["asyncio_default_fixture_loop_scope"]
+        assert loop_scope == "session", (
+            f"asyncio_default_fixture_loop_scope must be 'session', found '{loop_scope}'. "
+            "Session-scoped async fixtures (postgres_connection_real, redis_client_real, openfga_client_real) "
+            "require session-scoped event loop to prevent ScopeMismatch errors. "
+            "Change pyproject.toml:469 from 'function' to 'session'."
+        )
 
 
 @pytest.mark.xdist_group(name="testkeycloakserviceconfiguration")

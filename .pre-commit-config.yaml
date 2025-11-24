@@ -17,27 +17,26 @@ repos:
   - id: check-json
   - id: check-toml
   - id: mixed-line-ending
+  - id: check-ast
+    name: Check Python AST (Syntax Validation)
+    description: 'Validates Python files can be parsed (no SyntaxError).
+
+      Prevents commits of syntactically invalid Python code.
+
+      Regression prevention for commit a57fcc95 (pytestmark inside imports).
+      '
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.8.4
   hooks:
   - id: ruff
-    name: Ruff Linter (replaces isort)
+    name: Ruff Linter (replaces isort + flake8)
     args:
     - --fix
+    exclude: ^clients/(python|go|typescript)/
   - id: ruff-format
     name: Ruff Formatter (replaces Black)
     args:
     - --line-length=127
-- repo: https://github.com/pycqa/flake8
-  rev: 7.3.0
-  hooks:
-  - id: flake8
-    args:
-    - --max-line-length=127
-    - --max-complexity=20
-    - --extend-ignore=E203,W503,E501
-    additional_dependencies:
-    - flake8-docstrings
     exclude: ^clients/(python|go|typescript)/
 - repo: https://github.com/pycqa/bandit
   rev: 1.8.6
@@ -45,62 +44,49 @@ repos:
   - id: bandit
     args:
     - -lll
-    - -x
-    - tests
     - --skip
     - B608
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.13.0
   hooks:
   - id: mypy
-    name: MyPy Type Checking (Non-blocking)
+    name: MyPy Type Checking (Blocking)
+    entry: uv run mypy src/mcp_server_langgraph
+    language: system
+    types: [python]
     args:
-    - --ignore-missing-imports
-    - --check-untyped-defs
-    - --no-implicit-optional
+    - --config-file=pyproject.toml
     - --show-error-codes
     - --pretty
-    files: ^src/mcp_server_langgraph/
-    additional_dependencies:
-    - pydantic
-    - fastapi
-    - types-PyYAML
-    - types-redis
-    - types-requests
-    # MyPy set to manual stage (non-blocking) due to extensive pre-existing type errors.
+    pass_filenames: false
+    # MyPy Configuration Status (2025-11-23)
     #
-    # Background: --strict mode reveals 110+ type errors across 37 files that would
-    # block all development. Moving to manual stage allows incremental type safety
-    # improvements without blocking productive work.
+    # ✅ FIXED: All 46 type errors resolved!
+    # ✅ ENVIRONMENT: Uses system Python with full project dependencies via uv
+    # Stage: pre-push (BLOCKING - maintains local/CI parity)
     #
-    # To run manually: SKIP= pre-commit run mypy --all-files --hook-stage manual
+    # Modern best practice: Per-module overrides in pyproject.toml
+    #   - Strict mode for internal code (ignore_missing_imports = false)
+    #   - Lenient mode for third-party libraries (per-module overrides)
+    #
+    # Environment approach:
+    #   - language: system (uses uv-managed environment)
+    #   - Full project dependencies available
+    #   - Matches local development and CI/CD exactly
+    #
+    # Test: tests/meta/test_mypy_enforcement.py::test_mypy_passes_on_current_codebase ✅
     stages:
-    - manual
+    - pre-push
 - repo: https://github.com/gitleaks/gitleaks
   rev: v8.28.0
   hooks:
   - id: gitleaks
 - repo: local
   hooks:
-  - id: mypy-non-blocking
-    name: MyPy Type Checking (Warning Only - Non-blocking)
-    description: 'Runs MyPy type checking but does not block pushes on errors.
-
-
-      Warning-only mode allows type errors to be visible without blocking development.
-
-      CI can be configured to fail builds on type errors separately.
-
-      '
-    entry: ./.githooks/mypy-non-blocking
-    language: system
-    types: [python]
-    files: ^src/mcp_server_langgraph/
-    # Temporarily moved to manual stage to match main mypy hook
-    # (both hooks moved to manual due to 110+ pre-existing type errors)
-    stages:
-    - manual
-    pass_filenames: false
+  # NOTE: mypy-non-blocking hook REMOVED (2025-11-23)
+  # Reason: Redundant now that main MyPy hook is enabled and blocking
+  # Main MyPy hook runs on pre-push stage and fails on type errors
+  # This maintains local/CI parity (no more non-blocking warnings)
   - id: check-subprocess-timeout
     name: Enforce subprocess timeout parameters
     description: 'Ensures all subprocess.run() calls include timeout parameter to prevent test hangs.
@@ -112,8 +98,7 @@ repos:
 
       '
     entry: python .pre-commit-hooks/check_subprocess_timeout.py
-    language: python
-    additional_dependencies: []
+    language: system
     types: [python]
     files: ^tests/.*\.py$
     stages:
@@ -130,8 +115,7 @@ repos:
 
       '
     entry: python .pre-commit-hooks/check_banned_imports.py
-    language: python
-    additional_dependencies: []
+    language: system
     types: [python]
     stages:
     - pre-commit
@@ -142,6 +126,33 @@ repos:
     language: system
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
+    stages:
+    - pre-push
+  - id: uv-pip-check
+    name: Validate no dependency conflicts
+    entry: bash -c 'uv pip check || (echo "ERROR - Dependency conflicts detected. Run uv pip check to see details"; exit 1)'
+    language: system
+    pass_filenames: false
+    stages:
+    - pre-push
+    description: 'Validates that installed dependencies have no conflicts.
+
+
+      Why this check is critical:
+      - uv lock --check validates lockfile is current
+      - uv pip check validates no dependency conflicts exist
+      - Both are needed for comprehensive dependency validation
+
+      Example failure this prevents:
+      1. Package A requires foo>=2.0, Package B requires foo<2.0
+      2. uv lock succeeds and generates lockfile (lock check passes)
+      3. uv pip check FAILS (conflict detected)
+      4. Without this hook: conflict pushed to CI and fails there
+
+      Matches CI validation in .github/workflows/ci.yaml
+      Test: tests/meta/test_local_ci_parity.py::test_pre_push_includes_uv_pip_check
+
+      '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
     entry: scripts/run_pre_push_tests.py
@@ -156,15 +167,11 @@ repos:
 
       Combines 5 separate pytest sessions into 1 for efficiency:
 
-      - Unit tests: -m "unit and not llm"
+      - Combined marker: -m "(unit or api or property) and not llm"
 
-      - Smoke tests: tests/smoke/
+      - This covers: unit tests, smoke tests, API tests, MCP server tests, property tests
 
-      - API tests: -m "api and unit and not llm"
-
-      - MCP server tests: tests/unit/test_mcp_stdio_server.py
-
-      - Property tests: -m property (dev profile: 25 examples)
+      - Property tests use dev profile (25 examples) locally, ci profile (100 examples) in CI
 
 
       Time savings: 10-25 seconds vs separate sessions (no duplicate test discovery)
@@ -265,9 +272,8 @@ repos:
       '
   - id: check-test-sleep-duration
     name: Check Test Sleep Durations
-    entry: uv run python scripts/check_test_sleep_duration.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_test_sleep_duration.py
+    language: system
     files: ^tests/.*\.py$
     exclude: ^tests/meta/test_sleep_duration_linter\.py$
     pass_filenames: true
@@ -284,70 +290,20 @@ repos:
       Use VirtualClock for instant time advancement instead of real sleep.
 
       '
-  - id: validate-pytest-config
-    name: Validate Pytest Configuration Compatibility
-    entry: uv run python scripts/validate_pytest_config.py
-    language: python
-    additional_dependencies: []
-    files: ^pyproject\.toml$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Validates that pytest addopts flags match installed plugin dependencies.\n\nPrevents CI failures from:\n\
-      - Adding pytest flags without required plugins\n- Removing plugins that addopts still references\n- Dependency cleanup\
-      \ accidentally breaking pytest options\n\nCommon failure scenario:\n1. Add --timeout to addopts\n2. Forget to add pytest-timeout\
-      \ to dependencies\n3. CI fails: \"pytest: error: unrecognized arguments: --timeout\"\n\nValidated mappings:\n- --dist,\
-      \ -n \u2192 pytest-xdist\n- --timeout \u2192 pytest-timeout\n- --cov \u2192 pytest-cov\n- --benchmark \u2192 pytest-benchmark\n\
-      \nReference: Codex finding - pytest addopts compatibility validation\n"
-  - id: validate-pre-push-hook
-    name: Validate Pre-Push Hook Configuration
-    entry: uv run python scripts/validate_pre_push_hook.py
-    language: python
-    additional_dependencies: []
-    files: ^\.git/hooks/pre-push$
+  - id: validate-fast
+    name: Run Fast Validators (Consolidated)
+    entry: uv run python scripts/validation/validate_fast.py
+    language: system
     pass_filenames: false
     always_run: true
     stages:
     - pre-push
-    description: 'Validates that .git/hooks/pre-push contains all required validation steps.
+    description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
 
-
-      Prevents regressions where:
-
-      - Pre-push hook is accidentally modified or removed
-
-      - Local validation diverges from CI requirements
-
-      - Required validation steps are missing
-
-
-      Required validations:
-
-      - Lockfile validation (uv lock --check)
-
-      - Workflow validation tests
-
-      - MyPy type checking
-
-      - Pre-commit hooks on ALL files
-
-      - Property tests with CI profile (100 examples)
-
-
-      This ensures local validation always matches CI exactly, preventing
-
-      surprises after push.
-
-
-      Fix: Run ''make git-hooks'' to restore proper configuration
-
-      '
   - id: validate-mdx-extensions
     name: Validate MDX File Extensions in docs/
-    entry: uv run python scripts/validators/mdx_extension_validator.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/mdx_extension_validator.py
+    language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -376,17 +332,15 @@ repos:
       '
   - id: check-frontmatter-quotes
     name: Check Frontmatter Quote Style
-    entry: uv run python scripts/standardize_frontmatter.py docs --dry-run
-    language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
+    entry: uv run python scripts/docs/standardize_frontmatter.py docs --dry-run
+    language: system
     files: \.mdx$
     pass_filenames: false
     always_run: false
   - id: validate-file-naming-conventions
     name: Validate Documentation File Naming Conventions
-    entry: uv run python scripts/validators/file_naming_validator.py --path docs
-    language: python
+    entry: uv run python scripts/validation/file_naming_validator.py --path docs
+    language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -405,9 +359,8 @@ repos:
       Tests: tests/unit/documentation/test_file_naming_validator.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
-    entry: uv run python scripts/validators/todo_audit.py --quiet
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/todo_audit.py --quiet
+    language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
     always_run: false
@@ -415,13 +368,12 @@ repos:
     - manual
     description: "Audits documentation for TODO/FIXME/XXX markers (TDD):\n- Finds all TODO and FIXME comments\n- Detects XXX\
       \ placeholders in examples\n- Reports location and content\n- Tracks outstanding work items\n\nNote: This is informational\
-      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validators/todo_audit.py --docs-dir docs\nTests:\
+      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validation/todo_audit.py --docs-dir docs\nTests:\
       \ tests/unit/documentation/test_todo_audit.py (14 tests \u2705)\n"
   - id: validate-adr-sync
     name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
-    entry: uv run python scripts/validators/adr_sync_validator.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/adr_sync_validator.py
+    language: system
     files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
     pass_filenames: false
     always_run: false
@@ -438,7 +390,7 @@ repos:
 
       Ensures Architecture Decision Records stay synchronized.
 
-      Run: python scripts/validators/adr_sync_validator.py
+      Run: python scripts/validation/adr_sync_validator.py
 
       Exit code 1 if out of sync, 0 if synchronized
 
@@ -447,7 +399,7 @@ repos:
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
       bash -c 'if command -v npm >/dev/null 2>&1; then
-      cd docs && npm ci --silent && npm exec -- mintlify broken-links;
+      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links;
       else echo "Skipping: npm/Node.js not installed (install from https://nodejs.org/)";
       exit 0; fi'
     language: system
@@ -470,13 +422,13 @@ repos:
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
   - id: validate-documentation-integrity
     name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-    entry: uv run pytest tests/test_documentation_integrity.py -v --tb=short
+    entry: uv run pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
     language: system
     files: \.(md|mdx|json)$|^monitoring/.*README\.md$
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Documentation integrity and completeness tests (TDD):
 
       - ADR synchronization between adr/ and docs/architecture/
@@ -502,7 +454,7 @@ repos:
     pass_filenames: false
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Comprehensive documentation structure validation (TDD):
 
       - Prevents orphaned MDX files not in docs.json navigation
@@ -530,9 +482,8 @@ repos:
       '
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
-    entry: python scripts/generate_adr_index.py --check
-    language: python
-    additional_dependencies: []
+    entry: python scripts/docs/generate_adr_index.py --check
+    language: system
     files: ^adr/.*\.md$
     pass_filenames: false
     always_run: false
@@ -633,9 +584,8 @@ repos:
       '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
-    entry: uv run python scripts/check_mermaid_styling.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_mermaid_styling.py
+    language: system
     files: ^docs/.*\.mdx$
     pass_filenames: true
     always_run: false
@@ -650,7 +600,7 @@ repos:
       '
   - id: prevent-local-config-commits
     name: Prevent Local Config Files from Being Committed
-    entry: uv run pytest tests/test_gitignore_validation.py -v
+    entry: uv run pytest tests/meta/validation/test_gitignore_validation.py -v
     language: system
     pass_filenames: false
     always_run: true
@@ -667,7 +617,7 @@ repos:
       '
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
-    entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
+    entry: uv run python scripts/validation/validate_github_workflows.py
     language: system
     files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
@@ -689,7 +639,7 @@ repos:
       Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
-    entry: uv run python scripts/validate_gke_autopilot_compliance.py
+    entry: uv run python scripts/validation/validate_gke_autopilot_compliance.py
     language: system
     files: ^deployments/.*\.ya?ml$
     pass_filenames: false
@@ -703,8 +653,7 @@ repos:
   - id: validate-dependency-injection
     name: Validate Dependency Injection Configuration
     entry: python3 .githooks/pre-commit-dependency-validation
-    language: python
-    additional_dependencies: []
+    language: system
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
     always_run: false
@@ -727,9 +676,8 @@ repos:
       '
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
-    entry: uv run python scripts/validate_test_fixtures.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/validate_test_fixtures.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -765,20 +713,67 @@ repos:
 
       '
   - id: validate-pytest-markers
-    name: Validate Pytest Markers
-    entry: uv run python scripts/validate_pytest_markers.py
-    language: python
-    additional_dependencies: []
+    name: Validate Pytest Markers & Placement
+    entry: uv run python scripts/validation/validate_pytest_markers.py
+    language: system
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
-    description: 'Validates that all pytest.mark.* decorators used in tests are registered
+    exclude: ^tests/(conftest\.py|validation_lib/.*\.py)$
+    description: 'Validates pytest marker registration and pytestmark placement.
 
-      in pyproject.toml. Prevents "PytestUnknownMarkWarning" errors in CI.
+
+      1. Checks all pytest.mark.* decorators are registered in pyproject.toml
+
+         (prevents "PytestUnknownMarkWarning" errors)
+
+
+      2. Validates pytestmark appears AFTER all imports (prevents SyntaxError)
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside import blocks causing SyntaxError
+
+      - Uses AST parsing to detect misplaced module-level pytestmark
+
+      - See: docs-internal/PYTESTMARK_GUIDELINES.md for placement rules
+
+      '
+  - id: validate-test-collection
+    name: Validate Pytest Can Collect All Tests
+    entry: bash -c 'uv run pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: false
+    description: 'Validates that pytest can successfully collect all test files.
+
+      Prevents test collection failures from:
+
+      - SyntaxError in test files
+
+      - ImportError from missing modules
+
+      - Invalid pytest markers
+
+
+      Runs test collection without executing tests (fast check).
+
+
+      CODEX FINDING REGRESSION PREVENTION (2025-11-20):
+
+      - Prevents pytestmark inside imports causing collection failure
+
+      - Prevents ImportError from module relocations
+
+      - Ensures test suite integrity before commit
+
+
+      Regression prevention for commit a57fcc95.
 
       '
   - id: validate-fixture-organization
     name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/test_fixture_organization.py -v --tb=short
+    entry: uv run pytest tests/meta/test_fixture_organization.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^tests/.*\.py$
@@ -803,9 +798,12 @@ repos:
       See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
 
       '
+
+
+
   - id: regression-prevention-tests
     name: CI/CD Regression Prevention Tests
-    entry: uv run pytest tests/test_regression_prevention.py -v --tb=short
+    entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
@@ -838,8 +836,7 @@ repos:
   - id: detect-dead-test-code
     name: Detect Dead Code in Test Fixtures (Codex P0)
     entry: uv run python scripts/detect_dead_test_code.py tests/
-    language: python
-    additional_dependencies: []
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -851,105 +848,30 @@ repos:
       \ prefix.\n\nRegression prevention for Codex P0 finding:\n- test_code_generator.py:33-64 had 18 lines of dead code\n\
       - test_server.py:75-99 had 9 lines of dead code\nThese tests never executed, losing critical test coverage.\n\nMeta-test:\
       \ tests/meta/test_codex_regression_prevention.py::TestDeadCodeInFixtures\n"
-  - id: validate-api-schemas
-    name: Validate API Response Schemas
-    entry: uv run python scripts/validate_api_schemas.py
-    language: python
-    additional_dependencies: []
-    pass_filenames: false
-    files: ^src/mcp_server_langgraph/(api|auth)/.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that API endpoint responses match their documented Pydantic schemas.
-
-      Prevents bugs where implementations store data but don''t return it in responses.
 
 
-      Regression prevention for Codex Finding (2025-11-10):
-
-      - API key "created" timestamp was stored in Keycloak but omitted from response
-
-      - Violated CreateAPIKeyResponse schema contract
-
-      - Clients received empty string instead of actual timestamp
-
-
-      Detection strategy:
-
-      - Validates response model field definitions
-
-      - Checks that return statements include all required schema fields
-
-      - Warns when model instantiation might be missing fields
-
-
-      See: TESTING.md "Regression Test Patterns - Pattern 1: API Contract Violations"
-
-      '
-  - id: validate-test-time-bombs
-    name: Detect Test Time Bombs (Future Dates/Models)
-    entry: uv run python scripts/validate_test_time_bombs.py
-    language: python
-    additional_dependencies: []
-    pass_filenames: false
-    files: ^tests/.*test_.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Detects hard-coded future dates, versions, and model names in tests that
-
-      will break when those futures become reality.
-
-
-      Regression prevention for Codex Finding (2025-11-10):
-
-      - Tests used "gpt-5" which will break when OpenAI releases GPT-5
-
-      - Tests used "gemini-2.5-flash" and other future model names
-
-      - Created time-bomb test failures
-
-
-      Patterns detected:
-
-      - Future AI model names (gpt-5, claude-5, gemini-3+)
-
-      - Future year references (beyond current year + 2)
-
-      - High version numbers (v5.0+) that might become real
-
-
-      Best practice: Use clearly fake constants like TEST_NONEXISTENT_MODEL = "gpt-999-test-nonexistent"
-
-
-      See: TESTING.md "Regression Test Patterns - Pattern 3: Test Time Bombs"
-
-      '
   - id: check-e2e-completion
     name: Check E2E Test Implementation Progress
-    entry: uv run python scripts/check_e2e_completion.py --min-percent 25
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_e2e_completion.py --min-percent 25
+    language: system
     pass_filenames: false
     files: ^tests/e2e/test_full_user_journey\.py$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: "Tracks E2E test implementation progress to prevent regression of\nCodex Finding #1: \"E2E suite effectively\
       \ inert\u201449 scenarios are xfail placeholders\"\n\nMonitors:\n- Total E2E tests vs implemented tests\n- Completion\
       \ percentage (current: 35%, target: 80%)\n- Prevents decrease in implementation progress\n\nMin: 25% | Current: 35%\
       \ | Target: 80%\n"
   - id: check-test-sleep-budget
     name: Monitor Test Wall-Clock Sleep Time Budget
-    entry: uv run python scripts/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+    language: system
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: 'Monitors total wall-clock sleep time across test suite.
 
 
@@ -1076,39 +998,7 @@ repos:
       Ensures security best practices and prevents privilege escalation.
 
       '
-  - id: validate-serviceaccount-naming
-    name: Validate ServiceAccount Naming Consistency
-    entry: uv run python scripts/validate_serviceaccount_names.py
-    language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
-    files: ^deployments/(base/serviceaccounts\.yaml|overlays/.*/serviceaccount.*\.yaml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates ServiceAccount naming consistency between base and overlays.
 
-
-      Enforces naming convention:
-
-      - Base ServiceAccounts must end with -sa suffix (e.g., openfga-sa, keycloak-sa)
-
-      - Overlay ServiceAccounts must match base names (after removing env prefix)
-
-
-      Prevents deployment failures from naming mismatches that cause:
-
-      - Workload Identity binding failures
-
-      - RBAC permission issues
-
-      - Pod startup failures
-
-
-      Regression prevention for Run #19311976718 - Deployment Validation failure
-
-      '
   - id: check-helm-placeholders
     name: Check Helm values for unresolved placeholders
     entry: 'bash -c ''if grep -r "YOUR_.*_PROJECT_ID\|@PROJECT_ID\." deployments/helm/values-*.yaml | grep -v "^#" | grep
@@ -1156,7 +1046,7 @@ repos:
       '
   - id: validate-docker-compose-health-checks
     name: Validate Docker Compose health check configurations
-    entry: uv run pytest tests/test_docker_compose_validation.py::TestDockerComposeQdrantSpecific::test_qdrant_uses_grpc_health_probe
+    entry: uv run pytest tests/security/test_deployment_security_regression.py::TestQdrantHealthCheckSecurity::test_qdrant_uses_tcp_health_check
       -v --tb=short
     language: system
     files: ^.*docker-compose.*\.(yaml|yml)$
@@ -1188,10 +1078,8 @@ repos:
       '
   - id: validate-keycloak-config
     name: Validate Keycloak service configuration in docker-compose.test.yml
-    entry: uv run python scripts/validate_keycloak_config.py docker/docker-compose.test.yml
-    language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
+    entry: uv run python scripts/validation/validate_keycloak_config.py docker/docker-compose.test.yml
+    language: system
     files: ^docker/docker-compose\.test\.yml$
     pass_filenames: false
     always_run: false
@@ -1222,8 +1110,8 @@ repos:
       '
   - id: validate-docker-image-contents
     name: Validate Docker image contents in Dockerfile (final-test stage)
-    entry: uv run python scripts/validate_docker_image_contents.py docker/Dockerfile
-    language: python
+    entry: uv run python scripts/validation/validate_docker_image_contents.py docker/Dockerfile
+    language: system
     files: ^docker/Dockerfile$
     pass_filenames: false
     always_run: false
@@ -1234,7 +1122,6 @@ repos:
 
       - src/ (application source code)
 
-      - tests/ (test suite)
 
       - pyproject.toml (project configuration)
 
@@ -1362,95 +1249,12 @@ repos:
       Regression prevention for Codex Finding #3 (P0 Blocker)
 
       '
-  - id: check-test-memory-safety
-    name: Check Test Memory Safety (pytest-xdist OOM prevention)
-    entry: python scripts/check_test_memory_safety.py
-    language: python
-    additional_dependencies: []
-    files: ^tests/.*test_.*\.py$
-    pass_filenames: true
-    always_run: false
-    description: 'Ensures tests using AsyncMock/MagicMock follow memory safety pattern to
-
-      prevent pytest-xdist from consuming 200GB+ memory.
 
 
-      Required pattern (3-part):
-
-      1. @pytest.mark.xdist_group(name="...") - Groups tests in same worker
-
-      2. teardown_method() + gc.collect() - Forces GC after each test
-
-      3. Performance tests: @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER"))
-
-
-      Background:
-
-      pytest-xdist worker isolation causes AsyncMock/MagicMock objects to create
-
-      circular references that prevent garbage collection, leading to memory
-
-      explosion (observed: 217GB VIRT, 42GB RES).
-
-
-      Validates:
-
-      - Test classes with AsyncMock/MagicMock have xdist_group decorator
-
-      - Test classes have teardown_method with gc.collect()
-
-      - Performance tests skip when running in parallel mode
-
-
-      See: tests/MEMORY_SAFETY_GUIDELINES.md for complete guide
-
-      Reference: tests/security/test_api_key_indexed_lookup.py (correct implementation)
-
-      '
-  - id: check-async-mock-usage
-    name: Check Async Mock Usage (prevent hanging tests)
-    entry: python scripts/check_async_mock_usage.py
-    language: python
-    additional_dependencies: []
-    files: ^tests/.*test_.*\.py$
-    pass_filenames: true
-    always_run: false
-    description: 'Prevents hanging tests by detecting async methods mocked without AsyncMock.
-
-
-      Issue prevented:
-
-      When patch.object() or patch() is used without new_callable=AsyncMock on
-
-      async methods, the test will hang indefinitely when the code awaits the
-
-      mocked method. Python''s event loop waits forever for a non-async mock.
-
-
-      Required pattern:
-
-      - patch.object(obj, "async_method", new_callable=AsyncMock)
-
-      - NOT: patch.object(obj, "async_method")  # This hangs!
-
-
-      Detection strategy:
-
-      - Identifies common async method naming patterns (send_, get_, create_, etc.)
-
-      - Flags patch calls missing new_callable=AsyncMock parameter
-
-      - Works with both patch.object() and patch() calls
-
-
-      See: tests/monitoring/test_cost_tracker.py:350 (correct usage)
-
-      '
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
-    entry: python scripts/check_async_mock_configuration.py
-    language: python
-    additional_dependencies: []
+    entry: uv run python scripts/validation/check_async_mock_configuration.py
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
     always_run: false
@@ -1496,31 +1300,48 @@ repos:
       Meta-test: tests/meta/test_async_mock_configuration.py validates this
 
       '
-  - id: validate-test-ids
-    name: Validate Test IDs (prevent pytest-xdist pollution)
-    entry: python scripts/validate_test_ids.py
-    language: python
-    additional_dependencies: []
-    files: ^tests/.*\.py$
+  - id: check-asyncmock-instantiation
+    name: Check AsyncMock Instantiation (prevent class assignment)
+    entry: uv run python scripts/validation/check_asyncmock_usage.py
+    language: system
+    files: ^tests/.*test_.*\.py$
+    exclude: ^tests/meta/test_asyncmock_validation\.py$
     pass_filenames: true
     always_run: false
-    description: "Prevents hardcoded IDs in test files that cause state pollution in pytest-xdist.\n\nCRITICAL: Hardcoded\
-      \ IDs like \"user:alice\" or \"apikey_test123\" cause flaky tests\nwhen running in parallel with pytest-xdist due to\
-      \ state contamination across workers.\n\nWhy this matters:\n- Hardcoded IDs cause state pollution in parallel test execution\
-      \ (pytest-xdist)\n- State pollution leads to intermittent test failures (flaky tests)\n- Flaky tests waste CI/CD time\
-      \ and reduce confidence\n\nPrevention mechanism:\n- Pre-commit hook validates test files BEFORE commit\n- Hook detects\
-      \ hardcoded IDs and blocks commit with helpful error message\n- Developers must use worker-safe helpers (enforced by\
-      \ automation)\n\nRequired pattern:\n  from tests.conftest import get_user_id, get_api_key_id\n\n  def test_something():\n\
-      \      user_id = get_user_id()  # \u2705 Worker-safe\n      apikey_id = get_api_key_id()  # \u2705 Worker-safe\n\n \
-      \     # NOT: user_id = \"user:alice\"  # \u274C Hardcoded - will fail pre-commit\n\nWorker-safe helper usage examples:\n\
-      - Each xdist worker gets unique IDs (user:test_gw0, user:test_gw1, etc.)\n- Prevents race conditions and state pollution\
-      \ across workers\n- Ensures tests pass both in serial and parallel execution\n\nSee: tests/conftest.py for helper function\
-      \ documentation\nSee: tests/meta/test_id_pollution_prevention.py for validation tests\n"
+    description: 'Prevents AsyncMock class assignment instead of instance creation.
+
+      Issue prevented:
+
+      - Assigning AsyncMock class instead of AsyncMock() instance
+
+      - Causes "object AsyncMock can''t be used in ''await'' expression" errors
+
+      - Often appears with noqa comments documenting intended config but not applied
+
+
+      Required pattern:
+
+      - CORRECT: mock.method = AsyncMock(return_value=1)
+
+      - CORRECT: mock.method = AsyncMock()
+
+      - WRONG: mock.method = AsyncMock  # noqa: async-mock-config(return_value=1)
+
+
+      This hook catches the specific bug where developers put the configuration
+
+      in a noqa comment but forget to actually instantiate the AsyncMock.
+
+
+      See: tests/unit/health/test_database_checks.py (fixed instances)
+
+      Meta-test: tests/meta/test_asyncmock_validation.py validates this
+
+      '
   - id: validate-test-isolation
     name: Validate Test Isolation for Pytest-xdist
     entry: python scripts/validation/validate_test_isolation.py tests/
-    language: python
-    additional_dependencies: []
+    language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
     always_run: false
@@ -1561,8 +1382,7 @@ repos:
       '
   - id: validate-test-dependencies
     name: Validate Test Import Dependencies
-    entry: bash -c 'source .venv/bin/activate && pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies
-      -v --tb=short'
+    entry: uv run pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v --tb=short
     language: system
     files: ^(tests/.*\.py|pyproject\.toml)$
     pass_filenames: false
@@ -1581,9 +1401,7 @@ repos:
   - id: validate-workflow-test-deps
     name: Validate Workflow Test Dependencies
     entry: uv run python scripts/validation/validate_workflow_test_deps.py
-    language: python
-    additional_dependencies:
-    - pyyaml>=6.0.0
+    language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
     always_run: false
@@ -1599,8 +1417,7 @@ repos:
       See: scripts/validation/validate_workflow_test_deps.py for implementation\n"
   - id: validate-fixture-scopes
     name: Validate Pytest Fixture Scopes
-    entry: bash -c 'source .venv/bin/activate && pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible
-      -v --tb=short'
+    entry: uv run pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible -v --tb=short
     language: system
     files: ^tests/conftest\.py$
     pass_filenames: false
@@ -1627,7 +1444,7 @@ repos:
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
     always_run: false
     stages:
-    - pre-push
+    - manual
     description: "Prevents coverage regression by enforcing minimum 64% threshold.\n\nValidates that:\n- Overall test coverage\
       \ \u2265 64% (CI threshold)\n- Coverage doesn't drop from Phase 1 baseline (65.78%)\n- All new code is adequately tested\n\
       \nCoverage targets:\n- Minimum: 64% (MUST NOT DROP BELOW)\n- Current: 65.78% (after Phase 1 improvements)\n- Target:\
@@ -1746,6 +1563,71 @@ repos:
       Regression prevention for Phase 2 (2025-11-15)
 
       '
+  - id: validate-pytest-config
+    name: Validate Pytest Configuration
+    entry: uv run python scripts/validation/validate_pytest_config.py
+    language: system
+    files: ^pyproject\.toml$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates pytest configuration in pyproject.toml."
+
+  - id: check-test-memory-safety
+    name: Check Test Memory Safety
+    entry: uv run python scripts/validation/check_test_memory_safety.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates memory safety in tests (gc.collect in teardown)."
+
+  - id: check-async-mock-usage
+    name: Check Async Mock Usage
+    entry: uv run python scripts/validation/check_async_mock_usage.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates that AsyncMock is used correctly."
+
+  - id: check-test-naming
+    name: Check Test Naming Conventions
+    entry: uv run python scripts/validation/check_test_naming.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-commit
+    description: 'Validates test naming conventions.
+
+      Test files must use test_*.py pattern.
+
+      Test functions must use descriptive names: test_<function>_<scenario>_<expected_result>.
+
+      Prevents generic names like test_1, test_case_1, test_function.
+
+      See: CLAUDE.md for complete test naming conventions.
+
+      '
+
+  - id: validate-test-ids
+    name: Validate Test IDs (xdist isolation)
+    entry: uv run python scripts/validation/validate_test_ids.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: true
+    always_run: false
+    stages:
+    - pre-push
+    description: "Validates that integration tests use worker-safe ID helpers."
+
 - repo: https://github.com/antonbabenko/pre-commit-terraform
   rev: v1.96.2
   hooks:

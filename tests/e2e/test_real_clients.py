@@ -50,7 +50,7 @@ class TestRealKeycloakAuth:
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
@@ -79,7 +79,7 @@ class TestRealKeycloakAuth:
         THEN: Should properly close HTTP client on exit
         """
         with patch("tests.e2e.real_clients.httpx.AsyncClient") as mock_client_class:
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_client_class.return_value = mock_instance
 
             async with real_keycloak_auth() as auth:
@@ -114,13 +114,17 @@ class TestRealMCPClient:
             # Arrange
             mock_response = MagicMock()
             mock_response.json.return_value = {
-                "protocol_version": "2024-11-05",
-                "server_info": {"name": "mcp-server-langgraph", "version": "0.1.0"},
-                "capabilities": {"tools": True, "resources": True},
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "serverInfo": {"name": "mcp-server-langgraph", "version": "0.1.0"},
+                    "capabilities": {"tools": {"listChanged": False}, "resources": {"listChanged": False}},
+                },
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
@@ -130,34 +134,41 @@ class TestRealMCPClient:
             result = await client.initialize()
 
             # Assert
-            assert result["protocol_version"] == "2024-11-05"
-            assert result["capabilities"]["tools"] is True
+            assert result["protocolVersion"] == "2024-11-05"
+            assert result["capabilities"]["tools"]["listChanged"] is False
 
             mock_instance.post.assert_called_once()
             call_args = mock_instance.post.call_args
-            assert call_args[0][0] == "/mcp/initialize"
-            assert call_args[1]["json"]["protocol_version"] == "2024-11-05"
+            assert call_args[0][0] == "/message"
+            # Verify the JSON-RPC request includes correct protocolVersion
+            request_json = call_args[1]["json"]
+            assert request_json["method"] == "initialize"
+            assert request_json["params"]["protocolVersion"] == "2024-11-05"
 
     @pytest.mark.asyncio
     async def test_list_tools(self):
         """
         GIVEN: RealMCPClient with initialized session
         WHEN: Calling list_tools
-        THEN: Should GET /mcp/tools/list and return tools array
+        THEN: Should POST JSON-RPC tools/list to /message and return tools array
         """
         with patch("tests.e2e.real_clients.httpx.AsyncClient") as mock_client_class:
             # Arrange
             mock_response = MagicMock()
             mock_response.json.return_value = {
-                "tools": [
-                    {"name": "search", "description": "Search documents"},
-                    {"name": "analyze", "description": "Analyze data"},
-                ]
+                "jsonrpc": "2.0",
+                "id": 2,
+                "result": {
+                    "tools": [
+                        {"name": "search", "description": "Search documents"},
+                        {"name": "analyze", "description": "Analyze data"},
+                    ]
+                },
             }
             mock_response.raise_for_status = MagicMock()
 
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
-            mock_instance.get = AsyncMock(return_value=mock_response)
+            mock_instance = AsyncMock()
+            mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_instance
 
             client = RealMCPClient()
@@ -169,7 +180,10 @@ class TestRealMCPClient:
             assert len(result["tools"]) == 2
             assert result["tools"][0]["name"] == "search"
 
-            mock_instance.get.assert_called_once_with("/mcp/tools/list")
+            mock_instance.post.assert_called_once()
+            call_args = mock_instance.post.call_args
+            assert call_args[0][0] == "/message"
+            assert call_args[1]["json"]["method"] == "tools/list"
 
     @pytest.mark.asyncio
     async def test_context_manager_closes_client(self):
@@ -179,7 +193,7 @@ class TestRealMCPClient:
         THEN: Should properly close HTTP client on exit
         """
         with patch("tests.e2e.real_clients.httpx.AsyncClient") as mock_client_class:
-            mock_instance = AsyncMock(spec=httpx.AsyncClient)
+            mock_instance = AsyncMock()
             mock_client_class.return_value = mock_instance
 
             async with real_mcp_client(access_token="token") as client:

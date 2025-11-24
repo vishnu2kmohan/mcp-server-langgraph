@@ -18,7 +18,7 @@ References:
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any
 
 import asyncpg
 
@@ -40,7 +40,7 @@ class DatabaseInfo:
 
     name: str
     purpose: str
-    required_tables: List[str]
+    required_tables: list[str]
     managed_by: str  # "migrations" or service name (e.g., "openfga", "keycloak")
 
 
@@ -72,7 +72,7 @@ class DatabaseValidator:
         port: int,
         user: str,
         password: str,
-        environment: Optional[Environment] = None,
+        environment: Environment | None = None,
     ):
         """
         Initialize database validator.
@@ -120,7 +120,7 @@ class DatabaseValidator:
         # Default to development
         return Environment.DEV
 
-    def get_expected_databases(self) -> Dict[str, DatabaseInfo]:
+    def get_expected_databases(self) -> dict[str, DatabaseInfo]:
         """
         Get expected databases based on environment.
 
@@ -163,7 +163,7 @@ class DatabaseValidator:
             True if database exists, False otherwise
         """
         result = await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", db_name)
-        return result == 1
+        return bool(result == 1)
 
     async def _check_table_exists(self, conn: asyncpg.Connection, db_name: str, table_name: str) -> bool:
         """
@@ -184,7 +184,7 @@ class DatabaseValidator:
             """,
             table_name,
         )
-        return result == 1
+        return bool(result == 1)
 
     async def validate_database(self, db_info: DatabaseInfo) -> "DatabaseValidationResult":
         """
@@ -196,8 +196,8 @@ class DatabaseValidator:
         Returns:
             Validation result for this database
         """
-        errors = []
-        warnings = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         try:
             # Connect to postgres database to check if target database exists
@@ -328,8 +328,8 @@ class DatabaseValidationResult:
     database_name: str
     exists: bool
     tables_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
     @property
     def is_valid(self) -> bool:
@@ -342,12 +342,12 @@ class ValidationResult:
     """Overall validation result for all databases"""
 
     environment: Environment
-    databases: Dict[str, DatabaseValidationResult]
+    databases: dict[str, DatabaseValidationResult]
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
+    errors: list[str]
+    warnings: list[str]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "environment": self.environment.value,

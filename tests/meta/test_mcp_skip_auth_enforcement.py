@@ -21,9 +21,11 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.xdist_group(name="testmcpskipauthfixtureenforcement")
 class TestMCPSkipAuthFixtureEnforcement:
     """Validate that API test fixtures explicitly set MCP_SKIP_AUTH="false"."""
@@ -69,7 +71,7 @@ class TestMCPSkipAuthFixtureEnforcement:
         """
         assert service_principals_test_file.exists(), f"Test file not found: {service_principals_test_file}"
 
-        with open(service_principals_test_file, "r") as f:
+        with open(service_principals_test_file) as f:
             content = f.read()
 
         # Find the sp_test_client fixture
@@ -126,7 +128,7 @@ class TestMCPSkipAuthFixtureEnforcement:
         """
         assert service_principals_test_file.exists(), f"Test file not found: {service_principals_test_file}"
 
-        with open(service_principals_test_file, "r") as f:
+        with open(service_principals_test_file) as f:
             content = f.read()
 
         # Find the admin_test_client fixture
@@ -168,7 +170,7 @@ class TestMCPSkipAuthFixtureEnforcement:
         """
         assert service_principals_test_file.exists(), f"Test file not found: {service_principals_test_file}"
 
-        with open(service_principals_test_file, "r") as f:
+        with open(service_principals_test_file) as f:
             content = f.read()
 
         # Both fixtures should have cleanup (dependency_overrides.clear())

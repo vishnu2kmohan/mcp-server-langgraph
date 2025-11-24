@@ -6,7 +6,6 @@ Integrates CodeValidator and Sandbox backends (Docker, Kubernetes).
 """
 
 import logging
-from typing import Optional
 
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -32,7 +31,7 @@ class ExecutePythonInput(BaseModel):
     """Input schema for execute_python tool"""
 
     code: str = Field(description="Python code to execute in sandboxed environment")
-    timeout: Optional[int] = Field(default=None, description="Optional timeout in seconds (overrides default)")
+    timeout: int | None = Field(default=None, description="Optional timeout in seconds (overrides default)")
 
 
 def _is_execution_enabled() -> bool:
@@ -99,8 +98,8 @@ def _truncate_output(text: str, max_size: int = MAX_OUTPUT_SIZE) -> str:
     return f"{truncated}\n\n... (output truncated, {len(text)} total characters)"
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
-def execute_python(code: str, timeout: Optional[int] = None) -> str:
+@tool
+def execute_python(code: str, timeout: int | None = None) -> str:
     """
     Execute Python code in a secure sandboxed environment.
 

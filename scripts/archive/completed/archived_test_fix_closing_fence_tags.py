@@ -88,7 +88,7 @@ class TestClosingFenceFixer:
 
         # Should fix both closing fences
         assert len(fixes) == 2
-        assert all("```" == fix[2] for fix in fixes)  # Both fixed to bare ```
+        assert all(fix[2] == "```" for fix in fixes)  # Both fixed to bare ```
 
         # Verify opening fences preserved
         assert "```python\n" in fixed_content
@@ -389,7 +389,7 @@ class TestClosingFenceFixer:
         # Should fix the malformed closing fence
         assert len(fixes) == 1
         assert "```bash" in fixes[0][1]
-        assert "```" == fixes[0][2]
+        assert fixes[0][2] == "```"
 
         # Header should be outside code block
         assert "```\n### Development Setup" in fixed_content

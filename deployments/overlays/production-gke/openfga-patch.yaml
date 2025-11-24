@@ -3,13 +3,10 @@ kind: Deployment
 metadata:
   name: openfga
   annotations:
-    # OpenFGA only exposes /healthz endpoint for both checks
-    # Different timing params provide sufficient differentiation
     kube-score.com/ignore: container-readiness-probe-equal-liveness-probe
 spec:
   template:
     spec:
-      # Pod-level security context
       securityContext:
         runAsNonRoot: true
         runAsUser: 10000
@@ -17,8 +14,6 @@ spec:
         fsGroup: 10000
         seccompProfile:
           type: RuntimeDefault
-
-      # Init containers
       initContainers:
       - name: wait-for-postgres
         imagePullPolicy: Always
@@ -34,7 +29,7 @@ spec:
         securityContext:
           runAsUser: 10000
           runAsGroup: 10000
-
+          readOnlyRootFilesystem: true
       containers:
       - name: openfga
         imagePullPolicy: Always
@@ -50,9 +45,7 @@ spec:
         securityContext:
           runAsUser: 10000
           runAsGroup: 10000
-
-        # Make probes different (readiness more sensitive than liveness)
-        # Base has both at failureThreshold: 3, we make readiness more sensitive
+          readOnlyRootFilesystem: true
         readinessProbe:
           httpGet:
             path: /healthz
@@ -60,13 +53,11 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
-          failureThreshold: 1  # More sensitive - fail faster for readiness
-
+          failureThreshold: 1
         livenessProbe:
-          # Use gRPC health check for liveness (different probe type than HTTP readiness)
           grpc:
             port: 8081
           initialDelaySeconds: 30
-          periodSeconds: 30  # Less frequent
-          timeoutSeconds: 10  # More tolerant
-          failureThreshold: 5  # More tolerant before restart
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5

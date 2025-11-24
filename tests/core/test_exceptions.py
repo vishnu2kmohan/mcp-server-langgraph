@@ -25,44 +25,34 @@ from mcp_server_langgraph.core.exceptions import (  # Configuration errors; Auth
     HIPAAViolationError,
     InputValidationError,
     InsufficientPermissionsError,
-    InternalServerError,
-    InvalidConfigError,
     InvalidCredentialsError,
-    KeycloakAuthError,
     KeycloakError,
-    KeycloakUnavailableError,
     LLMModelNotFoundError,
     LLMProviderError,
     LLMRateLimitError,
     LLMTimeoutError,
     MCPServerException,
     MFARequiredError,
-    MissingConfigError,
     OpenFGAError,
-    OpenFGATimeoutError,
-    OpenFGAUnavailableError,
     PermissionDeniedError,
     QuotaExceededError,
     RateLimitError,
     RateLimitExceededError,
-    RedisConnectionError,
     RedisError,
-    RedisTimeoutError,
     ResilienceError,
     ResourceNotFoundError,
     RetryExhaustedError,
     RetryPolicy,
     SchemaValidationError,
-    SecretNotFoundError,
     SOC2ViolationError,
-    StorageBackendError,
     StorageError,
     TimeoutError,
     TokenExpiredError,
     TokenInvalidError,
-    UnexpectedError,
     ValidationError,
 )
+
+pytestmark = [pytest.mark.unit]
 
 
 @pytest.mark.xdist_group(name="core_exceptions_tests")
@@ -324,19 +314,19 @@ class TestExternalServiceExceptions:
         assert exc.retry_policy == RetryPolicy.NEVER
 
     @pytest.mark.unit
-    def test_openfga_error(self):
+    def test_openfga_error_has_correct_status_code(self):
         """Test OpenFGAError"""
         exc = OpenFGAError()
         assert exc.status_code == 503
 
     @pytest.mark.unit
-    def test_redis_error(self):
+    def test_redis_error_has_correct_status_code(self):
         """Test RedisError"""
         exc = RedisError()
         assert exc.status_code == 503
 
     @pytest.mark.unit
-    def test_keycloak_error(self):
+    def test_keycloak_error_has_correct_status_code(self):
         """Test KeycloakError"""
         exc = KeycloakError()
         assert exc.status_code == 503
@@ -364,7 +354,7 @@ class TestResilienceExceptions:
         assert exc.status_code == 503
 
     @pytest.mark.unit
-    def test_timeout_error(self):
+    def test_timeout_error_with_metadata_includes_timeout_in_message(self):
         """Test TimeoutError"""
         exc = TimeoutError(metadata={"timeout_seconds": 30})
         assert exc.status_code == 504

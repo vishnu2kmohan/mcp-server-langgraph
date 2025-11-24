@@ -7,8 +7,6 @@ systems are properly initialized before the app accepts requests.
 This module prevents the classes of issues found in OpenAI Codex audit from recurring.
 """
 
-from typing import Dict, List
-
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -22,9 +20,9 @@ class HealthCheckResult(BaseModel):
     """Health check result model"""
 
     status: str
-    checks: Dict[str, bool]
-    errors: List[str]
-    warnings: List[str]
+    checks: dict[str, bool]
+    errors: list[str]
+    warnings: list[str]
 
 
 class SystemValidationError(Exception):
@@ -131,31 +129,82 @@ def validate_docker_sandbox_security() -> tuple[bool, str]:
     return True, "Docker sandbox security checks not applicable (runtime validation required)"
 
 
+def validate_database_connectivity() -> tuple[bool, str]:
+    """
+    Validate that PostgreSQL database is accessible.
+
+    Returns:
+        Tuple of (is_healthy, message)
+
+    Related to: PostgreSQL dependency chain validation
+    """
+    import asyncio
+
+    from mcp_server_langgraph.infrastructure.database import check_database_connectivity
+
+    # Parse the postgres URL from settings
+    postgres_url = settings.gdpr_postgres_url
+
+    logger.debug(f"Validating database connectivity to {postgres_url.split('@')[-1]}")
+
+    # Run the async check synchronously
+    try:
+        return asyncio.run(check_database_connectivity(postgres_url, timeout=5.0))
+    except RuntimeError as e:
+        # If we're already in an event loop (shouldn't happen in startup)
+        if "cannot be called from a running event loop" in str(e):
+            return False, "Database validation failed: already in event loop"
+        raise
+
+
+async def validate_database_connectivity_async() -> tuple[bool, str]:
+    """
+    Validate that PostgreSQL database is accessible (async version).
+
+    Returns:
+        Tuple of (is_healthy, message)
+    """
+    from mcp_server_langgraph.infrastructure.database import check_database_connectivity
+
+    # Parse the postgres URL from settings
+    postgres_url = settings.gdpr_postgres_url
+
+    logger.debug(f"Validating database connectivity to {postgres_url.split('@')[-1]}")
+
+    return await check_database_connectivity(postgres_url, timeout=5.0)
+
+
 def run_startup_validation() -> None:
     """
     Run all startup validations and raise SystemValidationError if critical checks fail.
-
-    This function should be called during application startup to ensure all
-    systems are properly initialized before accepting requests.
-
-    Raises:
-        SystemValidationError: If any critical validation fails
-
-    Example:
-        # In app.py or startup event
-        try:
-            run_startup_validation()
-        except SystemValidationError as e:
-            logger.critical(f"Startup validation failed: {e}")
-            raise
+    ...
     """
     checks = {
         "observability": validate_observability_initialized(),
         "session_store": validate_session_store_registered(),
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": validate_database_connectivity(),
     }
+    _process_validation_results(checks)
 
+
+async def run_startup_validation_async() -> None:
+    """
+    Run all startup validations asynchronously.
+    """
+    checks = {
+        "observability": validate_observability_initialized(),
+        "session_store": validate_session_store_registered(),
+        "api_key_cache": validate_api_key_cache_configured(),
+        "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": await validate_database_connectivity_async(),
+    }
+    _process_validation_results(checks)
+
+
+def _process_validation_results(checks: dict[str, tuple[bool, str]]) -> None:
+    """Process validation results and raise error if needed."""
     errors = []
     warnings = []
 
@@ -185,7 +234,7 @@ def run_startup_validation() -> None:
     status_code=status.HTTP_200_OK,
     summary="Health Check",
     description="Check the health status of all critical systems",
-)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+)
 async def health_check() -> HealthCheckResult:
     """
     Health check endpoint that validates all critical systems.
@@ -214,6 +263,7 @@ async def health_check() -> HealthCheckResult:
         "session_store": validate_session_store_registered(),
         "api_key_cache": validate_api_key_cache_configured(),
         "docker_sandbox": validate_docker_sandbox_security(),
+        "database_connectivity": await validate_database_connectivity_async(),
     }
 
     # Convert to bool dict and collect errors/warnings

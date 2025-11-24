@@ -23,7 +23,7 @@ Usage:
 """
 
 import math
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, computed_field, field_validator
 
@@ -103,13 +103,13 @@ class PaginationMetadata(BaseModel):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def next_page(self) -> Optional[int]:
+    def next_page(self) -> int | None:
         """Next page number (None if on last page)"""
         return self.page + 1 if self.has_next else None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def prev_page(self) -> Optional[int]:
+    def prev_page(self) -> int | None:
         """Previous page number (None if on first page)"""
         return self.page - 1 if self.has_prev else None
 
@@ -142,7 +142,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         PaginatedResponse[UserResponse] for users
     """
 
-    data: List[T] = Field(description="Array of items for the current page")
+    data: list[T] = Field(description="Array of items for the current page")
     pagination: PaginationMetadata = Field(description="Pagination metadata for navigation")
 
     model_config = {
@@ -166,7 +166,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     }
 
 
-def create_paginated_response(data: List[T], total: int, page: int, page_size: int) -> PaginatedResponse[T]:
+def create_paginated_response(data: list[T], total: int, page: int, page_size: int) -> PaginatedResponse[T]:
     """
     Helper function to create paginated responses
 

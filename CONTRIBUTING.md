@@ -104,7 +104,7 @@ git checkout -b feature/your-feature-name
 
 ### 2. Make Changes
 
-- Follow code style guidelines (Black, isort)
+- Follow code style guidelines (Ruff linting + formatting, mypy type checking)
 - Add tests for new features (TDD required)
 - Update documentation as needed
 
@@ -140,10 +140,12 @@ This project uses a **two-stage validation strategy** optimized for rapid iterat
 Runs automatically on `git commit` for **changed files only**.
 
 **What runs:**
-- Auto-fixers: black, isort, trailing-whitespace
-- Fast linters: flake8, bandit, shellcheck
+- Auto-fixers: Ruff format + auto-fix, trailing-whitespace
+- Fast linters: Ruff check, bandit, shellcheck
 - Critical safety: memory safety, fixture organization
 - File-specific validators: workflow syntax, MDX frontmatter
+
+**Note**: Legacy tools (black, isort, flake8) replaced by Ruff for 10-100x faster performance
 
 ```bash
 # Test pre-commit speed
@@ -278,8 +280,9 @@ git push --no-verify
 # See specific failures
 pre-commit run --all-files
 
-# Run specific hook
-pre-commit run black --all-files
+# Run specific hook (use ruff-format for formatting, ruff for linting)
+pre-commit run ruff-format --all-files
+pre-commit run ruff --all-files
 ```
 
 **Pre-push failures:**
@@ -447,10 +450,13 @@ docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv
 
 ### Python Style Guide
 
-**Formatters** (enforced by pre-commit):
-- **Black**: Line length 127
-- **isort**: Profile black
-- **flake8**: Max line 127, extends ignore E203,W503
+**Linting & Formatting** (enforced by pre-commit, consolidated to Ruff for 10-100x faster performance):
+- **Ruff**: All-in-one linter + formatter (replaces black, isort, flake8)
+  - Line length: 127
+  - Linting rules: E/F (pycodestyle/pyflakes), I (isort), UP (pyupgrade), B (bugbear)
+  - Formatting: black-compatible
+- **mypy**: Type checking (preserved, Ruff doesn't do type checking)
+- **bandit**: Security scanning (preserved, Ruff doesn't do security analysis)
 
 **Type Checking** (gradually enforced):
 - **mypy**: Gradual strict mode (see pyproject.toml)
@@ -459,28 +465,48 @@ docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv
 ### Running Formatters
 
 ```bash
-# Check formatting
+# Check linting (replaces flake8 + isort checks)
 make lint-check
 
-# Auto-fix formatting
+# Auto-fix linting issues + format code (replaces black + isort)
 make lint-fix
+
+# Format code only (replaces black)
+make lint-format
+
+# Type checking (unchanged)
+make lint-type-check
+
+# Security scanning (unchanged)
+make lint-security
 ```
+
+**Migration Note**: Legacy tools (black, isort, flake8) are deprecated. See [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md) for details.
 
 ### Configuration
 
 All style configuration is in `pyproject.toml`:
 ```toml
-[tool.black]
+[tool.ruff]
 line-length = 127
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-line_length = 127
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]  # pycodestyle, pyflakes, isort, pyupgrade, bugbear
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.mypy]
 python_version = "3.11"
 disallow_untyped_defs = true
 ```
+
+**Legacy configurations** (deprecated, will be removed):
+- `[tool.black]` - Use `ruff format` instead
+- `[tool.isort]` - Use `ruff check --select I` instead
+- `[tool.flake8]` - Use `ruff check` instead
 
 ---
 

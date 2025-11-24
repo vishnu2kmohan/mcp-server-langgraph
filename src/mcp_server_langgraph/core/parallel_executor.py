@@ -7,8 +7,9 @@ Implements Anthropic's parallelization pattern for independent operations.
 import asyncio
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
@@ -105,7 +106,7 @@ class ParallelToolExecutor:
                 level_results = await asyncio.gather(*tasks, return_exceptions=True)
 
                 # Store results
-                for inv, result in zip(level_invocations, level_results):
+                for inv, result in zip(level_invocations, level_results, strict=False):
                     all_results[inv.invocation_id] = result
 
             # Convert to list maintaining original order

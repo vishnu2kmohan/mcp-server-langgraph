@@ -18,7 +18,7 @@ import pytest
 import yaml
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testkeycloakconfigvalidationhook")
@@ -37,7 +37,7 @@ class TestKeycloakConfigValidationHook:
         WHEN: Checking for validate_keycloak_config.py
         THEN: The script should exist and be executable
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validate_keycloak_config.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_keycloak_config.py"
         assert script_path.exists(), f"Hook script not found: {script_path}"
         assert script_path.is_file(), "Hook script must be a file"
 
@@ -77,7 +77,10 @@ class TestKeycloakConfigValidationHook:
         try:
             # Run validation script
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
+                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             assert result.returncode == 0, f"Hook should pass with Keycloak enabled. stderr: {result.stderr}"
@@ -105,7 +108,10 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
+                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when Keycloak service missing"
@@ -137,7 +143,10 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
+                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when health check missing"
@@ -174,7 +183,10 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
+                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             assert result.returncode == 1, "Hook should fail when required env vars missing"
@@ -220,7 +232,10 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validate_keycloak_config.py", str(temp_file)], capture_output=True, text=True, timeout=60
+                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             # Hook should warn or fail about inadequate start_period
@@ -243,7 +258,10 @@ class TestKeycloakConfigValidationHook:
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
         result = subprocess.run(
-            ["python", "scripts/validate_keycloak_config.py", str(compose_file)], capture_output=True, text=True, timeout=60
+            ["python", "scripts/validation/validate_keycloak_config.py", str(compose_file)],
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
 
         assert result.returncode == 0, (

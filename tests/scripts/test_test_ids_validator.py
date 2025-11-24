@@ -14,7 +14,9 @@ from textwrap import dedent
 
 import pytest
 
-from tests.validation_lib import test_ids
+from scripts.validation import validate_ids as test_ids
+
+pytestmark = pytest.mark.meta
 
 
 @pytest.mark.unit
@@ -128,7 +130,7 @@ class TestIDsValidator:
         # Docstrings are allowed
         assert len(violations) == 0
 
-    def test_allows_comments(self, tmp_path: Path) -> None:
+    def test_allows_comments_with_ids_without_violations(self, tmp_path: Path) -> None:
         """Test that comments with IDs are allowed."""
         test_file = tmp_path / "test_comments.py"
         test_file.write_text(

@@ -15,11 +15,9 @@ TDD Approach:
 """
 
 import gc
-import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List
 
 import pytest
 
@@ -257,7 +255,7 @@ class TestDynamoDBBackendSecurity:
         assert (
             'variable "enable_deletion_protection"' in backend_variables_tf
             or 'variable "deletion_protection_enabled"' in backend_variables_tf
-        ), ("Missing deletion protection variable. " "Required to prevent accidental deletion of Terraform state lock table.")
+        ), "Missing deletion protection variable. " "Required to prevent accidental deletion of Terraform state lock table."
 
     def test_deletion_protection_enabled_by_default(self, backend_variables_tf: str):
         """

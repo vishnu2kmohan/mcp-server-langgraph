@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 from jsonschema import Draft7Validator, ValidationError
+from tests.conftest import get_user_id
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -322,7 +325,7 @@ class TestMCPServerContractCompliance:
         with pytest.raises((PermissionError, Exception)):
             # This will fail auth but proves the contract structure works
             await mcp_server._handle_get_conversation(
-                {"thread_id": "test", "user_id": "user:test", "token": "invalid"}, Mock(), "user:test"
+                {"thread_id": "test", "user_id": get_user_id("test"), "token": "invalid"}, Mock(), get_user_id("test")
             )
 
 

@@ -6,7 +6,7 @@ to ensure they run in CI and are properly categorized.
 
 RATIONALE (OpenAI Codex Finding #1):
 - CI runs: pytest -n auto -m "unit and not llm"
-- Tests without @pytest.mark.unit are INVISIBLE to CI
+- Tests without @pytest.mark.meta are INVISIBLE to CI
 - 176 test files (57%) were unmarked, including critical guard-rail tests
 - This meta-test prevents regression by enforcing marker requirements
 
@@ -24,37 +24,38 @@ References:
 import ast
 import gc
 from pathlib import Path
-from typing import Set
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 # Test files that are intentionally exempt from marker requirements
 # Each entry must have a documented reason
-MARKER_EXEMPT_FILES: Set[str] = {
+MARKER_EXEMPT_FILES: set[str] = {
     # Add exempt files here with justification comments
     # Example: "tests/examples/demo.py",  # Educational example, not executed in CI
-    "tests/validation_lib/test_ids.py",  # Validator library imported by scripts (no pytest dependency)
+    "tests/validation_lib/test_ids.py",  # Validation utility module, not a test file
 }
 
 # Critical guard-rail tests that must have both 'unit' AND 'meta' markers
-CRITICAL_GUARD_RAIL_TESTS: Set[str] = {
-    "tests/test_gitignore_validation.py",
-    "tests/test_documentation_integrity.py",
-    "tests/test_workflow_security.py",
-    "tests/test_mdx_validation.py",
-    "tests/test_validate_mintlify_docs.py",
+CRITICAL_GUARD_RAIL_TESTS: set[str] = {
+    "tests/meta/validation/test_gitignore_validation.py",
+    "tests/meta/validation/test_documentation_integrity.py",
+    "tests/meta/ci/test_workflow_security.py",
+    "tests/meta/validation/test_mdx_validation.py",
+    "tests/meta/validation/test_validate_mintlify_docs.py",
 }
 
 # Meta test classes that must have xdist_group markers (OpenAI Codex Finding #5)
 # These classes perform repository-wide operations and need isolation
-META_TEST_CLASSES_REQUIRING_XDIST_GROUP: Set[tuple[str, str]] = {
+META_TEST_CLASSES_REQUIRING_XDIST_GROUP: set[tuple[str, str]] = {
     ("tests/meta/test_slash_commands.py", "TestCommandDocumentation"),
     ("tests/meta/test_claude_settings_schema.py", "TestSettingsLocalExclusion"),
     ("tests/meta/test_migration_checklists.py", "TestTypeSafetyChecklist"),
 }
 
 
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.meta
 @pytest.mark.xdist_group(name="marker_enforcement")
 class TestMarkerEnforcement:
@@ -71,19 +72,19 @@ class TestMarkerEnforcement:
         test_files.extend(tests_dir.rglob("*_test.py"))
         return sorted(set(test_files))
 
-    def _extract_markers_from_file(self, file_path: Path) -> Set[str]:
+    def _extract_markers_from_file(self, file_path: Path) -> set[str]:
         """
         Extract pytest markers from a test file.
 
         Returns set of marker names found in the file via:
         - pytestmark = pytest.mark.unit
         - pytestmark = [pytest.mark.unit, pytest.mark.integration]
-        - @pytest.mark.unit decorators on classes/functions
+        - @pytest.mark.meta decorators on classes/functions
         """
         markers = set()
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 tree = ast.parse(f.read(), filename=str(file_path))
         except SyntaxError:
             # If file has syntax errors, pytest won't collect it anyway
@@ -108,11 +109,11 @@ class TestMarkerEnforcement:
             # Check for decorators on classes and functions
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
                 for decorator in node.decorator_list:
-                    # @pytest.mark.unit
+                    # @pytest.mark.meta
                     if isinstance(decorator, ast.Attribute):
                         if isinstance(decorator.value, ast.Attribute) and decorator.value.attr == "mark":
                             markers.add(decorator.attr)
-                    # @pytest.mark.unit(...)
+                    # @pytest.mark.meta(...)
                     elif isinstance(decorator, ast.Call):
                         if isinstance(decorator.func, ast.Attribute):
                             if isinstance(decorator.func.value, ast.Attribute) and decorator.func.value.attr == "mark":
@@ -135,7 +136,7 @@ class TestMarkerEnforcement:
         """
         test_files = self._get_all_test_files()
         unmarked_files = []
-        required_categories = {"unit", "integration", "e2e"}
+        required_categories = {"unit", "integration", "e2e", "meta"}
 
         for test_file in test_files:
             # Skip exempt files
@@ -157,8 +158,8 @@ class TestMarkerEnforcement:
             "Found {} test files without required markers.\n\n"
             "Files must have at least one marker from: {}\n\n"
             "Unmarked files:\n"
-            + "\n".join("  - {}".format(f) for f in unmarked_files[:20])
-            + ("\n  ... and {} more".format(len(unmarked_files) - 20) if len(unmarked_files) > 20 else "")
+            + "\n".join(f"  - {f}" for f in unmarked_files[:20])
+            + (f"\n  ... and {len(unmarked_files) - 20} more" if len(unmarked_files) > 20 else "")
             + "\n\n"
             "CI filter: pytest -n auto -m 'unit and not llm'\n"
             "Tests without markers are INVISIBLE to CI!\n\n"
@@ -170,7 +171,7 @@ class TestMarkerEnforcement:
 
     def test_critical_guard_rail_tests_have_meta_marker(self):
         """
-        Validates critical guard-rail tests have both 'unit' and 'meta' markers.
+        Validates critical guard-rail tests have 'meta' marker.
 
         Critical guard-rail tests prevent bad code from being committed:
         - gitignore validation
@@ -192,20 +193,15 @@ class TestMarkerEnforcement:
 
             markers = self._extract_markers_from_file(test_file)
 
-            # Must have BOTH unit and meta markers
-            if "unit" not in markers or "meta" not in markers:
-                missing_markers = []
-                if "unit" not in markers:
-                    missing_markers.append("unit")
-                if "meta" not in markers:
-                    missing_markers.append("meta")
-                missing_meta.append(f"{test_file_path} (missing: {', '.join(missing_markers)})")
+            # Must have meta marker
+            if "meta" not in markers:
+                missing_meta.append(f"{test_file_path} (missing: meta)")
 
         assert not missing_meta, (
-            "Critical guard-rail tests must have both 'unit' AND 'meta' markers.\n\n"
-            "Files with missing markers:\n" + "\n".join("  - {}".format(f) for f in missing_meta) + "\n\n"
+            "Critical guard-rail tests must have 'meta' marker.\n\n"
+            "Files with missing markers:\n" + "\n".join(f"  - {f}" for f in missing_meta) + "\n\n"
             "Add markers using:\n"
-            "  pytestmark = [pytest.mark.unit, pytest.mark.meta]\n"
+            "  pytestmark = pytest.mark.meta\n"
         )
 
     def test_meta_test_classes_have_xdist_group_markers(self):
@@ -234,7 +230,7 @@ class TestMarkerEnforcement:
 
             # Parse file and find the class
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read(), filename=str(test_file))
             except SyntaxError:
                 violations.append(f"{test_file_path}::{class_name} (SYNTAX ERROR)")
@@ -270,7 +266,7 @@ class TestMarkerEnforcement:
 
         assert not violations, (
             "Meta test classes must have @pytest.mark.xdist_group marker.\n\n"
-            "Classes missing xdist_group:\n" + "\n".join("  - {}".format(v) for v in violations) + "\n\n"
+            "Classes missing xdist_group:\n" + "\n".join(f"  - {v}" for v in violations) + "\n\n"
             "Add marker using:\n"
             "  @pytest.mark.xdist_group(name='meta_<descriptive_name>')\n"
             "  class TestClassName:\n"

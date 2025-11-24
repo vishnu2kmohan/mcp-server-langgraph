@@ -18,12 +18,11 @@ import gc
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testmakefileprepushparity")
@@ -62,7 +61,7 @@ class TestMakefilePrePushParity:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     @pytest.fixture
@@ -72,18 +71,38 @@ class TestMakefilePrePushParity:
 
         This is the actual validation logic, not the auto-generated hook wrapper.
         """
-        with open(pre_push_script_path, "r") as f:
+        with open(pre_push_script_path) as f:
             return f.read()
 
     @pytest.fixture
     def makefile_validate_target(self, makefile_content: str) -> str:
-        """Extract validate-pre-push target content from Makefile."""
-        # Match from validate-pre-push: to the next target (line starting with non-whitespace)
-        # Targets in Makefile start at column 0 (no indentation)
-        pattern = r"^validate-pre-push:.*?(?=^\S|\Z)"
-        match = re.search(pattern, makefile_content, re.MULTILINE | re.DOTALL)
-        assert match, "Could not find validate-pre-push target in Makefile"
-        return match.group(0)
+        """
+        Extract validate-pre-push sub-targets content from Makefile.
+
+        validate-pre-push is a router that delegates to sub-targets:
+        - validate-pre-push-full (with integration tests)
+        - validate-pre-push-quick (without integration tests)
+
+        This fixture returns the combined content of both sub-targets.
+        """
+        # Extract validate-pre-push-full target
+        full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
+        full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        # Extract validate-pre-push-quick target
+        quick_pattern = r"^validate-pre-push-quick:.*?(?=^\S|\Z)"
+        quick_match = re.search(quick_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
+
+        # Combine both sub-targets
+        combined = ""
+        if full_match:
+            combined += full_match.group(0) + "\n"
+        if quick_match:
+            combined += quick_match.group(0) + "\n"
+
+        return combined
 
     def test_makefile_includes_uv_pip_check(self, makefile_validate_target: str):
         """
@@ -186,6 +205,12 @@ class TestMakefilePrePushParity:
 
         Without -n auto, xdist-specific isolation bugs could pass local validation
         and only be caught in CI.
+
+        Architecture Note (2025-11-23):
+        - Modern approach: xdist enforcement tests run via consolidated test orchestrator
+        - scripts/run_pre_push_tests.py includes xdist enforcement tests and uses -n auto
+        - This provides better integration and single-point test execution
+        - Test validates either explicit pytest command OR orchestrator usage
         """
         # Verify pre-push test orchestrator uses -n auto (baseline)
         # scripts/run_pre_push_tests.py adds -n auto to all pytest invocations
@@ -193,33 +218,48 @@ class TestMakefilePrePushParity:
             '"-n"' in pre_push_content or "-n auto" in pre_push_content
         ), "Pre-push test orchestrator should use '-n auto' for parallel execution as baseline"
 
-        # Verify Makefile has -n auto for xdist enforcement test (the actual test)
-        xdist_enforcement_make_pattern = r"pytest.*test_pytest_xdist_enforcement\.py[^\n]*"
-        make_match = re.search(xdist_enforcement_make_pattern, makefile_validate_target)
-        assert make_match, "Could not find xdist enforcement test in Makefile"
+        # Check if xdist enforcement tests run via orchestrator (modern approach)
+        # OR via explicit pytest command (legacy approach)
+        uses_orchestrator = "run_pre_push_tests.py" in makefile_validate_target
 
-        make_command = make_match.group(0)
-        assert "-n auto" in make_command, (
-            "Makefile xdist enforcement test MUST use '-n auto' for parallel execution\n"
-            "\n"
-            "Why -n auto is required:\n"
-            "  - xdist enforcement tests validate parallel execution behavior\n"
-            "  - Tests must run in parallel to catch isolation bugs\n"
-            "  - Matches how CI runs tests (with -n auto)\n"
-            "  - Matches how pre-commit test orchestrator runs tests\n"
-            "\n"
-            "Impact of omitting -n auto:\n"
-            "  - xdist-specific isolation bugs pass local validation\n"
-            "  - Tests run serially instead of in parallel\n"
-            "  - Different test conditions vs CI\n"
-            "  - Could miss memory leaks from mock accumulation\n"
-            "\n"
-            "Expected Makefile command:\n"
-            "  @OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py ...\n"
-            "                                           ^^^^^^^^ Required!\n"
-            f"\n"
-            f"Found command:\n  {make_command}\n"
-        )
+        if uses_orchestrator:
+            # Modern architecture: orchestrator includes xdist enforcement tests
+            # Verify Makefile mentions xdist enforcement tests in comments
+            assert "xdist enforcement" in makefile_validate_target.lower(), (
+                "Makefile should document that xdist enforcement tests are included\n"
+                "via the pre-push test orchestrator (run_pre_push_tests.py)\n"
+                "\n"
+                "Current validate-pre-push target doesn't mention xdist enforcement.\n"
+                "Add comment like: '# Includes: 19 xdist enforcement tests'"
+            )
+            # Orchestrator uses -n auto by default, no further check needed
+        else:
+            # Legacy architecture: explicit pytest command
+            # Verify Makefile has -n auto for xdist enforcement test
+            xdist_enforcement_make_pattern = r"pytest.*test_pytest_xdist_enforcement\.py[^\n]*"
+            make_match = re.search(xdist_enforcement_make_pattern, makefile_validate_target)
+            assert make_match, (
+                "Could not find xdist enforcement test in Makefile\n"
+                "Expected either:\n"
+                "  1. scripts/run_pre_push_tests.py (consolidated orchestrator) OR\n"
+                "  2. Explicit pytest command: pytest ... test_pytest_xdist_enforcement.py"
+            )
+
+            make_command = make_match.group(0)
+            assert "-n auto" in make_command, (
+                "Makefile xdist enforcement test MUST use '-n auto' for parallel execution\n"
+                "\n"
+                "Why -n auto is required:\n"
+                "  - xdist enforcement tests validate parallel execution behavior\n"
+                "  - Tests must run in parallel to catch isolation bugs\n"
+                "  - Matches how CI runs tests (with -n auto)\n"
+                "\n"
+                "Expected Makefile command:\n"
+                "  @OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py ...\n"
+                "                                           ^^^^^^^^ Required!\n"
+                f"\n"
+                f"Found command:\n  {make_command}\n"
+            )
 
     def test_makefile_phase_2_title_matches_behavior(self, makefile_validate_target: str):
         """
@@ -377,7 +417,7 @@ class TestMakefileEfficiency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_test_targets_do_not_have_redundant_uv_sync(self, makefile_content: str):
@@ -501,7 +541,7 @@ class TestMakefileValidationConsistency:
     @pytest.fixture
     def makefile_content(self, makefile_path: Path) -> str:
         """Read Makefile content."""
-        with open(makefile_path, "r") as f:
+        with open(makefile_path) as f:
             return f.read()
 
     def test_makefile_critical_checks_exit_on_failure(self, makefile_content: str):

@@ -7,7 +7,7 @@ to OpenFGA for fine-grained authorization.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 import jwt
@@ -21,15 +21,15 @@ class KeycloakUser(BaseModel):
 
     id: str = Field(description="Keycloak user ID (UUID)")
     username: str = Field(description="Username")
-    email: Optional[str] = Field(default=None, description="Email address")
-    first_name: Optional[str] = Field(default=None, description="First name")
-    last_name: Optional[str] = Field(default=None, description="Last name")
+    email: str | None = Field(default=None, description="Email address")
+    first_name: str | None = Field(default=None, description="First name")
+    last_name: str | None = Field(default=None, description="Last name")
     enabled: bool = Field(default=True, description="Whether user account is enabled")
     email_verified: bool = Field(default=False, description="Whether email is verified")
-    realm_roles: List[str] = Field(default_factory=list, description="Realm-level roles")
-    client_roles: Dict[str, List[str]] = Field(default_factory=dict, description="Client-specific roles")
-    groups: List[str] = Field(default_factory=list, description="Group memberships")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="Custom attributes")
+    realm_roles: list[str] = Field(default_factory=list, description="Realm-level roles")
+    client_roles: dict[str, list[str]] = Field(default_factory=dict, description="Client-specific roles")
+    groups: list[str] = Field(default_factory=list, description="Group memberships")
+    attributes: dict[str, Any] = Field(default_factory=dict, description="Custom attributes")
 
     @property
     def user_id(self) -> str:
@@ -49,9 +49,9 @@ class KeycloakConfig(BaseModel):
     server_url: str = Field(description="Keycloak server URL (e.g., http://localhost:8180)")
     realm: str = Field(description="Keycloak realm name")
     client_id: str = Field(description="OAuth2/OIDC client ID")
-    client_secret: Optional[str] = Field(default=None, description="OAuth2/OIDC client secret")
-    admin_username: Optional[str] = Field(default=None, description="Admin username for admin API access")
-    admin_password: Optional[str] = Field(default=None, description="Admin password for admin API access")
+    client_secret: str | None = Field(default=None, description="OAuth2/OIDC client secret")
+    admin_username: str | None = Field(default=None, description="Admin username for admin API access")
+    admin_password: str | None = Field(default=None, description="Admin password for admin API access")
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     timeout: int = Field(default=30, description="HTTP request timeout in seconds")
 
@@ -91,11 +91,11 @@ class TokenValidator:
 
     def __init__(self, config: KeycloakConfig) -> None:
         self.config = config
-        self._jwks_cache: Optional[Dict[str, Any]] = None
-        self._jwks_cache_time: Optional[datetime] = None
+        self._jwks_cache: dict[str, Any] | None = None
+        self._jwks_cache_time: datetime | None = None
         self._cache_ttl = timedelta(hours=1)
 
-    async def get_jwks(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_jwks(self, force_refresh: bool = False) -> dict[str, Any]:
         """
         Get JSON Web Key Set from Keycloak
 
@@ -131,7 +131,7 @@ class TokenValidator:
                     metrics.failed_calls.add(1, {"operation": "get_jwks"})
                     raise
 
-    async def verify_token(self, token: str) -> Dict[str, Any]:
+    async def verify_token(self, token: str) -> dict[str, Any]:
         """
         Verify JWT token using Keycloak public keys
 
@@ -239,10 +239,10 @@ class KeycloakClient:
         """
         self.config = config
         self.token_validator = TokenValidator(config)
-        self._admin_token: Optional[str] = None
-        self._admin_token_expiry: Optional[datetime] = None
+        self._admin_token: str | None = None
+        self._admin_token_expiry: datetime | None = None
 
-    async def authenticate_user(self, username: str, password: str) -> Dict[str, Any]:
+    async def authenticate_user(self, username: str, password: str) -> dict[str, Any]:
         """
         Authenticate user using Resource Owner Password Credentials (ROPC) flow
 
@@ -293,7 +293,7 @@ class KeycloakClient:
                     metrics.failed_calls.add(1, {"operation": "authenticate_user"})
                     raise
 
-    async def verify_token(self, token: str) -> Dict[str, Any]:
+    async def verify_token(self, token: str) -> dict[str, Any]:
         """
         Verify JWT token
 
@@ -305,7 +305,7 @@ class KeycloakClient:
         """
         return await self.token_validator.verify_token(token)
 
-    async def refresh_token(self, refresh_token: str) -> Dict[str, Any]:
+    async def refresh_token(self, refresh_token: str) -> dict[str, Any]:
         """
         Refresh access token using refresh token
 
@@ -346,7 +346,7 @@ class KeycloakClient:
                     metrics.failed_calls.add(1, {"operation": "refresh_token"})
                     raise
 
-    async def get_userinfo(self, access_token: str) -> Dict[str, Any]:
+    async def get_userinfo(self, access_token: str) -> dict[str, Any]:
         """
         Get user information from userinfo endpoint
 
@@ -386,6 +386,7 @@ class KeycloakClient:
         # Check if we have a valid cached token
         if self._admin_token and self._admin_token_expiry:
             if datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1):
+                assert self._admin_token is not None  # Guaranteed by condition above
                 return self._admin_token
 
         # Get new admin token
@@ -411,13 +412,14 @@ class KeycloakClient:
                     self._admin_token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
                     logger.info("Admin token obtained")
+                    assert self._admin_token is not None  # Just set on line above
                     return self._admin_token
 
                 except httpx.HTTPError as e:
                     logger.error(f"Failed to get admin token: {e}", exc_info=True)
                     raise
 
-    async def get_user_by_username(self, username: str) -> Optional[KeycloakUser]:
+    async def get_user_by_username(self, username: str) -> KeycloakUser | None:
         """
         Get user by username using admin API
 
@@ -477,7 +479,7 @@ class KeycloakClient:
                 logger.error(f"Failed to get user: {e}", exc_info=True)
                 return None
 
-    async def _get_user_realm_roles(self, user_id: str, admin_token: str) -> List[str]:
+    async def _get_user_realm_roles(self, user_id: str, admin_token: str) -> list[str]:
         """Get user's realm-level roles"""
         try:
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
@@ -493,7 +495,7 @@ class KeycloakClient:
             logger.warning(f"Failed to get realm roles for user {user_id}")
             return []
 
-    async def _get_user_client_roles(self, user_id: str, admin_token: str) -> Dict[str, List[str]]:
+    async def _get_user_client_roles(self, user_id: str, admin_token: str) -> dict[str, list[str]]:
         """Get user's client-level roles"""
         try:
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
@@ -524,7 +526,7 @@ class KeycloakClient:
             logger.warning(f"Failed to get client roles for user {user_id}")
             return {}
 
-    async def _get_user_groups(self, user_id: str, admin_token: str) -> List[str]:
+    async def _get_user_groups(self, user_id: str, admin_token: str) -> list[str]:
         """Get user's group memberships"""
         try:
             async with httpx.AsyncClient(verify=self.config.verify_ssl, timeout=self.config.timeout) as client:
@@ -544,7 +546,7 @@ class KeycloakClient:
     # Admin API Methods (stubs for new functionality)
     # These methods interact with Keycloak Admin API for user/client management
 
-    async def create_client(self, client_config: Dict[str, Any]) -> str:
+    async def create_client(self, client_config: dict[str, Any]) -> str:
         """
         Create Keycloak client via Admin API.
 
@@ -611,7 +613,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "create_client"})
                 raise
 
-    async def create_user(self, user_config: Dict[str, Any]) -> str:
+    async def create_user(self, user_config: dict[str, Any]) -> str:
         """
         Create Keycloak user via Admin API.
 
@@ -674,7 +676,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "create_user"})
                 raise
 
-    async def update_user(self, user_id: str, user_config: Dict[str, Any]) -> None:
+    async def update_user(self, user_id: str, user_config: dict[str, Any]) -> None:
         """
         Update Keycloak user via Admin API.
 
@@ -769,7 +771,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "set_user_password"})
                 raise
 
-    async def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_user(self, user_id: str) -> dict[str, Any] | None:
         """
         Get user by ID via Admin API.
 
@@ -820,7 +822,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "get_user"})
                 raise
 
-    async def get_user_attributes(self, user_id: str) -> Dict[str, Any]:
+    async def get_user_attributes(self, user_id: str) -> dict[str, Any]:
         """
         Get user custom attributes via Admin API.
 
@@ -867,7 +869,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "get_user_attributes"})
                 raise
 
-    async def update_user_attributes(self, user_id: str, attributes: Dict[str, Any]) -> None:
+    async def update_user_attributes(self, user_id: str, attributes: dict[str, Any]) -> None:
         """
         Update user custom attributes via Admin API.
 
@@ -921,7 +923,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "update_user_attributes"})
                 raise
 
-    async def update_client_attributes(self, client_id: str, attributes: Dict[str, Any]) -> None:
+    async def update_client_attributes(self, client_id: str, attributes: dict[str, Any]) -> None:
         """
         Update client attributes via Admin API.
 
@@ -1019,7 +1021,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "update_client_secret"})
                 raise
 
-    async def get_clients(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def get_clients(self, query: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
         Get clients via Admin API.
 
@@ -1066,7 +1068,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "get_clients"})
                 raise
 
-    async def get_client(self, client_id: str) -> Optional[Dict[str, Any]]:
+    async def get_client(self, client_id: str) -> dict[str, Any] | None:
         """
         Get client by ID via Admin API.
 
@@ -1195,9 +1197,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "delete_user"})
                 raise
 
-    async def search_users(
-        self, query: Optional[Dict[str, Any]] = None, first: int = 0, max: int = 100
-    ) -> List[Dict[str, Any]]:
+    async def search_users(self, query: dict[str, Any] | None = None, first: int = 0, max: int = 100) -> list[dict[str, Any]]:
         """
         Search users via Admin API with pagination.
 
@@ -1225,7 +1225,7 @@ class KeycloakClient:
                     url = f"{self.config.admin_url}/users"
 
                     # Build query parameters
-                    params: Dict[str, Any] = {"first": first, "max": max}
+                    params: dict[str, Any] = {"first": first, "max": max}
                     if query:
                         params.update(query)
 
@@ -1252,7 +1252,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "search_users"})
                 raise
 
-    async def get_users(self, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def get_users(self, query: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
         Get all users via Admin API with optional filtering.
 
@@ -1298,7 +1298,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "get_users"})
                 raise
 
-    async def create_group(self, group_config: Dict[str, Any]) -> str:
+    async def create_group(self, group_config: dict[str, Any]) -> str:
         """
         Create group via Admin API.
 
@@ -1347,7 +1347,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "create_group"})
                 raise
 
-    async def get_group(self, group_id: str) -> Optional[Dict[str, Any]]:
+    async def get_group(self, group_id: str) -> dict[str, Any] | None:
         """
         Get group by ID via Admin API.
 
@@ -1398,7 +1398,7 @@ class KeycloakClient:
                 metrics.failed_calls.add(1, {"operation": "get_group"})
                 raise
 
-    async def get_group_members(self, group_id: str) -> List[Dict[str, Any]]:
+    async def get_group_members(self, group_id: str) -> list[dict[str, Any]]:
         """
         Get group members via Admin API.
 
@@ -1490,8 +1490,8 @@ class KeycloakClient:
         self,
         user_id: str,
         requested_token_type: str = "urn:ietf:params:oauth:token-type:access_token",
-        audience: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        audience: str | None = None,
+    ) -> dict[str, Any]:
         """
         Issue JWT token for user using OAuth 2.0 Token Exchange (RFC 8693).
 
@@ -1565,7 +1565,7 @@ class KeycloakClient:
 
 
 async def sync_user_to_openfga(
-    keycloak_user: KeycloakUser, openfga_client: Any, role_mapper: Optional[Any] = None, use_legacy_mapping: bool = False
+    keycloak_user: KeycloakUser, openfga_client: Any, role_mapper: Any | None = None, use_legacy_mapping: bool = False
 ) -> None:
     """
     Synchronize Keycloak user roles/groups to OpenFGA tuples

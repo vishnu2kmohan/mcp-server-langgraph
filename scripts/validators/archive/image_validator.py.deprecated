@@ -20,7 +20,6 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 
 class ImageError(Exception):
@@ -53,9 +52,9 @@ class ValidationResult:
     """Result of image validation."""
 
     is_valid: bool
-    errors: List[ImageError] = field(default_factory=list)
-    warnings: List[Exception] = field(default_factory=list)
-    stats: Dict[str, int] = field(default_factory=dict)
+    errors: list[ImageError] = field(default_factory=list)
+    warnings: list[Exception] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -100,8 +99,8 @@ class ImageValidator:
         Returns:
             ValidationResult with errors and statistics
         """
-        errors: List[ImageError] = []
-        stats: Dict[str, int] = {
+        errors: list[ImageError] = []
+        stats: dict[str, int] = {
             "total_files": 0,
             "total_images": 0,
             "broken_images": 0,
@@ -127,7 +126,7 @@ class ImageValidator:
             stats=stats,
         )
 
-    def _find_mdx_files(self) -> Set[Path]:
+    def _find_mdx_files(self) -> set[Path]:
         """Find all MDX files, excluding specified directories."""
         files = set()
 
@@ -140,7 +139,7 @@ class ImageValidator:
 
         return files
 
-    def _validate_file(self, file_path: Path, relative_path: str, stats: Dict[str, int]) -> List[ImageError]:
+    def _validate_file(self, file_path: Path, relative_path: str, stats: dict[str, int]) -> list[ImageError]:
         """Validate image references in a single file."""
         errors = []
 
@@ -165,7 +164,7 @@ class ImageValidator:
 
         return errors
 
-    def _extract_images(self, content: str) -> List[str]:
+    def _extract_images(self, content: str) -> list[str]:
         """Extract all image references from content."""
         images = []
 

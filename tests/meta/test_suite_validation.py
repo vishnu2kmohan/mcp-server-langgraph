@@ -18,11 +18,11 @@ References:
 
 import ast
 import gc
-import os
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import pytest
+
+pytestmark = pytest.mark.meta
 
 
 @pytest.mark.xdist_group(name="testmarkerconsistency")
@@ -33,7 +33,7 @@ class TestMarkerConsistency:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_no_conflicting_unit_and_integration_markers(self):
         """
         TDD REGRESSION TEST: Ensure no test class has both unit and integration markers
@@ -57,7 +57,7 @@ class TestMarkerConsistency:
             error_msg += "\nTests should be categorized as either 'unit', 'integration', or 'e2e', not multiple."
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_unimplemented_features_use_xfail_strict(self):
         """
         TDD REGRESSION TEST: Ensure unimplemented features use xfail(strict=True) not skip
@@ -83,7 +83,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_integration_tests_properly_marked(self):
         """
         TDD REGRESSION TEST: Ensure integration tests are consistently marked
@@ -110,7 +110,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_integration_tests_use_conditional_skips_not_hard_skips(self):
         """
         TDD REGRESSION TEST: Integration tests should use conditional skips, not hard skips
@@ -146,7 +146,7 @@ class TestMarkerConsistency:
             )
             pytest.fail(error_msg)
 
-    def _find_unmarked_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+    def _find_unmarked_integration_tests(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests that use infrastructure but lack @pytest.mark.integration
 
@@ -178,7 +178,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -256,7 +256,7 @@ class TestMarkerConsistency:
 
         return ""
 
-    def _find_conflicting_markers(self, marker_pairs: List[Tuple[str, str]]) -> List[Tuple[str, str, Set[str]]]:
+    def _find_conflicting_markers(self, marker_pairs: list[tuple[str, str]]) -> list[tuple[str, str, set[str]]]:
         """
         Find test classes with conflicting pytest markers
 
@@ -275,7 +275,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     tree = ast.parse(f.read(), filename=str(test_file))
 
                 for node in ast.walk(tree):
@@ -295,7 +295,7 @@ class TestMarkerConsistency:
 
         return conflicts
 
-    def _extract_markers_from_class(self, class_node: ast.ClassDef) -> Set[str]:
+    def _extract_markers_from_class(self, class_node: ast.ClassDef) -> set[str]:
         """
         Extract pytest marker names from a test class
 
@@ -319,7 +319,7 @@ class TestMarkerConsistency:
         Extract marker name from a decorator node
 
         Handles:
-        - @pytest.mark.unit
+        - @pytest.mark.meta
         - @pytest.mark.integration
         - @pytest.mark.slow
 
@@ -330,7 +330,7 @@ class TestMarkerConsistency:
             Marker name or empty string if not a pytest marker
         """
         if isinstance(decorator, ast.Attribute):
-            # @pytest.mark.unit
+            # @pytest.mark.meta
             if (
                 isinstance(decorator.value, ast.Attribute)
                 and isinstance(decorator.value.value, ast.Name)
@@ -340,7 +340,7 @@ class TestMarkerConsistency:
                 return decorator.attr
         return ""
 
-    def _find_hard_skips_in_integration_tests(self) -> List[Tuple[str, str, int, str]]:
+    def _find_hard_skips_in_integration_tests(self) -> list[tuple[str, str, int, str]]:
         """
         Find integration tests using hard @pytest.mark.skip instead of conditional skips
 
@@ -355,7 +355,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -395,7 +395,7 @@ class TestMarkerConsistency:
 
         return violations
 
-    def _find_skip_markers_for_unimplemented_features(self) -> List[Tuple[str, str, int, str]]:
+    def _find_skip_markers_for_unimplemented_features(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests using @pytest.mark.skip for unimplemented features
 
@@ -420,7 +420,7 @@ class TestMarkerConsistency:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -481,7 +481,7 @@ class TestImportGuards:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_optional_imports_use_guards(self):
         """
         TDD REGRESSION TEST: Ensure optional imports use pytest.importorskip or try/except
@@ -507,7 +507,7 @@ class TestImportGuards:
 
             # Read file content
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     lines = content.split("\n")
 
@@ -560,7 +560,7 @@ class TestInfrastructureFixtures:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_infrastructure_fixtures_use_skip_not_fail(self):
         """
         TDD REGRESSION TEST: Ensure infrastructure fixtures use pytest.skip, not pytest.fail
@@ -571,7 +571,7 @@ class TestInfrastructureFixtures:
         """
         conftest_path = Path(__file__).parent.parent / "conftest.py"
 
-        with open(conftest_path, "r", encoding="utf-8") as f:
+        with open(conftest_path, encoding="utf-8") as f:
             content = f.read()
 
         # Check that pytest.fail is NOT used in infrastructure health checks
@@ -604,7 +604,7 @@ class TestCLIToolGuards:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_cli_tool_tests_have_skipif_guards(self):
         """
         TDD REGRESSION TEST: Ensure tests using CLI tools have proper skipif guards.
@@ -641,7 +641,7 @@ class TestCLIToolGuards:
             )
             pytest.fail(error_msg)
 
-    def _find_unguarded_cli_tool_usage(self) -> List[Tuple[str, str, int, str]]:
+    def _find_unguarded_cli_tool_usage(self) -> list[tuple[str, str, int, str]]:
         """
         Find tests that invoke CLI tools without proper guards.
 
@@ -663,7 +663,7 @@ class TestCLIToolGuards:
                 continue
 
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
+                with open(test_file, encoding="utf-8") as f:
                     content = f.read()
                     tree = ast.parse(content, filename=str(test_file))
 
@@ -846,7 +846,7 @@ class TestCLIToolGuards:
         Extract marker name from a decorator node.
 
         Handles:
-        - @pytest.mark.unit
+        - @pytest.mark.meta
         - @pytest.mark.integration
         - @pytest.mark.requires_kubectl
         - @pytest.mark.requires_kustomize
@@ -858,7 +858,7 @@ class TestCLIToolGuards:
             Marker name or empty string if not a pytest marker
         """
         if isinstance(decorator, ast.Attribute):
-            # @pytest.mark.unit
+            # @pytest.mark.meta
             if (
                 isinstance(decorator.value, ast.Attribute)
                 and isinstance(decorator.value.value, ast.Name)

@@ -8,8 +8,6 @@ Supports multiple authentication backends:
 - Custom providers (extensibility)
 """
 
-from typing import Optional
-
 from mcp_server_langgraph.auth.keycloak import KeycloakConfig
 from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -19,7 +17,7 @@ from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.observability.telemetry import logger
 
 
-def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGAClient] = None) -> UserProvider:
+def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | None = None) -> UserProvider:
     """
     Create UserProvider based on settings configuration (production use)
 
@@ -112,7 +110,7 @@ def create_user_provider(settings: Settings, openfga_client: Optional[OpenFGACli
         )
 
 
-def create_session_store(settings: Settings) -> Optional[SessionStore]:
+def create_session_store(settings: Settings) -> SessionStore | None:
     """
     Create SessionStore based on settings configuration
 
@@ -162,7 +160,7 @@ def create_session_store(settings: Settings) -> Optional[SessionStore]:
         raise ValueError(f"Unknown session backend: '{backend}'. " f"Supported backends: 'memory', 'redis'.")
 
 
-def create_auth_middleware(settings: Settings, openfga_client: Optional[OpenFGAClient] = None) -> AuthMiddleware:
+def create_auth_middleware(settings: Settings, openfga_client: OpenFGAClient | None = None) -> AuthMiddleware:
     """
     Create AuthMiddleware with configured providers
 

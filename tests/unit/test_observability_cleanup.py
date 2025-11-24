@@ -10,6 +10,8 @@ import pytest
 
 from mcp_server_langgraph.observability.telemetry import init_observability, is_initialized, shutdown_observability
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="unit_observability_cleanup_tests")
@@ -59,7 +61,7 @@ class TestObservabilityShutdown:
         # THEN: Should not raise error
         assert True  # If we got here, no exception was raised
 
-    def test_shutdown_idempotent(self):
+    def test_shutdown_idempotent_with_multiple_calls_completes_without_error(self):
         """
         Test that shutdown_observability can be called multiple times safely.
 

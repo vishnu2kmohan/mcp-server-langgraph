@@ -28,10 +28,10 @@ import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
-def run_gh_command(args: List[str]) -> str:
+def run_gh_command(args: list[str]) -> str:
     """Run gh CLI command and return output."""
     try:
         result = subprocess.run(["gh"] + args, capture_output=True, text=True, check=True, timeout=30)
@@ -42,7 +42,7 @@ def run_gh_command(args: List[str]) -> str:
         sys.exit(1)
 
 
-def calculate_deployment_frequency(deployments: List[Dict[str, Any]], days: int) -> float:
+def calculate_deployment_frequency(deployments: list[dict[str, Any]], days: int) -> float:
     """
     Calculate deployment frequency (deployments per day).
 
@@ -59,7 +59,7 @@ def calculate_deployment_frequency(deployments: List[Dict[str, Any]], days: int)
     return len(deployments) / days
 
 
-def calculate_lead_time(commits: List[Dict[str, Any]], deployment: Dict[str, Any]) -> float:
+def calculate_lead_time(commits: list[dict[str, Any]], deployment: dict[str, Any]) -> float:
     """
     Calculate lead time from first commit to deployment.
 
@@ -84,7 +84,7 @@ def calculate_lead_time(commits: List[Dict[str, Any]], deployment: Dict[str, Any
     return lead_time_hours
 
 
-def calculate_mttr(incident: Dict[str, Any], recovery_deployment: Dict[str, Any]) -> float:
+def calculate_mttr(incident: dict[str, Any], recovery_deployment: dict[str, Any]) -> float:
     """
     Calculate Mean Time to Recovery from incident to recovery deployment.
 
@@ -106,7 +106,7 @@ def calculate_mttr(incident: Dict[str, Any], recovery_deployment: Dict[str, Any]
     return mttr_hours
 
 
-def calculate_change_failure_rate(deployments: List[Dict[str, Any]]) -> float:
+def calculate_change_failure_rate(deployments: list[dict[str, Any]]) -> float:
     """
     Calculate change failure rate as percentage of failed deployments.
 
@@ -126,7 +126,7 @@ def calculate_change_failure_rate(deployments: List[Dict[str, Any]]) -> float:
     return failure_rate
 
 
-def classify_dora_performance(metrics: Dict[str, float]) -> str:
+def classify_dora_performance(metrics: dict[str, float]) -> str:
     """
     Classify DORA performance based on the four key metrics.
 
@@ -162,16 +162,16 @@ def classify_dora_performance(metrics: Dict[str, float]) -> str:
 class GitHubClient:
     """Mock GitHub client for testing."""
 
-    def get_deployments(self) -> List[Dict[str, Any]]:
+    def get_deployments(self) -> list[dict[str, Any]]:
         """Get deployment data from GitHub API."""
         return []
 
-    def get_commits(self) -> List[Dict[str, Any]]:
+    def get_commits(self) -> list[dict[str, Any]]:
         """Get commit data from GitHub API."""
         return []
 
 
-def collect_deployment_data(repo: str, days: int = 30) -> List[Dict[str, Any]]:
+def collect_deployment_data(repo: str, days: int = 30) -> list[dict[str, Any]]:
     """
     Collect deployment data from GitHub API.
 
@@ -198,7 +198,7 @@ def collect_deployment_data(repo: str, days: int = 30) -> List[Dict[str, Any]]:
     return deployments
 
 
-def collect_commit_data(repo: str, since: str) -> List[Dict[str, Any]]:
+def collect_commit_data(repo: str, since: str) -> list[dict[str, Any]]:
     """
     Collect commit data from GitHub API.
 
@@ -225,7 +225,7 @@ def collect_commit_data(repo: str, since: str) -> List[Dict[str, Any]]:
     return commits
 
 
-def save_metrics(metrics: Dict[str, Any], output_file: Path) -> None:
+def save_metrics(metrics: dict[str, Any], output_file: Path) -> None:
     """
     Save metrics to JSON file (appends to existing history).
 
@@ -250,7 +250,7 @@ def save_metrics(metrics: Dict[str, Any], output_file: Path) -> None:
     output_file.write_text(json.dumps(existing_metrics, indent=2))
 
 
-def load_historical_metrics(metrics_file: Path) -> List[Dict[str, Any]]:
+def load_historical_metrics(metrics_file: Path) -> list[dict[str, Any]]:
     """
     Load historical metrics from JSON file.
 
@@ -272,7 +272,7 @@ def load_historical_metrics(metrics_file: Path) -> List[Dict[str, Any]]:
         return []
 
 
-def generate_markdown_report(metrics: Dict[str, Any]) -> str:
+def generate_markdown_report(metrics: dict[str, Any]) -> str:
     """
     Generate markdown report for DORA metrics.
 
@@ -303,7 +303,7 @@ def generate_markdown_report(metrics: Dict[str, Any]) -> str:
     return report
 
 
-def generate_trend_data(history: List[Dict[str, Any]], metric_key: str) -> List[Dict[str, Any]]:
+def generate_trend_data(history: list[dict[str, Any]], metric_key: str) -> list[dict[str, Any]]:
     """
     Generate trend chart data for a specific metric.
 
@@ -322,7 +322,7 @@ def generate_trend_data(history: List[Dict[str, Any]], metric_key: str) -> List[
     return trend
 
 
-def calculate_deployment_frequency_cli(repo: str, days: int) -> Tuple[float, str]:
+def calculate_deployment_frequency_cli(repo: str, days: int) -> tuple[float, str]:
     """Calculate deployment frequency (deployments per day) from GitHub CLI."""
     cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
 

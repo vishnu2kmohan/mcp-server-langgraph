@@ -2,6 +2,7 @@
 """
 Setup script for OpenFGA authorization model and sample data
 """
+
 import asyncio
 
 from mcp_server_langgraph.auth.openfga import OpenFGAClient, initialize_openfga_store, seed_sample_data

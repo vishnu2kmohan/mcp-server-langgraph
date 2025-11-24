@@ -50,10 +50,10 @@ References:
 """
 
 import gc
-import os
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.regression
 
 
 @pytest.mark.unit

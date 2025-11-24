@@ -31,6 +31,8 @@ import pytest
 from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.llm.pydantic_agent import PydanticAIAgentWrapper
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_pydantic_agent_class():

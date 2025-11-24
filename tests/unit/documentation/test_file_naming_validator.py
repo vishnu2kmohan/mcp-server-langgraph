@@ -23,8 +23,14 @@ from scripts.validators.file_naming_validator import (
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testfilenamingvalidator")
 class TestFileNamingValidator:
     """Test file naming convention validation."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_lowercase_kebab_case_passes(self):
         """Valid kebab-case filenames should pass."""
@@ -39,7 +45,7 @@ class TestFileNamingValidator:
             errors = validate_filename_convention(file_path)
             assert len(errors) == 0, f"{file_path} should be valid"
 
-    def test_uppercase_detected(self):
+    def test_uppercase_detection_with_invalid_filenames_reports_violations(self):
         """UPPERCASE filenames should be detected."""
         invalid_files = [
             Path("docs/development/COMMANDS.mdx"),
@@ -176,12 +182,13 @@ class TestFileNamingValidator:
             assert any(".mdx" in error or "extension" in error.lower() for error in errors)
 
 
-@pytest.mark.xdist_group(name="file_naming_validator")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testvalidatorcli")
 class TestValidatorCLI:
     """Test the CLI interface of the validator."""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
     def test_validator_exit_code_on_errors(self, tmp_path):
@@ -206,15 +213,16 @@ class TestValidatorCLI:
         assert len(errors) == 0
 
 
-@pytest.mark.xdist_group(name="file_naming_validator")
+@pytest.mark.unit
+@pytest.mark.xdist_group(name="testedgecases")
 class TestEdgeCases:
     """Test edge cases and special scenarios."""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers."""
+        """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_empty_filename(self):
+    def test_empty_filename_handling_with_hidden_file_allows_validation(self):
         """Empty filename should be handled gracefully."""
         # Note: .mdx is treated as a hidden file (valid), so we don't validate it
         # This test verifies hidden files starting with . are allowed

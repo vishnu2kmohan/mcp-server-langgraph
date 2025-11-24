@@ -19,7 +19,7 @@ Example:
 """
 
 import ast
-from typing import Any, Dict, List
+from typing import Any
 
 from .ast_parser import PythonCodeParser
 
@@ -35,7 +35,7 @@ class GraphExtractor:
         """Initialize extractor."""
         self.parser = PythonCodeParser()
 
-    def extract_from_code(self, code: str) -> Dict[str, Any]:
+    def extract_from_code(self, code: str) -> dict[str, Any]:
         """
         Extract workflow from Python code string.
 
@@ -70,7 +70,7 @@ class GraphExtractor:
             "metadata": {"source": "imported", "parser_version": "1.0"},
         }
 
-    def extract_from_file(self, file_path: str) -> Dict[str, Any]:
+    def extract_from_file(self, file_path: str) -> dict[str, Any]:
         """
         Extract workflow from Python file.
 
@@ -83,7 +83,7 @@ class GraphExtractor:
         Example:
             >>> workflow = extractor.extract_from_file("agent.py")
         """
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             code = f.read()
 
         return self.extract_from_code(code)
@@ -143,7 +143,7 @@ class GraphExtractor:
         docstring = ast.get_docstring(tree)
         return docstring or "Imported workflow"
 
-    def _extract_state_schema(self, tree: ast.Module) -> Dict[str, str]:
+    def _extract_state_schema(self, tree: ast.Module) -> dict[str, str]:
         """
         Extract state schema from TypedDict or Pydantic model.
 
@@ -168,7 +168,7 @@ class GraphExtractor:
 
         return {}
 
-    def _extract_class_fields(self, tree: ast.Module, class_name: str) -> Dict[str, str]:
+    def _extract_class_fields(self, tree: ast.Module, class_name: str) -> dict[str, str]:
         """
         Extract fields from a class definition.
 
@@ -192,7 +192,7 @@ class GraphExtractor:
 
         return fields
 
-    def _extract_nodes(self, tree: ast.Module) -> List[Dict[str, Any]]:
+    def _extract_nodes(self, tree: ast.Module) -> list[dict[str, Any]]:
         """
         Extract nodes from add_node() calls.
 
@@ -231,7 +231,7 @@ class GraphExtractor:
 
         return nodes
 
-    def _infer_node_type(self, function_name: Any, kwargs: Dict[str, Any]) -> str:
+    def _infer_node_type(self, function_name: Any, kwargs: dict[str, Any]) -> str:
         """
         Infer node type from function name and configuration.
 
@@ -256,7 +256,7 @@ class GraphExtractor:
         else:
             return "custom"
 
-    def _extract_edges(self, tree: ast.Module) -> List[Dict[str, str]]:
+    def _extract_edges(self, tree: ast.Module) -> list[dict[str, str]]:
         """
         Extract edges from add_edge() and add_conditional_edges() calls.
 

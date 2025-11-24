@@ -12,11 +12,11 @@ Enhanced with resilience patterns (ADR-0026):
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from litellm import acompletion, completion
-from litellm.utils import ModelResponse
+from litellm.utils import ModelResponse  # type: ignore[attr-defined]
 
 from mcp_server_langgraph.core.exceptions import LLMModelNotFoundError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -34,12 +34,12 @@ class LLMFactory:
         self,
         provider: str = "anthropic",
         model_name: str = "claude-3-5-sonnet-20241022",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         timeout: int = 60,
         enable_fallback: bool = True,
-        fallback_models: Optional[list[str]] = None,
+        fallback_models: list[str] | None = None,
         **kwargs,
     ):
         """
@@ -92,6 +92,10 @@ class LLMFactory:
         model_lower = model_name.lower()
 
         # Check provider prefixes FIRST (azure/gpt-4 should be azure, not openai)
+        # Vertex AI (Google Cloud AI Platform)
+        if model_lower.startswith("vertex_ai/"):
+            return "vertex_ai"
+
         # Azure (prefixed models)
         if model_lower.startswith("azure/"):
             return "azure"
@@ -236,7 +240,7 @@ class LLMFactory:
                         f"Configured credential for provider: {provider}", extra={"provider": provider, "env_var": env_var}
                     )
 
-    def _format_messages(self, messages: list[BaseMessage]) -> list[Dict[str, str]]:
+    def _format_messages(self, messages: list[BaseMessage | dict[str, Any]]) -> list[dict[str, str]]:
         """
         Convert LangChain messages to LiteLLM format
 
@@ -249,14 +253,16 @@ class LLMFactory:
         formatted = []
         for msg in messages:
             if isinstance(msg, HumanMessage):
-                formatted.append({"role": "user", "content": msg.content})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "user", "content": content})
             elif isinstance(msg, AIMessage):
-                formatted.append({"role": "assistant", "content": msg.content})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "assistant", "content": content})
             elif isinstance(msg, SystemMessage):
-                formatted.append({"role": "system", "content": msg.content})
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                formatted.append({"role": "system", "content": content})
             elif isinstance(msg, dict):
                 # Handle dict messages (already in correct format or need conversion)
-                # Note: Technically unreachable since msg is BaseMessage, but kept for defensive programming
                 if "role" in msg and "content" in msg:
                     # Already formatted dict
                     formatted.append(msg)
@@ -276,7 +282,7 @@ class LLMFactory:
 
         return formatted
 
-    def invoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    def invoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
         Synchronous LLM invocation
 
@@ -306,7 +312,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = completion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 # Track metrics
                 metrics.successful_calls.add(1, {"operation": "llm.invoke", "model": self.model_name})
@@ -315,7 +321,7 @@ class LLMFactory:
                     "LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 
@@ -339,7 +345,7 @@ class LLMFactory:
     @retry_with_backoff(max_attempts=3, exponential_base=2)
     @with_timeout(operation_type="llm")
     @with_bulkhead(resource_type="llm")
-    async def ainvoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    async def ainvoke(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """
         Asynchronous LLM invocation with full resilience protection.
 
@@ -381,7 +387,7 @@ class LLMFactory:
             try:
                 response: ModelResponse = await acompletion(**params)
 
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content  # type: ignore[union-attr]
 
                 metrics.successful_calls.add(1, {"operation": "llm.ainvoke", "model": self.model_name})
 
@@ -389,7 +395,7 @@ class LLMFactory:
                     "Async LLM invocation successful",
                     extra={
                         "model": self.model_name,
-                        "tokens": response.usage.total_tokens if response.usage else 0,
+                        "tokens": response.usage.total_tokens if response.usage else 0,  # type: ignore[attr-defined]
                     },
                 )
 
@@ -437,7 +443,7 @@ class LLMFactory:
                         cause=e,
                     )
 
-    def _try_fallback(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    def _try_fallback(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models if primary fails"""
         for fallback_model in self.fallback_models:
             if fallback_model == self.model_name:
@@ -472,7 +478,7 @@ class LLMFactory:
 
         raise RuntimeError("All models failed including fallbacks")
 
-    async def _try_fallback_async(self, messages: list[BaseMessage], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
+    async def _try_fallback_async(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models asynchronously"""
         for fallback_model in self.fallback_models:
             if fallback_model == self.model_name:

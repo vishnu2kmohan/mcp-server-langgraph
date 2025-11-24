@@ -22,12 +22,11 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.skipif(os.getenv("CI") == "true", reason="Pre-push hooks not installed in CI environment")
@@ -132,18 +131,27 @@ class TestPrePushHookSync:
         makefile_path = repo_root / "Makefile"
         makefile_content = makefile_path.read_text()
 
-        # Extract validate-pre-push target
-        target_pattern = r"^validate-pre-push:.*?(?=^\S|\Z)"
-        target_match = re.search(target_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+        # Extract validate-pre-push sub-targets (router delegates to these)
+        full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
+        quick_pattern = r"^validate-pre-push-quick:.*?(?=^\S|\Z)"
 
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-        target_content = target_match.group(0)
+        full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+        quick_match = re.search(quick_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
+
+        # Combine both sub-targets to check
+        target_content = ""
+        if full_match:
+            target_content += full_match.group(0)
+        if quick_match:
+            target_content += quick_match.group(0)
 
         # Find MyPy command
         mypy_pattern = r"mypy src/mcp_server_langgraph.*"
         mypy_match = re.search(mypy_pattern, target_content)
 
-        assert mypy_match, "MyPy not found in Makefile validate-pre-push target"
+        assert mypy_match, "MyPy not found in Makefile validate-pre-push sub-targets"
 
         # Get context to check for blocking pattern
         mypy_start = mypy_match.start()

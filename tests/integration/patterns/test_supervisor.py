@@ -33,7 +33,7 @@ def teardown_method_supervisor():
 
 
 @pytest.mark.unit
-def test_supervisor_initialization():
+def test_supervisor_initialization_with_agents_stores_agents():
     """Test supervisor can be initialized with agents."""
 
     def dummy_agent(task: str) -> str:
@@ -220,7 +220,7 @@ def test_supervisor_empty_agents():
 
 @pytest.mark.performance
 @pytest.mark.benchmark
-def test_supervisor_performance(benchmark):
+def test_supervisor_performance_with_multiple_agents_executes_quickly(benchmark):
     """Benchmark supervisor execution time."""
 
     def fast_agent(task: str) -> str:

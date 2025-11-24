@@ -14,8 +14,10 @@ import gc
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.infrastructure]
 
-@pytest.mark.unit
+
+@pytest.mark.infrastructure
 @pytest.mark.xdist_group(name="testappfactory")
 class TestAppFactory:
     """Test the FastAPI app factory function"""
@@ -265,7 +267,7 @@ class TestAppFactoryIntegration:
         app = create_app()
 
         # App should have necessary attributes for uvicorn
-        assert hasattr(app, "__call__")
+        assert callable(app)
 
 
 @pytest.mark.xdist_group(name="testappfactorydocumentation")

@@ -59,7 +59,7 @@ def _is_safe_path(path: str) -> bool:
         return False
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
+@tool
 def read_file(
     file_path: Annotated[str, Field(description="Path to file to read")],
     max_bytes: Annotated[int, Field(ge=100, le=MAX_FILE_SIZE, description="Maximum bytes to read (100-1048576)")] = 10000,
@@ -104,7 +104,7 @@ def read_file(
             return f"Error: File too large ({file_size} bytes). Maximum: {MAX_FILE_SIZE} bytes"
 
         # Read file (up to max_bytes)
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             content = f.read(max_bytes)
 
         truncated = len(content) >= max_bytes
@@ -127,7 +127,7 @@ def read_file(
         return f"Error: {e}"
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
+@tool
 def list_directory(
     directory_path: Annotated[str, Field(description="Path to directory to list")],
     show_hidden: Annotated[bool, Field(description="Whether to show hidden files (starting with .)")] = False,
@@ -198,7 +198,7 @@ def list_directory(
         return f"Error: {e}"
 
 
-@tool  # type: ignore[misc]  # LangChain @tool decorator lacks type stubs
+@tool
 def search_files(
     directory_path: Annotated[str, Field(description="Directory to search in")],
     pattern: Annotated[str, Field(description="Filename pattern to search for (e.g., '*.py', 'config.yaml')")],

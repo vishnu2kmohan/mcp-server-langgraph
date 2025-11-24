@@ -24,7 +24,10 @@ from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 
+pytestmark = pytest.mark.integration
 
+
+@pytest.mark.asyncio
 @pytest.mark.xdist_group(name="app_startup_integration_tests")
 class TestFastAPIStartupValidation:
     """Test that FastAPI app starts successfully with various configs"""
@@ -140,7 +143,6 @@ class TestFastAPIStartupValidation:
         This test validates Bug Fix #3: ServicePrincipalManager must guard
         all OpenFGA operations and not crash when OpenFGA is disabled.
         """
-        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
@@ -212,7 +214,9 @@ class TestDependencyInjectionWiring:
         monkeypatch.setenv("KEYCLOAK_ADMIN_USERNAME", "admin")
         monkeypatch.setenv("KEYCLOAK_ADMIN_PASSWORD", "admin-password")
         monkeypatch.setenv("OPENFGA_API_URL", "http://localhost:8080")
-        # Leave OpenFGA store/model unset to test graceful degradation
+        # Explicitly unset OpenFGA store/model to test graceful degradation
+        monkeypatch.setenv("OPENFGA_STORE_ID", "")
+        monkeypatch.setenv("OPENFGA_MODEL_ID", "")
 
         # Reload config to pick up monkeypatched env vars
         import importlib
@@ -444,7 +448,6 @@ class TestRegressionPrevention:
         """
         Regression test for Bug #3: ServicePrincipalManager accepts Optional[OpenFGAClient].
         """
-        from unittest.mock import AsyncMock
 
         from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 

@@ -19,6 +19,8 @@ from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.unit
 @pytest.mark.regression
@@ -103,7 +105,7 @@ class TestBearerSchemeOverrideDiagnostic:
         """
         import importlib
         from datetime import datetime, timedelta, timezone
-        from unittest.mock import AsyncMock, MagicMock
+        from unittest.mock import AsyncMock
 
         from fastapi.security import HTTPAuthorizationCredentials
 
@@ -210,7 +212,6 @@ class TestBearerSchemeOverrideDiagnostic:
         It checks if we're running in Docker and validates the fix is present.
         """
         import os
-        import subprocess
 
         # Check if running in Docker
         in_docker = (

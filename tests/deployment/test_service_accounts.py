@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -90,7 +90,7 @@ class TestServiceAccountSeparation:
 
         for component in expected_separate_components:
             # Find workloads for this component
-            component_workloads = [w for w in workload_to_sa.keys() if component in w.lower()]
+            component_workloads = [w for w in workload_to_sa if component in w.lower()]
 
             if not component_workloads:
                 continue  # Component not deployed

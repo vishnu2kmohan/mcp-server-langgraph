@@ -15,7 +15,7 @@ Evidence Categories:
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -67,10 +67,10 @@ class Evidence(BaseModel):
     description: str = Field(..., description="Evidence description")
     collected_at: str = Field(..., description="Collection timestamp (ISO format)")
     status: EvidenceStatus
-    data: Dict[str, Any] = Field(default_factory=dict, description="Evidence data")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    findings: List[str] = Field(default_factory=list, description="Audit findings")
-    recommendations: List[str] = Field(default_factory=list, description="Recommendations")
+    data: dict[str, Any] = Field(default_factory=dict, description="Evidence data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    findings: list[str] = Field(default_factory=list, description="Audit findings")
+    recommendations: list[str] = Field(default_factory=list, description="Recommendations")
 
 
 class ComplianceReport(BaseModel):
@@ -81,8 +81,8 @@ class ComplianceReport(BaseModel):
     generated_at: str
     period_start: str
     period_end: str
-    evidence_items: List[Evidence] = Field(default_factory=list)
-    summary: Dict[str, Any] = Field(default_factory=dict)
+    evidence_items: list[Evidence] = Field(default_factory=list)
+    summary: dict[str, Any] = Field(default_factory=dict)
     compliance_score: float = Field(..., ge=0.0, le=100.0)
     passed_controls: int
     failed_controls: int
@@ -100,10 +100,10 @@ class EvidenceCollector:
 
     def __init__(
         self,
-        session_store: Optional[SessionStore] = None,
-        user_provider: Optional[UserProvider] = None,
-        openfga_client: Optional[OpenFGAClient] = None,
-        evidence_dir: Optional[Path] = None,
+        session_store: SessionStore | None = None,
+        user_provider: UserProvider | None = None,
+        openfga_client: OpenFGAClient | None = None,
+        evidence_dir: Path | None = None,
     ):
         """
         Initialize evidence collector
@@ -122,7 +122,7 @@ class EvidenceCollector:
 
         logger.info(f"Evidence collector initialized: {self.evidence_dir}")
 
-    async def collect_all_evidence(self) -> List[Evidence]:
+    async def collect_all_evidence(self) -> list[Evidence]:
         """
         Collect all SOC 2 evidence
 
@@ -154,7 +154,7 @@ class EvidenceCollector:
 
             return evidence_items
 
-    async def collect_security_evidence(self) -> List[Evidence]:
+    async def collect_security_evidence(self) -> list[Evidence]:
         """
         Collect security control evidence (CC6.1, CC6.2, CC6.6, CC7.2, CC8.1)
 
@@ -181,7 +181,7 @@ class EvidenceCollector:
 
             return evidence_items
 
-    async def collect_availability_evidence(self) -> List[Evidence]:
+    async def collect_availability_evidence(self) -> list[Evidence]:
         """
         Collect availability control evidence (A1.2)
 
@@ -199,7 +199,7 @@ class EvidenceCollector:
 
             return evidence_items
 
-    async def collect_confidentiality_evidence(self) -> List[Evidence]:
+    async def collect_confidentiality_evidence(self) -> list[Evidence]:
         """
         Collect confidentiality control evidence
 
@@ -217,7 +217,7 @@ class EvidenceCollector:
 
             return evidence_items
 
-    async def collect_processing_integrity_evidence(self) -> List[Evidence]:
+    async def collect_processing_integrity_evidence(self) -> list[Evidence]:
         """
         Collect processing integrity control evidence (PI1.4)
 
@@ -235,7 +235,7 @@ class EvidenceCollector:
 
             return evidence_items
 
-    async def collect_privacy_evidence(self) -> List[Evidence]:
+    async def collect_privacy_evidence(self) -> list[Evidence]:
         """
         Collect privacy control evidence
 
@@ -768,7 +768,7 @@ class EvidenceCollector:
 
             return report
 
-    def _summarize_by_type(self, evidence_items: List[Evidence]) -> Dict[str, int]:
+    def _summarize_by_type(self, evidence_items: list[Evidence]) -> dict[str, int]:
         """Summarize evidence by type"""
         summary = {}  # type: ignore[var-annotated]
         for evidence in evidence_items:
@@ -776,7 +776,7 @@ class EvidenceCollector:
             summary[type_name] = summary.get(type_name, 0) + 1
         return summary
 
-    def _summarize_by_control(self, evidence_items: List[Evidence]) -> Dict[str, int]:
+    def _summarize_by_control(self, evidence_items: list[Evidence]) -> dict[str, int]:
         """Summarize evidence by control category"""
         summary = {}  # type: ignore[var-annotated]
         for evidence in evidence_items:
@@ -784,7 +784,7 @@ class EvidenceCollector:
             summary[control] = summary.get(control, 0) + 1
         return summary
 
-    def _summarize_findings(self, evidence_items: List[Evidence]) -> Dict[str, Any]:
+    def _summarize_findings(self, evidence_items: list[Evidence]) -> dict[str, Any]:
         """Summarize findings and recommendations"""
         all_findings = []
         all_recommendations = []

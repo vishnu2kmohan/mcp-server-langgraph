@@ -11,6 +11,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+pytestmark = pytest.mark.unit
+
 # This import will fail initially - that's expected in TDD!
 # We'll implement the module to make tests pass
 try:
@@ -51,7 +53,7 @@ class TestCodeValidator:
         """Create validator with minimal allowed imports"""
         return CodeValidator(allowed_imports=["json", "math"])
 
-    def test_validator_initialization(self):
+    def test_validator_initialization_with_allowed_imports_creates_valid_instance(self):
         """Test validator initializes with allowed imports"""
         validator = CodeValidator(allowed_imports=["json", "math"])
         assert "json" in validator.allowed_imports
@@ -167,7 +169,7 @@ length = len(numbers)
         assert result.is_valid is False
         assert any("syntax" in str(error).lower() for error in result.errors)
 
-    def test_empty_code(self, validator):
+    def test_empty_code_validation_with_empty_string_returns_invalid(self, validator):
         """Test validation of empty code"""
         code = ""
         result = validator.validate(code)

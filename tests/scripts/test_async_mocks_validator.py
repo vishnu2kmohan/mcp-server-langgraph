@@ -17,6 +17,8 @@ import pytest
 
 from tests.validation_lib import async_mocks
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.unit
 @pytest.mark.meta

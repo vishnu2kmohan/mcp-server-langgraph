@@ -15,6 +15,8 @@ from mcp_server_langgraph.core.agent import AgentState, _create_checkpointer, cr
 from mcp_server_langgraph.core.config import settings
 from mcp_server_langgraph.llm.factory import LLMFactory
 
+pytestmark = pytest.mark.integration
+
 # Try importing RedisSaver
 try:
     from langgraph.checkpoint.redis import RedisSaver

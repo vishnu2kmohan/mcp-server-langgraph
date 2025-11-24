@@ -665,13 +665,25 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 
 **Quality Score: 9.6/10** across 7 dimensions (Code Organization, Testing, Type Safety, Documentation, Error Handling, Observability, Security).
 
-**Quality Gates**: Pre-commit hooks (black, isort, flake8, mypy, bandit) + CI/CD (unit/integration/property/contract/regression/mutation tests, OpenAPI validation). All tests run on Python 3.10-3.12.
+**Quality Gates**: Pre-commit hooks (Ruff linting + formatting, mypy type checking, bandit security scanning) + CI/CD (unit/integration/property/contract/regression/mutation tests, OpenAPI validation). All tests run on Python 3.10-3.12.
 
-**Commands**: `make format`, `make lint`, `make test-unit`, `make test-all-quality`, `make test-coverage`
+**Linting & Formatting** (consolidated to Ruff for 10-100x faster performance):
+- `make lint-check` - Run Ruff linter (replaces flake8 + isort checks)
+- `make lint-fix` - Auto-fix linting issues + format code (replaces black + isort)
+- `make lint-format` - Format code only (replaces black)
+- `make lint-type-check` - Run mypy type checking (unchanged)
+- `make lint-security` - Run bandit security scan (unchanged)
 
-**Development**: Branch protection, conventional commits, code review required, 25 ADRs documenting architectural decisions.
+**Testing**:
+- `make test-unit` - Fast unit tests with mocked dependencies
+- `make test-integration` - End-to-end with real infrastructure
+- `make test-coverage` - Generate coverage report
+- `make validate-pre-push` - Quick validation (skip integration, use testmon)
+- `CI_PARITY=1 make validate-pre-push` - Full CI-equivalent validation (includes integration tests)
 
-**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md)
+**Development**: Branch protection, conventional commits, code review required, 59 ADRs documenting architectural decisions.
+
+**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md) | [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md)
 
 ## Contributors
 
@@ -739,20 +751,20 @@ This project uses tiered validation hooks optimized for developer productivity:
 | Stage | Duration | What Runs | When |
 |-------|----------|-----------|------|
 | **Pre-commit** | < 30s | Formatting, linting, quick checks | Every commit |
-| **Pre-push** | 3-5min | Unit tests, smoke tests, API tests (dev profile) | Every push |
-| **CI/Full** | 12-15min | Complete validation with CI profile (100 examples) | Pull requests, CI |
+| **Pre-push** | 8-12min | Unit, smoke, API, integration tests | Every push |
+| **CI/Full** | 12-15min | Complete validation with CI profile | Pull requests, CI |
 
 **Key Points**:
 - Pre-push uses **dev profile** (25 property test examples) for faster iteration
 - CI uses **ci profile** (100 property test examples) for thorough validation
-- Integration tests moved to manual stage (run via `make test-integration` when needed)
+- Integration tests included in pre-push for CI parity
 - Bypass for emergencies: `git push --no-verify` (use sparingly!)
 
 **Validation Tiers**:
 ```bash
 make validate-commit      # Tier-1: < 30s (quick checks)
 make validate-push        # Tier-2: 3-5min (focused validation)
-make validate-full        # Tier-3: 12-15min (CI-equivalent)
+make validate-pre-push    # Tier-3: 8-12min (CI-equivalent, includes integration)
 ```
 
 See [CONTRIBUTING.md](.github/CONTRIBUTING.md#validation-workflow) for detailed validation workflow.

@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   keycloak-test:
-    image: quay.io/keycloak/keycloak:23.0
+    image: quay.io/keycloak/keycloak:26.4.2
     container_name: keycloak-test
     environment:
       # Admin credentials
@@ -34,6 +34,7 @@ services:
       - ./tests/fixtures/keycloak-realm-test.json:/opt/keycloak/data/import/realm-test.json:ro
 
     healthcheck:
+      # curl is available in the official Keycloak image (quay.io/keycloak/keycloak)
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 10s
       timeout: 5s

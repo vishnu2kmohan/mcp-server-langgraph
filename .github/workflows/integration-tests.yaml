@@ -101,145 +101,12 @@ jobs:
         uv sync --frozen --extra dev
         echo "✓ Dependencies installed from lockfile with dev extra"
 
-    - name: Start test infrastructure
+    - name: Run Integration Tests via Script (Group ${{ matrix.split-group }}/4)
       run: |
-        echo "Starting test infrastructure (docker-compose.test.yml)..."
-        echo "Building fresh Docker images to ensure latest code is used..."
-        docker compose -f docker-compose.test.yml up -d --build
-
-        echo "Waiting for all services to report healthy..."
-        echo "This may take up to 10 minutes for all services to initialize on slow runners..."
-
-        # Wait for all services to be healthy (max 10 minutes = 600 seconds)
-        for i in {1..200}; do
-          HEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health == "healthy") | .Service' | wc -l | tr -d ' ')
-          TOTAL=$(docker compose -f docker-compose.test.yml ps --services | wc -l | tr -d ' ')
-
-          echo "Attempt $i/200: $HEALTHY/$TOTAL services healthy"
-
-          # Show which services are not healthy yet (for debugging)
-          if [ "$HEALTHY" -ne "$TOTAL" ]; then
-            UNHEALTHY=$(docker compose -f docker-compose.test.yml ps --format json | jq -r 'select(.Health != "healthy") | "\(.Service): \(.Health // "starting")"' | tr '\n' ', ' | sed 's/,$//')
-            if [ -n "$UNHEALTHY" ]; then
-              echo "  ⏳ Waiting for: $UNHEALTHY"
-            fi
-          fi
-
-          if [ "$HEALTHY" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
-            echo "✅ All $TOTAL services are healthy!"
-            break
-          fi
-
-          if [ $i -eq 200 ]; then
-            echo "❌ Timeout waiting for services after 10 minutes. Current status:"
-            docker compose -f docker-compose.test.yml ps
-            echo ""
-            echo "Showing logs for all services:"
-            docker compose -f docker-compose.test.yml logs --tail=50
-            exit 1
-          fi
-
-          sleep 3
-        done
-
-        echo ""
-        echo "Final service status:"
-        docker compose -f docker-compose.test.yml ps
-
-    - name: Verify test infrastructure
-      run: |
-        echo "=== Verifying PostgreSQL ==="
-        docker compose -f docker-compose.test.yml exec -T postgres-test pg_isready -U postgres || {
-          echo "❌ PostgreSQL not ready"
-          docker compose -f docker-compose.test.yml logs postgres-test
-          exit 1
-        }
-        echo "✓ PostgreSQL ready"
-
-        echo ""
-        echo "=== Verifying Redis (checkpoints) ==="
-        docker compose -f docker-compose.test.yml exec -T redis-test redis-cli ping || {
-          echo "❌ Redis not ready"
-          docker compose -f docker-compose.test.yml logs redis-test
-          exit 1
-        }
-        echo "✓ Redis ready"
-
-        echo ""
-        echo "=== Verifying OpenFGA ==="
-        for i in {1..30}; do
-          if curl -sf http://localhost:9080/healthz > /dev/null 2>&1; then
-            echo "✓ OpenFGA ready"
-            break
-          fi
-          if [ $i -eq 30 ]; then
-            echo "❌ OpenFGA not ready after 30 attempts"
-            docker compose -f docker-compose.test.yml logs openfga-test
-            exit 1
-          fi
-          echo "Waiting for OpenFGA... (attempt $i/30)"
-          sleep 2
-        done
-
-        echo ""
-        echo "=== Verifying Qdrant ==="
-        for i in {1..20}; do
-          if curl -sf http://localhost:9333/healthz > /dev/null 2>&1; then
-            echo "✓ Qdrant ready"
-            break
-          fi
-          if [ $i -eq 20 ]; then
-            echo "❌ Qdrant not ready after 20 attempts"
-            docker compose -f docker-compose.test.yml logs qdrant-test
-            exit 1
-          fi
-          echo "Waiting for Qdrant... (attempt $i/20)"
-          sleep 2
-        done
-
-        echo ""
-        echo "=== All test infrastructure services verified! ==="
-
-    - name: Verify PostgreSQL accepts connections
-      run: |
-        echo "=== Verifying PostgreSQL actually accepts connections (not just reports healthy) ==="
-        for i in {1..30}; do
-          if docker compose -f docker-compose.test.yml exec -T postgres-test \
-             psql -U postgres -d gdpr_test -c "SELECT 1" > /dev/null 2>&1; then
-            echo "✓ PostgreSQL accepting connections on gdpr_test database"
-            break
-          fi
-          if [ $i -eq 30 ]; then
-            echo "❌ PostgreSQL not accepting connections after 30 attempts"
-            docker compose -f docker-compose.test.yml logs postgres-test
-            exit 1
-          fi
-          echo "Waiting for PostgreSQL to accept connections... (attempt $i/30)"
-          sleep 2
-        done
-        echo ""
-
-    - name: Run Integration Tests (Group ${{ matrix.split-group }}/4)
-      run: |
-        source .venv/bin/activate
-        echo "=== Running integration tests (group ${{ matrix.split-group }}/4 with pytest-split) ==="
-        # --splits 4: Total number of groups
-        # --group $N: Which group to run (1-based indexing)
-        # -m integration: Only run integration tests
-        # -v --tb=short: Verbose with short tracebacks
-        # --cov: Generate coverage report for this split
-        # Note: Integration tests run in isolation (split), coverage threshold set to 0 (overrides pyproject.toml's 66%)
-        #
-        # IMPORTANT: Set all PostgreSQL connection parameters explicitly (must match docker-compose.test.yml)
-        # This prevents connection failures and makes configuration explicit (Cloud-Native best practice)
-        TESTING=true \
-        OTEL_SDK_DISABLED=true \
-        POSTGRES_HOST=localhost \
-        POSTGRES_PORT=9432 \
-        POSTGRES_DB=gdpr_test \
-        POSTGRES_USER=postgres \
-        POSTGRES_PASSWORD=postgres \
-        pytest \
+        # Use the orchestration script to manage infrastructure and execution
+        # This ensures 100% parity between local and CI execution
+        # Passing arguments after '--' injects them into the pytest command
+        ./scripts/test-integration.sh -- \
           --splits 4 \
           --group ${{ matrix.split-group }} \
           -m integration \
@@ -259,9 +126,9 @@ jobs:
     - name: Cleanup infrastructure
       if: always()
       run: |
-        echo "Stopping test infrastructure..."
-        docker compose -f docker-compose.test.yml down -v
-        echo "✓ Test infrastructure stopped and volumes removed"
+        echo "Ensuring infrastructure cleanup..."
+        docker compose -f docker-compose.test.yml down -v || true
+        echo "✓ Cleanup complete"
 
   # ============================================================================
   # Merge Coverage Reports

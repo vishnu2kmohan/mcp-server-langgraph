@@ -147,7 +147,7 @@ class TestRedisURLEncoding:
         assert ":6380/" in result
         assert "pass%2Bword" in result
 
-    def test_idempotent_encoding(self):
+    def test_idempotent_encoding_with_already_encoded_url_produces_same_result(self):
         """Test that encoding same URL twice produces same result.
 
         This ensures already-encoded passwords are not double-encoded.

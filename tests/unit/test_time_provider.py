@@ -8,10 +8,7 @@ TDD: These tests are written FIRST (RED phase) before implementing the time prov
 """
 
 import gc
-import os
 import time
-from typing import Protocol
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

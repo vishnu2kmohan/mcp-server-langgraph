@@ -66,7 +66,7 @@ class ResponseOptimizer:
 
         try:
             # Use LiteLLM's model-aware token counting
-            token_count: int = litellm.token_counter(model=self.model, text=text)
+            token_count: int = litellm.token_counter(model=self.model, text=text)  # type: ignore[attr-defined]
             return token_count
         except Exception as e:
             # SECURITY: Log fallback usage for monitoring

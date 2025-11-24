@@ -37,7 +37,7 @@ class TestAlert:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_alert_creation(self):
+    def test_alert_creation_with_valid_fields_creates_alert(self):
         """Test basic alert creation"""
         alert = Alert(
             title="Test Alert",

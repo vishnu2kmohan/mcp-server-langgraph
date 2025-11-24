@@ -4,22 +4,176 @@ Comprehensive test suite for MCP Server with LangGraph, following best practices
 
 ## Directory Structure
 
+**🎉 Restructured November 2025** - Test suite reorganized from 55 files in root to 1 file, with logical categorization into 24 subdirectories for improved maintainability. See `TESTING_STRATEGY_VALIDATION_REPORT.md` for full details.
+
 ```
 tests/
-├── test_*.py              # Unit & integration tests (mixed markers)
-├── api/                   # API endpoint tests (NEW)
+├── conftest.py                    # Shared fixtures (2400 lines, -9% from modularization)
+│
+├── test_app_factory.py            # Only remaining root test (app factory initialization)
+│
+├── fixtures/                      # 📦 Modular fixture packages (Phase 3)
+│   ├── __init__.py               #     Package initialization with loading rules
+│   ├── docker_fixtures.py        #     Docker Compose lifecycle, health checks (183 lines)
+│   └── time_fixtures.py          #     Time freezing for deterministic tests (42 lines)
+│
+├── api/                           # REST API endpoint tests
 │   ├── test_api_keys_endpoints.py
+│   ├── test_conversation_api.py
+│   ├── test_execution_api.py
+│   ├── test_monitoring_api.py
 │   └── test_service_principals_endpoints.py
-├── e2e/                   # End-to-end user journey tests (NEW)
-│   └── test_full_user_journey.py
-├── unit/                  # Dedicated unit tests (NEW)
-│   └── test_mcp_stdio_server.py
-├── contract/              # Contract tests (MCP protocol, OpenAPI)
-├── property/              # Property-based tests (Hypothesis)
-├── performance/           # Performance benchmark tests
-├── regression/            # Performance regression tests
-└── conftest.py            # Shared test fixtures and configuration
+│
+├── benchmarks/                    # Performance benchmarking
+│   ├── scenarios/                #     Benchmark scenario definitions
+│   └── test_*.py                 #     Pytest-benchmark performance tests
+│
+├── builder/                       # Graph builder tests
+│   ├── api/                      #     Builder API tests
+│   └── test_*.py                 #     Builder logic tests
+│
+├── cli/                           # CLI command tests
+│   └── test_*.py                 #     Command-line interface tests
+│
+├── contract/                      # Contract testing (MCP, OpenAPI)
+│   ├── test_mcp_protocol_contract.py
+│   └── test_openapi_spec.py
+│
+├── core/                          # Core functionality tests
+│   ├── interrupts/               #     Interrupt handling tests
+│   └── test_*.py                 #     Core logic tests
+│
+├── deployment/                    # Deployment configuration validation
+│   └── test_*.py                 #     Terraform, K8s manifest tests
+│
+├── deployments/                   # Deployment-specific tests
+│   └── test_*.py                 #     Environment-specific deployment tests
+│
+├── e2e/                           # 🚀 End-to-end user journey tests
+│   ├── test_full_user_journey.py #     Complete user workflows (6 journeys)
+│   ├── test_real_clients.py      #     Real infrastructure integration
+│   ├── test_scim_provisioning.py #     SCIM provisioning workflows
+│   ├── real_clients.py           #     Real Keycloak/MCP clients
+│   └── helpers.py                #     E2E test helpers (mock clients)
+│
+├── helpers/                       # Test helper utilities
+│   └── test_*.py                 #     Shared test utilities
+│
+├── infrastructure/                # Infrastructure tests (non-K8s)
+│   └── test_*.py                 #     Docker, database, cache tests
+│
+├── integration/                   # 🔗 Integration test suites (by domain)
+│   ├── api/                      #     API integration tests
+│   ├── compliance/               #     GDPR, SOC2 compliance tests
+│   ├── contract/                 #     Contract integration tests
+│   ├── core/                     #     Core integration tests
+│   ├── deployment/               #     Deployment integration tests
+│   ├── execution/                #     Execution engine integration
+│   ├── health/                   #     Health check integration
+│   ├── infrastructure/           #     Infrastructure integration
+│   ├── patterns/                 #     Design pattern tests
+│   ├── property/                 #     Property-based integration
+│   ├── regression/               #     Regression prevention tests
+│   ├── resilience/               #     Resilience pattern tests
+│   └── security/                 #     Security integration tests
+│
+├── kubernetes/                    # Kubernetes-specific tests
+│   └── test_*.py                 #     K8s manifest validation
+│
+├── llm/                           # LLM provider tests
+│   └── test_*.py                 #     LangChain, Pydantic AI tests
+│
+├── meta/                          # 🔍 Meta-validation (tests that test tests)
+│   ├── ci/                       #     CI/CD workflow validation
+│   │   ├── test_workflow_dependencies.py  # Workflow job dependency validation
+│   │   ├── test_workflow_security.py      # Workflow secret security patterns
+│   │   └── test_workflow_syntax.py        # Actionlint syntax validation
+│   ├── infrastructure/           #     Infrastructure configuration tests
+│   │   └── test_docker_paths.py  #     Docker Python path validation
+│   └── validation/               #     Test suite validation scripts
+│       └── test_*.py             #     Test organization enforcement
+│
+├── middleware/                    # Middleware component tests
+│   └── test_*.py                 #     Middleware logic tests
+│
+├── monitoring/                    # Observability tests
+│   └── test_*.py                 #     Metrics, tracing, logging tests
+│
+├── performance/                   # 📊 Performance regression tests
+│   ├── test_*.py                 #     Percentile-based performance validation
+│   └── *.ipynb                   #     Jupyter notebook analysis
+│
+├── property/                      # 🎲 Property-based tests (Hypothesis)
+│   └── test_*.py                 #     Generative testing with Hypothesis
+│
+├── regression/                    # Regression prevention tests
+│   └── test_*.py                 #     Regression test suite
+│
+├── resilience/                    # Resilience pattern tests
+│   └── test_*.py                 #     Circuit breaker, retry, timeout tests
+│
+├── scripts/                       # Test automation scripts
+│   └── *.py                      #     CI/CD helper scripts
+│
+├── security/                      # 🔒 Security testing
+│   ├── test_api_key_*.py         #     API key security tests
+│   ├── test_authorization_*.py   #     OpenFGA authorization tests
+│   ├── test_rbac_*.py            #     RBAC implementation tests
+│   └── test_secrets_*.py         #     Secret management tests
+│
+├── smoke/                         # 💨 Smoke tests (fast validation)
+│   └── test_*.py                 #     Quick sanity checks
+│
+├── terraform/                     # Terraform IaC tests
+│   └── test_*.py                 #     Terraform plan validation
+│
+├── tools/                         # Tool implementation tests
+│   └── test_*.py                 #     MCP tool logic tests
+│
+├── unit/                          # ⚡ Pure unit tests (no dependencies)
+│   ├── auth/                     #     Authentication logic
+│   ├── config/                   #     Configuration management
+│   ├── core/                     #     Core business logic
+│   ├── documentation/            #     Documentation generation
+│   ├── execution/                #     Execution engine
+│   ├── health/                   #     Health check logic
+│   ├── llm/                      #     LLM integration
+│   ├── observability/            #     Observability logic
+│   ├── resilience/               #     Resilience patterns
+│   ├── session/                  #     Session management
+│   ├── storage/                  #     Storage layer
+│   └── tools/                    #     Tool implementations
+│
+├── utils/                         # Test utilities
+│   └── *.py                      #     Helper functions
+│
+└── validation_lib/                # Validation library tests
+    └── test_*.py                 #     Input validation tests
 ```
+
+### Reorganization Impact
+
+**Before (Phase 1 baseline)**:
+- 55 test files in root directory
+- Difficult to navigate
+- No clear categorization
+- Mixed concerns (unit, integration, meta-validation)
+
+**After (Phase 2 completed November 2025)**:
+- **1 test file in root** (98% reduction)
+- **24 logical subdirectories**
+- **44 files relocated** to appropriate categories
+- Clear separation of concerns
+- Easier navigation and maintenance
+
+**Key Improvements**:
+1. **97% root directory reduction** - Only `test_app_factory.py` remains in root
+2. **Logical categorization** - Tests grouped by domain (api, core, security, etc.)
+3. **Meta-validation separation** - CI/infrastructure tests in `tests/meta/`
+4. **Integration test organization** - 14 subdirectories under `tests/integration/`
+5. **Modular fixtures** - Extracted into `tests/fixtures/` package (Phase 3)
+
+See `docs-internal/TESTING_STRATEGY_VALIDATION_REPORT.md` and `tests/MIGRATION_GUIDE.md` for complete reorganization details and file relocation mappings.
 
 ## 🎯 Quick Start - Testing the New Features
 
@@ -544,7 +698,155 @@ pre-commit install
 
 ## Troubleshooting
 
-### Common Issues
+### Common Integration Test Issues (Updated 2025-11-21)
+
+**IMPORTANT**: Recent fixes addressed 7 major failure buckets affecting 78+ tests. If experiencing failures, review the CODEX FINDING FIX comments in the code for context.
+
+#### 1. RuntimeError: Future attached to a different loop (34 tests)
+
+**Symptom**: `RuntimeError: Future <Future pending> attached to a different loop than the current one`
+
+**Root Cause**: Session-scoped async fixtures using function-scoped event loop
+
+**Fix Applied**: Added explicit `loop_scope="session"` to async fixtures in `tests/conftest.py`:
+- `postgres_connection_real` (line 1424)
+- `redis_client_real` (line 1487)
+- `openfga_client_real` (line 1524)
+
+**Validation**: Run postgres compliance tests:
+```bash
+pytest tests/integration/compliance/test_postgres_*.py -v
+```
+
+**Prevention**: Pre-commit hook validates `asyncio_default_fixture_loop_scope="session"` in `pyproject.toml`
+
+---
+
+#### 2. GDPR Endpoint 401 Unauthorized (6 tests)
+
+**Symptom**: All GDPR endpoint tests fail with 401 Unauthorized
+
+**Root Cause**: Missing authentication middleware in test fixture. Endpoints check `request.state.user` (set by middleware), but test only overrode dependencies.
+
+**Fix Applied**: Added mock auth middleware to `tests/integration/test_gdpr_endpoints.py:109-118`:
+```python
+@app.middleware("http")
+async def mock_auth_middleware(request_obj: Request, call_next):
+    request_obj.state.user = mock_auth_user
+    response = await call_next(request_obj)
+    return response
+```
+
+**Validation**: Run GDPR endpoint tests:
+```bash
+pytest tests/integration/test_gdpr_endpoints.py -v
+```
+
+---
+
+#### 3. Docker Health-Check Tests Kill Main Infrastructure (8 tests)
+
+**Symptom**: OSError: [Errno 111] Connect call failed ('127.0.0.1', 9432) after health check tests run
+
+**Root Cause**: `docker compose down --remove-orphans` from health check tests tears down shared network containers
+
+**Fix Applied**: Removed `--remove-orphans` flag from cleanup in `tests/integration/test_docker_health_checks.py` (lines 361, 427)
+
+**Validation**: Run health checks then schema tests:
+```bash
+pytest tests/integration/test_docker_health_checks.py::TestDockerComposeHealthChecksIntegration::test_qdrant_health_check_works -v
+pytest tests/integration/test_schema_initialization_timing.py -v
+```
+
+**Prevention**: Tests use isolated `COMPOSE_PROJECT_NAME` but share network
+
+---
+
+#### 4. Qdrant Port Already Allocated (3 tests)
+
+**Symptom**: `Bind for 0.0.0.0:9333 failed: port is already allocated`
+
+**Root Cause**: Health check tests try to start Qdrant on port already used by main infrastructure
+
+**Fix Applied**: Added port-in-use check to `tests/integration/test_docker_health_checks.py:289-294`:
+```python
+if is_port_in_use(QDRANT_TEST_PORT):
+    pytest.skip(f"Qdrant test port {QDRANT_TEST_PORT} already in use...")
+```
+
+**Validation**: Run health check test with main infrastructure running:
+```bash
+docker compose -f docker-compose.test.yml up -d
+pytest tests/integration/test_docker_health_checks.py::TestDockerComposeHealthChecksIntegration::test_qdrant_health_check_works -v
+```
+
+---
+
+#### 5. OpenFGA Initialization Timeout (3 tests)
+
+**Symptom**: `pytest.skip: Failed to initialize OpenFGA after 3 attempts`
+
+**Root Cause**: PostgreSQL migrations take >14s in slow CI environments
+
+**Fix Applied**: Increased retry logic in `tests/conftest.py:1563-1564`:
+- `max_retries`: 3 → 5
+- `retry_delay`: 2.0 → 3.0
+- Max wait time: 14s → 93s
+
+**Validation**: Run OpenFGA-dependent tests:
+```bash
+pytest tests/integration/api/test_scim_security.py::test_openfga_admin_relation_check -v
+```
+
+---
+
+#### 6. Kubernetes Health Probe Tests Run Unconditionally
+
+**Symptom**: Tests fail when `HEALTH_CHECK_URL` not set
+
+**Root Cause**: Incomplete `pytestmark = pytest.mark.skipif` (missing condition)
+
+**Fix Applied**: Added proper skip condition to `tests/integration/test_kubernetes_health_probes.py:29-33`:
+```python
+pytestmark = pytest.mark.skipif(
+    os.getenv("HEALTH_CHECK_URL") is None,
+    reason="Kubernetes health probe tests require HEALTH_CHECK_URL..."
+)
+```
+
+**Validation**: Tests should skip gracefully:
+```bash
+pytest tests/integration/test_kubernetes_health_probes.py -v
+# Should see: SKIPPED (Kubernetes health probe tests require...)
+```
+
+---
+
+#### 7. E2E Tests Missing MCP Server
+
+**Symptom**: E2E tests marked xfail with "MCP server not running"
+
+**Root Cause**: No MCP server in test infrastructure
+
+**Fix Applied**:
+1. Added `mcp-server-test` service to `docker-compose.test.yml` (lines 274-354)
+2. Configured Keycloak confidential client in `tests/e2e/keycloak-test-realm.json`
+3. Updated `scripts/test-integration.sh` to start MCP server (line 220)
+
+**Validation**: Check MCP server starts correctly:
+```bash
+docker compose -f docker-compose.test.yml up -d
+docker compose -f docker-compose.test.yml ps mcp-server-test
+curl http://localhost:8000/health
+```
+
+**E2E Test Status**:
+- ✅ Infrastructure ready (6 tests passing: login, init, list_tools, chat, continue, get_conversation)
+- ⏳ 23 tests remain xfail (features not yet implemented: search, token refresh, GDPR, service principals, API keys)
+
+---
+
+### Common Issues (General)
 
 **Import errors**:
 ```bash
@@ -577,6 +879,30 @@ deadline = 10000  # 10 seconds
 - Some modules intentionally excluded (see pyproject.toml)
 - MCP entry points tested via integration tests
 - Target is 80%+, not 100%
+
+**Docker Compose services won't start**:
+```bash
+# Clean up all test containers and networks
+docker compose -f docker-compose.test.yml down -v --remove-orphans
+
+# Rebuild images
+docker compose -f docker-compose.test.yml build --no-cache
+
+# Start fresh
+docker compose -f docker-compose.test.yml up -d
+```
+
+**Port conflicts**:
+```bash
+# Check what's using test ports
+lsof -i :9432  # PostgreSQL
+lsof -i :9080  # OpenFGA
+lsof -i :9082  # Keycloak
+lsof -i :9333  # Qdrant
+lsof -i :8000  # MCP Server
+
+# Stop conflicting processes or use different ports
+```
 
 ### Debug Tests
 

@@ -14,7 +14,6 @@ Tests cover:
 """
 
 import gc
-import os
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
@@ -22,6 +21,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.unit
 
 # ==============================================================================
 # Test Fixtures

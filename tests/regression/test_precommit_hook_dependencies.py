@@ -28,12 +28,11 @@ import ast
 import gc
 import re
 from pathlib import Path
-from typing import Dict, List, Set
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 try:
@@ -42,7 +41,7 @@ except ImportError:
     yaml = None
 
 
-def load_precommit_config() -> Dict:
+def load_precommit_config() -> dict:
     """Load .pre-commit-config.yaml configuration."""
     config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
     if not config_path.exists():
@@ -55,7 +54,7 @@ def load_precommit_config() -> Dict:
         return yaml.safe_load(f)
 
 
-def extract_imports_from_python_file(file_path: Path) -> Set[str]:
+def extract_imports_from_python_file(file_path: Path) -> set[str]:
     """
     Extract all import statements from a Python file.
 
@@ -133,6 +132,12 @@ class TestPreCommitHookDependencies:
         - Hooks using `uv run` or `bash -c '... source .venv ...'` SHOULD use language: system
         - uv/venv manage their own dependencies, not pre-commit's isolated environment
         - This provides better integration with project dependencies
+
+        EXCEPTION (2025-11-23):
+        - Project scripts (scripts/, .pre-commit-hooks/, .githooks/) SHOULD use language: system
+        - These scripts are part of the project and rely on the project's Python environment
+        - Deliberately switched to language: system for better project integration
+        - Only external/third-party hooks should use language: python with additional_dependencies
         """
         config = load_precommit_config()
         if not config:
@@ -146,12 +151,19 @@ class TestPreCommitHookDependencies:
                 language = hook.get("language", "")
                 hook_id = hook.get("id", "unknown")
 
-                # EXCEPTION: Allow language: system for hooks using uv run or venv activation
+                # EXCEPTION 1: Allow language: system for hooks using uv run or venv activation
                 # These hooks manage their own dependencies and should use project's environment
                 # Note: Checks for "uv run" anywhere in entry to handle bash-wrapped commands
                 # like: bash -c 'OTEL_SDK_DISABLED=true uv run pytest...'
                 # Also allow run-pre-push-tests orchestrator which calls "uv run pytest" internally
                 if "uv run" in entry or "source .venv/bin/activate" in entry or hook_id == "run-pre-push-tests":
+                    continue
+
+                # EXCEPTION 2: Allow language: system for project scripts
+                # Project scripts (scripts/, .pre-commit-hooks/, .githooks/) use project environment
+                # These are maintained as part of the project and depend on project dependencies
+                project_script_patterns = ["scripts/", ".pre-commit-hooks/", ".githooks/"]
+                if any(pattern in entry for pattern in project_script_patterns):
                     continue
 
                 # Check if hook executes Python but uses language: system
@@ -310,22 +322,24 @@ class TestPreCommitHookDependencies:
 
     def test_validate_workflow_test_deps_hook_has_pyyaml(self):
         """
-        Test: validate-workflow-test-deps hook must have pyyaml dependency.
+        Test: validate-workflow-test-deps hook has pyyaml available.
 
         Specific regression test for the exact issue from 2025-11-12.
 
-        RED (Before Fix):
+        RED (Before Fix - 2025-11-12):
         - Hook had no additional_dependencies
         - Script imported yaml at line 30
         - ModuleNotFoundError in CI
 
-        GREEN (After Fix):
-        - Hook has additional_dependencies: ['pyyaml>=6.0.0']
+        GREEN (After Fix - 2025-11-12):
+        - Hook had additional_dependencies: ['pyyaml>=6.0.0']
         - yaml import satisfied
 
-        REFACTOR:
-        - Permanent regression check
-        - Fails immediately if dependency removed
+        REFACTOR (2025-11-23):
+        - Hook now uses `uv run` which loads dependencies from pyproject.toml
+        - No longer needs additional_dependencies because uv manages project deps
+        - Test updated to verify hook uses uv run OR has pyyaml in additional_dependencies
+        - Either approach satisfies the yaml import requirement
         """
         config = load_precommit_config()
         if not config:
@@ -333,12 +347,18 @@ class TestPreCommitHookDependencies:
 
         hook_found = False
         hook_has_pyyaml = False
+        hook_uses_uv_run = False
 
         for repo in config.get("repos", []):
             for hook in repo.get("hooks", []):
                 if hook.get("id") == "validate-workflow-test-deps":
                     hook_found = True
+                    entry = hook.get("entry", "")
                     additional_deps = hook.get("additional_dependencies", [])
+
+                    # Check if hook uses uv run (which provides project dependencies)
+                    if "uv run" in entry:
+                        hook_uses_uv_run = True
 
                     # Check for pyyaml in dependencies
                     for dep in additional_deps:
@@ -349,9 +369,19 @@ class TestPreCommitHookDependencies:
         if not hook_found:
             pytest.skip("validate-workflow-test-deps hook not found in config")
 
-        assert hook_has_pyyaml, (
-            "validate-workflow-test-deps hook missing pyyaml dependency!\n"
+        # Hook must EITHER use uv run (project deps) OR have pyyaml in additional_dependencies
+        assert hook_uses_uv_run or hook_has_pyyaml, (
+            "validate-workflow-test-deps hook has no way to import yaml!\n"
             "\n"
+            "The hook must either:\n"
+            "  1. Use 'uv run' to access project dependencies (pyyaml in pyproject.toml)\n"
+            "  2. Have 'pyyaml' in additional_dependencies\n"
+            "\n"
+            f"Current state:\n"
+            f"  - Uses uv run: {hook_uses_uv_run}\n"
+            f"  - Has pyyaml in additional_dependencies: {hook_has_pyyaml}\n"
+            "\n"
+            "Original error (2025-11-12):\n"
             "This is the exact issue from 2025-11-12 that caused CI failures.\n"
             "\n"
             "Fix in .pre-commit-config.yaml:\n"

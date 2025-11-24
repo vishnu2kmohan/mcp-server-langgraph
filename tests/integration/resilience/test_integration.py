@@ -13,6 +13,8 @@ from mcp_server_langgraph.core.exceptions import CircuitBreakerOpenError, RetryE
 from mcp_server_langgraph.core.exceptions import TimeoutError as MCPTimeoutError
 from mcp_server_langgraph.resilience import circuit_breaker, retry_with_backoff, with_bulkhead, with_fallback, with_timeout
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def reset_all_resilience():

@@ -12,6 +12,8 @@ import gc
 import pytest
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_client():

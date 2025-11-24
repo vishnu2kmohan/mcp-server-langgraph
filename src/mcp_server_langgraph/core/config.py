@@ -2,7 +2,7 @@
 Configuration management with Infisical secrets integration
 """
 
-from typing import Any, List, Optional
+from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,7 +16,7 @@ except ImportError:
     __version__ = "2.7.0"  # Fallback
 
 
-class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lacks complete type stubs
+class Settings(BaseSettings):
     """Application settings with Infisical secrets support"""
 
     # Service
@@ -27,10 +27,10 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     # CORS Configuration
     # SECURITY: Empty list by default (no CORS) in production
     # Override with CORS_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:8000"
-    cors_allowed_origins: List[str] = []  # Empty = no CORS/restrictive by default
+    cors_allowed_origins: list[str] = []  # Empty = no CORS/restrictive by default
 
     # Authentication
-    jwt_secret_key: Optional[str] = None
+    jwt_secret_key: str | None = None
     jwt_algorithm: str = "HS256"
     jwt_expiration_seconds: int = 3600
     use_password_hashing: bool = True  # Enable bcrypt password hashing for InMemoryUserProvider (default: secure)
@@ -42,7 +42,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     allow_auth_fallback: bool = False
 
     # HIPAA Compliance (only required if processing PHI)
-    hipaa_integrity_secret: Optional[str] = None
+    hipaa_integrity_secret: str | None = None
 
     # OpenTelemetry
     otlp_endpoint: str = "http://localhost:4317"
@@ -56,21 +56,21 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     prometheus_retry_attempts: int = 3  # Number of retry attempts
 
     # Alerting Configuration (PagerDuty, Slack, OpsGenie, Email)
-    pagerduty_integration_key: Optional[str] = None  # PagerDuty Events API v2 integration key
-    slack_webhook_url: Optional[str] = None  # Slack incoming webhook URL
-    opsgenie_api_key: Optional[str] = None  # OpsGenie API key
-    email_smtp_host: Optional[str] = None  # SMTP server for email alerts
+    pagerduty_integration_key: str | None = None  # PagerDuty Events API v2 integration key
+    slack_webhook_url: str | None = None  # Slack incoming webhook URL
+    opsgenie_api_key: str | None = None  # OpsGenie API key
+    email_smtp_host: str | None = None  # SMTP server for email alerts
     email_smtp_port: int = 587  # SMTP port
-    email_from_address: Optional[str] = None  # From email address
-    email_to_addresses: Optional[str] = None  # Comma-separated list of email addresses
+    email_from_address: str | None = None  # From email address
+    email_to_addresses: str | None = None  # Comma-separated list of email addresses
 
     # Web Search API Configuration (for search_tools.py)
-    tavily_api_key: Optional[str] = None  # Tavily API key (recommended for AI)
-    serper_api_key: Optional[str] = None  # Serper API key (Google search)
-    brave_api_key: Optional[str] = None  # Brave Search API key (privacy-focused)
+    tavily_api_key: str | None = None  # Tavily API key (recommended for AI)
+    serper_api_key: str | None = None  # Serper API key (Google search)
+    brave_api_key: str | None = None  # Brave Search API key (privacy-focused)
 
     # LangSmith Observability
-    langsmith_api_key: Optional[str] = None
+    langsmith_api_key: str | None = None
     langsmith_project: str = "mcp-server-langgraph"
     langsmith_endpoint: str = "https://api.smith.langchain.com"
     langsmith_tracing: bool = False  # Enable LangSmith tracing
@@ -81,48 +81,60 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
 
     # Logging
     log_level: str = "INFO"
-    log_file: Optional[str] = None
+    log_file: str | None = None
     log_format: str = "json"  # "json" or "text"
-    log_json_indent: Optional[int] = None  # None for compact, 2 for pretty-print
+    log_json_indent: int | None = None  # None for compact, 2 for pretty-print
     enable_file_logging: bool = False  # Opt-in file-based log rotation (for persistent storage)
 
     # LLM Provider (litellm integration)
-    llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock
+    llm_provider: str = "google"  # google, anthropic, openai, ollama, azure, bedrock, vertex_ai
 
-    # Anthropic
-    anthropic_api_key: Optional[str] = None
+    # Anthropic (Direct API)
+    # Latest models: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-1-20250805
+    anthropic_api_key: str | None = None
 
     # OpenAI
-    openai_api_key: Optional[str] = None
-    openai_organization: Optional[str] = None
+    openai_api_key: str | None = None
+    openai_organization: str | None = None
 
-    # Google (Gemini/VertexAI)
-    google_api_key: Optional[str] = None
-    google_project_id: Optional[str] = None
+    # Google (Gemini via Google AI Studio)
+    # Latest models: gemini-3-pro-preview (Nov 2025), gemini-2.5-flash
+    google_api_key: str | None = None
+    google_project_id: str | None = None
     google_location: str = "us-central1"
 
     # Vertex AI (Google Cloud AI Platform)
-    # Use Workload Identity on GKE (no GOOGLE_APPLICATION_CREDENTIALS needed)
-    # or set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
-    vertex_project: Optional[str] = None  # GCP project ID for Vertex AI (falls back to google_project_id)
+    # Supports both Anthropic Claude and Google Gemini models via Vertex AI
+    # Authentication:
+    #   - On GKE: Use Workload Identity (automatic, no credentials needed)
+    #   - Locally: Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+    # Anthropic via Vertex AI: vertex_ai/claude-sonnet-4-5@20250929
+    # Google via Vertex AI: vertex_ai/gemini-3-pro-preview
+    vertex_project: str | None = None  # GCP project ID for Vertex AI (falls back to google_project_id)
     vertex_location: str = "us-central1"  # Vertex AI location/region
 
     # Azure OpenAI
-    azure_api_key: Optional[str] = None
-    azure_api_base: Optional[str] = None
+    azure_api_key: str | None = None
+    azure_api_base: str | None = None
     azure_api_version: str = "2024-02-15-preview"
-    azure_deployment_name: Optional[str] = None
+    azure_deployment_name: str | None = None
 
     # AWS Bedrock
-    aws_access_key_id: Optional[str] = None
-    aws_secret_access_key: Optional[str] = None
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
     aws_region: str = "us-east-1"
 
     # Ollama (for local/open-source models)
     ollama_base_url: str = "http://localhost:11434"
 
     # Model Configuration (Primary Chat Model)
-    model_name: str = "gemini-2.5-flash"  # Latest Gemini 2.5 Flash
+    # Options:
+    #   - gemini-3-pro-preview (Gemini 3.0 Pro - latest, Nov 2025, 1M context window)
+    #   - gemini-2.5-flash (Gemini 2.5 Flash - fast, cost-effective)
+    #   - claude-sonnet-4-5-20250929 (Claude Sonnet 4.5 via Anthropic API)
+    #   - vertex_ai/claude-sonnet-4-5@20250929 (Claude Sonnet 4.5 via Vertex AI)
+    #   - vertex_ai/gemini-3-pro-preview (Gemini 3.0 Pro via Vertex AI)
+    model_name: str = "gemini-2.5-flash"  # Default: Gemini 2.5 Flash (balanced cost/performance)
     model_temperature: float = 0.7
     model_max_tokens: int = 8192
     model_timeout: int = 60
@@ -130,15 +142,15 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     # Dedicated Models for Cost/Performance Optimization
     # Summarization Model (lighter/cheaper model for context compaction)
     use_dedicated_summarization_model: bool = True
-    summarization_model_name: Optional[str] = "gemini-2.5-flash"  # Lighter/cheaper for summarization
-    summarization_model_provider: Optional[str] = None  # Defaults to llm_provider if None
+    summarization_model_name: str | None = "gemini-2.5-flash"  # Lighter/cheaper for summarization
+    summarization_model_provider: str | None = None  # Defaults to llm_provider if None
     summarization_model_temperature: float = 0.3  # Lower temperature for factual summaries
     summarization_model_max_tokens: int = 2000  # Smaller output for summaries
 
     # Verification Model (dedicated model for LLM-as-judge)
     use_dedicated_verification_model: bool = True
-    verification_model_name: Optional[str] = "gemini-2.5-flash"  # Can use different model for verification
-    verification_model_provider: Optional[str] = None  # Defaults to llm_provider if None
+    verification_model_name: str | None = "gemini-2.5-flash"  # Can use different model for verification
+    verification_model_provider: str | None = None  # Defaults to llm_provider if None
     verification_model_temperature: float = 0.0  # Deterministic for consistent verification
     verification_model_max_tokens: int = 1000  # Smaller output for verification feedback
 
@@ -190,7 +202,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
 
     # Data Security & Compliance (for regulated workloads)
     enable_context_encryption: bool = False  # Enable encryption-at-rest for context data
-    context_encryption_key: Optional[str] = None  # Encryption key for context data (Fernet-compatible)
+    context_encryption_key: str | None = None  # Encryption key for context data (Fernet-compatible)
     context_retention_days: int = 90  # Retention period for context data (days)
     enable_auto_deletion: bool = True  # Automatically delete expired context data
     enable_multi_tenant_isolation: bool = False  # Use separate collections per tenant
@@ -219,11 +231,9 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     code_execution_cpu_quota: float = 1.0  # CPU cores quota (0.1-8.0)
     code_execution_disk_quota_mb: int = 100  # Disk quota in MB (1-10240)
     code_execution_max_processes: int = 1  # Maximum processes (1-100)
-    code_execution_network_mode: str = (
-        "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to 'none' for maximum isolation - users must explicitly opt-in to network access)
-    )
-    code_execution_allowed_domains: List[str] = []  # Allowed domains for allowlist mode
-    code_execution_allowed_imports: List[str] = [
+    code_execution_network_mode: str = "none"  # Network mode: none, allowlist, unrestricted (SECURITY: defaults to 'none' for maximum isolation - users must explicitly opt-in to network access)
+    code_execution_allowed_domains: list[str] = []  # Allowed domains for allowlist mode
+    code_execution_allowed_imports: list[str] = [
         # Safe standard library modules
         "json",
         "math",
@@ -256,18 +266,18 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
 
     # OpenFGA
     openfga_api_url: str = "http://localhost:8080"
-    openfga_store_id: Optional[str] = None
-    openfga_model_id: Optional[str] = None
+    openfga_store_id: str | None = None
+    openfga_model_id: str | None = None
 
     # Infisical
     infisical_site_url: str = "https://app.infisical.com"
-    infisical_client_id: Optional[str] = None
-    infisical_client_secret: Optional[str] = None
-    infisical_project_id: Optional[str] = None
+    infisical_client_id: str | None = None
+    infisical_client_secret: str | None = None
+    infisical_project_id: str | None = None
 
     # LangGraph Platform
-    langgraph_api_key: Optional[str] = None
-    langgraph_deployment_url: Optional[str] = None
+    langgraph_api_key: str | None = None
+    langgraph_deployment_url: str | None = None
     langgraph_api_url: str = "https://api.langchain.com"
 
     # Authentication Provider
@@ -277,15 +287,15 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     # Mock Data (Development)
     # SECURITY: Mock authorization disabled by default in production
     # Override with ENABLE_MOCK_AUTHORIZATION=true if needed for staging/testing
-    enable_mock_authorization: Optional[bool] = None  # None = auto-determine based on environment
+    enable_mock_authorization: bool | None = None  # None = auto-determine based on environment
 
     # Keycloak Settings
     keycloak_server_url: str = "http://localhost:8082"
     keycloak_realm: str = "langgraph-agent"
     keycloak_client_id: str = "langgraph-client"
-    keycloak_client_secret: Optional[str] = None
+    keycloak_client_secret: str | None = None
     keycloak_admin_username: str = "admin"
-    keycloak_admin_password: Optional[str] = None
+    keycloak_admin_password: str | None = None
     keycloak_verify_ssl: bool = True
     keycloak_timeout: int = 30  # HTTP timeout in seconds
 
@@ -297,7 +307,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     )
     redis_host: str = "localhost"  # Redis host for rate limiting and cache
     redis_port: int = 6379  # Redis port for rate limiting and cache
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
     redis_ssl: bool = False
     session_ttl_seconds: int = 86400  # 24 hours
     session_sliding_window: bool = True
@@ -328,24 +338,24 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
     # - Audit logs: 7 years (HIPAA §164.316(b)(2)(i), SOC2 CC6.6)
 
     # Audit Log Cold Storage (for long-term compliance archival)
-    audit_log_cold_storage_backend: Optional[str] = None  # None, "s3", "gcs", "azure", "local"
-    audit_log_cold_storage_path: Optional[str] = None  # Local path or bucket name
+    audit_log_cold_storage_backend: str | None = None  # None, "s3", "gcs", "azure", "local"
+    audit_log_cold_storage_path: str | None = None  # Local path or bucket name
 
     # S3 Configuration (for audit log archival)
-    aws_s3_bucket: Optional[str] = None  # S3 bucket for audit log archival
-    aws_s3_region: Optional[str] = None  # S3 region (defaults to aws_region if not set)
+    aws_s3_bucket: str | None = None  # S3 bucket for audit log archival
+    aws_s3_region: str | None = None  # S3 region (defaults to aws_region if not set)
     aws_s3_prefix: str = "audit-logs/"  # S3 key prefix for audit logs
 
     # GCS Configuration (for audit log archival)
-    gcp_storage_bucket: Optional[str] = None  # GCS bucket for audit log archival
+    gcp_storage_bucket: str | None = None  # GCS bucket for audit log archival
     gcp_storage_prefix: str = "audit-logs/"  # GCS object prefix for audit logs
-    gcp_credentials_path: Optional[str] = None  # Path to GCP service account credentials JSON
+    gcp_credentials_path: str | None = None  # Path to GCP service account credentials JSON
 
     # Azure Blob Storage Configuration (for audit log archival)
-    azure_storage_account: Optional[str] = None  # Azure storage account name
-    azure_storage_container: Optional[str] = None  # Azure blob container for audit logs
+    azure_storage_account: str | None = None  # Azure storage account name
+    azure_storage_container: str | None = None  # Azure blob container for audit logs
     azure_storage_prefix: str = "audit-logs/"  # Blob prefix for audit logs
-    azure_storage_connection_string: Optional[str] = None  # Azure storage connection string
+    azure_storage_connection_string: str | None = None  # Azure storage connection string
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -450,7 +460,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
         # Enable in development, disable in production/staging
         return self.environment == "development"
 
-    def get_cors_origins(self) -> List[str]:
+    def get_cors_origins(self) -> list[str]:
         """
         Get the effective CORS allowed origins based on environment and configuration.
 
@@ -665,7 +675,7 @@ class Settings(BaseSettings):  # type: ignore[misc]  # Pydantic BaseSettings lac
         """Alias for redis_url (test compatibility)"""
         return self.redis_url
 
-    def get_secret(self, key: str, fallback: Optional[str] = None) -> Optional[str]:
+    def get_secret(self, key: str, fallback: str | None = None) -> str | None:
         """
         Get a secret value from Infisical
 

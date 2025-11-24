@@ -129,6 +129,9 @@ Thumbs.db
 .dockerignore
 docker-compose.override.yml
 
+# Docker runtime artifacts
+monitoring/grafana/dashboards/dashboards.yml
+
 # Kubernetes
 kubeconfig
 *.kubeconfig
@@ -248,3 +251,4 @@ poetry.lock
 terraform/environments/staging/.terraform/
 terraform/**/.terraform/
 terraform/**/.terraform.lock.hcl
+.ruff_cache/

@@ -32,8 +32,8 @@ help-common:
 	@echo "📝 Daily Development:"
 	@echo "  make test-dev              🚀 Run tests (fast, parallel, recommended)"
 	@echo "  make validate-pre-push     ✅ Validate before push (matches CI exactly)"
-	@echo "  make format                Format code (black, isort)"
-	@echo "  make lint-check            Check code quality"
+	@echo "  make format                Format code (Ruff)"
+	@echo "  make lint-check            Check code quality (Ruff, MyPy)"
 	@echo "  make run-streamable        Start HTTP server"
 	@echo ""
 	@echo "🧪 Essential Testing:"
@@ -78,15 +78,14 @@ help:
 	@echo "  make setup-keycloak   Initialize Keycloak"
 	@echo "  make setup-infisical  Initialize Infisical"
 	@echo ""
-	@echo "Testing:"
+Testing:
 	@echo "  make test                     Run all automated tests with coverage"
-	@echo "  make test-unit                Run unit tests with coverage"
+	@echo "  make test-unit                Run pure unit tests (tests/unit/)"
+	@echo "  make test-local               Run all local tests (Unit + CLI + Validation)"
 	@echo "  make test-integration         Run integration tests in Docker"
 	@echo ""
 	@echo "Fast Testing (40-70% faster):"
 	@echo "  make test-dev                 🚀 Development mode (parallel, fast-fail) - RECOMMENDED"
-	@echo "  make test-parallel            Run all tests in parallel (no coverage)"
-	@echo "  make test-parallel-unit       Run unit tests in parallel"
 	@echo "  make test-fast-core           Fastest iteration (core tests only, <5s)"
 	@echo "  make test-fast                Run all tests without coverage"
 	@echo ""
@@ -143,8 +142,8 @@ help:
 	@echo "  make test-helm-deployment     Test Helm deployment (kind)"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  make lint                Run linters (flake8, mypy)"
-	@echo "  make format              Format code (black, isort)"
+	@echo "  make lint                Alias for lint-check (Ruff linter + MyPy)"
+	@echo "  make format              Alias for lint-fix (Ruff formatter)"
 	@echo "  make security-check      Run security scans"
 	@echo "  make lint-check          Run comprehensive lint checks (non-destructive)"
 	@echo "  make lint-fix            Auto-fix formatting issues"
@@ -227,23 +226,31 @@ test:
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Tests complete. Coverage report above."
 	@echo ""
-	@echo "Tip: Use 'make test-fast' or 'make test-parallel' for faster iteration"
+	@echo "Tip: Use 'make test-fast' or 'make test-dev' for faster iteration"
 
 test-unit:
-	@echo "Running unit tests with coverage (parallel execution, matches CI)..."
+	@echo "Running pure unit tests (tests/unit/)..."
 	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
-	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m unit $(COV_OPTIONS) --cov-report=term-missing
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit $(COV_OPTIONS) --cov-report=term-missing
 	@echo "✓ Unit tests complete"
 
-test-unit-fast:
-	@echo "Running unit tests without coverage (fast iteration)..."
-	@echo "⚠️  DEPRECATED: Use 'make test-parallel-unit' or 'make test-dev' instead"
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit --tb=short
-	@echo "✓ Fast unit tests complete"
+test-local:
+	@echo "Running all local tests (Unit + CLI + Validation)..."
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit tests/cli tests/deployment tests/infrastructure tests/ci
+	@echo "✓ Local tests complete"
+
+test-meta:  ## Run meta-tests (infrastructure validation) - Codex Finding #5 Fix (2025-11-23)
+	@echo "Running meta-tests (test infrastructure validation)..."
+	@echo "  These tests validate git hooks, CI workflows, Docker configs, etc."
+	@echo "  They are excluded from regular unit test runs (pre-push) to reduce overhead."
+	@test -d .venv || (echo "✗ No .venv found. Run: make install-dev" && exit 1)
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m meta -v
+	@echo "✓ Meta-tests complete"
 
 test-ci:
 	@echo "Running tests exactly as CI does (parallel execution)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
+	OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci $(PYTEST) -n auto -m "unit and not llm" $(COV_OPTIONS) --cov-report=xml --cov-report=term-missing
 	@echo "✓ CI-equivalent tests complete"
 	@echo "  Coverage XML: coverage.xml"
 
@@ -251,12 +258,6 @@ test-integration:
 	@echo "Running integration tests in Docker environment (matches CI)..."
 	./scripts/test-integration.sh --build
 	@echo "✓ Integration tests complete"
-
-test-integration-local:
-	@echo "⚠️  Running integration tests locally (parallel execution, requires services running)..."
-	@echo "Note: CI uses Docker. Use 'make test-integration' to match CI exactly."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m integration --no-cov --tb=short
-	@echo "✓ Local integration tests complete"
 
 test-integration-services:
 	@echo "Starting integration test services only..."
@@ -272,7 +273,7 @@ test-integration-debug:
 
 test-integration-cleanup:
 	@echo "Cleaning up integration test containers..."
-	$(DOCKER_COMPOSE) -f docker/docker-compose.test.yml down -v --remove-orphans
+	$(DOCKER_COMPOSE) -f docker-compose.test.yml down -v --remove-orphans
 	@echo "✓ Cleanup complete"
 
 test-coverage:
@@ -400,8 +401,8 @@ test-all-quality: test-property test-contract test-regression
 
 # Pre-commit Hook Validation
 test-precommit-validation:
-	@echo "Validating pre-commit hook configuration..."
-	OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/regression/test_precommit_hook_dependencies.py -v --tb=short
+	@echo "Validating pre-commit hook configuration (parallel)..."
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/regression/test_precommit_hook_dependencies.py -v --tb=short
 	@echo "✓ Pre-commit validation complete"
 
 # CI-Mode Quality Tests (with coverage, matches CI exactly)
@@ -461,15 +462,14 @@ test-e2e:
 	$(MAKE) test-infra-up
 	@echo ""
 	@echo "Waiting for services to be healthy..."
-	@sleep 10
+	@bash scripts/utils/wait_for_services.sh docker-compose.test.yml
 	@echo ""
 	@echo "Running E2E tests..."
-	TESTING=true OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m e2e -v --tb=short
+	TESTING=true OTEL_SDK_DISABLED=true KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests KEYCLOAK_ADMIN_PASSWORD=admin JWT_SECRET_KEY=test-jwt-secret-key-for-e2e-testing-only uv run pytest -n auto -m e2e -v --tb=short
 	@echo "✓ E2E tests complete"
 
 test-api:
 	@echo "Running API endpoint tests (unit tests for REST APIs)..."
-	@uv sync --extra dev --extra code-execution --quiet
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m "api and unit" -v
 	@echo "✓ API endpoint tests complete"
 
@@ -558,12 +558,47 @@ test-workflow-%:
 	@echo "Testing workflow: $*.yaml"
 	@act push -W .github/workflows/$*.yaml
 
-validate-workflows:
-	@echo "Validating all workflow YAML syntax..."
-	@for file in .github/workflows/*.yaml; do \
-		python -c "import yaml; yaml.safe_load(open('$$file'))" 2>/dev/null && echo "  ✓ $$(basename $$file)" || echo "  ✗ $$(basename $$file) INVALID"; \
-	done
-	@echo "✓ Workflow syntax validation complete"
+validate-workflows:  ## Comprehensive workflow validation (matches CI exactly)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Comprehensive Workflow Validation (CI-Equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ STEP 1: Install actionlint (if needed)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if ! command -v actionlint >/dev/null 2>&1; then \
+		echo "actionlint not found - installing..."; \
+		wget -q https://github.com/rhysd/actionlint/releases/latest/download/actionlint_1.7.5_linux_amd64.tar.gz -O /tmp/actionlint.tar.gz && \
+		tar -xzf /tmp/actionlint.tar.gz -C /tmp && \
+		sudo mv /tmp/actionlint /usr/local/bin/ && \
+		sudo chmod +x /usr/local/bin/actionlint && \
+		rm -f /tmp/actionlint.tar.gz && \
+		echo "✓ actionlint installed"; \
+	else \
+		echo "✓ actionlint already installed ($$(actionlint --version))"; \
+	fi
+	@echo ""
+	@echo "▶ STEP 2: Run actionlint on all workflow files"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@actionlint -color -shellcheck= .github/workflows/*.{yml,yaml} && echo "✓ actionlint validation passed" || (echo "✗ actionlint validation failed" && exit 1)
+	@echo ""
+	@echo "▶ STEP 3: Run workflow validation test suite"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running: test_workflow_syntax.py, test_workflow_security.py,"
+	@echo "         test_workflow_dependencies.py, test_docker_paths.py"
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest \
+		tests/meta/ci/test_workflow_syntax.py \
+		tests/meta/ci/test_workflow_security.py \
+		tests/meta/ci/test_workflow_dependencies.py \
+		tests/meta/infrastructure/test_docker_paths.py \
+		-v --tb=short && echo "✓ Workflow test suite passed" || (echo "✗ Workflow tests failed" && exit 1)
+	@echo ""
+	@echo "▶ STEP 4: Validate pytest configuration compatibility"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@$(UV_RUN) python scripts/validation/validate_pytest_config.py && echo "✓ Pytest config validation passed" || (echo "✗ Pytest config validation failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ All workflow validations passed (CI-equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Tiered Validation System (2025-11-16 - CI/CD Optimization)
@@ -577,37 +612,66 @@ validate-commit:  ## Tier 1: Fast validation (<30s) - formatters, linters, basic
 	@echo "⚡ TIER 1 VALIDATION - Quick Checks (<30s)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "Running pre-commit hooks (default stage only)..."
-	@echo "Hooks: trailing-whitespace, end-of-file-fixer, black, isort,"
-	@echo "       flake8, bandit, gitleaks, check-yaml/json/toml, etc."
+	@echo "Running pre-commit hooks (staged files only)..."
+	@echo "Hooks: trailing-whitespace, end-of-file-fixer, Ruff (linter + formatter),"
+	@echo "       bandit, gitleaks, check-yaml/json/toml, etc."
 	@echo ""
-	@pre-commit run --all-files
+	@pre-commit run --show-diff-on-failure
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✅ Tier 1 validation complete!"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-validate-push:  ## Tier 2: Critical validation (3-5 min) - type checking, fast tests, deployment
+## validate-push-changed: Fast validation of changed files only (matches git hook behavior)
+validate-push-changed:  ## Tier 2: Critical validation - changed files only (1-3 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 TIER 2 VALIDATION - Critical Checks (3-5 min)"
+	@echo "🔍 TIER 2 VALIDATION - Critical Checks (Changed Files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "This runs Tier 1 + Tier 2 validators"
+	@echo "This runs Tier 1 + Tier 2 validators on CHANGED files only"
+	@echo "Matches git hook behavior - faster for routine development"
 	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
 	@echo ""
-	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks)"
+	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks - changed files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@pre-commit run --all-files
+	@pre-commit run --show-diff-on-failure
 	@echo ""
-	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks)"
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks - changed files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "Running: mypy, helm-lint, kustomize, pytest, deployment validation..."
 	@echo ""
-	@pre-commit run --hook-stage pre-push --all-files
+	@pre-commit run --hook-stage pre-push --show-diff-on-failure
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "✅ Tier 1 + Tier 2 validation complete!"
+	@echo "✅ Tier 1 + Tier 2 validation complete (changed files)!"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-push-full: Comprehensive validation of all files (pre-release audit)
+validate-push-full:  ## Tier 2: Critical validation - all files (3-5 min)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 TIER 2 VALIDATION - Critical Checks (All Files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This runs Tier 1 + Tier 2 validators on ALL files"
+	@echo "Use before important releases or when refactoring core code"
+	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
+	@echo ""
+	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks - all files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@pre-commit run --all-files --show-diff-on-failure
+	@echo ""
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks - all files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running: mypy, helm-lint, kustomize, pytest, deployment validation..."
+	@echo ""
+	@pre-commit run --hook-stage pre-push --all-files --show-diff-on-failure
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ Tier 1 + Tier 2 validation complete (all files)!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-push: Alias to validate-push-changed (common case for development)
+validate-push: validate-push-changed  ## Tier 2: Critical validation (default: changed files)
 
 validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, security, manual validators
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -640,9 +704,66 @@ validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, sec
 # Legacy comprehensive pre-push validation target
 # NOTE: validate-push (Tier 2) is now the recommended target for pre-push validation
 # This target is kept for CI/CD parity and backward compatibility
-validate-pre-push:
+## validate-pre-push-quick: Fast pre-push validation (skip integration tests)
+validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 Running comprehensive pre-push validation (CI-equivalent)"
+	@echo "🔍 Running pre-push validation (QUICK - no integration tests)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Skipping integration tests (no Docker required)"
+	@echo "Run 'make validate-pre-push-full' for comprehensive validation with Docker"
+	@echo ""
+	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Lockfile Validation..."
+	@uv lock --check && echo "✓ Lockfile valid" || (echo "✗ Lockfile validation failed" && exit 1)
+	@echo ""
+	@echo "▶ Dependency Tree Validation..."
+	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
+	@echo ""
+	@echo "▶ Workflow Validation Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 2: Type Checking (Critical - matches CI)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ MyPy Type Checking (Critical)..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 3: Test Suite Validation"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Running Unit, API, Property, and Smoke Tests (Optimized)..."
+	@# Runs: unit tests + API tests + property tests + smoke tests (11 critical startup tests)
+	@# Includes: 19 xdist enforcement tests (validates pytest-xdist isolation patterns)
+	@# Includes: Smoke tests (validate app startup, dependency injection, configuration)
+	@$(UV_RUN) python scripts/run_pre_push_tests.py && echo "✓ Fast tests passed" || (echo "✗ Fast tests failed" && exit 1)
+	@echo ""
+	@echo "⚠ Skipping integration tests (use validate-pre-push-full for comprehensive validation)"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
+	@# Skip hooks already run in manual phases to avoid duplicate work
+	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
+	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
+	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✓ All pre-push validations passed (QUICK)!"
+	@echo "✓ Your push should pass most CI checks"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-pre-push-full: Comprehensive pre-push validation with integration tests
+validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integration tests (8-12 min)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
@@ -655,7 +776,7 @@ validate-pre-push:
 	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
 	@echo ""
 	@echo "▶ Workflow Validation Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 2: Type Checking (Critical - matches CI)"
@@ -665,53 +786,61 @@ validate-pre-push:
 	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 3: Test Suite Validation (CI-equivalent)"
+	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ Unit Tests (with coverage)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/ -m 'unit and not llm and not property' -x --tb=short --cov=src/mcp_server_langgraph --cov-report= && echo "✓ Unit tests passed (coverage collected)" || (echo "✗ Unit tests failed" && exit 1)
+	@echo "▶ Running Unit, API, Property, and Smoke Tests (Optimized)..."
+	@# Runs: unit tests + API tests + property tests + smoke tests (11 critical startup tests)
+	@# Includes: 19 xdist enforcement tests (validates pytest-xdist isolation patterns)
+	@# Includes: Smoke tests (validate app startup, dependency injection, configuration)
+	@$(UV_RUN) python scripts/run_pre_push_tests.py && echo "✓ Fast tests passed" || (echo "✗ Fast tests failed" && exit 1)
 	@echo ""
-	@echo "▶ Smoke Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/smoke/ -v --tb=short && echo "✓ Smoke tests passed" || (echo "✗ Smoke tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Integration Tests (Last Failed)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/integration/ -x --tb=short --lf && echo "✓ Integration tests passed" || echo "⚠ Integration tests failed (non-blocking)"
-	@echo ""
-	@echo "▶ API Endpoint Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m 'api and unit and not llm' -v --tb=short && echo "✓ API tests passed" || (echo "✗ API tests failed" && exit 1)
-	@echo ""
-	@echo "▶ MCP Server Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/unit/test_mcp_stdio_server.py -m 'not llm' -v --tb=short && echo "✓ MCP tests passed" || (echo "✗ MCP tests failed" && exit 1)
-	@echo ""
-	@echo "▶ Property Tests (100 examples)..."
-	@HYPOTHESIS_PROFILE=ci OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto -m property -x --tb=short && echo "✓ Property tests passed" || (echo "✗ Property tests failed" && exit 1)
-	@echo ""
-	@echo "▶ pytest-xdist Enforcement Tests (Meta)..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/meta/test_pytest_xdist_enforcement.py -x --tb=short && echo "✓ pytest-xdist enforcement passed" || (echo "✗ pytest-xdist enforcement failed" && exit 1)
+	@echo "▶ Running Integration Tests (Docker - requires Docker daemon)..."
+	@./scripts/test-integration.sh && echo "✓ Integration tests passed" || (echo "✗ Integration tests failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
-	@pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@# Skip hooks already run in manual phases to avoid duplicate work
+	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
+	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
+	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "✓ All pre-push validations passed!"
-	@echo "✓ Your push should pass CI checks"
+	@echo "✓ All pre-push validations passed (FULL)!"
+	@echo "✓ Your push should pass all CI checks"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-pre-push: Smart routing based on CI_PARITY environment variable
+## Includes: Lockfile check, dependency validation, MyPy type checking, test suite, pre-commit hooks
+validate-pre-push:  ## Pre-push validation (auto-detects CI_PARITY for full vs quick)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if [ "$$CI_PARITY" = "1" ]; then \
+		echo "🔍 CI_PARITY=1 detected - Running FULL CI-equivalent validation"; \
+		echo "   This includes integration tests and matches CI exactly"; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		$(MAKE) validate-pre-push-full; \
+	else \
+		echo "🚀 Running QUICK validation (skip integration, use testmon)"; \
+		echo "   💡 Tip: Use 'CI_PARITY=1 make validate-pre-push' for full CI validation"; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		$(MAKE) validate-pre-push-quick; \
+	fi
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."
 	@act push --list
 
 # Code quality
-# REMOVED 2025-11-16: Deprecated targets removed as part of CI/CD optimization
-# Old targets: lint, format
-# Replacements:
-#   - make lint     → make lint-check (comprehensive linting with all tools)
-#   - make format   → make lint-fix (auto-fix formatting issues)
-# See: VALIDATION_STRATEGY.md for modern validation approach
+# Modern tooling: Ruff (replaces black/isort/flake8)
+# Aliases provided for backward compatibility (2025-11-23 - Codex Finding #3)
+
+lint: lint-check  ## Alias for lint-check (Ruff linter + MyPy)
+
+format: lint-fix  ## Alias for lint-fix (Ruff formatter)
 
 security-check:
 	@echo "Running bandit security scan..."
@@ -749,47 +878,33 @@ security-scan-full:
 	@echo ""
 	@cat security-reports/security-scan-report.md
 
-# Enhanced lint targets for pre-commit/pre-push workflow
-lint-check:
-	@echo "🔍 Running comprehensive lint checks in parallel (non-destructive)..."
-	@echo ""
-	@echo "Running 5 linters in parallel..."
-	@( \
-		echo "1/5 Running flake8..." && $(UV_RUN) flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | sed 's/^/[flake8] /' || true \
-	) & pid1=$$!; \
-	( \
-		echo "2/5 Checking black formatting..." && $(UV_RUN) black --check src/ --line-length=127 2>&1 | sed 's/^/[black] /' || true \
-	) & pid2=$$!; \
-	( \
-		echo "3/5 Checking isort import order..." && $(UV_RUN) isort --check src/ --profile=black --line-length=127 2>&1 | sed 's/^/[isort] /' || true \
-	) & pid3=$$!; \
-	( \
-		echo "4/5 Running mypy type checking..." && $(UV_RUN) mypy src/ --ignore-missing-imports --show-error-codes 2>&1 | sed 's/^/[mypy] /' || true \
-	) & pid4=$$!; \
-	( \
-		echo "5/5 Running bandit security scan..." && $(UV_RUN) bandit -r src/ -ll 2>&1 | sed 's/^/[bandit] /' || true \
-	) & pid5=$$!; \
-	wait $$pid1 $$pid2 $$pid3 $$pid4 $$pid5
-	@echo ""
-	@echo "✓ Lint check complete (see above for any issues)"
-	@echo "  Speedup: ~80% faster with parallel execution"
+# Modern Ruff-based lint targets (replaces flake8, black, isort)
+lint-check:  ## Run Ruff linter (replaces flake8, isort checks)
+	@echo "🔍 Running Ruff linter..."
+	@$(UV_RUN) ruff check src/ tests/ --output-format=concise
+	@echo "✓ Lint check complete (Ruff)"
 
-lint-fix:
-	@echo "🔧 Auto-fixing formatting issues in parallel..."
-	@echo ""
-	@echo "Running black and isort in parallel..."
-	@( \
-		echo "Formatting with black..." && $(UV_RUN) black src/ --line-length=127 2>&1 | sed 's/^/[black] /' \
-	) & pid1=$$!; \
-	( \
-		echo "Sorting imports with isort..." && $(UV_RUN) isort src/ --profile=black --line-length=127 2>&1 | sed 's/^/[isort] /' \
-	) & pid2=$$!; \
-	wait $$pid1 $$pid2
-	@echo ""
-	@echo "✓ Auto-fix complete"
-	@echo "  Speedup: ~50% faster with parallel execution"
-	@echo ""
-	@echo "Run 'make lint-check' to verify remaining issues"
+lint-fix:  ## Auto-fix linting issues with Ruff
+	@echo "🔧 Auto-fixing with Ruff..."
+	@$(UV_RUN) ruff check src/ tests/ --fix
+	@$(UV_RUN) ruff format src/ tests/
+	@echo "✓ Auto-fix complete (Ruff)"
+
+lint-format:  ## Format code with Ruff (replaces black)
+	@echo "🎨 Formatting with Ruff..."
+	@$(UV_RUN) ruff format src/ tests/
+	@echo "✓ Format complete (Ruff)"
+
+# Keep mypy and bandit separate (not replaced by Ruff)
+lint-type-check:  ## Run mypy type checking
+	@echo "🔍 Running mypy type checking..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary
+	@echo "✓ Type check complete (mypy)"
+
+lint-security:  ## Run bandit security scan
+	@echo "🔒 Running bandit security scan..."
+	@$(UV_RUN) bandit -r src/ -ll
+	@echo "✓ Security scan complete (bandit)"
 
 lint-pre-commit:
 	@echo "🎯 Simulating pre-commit hook (runs on staged files)..."
@@ -798,15 +913,15 @@ lint-pre-commit:
 
 lint-pre-push:
 	@echo "🚀 Simulating pre-push hook (runs on changed files)..."
-	@bash .git/hooks/pre-push
+	@bash $$(git rev-parse --git-common-dir)/hooks/pre-push
 	@echo "✓ Pre-push simulation complete"
 
 lint-install:
 	@echo "📦 Installing/reinstalling lint hooks..."
 	@$(UV_RUN) pre-commit install
-	@chmod +x .git/hooks/pre-push
+	@chmod +x $$(git rev-parse --git-common-dir)/hooks/pre-push
 	@echo "✓ Hooks installed:"
-	@echo "  • pre-commit (auto-fix black/isort, run flake8/mypy/bandit)"
+	@echo "  • pre-commit (auto-fix Ruff formatter, run Ruff linter/MyPy/bandit)"
 	@echo "  • pre-push (comprehensive validation before push)"
 	@echo ""
 	@echo "Test hooks:"
@@ -960,7 +1075,8 @@ quick-start:
 	@$(MAKE) install-dev -s
 	@echo "Starting infrastructure..."
 	@$(MAKE) setup-infra -s
-	@sleep 5
+	@echo "Waiting for services to be healthy..."
+	@bash scripts/utils/wait_for_services.sh docker-compose.yml
 	@echo ""
 	@echo "✓ Quick start complete!"
 	@echo ""
@@ -1079,19 +1195,18 @@ pre-commit-setup:
 	fi
 	@echo ""
 	@echo "Hooks installed:"
-	@echo "  • black (code formatting)"
-	@echo "  • isort (import sorting)"
-	@echo "  • flake8 (linting)"
-	@echo "  • bandit (security)"
+	@echo "  • Ruff (code formatting + linting, replaces black/isort/flake8)"
+	@echo "  • bandit (security scanning)"
+	@echo "  • MyPy (type checking - runs in pre-push stage)"
 	@echo ""
-	@echo "Note: MyPy runs separately in pre-push hook (disabled in pre-commit due to 145+ existing errors)"
+	@echo "Note: MyPy runs at pre-push stage for comprehensive type checking"
 	@echo "Run manually: pre-commit run --all-files"
 
 git-hooks: pre-commit-setup
 	@echo "✅ Git hooks installed successfully:"
 	@echo ""
 	@echo "  • pre-commit   - Format, lint, and basic validation on commit"
-	@echo "                   Runs: black, isort, flake8, bandit, etc."
+	@echo "                   Runs: Ruff (formatter + linter), bandit, etc."
 	@echo "                   Timing: < 30 seconds"
 	@echo ""
 	@echo "  • pre-push     - Comprehensive CI-equivalent validation before push"
@@ -1172,10 +1287,10 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 	@echo "🔧 SUPPLEMENTARY: Specialized validators"
 	@echo "   Note: Code block validation disabled (caused more trouble than it's worth)"
 	@echo "🔍 Validating ADR synchronization..."
-	@python scripts/validators/adr_sync_validator.py || \
+	@python scripts/validation/adr_sync_validator.py || \
 		(echo "❌ ADR synchronization failed." && exit 1)
 	@echo "🔍 Validating MDX file extensions..."
-	@python scripts/validators/mdx_extension_validator.py --docs-dir docs || \
+	@python scripts/validation/mdx_extension_validator.py --docs-dir docs || \
 		(echo "❌ MDX extension validation failed." && exit 1)
 	@echo "✅ Specialized validators passed"
 
@@ -1187,12 +1302,12 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."
-	@python3 scripts/check_version_consistency.py || \
+	@python3 scripts/validation/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
 
 docs-fix-mdx:
 	@echo "🔧 Auto-fixing MDX syntax errors..."
-	@python3 scripts/fix_mdx_syntax.py --all
+	@python3 scripts/docs/fix_mdx_syntax.py --all
 	@echo "✅ MDX syntax fixed. Review changes with 'git diff docs/'"
 
 docs-test:
@@ -1216,11 +1331,11 @@ generate-reports:  ## Regenerate all test infrastructure scan reports
 	@echo "📊 Regenerating test infrastructure reports..."
 	@echo ""
 	@echo "🔍 Running AsyncMock configuration scan..."
-	@$(UV_RUN) python scripts/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
 	@echo "✅ AsyncMock scan complete"
 	@echo ""
 	@echo "🔍 Running memory safety scan..."
-	@$(UV_RUN) python scripts/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validation/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
 	@echo "✅ Memory safety scan complete"
 	@echo ""
 	@echo "📈 Generating test suite statistics..."
@@ -1248,22 +1363,6 @@ test-fast:
 test-fast-unit:
 	@echo "⚡ Running unit tests without coverage (parallel)..."
 	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -m unit --tb=short
-
-# ==============================================================================
-# Parallel Testing (40-60% faster)
-# ==============================================================================
-
-test-parallel:
-	@echo "⚡⚡ Running all tests in parallel (pytest-xdist)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto --tb=short
-	@echo "✓ Parallel tests complete"
-	@echo ""
-	@echo "Speedup: ~40-60% faster than sequential execution"
-
-test-parallel-unit:
-	@echo "⚡⚡ Running unit tests in parallel..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -m unit -n auto --tb=short
-	@echo "✓ Parallel unit tests complete"
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."

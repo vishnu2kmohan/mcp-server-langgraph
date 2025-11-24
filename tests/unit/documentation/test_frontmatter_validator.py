@@ -20,7 +20,6 @@ sys.path.insert(0, str(_scripts_dir))
 
 
 from validators.frontmatter_validator import (  # noqa: E402
-    FrontmatterError,
     FrontmatterValidator,
     InvalidYAMLError,
     MissingFrontmatterError,
@@ -289,7 +288,7 @@ tags: ["tag1", "tag2"]
         # Assert
         assert result.is_valid
 
-    def test_statistics_accurate(self, tmp_path):
+    def test_statistics_collection_with_multiple_files_reports_accurate_counts(self, tmp_path):
         """Test that statistics are accurately collected."""
         # Arrange
         docs_dir = tmp_path / "docs"

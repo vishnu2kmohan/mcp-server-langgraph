@@ -11,7 +11,7 @@ Implements Anthropic's gather-action-verify-repeat agentic loop:
 """
 
 import operator
-from typing import Annotated, Any, Literal, Optional, TypedDict
+from typing import Annotated, Any, Literal, Sequence, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -74,7 +74,7 @@ class AgentState(TypedDict):
     - Metadata: user_id, request_id
     """
 
-    messages: Annotated[list[BaseMessage], operator.add]
+    messages: Annotated[Sequence[BaseMessage], operator.add]
     next_action: str
     user_id: str | None
     request_id: str | None
@@ -93,7 +93,7 @@ class AgentState(TypedDict):
     user_request: str | None  # Original user request for verification
 
 
-def _initialize_pydantic_agent() -> None:
+def _initialize_pydantic_agent() -> Any:
     """Initialize Pydantic AI agent if available"""
     if not PYDANTIC_AI_AVAILABLE:
         return None
@@ -101,13 +101,13 @@ def _initialize_pydantic_agent() -> None:
     try:
         pydantic_agent = create_pydantic_agent()
         logger.info("Pydantic AI agent initialized for type-safe routing")
-        return pydantic_agent  # type: ignore[return-value]
+        return pydantic_agent
     except Exception as e:
         logger.warning(f"Failed to initialize Pydantic AI agent: {e}", exc_info=True)
         return None
 
 
-def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
+def _create_checkpointer(settings_to_use: Any | None = None) -> Any:
     """
     Create checkpointer backend based on configuration
 
@@ -154,7 +154,7 @@ def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpoin
 
             # Store context manager reference for proper cleanup on shutdown
             # This prevents resource leaks (Redis connections, file descriptors)
-            checkpointer.__context_manager__ = checkpointer_ctx
+            checkpointer.__context_manager__ = checkpointer_ctx  # type: ignore[attr-defined]
 
             logger.info("Redis checkpointer initialized successfully")
             return checkpointer
@@ -177,7 +177,7 @@ def _create_checkpointer(settings_to_use: Optional[Any] = None) -> BaseCheckpoin
         return MemorySaver()
 
 
-def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpointSaver[Any]:
+def create_checkpointer(settings_override: Any | None = None) -> Any:
     """
     Public API to create checkpointer backend based on configuration.
 
@@ -201,7 +201,7 @@ def create_checkpointer(settings_override: Optional[Any] = None) -> BaseCheckpoi
     return _create_checkpointer(settings_to_use=settings_override)
 
 
-def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
+def cleanup_checkpointer(checkpointer: BaseCheckpointSaver[Any]) -> None:
     """
     Clean up checkpointer resources on application shutdown.
 
@@ -244,7 +244,7 @@ def cleanup_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
         logger.error(f"Error during checkpointer cleanup: {e}", exc_info=True)
 
 
-def _get_runnable_config(user_id: Optional[str] = None, request_id: Optional[str] = None) -> Optional[RunnableConfig]:
+def _get_runnable_config(user_id: str | None = None, request_id: str | None = None) -> RunnableConfig | None:
     """Get runnable config with LangSmith metadata"""
     if not LANGSMITH_AVAILABLE or not langsmith_config.is_enabled():
         return None
@@ -274,7 +274,7 @@ def _fallback_routing(state: AgentState, last_message: HumanMessage) -> AgentSta
     }
 
 
-def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> Any:  # noqa: C901
+def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any:  # noqa: C901
     """
     Create the LangGraph agent using functional API with LiteLLM and observability.
 
@@ -296,7 +296,7 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
     model = create_llm_from_config(effective_settings)
 
     # Initialize Pydantic AI agent if available
-    pydantic_agent = _initialize_pydantic_agent()  # type: ignore[func-returns-value]
+    pydantic_agent = _initialize_pydantic_agent()
 
     # Initialize context manager for compaction
     context_manager = ContextManager(compaction_threshold=8000, target_after_compaction=4000, recent_message_count=5)
@@ -352,8 +352,9 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                     context_messages = context_loader.to_messages(loaded_contexts)
 
                     # Insert context before user message
-                    messages_before = state["messages"][:-1]
-                    user_message = state["messages"][-1]
+                    current_messages = list(state["messages"])
+                    messages_before = current_messages[:-1]
+                    user_message = current_messages[-1]
                     state["messages"] = messages_before + context_messages + [user_message]
 
                     logger.info(
@@ -382,21 +383,21 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             # NOTE: Not modifying any state - exclude messages to avoid duplication
             return {k: v for k, v in state.items() if k != "messages"}  # type: ignore[return-value]
 
-        messages = state["messages"]
+        messages_list = list(state["messages"])
 
-        if context_manager.needs_compaction(messages):
+        if context_manager.needs_compaction(messages_list):
             try:
                 logger.info("Applying context compaction")
-                result = await context_manager.compact_conversation(messages)
+                result = await context_manager.compact_conversation(messages_list)
 
                 state["messages"] = result.compacted_messages
                 state["compaction_applied"] = True
-                state["original_message_count"] = len(messages)
+                state["original_message_count"] = len(messages_list)
 
                 logger.info(
                     "Context compacted",
                     extra={
-                        "original_messages": len(messages),
+                        "original_messages": len(messages_list),
                         "compacted_messages": len(result.compacted_messages),
                         "compression_ratio": result.compression_ratio,
                     },
@@ -651,6 +652,8 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         """Generate final response using LLM with Pydantic AI validation"""
         messages = state["messages"]
 
+        messages_list = list(messages)
+
         # Add refinement context if this is a refinement attempt
         refinement_attempts = state.get("refinement_attempts", 0)
         if refinement_attempts > 0 and state.get("verification_feedback"):  # type: ignore[operator]
@@ -660,14 +663,14 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
                 f"{state['verification_feedback']}\n"
                 f"</refinement_guidance>"
             )
-            messages = [refinement_prompt] + messages
+            messages_list = [refinement_prompt] + messages_list
 
         # Use Pydantic AI for structured response if available
         if pydantic_agent:
             try:
                 # Generate type-safe response
                 typed_response = await pydantic_agent.generate_response(
-                    messages,
+                    messages_list,
                     context={
                         "user_id": state.get("user_id", "unknown"),
                         "routing_confidence": str(state.get("routing_confidence", 0.0)),
@@ -690,10 +693,12 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
             except Exception as e:
                 logger.error(f"Pydantic AI response generation failed, using fallback: {e}", exc_info=True)
                 # Fallback to standard LLM (use async invoke)
-                response = await model.ainvoke(messages)
+                # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
+                response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
         else:
             # Standard LLM response (use async invoke)
-            response = await model.ainvoke(messages)
+            # Type cast needed: list is invariant, so list[BaseMessage] != list[BaseMessage | dict[str, Any]]
+            response = await model.ainvoke(messages_list)  # type: ignore[arg-type]
 
         # NOTE: Returning [response] (not state["messages"] + [response]) is correct here.
         # Lang Graph's operator.add annotation on AgentState.messages (line 77) automatically
@@ -722,7 +727,7 @@ def _create_agent_graph_singleton(settings_override: Optional[Any] = None) -> An
         user_request = state.get("user_request") or ""
 
         # Get conversation context (excluding the response we're verifying)
-        conversation_context = state["messages"][:-1]
+        conversation_context = list(state["messages"])[:-1]
 
         try:
             logger.info("Verifying response quality")
@@ -900,8 +905,8 @@ agent_graph = None
 
 
 def create_agent_graph(
-    settings: Optional[Any] = None,
-    container: Optional[Any] = None,
+    settings: Any | None = None,
+    container: Any | None = None,
 ) -> Any:
     """
     Create a new agent graph with dependency injection support.
@@ -966,8 +971,8 @@ def create_agent_graph_impl(settings_to_use: Any) -> Any:
 
 
 def create_agent(
-    settings: Optional[Any] = None,
-    container: Optional[Any] = None,
+    settings: Any | None = None,
+    container: Any | None = None,
 ) -> Any:
     """
     Create a new agent instance with dependency injection support.

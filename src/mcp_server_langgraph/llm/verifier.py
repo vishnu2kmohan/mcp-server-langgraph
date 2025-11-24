@@ -11,7 +11,7 @@ References:
 """
 
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from langchain_core.messages import BaseMessage, HumanMessage
 from pydantic import BaseModel, Field
@@ -55,7 +55,7 @@ class OutputVerifier:
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
-        criteria: Optional[list[VerificationCriterion]] = None,
+        criteria: list[VerificationCriterion] | None = None,
         quality_threshold: float = 0.7,
         settings=None,
     ):
@@ -90,7 +90,7 @@ class OutputVerifier:
         self,
         response: str,
         user_request: str,
-        conversation_context: Optional[list[BaseMessage]] = None,
+        conversation_context: list[BaseMessage] | None = None,
         verification_mode: Literal["standard", "strict", "lenient"] = "standard",
     ) -> VerificationResult:
         """
@@ -119,7 +119,10 @@ class OutputVerifier:
                 # Get LLM judgment
                 # BUGFIX: Wrap prompt in HumanMessage to avoid string-to-character-list iteration
                 llm_response = await self.llm.ainvoke([HumanMessage(content=verification_prompt)])
-                judgment = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
+
+                # Get content and ensure it's a string
+                content = llm_response.content if hasattr(llm_response, "content") else str(llm_response)
+                judgment = str(content) if not isinstance(content, str) else content
 
                 # Parse judgment into structured result
                 result = self._parse_verification_judgment(judgment, threshold)
@@ -155,7 +158,7 @@ class OutputVerifier:
                 )
 
     def _build_verification_prompt(
-        self, response: str, user_request: str, conversation_context: Optional[list[BaseMessage]] = None
+        self, response: str, user_request: str, conversation_context: list[BaseMessage] | None = None
     ) -> str:
         """
         Build verification prompt using XML structure (Anthropic best practice).
@@ -444,8 +447,8 @@ FEEDBACK:
 async def verify_output(
     response: str,
     user_request: str,
-    conversation_context: Optional[list[BaseMessage]] = None,
-    verifier: Optional[OutputVerifier] = None,
+    conversation_context: list[BaseMessage] | None = None,
+    verifier: OutputVerifier | None = None,
 ) -> VerificationResult:
     """
     Verify agent output (convenience function).

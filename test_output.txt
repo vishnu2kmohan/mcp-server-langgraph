@@ -1,0 +1,743 @@
+Running pure unit tests (tests/unit/)...
+OTEL_SDK_DISABLED=true uv run pytest -n auto tests/unit --cov=src/mcp_server_langgraph --cov-report=term-missing
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0 -- /home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251118-221044/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'dev' -> max_examples=25, deadline=timedelta(milliseconds=2000)
+benchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /home/vishnu/git/vishnu2kmohan/worktrees/mcp-server-langgraph-session-20251118-221044
+configfile: pyproject.toml
+plugins: hypothesis-6.148.2, langsmith-0.4.37, anyio-4.11.0, split-0.10.0, subtests-0.14.2, timeout-2.4.0, xdist-3.8.0, logfire-4.14.2, schemathesis-4.3.8, cov-7.0.0, mock-3.15.1, testmon-2.1.3, asyncio-1.2.0, benchmark-5.1.0
+timeout: 60.0s
+timeout method: signal
+timeout func_only: False
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+created: 8/8 workers
+8 workers [1299 items]
+
+scheduling tests via LoadScopeScheduling
+
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_default_resource_limits
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_validator_initialization
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_init
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_create_session
+tests/unit/core/test_context_manager.py::TestContextManager::test_initialization
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_sonnet_with_prefix
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_initialization
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_initialization
+[gw2] [  0%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_default_resource_limits
+[gw5] [  0%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_initialization
+[gw4] [  0%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_initialization
+[gw3] [  0%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_create_session
+[gw7] [  0%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_sonnet_with_prefix
+[gw0] [  0%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_validator_initialization
+[gw6] [  0%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_initialization
+[gw1] [  0%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_init
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_custom_resource_limits
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_initialization_with_openfga
+[gw2] [  0%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_custom_resource_limits
+[gw5] [  0%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_initialization_with_openfga
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_get_session
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_success
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_haiku_with_prefix
+[gw3] [  0%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_get_session
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_simple_valid_code
+[gw7] [  0%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_haiku_with_prefix
+[gw0] [  1%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_simple_valid_code
+[gw4] [  1%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_success
+tests/unit/core/test_context_manager.py::TestContextManager::test_needs_compaction_short_conversation
+[gw6] [  1%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_needs_compaction_short_conversation
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_success
+[gw1] [  1%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_success
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_timeout_validation_positive
+[gw2] [  1%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_timeout_validation_positive
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_success
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_get_nonexistent_session
+[gw5] [  1%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_success
+[gw3] [  1%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_get_nonexistent_session
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_opus_with_prefix
+[gw7] [  1%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_claude_opus_with_prefix
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_user_not_found
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_code_with_allowed_import
+[gw0] [  1%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_code_with_allowed_import
+[gw4] [  1%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_user_not_found
+tests/unit/core/test_context_manager.py::TestContextManager::test_needs_compaction_long_conversation
+[gw6] [  1%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_needs_compaction_long_conversation
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_missing_password
+[gw1] [  1%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_missing_password
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_timeout_maximum_limit
+[gw2] [  1%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_timeout_maximum_limit
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_no_password
+[gw5] [  2%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_no_password
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_update_session
+[gw3] [  2%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_update_session
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_gemini_pro_with_prefix
+[gw7] [  2%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_gemini_pro_with_prefix
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_code_with_multiple_imports
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_inactive_user
+[gw0] [  2%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_code_with_multiple_imports
+[gw4] [  2%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_authenticate_inactive_user
+tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_structure
+[gw6] [  2%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_structure
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_invalid_password
+[gw1] [  2%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_invalid_password
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_validation_positive
+[gw2] [  2%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_validation_positive
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_with_openfga_sync
+[gw5] [  2%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_with_openfga_sync
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_update_nonexistent_session
+[gw3] [  2%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_update_nonexistent_session
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_gemini_flash_with_prefix
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_os
+[gw0] [  2%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_os
+[gw7] [  2%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_vertex_ai_gemini_flash_with_prefix
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_id
+[gw4] [  2%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_id
+tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_preserves_recent
+[gw6] [  3%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_preserves_recent
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_user_not_found
+[gw1] [  3%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_user_not_found
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_minimum
+[gw2] [  3%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_minimum
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_openfga_sync_failure
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_refresh_session
+[gw5] [  3%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_openfga_sync_failure
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_anthropic_direct_claude_sonnet
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_subprocess
+[gw7] [  3%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_anthropic_direct_claude_sonnet
+[gw0] [  3%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_subprocess
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_id_not_found
+[gw4] [  3%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_id_not_found
+tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_with_system_messages
+[gw6] [  3%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_with_system_messages
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_inactive_user
+[gw1] [  3%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authenticate_inactive_user
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_maximum
+[gw2] [  3%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_memory_limit_maximum
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_keycloak_error
+[gw5] [  3%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_authenticate_keycloak_error
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_sys
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_anthropic_direct_claude_haiku
+[gw0] [  3%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dangerous_import_sys
+[gw7] [  3%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_anthropic_direct_claude_haiku
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_username
+[gw4] [  4%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_username
+tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_no_older_messages
+[gw6] [  4%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_compact_conversation_no_older_messages
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_success
+[gw1] [  4%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_success
+[gw3] [  4%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_refresh_session
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_validation_positive
+[gw2] [  4%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_validation_positive
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_id
+[gw5] [  4%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_id
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_eval_usage
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_google_direct_gemini_pro
+[gw0] [  4%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_eval_usage
+[gw7] [  4%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_google_direct_gemini_pro
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_username_not_found
+[gw4] [  4%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_get_user_by_username_not_found
+tests/unit/core/test_context_manager.py::TestContextManager::test_summarization_calls_llm
+[gw6] [  4%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_summarization_calls_llm
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_denied
+[gw1] [  4%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_denied
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_refresh_with_custom_ttl
+[gw3] [  4%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_refresh_with_custom_ttl
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_maximum
+[gw2] [  4%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_maximum
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_username
+[gw5] [  5%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_username
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_exec_usage
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_google_direct_gemini_flash
+[gw0] [  5%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_exec_usage
+[gw7] [  5%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_google_direct_gemini_flash
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_list_users
+[gw4] [  5%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_list_users
+tests/unit/core/test_context_manager.py::TestContextManager::test_summarization_fallback_on_error
+[gw6] [  5%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_summarization_fallback_on_error
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_error
+[gw1] [  5%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_with_openfga_error
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_session
+[gw3] [  5%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_session
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_fractional
+[gw2] [  5%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_cpu_quota_fractional
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_username_not_found
+[gw5] [  5%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_by_username_not_found
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_compile_usage
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_vertex_ai_prefix_takes_precedence_over_pattern
+[gw0] [  5%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_compile_usage
+[gw7] [  5%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_vertex_ai_prefix_takes_precedence_over_pattern
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_success
+[gw4] [  5%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_success
+tests/unit/core/test_context_manager.py::TestContextManager::test_message_to_text
+[gw6] [  5%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_message_to_text
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_admin_access
+[gw1] [  6%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_admin_access
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_immutable
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_nonexistent_session
+[gw2] [  6%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_immutable
+[gw3] [  6%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_nonexistent_session
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_error_handling
+[gw5] [  6%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_get_user_error_handling
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_openai_models
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dunder_import
+[gw7] [  6%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_openai_models
+[gw0] [  6%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_dunder_import
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_user_not_found
+[gw4] [  6%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_user_not_found
+tests/unit/core/test_context_manager.py::TestContextManager::test_get_role_label
+[gw6] [  6%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_get_role_label
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_premium_user
+[gw1] [  6%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_premium_user
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_repr
+[gw2] [  6%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_repr
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_session_expiration
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_verify_token_success
+[gw5] [  6%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_verify_token_success
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_azure_models
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_from_import_dangerous
+[gw7] [  6%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_azure_models
+[gw0] [  6%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_from_import_dangerous
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_expiration
+[gw4] [  7%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_create_token_expiration
+[gw3] [  7%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_session_expiration
+tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information
+[gw6] [  7%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_standard_user
+[gw1] [  7%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_standard_user
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_dict_conversion
+[gw2] [  7%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_dict_conversion
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_verify_token_invalid
+[gw5] [  7%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_verify_token_invalid
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_bedrock_models
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_os_system_via_attribute
+[gw7] [  7%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_bedrock_models
+[gw0] [  7%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_os_system_via_attribute
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_success
+[gw4] [  7%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_success
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_list_user_sessions
+[gw3] [  7%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_list_user_sessions
+tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_facts
+[gw6] [  7%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_facts
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_viewer_access
+[gw1] [  7%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_viewer_access
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_from_dict
+[gw2] [  7%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_resource_limits_from_dict
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_refresh_token_success
+[gw5] [  8%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_refresh_token_success
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_ollama_models
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_allow_safe_builtins
+[gw7] [  8%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_detect_ollama_models
+[gw0] [  8%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_allow_safe_builtins
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_expired
+[gw4] [  8%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_expired
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_list_user_sessions_empty
+[gw3] [  8%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_list_user_sessions_empty
+tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_action_items
+[gw6] [  8%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_action_items
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_default
+[gw1] [  8%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_default
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_access_control
+[gw2] [  8%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_access_control
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_refresh_token_failure
+[gw5] [  8%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_refresh_token_failure
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_case_insensitive_detection
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_syntax_error_detection
+[gw7] [  8%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_case_insensitive_detection
+[gw0] [  8%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_syntax_error_detection
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_invalid
+[gw4] [  8%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_invalid
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_user_sessions
+[gw3] [  8%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_delete_user_sessions
+tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_preferences
+[gw6] [  9%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_preferences
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_owned
+[gw1] [  9%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_owned
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_mode_validation
+[gw2] [  9%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_mode_validation
+tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_list_users_not_implemented
+[gw5] [  9%] PASSED tests/unit/auth/test_user_provider.py::TestKeycloakUserProvider::test_list_users_not_implemented
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_empty_code
+tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_fallback_to_default_provider
+[gw0] [  9%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_empty_code
+[gw7] [  9%] PASSED tests/unit/test_vertex_ai_provider_detection.py::TestVertexAIProviderDetection::test_fallback_to_default_provider
+tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_wrong_secret
+[gw4] [  9%] PASSED tests/unit/auth/test_user_provider.py::TestInMemoryUserProvider::test_verify_token_wrong_secret
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_concurrent_session_limit
+[gw3] [  9%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_concurrent_session_limit
+tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_all_categories
+[gw6] [  9%] PASSED tests/unit/core/test_context_manager.py::TestContextManager::test_extract_key_information_all_categories
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_denied_other_user
+[gw1] [  9%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_editor_access_denied_other_user
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_allowlist_with_empty_domains
+[gw2] [  9%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_network_allowlist_with_empty_domains
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_initialization
+[gw5] [  9%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_initialization
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_whitespace_only_code
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_token_field
+[gw0] [  9%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_whitespace_only_code
+[gw7] [ 10%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_token_field
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_count
+[gw4] [ 10%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_count
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_sliding_window_enabled
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_disabled_by_default
+[gw6] [ 10%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_disabled_by_default
+[gw3] [ 10%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_sliding_window_enabled
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_viewer_access_denied_other_user
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_disk_quota_configuration
+[gw1] [ 10%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_viewer_access_denied_other_user
+[gw2] [ 10%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_disk_quota_configuration
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_initialization_with_model
+[gw5] [ 10%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_initialization_with_model
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_pandas_usage
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_missing_token
+[gw7] [ 10%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_missing_token
+[gw0] [ 10%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_pandas_usage
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_are_base_tool
+[gw4] [ 10%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_are_base_tool
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_backend_default
+[gw6] [ 10%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_backend_default
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_sliding_window_disabled
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_disk_quota_validation
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_unknown_user
+[gw2] [ 10%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_disk_quota_validation
+[gw1] [ 10%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_authorize_fallback_unknown_user
+[gw3] [ 11%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_sliding_window_disabled
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_simple
+[gw5] [ 11%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_simple
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_truncates_long_message
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_numpy_usage
+[gw7] [ 11%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_truncates_long_message
+[gw0] [ 11%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_valid_numpy_usage
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_unique_names
+[gw4] [ 11%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_unique_names
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_timeout_default
+[gw6] [ 11%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_timeout_default
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_max_processes_configuration
+[gw2] [ 11%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_max_processes_configuration
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_success
+[gw1] [ 11%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_success
+tests/unit/session/test_session.py::TestInMemorySessionStore::test_custom_ttl_per_session
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_empty
+[gw5] [ 11%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_empty
+[gw3] [ 11%] PASSED tests/unit/session/test_session.py::TestInMemorySessionStore::test_custom_ttl_per_session
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_preserves_short_message
+[gw7] [ 11%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_preserves_short_message
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_import_not_in_whitelist
+[gw0] [ 11%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_import_not_in_whitelist
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_calculator_tools_count
+[gw4] [ 11%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_calculator_tools_count
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_memory_limit_default
+[gw6] [ 12%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_memory_limit_default
+tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_max_processes_validation
+[gw2] [ 12%] PASSED tests/unit/execution/test_resource_limits.py::TestResourceLimits::test_max_processes_validation
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_no_openfga
+[gw1] [ 12%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_no_openfga
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_long_text
+[gw5] [ 12%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_count_tokens_long_text
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_truncates_query_field
+[gw7] [ 12%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_truncates_query_field
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_open_file_access
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_cookie
+[gw0] [ 12%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_open_file_access
+[gw3] [ 12%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_cookie
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_search_tools_count
+[gw4] [ 12%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_search_tools_count
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_cpu_quota_default
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_human_message
+[gw2] [ 12%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_human_message
+[gw6] [ 12%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_cpu_quota_default
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_error
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_no_truncation_needed
+[gw5] [ 12%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_no_truncation_needed
+[gw1] [ 12%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_list_accessible_resources_error
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_creates_shallow_copy
+[gw7] [ 12%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_creates_shallow_copy
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_input_function
+[gw0] [ 13%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_input_function
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_state
+[gw3] [ 13%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_state
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_filesystem_tools_count
+[gw4] [ 13%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_filesystem_tools_count
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_ai_message
+[gw2] [ 13%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_ai_message
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_disk_quota_default
+[gw6] [ 13%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_disk_quota_default
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_with_truncation
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_success
+[gw5] [ 13%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_with_truncation
+[gw1] [ 13%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_success
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_nested_token
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_globals_access
+[gw7] [ 13%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_nested_token
+[gw0] [ 13%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_globals_access
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_none
+[gw3] [ 13%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_none
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_all
+[gw4] [ 13%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_all
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_system_message
+[gw2] [ 13%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_single_system_message
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_max_processes_default
+[gw6] [ 13%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_max_processes_default
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_custom_message
+[gw5] [ 14%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_truncate_response_custom_message
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_expiration
+[gw1] [ 14%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_expiration
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_none_value
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_locals_access
+[gw7] [ 14%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_none_value
+[gw0] [ 14%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_locals_access
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_by_category
+[gw4] [ 14%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_by_category
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_bearer_token
+[gw3] [ 14%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_bearer_token
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_mixed_message_types
+[gw2] [ 14%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_mixed_message_types
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_network_mode_default
+[gw6] [ 14%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_network_mode_default
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_concise
+[gw5] [ 14%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_concise
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_user_not_found
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_empty_dict
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_vars_access
+[gw7] [ 14%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_empty_dict
+[gw1] [ 14%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_create_token_user_not_found
+[gw0] [ 14%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_reject_vars_access
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_multiple_categories
+[gw4] [ 14%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_multiple_categories
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_sid_claim
+[gw3] [ 15%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_sid_claim
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_dict_message_with_role_and_content
+[gw2] [ 15%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_dict_message_with_role_and_content
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_allowed_domains_default
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_detailed
+[gw5] [ 15%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_detailed
+[gw6] [ 15%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_allowed_domains_default
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_validation_result_structure
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_with_multiple_sensitive_fields
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_success
+[gw0] [ 15%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_validation_result_structure
+[gw7] [ 15%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_with_multiple_sensitive_fields
+[gw1] [ 15%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_success
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_invalid_category
+[gw4] [ 15%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tools_invalid_category
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_jti_claim
+[gw3] [ 15%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_jti_claim
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_dict_message_with_content_only
+[gw2] [ 15%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_dict_message_with_content_only
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_short_text
+[gw5] [ 15%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_short_text
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_allowed_imports_default
+[gw6] [ 15%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_code_execution_allowed_imports_default
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_preserves_non_string_types
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_multiple_validation_errors
+[gw0] [ 15%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_multiple_validation_errors
+[gw7] [ 16%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_preserves_non_string_types
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_expired
+[gw1] [ 16%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_expired
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tool_by_name_existing
+[gw4] [ 16%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tool_by_name_existing
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_invalid_token
+[gw3] [ 16%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_jwt_invalid_token
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_malformed_dict_message
+[gw2] [ 16%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_malformed_dict_message
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_custom_max_tokens
+[gw5] [ 16%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_format_response_custom_max_tokens
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_docker_image_default
+[gw6] [ 16%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_docker_image_default
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_nested_dangerous_call
+[gw0] [ 16%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_nested_dangerous_call
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_session_id
+[gw7] [ 16%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_session_id
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_invalid
+[gw1] [ 16%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_invalid
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tool_by_name_nonexistent
+[gw4] [ 16%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_get_tool_by_name_nonexistent
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_jwt_priority_over_cookie
+[gw3] [ 16%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_jwt_priority_over_cookie
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_empty_list
+[gw2] [ 16%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_empty_list
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_basic
+[gw5] [ 17%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_basic
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_docker_socket_path_default
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_lambda_with_eval
+[gw6] [ 17%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_docker_socket_path_default
+[gw0] [ 17%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_lambda_with_eval
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_user_id
+[gw7] [ 17%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_user_id
+tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_wrong_secret
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_descriptions
+[gw1] [ 17%] PASSED tests/unit/auth/test_auth.py::TestAuthMiddleware::test_verify_token_wrong_secret
+[gw4] [ 17%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_descriptions
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_rs256_jwt_token
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_preserves_long_content
+[gw2] [ 17%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_preserves_long_content
+[gw3] [ 17%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_get_session_id_from_rs256_jwt_token
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_custom_exclude
+[gw5] [ 17%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_custom_exclude
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_kubernetes_namespace_default
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_list_comprehension_safe
+[gw0] [ 17%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_list_comprehension_safe
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_username
+[gw7] [ 17%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_redacts_username
+[gw6] [ 17%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_kubernetes_namespace_default
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_args_schema
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_forward_slash_encoded
+[gw4] [ 17%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_all_tools_have_args_schema
+[gw1] [ 18%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_forward_slash_encoded
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_multiline_content
+[gw2] [ 18%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_multiline_content
+tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_empty_data
+[gw5] [ 18%] PASSED tests/unit/resilience/test_response_optimizer.py::TestResponseOptimizer::test_extract_high_signal_empty_data
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_health
+[gw3] [ 18%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_health
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_dict_comprehension_safe
+[gw0] [ 18%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_dict_comprehension_safe
+tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_all_sensitive_fields
+[gw7] [ 18%] PASSED tests/unit/test_security_logging.py::TestLogSanitization::test_sanitize_for_logging_handles_all_sensitive_fields
+tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_kubernetes_job_ttl_default
+[gw6] [ 18%] PASSED tests/unit/config/test_code_execution_config.py::TestCodeExecutionSettings::test_kubernetes_job_ttl_default
+tests/unit/test_tools_catalog.py::TestToolsCatalog::test_tool_names_match_expected
+[gw4] [ 18%] PASSED tests/unit/test_tools_catalog.py::TestToolsCatalog::test_tool_names_match_expected
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_plus_sign_encoded
+[gw1] [ 18%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_plus_sign_encoded
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_special_characters
+[gw2] [ 18%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_special_characters
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_valid_frontmatter_passes
+[gw5] [ 18%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_valid_frontmatter_passes
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_metrics
+[gw3] [ 18%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_metrics
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_generator_expression_safe
+[gw0] [ 18%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_generator_expression_safe
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_valid_alphanumeric
+[gw7] [ 19%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_valid_alphanumeric
+tests/unit/test_conversation_store.py::TestConversationStore::test_record_conversation
+[gw6] [ 19%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_record_conversation
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_lowercase_kebab_case_passes
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_equals_sign_encoded
+[gw4] [ 19%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_lowercase_kebab_case_passes
+[gw1] [ 19%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_with_equals_sign_encoded
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_unicode_content
+[gw2] [ 19%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_unicode_content
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_frontmatter_detected
+[gw5] [ 19%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_frontmatter_detected
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_login
+[gw3] [ 19%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_login
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_class_definition_safe
+[gw0] [ 19%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_class_definition_safe
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_underscores
+[gw7] [ 19%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_underscores
+tests/unit/test_conversation_store.py::TestConversationStore::test_update_conversation
+[gw6] [ 19%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_update_conversation
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_uppercase_detected
+[gw4] [ 19%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_uppercase_detected
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_base64_like_password_with_multiple_special_chars_encoded
+[gw1] [ 19%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_base64_like_password_with_multiple_special_chars_encoded
+tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_xml_structured_prompt
+[gw2] [ 19%] PASSED tests/unit/llm/test_llm_factory_contract.py::TestFormatMessagesContract::test_format_xml_structured_prompt
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_title_detected
+[gw5] [ 20%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_title_detected
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_docs
+[gw3] [ 20%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_docs
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_async_code_safe
+[gw0] [ 20%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_async_code_safe
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_newline_characters
+[gw7] [ 20%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_newline_characters
+tests/unit/test_conversation_store.py::TestConversationStore::test_get_nonexistent_conversation
+[gw6] [ 20%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_get_nonexistent_conversation
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_snake_case_detected
+[gw4] [ 20%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_snake_case_detected
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_without_special_chars_unchanged
+[gw1] [ 20%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_password_without_special_chars_unchanged
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_valid_mdx_files_pass
+[gw2] [ 20%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_valid_mdx_files_pass
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_description_detected
+[gw5] [ 20%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_missing_description_detected
+tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_private
+[gw3] [ 20%] PASSED tests/unit/session/test_session_timeout.py::TestSessionTimeoutHelpers::test_is_public_endpoint_private
+tests/unit/execution/test_code_validator.py::TestCodeValidator::test_context_manager_safe
+[gw0] [ 20%] PASSED tests/unit/execution/test_code_validator.py::TestCodeValidator::test_context_manager_safe
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_carriage_return
+tests/unit/test_conversation_store.py::TestConversationStore::test_list_user_conversations
+[gw7] [ 20%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_carriage_return
+[gw6] [ 20%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_list_user_conversations
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_mixed_case_detected
+[gw4] [ 21%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_mixed_case_detected
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_url_without_password_unchanged
+[gw1] [ 21%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_url_without_password_unchanged
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_md_file_detected
+[gw2] [ 21%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_md_file_detected
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_invalid_yaml_detected
+[gw5] [ 21%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_invalid_yaml_detected
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_empty_directory_has_no_todos
+[gw3] [ 21%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_empty_directory_has_no_todos
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_basic_formatting
+tests/unit/test_conversation_store.py::TestConversationStore::test_list_conversations_sorted_by_activity
+[gw0] [ 21%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_basic_formatting
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_null_bytes
+[gw7] [ 21%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_null_bytes
+[gw6] [ 21%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_list_conversations_sorted_by_activity
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_conventional_files_excluded
+[gw4] [ 21%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_conventional_files_excluded
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_url_with_username_and_password_encoded
+[gw1] [ 21%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_url_with_username_and_password_encoded
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_root_md_files_allowed
+[gw2] [ 21%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_root_md_files_allowed
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_empty_title_detected
+[gw5] [ 21%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_empty_title_detected
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_timestamp_format
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_todo_marker
+[gw0] [ 21%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_timestamp_format
+[gw3] [ 22%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_todo_marker
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_colon_for_openfga_safety
+[gw7] [ 22%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_colon_for_openfga_safety
+tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_by_query
+[gw6] [ 22%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_by_query
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_suggests_correct_name
+[gw4] [ 22%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_suggests_correct_name
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_empty_password_unchanged
+[gw1] [ 22%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_empty_password_unchanged
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_nested_md_files_detected
+[gw2] [ 22%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_nested_md_files_detected
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_empty_description_detected
+[gw5] [ 22%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_empty_description_detected
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_trace_context_injection
+tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_no_query
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_path_traversal
+[gw6] [ 22%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_no_query
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_fixme_marker
+[gw0] [ 22%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_trace_context_injection
+[gw7] [ 22%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_path_traversal
+[gw3] [ 22%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_fixme_marker
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_is_kebab_case_function
+[gw4] [ 22%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_is_kebab_case_function
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_at_sign_in_password_encoded
+[gw1] [ 22%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_at_sign_in_password_encoded
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_exclude_patterns_work
+[gw2] [ 23%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_exclude_patterns_work
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_template_files_excluded
+[gw5] [ 23%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_template_files_excluded
+tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_limit
+[gw6] [ 23%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_search_conversations_limit
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_process_and_thread_info
+[gw0] [ 23%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_process_and_thread_info
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_excessive_length
+[gw7] [ 23%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_excessive_length
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_xxx_marker
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_find_invalid_filenames_in_docs
+[gw3] [ 23%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_xxx_marker
+[gw4] [ 23%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_find_invalid_filenames_in_docs
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_multiple_database_numbers_preserved
+[gw1] [ 23%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_multiple_database_numbers_preserved
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_multiple_md_files_all_reported
+[gw2] [ 23%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_multiple_md_files_all_reported
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_multiple_errors_reported
+[gw5] [ 23%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_multiple_errors_reported
+tests/unit/test_conversation_store.py::TestConversationStore::test_delete_conversation
+[gw6] [ 23%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_delete_conversation
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_location_info
+[gw0] [ 23%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_location_info
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_none
+[gw7] [ 23%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_accepts_none
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_multiple_markers_in_file
+[gw3] [ 24%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_finds_multiple_markers_in_file
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_numbers_allowed_in_kebab_case
+[gw4] [ 24%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_numbers_allowed_in_kebab_case
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_custom_port_preserved
+[gw1] [ 24%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_custom_port_preserved
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_mixed_files_only_md_reported
+[gw2] [ 24%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_mixed_files_only_md_reported
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_optional_fields_allowed
+[gw5] [ 24%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_optional_fields_allowed
+tests/unit/test_conversation_store.py::TestConversationStore::test_delete_nonexistent_conversation
+[gw6] [ 24%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_delete_nonexistent_conversation
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_custom_extra_fields
+[gw0] [ 24%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_custom_extra_fields
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_empty_string
+[gw7] [ 24%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_empty_string
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_tracks_line_numbers
+[gw3] [ 24%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_tracks_line_numbers
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_only_validates_docs_directory
+[gw4] [ 24%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_only_validates_docs_directory
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_idempotent_encoding
+[gw1] [ 24%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_idempotent_encoding
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_empty_docs_directory
+[gw2] [ 24%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_empty_docs_directory
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_statistics_accurate
+[gw5] [ 24%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_statistics_accurate
+tests/unit/test_conversation_store.py::TestConversationStore::test_get_stats
+[gw6] [ 25%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_get_stats
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_exception_handling
+[gw0] [ 25%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_exception_handling
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_spaces
+[gw7] [ 25%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_rejects_spaces
+tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_md_files_not_allowed_in_docs
+[gw4] [ 25%] PASSED tests/unit/documentation/test_file_naming_validator.py::TestFileNamingValidator::test_md_files_not_allowed_in_docs
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_handles_nested_directories
+[gw3] [ 25%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_handles_nested_directories
+tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_all_reserved_characters_encoded
+[gw1] [ 25%] PASSED tests/unit/test_redis_url_encoding.py::TestRedisURLEncoding::test_all_reserved_characters_encoded
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_cli_exit_codes
+[gw2] [ 25%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_cli_exit_codes
+tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_nested_files_validated
+[gw5] [ 25%] PASSED tests/unit/documentation/test_frontmatter_validator.py::TestFrontmatterValidator::test_nested_files_validated
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_pretty_print_formatting
+[gw0] [ 25%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_pretty_print_formatting
+tests/unit/test_conversation_store.py::TestConversationStore::test_search_by_tags
+[gw6] [ 25%] PASSED tests/unit/test_conversation_store.py::TestConversationStore::test_search_by_tags
+tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_with_search_conversations_input
+[gw7] [ 25%] PASSED tests/unit/test_input_validation.py::TestThreadIdValidation::test_thread_id_with_search_conversations_input
+tests/unit/test_lazy_imports.py::TestLazyImports::test_package_import_does_not_load_heavy_modules
+[gw4] [ 25%] PASSED tests/unit/test_lazy_imports.py::TestLazyImports::test_package_import_does_not_load_heavy_modules
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_excludes_template_files
+[gw3] [ 25%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_excludes_template_files
+tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_default_config
+[gw1] [ 26%] PASSED tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_default_config
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_statistics_accurate
+[gw2] [ 26%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_statistics_accurate
+tests/unit/session/test_session.py::TestRedisSessionStore::test_create_session
+[gw5] [ 26%] PASSED tests/unit/session/test_session.py::TestRedisSessionStore::test_create_session
+tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_simple_addition
+[gw6] [ 26%] PASSED tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_simple_addition
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_compact_formatting
+[gw0] [ 26%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_compact_formatting
+tests/unit/test_search_tools.py::TestWebSearch::test_web_search_with_query
+[gw7] [ 26%] PASSED tests/unit/test_search_tools.py::TestWebSearch::test_web_search_with_query
+tests/unit/test_lazy_imports.py::TestLazyImports::test_settings_import_is_lightweight
+[gw4] [ 26%] PASSED tests/unit/test_lazy_imports.py::TestLazyImports::test_settings_import_is_lightweight
+tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_yaml_config_loading
+[gw1] [ 26%] PASSED tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_yaml_config_loading
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_processes_multiple_files
+[gw3] [ 26%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_processes_multiple_files
+tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_relative_paths_in_errors
+[gw2] [ 26%] PASSED tests/unit/documentation/test_mdx_extension_validator.py::TestMDXExtensionValidator::test_relative_paths_in_errors
+tests/unit/session/test_session.py::TestRedisSessionStore::test_get_session
+[gw5] [ 26%] PASSED tests/unit/session/test_session.py::TestRedisSessionStore::test_get_session
+tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_complex_expression
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_hostname_inclusion
+[gw6] [ 26%] PASSED tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_complex_expression
+[gw0] [ 26%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_hostname_inclusion
+tests/unit/test_search_tools.py::TestWebSearch::test_web_search_different_result_counts
+[gw7] [ 27%] PASSED tests/unit/test_search_tools.py::TestWebSearch::test_web_search_different_result_counts
+tests/unit/test_lazy_imports.py::TestLazyImports::test_lazy_import_of_auth_middleware
+[gw4] [ 27%] PASSED tests/unit/test_lazy_imports.py::TestLazyImports::test_lazy_import_of_auth_middleware
+tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_dict_config
+[gw1] [ 27%] PASSED tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_dict_config
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_statistics_are_accurate
+[gw3] [ 27%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_statistics_are_accurate
+tests/unit/test_security_headers.py::TestHeaderSanitization::test_sanitize_header_value_removes_cr_characters
+[gw2] [ 27%] PASSED tests/unit/test_security_headers.py::TestHeaderSanitization::test_sanitize_header_value_removes_cr_characters
+tests/unit/session/test_session.py::TestRedisSessionStore::test_get_nonexistent_session
+[gw5] [ 27%] PASSED tests/unit/session/test_session.py::TestRedisSessionStore::test_get_nonexistent_session
+tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_division
+[gw6] [ 27%] PASSED tests/unit/test_calculator_tools.py::TestCalculatorTool::test_calculator_division
+tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_no_trace_context
+[gw0] [ 27%] PASSED tests/unit/observability/test_json_logger.py::TestCustomJSONFormatter::test_no_trace_context
+tests/unit/test_search_tools.py::TestWebSearch::test_web_search_default_results
+[gw7] [ 27%] PASSED tests/unit/test_search_tools.py::TestWebSearch::test_web_search_default_results
+tests/unit/test_lazy_imports.py::TestLazyImports::test_lazy_import_of_openfga_client
+[gw4] [ 27%] PASSED tests/unit/test_lazy_imports.py::TestLazyImports::test_lazy_import_of_openfga_client
+tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_role_hierarchies
+[gw1] [ 27%] PASSED tests/unit/auth/test_role_mapper.py::TestRoleMapper::test_role_hierarchies
+tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_nonexistent_directory
+[gw3] [ 27%] PASSED tests/unit/documentation/test_todo_audit.py::TestTodoAuditor::test_nonexistent_directory make: *** [Makefile:234: test-unit] Error 129

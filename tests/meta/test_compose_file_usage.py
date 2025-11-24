@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.meta
@@ -61,7 +61,6 @@ class TestComposeFileConsolidation:
         required_services = [
             "postgres-test",
             "redis-test",
-            "redis-sessions-test",
             "openfga-test",
             "keycloak-test",
             "qdrant-test",
@@ -135,7 +134,7 @@ class TestComposeFileConsolidation:
         # Find test-integration targets
         integration_targets = [
             "test-integration:",
-            "test-integration-local:",
+            "test-integration-debug:",
             "test-integration-cleanup:",
         ]
 
@@ -144,7 +143,7 @@ class TestComposeFileConsolidation:
 
         # Verify compose file references
         # Look for docker-compose commands
-        compose_commands = re.findall(r"docker-compose.*?-f\s+([^\s]+)", content, re.MULTILINE)
+        compose_commands = re.findall(r"docker[- ]compose.*?-f\s+([^\s]+)", content, re.MULTILINE)
 
         for compose_path in compose_commands:
             if "docker-compose.test.yml" in compose_path:
@@ -153,32 +152,32 @@ class TestComposeFileConsolidation:
                     "docker/docker-compose.test.yml" not in compose_path
                 ), f"Makefile must NOT use legacy docker/docker-compose.test.yml: {compose_path}"
 
-    def test_conftest_uses_root_compose(self):
+    def test_docker_fixtures_uses_root_compose(self):
         """
-        🟢 GREEN: Verify tests/conftest.py uses root compose file.
+        🟢 GREEN: Verify tests/fixtures/docker_fixtures.py uses root compose file.
 
         The docker_compose_file fixture must return root compose file path.
         """
         root = Path(__file__).parent.parent.parent
-        conftest = root / "tests" / "conftest.py"
+        docker_fixtures = root / "tests" / "fixtures" / "docker_fixtures.py"
 
-        assert conftest.exists(), "tests/conftest.py must exist"
+        assert docker_fixtures.exists(), "tests/fixtures/docker_fixtures.py must exist"
 
-        content = conftest.read_text()
+        content = docker_fixtures.read_text()
 
         # Look for docker_compose_file fixture
         assert "docker_compose_file" in content, "docker_compose_file fixture missing"
 
-        # Should return ../docker-compose.test.yml (relative to tests/)
+        # Should return ../../docker-compose.test.yml (relative to tests/fixtures/)
         # Pattern: return Path(...) / "docker-compose.test.yml"
-        assert "../docker-compose.test.yml" in content or (
-            'Path(__file__).parent.parent / "docker-compose.test.yml"' in content
-        ), "conftest.py docker_compose_file fixture must return root compose file"
+        assert (
+            "docker-compose.test.yml" in content
+        ), "docker_fixtures.py docker_compose_file fixture must return root compose file"
 
         # Should NOT reference docker/ subdirectory
         assert (
             "docker/docker-compose.test.yml" not in content
-        ), "conftest.py must NOT use legacy docker/docker-compose.test.yml"
+        ), "docker_fixtures.py must NOT use legacy docker/docker-compose.test.yml"
 
     def test_ci_workflows_use_root_compose(self):
         """
@@ -312,7 +311,9 @@ class TestComposeFileConsistency:
         content = compose_file.read_text()
 
         # Expected test ports (from investigation)
-        expected_ports = ["9432", "9379", "9380", "9080", "9082", "9333"]
+        # Note: Test uses ONE Redis (9379) for both checkpoints and sessions
+        # Production (docker-compose.yml) uses TWO Redis instances (6379 and 6380)
+        expected_ports = ["9432", "9379", "9080", "9082", "9333"]
 
         for port in expected_ports:
             assert port in content, (

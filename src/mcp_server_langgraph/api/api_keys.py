@@ -7,7 +7,7 @@ Also provides validation endpoint for Kong API key→JWT exchange.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
@@ -40,7 +40,7 @@ class APIKeyResponse(BaseModel):
     name: str
     created: str
     expires_at: str
-    last_used: Optional[str] = None
+    last_used: str | None = None
 
 
 class CreateAPIKeyResponse(APIKeyResponse):
@@ -70,10 +70,10 @@ class ValidateAPIKeyResponse(BaseModel):
 # User-Facing API Endpoints
 
 
-@router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)
 async def create_api_key(
     request: CreateAPIKeyRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
 ) -> CreateAPIKeyResponse:
     """
@@ -114,11 +114,11 @@ async def create_api_key(
         )
 
 
-@router.get("/", response_model=List[APIKeyResponse])  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/", response_model=list[APIKeyResponse])
 async def list_api_keys(
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-) -> List[APIKeyResponse]:
+) -> list[APIKeyResponse]:
     """
     List all API keys for the current user
 
@@ -139,10 +139,10 @@ async def list_api_keys(
     ]
 
 
-@router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)
 async def rotate_api_key(
     key_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
 ) -> RotateAPIKeyResponse:
     """
@@ -171,10 +171,10 @@ async def rotate_api_key(
         )
 
 
-@router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_api_key(
     key_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
 ) -> None:
     """
@@ -194,9 +194,9 @@ async def revoke_api_key(
 # Internal Endpoint for Kong Plugin
 
 
-@router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)
 async def validate_api_key(
-    api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    api_key: str | None = Header(None, alias="X-API-Key"),
     api_key_manager: APIKeyManager = Depends(get_api_key_manager),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
 ) -> ValidateAPIKeyResponse:

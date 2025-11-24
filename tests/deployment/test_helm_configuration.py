@@ -10,7 +10,6 @@ These tests ensure deployment configuration issues can never occur again by:
 6. Validating Helm chart lints successfully
 """
 
-import gc
 import re
 import subprocess
 from pathlib import Path
@@ -18,7 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit

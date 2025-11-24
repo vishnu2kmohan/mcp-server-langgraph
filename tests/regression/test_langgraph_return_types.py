@@ -33,7 +33,7 @@ References:
 """
 
 import gc
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import MemorySaver
@@ -74,7 +74,7 @@ class TestLangGraphReturnTypes:
 
         graph = StateGraph(SimpleState)
 
-        def update_value(state: SimpleState) -> Dict[str, Any]:
+        def update_value(state: SimpleState) -> dict[str, Any]:
             return {"value": "updated"}
 
         graph.add_node("update", update_value)

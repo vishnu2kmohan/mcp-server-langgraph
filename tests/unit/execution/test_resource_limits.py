@@ -11,6 +11,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+pytestmark = pytest.mark.unit
+
 # This import will fail initially - that's expected in TDD!
 try:
     from mcp_server_langgraph.execution.resource_limits import ResourceLimitError, ResourceLimits
@@ -283,14 +285,14 @@ class TestPresetResourceProfiles:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_development_profile(self):
+    def test_development_profile_creation_with_factory_method_returns_relaxed_limits(self):
         """Test development profile (relaxed limits)"""
         limits = ResourceLimits.development()
         # Development should have generous limits
         assert limits.timeout_seconds >= 120  # At least 2 minutes
         assert limits.memory_limit_mb >= 1024  # At least 1GB
 
-    def test_production_profile(self):
+    def test_production_profile_creation_with_factory_method_returns_strict_limits(self):
         """Test production profile (strict limits)"""
         limits = ResourceLimits.production()
         # Production should have conservative limits
@@ -298,7 +300,7 @@ class TestPresetResourceProfiles:
         assert limits.memory_limit_mb <= 512  # Max 512MB
         assert limits.network_mode == "allowlist" or limits.network_mode == "none"
 
-    def test_testing_profile(self):
+    def test_testing_profile_creation_with_factory_method_returns_minimal_limits(self):
         """Test testing profile (minimal limits)"""
         limits = ResourceLimits.testing()
         # Testing should have tight limits for fast execution
@@ -322,13 +324,13 @@ class TestResourceLimitsComparison:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_limits_equality(self):
+    def test_limits_equality_comparison_with_identical_values_returns_true(self):
         """Test that identical limits are equal"""
         limits1 = ResourceLimits(timeout_seconds=30, memory_limit_mb=512)
         limits2 = ResourceLimits(timeout_seconds=30, memory_limit_mb=512)
         assert limits1 == limits2
 
-    def test_limits_inequality(self):
+    def test_limits_inequality_comparison_with_different_values_returns_false(self):
         """Test that different limits are not equal"""
         limits1 = ResourceLimits(timeout_seconds=30, memory_limit_mb=512)
         limits2 = ResourceLimits(timeout_seconds=60, memory_limit_mb=512)

@@ -24,6 +24,8 @@ import pytest
 
 from mcp_server_langgraph.utils.response_optimizer import ResponseOptimizer
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.security
 @pytest.mark.unit

@@ -34,10 +34,39 @@ jobs:
           echo "  4. Cache uses secure Redis configuration"
           echo "  5. Required tests exist"
 
+  path-validation:
+    name: Validate Repository Root Calculations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Run path calculation validation
+        run: |
+          uv run python scripts/validate_repo_root_calculations.py --verbose
+
+      - name: Validation passed
+        if: success()
+        run: |
+          echo "✅ Repository root path calculations validated"
+          echo "All test files use marker-based repo root detection:"
+          echo "  1. No hardcoded .parents[N] without marker validation"
+          echo "  2. Proper use of .git or pyproject.toml markers"
+          echo "  3. Path calculations safe from file movement"
+
   smoke-tests:
     name: CI Smoke Tests
     runs-on: ubuntu-latest
-    needs: dependency-validation
+    needs: [dependency-validation, path-validation]
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]

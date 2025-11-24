@@ -119,13 +119,13 @@ jobs:
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          uv run pytest tests/test_workflow_syntax.py tests/test_workflow_security.py tests/test_workflow_dependencies.py tests/test_docker_paths.py -v --tb=short
+          uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
       - name: Validate pytest configuration compatibility
         run: |
           echo "🔍 Validating pytest addopts against installed plugins..."
-          uv run python scripts/validate_pytest_config.py
+          uv run python scripts/validation/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
   validate-local-ci-parity:
@@ -188,19 +188,19 @@ jobs:
       - name: Run xdist enforcement meta-tests
         run: |
           echo "🧪 Running pytest-xdist isolation enforcement tests..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "unit and not llm"
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
           echo "✅ Pytest-xdist isolation patterns validated"
 
       - name: Run xfail strict enforcement test
         run: |
           echo "🧪 Running xfail strict enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "unit and not llm"
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
           echo "✅ All xfail markers use strict=True"
 
       - name: Run marker enforcement test
         run: |
           echo "🧪 Running marker enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "unit and not llm"
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
           echo "✅ All test files have required markers"
 
   # ============================================================================
@@ -267,13 +267,33 @@ jobs:
         }
         echo "✓ Lockfile is current and valid"
 
+    - name: Build Helm chart dependencies
+      run: |
+        # Build Helm chart dependencies if helm is available
+        # Required for tests in tests/deployment/test_helm_templates.py
+        if command -v helm &> /dev/null; then
+          echo "🔨 Adding Helm repositories..."
+          helm repo add openfga https://openfga.github.io/helm-charts
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+          echo "🔨 Building Helm chart dependencies..."
+          helm dependency build deployments/helm/mcp-server-langgraph
+          echo "✓ Helm dependencies built successfully"
+        else
+          echo "⚠️ Helm not installed, skipping dependency build (Helm tests may be skipped)"
+        fi
+
     - name: Run unit tests
       run: |
         source .venv/bin/activate
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "unit and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
+        # Run all fast tests: unit, api, property (matches local pre-push via scripts/run_pre_push_tests.py)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
     - name: Run new test suites
       run: |

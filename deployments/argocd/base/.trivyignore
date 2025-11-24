@@ -1,0 +1,40 @@
+# ArgoCD Upstream False Positives
+# These are from upstream ArgoCD v2.9.3 manifests (not our code)
+# Review: Annually (tracks upstream releases)
+# Last reviewed: 2025-11-23
+# Next review: 2026-11-23
+
+# ==============================================================================
+# AVD-KSV-0109: ArgoCD ConfigMaps reference secret names, not values
+# ==============================================================================
+# Finding: ConfigMap stores secrets in key(s) or value(s)
+# Severity: HIGH
+#
+# Affected Components:
+# - argocd-cm: ArgoCD core configuration
+# - argocd-notifications-cm: Notifications configuration
+#
+# Justification:
+# False positive - these ConfigMaps contain references to Kubernetes Secret names
+# (e.g., "passwordSecret", "usernameSecret", "token"), not actual secret values.
+# ArgoCD follows Kubernetes best practices by storing credentials in Secrets and
+# only referencing the Secret names in ConfigMaps.
+#
+# Example from argocd-cm:
+#   dex.config: |
+#     connectors:
+#     - type: ldap
+#       config:
+#         bindPW: $dex.ldap.bindPW  # References secret, doesn't contain password
+#         passwordSecret: argocd-ldap-password  # Secret name reference
+#
+# Upstream Issue:
+# - https://github.com/aquasecurity/trivy/discussions/6158
+# - https://github.com/argoproj/argo-cd/issues/16915
+#
+# Risk Assessment: FALSE POSITIVE (upstream manifest design)
+# Review: When upgrading ArgoCD (may be fixed in newer versions)
+# Owner: @platform-team
+# ==============================================================================
+AVD-KSV-0109: argocd-install.yaml
+AVD-KSV-0109: gcp-production-app.yaml

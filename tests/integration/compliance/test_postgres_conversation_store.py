@@ -6,17 +6,18 @@ Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 
 import gc
 import os
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import AsyncGenerator
 
 import asyncpg
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import PostgresConversationStore, PostgresUserProfileStore
 from mcp_server_langgraph.compliance.gdpr.storage import Conversation, UserProfile
+from tests.conftest import get_user_id
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_compliance_postgres_conversation_tests")]
+pytestmark = pytest.mark.integration
 
 
 def teardown_module():
@@ -32,22 +33,14 @@ def teardown_method_conversation_store():
 
 
 @pytest.fixture
-async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
+async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None]:
     """
-    Create test database pool with environment-based configuration.
+    Use shared test database pool with cleanup.
 
-    Supports both local development and CI/CD environments by using
-    environment variables with sensible defaults.
+    CODEX FINDING FIX (2025-11-20): Use shared pool to prevent
+    "asyncpg.exceptions.InterfaceError: another operation is in progress"
     """
-    pool = await asyncpg.create_pool(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT", "5432")),
-        user=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        database=os.getenv("POSTGRES_DB", "gdpr_test"),
-        min_size=1,
-        max_size=5,
-    )
+    pool = postgres_connection_real
 
     # Clean up test data
     async with pool.acquire() as conn:
@@ -61,7 +54,7 @@ async def db_pool() -> AsyncGenerator[asyncpg.Pool, None]:
         await conn.execute("DELETE FROM conversations WHERE user_id LIKE 'test_%'")
         await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
 
-    await pool.close()
+    # Note: Don't close the pool - it's session-scoped and shared across all tests
 
 
 @pytest.fixture
@@ -78,17 +71,18 @@ async def store(db_pool: asyncpg.Pool) -> PostgresConversationStore:
 
 @pytest.fixture
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
-    """Create test user"""
+    """Create test user (worker-safe for pytest-xdist)"""
+    user_id = get_user_id("conv_user")  # Worker-safe ID for parallel execution
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
-        user_id="test_conv_user",
+        user_id=user_id,
         username="convuser",
         email="conv@example.com",
         created_at=now,
         last_updated=now,
     )
     await profile_store.create(profile)
-    return "test_conv_user"
+    return user_id
 
 
 # ============================================================================

@@ -14,6 +14,8 @@ from mcp_server_langgraph.core.dynamic_context_loader import DynamicContextLoade
 from mcp_server_langgraph.core.parallel_executor import ParallelToolExecutor, ToolInvocation
 from tests.helpers.async_mock_helpers import configured_async_mock
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def mock_settings():
@@ -89,7 +91,7 @@ class TestDynamicContextIntegration:
                 query="How do I write asynchronous code in Python?", top_k=2, min_score=0.5
             )
             assert len(python_results) >= 1
-            assert any((r.ref_id == "python_async" for r in python_results))
+            assert any(r.ref_id == "python_async" for r in python_results)
             loaded = await loader.load_batch(python_results, max_tokens=1000)
             assert len(loaded) >= 1
             async_ctx = next((c for c in loaded if c.ref_id == "python_async"), None)
@@ -199,7 +201,7 @@ class TestParallelExecutionIntegration:
         ]
         results = await executor.execute_parallel(invocations, simulated_tool_executor)
         assert len(results) == 5
-        assert all((r.error is None for r in results))
+        assert all(r.error is None for r in results)
         user_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_user"))
         orders_start = next((t for e, n, t in execution_log if e == "start" and n == "fetch_orders"))
         assert abs(user_start - orders_start) < 0.05
@@ -431,7 +433,7 @@ class TestEndToEndWorkflow:
         ]
         results = await executor.execute_parallel(invocations, mock_tool)
         assert len(results) == 3
-        assert all((r.success for r in results))
+        assert all(r.success for r in results)
         print("\n✅ End-to-end workflow test passed:")
         print("  - Dynamic context loading: ✓")
         print("  - LLM extraction: ✓")

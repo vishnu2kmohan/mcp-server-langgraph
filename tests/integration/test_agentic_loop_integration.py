@@ -16,6 +16,8 @@ from mcp_server_langgraph.core.config import Settings
 from mcp_server_langgraph.core.context_manager import ContextManager
 from mcp_server_langgraph.llm.verifier import OutputVerifier, VerificationResult
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_settings():

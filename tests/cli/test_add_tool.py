@@ -18,12 +18,14 @@ import pytest
 
 from mcp_server_langgraph.cli.add_tool import TOOL_TEMPLATE, generate_tool
 
+pytestmark = pytest.mark.unit
+
 # ==============================================================================
 # Test generate_tool Function
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgeneratetool")
 class TestGenerateTool:
     """Test tool file generation functionality."""
@@ -261,7 +263,7 @@ class TestGenerateTool:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testtooltemplate")
 class TestToolTemplate:
     """Test the tool template structure."""
@@ -327,7 +329,7 @@ class TestToolTemplate:
 # ==============================================================================
 
 
-@pytest.mark.unit
+@pytest.mark.cli
 @pytest.mark.xdist_group(name="testgeneratetooledgecases")
 class TestGenerateToolEdgeCases:
     """Test edge cases and error scenarios for generate_tool."""

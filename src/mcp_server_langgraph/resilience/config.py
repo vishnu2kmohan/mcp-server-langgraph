@@ -9,7 +9,6 @@ Centralized configuration for all resilience patterns:
 """
 
 import os
-from typing import Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -59,7 +58,7 @@ class ResilienceConfig(BaseModel):
     enabled: bool = Field(default=True, description="Enable resilience patterns")
 
     # Circuit breaker configs per service
-    circuit_breakers: Dict[str, CircuitBreakerConfig] = Field(
+    circuit_breakers: dict[str, CircuitBreakerConfig] = Field(
         default_factory=lambda: {
             "llm": CircuitBreakerConfig(name="llm", fail_max=5, timeout_duration=60),
             "openfga": CircuitBreakerConfig(name="openfga", fail_max=10, timeout_duration=30),
@@ -106,7 +105,7 @@ class ResilienceConfig(BaseModel):
 
 
 # Global config instance
-_resilience_config: Optional[ResilienceConfig] = None
+_resilience_config: ResilienceConfig | None = None
 
 
 def get_resilience_config() -> ResilienceConfig:

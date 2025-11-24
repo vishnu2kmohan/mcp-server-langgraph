@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -145,7 +145,7 @@ class TestStagingGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency(self):
+    def test_namespace_consistency_for_staging_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 
@@ -248,7 +248,7 @@ class TestProductionGKEOverlay:
             pytest.skip(f"Build failed: {result.stderr}")
         return list(yaml.safe_load_all(result.stdout))
 
-    def test_namespace_consistency(self):
+    def test_namespace_consistency_for_production_matches_expected_namespace(self):
         """
         Test that all resources use the correct namespace.
 
@@ -438,7 +438,7 @@ class TestServiceMeshConfig:
         if not istio_config.exists():
             pytest.skip("Istio config not found")
 
-        with open(istio_config, "r") as f:
+        with open(istio_config) as f:
             content = f.read()
 
         # Parse YAML

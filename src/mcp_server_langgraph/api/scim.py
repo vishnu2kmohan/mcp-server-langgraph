@@ -22,7 +22,7 @@ References:
 - RFC 7644: https://datatracker.ietf.org/doc/html/rfc7644
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
@@ -51,7 +51,7 @@ router = APIRouter(
 
 
 # Error response helper
-def scim_error(status_code: int, detail: str, scim_type: Optional[str] = None) -> JSONResponse:
+def scim_error(status_code: int, detail: str, scim_type: str | None = None) -> JSONResponse:
     """Return SCIM-formatted error response"""
     error = SCIMError(
         status=status_code,
@@ -68,7 +68,7 @@ def scim_error(status_code: int, detail: str, scim_type: Optional[str] = None) -
 
 
 async def _require_admin_or_scim_role(
-    current_user: Dict[str, Any], openfga: Optional[Any] = None, resource: str = "scim:users"
+    current_user: dict[str, Any], openfga: Any | None = None, resource: str = "scim:users"
 ) -> None:
     """
     Validate that the current user has admin or SCIM provisioner role.
@@ -144,10 +144,10 @@ async def _require_admin_or_scim_role(
 # User Endpoints
 
 
-@router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)
 async def create_user(
-    user_data: Dict[str, Any],
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    user_data: dict[str, Any],
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> SCIMUser:
@@ -212,10 +212,10 @@ async def create_user(
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
 
-@router.get("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/Users/{user_id}", response_model=SCIMUser)
 async def get_user(
     user_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
 ) -> SCIMUser:
     """
@@ -240,14 +240,14 @@ async def get_user(
         raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
 
 
-@router.put("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.put("/Users/{user_id}", response_model=SCIMUser)
 async def replace_user(
     user_id: str,
-    user_data: Dict[str, Any],
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    user_data: dict[str, Any],
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
-) -> Union[SCIMUser, JSONResponse]:
+) -> SCIMUser | JSONResponse:
     """
     Replace user (SCIM 2.0 PUT)
 
@@ -280,14 +280,14 @@ async def replace_user(
         return scim_error(500, f"Failed to update user: {str(e)}", "internalError")
 
 
-@router.patch("/Users/{user_id}", response_model=SCIMUser)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.patch("/Users/{user_id}", response_model=SCIMUser)
 async def update_user(
     user_id: str,
     patch_request: SCIMPatchRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
-) -> Union[SCIMUser, JSONResponse]:
+) -> SCIMUser | JSONResponse:
     """
     Update user with PATCH operations (SCIM 2.0)
 
@@ -341,10 +341,10 @@ async def update_user(
         return scim_error(500, f"Failed to patch user: {str(e)}", "internalError")
 
 
-@router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
 ) -> None:
@@ -368,14 +368,14 @@ async def delete_user(
         raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
 
 
-@router.get("/Users", response_model=SCIMListResponse)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/Users", response_model=SCIMListResponse)
 async def list_users(
-    filter: Optional[str] = Query(None, description="SCIM filter expression"),
+    filter: str | None = Query(None, description="SCIM filter expression"),
     startIndex: int = Query(1, ge=1, description="1-based start index"),
     count: int = Query(100, ge=1, le=1000, description="Number of results"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> Union[SCIMListResponse, JSONResponse]:
+) -> SCIMListResponse | JSONResponse:
     """
     List/search users (SCIM 2.0)
 
@@ -449,13 +449,13 @@ async def list_users(
 # Group Endpoints
 
 
-@router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.post("/Groups", response_model=SCIMGroup, status_code=status.HTTP_201_CREATED)
 async def create_group(
-    group_data: Dict[str, Any],
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    group_data: dict[str, Any],
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
     openfga: OpenFGAClient = Depends(get_openfga_client),
-) -> Union[SCIMGroup, JSONResponse]:
+) -> SCIMGroup | JSONResponse:
     """
     Create a new group (SCIM 2.0)
 
@@ -509,12 +509,12 @@ async def create_group(
         return scim_error(500, f"Failed to create group: {str(e)}", "internalError")
 
 
-@router.get("/Groups/{group_id}", response_model=SCIMGroup)  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@router.get("/Groups/{group_id}", response_model=SCIMGroup)
 async def get_group(
     group_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: dict[str, Any] = Depends(get_current_user),
     keycloak: KeycloakClient = Depends(get_keycloak_client),
-) -> Union[SCIMGroup, JSONResponse]:
+) -> SCIMGroup | JSONResponse:
     """Get group by ID (SCIM 2.0)"""
     try:
         group = await keycloak.get_group(group_id)

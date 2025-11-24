@@ -6,15 +6,14 @@ Ensures that all Kustomize overlays build successfully and produce
 valid Kubernetes manifests without errors or warnings.
 """
 
-import gc
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
@@ -47,7 +46,7 @@ def build_kustomize(overlay_dir: Path) -> tuple[str, str, int]:
     return result.stdout, result.stderr, result.returncode
 
 
-def parse_manifests(manifest_text: str) -> List[Dict[str, Any]]:
+def parse_manifests(manifest_text: str) -> list[dict[str, Any]]:
     """Parse YAML manifests from text."""
     return [m for m in yaml.safe_load_all(manifest_text) if m]
 
@@ -101,7 +100,7 @@ def test_all_manifests_have_required_fields(overlay_dir: Path):
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for namespace validation")
 @pytest.mark.parametrize("overlay_dir", OVERLAYS_TO_TEST)
-def test_namespace_consistency(overlay_dir: Path):
+def test_namespace_consistency_across_all_resources_matches_overlay(overlay_dir: Path):
     """Test that all namespaced resources use the correct namespace."""
     stdout, _, returncode = build_kustomize(overlay_dir)
     assert returncode == 0

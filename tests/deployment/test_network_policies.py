@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -272,7 +272,7 @@ class TestNetworkPolicyComments:
         if not staging_netpol.exists():
             pytest.skip("Staging network policy file not found")
 
-        with open(staging_netpol, "r") as f:
+        with open(staging_netpol) as f:
             content = f.read()
 
         # Check for comments near port specifications

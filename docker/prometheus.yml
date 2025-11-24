@@ -59,20 +59,15 @@ scrape_configs:
           service: 'redis'
           component: 'checkpoints'
 
-  - job_name: 'redis-sessions'
-    static_configs:
-      - targets: ['redis-sessions:6379']
-        labels:
-          service: 'redis'
-          component: 'sessions'
+
 
   # PostgreSQL metrics (via postgres_exporter if available)
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres:5432']
-        labels:
-          service: 'postgres'
-          component: 'database'
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres:5432']
+  #       labels:
+  #         service: 'postgres'
+  #         component: 'database'
 
   # Keycloak metrics
   - job_name: 'keycloak'

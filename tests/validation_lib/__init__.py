@@ -12,10 +12,14 @@ By centralizing validation logic, we ensure:
 
 Modules:
 - memory_safety: Memory safety pattern validation for pytest-xdist
-- test_ids: Test ID pollution prevention validation
 - async_mocks: AsyncMock configuration and usage validation
 
+Note: test_ids module moved to scripts/validation/validate_ids.py (2025-11-20)
+
 Version History:
+- 1.0.1 (2025-11-20): Move test_ids to scripts/validation/
+  * test_ids moved to scripts/validation/validate_ids.py
+  * Removed from validation_lib (not a test file)
 - 1.0.0 (2025-11-18): Initial release
   * memory_safety validator
   * test_ids validator
@@ -23,17 +27,16 @@ Version History:
   * 46 comprehensive unit tests
   * TDD implementation
 
-Version: 1.0.0
+Version: 1.0.1
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # Import modules for convenient access
-from tests.validation_lib import async_mocks, memory_safety, test_ids
+from tests.validation_lib import async_mocks, memory_safety
 
 __all__ = [
     "__version__",
     "memory_safety",
-    "test_ids",
     "async_mocks",
 ]

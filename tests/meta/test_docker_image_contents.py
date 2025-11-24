@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.xdist_group(name="docker_image_contents")
 class TestDockerImageContents:
@@ -102,7 +104,7 @@ class TestDockerImageContents:
         assert pyproject.exists(), "pyproject.toml must exist in Docker image"
         assert pyproject.is_file(), "pyproject.toml must be a regular file"
 
-    @pytest.mark.unit
+    @pytest.mark.meta
     def test_critical_files_documented(self):
         """
         Document which files/directories MUST be in the Docker image.

@@ -35,13 +35,10 @@ References:
 - ADR: Single shared test infrastructure with logical isolation
 """
 
-import gc
-import os
-
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.regression
@@ -63,6 +60,9 @@ def test_ports_are_intentionally_fixed(test_infrastructure_ports):
     assert test_infrastructure_ports["openfga_http"] == 9080, "OpenFGA HTTP port should be fixed at 9080 for all workers"
     assert test_infrastructure_ports["openfga_grpc"] == 9081, "OpenFGA gRPC port should be fixed at 9081 for all workers"
     assert test_infrastructure_ports["keycloak"] == 9082, "Keycloak port should be fixed at 9082 for all workers"
+    assert (
+        test_infrastructure_ports["keycloak_management"] == 9900
+    ), "Keycloak management port should be fixed at 9900 for all workers"
 
 
 @pytest.mark.regression
@@ -83,6 +83,7 @@ def test_all_workers_share_same_ports(test_infrastructure_ports):
         "openfga_http": 9080,
         "openfga_grpc": 9081,
         "keycloak": 9082,
+        "keycloak_management": 9900,
     }
 
     # Current worker should match base ports exactly
@@ -120,7 +121,7 @@ def test_no_worker_based_port_offsets():
 
     import inspect
 
-    from tests.conftest import test_infrastructure_ports as fixture_func
+    from tests.fixtures.docker_fixtures import test_infrastructure_ports as fixture_func
 
     source = inspect.getsource(fixture_func)
 
@@ -205,7 +206,7 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
     """
     import inspect
 
-    from tests.conftest import test_infrastructure_ports as fixture_func
+    from tests.fixtures.docker_fixtures import test_infrastructure_ports as fixture_func
 
     # Get docstring
     docstring = inspect.getdoc(fixture_func)
@@ -225,7 +226,7 @@ def test_fixture_documentation_explains_architecture(test_infrastructure_ports):
 
 
 @pytest.mark.regression
-def test_regression_documentation():
+def test_regression_documentation_explains_port_conflict_resolution():
     """
     📚 Document the regression and its resolution.
 

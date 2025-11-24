@@ -1,5 +1,3 @@
----
-# Redis for Kong rate limiting (shared state across replicas)
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,12 +6,15 @@ metadata:
   labels:
     app: redis
 data:
-  redis.conf: |
-    maxmemory 256mb
+  redis.conf: 'maxmemory 256mb
+
     maxmemory-policy allkeys-lru
+
     save ""
+
     appendonly no
 
+    '
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -40,8 +41,8 @@ spec:
           name: redis
           protocol: TCP
         command:
-          - redis-server
-          - /usr/local/etc/redis/redis.conf
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
         volumeMounts:
         - name: config
           mountPath: /usr/local/etc/redis
@@ -64,11 +65,12 @@ spec:
             - ping
           initialDelaySeconds: 5
           periodSeconds: 5
+        securityContext:
+          readOnlyRootFilesystem: true
       volumes:
       - name: config
         configMap:
           name: redis-config
-
 ---
 apiVersion: v1
 kind: Service

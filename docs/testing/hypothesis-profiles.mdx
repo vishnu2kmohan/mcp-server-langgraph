@@ -1,0 +1,177 @@
+---
+title: Hypothesis Property Test Profiles
+description: Different Hypothesis profiles for property-based testing to balance speed vs thoroughness
+icon: settings
+contentType: reference
+seoTitle: Hypothesis Test Profiles - Dev vs CI Testing Strategy
+seoDescription: Understanding dev and CI Hypothesis profiles for property-based testing. Learn when to use 25 examples vs 100 examples for optimal test coverage.
+keywords:
+  - hypothesis
+  - property-based testing
+  - test profiles
+  - dev profile
+  - ci profile
+  - test strategy
+---
+
+# Hypothesis Property Test Profiles
+
+This document explains the different Hypothesis profiles used for property-based testing in this project.
+
+## Overview
+
+Property-based testing with Hypothesis uses different profiles to balance speed vs thoroughness:
+
+| Profile | Examples | Use Case | Speed | Thoroughness |
+|---------|----------|----------|-------|--------------|
+| **dev** | 25 | Local development, git pre-push hooks | ⚡ Fast | ✓ Good |
+| **ci** | 100 | CI/CD, `make validate-pre-push` | 🐢 Slow | ✓✓✓ Comprehensive |
+
+## When to Use Each Profile
+
+### Dev Profile (25 examples) - Default
+
+**Used by:**
+- Git pre-push hooks (automatic)
+- `make test-property`
+- Local test runs: `pytest -m property`
+
+**Characteristics:**
+- **Fast iteration**: ~4x faster than CI profile
+- **Good coverage**: Catches 80-90% of property violations
+- **Developer-friendly**: Doesn't slow down TDD workflow
+
+**When to use:**
+- Active development with frequent test runs
+- Quick validation before committing code
+- Iterating on property test logic
+
+### CI Profile (100 examples) - Thorough
+
+**Used by:**
+- CI/CD workflows (GitHub Actions)
+- `make validate-pre-push` (Makefile target)
+- `HYPOTHESIS_PROFILE=ci pytest -m property`
+
+**Characteristics:**
+- **Comprehensive**: Tests 4x more examples
+- **High confidence**: Catches rare edge cases
+- **Slower**: Takes 4x longer to run
+
+**When to use:**
+- Before pushing changes that modify property-tested code
+- Final validation before creating pull requests
+- Investigating property test failures in CI
+
+## Usage Examples
+
+### Running with Dev Profile (Fast)
+
+```bash
+# Git pre-push hook (automatic)
+git push
+
+# Manual pytest run (uses dev profile by default)
+pytest -m property
+
+# Explicit dev profile
+HYPOTHESIS_PROFILE=dev pytest -m property
+```
+
+### Running with CI Profile (Thorough)
+
+```bash
+# Via Makefile (recommended for pre-push validation)
+make validate-pre-push
+
+# Explicit CI profile
+HYPOTHESIS_PROFILE=ci pytest -m property
+
+# Quick make target
+make test-property-ci
+```
+
+### Running with CI Parity (Integration Tests + CI Profile)
+
+```bash
+# Full CI-equivalent validation
+CI_PARITY=1 git push
+
+# Or via Makefile
+CI_PARITY=1 make validate-pre-push
+```
+
+## Configuration
+
+Hypothesis profiles are configured in:
+- **pyproject.toml** (lines 505-513): Default dev profile settings
+- **tests/conftest.py**: CI profile registration
+
+### Dev Profile (pyproject.toml)
+
+```toml
+[tool.hypothesis]
+max_examples = 25  # Fast iteration
+deadline = 2000    # 2s max per test case
+```
+
+### CI Profile (conftest.py)
+
+```python
+settings.register_profile(
+    "ci",
+    max_examples=100,  # Comprehensive testing
+    deadline=5000,     # 5s max per test case
+)
+```
+
+## Troubleshooting
+
+### Property test fails in CI but passes locally
+
+**Problem**: Test passes with dev profile (25 examples) but fails with CI profile (100 examples)
+
+**Solution**:
+1. Run locally with CI profile: `HYPOTHESIS_PROFILE=ci pytest -m property`
+2. Hypothesis will find the failing example
+3. Fix the property or the code
+4. Verify: `HYPOTHESIS_PROFILE=ci pytest -m property`
+
+### Property tests are too slow locally
+
+**Problem**: `git push` takes too long due to property tests
+
+**Current behavior**: This is expected! Property tests with 25 examples typically add ~30-60s to pre-push
+
+**Options**:
+1. **Accept the delay**: 30-60s is reasonable for quality assurance
+2. **Skip pre-push (not recommended)**: `git push --no-verify`
+3. **Run tests separately**: `make test-property && git push`
+
+### Want faster feedback during development
+
+**Use pytest-testmon** for change-aware testing:
+
+```bash
+# Only run tests affected by code changes
+pytest --testmon -m property
+
+# Faster iteration in TDD workflow
+make test-watch  # Automatically reruns affected tests
+```
+
+## References
+
+- **OpenAI Codex Finding 2c**: Property test profile split documentation
+- **Hypothesis Docs**: https://hypothesis.readthedocs.io/en/latest/settings.html#profiles
+- **Test Strategy**: `TESTING.md`
+- **CI/CD Parity**: `CONTRIBUTING.md`
+
+## Summary
+
+- **Local development**: Use dev profile (25 examples, automatic)
+- **Pre-push validation**: Use CI profile via `make validate-pre-push`
+- **CI/CD**: Always uses CI profile (100 examples)
+- **Debugging CI failures**: Run locally with `HYPOTHESIS_PROFILE=ci`
+
+The split profile strategy balances developer productivity (fast local tests) with code quality (thorough CI testing).

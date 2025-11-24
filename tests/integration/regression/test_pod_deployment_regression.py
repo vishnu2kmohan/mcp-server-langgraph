@@ -19,12 +19,14 @@ Test Execution:
 import gc
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
+
+pytestmark = pytest.mark.integration
 
 
 # Test configuration - Environment-agnostic path resolution
@@ -52,7 +54,7 @@ REPO_ROOT = _find_project_root()
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 
 
-def get_all_overlays() -> List[Path]:
+def get_all_overlays() -> list[Path]:
     """
     Get all kustomize overlay directories.
 
@@ -65,7 +67,7 @@ def get_all_overlays() -> List[Path]:
 
 
 @requires_tool("kubectl")
-def build_kustomize(overlay_path: Path) -> List[Dict[str, Any]]:
+def build_kustomize(overlay_path: Path) -> list[dict[str, Any]]:
     """Build kustomize overlay and return parsed manifests"""
     result = subprocess.run(
         ["kubectl", "kustomize", str(overlay_path)], capture_output=True, text=True, check=True, timeout=60
@@ -106,12 +108,12 @@ def parse_memory(mem_str: str) -> float:
     return float(mem_str) / (1024 * 1024)
 
 
-def get_deployments_from_manifests(manifests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def get_deployments_from_manifests(manifests: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Filter deployment-like resources from manifests"""
     return [m for m in manifests if m.get("kind") in ["Deployment", "StatefulSet", "DaemonSet"]]
 
 
-def get_containers_from_deployment(deployment: Dict[str, Any]) -> List[Dict[str, Any]]:
+def get_containers_from_deployment(deployment: dict[str, Any]) -> list[dict[str, Any]]:
     """Extract containers from deployment manifest"""
     return deployment.get("spec", {}).get("template", {}).get("spec", {}).get("containers", [])
 
@@ -336,7 +338,7 @@ class TestOTELCollectorConfiguration:
         config_files = list(REPO_ROOT.glob("**/otel-collector-config*.yaml"))
 
         for config_file in config_files:
-            with open(config_file, "r") as f:
+            with open(config_file) as f:
                 content = f.read()
 
             # Check for bash-style env var syntax (should use ${env:VAR} instead)

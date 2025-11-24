@@ -1,0 +1,137 @@
+# Trivy Security Scanner Suppressions for MCP Server LangGraph Base Deployments
+#
+# This file documents the security architecture and rationale for base deployment
+# configurations. It serves as the authoritative source for security decisions
+# that apply across all environments.
+#
+# IMPORTANT: Base deployments currently have readOnlyRootFilesystem: true for
+# all services. This file documents the INTENDED exception for Keycloak when
+# it is deployed to production environments.
+#
+# Review frequency: Quarterly
+# Last reviewed: 2025-11-23
+# Next review: 2026-02-23
+
+# ==============================================================================
+# AVD-KSV-0014: Containers should run with readOnlyRootFilesystem
+# ==============================================================================
+#
+# Current Status:
+# - Base Keycloak deployment: readOnlyRootFilesystem: true (with emptyDir volumes)
+# - Staging-gke overlay: readOnlyRootFilesystem: false (ACTIVE DEPLOYMENT)
+# - Production-gke overlay: readOnlyRootFilesystem: true (not currently deployed)
+#
+# This documentation applies to environments that require readOnlyRootFilesystem: false
+#
+# Affected Component: Keycloak identity provider
+#
+# Justification:
+# Keycloak uses the Quarkus framework which performs Just-In-Time (JIT) compilation
+# at runtime to optimize performance. JIT compilation requires write access to the
+# filesystem to generate and load dynamic bytecode, making readOnlyRootFilesystem
+# incompatible with Keycloak's runtime requirements.
+#
+# Note: The base deployment attempts to work around this with emptyDir volumes, but
+# this is NOT sufficient for Quarkus JIT. Only staging-gke (with readOnlyRootFilesystem: false)
+# is confirmed working.
+#
+# Alternative Considered: Native Image (GraalVM)
+# Keycloak does not officially support GraalVM native images as a production
+# deployment option. While native images would eliminate JIT compilation and allow
+# readOnlyRootFilesystem, this approach is not recommended by the Keycloak project
+# due to limitations with:
+# - Dynamic class loading for extensions/providers
+# - Reflection-heavy frameworks (Hibernate, RESTEasy)
+# - Runtime configuration changes
+# - Custom theme and provider deployments
+#
+# References:
+# - Keycloak Issue #10150: https://github.com/keycloak/keycloak/issues/10150
+# - Quarkus JIT Requirements: Requires writable /tmp and work directories
+# - WebSearch Research (2025-11-20): Confirmed native image not production-ready
+#
+# Compensating Security Controls:
+# To mitigate the risk of running with readOnlyRootFilesystem: false, the following
+# security hardening measures are implemented in keycloak-deployment.yaml:
+#
+# 1. Pod Security Context:
+#    - runAsNonRoot: true (prevents root execution)
+#    - runAsUser: 10000 (non-privileged UID)
+#    - runAsGroup: 10000 (non-privileged GID)
+#    - fsGroup: 1000 (group ownership for volumes)
+#    - seccompProfile: RuntimeDefault (syscall filtering)
+#
+# 2. Container Security Context:
+#    - allowPrivilegeEscalation: false (prevents privilege escalation)
+#    - readOnlyRootFilesystem: false (documented exception)
+#    - runAsNonRoot: true (container-level enforcement)
+#    - runAsUser: 10000 (non-privileged UID)
+#    - capabilities.drop: ALL (removes all Linux capabilities)
+#    - runAsGroup: 10000 (non-privileged GID)
+#
+# 3. EmptyDir Volume Isolation:
+#    Writable paths are isolated to ephemeral emptyDir volumes that are
+#    destroyed when the pod terminates, preventing persistent filesystem
+#    modifications:
+#    - /tmp (temporary files for JIT compilation)
+#    - /var/tmp (additional temporary storage)
+#    - /opt/keycloak/data/tmp (Keycloak cache directory)
+#    - /opt/keycloak/data (Keycloak work directory)
+#    - /opt/keycloak/providers (custom provider JARs)
+#    - /opt/keycloak/themes (custom themes)
+#
+# 4. Network Security:
+#    - NetworkPolicy restricts ingress/egress
+#    - TLS termination at ingress layer
+#    - Internal-only database communication
+#
+# 5. Resource Limits:
+#    - CPU: 500m request, 2000m limit
+#    - Memory: 1Gi request, 2Gi limit
+#    - Ephemeral Storage: 500Mi request, 1Gi limit
+#    - Prevents resource exhaustion attacks
+#
+# 6. Pod Anti-Affinity:
+#    - Distributes Keycloak replicas across nodes
+#    - Reduces blast radius of node compromise
+#
+# Risk Assessment:
+# - Likelihood: LOW (multiple compensating controls)
+# - Impact: MEDIUM (identity compromise affects all services)
+# - Residual Risk: LOW (acceptable for production deployment)
+#
+# Approval: Security Architecture Team
+# Date: 2025-11-20
+# Next Review: 2026-02-20 (or when Keycloak adds native image support)
+
+exp:2026-02-20 AVD-KSV-0014
+
+# ==============================================================================
+# AVD-KSV-0109: ConfigMaps should not store secrets
+# ==============================================================================
+# Finding: ConfigMap 'mcp-server-langgraph-config' stores secrets in key(s) or value(s)
+# Severity: HIGH
+#
+# Affected Component: Application ConfigMap (configmap.yaml)
+#
+# Justification:
+# False positive - the detected keys are configuration values, not secrets:
+# - dynamic_context_max_tokens: Token limit for context loading (integer)
+# - model_max_tokens: Maximum tokens for model inference (integer)
+#
+# These are public configuration parameters that control application behavior,
+# not sensitive credentials. Trivy's heuristic matches on the word "token" but
+# these refer to LLM tokens (text chunks), not authentication tokens.
+#
+# Risk Assessment: FALSE POSITIVE (no actual secrets stored)
+# Review: 2026-11-23 (annually)
+# Owner: @platform-team
+# ==============================================================================
+AVD-KSV-0109: configmap.yaml
+
+# ==============================================================================
+# Future Suppressions
+# ==============================================================================
+# Additional security exceptions should be documented here with the same level
+# of detail: affected component, justification, alternatives considered,
+# compensating controls, risk assessment, and expiration date.

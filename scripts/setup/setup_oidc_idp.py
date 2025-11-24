@@ -31,7 +31,7 @@ import argparse
 import asyncio
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -88,7 +88,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_identity_provider(self, realm: str, idp_config: Dict[str, Any]):
+    async def create_identity_provider(self, realm: str, idp_config: dict[str, Any]):
         """Create identity provider"""
         if not self.access_token:
             await self.get_admin_token()
@@ -107,7 +107,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             return response.json()
 
-    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]):
+    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: dict[str, Any]):
         """Create identity provider mapper"""
         if not self.access_token:
             await self.get_admin_token()
@@ -135,7 +135,7 @@ async def configure_google_identity_provider(
     hosted_domain: str = None,
 ) -> str:
     """Configure Google Workspace / Gmail identity provider"""
-    print(f"\nConfiguring Google Identity Provider")
+    print("\nConfiguring Google Identity Provider")
 
     idp_config = {
         "alias": "google",
@@ -152,7 +152,7 @@ async def configure_google_identity_provider(
     }
 
     await keycloak_admin.create_identity_provider(realm_name, idp_config)
-    print(f"✓ Google identity provider configured")
+    print("✓ Google identity provider configured")
 
     return "google"
 
@@ -165,7 +165,7 @@ async def configure_microsoft_identity_provider(
     tenant_id: str = "common",
 ) -> str:
     """Configure Microsoft 365 / Azure AD identity provider"""
-    print(f"\nConfiguring Microsoft Identity Provider")
+    print("\nConfiguring Microsoft Identity Provider")
     print(f"Tenant ID: {tenant_id}")
 
     idp_config = {
@@ -182,7 +182,7 @@ async def configure_microsoft_identity_provider(
     }
 
     await keycloak_admin.create_identity_provider(realm_name, idp_config)
-    print(f"✓ Microsoft identity provider configured")
+    print("✓ Microsoft identity provider configured")
 
     return "microsoft"
 
@@ -194,7 +194,7 @@ async def configure_github_identity_provider(
     client_secret: str,
 ) -> str:
     """Configure GitHub identity provider"""
-    print(f"\nConfiguring GitHub Identity Provider")
+    print("\nConfiguring GitHub Identity Provider")
 
     idp_config = {
         "alias": "github",
@@ -210,7 +210,7 @@ async def configure_github_identity_provider(
     }
 
     await keycloak_admin.create_identity_provider(realm_name, idp_config)
-    print(f"✓ GitHub identity provider configured")
+    print("✓ GitHub identity provider configured")
 
     return "github"
 
@@ -223,7 +223,7 @@ async def configure_okta_identity_provider(
     okta_domain: str,
 ) -> str:
     """Configure Okta identity provider"""
-    print(f"\nConfiguring Okta Identity Provider")
+    print("\nConfiguring Okta Identity Provider")
     print(f"Okta Domain: {okta_domain}")
 
     idp_config = {
@@ -247,7 +247,7 @@ async def configure_okta_identity_provider(
     }
 
     await keycloak_admin.create_identity_provider(realm_name, idp_config)
-    print(f"✓ Okta identity provider configured")
+    print("✓ Okta identity provider configured")
 
     return "okta"
 
@@ -313,7 +313,7 @@ async def main():
     provider = args.provider
 
     print("=" * 70)
-    print(f" " * 15 + f"{provider.upper()} Identity Provider Setup")
+    print(" " * 15 + f"{provider.upper()} Identity Provider Setup")
     print("=" * 70)
 
     # Get configuration from environment
@@ -385,8 +385,8 @@ async def main():
         print("=" * 70)
         print("\nNext steps:")
         print(f"1. Test {provider} SSO flow")
-        print(f"2. Verify attribute mapping")
-        print(f"3. Configure account linking if needed")
+        print("2. Verify attribute mapping")
+        print("3. Configure account linking if needed")
         print(f"4. Test JWT issuance after {provider} login")
         print("=" * 70)
 

@@ -10,7 +10,6 @@ Related: OpenAI Codex Finding #6 - Subprocess test safeguards
 import ast
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
 class SubprocessTimeoutAdder(ast.NodeTransformer):
@@ -42,14 +41,14 @@ class SubprocessTimeoutAdder(ast.NodeTransformer):
         return node
 
 
-def add_timeouts_to_file(file_path: Path) -> Tuple[bool, List[int]]:
+def add_timeouts_to_file(file_path: Path) -> tuple[bool, list[int]]:
     """Add timeout parameters to subprocess.run() calls in a file.
 
     Returns:
         Tuple of (modified, line_numbers)
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source = f.read()
 
         tree = ast.parse(source, filename=str(file_path))
@@ -96,12 +95,12 @@ def main():
             total_modifications += len(line_numbers)
             print(f"✓ {test_file.relative_to(tests_dir)}: Added timeout to {len(line_numbers)} calls")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Modified files: {len(modified_files)}")
     print(f"  Total timeout parameters added: {total_modifications}")
 
     if modified_files:
-        print(f"\nModified files:")
+        print("\nModified files:")
         for file in modified_files:
             print(f"  - {file}")
 

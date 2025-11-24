@@ -17,12 +17,11 @@ See: https://www.anthropic.com/engineering/claude-code-best-practices
 
 import gc
 from pathlib import Path
-from typing import List
 
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="migration_checklists")

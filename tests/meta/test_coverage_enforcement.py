@@ -54,9 +54,11 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 @pytest.mark.timeout(360)  # 6 minutes - max time if fallback runs tests
 def test_minimum_coverage_threshold():
     """

@@ -34,19 +34,24 @@ import pytest
 import mcp_server_langgraph.auth.middleware as middleware
 from mcp_server_langgraph.auth.middleware import set_global_auth_middleware
 
+pytestmark = pytest.mark.regression
+
 
 @pytest.mark.xdist_group(name="auth_middleware_isolation")
 class TestAuthMiddlewareIsolation:
     """Test auth middleware global state isolation."""
 
-    def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
+    def setup_method(self):
+        """Reset auth middleware before each test to prevent pollution."""
+        # Explicitly reset global auth middleware BEFORE test starts
+        middleware._global_auth_middleware = None
         gc.collect()
 
     def teardown_method(self):
         """Clean up auth middleware after each test."""
-        # Explicitly reset global auth middleware
+        # Explicitly reset global auth middleware AFTER test completes
         middleware._global_auth_middleware = None
+        gc.collect()
 
     @pytest.mark.unit
     def test_global_auth_middleware_starts_none(self):

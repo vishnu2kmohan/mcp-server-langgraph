@@ -1,69 +1,140 @@
 # Claude Code Integration Guide
 
-This document provides guidance for using Claude Code (Anthropic's CLI) with the MCP Server LangGraph project.
+**Purpose**: Quick start guide for using Claude Code with MCP Server LangGraph
+**Comprehensive Documentation**: See `.claude/` directory for complete resources
 
-## Overview
+---
 
-Claude Code is an AI-powered coding assistant that provides:
-- **Autonomous task execution**: Complete multi-step tasks without constant supervision
-- **Codebase understanding**: Deep analysis of project structure and dependencies
-- **Test generation**: Comprehensive test suite creation with high coverage
-- **Documentation**: Automated documentation generation and maintenance
-- **Refactoring**: Safe code refactoring with validation
+## 🚀 Quick Start
 
-## Project Structure for Claude Code
+### For New Claude Code Sessions
 
-The project follows a pythonic src/ layout that Claude Code can navigate efficiently:
+1. **Load mandatory context** (prevents common errors):
+   ```bash
+   # Read these FIRST in every session
+   cat .claude/memory/python-environment-usage.md  # CRITICAL: Always use .venv
+   cat .claude/memory/pre-commit-hooks-catalog.md  # 78 hooks, 3-tier validation
+   cat .claude/memory/make-targets.md              # 122 Make targets reference
+   ```
 
-```python
-mcp_server_langgraph/
-├── src/mcp_server_langgraph/     # Main package
-│   ├── core/                      # Core functionality (agent, config, feature_flags)
-│   ├── auth/                      # Authentication & authorization
-│   │   ├── middleware.py          # AuthMiddleware with session support
-│   │   ├── keycloak.py           # Keycloak integration
-│   │   ├── session.py            # Session management (InMemory, Redis)
-│   │   ├── role_mapper.py        # Advanced role mapping engine
-│   │   ├── metrics.py            # 30+ authentication metrics
-│   │   └── openfga.py            # OpenFGA client
-│   ├── llm/                      # LLM factory and validators
+2. **Load project context** (understand recent work):
+   ```bash
+   cat .claude/context/recent-work.md             # Last 15 commits, sprint summary
+   cat .claude/README.md                          # Complete workflow guide
+   ```
+
+3. **Use slash commands** for common workflows:
+   ```bash
+   /start-sprint <type>    # Initialize sprint with context
+   /test-summary          # Analyze test suite
+   /quick-debug <error>   # AI-assisted debugging
+   /validate              # Run all validations
+   ```
+
+---
+
+## 📚 Complete Documentation Structure
+
+### `.claude/` Directory Organization
+
+```
+.claude/
+├── README.md                          # 📖 Complete workflow automation guide
+├── QUICK_REFERENCE.md                 # 📄 1-page command cheat sheet
+├── SETTINGS.md                        # ⚙️ Configuration architecture
+│
+├── commands/                          # 38 slash commands (organized)
+│   └── README.md                      # Command discovery guide
+│
+├── templates/                         # 6 professional templates
+│   └── README.md                      # Template selection guide
+│
+├── context/                           # Living context files
+│   ├── recent-work.md                 # Last 15 commits (auto-updated)
+│   ├── testing-patterns.md            # 437+ test patterns
+│   ├── code-patterns.md               # Design patterns library
+│   ├── pytest-markers.md              # 67 markers catalog (NEW)
+│   ├── xdist-safety-patterns.md       # Memory safety (NEW)
+│   └── test-constants-pattern.md      # Centralized constants (NEW)
+│
+└── memory/                            # Persistent guidance (MANDATORY)
+    ├── python-environment-usage.md    # CRITICAL: Always use .venv
+    ├── pre-commit-hooks-catalog.md    # 78 hooks reference (NEW)
+    └── make-targets.md                # 122 Make targets (NEW)
+```
+
+**Total**: 62+ files, ~20,000 lines of documentation & automation
+
+---
+
+## 🎯 Project Overview
+
+### Architecture
+
+**Technology Stack**:
+- **Framework**: LangGraph (conversation state management)
+- **LLM Support**: Multi-provider (OpenAI, Anthropic, Google, Azure)
+- **Auth**: Keycloak SSO + OpenFGA authorization
+- **Storage**: PostgreSQL + Redis
+- **Observability**: OpenTelemetry + Prometheus + Grafana
+- **Deployment**: Kubernetes (Helm + Kustomize)
+
+### Project Structure
+
+```
+mcp-server-langgraph/
+├── src/mcp_server_langgraph/    # Main package
+│   ├── core/                     # Agent, config, feature flags
+│   ├── auth/                     # Authentication & authorization
+│   ├── llm/                      # LLM factory & validators
 │   ├── mcp/                      # MCP server implementations
-│   ├── observability/            # Telemetry, tracing, metrics
-│   ├── secrets/                  # Secrets management
-│   └── health/                   # Health checks
-├── tests/                        # Comprehensive test suite
-│   ├── test_session.py          # Session management tests (26 tests)
-│   ├── test_role_mapper.py      # Role mapper tests (23 tests)
-│   ├── test_keycloak.py         # Keycloak tests (31 tests)
-│   └── test_user_provider.py    # User provider tests (50+ tests)
-├── config/                       # Configuration files
-│   └── role_mappings.yaml       # Declarative role mapping config
-├── docs/                         # Comprehensive documentation
+│   ├── observability/            # Telemetry & metrics
+│   └── secrets/                  # Secrets management
+├── tests/                        # 437+ comprehensive tests
 ├── deployments/                  # Kubernetes, Helm, Kustomize
-└── monitoring/                   # Grafana dashboards, Prometheus alerts
-## Workflow Automation & Resources
+├── monitoring/                   # Grafana dashboards
+└── .claude/                      # Workflow automation
+```
 
-This project includes comprehensive Claude Code workflow automation delivering **55-65% efficiency improvement** with **45x ROI**.
+**Test Suite**: 437+ tests, 67 pytest markers, 99.3% pass rate
+**Coverage**: 69% (targeting 80%+)
 
-**Quick Start**:
-- **Commands**: See `.claude/commands/README.md` for all 38 slash commands organized by category
-- **Templates**: See `.claude/templates/README.md` for 6 professional templates (saves 585+ min/sprint)
-- **Settings**: See `.claude/SETTINGS.md` for configuration architecture and customization
-- **Quick Reference**: See `.claude/QUICK_REFERENCE.md` for 1-page cheat sheet
+---
 
-**Key Resources**:
-- `.claude/context/recent-work.md` - Auto-updated from git (last 15 commits, sprint summary)
-- `.claude/context/testing-patterns.md` - Test patterns from 437+ tests
-- `.claude/context/code-patterns.md` - Design patterns from the codebase
-- `.claude/memory/` - MANDATORY reading (Python environment, error prevention)
+## Workflow Automation
 
-**Common Workflows**:
-- Sprint start: `/start-sprint <type>` → Auto-loads context, creates plan, sets up tracking
-- Progress tracking: `/progress-update` → Git metrics, test results, sprint health
-- Testing: `/test-summary [scope]` → Detailed test analysis with recommendations
-- Debugging: `/quick-debug [error]` → AI-assisted error analysis
+### Efficiency Gains
 
-**Measured Results**: 607 hours saved annually across automation, with comprehensive quality checks via 13 hooks.
+**Measured Results**:
+- **Time Saved**: 607 hours/year (~15 work weeks)
+- **Efficiency**: 45-50% workflow improvement
+- **ROI**: 45x return on investment
+
+### Key Resources
+
+1. **Commands** (`.claude/commands/`): 38 slash commands
+   - `/start-sprint` - Sprint initialization
+   - `/test-summary` - Detailed test analysis
+   - `/quick-debug` - AI-assisted debugging
+   - `/validate` - Complete validation
+   - See `.claude/commands/README.md` for all commands
+
+2. **Templates** (`.claude/templates/`): 6 professional templates
+   - ADR template (650 lines) - 67% faster
+   - API design template (1,400 lines) - 67% faster
+   - Bug investigation template (1,250 lines) - 50% faster
+   - See `.claude/templates/README.md` for all templates
+
+3. **Context** (`.claude/context/`): Living documentation
+   - Auto-updated from git history
+   - Test patterns from 437+ tests
+   - Design patterns from codebase
+   - **NEW**: pytest markers, xdist safety, test constants
+
+4. **Memory** (`.claude/memory/`): Persistent guidance
+   - Python environment usage (MANDATORY)
+   - **NEW**: Pre-commit hooks catalog (78 hooks)
+   - **NEW**: Make targets guide (122 targets)
 
 ---
 
@@ -172,9 +243,14 @@ When running in a worktree, Claude Code automatically displays:
 
 ---
 
-## Recommended Workflow: Explore → Plan → Code → Commit
+---
 
-**CRITICAL**: Always follow this 4-phase workflow. Skipping phases leads to suboptimal results and introduces bugs.
+## 🔄 Recommended Workflow
+
+**CRITICAL**: Always follow the Explore → Plan → Code → Commit workflow
+
+**Complete Guide**: See `.github/CLAUDE.md` sections below for detailed workflow
+**Quick Reference**: TDD principles in `~/.claude/CLAUDE.md` (global)
 
 ### Phase 1: EXPLORE (Research First) 🔍
 
@@ -337,12 +413,11 @@ pytest tests/test_rate_limit.py -xvs
 git commit -m "feat: implement rate limiting middleware"
 
 # Automatically runs:
-# - black (auto-format code)
-# - isort (auto-sort imports)
-# - flake8 (lint code)
+# - ruff format (auto-format code - replaces black)
+# - ruff check --fix (auto-fix linting - replaces isort + flake8)
 # - bandit (security scan)
 # - shellcheck (bash scripts)
-# Duration: 15-30 seconds
+# Duration: 15-30 seconds (45% faster with Ruff consolidation)
 ```bash
 **Pre-push Hooks (8-12 min - Comprehensive Validation)**:
 ```bash
@@ -572,7 +647,7 @@ Claude Code automatically detects:
 - Python virtual environment (.venv)
 - Package manager (uv, pip, poetry)
 - Test framework (pytest)
-- Code style tools (black, isort, mypy)
+- Code style tools (Ruff, mypy, bandit)
 
 ### Git Hooks Configuration
 
@@ -585,15 +660,15 @@ Auto-runs on `git commit` for changed files only.
 
 **What Claude Code needs to know:**
 - Commits are fast (15-30s) - no need to wait long
-- Auto-fixers run automatically (black, isort)
+- Auto-fixers run automatically (Ruff format + auto-fix)
 - Only changed files are validated
 - Can commit frequently without performance penalty
 
 ```bash
 # When Claude Code commits changes
 git commit -m "feat: implement feature"
-# Runs: black, isort, flake8, bandit, shellcheck, etc.
-# Duration: < 30 seconds
+# Runs: ruff format, ruff check --fix, bandit, shellcheck, etc.
+# Duration: < 30 seconds (45% faster with Ruff consolidation)
 ```bash
 #### Pre-push Hooks (Comprehensive - 8-12 min)
 Auto-runs on `git push` for all files. Matches CI exactly.
@@ -661,13 +736,16 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 markers = ["unit", "integration", "e2e"]
 
-[tool.black]
-line-length = 120
-target-version = ['py312']
+[tool.ruff]
+line-length = 127
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-line_length = 120
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]  # pycodestyle, pyflakes, isort, pyupgrade, bugbear
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 ```bash
 ## Tips for Maximum Productivity
 
@@ -708,7 +786,7 @@ Claude Code maintains:
 - **Type safety**: Full type hints with mypy validation
 - **Test coverage**: 70%+ coverage target (achieved 86% in Phase 2)
 - **Documentation**: Docstrings for all public APIs
-- **Code style**: Black, isort, flake8 compliance
+- **Code style**: Ruff linting + formatting (10-100x faster than legacy tools)
 - **Security**: Bandit scanning for vulnerabilities
 
 ## Example Claude Code Workflow
@@ -817,9 +895,11 @@ make deploy-rollback-production  # Rollback production deployment
 ### Code Quality Commands
 
 ```bash
-make lint                 # Run linters (flake8, mypy)
-make format               # Format code (black, isort)
-make security-check       # Run security scans (bandit)
+make lint-check           # Run Ruff linter (replaces flake8 + isort checks)
+make lint-fix             # Auto-fix linting + format code (replaces black + isort)
+make lint-format          # Format code only (replaces black)
+make lint-type-check      # Run mypy type checking
+make lint-security        # Run bandit security scan
 make pre-commit-setup     # Setup pre-commit hooks
 ```bash
 ### Running & Monitoring

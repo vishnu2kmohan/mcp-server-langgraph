@@ -4,7 +4,7 @@ LLM Response Validators using Pydantic AI
 Provides type-safe validation and structured extraction from LLM responses.
 """
 
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from langchain_core.messages import AIMessage
 from pydantic import BaseModel, Field, ValidationError
@@ -22,9 +22,7 @@ class ValidatedResponse(Generic[T]):
     the expected structure of the response.
     """
 
-    def __init__(
-        self, data: T, raw_content: str, validation_success: bool = True, validation_errors: Optional[list[str]] = None
-    ):
+    def __init__(self, data: T, raw_content: str, validation_success: bool = True, validation_errors: list[str] | None = None):
         """
         Initialize validated response.
 
@@ -107,7 +105,11 @@ class LLMValidator:
         with tracer.start_as_current_span("llm.validate_response") as span:
             # Extract content
             if isinstance(response, AIMessage):
-                content = response.content
+                if isinstance(response.content, str):
+                    content = response.content
+                else:
+                    # Handle structured content (list) by converting to string
+                    content = str(response.content)
             else:
                 content = str(response)
 
@@ -163,7 +165,10 @@ class LLMValidator:
                     empty_data = None
 
                 return ValidatedResponse(
-                    data=empty_data, raw_content=content, validation_success=False, validation_errors=errors  # type: ignore[arg-type]
+                    data=empty_data,  # type: ignore[arg-type]
+                    raw_content=content,
+                    validation_success=False,
+                    validation_errors=errors,
                 )
 
             except Exception as e:

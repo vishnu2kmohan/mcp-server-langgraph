@@ -15,12 +15,12 @@ Uses ruamel.yaml to preserve comments and formatting.
 
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from ruamel.yaml import YAML
 
 
-def fix_image_pull_policy(container: Dict[str, Any]) -> bool:
+def fix_image_pull_policy(container: dict[str, Any]) -> bool:
     """Set imagePullPolicy to Always."""
     if container.get("imagePullPolicy") != "Always":
         container["imagePullPolicy"] = "Always"
@@ -28,7 +28,7 @@ def fix_image_pull_policy(container: Dict[str, Any]) -> bool:
     return False
 
 
-def add_init_container_resources(container: Dict[str, Any]) -> bool:
+def add_init_container_resources(container: dict[str, Any]) -> bool:
     """Add minimal resource limits for init containers."""
     changed = False
 
@@ -73,7 +73,7 @@ def add_init_container_resources(container: Dict[str, Any]) -> bool:
     return changed
 
 
-def add_ephemeral_storage_limits(container: Dict[str, Any]) -> bool:
+def add_ephemeral_storage_limits(container: dict[str, Any]) -> bool:
     """Add ephemeral storage limits to existing resources."""
     changed = False
 
@@ -104,7 +104,7 @@ def add_ephemeral_storage_limits(container: Dict[str, Any]) -> bool:
     return changed
 
 
-def fix_security_context_uids(container: Dict[str, Any], is_init: bool = False) -> bool:
+def fix_security_context_uids(container: dict[str, Any], is_init: bool = False) -> bool:
     """Fix runAsUser and runAsGroup to use high IDs."""
     changed = False
 
@@ -129,7 +129,7 @@ def fix_security_context_uids(container: Dict[str, Any], is_init: bool = False) 
     return changed
 
 
-def fix_readonly_filesystem(container: Dict[str, Any], container_name: str) -> bool:
+def fix_readonly_filesystem(container: dict[str, Any], container_name: str) -> bool:
     """
     Set readOnlyRootFilesystem: true for main containers.
 
@@ -156,7 +156,7 @@ def fix_readonly_filesystem(container: Dict[str, Any], container_name: str) -> b
     return changed
 
 
-def differentiate_probes(container: Dict[str, Any]) -> bool:
+def differentiate_probes(container: dict[str, Any]) -> bool:
     """
     Make readiness and liveness probes different.
 
@@ -171,9 +171,7 @@ def differentiate_probes(container: Dict[str, Any]) -> bool:
     # If probes are identical, make readiness more sensitive
     if liveness == readiness:
         # Readiness should fail faster
-        if "failureThreshold" not in readiness:
-            readiness["failureThreshold"] = 1
-        elif readiness["failureThreshold"] > 1:
+        if "failureThreshold" not in readiness or readiness["failureThreshold"] > 1:
             readiness["failureThreshold"] = 1
 
         # Readiness can have shorter period
@@ -187,7 +185,7 @@ def differentiate_probes(container: Dict[str, Any]) -> bool:
     return False
 
 
-def fix_deployment_or_statefulset(doc: Dict[str, Any]) -> bool:
+def fix_deployment_or_statefulset(doc: dict[str, Any]) -> bool:
     """Fix all kube-score issues in a Deployment or StatefulSet."""
     changed = False
     kind = doc.get("kind")
@@ -250,11 +248,11 @@ def fix_yaml_file(file_path: Path) -> bool:
         yaml.width = 120
 
         # Load all documents
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             docs = list(yaml.load_all(f))
 
         if not docs or all(d is None for d in docs):
-            print(f"  ⚠️  Skipped (empty)")
+            print("  ⚠️  Skipped (empty)")
             return False
 
         # Fix each document
@@ -273,10 +271,10 @@ def fix_yaml_file(file_path: Path) -> bool:
                             f.write("---\n")
                         yaml.dump(doc, f)
 
-            print(f"  ✅ Fixed")
+            print("  ✅ Fixed")
             return True
         else:
-            print(f"  ℹ️  No changes needed")
+            print("  ℹ️  No changes needed")
             return False
 
     except Exception as e:

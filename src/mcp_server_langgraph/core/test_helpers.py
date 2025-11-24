@@ -23,7 +23,7 @@ Usage:
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 from unittest.mock import MagicMock
 
 from mcp_server_langgraph.core.config import Settings
@@ -35,7 +35,7 @@ from mcp_server_langgraph.core.container import create_test_container as _create
 # ==============================================================================
 
 
-def create_test_container(settings: Optional[Settings] = None) -> ApplicationContainer:
+def create_test_container(settings: Settings | None = None) -> ApplicationContainer:
     """
     Create a test container with no-op providers.
 
@@ -59,7 +59,7 @@ def create_test_container(settings: Optional[Settings] = None) -> ApplicationCon
 # ==============================================================================
 
 
-def create_test_settings(**kwargs) -> Settings:
+def create_test_settings(**kwargs: Any) -> Settings:
     """
     Create test settings with safe defaults.
 
@@ -84,7 +84,7 @@ def create_test_settings(**kwargs) -> Settings:
         "enable_metrics": False,
     }
     defaults.update(kwargs)
-    return Settings(**defaults)
+    return Settings(**defaults)  # type: ignore[arg-type]
 
 
 # ==============================================================================
@@ -92,7 +92,7 @@ def create_test_settings(**kwargs) -> Settings:
 # ==============================================================================
 
 
-def create_test_agent(settings: Optional[Settings] = None, container: Optional[ApplicationContainer] = None) -> Any:
+def create_test_agent(settings: Settings | None = None, container: ApplicationContainer | None = None) -> Any:
     """
     Create a test agent instance with dependency injection support.
 
@@ -123,7 +123,7 @@ def create_test_agent(settings: Optional[Settings] = None, container: Optional[A
 # ==============================================================================
 
 
-def create_test_server(container: Optional[ApplicationContainer] = None) -> Any:
+def create_test_server(container: ApplicationContainer | None = None) -> Any:
     """
     Create a test MCP server instance.
 
@@ -155,7 +155,7 @@ def create_test_server(container: Optional[ApplicationContainer] = None) -> Any:
 # ==============================================================================
 
 
-def create_mock_llm_response(content: str = "Test response", model: str = "test-model", **kwargs) -> Any:
+def create_mock_llm_response(content: str = "Test response", model: str = "test-model", **kwargs: Any) -> Any:
     """
     Create a mock LLM response compatible with LangChain.
 
@@ -175,7 +175,7 @@ def create_mock_llm_response(content: str = "Test response", model: str = "test-
     return AIMessage(content=content, response_metadata={"model": model, **kwargs})
 
 
-def create_mock_llm_stream(chunks: List[str]) -> List[Any]:
+def create_mock_llm_stream(chunks: list[str]) -> list[Any]:
     """
     Create a mock LLM stream response.
 
@@ -196,8 +196,8 @@ def create_mock_llm_stream(chunks: List[str]) -> List[Any]:
 
 
 def create_mock_mcp_request(
-    method: str = "tools/call", params: Optional[Dict[str, Any]] = None, request_id: int = 1
-) -> Dict[str, Any]:
+    method: str = "tools/call", params: dict[str, Any] | None = None, request_id: int = 1
+) -> dict[str, Any]:
     """
     Create a mock MCP JSON-RPC request.
 
@@ -241,7 +241,7 @@ def create_mock_jwt_token(user_id: str = "test-user", expiry_hours: int = 1) -> 
         "iat": datetime.now(timezone.utc),
     }
 
-    return jwt.encode(payload, "test-secret-key", algorithm="HS256")
+    return jwt.encode(payload, "test-secret-key", algorithm="HS256")  # type: ignore[no-any-return]
 
 
 # ==============================================================================
@@ -249,7 +249,7 @@ def create_mock_jwt_token(user_id: str = "test-user", expiry_hours: int = 1) -> 
 # ==============================================================================
 
 
-def assert_valid_mcp_response(response: Dict[str, Any]) -> None:
+def assert_valid_mcp_response(response: dict[str, Any]) -> None:
     """
     Assert that a response is a valid MCP JSON-RPC response.
 
@@ -269,7 +269,7 @@ def assert_valid_mcp_response(response: Dict[str, Any]) -> None:
     assert ("result" in response) or ("error" in response)
 
 
-def assert_valid_agent_state(state: Dict[str, Any]) -> None:
+def assert_valid_agent_state(state: dict[str, Any]) -> None:
     """
     Assert that a state dict is a valid LangGraph agent state.
 

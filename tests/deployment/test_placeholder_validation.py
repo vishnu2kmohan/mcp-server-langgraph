@@ -8,16 +8,14 @@ that would cause runtime failures.
 Codex Finding #3 (P0 Blocker): production-gke overlay emits placeholders after build
 """
 
-import gc
 import re
 import subprocess
 from pathlib import Path
-from typing import List, Set
 
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
 pytestmark = pytest.mark.unit
@@ -58,7 +56,7 @@ def build_overlay(overlay_path: Path) -> str:
     return result.stdout
 
 
-def extract_placeholders(manifest_text: str, patterns: List[str]) -> Set[str]:
+def extract_placeholders(manifest_text: str, patterns: list[str]) -> set[str]:
     """
     Extract placeholder values from manifest text.
 

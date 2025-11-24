@@ -13,37 +13,27 @@ Usage:
     uvicorn mcp_server_langgraph.app:app --host 0.0.0.0 --port 8000
 """
 
-from typing import Optional
+import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router, scim_router, service_principals_router
+from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
-from mcp_server_langgraph.api.health import run_startup_validation
+from mcp_server_langgraph.api.health import run_startup_validation_async
+from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
 from mcp_server_langgraph.observability.telemetry import init_observability, logger
 
 
-def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
+def create_app(settings_override: Settings | None = None, skip_startup_validation: bool = False) -> FastAPI:
     """
     Create and configure the FastAPI application.
-
-    Args:
-        settings_override: Optional settings to use instead of global settings.
-                          Useful for testing with custom configurations.
-
-    Returns:
-        FastAPI: Configured application instance
-
-    Usage:
-        # Production (uses global settings)
-        app = create_app()
-
-        # Testing (uses custom settings)
-        test_settings = Settings(environment="test", ...)
-        test_app = create_app(settings_override=test_settings)
+    ...
     """
     # Use override settings if provided, otherwise use global settings
     config = settings_override if settings_override is not None else settings
@@ -61,6 +51,28 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
             f"Error: {e}. This is a critical bug - logging will fail throughout the app."
         )
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+        # Run startup validation to ensure all critical systems initialized correctly
+        # This prevents the app from starting if any of the OpenAI Codex findings recur
+        # Skip validation in unit tests (skip_startup_validation=True) to avoid DB dependency
+        if not skip_startup_validation:
+            try:
+                await run_startup_validation_async()
+            except Exception as e:
+                try:
+                    logger.critical(f"Startup validation failed: {e}")
+                except RuntimeError:
+                    pass  # Graceful degradation if observability not initialized
+                raise
+        else:
+            try:
+                logger.debug("Skipping startup validation (test mode)")
+            except RuntimeError:
+                pass  # Graceful degradation if observability not initialized
+
+        yield
+
     app = FastAPI(
         title="MCP Server LangGraph API",
         version="2.8.0",
@@ -68,6 +80,7 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
         docs_url="/api/docs",
         redoc_url="/api/redoc",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
 
     # CORS middleware - use config (settings or override) for environment-aware defaults
@@ -91,6 +104,16 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
         except RuntimeError:
             pass  # Graceful degradation if observability not initialized
 
+    # Authentication middleware - intercepts requests and verifies JWT tokens
+    # Sets request.state.user for authenticated requests
+    auth_middleware = AuthMiddleware(secret_key=config.jwt_secret_key, settings=config)
+    set_global_auth_middleware(auth_middleware)  # Set global instance for dependency injection
+    app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
+    try:
+        logger.info("Auth request middleware enabled")
+    except RuntimeError:
+        pass  # Graceful degradation if observability not initialized
+
     # Rate limiting - setup function registers middleware and exception handlers
     setup_rate_limiting(app)
 
@@ -109,31 +132,24 @@ def create_app(settings_override: Optional[Settings] = None) -> FastAPI:
     except RuntimeError:
         pass  # Graceful degradation if observability not initialized
 
-    # Run startup validation to ensure all critical systems initialized correctly
-    # This prevents the app from starting if any of the OpenAI Codex findings recur
-    try:
-        run_startup_validation()
-    except Exception as e:
-        try:
-            logger.critical(f"Startup validation failed: {e}")
-        except RuntimeError:
-            pass  # Graceful degradation if observability not initialized
-        raise
-
     return app
 
 
 # Create the application instance
-app = create_app()
+# Skip validation when running under pytest to avoid DB dependency in unit tests
+# This is detected via PYTEST_CURRENT_TEST environment variable set by pytest
+# Also skip if TESTING env var is set (used by integration tests)
+_is_pytest_session = os.getenv("PYTEST_CURRENT_TEST") is not None or os.getenv("TESTING") == "true"
+app = create_app(skip_startup_validation=_is_pytest_session)
 
 
-@app.get("/health")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint"""
     return {"status": "healthy", "service": "mcp-server-langgraph"}
 
 
-@app.get("/")  # type: ignore[misc]  # FastAPI decorator lacks complete type stubs
+@app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint with API information"""
     return {

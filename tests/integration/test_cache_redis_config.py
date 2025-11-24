@@ -16,6 +16,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="unit_cache_redis_config_tests")

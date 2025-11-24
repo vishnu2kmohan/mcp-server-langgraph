@@ -22,10 +22,17 @@ import pytest
 
 from mcp_server_langgraph.health.database_checks import DatabaseValidator, Environment, validate_database_architecture
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(autouse=True)
-def setup_test_environment(monkeypatch):
-    """Ensure we're in test environment for all database validation integration tests"""
+def setup_test_environment(monkeypatch, integration_test_env):
+    """
+    Ensure we're in test environment for all integration tests in this module.
+
+    Depends on integration_test_env to ensure Docker infrastructure is ready
+    before attempting connections (prevents "Connection refused" errors).
+    """
     monkeypatch.setenv("TESTING", "true")
     monkeypatch.setenv("POSTGRES_DB", "gdpr_test")
 
@@ -36,7 +43,7 @@ def setup_test_environment(monkeypatch):
 class TestDatabaseValidationIntegration:
     """Integration tests for database validation with real PostgreSQL"""
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
@@ -51,7 +58,7 @@ class TestDatabaseValidationIntegration:
         """
         # Get connection parameters from environment
         host = os.getenv("POSTGRES_HOST", "localhost")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
+        port = int(os.getenv("POSTGRES_PORT", "9432"))
         user = os.getenv("POSTGRES_USER", "postgres")
         password = os.getenv("POSTGRES_PASSWORD", "postgres")
 
@@ -110,7 +117,7 @@ class TestDatabaseValidationIntegration:
         (migrations/001_gdpr_schema.sql) has been applied correctly.
         """
         host = os.getenv("POSTGRES_HOST", "localhost")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
+        port = int(os.getenv("POSTGRES_PORT", "9432"))
         user = os.getenv("POSTGRES_USER", "postgres")
         password = os.getenv("POSTGRES_PASSWORD", "postgres")
 
@@ -145,7 +152,7 @@ class TestDatabaseValidationIntegration:
     async def test_validation_result_serialization(self):
         """Should serialize validation result to JSON-compatible dict"""
         host = os.getenv("POSTGRES_HOST", "localhost")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
+        port = int(os.getenv("POSTGRES_PORT", "9432"))
         user = os.getenv("POSTGRES_USER", "postgres")
         password = os.getenv("POSTGRES_PASSWORD", "postgres")
 
@@ -181,7 +188,7 @@ class TestDatabaseValidationIntegration:
         """Should auto-detect test environment from POSTGRES_DB"""
         # Environment variables already set by fixture (POSTGRES_DB=gdpr_test)
         host = os.getenv("POSTGRES_HOST", "localhost")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
+        port = int(os.getenv("POSTGRES_PORT", "9432"))
         user = os.getenv("POSTGRES_USER", "postgres")
         password = os.getenv("POSTGRES_PASSWORD", "postgres")
 
@@ -204,8 +211,13 @@ class TestDatabaseValidationIntegration:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xdist_group(name="testdatabasevalidationfailurecases")
 class TestDatabaseValidationFailureCases:
     """Integration tests for validation failure scenarios"""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     async def test_validation_with_wrong_port(self):
         """Should handle connection failure gracefully"""
@@ -230,7 +242,7 @@ class TestDatabaseValidationFailureCases:
     async def test_validation_with_wrong_credentials(self):
         """Should handle authentication failure gracefully"""
         host = os.getenv("POSTGRES_HOST", "localhost")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
+        port = int(os.getenv("POSTGRES_PORT", "9432"))
 
         # Try with wrong password
         result = await validate_database_architecture(

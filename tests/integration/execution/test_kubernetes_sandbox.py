@@ -11,6 +11,8 @@ import gc
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 # These imports will fail initially - that's expected in TDD!
 try:
     from mcp_server_langgraph.execution.kubernetes_sandbox import KubernetesSandbox
@@ -46,11 +48,29 @@ class TestKubernetesSandbox:
 
     @pytest.fixture
     def sandbox(self, kubernetes_available):
-        """Create Kubernetes sandbox instance"""
-        limits = ResourceLimits.testing()
+        """
+        Create Kubernetes sandbox instance with extended timeout.
+
+        NOTE: Kubernetes Job execution has significant overhead compared to Docker:
+        - Pod scheduling latency
+        - Image pull time (if not cached)
+        - Container startup time
+        - Job cleanup time
+
+        Using 20-second timeout instead of 10s to account for K8s overhead
+        while still catching genuine timeout issues.
+        """
+        limits = ResourceLimits(
+            timeout_seconds=20,  # Extended for K8s overhead (vs 10s for Docker)
+            memory_limit_mb=256,
+            cpu_quota=0.5,
+            disk_quota_mb=50,
+            max_processes=1,
+            network_mode="none",
+        )
         return KubernetesSandbox(limits=limits, namespace="default")
 
-    def test_sandbox_initialization(self, sandbox):
+    def test_sandbox_initialization_with_defaults_creates_valid_instance(self, sandbox):
         """Test sandbox initializes correctly"""
         assert sandbox is not None
         assert isinstance(sandbox, Sandbox)
@@ -212,7 +232,7 @@ class TestKubernetesSandboxResourceLimits:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_timeout_enforcement(self, kubernetes_available):
+    def test_timeout_enforcement_with_long_running_code_terminates_execution(self, kubernetes_available):
         """Test that timeout is enforced"""
         limits = ResourceLimits(timeout_seconds=1)
         sandbox = KubernetesSandbox(limits=limits, namespace="default")
@@ -335,7 +355,7 @@ class TestKubernetesSandboxConfiguration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_custom_namespace(self, kubernetes_available):
+    def test_custom_namespace_configuration_with_alternative_namespace_executes_successfully(self, kubernetes_available):
         """Test using custom namespace"""
         limits = ResourceLimits.testing()
         sandbox = KubernetesSandbox(limits=limits, namespace="default")
@@ -344,7 +364,7 @@ class TestKubernetesSandboxConfiguration:
 
         assert result.success is True
 
-    def test_custom_image(self, kubernetes_available):
+    def test_custom_image_configuration_with_alternative_image_executes_successfully(self, kubernetes_available):
         """Test using custom container image"""
         limits = ResourceLimits.testing()
         sandbox = KubernetesSandbox(limits=limits, namespace="default", image="python:3.12-slim")
@@ -354,7 +374,7 @@ class TestKubernetesSandboxConfiguration:
         assert result.success is True
         assert "Python 3." in result.stdout
 
-    def test_job_ttl(self, kubernetes_available):
+    def test_job_ttl_configuration_with_cleanup_setting_applies_correctly(self, kubernetes_available):
         """Test Job TTL configuration"""
         limits = ResourceLimits.testing()
         sandbox = KubernetesSandbox(limits=limits, namespace="default", job_ttl=60)
@@ -374,7 +394,7 @@ class TestKubernetesSandboxErrorHandling:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_invalid_namespace(self):
+    def test_invalid_namespace_specification_with_nonexistent_namespace_raises_error(self):
         """Test handling of invalid namespace"""
         limits = ResourceLimits.testing()
 
@@ -388,7 +408,7 @@ class TestKubernetesSandboxErrorHandling:
         # For now, verify the class exists
         assert KubernetesSandbox is not None
 
-    def test_empty_code(self, kubernetes_available):
+    def test_empty_code_execution_with_blank_input_returns_error(self, kubernetes_available):
         """Test handling of empty code"""
         limits = ResourceLimits.testing()
         sandbox = KubernetesSandbox(limits=limits, namespace="default")

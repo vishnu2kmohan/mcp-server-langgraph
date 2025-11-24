@@ -9,8 +9,9 @@ See ADR-0026 for design rationale.
 
 import functools
 import logging
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Optional, ParamSpec, Type, TypeVar, Union
+from typing import ParamSpec, TypeVar
 
 from opentelemetry import trace
 from tenacity import (
@@ -147,10 +148,10 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
 
 
 def retry_with_backoff(  # noqa: C901
-    max_attempts: Optional[int] = None,
-    exponential_base: Optional[float] = None,
-    exponential_max: Optional[float] = None,
-    retry_on: Optional[Union[Type[Exception], tuple[Type[Exception], ...]]] = None,
+    max_attempts: int | None = None,
+    exponential_base: float | None = None,
+    exponential_max: float | None = None,
+    retry_on: type[Exception] | tuple[type[Exception], ...] | None = None,
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
@@ -220,7 +221,7 @@ def retry_with_backoff(  # noqa: C901
 
                 try:
                     # Execute with retry
-                    async for attempt in AsyncRetrying(**retry_kwargs):
+                    async for attempt in AsyncRetrying(**retry_kwargs):  # type: ignore[arg-type]
                         with attempt:
                             result: T = await func(*args, **kwargs)  # type: ignore[misc]
                             span.set_attribute("retry.success", True)
@@ -274,7 +275,7 @@ def retry_with_backoff(  # noqa: C901
                 retry_kwargs["retry"] = retry_if_exception_type(retry_on)
 
             try:
-                for attempt in Retrying(**retry_kwargs):
+                for attempt in Retrying(**retry_kwargs):  # type: ignore[arg-type]
                     with attempt:
                         return func(*args, **kwargs)
             except RetryError as e:

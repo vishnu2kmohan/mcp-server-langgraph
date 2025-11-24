@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.meta
@@ -78,9 +78,9 @@ class TestScriptsGovernance:
 
         # Key validator scripts
         expected_validators = [
-            "scripts/validate_ci_cd.py",
-            "scripts/validate_pre_push_hook.py",
-            "scripts/check_test_memory_safety.py",
+            "scripts/validation/validate_ci_cd.py",
+            "scripts/validation/validate_pre_push_hook.py",
+            "scripts/validation/check_test_memory_safety.py",
         ]
 
         for validator_path in expected_validators:
@@ -129,8 +129,8 @@ class TestScriptsGovernance:
 
         # Key validator scripts that should be executable
         expected_executables = [
-            "scripts/validate_ci_cd.py",
-            "scripts/check_test_memory_safety.py",
+            "scripts/validation/validate_ci_cd.py",
+            "scripts/validation/check_test_memory_safety.py",
         ]
 
         non_executable = []
@@ -170,9 +170,9 @@ class TestScriptsGovernance:
 
         # Key validator scripts
         validator_scripts = [
-            root / "scripts" / "validate_ci_cd.py",
-            root / "scripts" / "validate_pre_push_hook.py",
-            root / "scripts" / "check_test_memory_safety.py",
+            root / "scripts" / "validation" / "validate_ci_cd.py",
+            root / "scripts" / "validation" / "validate_pre_push_hook.py",
+            root / "scripts" / "validation" / "check_test_memory_safety.py",
         ]
 
         missing_docstring = []

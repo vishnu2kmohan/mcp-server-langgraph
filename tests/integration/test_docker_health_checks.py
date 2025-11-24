@@ -16,17 +16,44 @@ Related Codex Finding: docker-compose.test.yml:214-233 Qdrant health check issue
 
 import gc
 import os
+import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import List, Optional
 
 import pytest
 import yaml
 
-from tests.conftest import requires_tool
+from tests.fixtures.tool_fixtures import requires_tool
+
+pytestmark = pytest.mark.integration
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
+def is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
+    """
+    Check if a port is already in use.
+
+    CODEX FINDING FIX (2025-11-21): Port Conflict Detection
+    ========================================================
+    Prevents docker compose from failing with "port already allocated" error
+    when health check tests try to start services on ports already used by
+    main test infrastructure.
+
+    Args:
+        port: Port number to check
+        host: Host to check (default: 127.0.0.1)
+
+    Returns:
+        True if port is in use, False otherwise
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.bind((host, port))
+            return False
+        except OSError:
+            return True
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +96,7 @@ def run_docker_compose(
     compose_file: Path,
     *args: str,
     timeout: int = 30,
-    env: Optional[dict] = None,
+    env: dict | None = None,
 ) -> subprocess.CompletedProcess:
     """Run a docker-compose command."""
     cmd = ["docker", "compose", "-f", str(compose_file)] + list(args)
@@ -91,7 +118,7 @@ def run_docker_compose(
     return result
 
 
-def get_service_health(compose_file: Path, service_name: str) -> str:
+def get_service_health(compose_file: Path, service_name: str, env: dict | None = None) -> str:
     """Get the health status of a service."""
     result = run_docker_compose(
         compose_file,
@@ -99,6 +126,7 @@ def get_service_health(compose_file: Path, service_name: str) -> str:
         "--format",
         "json",
         timeout=10,
+        env=env,
     )
 
     if result.returncode != 0:
@@ -127,9 +155,17 @@ def wait_for_health(
     service_name: str,
     timeout: int = 120,
     check_interval: int = 2,
+    env: dict | None = None,
 ) -> bool:
     """
     Wait for a service to become healthy.
+
+    Args:
+        compose_file: Path to docker-compose file
+        service_name: Name of service to check
+        timeout: Maximum wait time in seconds
+        check_interval: Seconds between health checks
+        env: Optional environment variables (for COMPOSE_PROJECT_NAME isolation)
 
     Returns:
         True if service became healthy, False if timeout
@@ -137,7 +173,7 @@ def wait_for_health(
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        health = get_service_health(compose_file, service_name)
+        health = get_service_health(compose_file, service_name, env=env)
 
         if health == "healthy":
             return True
@@ -227,6 +263,12 @@ class TestDockerComposeHealthChecksIntegration:
         """
         Test that Qdrant container health check works correctly.
 
+        CODEX FINDING FIX (2025-11-20): Use isolated test infrastructure to prevent
+        tearing down shared containers. Previous issue: 'docker compose down -v' stopped
+        PostgreSQL/Redis/etc, causing subsequent tests to fail with connection errors.
+
+        Solution: Use unique COMPOSE_PROJECT_NAME for test-specific isolation.
+
         RED phase: Will fail if using wget (command not found)
         GREEN phase: Will pass after switching to grpc_health_probe
 
@@ -235,6 +277,22 @@ class TestDockerComposeHealthChecksIntegration:
         Note: Requires extended timeout (150s) as Qdrant can take up to 120s to become healthy
         in CI environments with limited resources.
         """
+        import os
+        import uuid
+
+        # CODEX FINDING FIX (2025-11-21): Port Conflict Resolution
+        # ========================================================
+        # Check if Qdrant test port is already in use before starting service
+        # Prevents "Bind ... port 9333 already allocated" error when main test
+        # infrastructure already has Qdrant running
+        QDRANT_TEST_PORT = 9333  # From docker-compose.test.yml:242
+        if is_port_in_use(QDRANT_TEST_PORT):
+            pytest.skip(
+                f"Qdrant test port {QDRANT_TEST_PORT} already in use. "
+                f"This likely means main test infrastructure is running. "
+                f"Stop existing containers or run this test in isolation."
+            )
+
         compose_file = PROJECT_ROOT / "docker-compose.test.yml"
 
         if not compose_file.exists():
@@ -253,21 +311,29 @@ class TestDockerComposeHealthChecksIntegration:
 
         qdrant_service = qdrant_services[0]
 
-        # Start only the Qdrant service (no dependencies)
-        print(f"\n🐳 Starting {qdrant_service} service...")
+        # Use unique project name for isolated test infrastructure
+        # This prevents 'docker compose down' from affecting shared test infrastructure
+        unique_project_name = f"health-check-test-{uuid.uuid4().hex[:8]}"
+        test_env = os.environ.copy()
+        test_env["COMPOSE_PROJECT_NAME"] = unique_project_name
+
+        print(f"\n🐳 Starting {qdrant_service} in isolated project '{unique_project_name}'...")
+
+        # Start only the Qdrant service (no dependencies) with isolated project name
         result = run_docker_compose(
             compose_file,
             "up",
             "-d",
             qdrant_service,
             timeout=60,
+            env=test_env,
         )
 
         if result.returncode != 0:
             pytest.fail(f"Failed to start {qdrant_service}:\n" f"stdout: {result.stdout}\n" f"stderr: {result.stderr}")
 
         try:
-            # Wait for health check to pass
+            # Wait for health check to pass (using isolated environment)
             print(f"⏳ Waiting for {qdrant_service} to become healthy (max 120s)...")
 
             is_healthy = wait_for_health(
@@ -275,17 +341,19 @@ class TestDockerComposeHealthChecksIntegration:
                 qdrant_service,
                 timeout=120,
                 check_interval=3,
+                env=test_env,
             )
 
-            # Get final health status
-            final_health = get_service_health(compose_file, qdrant_service)
+            # Get final health status (using isolated environment)
+            final_health = get_service_health(compose_file, qdrant_service, env=test_env)
 
-            # Get container logs for debugging
+            # Get container logs for debugging (using isolated environment)
             logs_result = run_docker_compose(
                 compose_file,
                 "logs",
                 qdrant_service,
                 timeout=10,
+                env=test_env,
             )
 
             assert is_healthy, (
@@ -298,30 +366,54 @@ class TestDockerComposeHealthChecksIntegration:
                 f"  - Health check uses 'curl' but image doesn't have it\n"
                 f"  - Wrong port in health check\n"
                 f"  - Service not starting properly\n\n"
-                f"Expected fix: Use 'grpc_health_probe' for Qdrant health check"
+                f"Current configuration (as of 2025-11-20):\n"
+                f"  - docker-compose.test.yml: timeout 2 bash -c '</dev/tcp/localhost/6333'\n"
+                f"  - conftest.py: HTTP check http://localhost:9333/readyz\n"
+                f"  - Production: /healthz (startup), /livez (liveness), /readyz (readiness)\n"
+                f"  - Qdrant version: v1.15.5 (latest stable)"
             )
 
             print(f"✅ {qdrant_service} is healthy!")
 
         finally:
-            # Cleanup: Stop and remove containers
-            print(f"\n🧹 Cleaning up {qdrant_service}...")
+            # Cleanup: Stop and remove containers from isolated project
+            # CODEX FINDING FIX (2025-11-20): Removed hard-coded container names from docker-compose.test.yml
+            # This allows multiple isolated projects to run simultaneously without conflicts.
+            # Note: Using 'down' without '-v' to avoid interfering with shared network (mcp-test-network)
+            # since all storage is tmpfs-based anyway (no volumes to clean up).
+            #
+            # CODEX FINDING FIX (2025-11-21): Docker Health-Check Teardown Interference
+            # ==========================================================================
+            # Previous: Used 'docker compose down --remove-orphans'
+            # Problem: --remove-orphans flag can remove containers from shared network
+            #          (mcp-test-network), causing 8+ tests to fail with connection errors
+            # Fix: Remove --remove-orphans flag from cleanup command
+            #
+            # Root Cause: Even with isolated COMPOSE_PROJECT_NAME, --remove-orphans
+            #             traverses the shared network and may stop unrelated containers
+            #
+            # Prevention: Added @pytest.mark.xdist_group to isolate health check tests
+            print(f"\n🧹 Cleaning up isolated project '{unique_project_name}'...")
             cleanup_result = run_docker_compose(
                 compose_file,
                 "down",
-                "-v",
-                "--remove-orphans",
+                # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
+                env=test_env,
             )
 
             if cleanup_result.returncode != 0:
                 print(f"Warning: Cleanup had issues:\n{cleanup_result.stderr}")
 
+    @pytest.mark.timeout(150)  # Override global 60s timeout - Postgres may need up to 90s to become healthy
     def test_minimal_compose_health_checks(self, docker_available, docker_compose_available, cleanup_containers):
         """
         Test health checks in docker-compose.minimal.yml if it exists.
 
         This ensures minimal/production configurations also have working health checks.
+
+        Timeout Note: Test waits up to 90s for service health (line 447), so pytest timeout
+        must be > 90s to avoid premature termination. Set to 150s for safety margin.
         """
         compose_file = PROJECT_ROOT / "docker-compose.minimal.yml"
 
@@ -369,12 +461,13 @@ class TestDockerComposeHealthChecksIntegration:
             print(f"✅ {service_name} is healthy!")
 
         finally:
+            # CODEX FINDING FIX (2025-11-21): Docker Health-Check Teardown Interference
+            # See test_qdrant_health_check_works for detailed explanation
             print(f"\n🧹 Cleaning up {service_name}...")
             run_docker_compose(
                 compose_file,
                 "down",
-                "-v",
-                "--remove-orphans",
+                # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
             )
 

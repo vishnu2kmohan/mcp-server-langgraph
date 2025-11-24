@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.xdist_group(name="testprepushorchestrator")
@@ -71,7 +71,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             content = f.read()
 
         # Verify it's a Python script
@@ -103,7 +103,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             content = f.read()
 
         # Verify it uses -n auto for parallel execution
@@ -135,7 +135,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             content = f.read()
 
         # Verify it uses -x for fail-fast behavior
@@ -153,7 +153,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             content = f.read()
 
         # Verify it uses --tb=short
@@ -171,7 +171,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             content = f.read()
 
         # Verify it excludes llm marker
@@ -193,7 +193,7 @@ class TestPrePushOrchestrator:
         if not orchestrator_path.exists():
             pytest.skip("Orchestrator script doesn't exist yet")
 
-        with open(orchestrator_path, "r") as f:
+        with open(orchestrator_path) as f:
             first_line = f.readline().strip()
 
         assert first_line.startswith("#!"), (

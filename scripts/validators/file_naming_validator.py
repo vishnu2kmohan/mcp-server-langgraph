@@ -10,11 +10,11 @@ Usage:
     python scripts/validators/file_naming_validator.py --path docs/
     python scripts/validators/file_naming_validator.py --check-file docs/my-file.mdx
 """
+
 import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Conventional files that are allowed to have UPPERCASE names
 CONVENTIONAL_FILES = {
@@ -116,7 +116,7 @@ def to_kebab_case(filename: str) -> str:
     return f"{suggested}{extension}"
 
 
-def validate_filename_convention(file_path: Path) -> List[str]:
+def validate_filename_convention(file_path: Path) -> list[str]:
     """
     Validate that filename follows kebab-case convention.
 
@@ -182,8 +182,8 @@ def validate_filename_convention(file_path: Path) -> List[str]:
 def find_invalid_filenames(
     directory: Path,
     pattern: str = "**/*.mdx",
-    exclude_patterns: List[str] = None,
-) -> List[Tuple[Path, List[str]]]:
+    exclude_patterns: list[str] = None,
+) -> list[tuple[Path, list[str]]]:
     """
     Find all files with invalid naming conventions in directory.
 
@@ -287,11 +287,11 @@ def main():
                 new_path = file_path.parent / suggested
                 print(f"   git mv {file_path} {new_path}")
 
-    print(f"\n📋 Summary:")
+    print("\n📋 Summary:")
     print(f"   Total files checked: {len(list(args.path.glob(args.pattern)))}")
     print(f"   Invalid files: {len(invalid_files)}")
-    print(f"\n💡 Tip: Run with --fix to see suggested git mv commands")
-    print(f"\n📚 See: docs/references/documentation-authoring-guide")
+    print("\n💡 Tip: Run with --fix to see suggested git mv commands")
+    print("\n📚 See: docs/references/documentation-authoring-guide")
 
     return 1
 

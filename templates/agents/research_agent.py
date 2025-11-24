@@ -20,8 +20,6 @@ Usage:
     print(result["summary"])
 """
 
-from typing import Dict, List
-
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
@@ -34,14 +32,14 @@ class ResearchState(BaseModel):
     """State for research agent."""
 
     topic: str = Field(description="Research topic")
-    search_queries: List[str] = Field(default_factory=list, description="Generated search queries")
-    search_results: List[Dict[str, str]] = Field(default_factory=list, description="Raw search results")
-    filtered_sources: List[Dict[str, str]] = Field(default_factory=list, description="Filtered and validated sources")
-    key_findings: List[str] = Field(default_factory=list, description="Key findings extracted")
+    search_queries: list[str] = Field(default_factory=list, description="Generated search queries")
+    search_results: list[dict[str, str]] = Field(default_factory=list, description="Raw search results")
+    filtered_sources: list[dict[str, str]] = Field(default_factory=list, description="Filtered and validated sources")
+    key_findings: list[str] = Field(default_factory=list, description="Key findings extracted")
     summary: str = Field(default="", description="Synthesized summary")
-    citations: List[str] = Field(default_factory=list, description="Source citations")
+    citations: list[str] = Field(default_factory=list, description="Source citations")
     confidence_score: float = Field(default=0.0, description="Confidence in findings (0-1)")
-    metadata: Dict[str, str] = Field(default_factory=dict, description="Research metadata")
+    metadata: dict[str, str] = Field(default_factory=dict, description="Research metadata")
 
 
 # ------------------------------------------------------------------------------
@@ -216,7 +214,7 @@ def synthesize_summary(state: ResearchState) -> ResearchState:
 # ------------------------------------------------------------------------------
 
 
-def create_research_agent(search_engines: List[str] = None, max_sources: int = 10):
+def create_research_agent(search_engines: list[str] = None, max_sources: int = 10):
     """
     Create research agent.
 

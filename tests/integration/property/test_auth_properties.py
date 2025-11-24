@@ -10,8 +10,11 @@ from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
+from tests.conftest import get_user_id
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
+
+pytestmark = pytest.mark.integration
 
 
 # Helper to run async code in sync tests with proper event loop cleanup
@@ -79,7 +82,7 @@ def run_async(coro):
 valid_usernames = st.sampled_from(["alice", "bob", "admin"])
 usernames = valid_usernames  # Alias for compatibility
 
-user_ids = st.builds(lambda name: f"user:{name}", usernames)
+user_ids = st.builds(lambda name: get_user_id(name), usernames)
 
 resource_types = st.sampled_from(["tool", "conversation", "organization"])
 
@@ -102,21 +105,21 @@ def add_test_users(auth):
     """
     test_users = {
         "alice": {
-            "user_id": "user:alice",
+            "user_id": get_user_id("alice"),
             "email": "alice@test.com",
             "password": "test123",
             "roles": ["user", "executor"],
             "active": True,
         },
         "bob": {
-            "user_id": "user:bob",
+            "user_id": get_user_id("bob"),
             "email": "bob@test.com",
             "password": "test123",
             "roles": ["user", "viewer"],
             "active": True,
         },
         "admin": {
-            "user_id": "user:admin",
+            "user_id": get_user_id("admin"),
             "email": "admin@test.com",
             "password": "admin123",
             "roles": ["admin", "user"],
@@ -189,7 +192,7 @@ class TestJWTProperties:
 
         # Create token that expired 1 hour ago
         expired_payload = {
-            "sub": f"user:{username}",
+            "sub": get_user_id(username),
             "username": username,
             "exp": datetime.now(timezone.utc) - timedelta(hours=1),
             "iat": datetime.now(timezone.utc) - timedelta(hours=2),
@@ -275,7 +278,7 @@ class TestAuthorizationProperties:
         # No OpenFGA client - fallback mode
 
         # Property: Admin should have access to everything in test environment with fallback enabled
-        authorized = await auth.authorize("user:admin", "executor", resource)
+        authorized = await auth.authorize(get_user_id("admin"), "executor", resource)
 
         assert authorized is True
 
@@ -308,7 +311,7 @@ class TestAuthorizationProperties:
         # Add inactive user to database
         if username not in auth.users_db:
             auth.users_db[username] = {
-                "user_id": f"user:{username}",
+                "user_id": get_user_id(username),
                 "email": f"{username}@test.com",
                 "password": "test123",  # Add password for authentication
                 "roles": ["user"],
@@ -360,7 +363,7 @@ class TestPermissionInheritance:
             mock_openfga.check_permission = mock_check
 
             # Property: Org member should have tool access
-            authorized = await auth.authorize(f"user:{org_user}", "executor", f"tool:{tool_name}")
+            authorized = await auth.authorize(get_user_id(org_user), "executor", f"tool:{tool_name}")
 
             # In real OpenFGA this would check transitivity
             # For now just verify the mock works
@@ -379,7 +382,7 @@ class TestPermissionInheritance:
 
             async def mock_check(user, relation, object, context=None):
                 # Owner has all permissions
-                if user == f"user:{owner}" and object == resource:
+                if user == get_user_id(owner) and object == resource:
                     return True
                 return False
 
@@ -387,7 +390,7 @@ class TestPermissionInheritance:
 
             # Property: Owner should have viewer, editor, owner relations
             for relation in ["viewer", "editor", "owner"]:
-                authorized = await auth.authorize(f"user:{owner}", relation, resource)
+                authorized = await auth.authorize(get_user_id(owner), relation, resource)
                 assert authorized is True
 
 
@@ -520,7 +523,7 @@ class TestAuthorizationEdgeCases:
         auth = AuthMiddleware()
 
         async def run_test():
-            return await auth.authorize("user:alice", "executor", resource)
+            return await auth.authorize(get_user_id("alice"), "executor", resource)
 
         try:
             result = run_async(run_test())

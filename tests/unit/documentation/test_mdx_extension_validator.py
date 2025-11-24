@@ -9,11 +9,10 @@ Tests validate that:
 """
 
 import gc
-from pathlib import Path
 
 import pytest
 
-from scripts.validators.mdx_extension_validator import ExtensionError, InvalidExtensionError, MDXExtensionValidator
+from scripts.validators.mdx_extension_validator import InvalidExtensionError, MDXExtensionValidator
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -185,7 +184,7 @@ class TestMDXExtensionValidator:
         # Assert
         assert result.exit_code != 0  # Should fail with .md file
 
-    def test_statistics_accurate(self, tmp_path):
+    def test_statistics_collection_with_mixed_extensions_reports_accurate_counts(self, tmp_path):
         """Test that statistics are accurately collected."""
         # Arrange
         docs_dir = tmp_path / "docs"

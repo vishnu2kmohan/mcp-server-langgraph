@@ -384,7 +384,7 @@ pytest -n auto
 # Fast testing (40-70% faster)
 make test-dev           # Development mode (recommended)
 make test-fast-core     # Core tests only (<5s)
-make test-parallel      # All tests in parallel
+make test-fast          # All tests in parallel
 
 # Specialized test types
 make test-compliance    # GDPR, SOC2, SLA tests

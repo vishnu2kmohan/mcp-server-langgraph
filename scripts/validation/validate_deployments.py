@@ -13,7 +13,7 @@ Validates all deployment configurations (Docker Compose, Kubernetes, Helm) to en
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 
@@ -23,8 +23,8 @@ class DeploymentValidator:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
 
     def validate_all(self) -> bool:
         """Run all validation checks."""
@@ -41,14 +41,90 @@ class DeploymentValidator:
 
         # Validate Helm chart
         self.validate_helm_chart()
+        self.validate_helm_lint()
+
+        # Validate Kustomize overlays
+        self.validate_kustomize_build()
 
         # Validate configuration consistency
         self.validate_config_consistency()
+
+        # Validate CORS security
+        self.validate_cors_security()
 
         # Print results
         self.print_results()
 
         return len(self.errors) == 0
+
+    def validate_helm_lint(self):
+        """Run helm lint."""
+        print("\n⎈  Running Helm lint...")
+        import shutil
+        import subprocess
+
+        if not shutil.which("helm"):
+            print("  ⚠️  Helm not installed, skipping lint")
+            return
+
+        chart_path = self.project_root / "deployments/helm/mcp-server-langgraph"
+        try:
+            subprocess.run(["helm", "lint", str(chart_path)], capture_output=True, text=True, check=True)
+            print("  ✓ Helm lint passed")
+        except subprocess.CalledProcessError as e:
+            # Filter out common non-critical warnings if needed, or just report error
+            # The shell script grep'd out "bad character", let's report output on failure
+            self.errors.append(f"Helm lint failed:\n{e.stdout}\n{e.stderr}")
+
+    def validate_kustomize_build(self):
+        """Run kustomize build on overlays."""
+        print("\n🔧 Validating Kustomize overlays...")
+        import shutil
+        import subprocess
+
+        # Prefer kustomize, fall back to kubectl kustomize
+        cmd = []
+        if shutil.which("kustomize"):
+            cmd = ["kustomize", "build"]
+        elif shutil.which("kubectl"):
+            cmd = ["kubectl", "kustomize"]
+        else:
+            print("  ⚠️  Kustomize/kubectl not installed, skipping build")
+            return
+
+        overlays_dir = self.project_root / "deployments/overlays"
+        if not overlays_dir.exists():
+            return
+
+        for overlay in overlays_dir.iterdir():
+            if overlay.is_dir() and (overlay / "kustomization.yaml").exists():
+                try:
+                    subprocess.run(cmd + [str(overlay)], capture_output=True, check=True)
+                    print(f"  ✓ Overlay {overlay.name} OK")
+                except subprocess.CalledProcessError:
+                    self.errors.append(f"Kustomize build failed for overlay: {overlay.name}")
+
+    def validate_cors_security(self):
+        """Validate CORS security in Kong config."""
+        print("\n🔒 Validating CORS security...")
+        kong_config = self.project_root / "deployments/kong/kong.yaml"
+        if not kong_config.exists():
+            return
+
+        try:
+            content = kong_config.read_text()
+            # Check for insecure CORS: credentials=true AND origins="*"
+            # Simple string check (regex could be better but this matches shell script intent)
+            if "credentials: true" in content and ('"*"' in content or "'*'" in content):
+                # Need to check if they are in the same context/plugin config
+                # But for now, replicate shell script logic which grep'd globally
+                # "Kong: wildcard CORS with credentials"
+                # Refined check: Check if both exist in file (broad check like shell script)
+                self.errors.append("Kong: wildcard CORS with credentials detected (insecure)")
+            else:
+                print("  ✓ CORS configuration secure")
+        except Exception as e:
+            self.errors.append(f"Failed to check CORS security: {e}")
 
     def validate_yaml_syntax(self):
         """Validate YAML syntax for all deployment files."""
@@ -142,7 +218,7 @@ class DeploymentValidator:
         if redis_docs:
             self._check_redis_deployment(redis_docs)
 
-    def _check_deployment(self, deployment: Dict[str, Any]):
+    def _check_deployment(self, deployment: dict[str, Any]):
         """Check main application deployment."""
         spec = deployment.get("spec", {})
         template = spec.get("template", {})
@@ -182,7 +258,7 @@ class DeploymentValidator:
 
         print("  ✓ Main deployment validated")
 
-    def _check_configmap(self, configmap: Dict[str, Any]):
+    def _check_configmap(self, configmap: dict[str, Any]):
         """Check ConfigMap configuration."""
         data = configmap.get("data", {})
 
@@ -202,7 +278,7 @@ class DeploymentValidator:
         else:
             print(f"  ✓ ConfigMap validated ({len(data)} keys)")
 
-    def _check_secret(self, secret: Dict[str, Any]):
+    def _check_secret(self, secret: dict[str, Any]):
         """Check Secret template."""
         string_data = secret.get("stringData", {})
 
@@ -220,7 +296,7 @@ class DeploymentValidator:
         else:
             print(f"  ✓ Secret template validated ({len(string_data)} keys)")
 
-    def _check_keycloak_deployment(self, deployment: Dict[str, Any]):
+    def _check_keycloak_deployment(self, deployment: dict[str, Any]):
         """Check Keycloak deployment configuration."""
         spec = deployment.get("spec", {})
 
@@ -236,7 +312,7 @@ class DeploymentValidator:
 
         print("  ✓ Keycloak deployment validated")
 
-    def _check_redis_deployment(self, docs: List[Dict[str, Any]]):
+    def _check_redis_deployment(self, docs: list[dict[str, Any]]):
         """Check Redis deployment configuration."""
         # Find the Deployment document
         deployment = next((d for d in docs if d.get("kind") == "Deployment"), None)
@@ -369,7 +445,7 @@ class DeploymentValidator:
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
-    def _load_yaml(self, relative_path: str) -> Dict[str, Any] | None:
+    def _load_yaml(self, relative_path: str) -> dict[str, Any] | None:
         """Load a single-document YAML file."""
         try:
             with open(self.project_root / relative_path) as f:
@@ -378,7 +454,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_all(self, relative_path: str) -> List[Dict[str, Any]] | None:
+    def _load_yaml_all(self, relative_path: str) -> list[dict[str, Any]] | None:
         """Load a multi-document YAML file."""
         try:
             with open(self.project_root / relative_path) as f:
@@ -387,7 +463,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_optional(self, relative_path: str) -> Dict[str, Any] | None:
+    def _load_yaml_optional(self, relative_path: str) -> dict[str, Any] | None:
         """Load a single-document YAML file (optional - no error if missing)."""
         full_path = self.project_root / relative_path
         if not full_path.exists():
@@ -399,7 +475,7 @@ class DeploymentValidator:
             self.errors.append(f"Failed to load {relative_path}: {e}")
             return None
 
-    def _load_yaml_all_optional(self, relative_path: str) -> List[Dict[str, Any]] | None:
+    def _load_yaml_all_optional(self, relative_path: str) -> list[dict[str, Any]] | None:
         """Load a multi-document YAML file (optional - no error if missing)."""
         full_path = self.project_root / relative_path
         if not full_path.exists():

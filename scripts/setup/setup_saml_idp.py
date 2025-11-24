@@ -27,7 +27,7 @@ Environment Variables:
 import asyncio
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -56,7 +56,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             self.access_token = response.json()["access_token"]
 
-    async def create_identity_provider(self, realm: str, idp_config: Dict[str, Any]):
+    async def create_identity_provider(self, realm: str, idp_config: dict[str, Any]):
         """Create identity provider"""
         if not self.access_token:
             await self.get_admin_token()
@@ -75,7 +75,7 @@ class KeycloakAdminClient:
             response.raise_for_status()
             return response.json()
 
-    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: Dict[str, Any]):
+    async def create_identity_provider_mapper(self, realm: str, idp_alias: str, mapper_config: dict[str, Any]):
         """Create identity provider mapper"""
         if not self.access_token:
             await self.get_admin_token()
@@ -98,7 +98,7 @@ class KeycloakAdminClient:
 async def configure_saml_identity_provider(
     keycloak_admin: KeycloakAdminClient,
     realm_name: str,
-    saml_config: Dict[str, str],
+    saml_config: dict[str, str],
 ) -> str:
     """
     Configure SAML 2.0 identity provider
@@ -269,11 +269,11 @@ async def main():
         print("✓ SAML identity provider setup completed successfully!")
         print("=" * 70)
         print("\nNext steps:")
-        print(f"1. Import SAML metadata in Keycloak Admin Console")
+        print("1. Import SAML metadata in Keycloak Admin Console")
         print(f"   - Identity Providers → {saml_alias} → Import from URL/file")
-        print(f"2. Test SAML SSO flow")
-        print(f"3. Verify attribute mapping")
-        print(f"4. Configure account linking if needed")
+        print("2. Test SAML SSO flow")
+        print("3. Verify attribute mapping")
+        print("4. Configure account linking if needed")
         print("=" * 70)
 
         return 0

@@ -21,7 +21,6 @@ Related:
 """
 
 import gc
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -64,7 +63,6 @@ class TestConfiguredAsyncMock:
         WHEN: Mock is called (not awaited)
         THEN: Should return a coroutine object
         """
-        import asyncio
         import inspect
 
         mock = configured_async_mock()

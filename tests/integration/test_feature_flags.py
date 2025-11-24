@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.unit
 @pytest.mark.xdist_group(name="testfeatureflags")
@@ -137,7 +139,7 @@ class TestFeatureFlags:
         assert is_enabled("enable_pydantic_ai_routing") in [True, False]
         assert isinstance(is_enabled("enable_langsmith"), bool)
 
-    def test_cache_configuration(self):
+    def test_cache_configuration_enables_caching_with_ttl(self):
         """Test caching feature flags"""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
@@ -147,7 +149,7 @@ class TestFeatureFlags:
         assert flags.cache_ttl_seconds == 600
         assert flags.enable_request_batching is True
 
-    def test_security_flags(self):
+    def test_security_flags_enable_rate_limiting_and_validation(self):
         """Test security-related feature flags"""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
@@ -158,7 +160,7 @@ class TestFeatureFlags:
         assert flags.rate_limit_requests_per_minute > 0
         assert flags.max_input_length > 0
 
-    def test_observability_flags(self):
+    def test_observability_flags_enable_logging_and_tracing(self):
         """Test observability feature flags"""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
@@ -181,7 +183,7 @@ class TestFeatureFlags:
         assert flags.enable_agent_memory is True
         assert flags.memory_max_messages == 500
 
-    def test_openfga_configuration(self):
+    def test_openfga_configuration_supports_strict_and_permissive_modes(self):
         """Test OpenFGA feature flags"""
         from mcp_server_langgraph.core.feature_flags import FeatureFlags
 
@@ -226,7 +228,7 @@ class TestFeatureFlagEdgeCases:
         with pytest.raises(ValidationError):
             FeatureFlags(pydantic_ai_confidence_threshold=-1.0)
 
-    def test_invalid_timeout(self):
+    def test_invalid_timeout_with_low_value_raises_validation_error(self):
         """Test timeout validation"""
         from pydantic import ValidationError
 

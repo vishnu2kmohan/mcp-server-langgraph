@@ -37,26 +37,56 @@ References:
 """
 
 import gc
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 # Mark as unit+meta test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.meta]
+pytestmark = [pytest.mark.unit]
+
+
+def create_mock_gdpr_storage():
+    """
+    Create a mock GDPR storage for testing without global singleton dependency.
+
+    This avoids test isolation issues from the global _gdpr_storage singleton.
+    Each test gets a fresh mock instance.
+    """
+    from mcp_server_langgraph.compliance.gdpr.storage import (
+        InMemoryAuditLogStore,
+        InMemoryConsentStore,
+        InMemoryConversationStore,
+        InMemoryPreferencesStore,
+        InMemoryUserProfileStore,
+    )
+    from mcp_server_langgraph.compliance.gdpr.factory import GDPRStorage
+
+    return GDPRStorage(
+        user_profiles=InMemoryUserProfileStore(),
+        preferences=InMemoryPreferencesStore(),
+        consents=InMemoryConsentStore(),
+        conversations=InMemoryConversationStore(),
+        audit_logs=InMemoryAuditLogStore(),
+    )
 
 
 @pytest.fixture(autouse=True)
-async def setup_gdpr_storage():
-    """Initialize GDPR storage for tests (using memory backend for speed)."""
-    from mcp_server_langgraph.compliance.gdpr.factory import initialize_gdpr_storage, reset_gdpr_storage
+def reset_gdpr_singleton():
+    """
+    Reset GDPR storage singleton before and after each test to prevent pollution.
 
-    # Initialize with memory backend for fast testing
-    await initialize_gdpr_storage(backend="memory")
+    DEFENSIVE FIX: Ensures global _gdpr_storage singleton is None before/after
+    each test, preventing state pollution from test_gdpr_endpoints.py or other
+    integration tests that initialize the singleton.
 
+    This is defensive in addition to the global reset in tests/conftest.py.
+    """
+    from mcp_server_langgraph.compliance.gdpr.factory import reset_gdpr_storage
+
+    reset_gdpr_storage()
     yield
-
-    # Reset after test
     reset_gdpr_storage()
 
 
@@ -74,38 +104,48 @@ class TestGDPREndpointAuthOverrides:
 
     def test_user_data_endpoint_with_proper_auth_override_returns_200(self):
         """
-        🟢 GREEN: Test GET /api/v1/users/me/data with proper auth override.
+        🟢 GREEN: Test GET /api/v1/users/me/data with middleware-based auth.
 
-        This test demonstrates the CORRECT pattern:
-        - Async override for async get_current_user dependency
-        - bearer_scheme override to prevent singleton pollution
-        - Dependency cleanup in fixture teardown
+        This test demonstrates the NEW middleware pattern:
+        - Test middleware sets request.state.user directly
+        - No dependency overrides needed
+        - Mock GDPR storage to avoid global singleton pollution
 
-        This test should PASS with our current implementation.
+        After refactoring to middleware-based auth,
+        tests simply set request.state.user via test middleware.
+
+        This test should PASS with the new middleware implementation.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         app = FastAPI()
+
+        # Test middleware to set authenticated user
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                # Set user in request state (simulating auth middleware)
+                request.state.user = {
+                    "user_id": "user:alice",
+                    "username": "alice",
+                    "email": "alice@example.com",
+                    "roles": ["user"],
+                }
+                response = await call_next(request)
+                return response
+
+        app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
 
-        # CORRECT pattern: Async override for async dependency
-        async def mock_get_current_user_async():
-            return {
-                "user_id": "user:alice",
-                "username": "alice",
-                "email": "alice@example.com",
-                "roles": ["user"],
-            }
-
-        # CRITICAL: Must override BOTH bearer_scheme and get_current_user
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
 
-        # With proper overrides, should get 200 OK
+        # With middleware setting request.state.user, should get 200 OK
         assert response.status_code == 200, (
             f"Expected 200 with proper auth override, got {response.status_code}. "
             "This indicates the override pattern is working correctly."
@@ -114,58 +154,48 @@ class TestGDPREndpointAuthOverrides:
         # Cleanup
         app.dependency_overrides.clear()
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason=(
-            "Non-deterministic test documenting bearer_scheme singleton pollution. "
-            "May return 200 or 401 depending on pytest-xdist execution order. "
-            "Demonstrates why BOTH bearer_scheme AND get_current_user must be overridden. "
-            "See PYTEST_XDIST_BEST_PRACTICES.md for details."
-        ),
-    )
-    def test_user_data_endpoint_without_bearer_scheme_override_may_fail(self):
+    def test_user_data_endpoint_override_without_bearer_coupling(self):
         """
-        🔴 RED: Test GET /api/v1/users/me/data WITHOUT bearer_scheme override.
+        🟢 GREEN: Test GET /api/v1/users/me/data with middleware-based auth.
 
-        This test demonstrates what happens when you forget to override bearer_scheme.
-        Per PYTEST_XDIST_BEST_PRACTICES.md, this can cause singleton pollution
-        and intermittent 401 errors in pytest-xdist.
+        After refactoring to middleware-based auth, there's no dependency coupling at all.
+        Middleware sets request.state.user directly, and endpoints access it.
 
-        This test may PASS or FAIL depending on test execution order, which is
-        exactly the problem - it's non-deterministic!
-
-        The test documents the INCORRECT pattern to avoid.
+        This test validates that the new middleware pattern works correctly
+        without any dependency injection complexity.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         app = FastAPI()
+
+        # Test middleware to set authenticated user
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                request.state.user = {
+                    "user_id": "user:alice",
+                    "username": "alice",
+                    "email": "alice@example.com",
+                    "roles": ["user"],
+                }
+                response = await call_next(request)
+                return response
+
+        app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
 
-        async def mock_get_current_user_async():
-            return {
-                "user_id": "user:alice",
-                "username": "alice",
-                "email": "alice@example.com",
-                "roles": ["user"],
-            }
-
-        # INCORRECT: Only overriding get_current_user, NOT bearer_scheme
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
-
-        # This might return 200 OR 401 depending on execution order (flaky!)
-        # The non-determinism is the PROBLEM
         response = client.get("/api/v1/users/me/data")
 
-        # Incomplete override should cause 401 (bearer_scheme validation fails)
-        # If we get 200, it means the non-determinism bug is manifesting
-        assert response.status_code == 401, (
-            f"Expected 401 with incomplete override (missing bearer_scheme), got {response.status_code}. "
-            "Without bearer_scheme override, auth should fail even if get_current_user is overridden. "
-            "If this test fails with 200, it demonstrates the non-determinism bug in pytest-xdist. "
-            "Always override BOTH bearer_scheme AND get_current_user."
+        # With middleware setting request.state.user, should work perfectly
+        assert response.status_code == 200, (
+            f"Expected 200 with get_current_user override, got {response.status_code}. "
+            "After removing Depends(bearer_scheme) coupling, overriding only get_current_user should be sufficient."
         )
 
         # Cleanup
@@ -173,27 +203,37 @@ class TestGDPREndpointAuthOverrides:
 
     def test_consent_endpoint_with_proper_auth_override_returns_200(self):
         """
-        🟢 GREEN: Test POST /api/v1/users/me/consent with proper auth override.
+        🟢 GREEN: Test POST /api/v1/users/me/consent with middleware-based auth.
 
-        Another example of the CORRECT pattern for a different endpoint.
+        Another example of the middleware pattern for a different endpoint.
+
+        After refactoring to middleware-based auth,
+        tests use test middleware to set request.state.user.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         app = FastAPI()
+
+        # Test middleware to set authenticated user
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                request.state.user = {
+                    "user_id": "user:bob",
+                    "username": "bob",
+                    "email": "bob@example.com",
+                    "roles": ["user"],
+                }
+                response = await call_next(request)
+                return response
+
+        app.add_middleware(TestAuthMiddleware)
         app.include_router(router)
 
-        async def mock_get_current_user_async():
-            return {
-                "user_id": "user:bob",
-                "username": "bob",
-                "email": "bob@example.com",
-                "roles": ["user"],
-            }
-
-        # CORRECT: Override both bearer_scheme and get_current_user
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = mock_get_current_user_async
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
 
@@ -206,7 +246,7 @@ class TestGDPREndpointAuthOverrides:
             },
         )
 
-        # With proper overrides, should get 200/201
+        # With middleware setting request.state.user, should get 200/201
         assert response.status_code in (200, 201), f"Expected 200/201 with proper auth override, got {response.status_code}"
 
         # Cleanup
@@ -231,14 +271,14 @@ def test_auth_override_sanity_pattern_documentation():
     Prevent regressions in FastAPI authentication override patterns by
     creating minimal sanity tests for each authenticated endpoint.
 
-    Pattern:
-    --------
+    Pattern (After Refactoring):
+    -----------------------------
     For EVERY authenticated FastAPI endpoint, create a sanity test:
 
     ```python
     def test_{endpoint}_with_proper_auth_override_returns_200(self):
         from {module} import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.auth.middleware import get_current_user
 
         app = FastAPI()
         app.include_router(router)
@@ -246,8 +286,7 @@ def test_auth_override_sanity_pattern_documentation():
         async def mock_get_current_user_async():
             return {"user_id": "test-user", ...}
 
-        # CRITICAL: Override BOTH dependencies
-        app.dependency_overrides[bearer_scheme] = lambda: None
+        # After refactoring: Only need to override get_current_user
         app.dependency_overrides[get_current_user] = mock_get_current_user_async
 
         client = TestClient(app)
@@ -257,10 +296,18 @@ def test_auth_override_sanity_pattern_documentation():
         app.dependency_overrides.clear()
     ```
 
+    Refactoring Note:
+    -----------------
+    Previously, tests needed to override BOTH bearer_scheme AND get_current_user
+    due to dependency coupling (get_current_user had Depends(bearer_scheme) parameter).
+
+    After refactoring to remove this coupling, only get_current_user needs to be
+    overridden. Bearer token extraction now happens inside get_current_user.
+
     Benefits:
     ---------
     1. ✅ Makes authentication contract visible
-    2. ✅ Catches missing bearer_scheme override immediately
+    2. ✅ Simpler test pattern (only one override needed)
     3. ✅ Catches async/sync mismatch immediately
     4. ✅ Prevents intermittent 401 errors in pytest-xdist
     5. ✅ Serves as living documentation
@@ -297,12 +344,12 @@ def test_auth_override_sanity_pattern_documentation():
     """
 
     assert len(documentation) > 100, "Pattern is documented"
-    assert "bearer_scheme" in documentation, "Documents bearer_scheme requirement"
+    assert "get_current_user" in documentation, "Documents get_current_user override"
     assert "async def" in documentation, "Documents async override pattern"
     assert "dependency_overrides.clear()" in documentation, "Documents cleanup"
 
 
-@pytest.mark.xdist_group(name="auth_override_sanity_tests")
+@pytest.mark.xdist_group(name="testauthoverridesanitypattern")
 class TestAuthOverrideSanityPattern:
     """
     Tests demonstrating the auth override sanity pattern for various scenarios.
@@ -310,6 +357,8 @@ class TestAuthOverrideSanityPattern:
 
     def teardown_method(self):
         """Force GC to prevent mock accumulation in xdist workers"""
+        import gc
+
         gc.collect()
 
     def test_pattern_works_with_minimal_mock(self):
@@ -321,20 +370,30 @@ class TestAuthOverrideSanityPattern:
         - No complex dependency mocking
         - Just verify 200 vs 401
 
+        After refactoring to middleware-based auth,
+        tests use simple test middleware.
+
         This keeps them maintainable and fast to run.
         """
         from mcp_server_langgraph.api.gdpr import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
+        from starlette.middleware.base import BaseHTTPMiddleware
 
         app = FastAPI()
-        app.include_router(router)
 
         # MINIMAL mock - just enough for auth to work
-        async def mock_user():
-            return {"user_id": "test", "username": "test"}
+        class TestAuthMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                request.state.user = {"user_id": "test", "username": "test"}
+                response = await call_next(request)
+                return response
 
-        app.dependency_overrides[bearer_scheme] = lambda: None
-        app.dependency_overrides[get_current_user] = mock_user
+        app.add_middleware(TestAuthMiddleware)
+        app.include_router(router)
+
+        # Mock GDPR storage to avoid global singleton issues
+        mock_storage = create_mock_gdpr_storage()
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
 
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
@@ -365,11 +424,16 @@ class TestAuthOverrideSanityPattern:
         This is the baseline behavior that sanity tests protect against.
         """
         from mcp_server_langgraph.api.gdpr import router
+        from mcp_server_langgraph.compliance.gdpr.factory import get_gdpr_storage
 
         app = FastAPI()
         app.include_router(router)
 
-        # NO overrides - this is the PROBLEM
+        # Mock GDPR storage to avoid RuntimeError (GDPR storage must be initialized)
+        # But NO auth override - this is the PROBLEM we're testing
+        mock_storage = create_mock_gdpr_storage()
+        app.dependency_overrides[get_gdpr_storage] = lambda: mock_storage
+
         client = TestClient(app)
         response = client.get("/api/v1/users/me/data")
 

@@ -8,16 +8,17 @@ pytest-xdist state pollution.
 Run with: pytest tests/meta/test_async_mock_configuration.py -v
 """
 
-import gc
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.meta
+
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_all_async_mocks_have_return_values():
     """
     Verify all AsyncMock instances have explicit configuration.
@@ -42,7 +43,7 @@ def test_all_async_mocks_have_return_values():
         pytest.skip("No test files found to check")
 
     # Run the AsyncMock configuration checker
-    script_path = Path(__file__).parent.parent.parent / "scripts" / "check_async_mock_configuration.py"
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_async_mock_configuration.py"
 
     result = subprocess.run(
         [sys.executable, str(script_path)] + [str(f) for f in test_files], capture_output=True, text=True, timeout=60
@@ -91,7 +92,7 @@ def test_all_async_mocks_have_return_values():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_async_mock_guidelines_exist():
     """Verify AsyncMock guidelines documentation exists."""
     guidelines_path = Path(__file__).parent.parent / "ASYNC_MOCK_GUIDELINES.md"
@@ -99,12 +100,12 @@ def test_async_mock_guidelines_exist():
 
 
 @pytest.mark.meta
-@pytest.mark.unit
+@pytest.mark.meta
 def test_async_mock_checker_script_exists():
     """Verify AsyncMock configuration checker script exists."""
-    script_path = Path(__file__).parent.parent.parent / "scripts" / "check_async_mock_configuration.py"
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_async_mock_configuration.py"
     assert script_path.exists(), (
-        "AsyncMock configuration checker script missing!\n" "Expected: scripts/check_async_mock_configuration.py"
+        "AsyncMock configuration checker script missing!\n" "Expected: scripts/validation/check_async_mock_configuration.py"
     )
     assert script_path.stat().st_mode & 0o111, (
         "AsyncMock configuration checker script is not executable!\n" f"Run: chmod +x {script_path}"
