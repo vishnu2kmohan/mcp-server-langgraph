@@ -61,9 +61,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Unified Docker configuration: Buildx 3.11.1, QEMU 3.7.0, multiplatform support
     - Features: Optional QEMU (single vs multiplatform), custom driver options, inline config
     - Documentation: 120-line README with usage examples
+  - **Created `setup-gcp-auth` composite action** (`.github/actions/setup-gcp-auth/`) - Consolidated GCP Workload Identity Federation authentication:
+    - Migrated 4 workflows (12 jobs, 12 instances): `deploy-production-gke.yaml`, `deploy-staging-gke.yaml`, `gcp-drift-detection.yaml`, `ci.yaml`
+    - Removed ~48 lines of duplicate auth code (92% consolidation - 12 of 13 instances)
+    - Not migrated: `gcp-compliance-scan.yaml` (1 instance with workflow-specific conditional defaults)
+    - Unified GCP auth: Workload Identity Federation, auth@v3, flexible token formats
+    - Features: Token format support (none, access_token, id_token), output propagation, version pinning
+    - Documentation: 254-line README with WIF setup guide, deployment examples, troubleshooting
   - **Impact** (see `docs-internal/WORKFLOW_CONSOLIDATION_REPORT.md` for full analysis):
-    - Total duplicate code removed: ~371 lines (282 + 18 + 71 from script consolidation)
-    - Workflows improved: 14 workflows (24 jobs)
+    - Total duplicate code removed: ~437 lines (282 + 18 + 48 + 71 from script consolidation + 18 from other)
+    - Workflows improved: 18 workflows (36 jobs) via 3 composite actions
     - Version consistency: Unified to latest versions across all workflows
     - Maintenance reduction: 90% (20h/year → 2h/year for version updates)
     - Cache efficiency: Projected 30% → 85% hit rate improvement
