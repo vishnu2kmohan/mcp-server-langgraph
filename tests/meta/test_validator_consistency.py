@@ -21,7 +21,7 @@ from textwrap import dedent
 import pytest
 
 from tests.validation_lib import async_mocks, memory_safety
-from scripts.validators import validate_ids as test_ids
+import scripts.validators.validate_ids as test_ids
 
 pytestmark = pytest.mark.meta
 

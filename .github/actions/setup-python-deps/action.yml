@@ -55,9 +55,9 @@ runs:
             EXTRA_FLAGS="$EXTRA_FLAGS --extra $extra"
           done
           echo "Installing with extras: ${{ inputs.extras }}"
-          uv sync --frozen $EXTRA_FLAGS
+          uv sync --frozen --python ${{ inputs.python-version }} $EXTRA_FLAGS
         else
-          uv sync --frozen
+          uv sync --frozen --python ${{ inputs.python-version }}
         fi
 
         # NOTE: Removed legacy install-test flag support (redundant with extras parameter)
@@ -68,6 +68,19 @@ runs:
       run: |
         echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
         echo "$PWD/.venv/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Verify Python version
+      run: |
+        EXPECTED="${{ inputs.python-version }}"
+        ACTUAL=$(.venv/bin/python --version | awk '{print $2}')
+        echo "Expected Python: $EXPECTED"
+        echo "Actual Python: $ACTUAL"
+        if [[ ! "$ACTUAL" == "$EXPECTED"* ]]; then
+          echo "::error::Python version mismatch! Expected $EXPECTED but got $ACTUAL"
+          exit 1
+        fi
+        echo "✓ Python version verified: $ACTUAL"
       shell: bash
 
     - name: Validate dependency consistency

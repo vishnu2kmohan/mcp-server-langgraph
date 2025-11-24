@@ -27,7 +27,7 @@ on:
       - 'scripts/validators/**'
       - 'scripts/fix_mdx_syntax.py'
       - 'scripts/validate_mintlify_docs.py'
-      - 'tests/test_mdx_validation.py'
+      - 'tests/meta/validation/test_mdx_validation.py'
       - 'tests/unit/documentation/**'
   push:
     branches:
@@ -217,7 +217,7 @@ jobs:
       - name: Run Documentation Meta-Tests
         run: |
           echo "::group::Documentation Integrity Tests"
-          uv run pytest tests/test_documentation_integrity.py -v --tb=short
+          uv run pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
           echo "::endgroup::"
         continue-on-error: true
         id: doc-integrity
@@ -233,7 +233,7 @@ jobs:
       - name: Run MDX Validation Tests
         run: |
           echo "::group::MDX Validation Tests"
-          uv run pytest tests/test_mdx_validation.py -v --tb=short
+          uv run pytest tests/meta/validation/test_mdx_validation.py -v --tb=short
           echo "::endgroup::"
         continue-on-error: true
         id: mdx-validation

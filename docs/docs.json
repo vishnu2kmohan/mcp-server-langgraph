@@ -65,6 +65,7 @@
           {
             "group": "Development",
             "pages": [
+              "development/setup",
               "development/onboarding",
               "development/naming-conventions",
               "advanced/contributing",

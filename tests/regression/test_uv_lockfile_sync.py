@@ -216,31 +216,56 @@ class TestCIPythonVersionMatrix:
         ```
         """
         project_root = Path(__file__).parent.parent.parent
+
+        # Check both the workflow file and the composite action
+        # The composite action is where the actual uv sync command is executed
+        composite_action = project_root / ".github" / "actions" / "setup-python-deps" / "action.yml"
         ci_workflow = project_root / ".github" / "workflows" / "ci.yaml"
+
+        with open(composite_action) as f:
+            action_content = f.read()
 
         with open(ci_workflow) as f:
             workflow_content = f.read()
 
-        # Must use --python flag with matrix variable
-        assert "uv sync --python ${{ matrix.python-version }}" in workflow_content or "uv sync --python" in workflow_content, (
-            "❌ CI workflow must use 'uv sync --python ${{ matrix.python-version }}'\n\n"
+        # Must use --python flag in composite action (inputs.python-version)
+        # or directly in workflow (matrix.python-version)
+        has_python_flag = "uv sync --python" in workflow_content or "uv sync --frozen --python" in action_content
+
+        assert has_python_flag, (
+            "❌ CI must use 'uv sync --python <version>' flag\n\n"
             "Without this flag, uv sync recreates venv with default Python (3.12)\n"
-            "instead of using the matrix Python version (3.10, 3.11, 3.12).\n\n"
+            "instead of using the configured Python version.\n\n"
             "This caused all test jobs to run Python 3.12 regardless of matrix config.\n\n"
+            "Check: .github/actions/setup-python-deps/action.yml\n"
             "See commits: c193936, ba5296f for fix details"
         )
 
     def test_ci_workflow_verifies_python_version_after_install(self):
         """Verify CI workflow checks Python version after venv creation"""
         project_root = Path(__file__).parent.parent.parent
+
+        # Check both the workflow file and the composite action
+        composite_action = project_root / ".github" / "actions" / "setup-python-deps" / "action.yml"
         ci_workflow = project_root / ".github" / "workflows" / "ci.yaml"
+
+        with open(composite_action) as f:
+            action_content = f.read()
 
         with open(ci_workflow) as f:
             workflow_content = f.read()
 
-        # Should verify Python version
-        assert ".venv/bin/python --version" in workflow_content or "python --version" in workflow_content, (
-            "CI workflow should verify Python version after venv creation.\n" "This catches Python version mismatches early."
+        # Should verify Python version in either location
+        has_version_check = (
+            ".venv/bin/python --version" in workflow_content
+            or "python --version" in workflow_content
+            or ".venv/bin/python --version" in action_content
+        )
+
+        assert has_version_check, (
+            "CI must verify Python version after venv creation.\n"
+            "This catches Python version mismatches early.\n"
+            "Check: .github/actions/setup-python-deps/action.yml"
         )
 
 

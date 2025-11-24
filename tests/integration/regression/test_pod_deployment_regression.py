@@ -402,6 +402,13 @@ class TestKustomizeBuildValidity:
         # Allow errors for missing cluster resources (namespaces, CRDs, etc.)
         # but fail on validation errors
         if dry_run_result.returncode != 0:
+            error_output = dry_run_result.stderr.lower()
+
+            # Skip if Kubernetes cluster is unavailable (CI environment without cluster)
+            connection_errors = ["connection refused", "failed to download openapi", "unable to connect"]
+            if any(err in error_output for err in connection_errors):
+                pytest.skip("Kubernetes cluster not available for dry-run validation (CI environment)")
+
             error_lines = dry_run_result.stderr.split("\n")
             validation_errors = [line for line in error_lines if "invalid" in line.lower() or "error" in line.lower()]
 
