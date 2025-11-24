@@ -336,22 +336,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Install build tools
-      run: |
-        # Install release tools (build, twine) from pyproject.toml extras
-        # Installed to system Python to be available for python -m build
-        uv pip install --system -e .[release-tools]
-        echo "✓ Release tools installed to active interpreter"
+        extras: 'release-tools'
+        cache-key-prefix: 'release-pypi'
 
     - name: Build package
       run: |

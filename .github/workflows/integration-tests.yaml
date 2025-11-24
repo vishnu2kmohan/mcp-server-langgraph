@@ -69,37 +69,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Cache uv binary
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/uv
-        key: uv-binary-${{ runner.os }}-0.5.0
-        restore-keys: uv-binary-${{ runner.os }}-
-
-    - name: Cache uv dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/uv
-        key: ${{ runner.os }}-uv-integration-${{ hashFiles('uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-integration-
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
-    - name: Install dependencies
-      run: |
-        # Install with dev extra for testing framework
-        # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
-        uv sync --frozen --extra dev
-        echo "✓ Dependencies installed from lockfile with dev extra"
+        extras: 'dev'
+        cache-key-prefix: 'integration-tests'
 
     - name: Run Integration Tests via Script (Group ${{ matrix.split-group }}/4)
       run: |
