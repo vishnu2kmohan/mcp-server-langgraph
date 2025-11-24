@@ -890,7 +890,7 @@ repos:
       '
   - id: detect-dead-test-code
     name: Detect Dead Code in Test Fixtures (Codex P0)
-    entry: uv run python scripts/detect_dead_test_code.py tests/
+    entry: uv run python scripts/archive/unused/detect_dead_test_code.py tests/
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false

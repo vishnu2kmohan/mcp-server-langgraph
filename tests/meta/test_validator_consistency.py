@@ -21,7 +21,7 @@ from textwrap import dedent
 import pytest
 
 from tests.validation_lib import async_mocks, memory_safety
-from scripts.validation import validate_ids as test_ids
+from scripts.validators import validate_ids as test_ids
 
 pytestmark = pytest.mark.meta
 
@@ -320,7 +320,7 @@ class TestValidationLibraryExports:
 
     def test_can_import_test_ids(self) -> None:
         """Test that test_ids can be imported from validation_lib."""
-        from scripts.validation import validate_ids as test_ids
+        from scripts.validators import validate_ids as test_ids
 
         assert test_ids is not None
         assert hasattr(test_ids, "find_hardcoded_ids")

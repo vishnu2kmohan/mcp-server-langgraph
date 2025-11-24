@@ -25,13 +25,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # These run as individual hooks for better fail-fast behavior and clearer error messages.
 # validate-fast now focuses on lightweight validators without dedicated hooks.
 SCRIPTS = [
-    "scripts/validation/validate_pre_push_hook.py",
-    "scripts/validation/validate_repo_root_calculations.py",
-    "scripts/validation/validate_test_time_bombs.py",
-    "scripts/validation/validate_async_fixture_scope.py",
-    "scripts/validation/validate_migration_idempotency.py",
-    "scripts/validation/validate_api_schemas.py",
-    "scripts/validation/validate_serviceaccount_names.py",
+    "scripts/validators/validate_pre_push_hook.py",
+    "scripts/validators/validate_repo_root_calculations.py",
+    "scripts/validators/validate_test_time_bombs.py",
+    "scripts/validators/validate_async_fixture_scope.py",
+    "scripts/validators/validate_migration_idempotency.py",
+    "scripts/validators/validate_api_schemas.py",
+    "scripts/validators/validate_serviceaccount_names.py",
 ]
 
 

@@ -47,7 +47,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 # Import validation logic from shared library
-from scripts.validation import validate_ids as test_ids  # noqa: E402
+from scripts.validators import validate_ids as test_ids  # noqa: E402
 
 
 def main() -> int:
