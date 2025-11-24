@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 import yaml
 
-pytestmark = pytest.mark.infrastructure
+pytestmark = [pytest.mark.integration, pytest.mark.infrastructure]
 
 
 @pytest.mark.infrastructure

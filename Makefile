@@ -393,8 +393,8 @@ test-all-quality: test-property test-contract test-regression
 
 # Pre-commit Hook Validation
 test-precommit-validation:
-	@echo "Validating pre-commit hook configuration..."
-	OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/regression/test_precommit_hook_dependencies.py -v --tb=short
+	@echo "Validating pre-commit hook configuration (parallel)..."
+	OTEL_SDK_DISABLED=true $(UV_RUN) pytest -n auto tests/regression/test_precommit_hook_dependencies.py -v --tb=short
 	@echo "✓ Pre-commit validation complete"
 
 # CI-Mode Quality Tests (with coverage, matches CI exactly)
@@ -579,27 +579,56 @@ validate-commit:  ## Tier 1: Fast validation (<30s) - formatters, linters, basic
 	@echo "✅ Tier 1 validation complete!"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-validate-push:  ## Tier 2: Critical validation (3-5 min) - type checking, fast tests, deployment
+## validate-push-changed: Fast validation of changed files only (matches git hook behavior)
+validate-push-changed:  ## Tier 2: Critical validation - changed files only (1-3 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 TIER 2 VALIDATION - Critical Checks (3-5 min)"
+	@echo "🔍 TIER 2 VALIDATION - Critical Checks (Changed Files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "This runs Tier 1 + Tier 2 validators"
+	@echo "This runs Tier 1 + Tier 2 validators on CHANGED files only"
+	@echo "Matches git hook behavior - faster for routine development"
+	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
+	@echo ""
+	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks - changed files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@pre-commit run --show-diff-on-failure
+	@echo ""
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks - changed files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running: mypy, helm-lint, kustomize, pytest, deployment validation..."
+	@echo ""
+	@pre-commit run --hook-stage pre-push --show-diff-on-failure
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ Tier 1 + Tier 2 validation complete (changed files)!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-push-full: Comprehensive validation of all files (pre-release audit)
+validate-push-full:  ## Tier 2: Critical validation - all files (3-5 min)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 TIER 2 VALIDATION - Critical Checks (All Files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This runs Tier 1 + Tier 2 validators on ALL files"
+	@echo "Use before important releases or when refactoring core code"
 	@echo "See: docs/development/VALIDATION_STRATEGY.md for details"
 	@echo ""
 	@echo "▶ STEP 1: Tier 1 Validation (pre-commit hooks - all files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@pre-commit run --all-files --show-diff-on-failure
 	@echo ""
-	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks)"
+	@echo "▶ STEP 2: Tier 2 Validation (pre-push hooks - all files)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "Running: mypy, helm-lint, kustomize, pytest, deployment validation..."
 	@echo ""
 	@pre-commit run --hook-stage pre-push --all-files --show-diff-on-failure
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "✅ Tier 1 + Tier 2 validation complete!"
+	@echo "✅ Tier 1 + Tier 2 validation complete (all files)!"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-push: Alias to validate-push-changed (common case for development)
+validate-push: validate-push-changed  ## Tier 2: Critical validation (default: changed files)
 
 validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, security, manual validators
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -632,9 +661,64 @@ validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, sec
 # Legacy comprehensive pre-push validation target
 # NOTE: validate-push (Tier 2) is now the recommended target for pre-push validation
 # This target is kept for CI/CD parity and backward compatibility
-validate-pre-push:
+## validate-pre-push-quick: Fast pre-push validation (skip integration tests)
+validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 min)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 Running comprehensive pre-push validation (CI-equivalent)"
+	@echo "🔍 Running pre-push validation (QUICK - no integration tests)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Skipping integration tests (no Docker required)"
+	@echo "Run 'make validate-pre-push-full' for comprehensive validation with Docker"
+	@echo ""
+	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Lockfile Validation..."
+	@uv lock --check && echo "✓ Lockfile valid" || (echo "✗ Lockfile validation failed" && exit 1)
+	@echo ""
+	@echo "▶ Dependency Tree Validation..."
+	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
+	@echo ""
+	@echo "▶ Workflow Validation Tests..."
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 2: Type Checking (Critical - matches CI)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ MyPy Type Checking (Critical)..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 3: Test Suite Validation"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Running Unit, API, Property, and Smoke Tests (Optimized)..."
+	@# Runs: unit tests + API tests + property tests + smoke tests (11 critical startup tests)
+	@# Includes: 19 xdist enforcement tests (validates pytest-xdist isolation patterns)
+	@# Includes: Smoke tests (validate app startup, dependency injection, configuration)
+	@$(UV_RUN) python scripts/run_pre_push_tests.py && echo "✓ Fast tests passed" || (echo "✗ Fast tests failed" && exit 1)
+	@echo ""
+	@echo "⚠ Skipping integration tests (use validate-pre-push-full for comprehensive validation)"
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
+	@# Skip hooks already run in manual phases to avoid duplicate work
+	@# Also skip validation hooks redundant with pytest tests (30-60s savings)
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests,validate-pytest-config,check-test-memory-safety,check-async-mock-usage,validate-test-ids pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✓ All pre-push validations passed (QUICK)!"
+	@echo "✓ Your push should pass most CI checks"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-pre-push-full: Comprehensive pre-push validation with integration tests
+validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integration tests (8-12 min)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
@@ -666,7 +750,7 @@ validate-pre-push:
 	@# Includes: Smoke tests (validate app startup, dependency injection, configuration)
 	@$(UV_RUN) python scripts/run_pre_push_tests.py && echo "✓ Fast tests passed" || (echo "✗ Fast tests failed" && exit 1)
 	@echo ""
-	@echo "▶ Running Integration Tests (Docker)..."
+	@echo "▶ Running Integration Tests (Docker - requires Docker daemon)..."
 	@./scripts/test-integration.sh && echo "✓ Integration tests passed" || (echo "✗ Integration tests failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -674,12 +758,17 @@ validate-pre-push:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
 	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
-	@pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@# Skip hooks already run in manual phases to avoid duplicate work
+	@# Also skip validation hooks redundant with pytest tests (30-60s savings)
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests,validate-pytest-config,check-test-memory-safety,check-async-mock-usage,validate-test-ids pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "✓ All pre-push validations passed!"
-	@echo "✓ Your push should pass CI checks"
+	@echo "✓ All pre-push validations passed (FULL)!"
+	@echo "✓ Your push should pass all CI checks"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+## validate-pre-push: Alias to validate-pre-push-quick (common case, no Docker needed)
+validate-pre-push: validate-pre-push-quick  ## Pre-push validation (default: quick, no Docker)
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."

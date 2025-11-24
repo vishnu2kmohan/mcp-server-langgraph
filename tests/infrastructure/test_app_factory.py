@@ -14,7 +14,7 @@ import gc
 
 import pytest
 
-pytestmark = pytest.mark.infrastructure
+pytestmark = [pytest.mark.unit, pytest.mark.infrastructure]
 
 
 @pytest.mark.infrastructure

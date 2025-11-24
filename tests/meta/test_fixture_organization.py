@@ -142,7 +142,7 @@ def test_no_duplicate_autouse_fixtures():
     Best practice: Module/session-scoped autouse fixtures should be defined
     in conftest.py to avoid initialization conflicts and improve clarity.
     """
-    test_dir = Path(__file__).parent
+    test_dir = Path(__file__).parent.parent  # tests/ root, not tests/meta/
     autouse_fixtures = find_autouse_fixtures(test_dir)
 
     # Find fixtures with multiple definitions
@@ -188,7 +188,7 @@ def test_autouse_fixtures_documented():
     Autouse fixtures run automatically, so they should be well-documented
     to explain why they run and what they do.
     """
-    test_dir = Path(__file__).parent
+    test_dir = Path(__file__).parent.parent  # tests/ root, not tests/meta/
     autouse_fixtures = find_autouse_fixtures(test_dir)
 
     undocumented: list[tuple[str, str, int]] = []

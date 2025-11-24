@@ -1381,8 +1381,7 @@ repos:
       '
   - id: validate-test-dependencies
     name: Validate Test Import Dependencies
-    entry: bash -c 'source .venv/bin/activate && pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies
-      -v --tb=short'
+    entry: uv run pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v --tb=short
     language: system
     files: ^(tests/.*\.py|pyproject\.toml)$
     pass_filenames: false
@@ -1417,8 +1416,7 @@ repos:
       See: scripts/validation/validate_workflow_test_deps.py for implementation\n"
   - id: validate-fixture-scopes
     name: Validate Pytest Fixture Scopes
-    entry: bash -c 'source .venv/bin/activate && pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible
-      -v --tb=short'
+    entry: uv run pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible -v --tb=short
     language: system
     files: ^tests/conftest\.py$
     pass_filenames: false

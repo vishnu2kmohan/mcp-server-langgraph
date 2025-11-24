@@ -98,26 +98,26 @@ class TestMakefileParallelization:
         assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
 
     @pytest.mark.meta
-    def test_test_integration_local_uses_parallel_execution(self):
+    def test_test_precommit_validation_uses_parallel_execution(self):
         """
-        test-integration-local should use -n auto for parallel execution.
+        test-precommit-validation should use -n auto for parallel execution.
 
-        GIVEN: The test-integration-local target in Makefile
+        GIVEN: The test-precommit-validation target in Makefile
         WHEN: Reading the Makefile
-        THEN: test-integration-local should include -n auto flag
+        THEN: test-precommit-validation should include -n auto flag
         """
         makefile = Path("Makefile")
         content = makefile.read_text()
 
-        # Find test-integration-local target
-        pattern = r"test-integration-local:.*?\n\t.*?\$\(PYTEST\)([^\n]+)"
+        # Find test-precommit-validation target
+        pattern = r"test-precommit-validation:.*?\n\t.*?\$\(UV_RUN\) pytest([^\n]+)"
         match = re.search(pattern, content, re.DOTALL)
 
-        assert match, "test-integration-local target not found in Makefile"
+        assert match, "test-precommit-validation target not found in Makefile"
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-integration-local should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+            f"test-precommit-validation should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
         )
 
     @pytest.mark.meta
@@ -157,7 +157,7 @@ class TestMakefileParallelization:
             "test-ci",
             "test-mcp-server",
             "test-new",
-            "test-integration-local",
+            "test-precommit-validation",
             "test-e2e",
         ]
 

@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.infrastructure
+pytestmark = [pytest.mark.integration, pytest.mark.infrastructure]
 
 
 @pytest.mark.xdist_group(name="testretryintegration")
