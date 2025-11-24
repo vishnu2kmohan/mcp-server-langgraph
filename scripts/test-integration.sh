@@ -25,6 +25,11 @@
 #
 #   # Start services only (run tests manually)
 #   ./scripts/test-integration.sh --services
+#
+#   # Pass custom pytest flags after '--' separator
+#   ./scripts/test-integration.sh -- --splits 4 --group 1
+#   ./scripts/test-integration.sh -- --cov --cov-report=xml
+#   ./scripts/test-integration.sh -- -m "integration and not slow"
 
 set -euo pipefail
 
@@ -300,7 +305,7 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
        POSTGRES_USER=postgres \
        POSTGRES_PASSWORD=postgres \
        KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests \
-       uv run pytest -m integration -v --tb=short; then
+       uv run pytest "${PYTEST_ARGS[@]}"; then
         END_TIME=$(date +%s)
 
         DURATION=$((END_TIME - START_TIME))

@@ -311,7 +311,9 @@ class TestComposeFileConsistency:
         content = compose_file.read_text()
 
         # Expected test ports (from investigation)
-        expected_ports = ["9432", "9379", "9380", "9080", "9082", "9333"]
+        # Note: Test uses ONE Redis (9379) for both checkpoints and sessions
+        # Production (docker-compose.yml) uses TWO Redis instances (6379 and 6380)
+        expected_ports = ["9432", "9379", "9080", "9082", "9333"]
 
         for port in expected_ports:
             assert port in content, (

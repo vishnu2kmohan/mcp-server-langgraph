@@ -49,10 +49,11 @@ class TestInfrastructureSingleton:
         regardless of worker ID. This enforces the single-instance architecture.
         """
         # Expected base ports (from docker-compose.test.yml)
+        # Test environment uses consolidated Redis (both keys point to same port)
         expected_ports = {
             "postgres": 9432,
             "redis_checkpoints": 9379,
-            "redis_sessions": 9380,
+            "redis_sessions": 9379,  # Same as checkpoints (consolidated)
             "qdrant": 9333,
             "qdrant_grpc": 9334,
             "openfga_http": 9080,
@@ -86,7 +87,15 @@ class TestInfrastructureSingleton:
         )
         assert test_infrastructure_ports["redis_checkpoints"] == 9379, (
             f"All workers should use base port 9379, not offset ports\n"
-            f"Got: {test_infrastructure_ports['redis_checkpoints']}"
+            f"Got: {test_infrastructure_ports['redis_checkpoints']}\n"
+            f"\n"
+            f"Test uses consolidated Redis (9379) for both checkpoints and sessions."
+        )
+        assert test_infrastructure_ports["redis_sessions"] == 9379, (
+            f"All workers should use base port 9379 (same as checkpoints)\n"
+            f"Got: {test_infrastructure_ports['redis_sessions']}\n"
+            f"\n"
+            f"Test consolidates Redis for simplicity (production uses separate instances)."
         )
 
     def test_docker_compose_ports_match_fixture_ports(self, test_infrastructure_ports):
@@ -110,10 +119,17 @@ class TestInfrastructureSingleton:
             f'"{ports["postgres"]}:5432"' in content or f"'{ports['postgres']}:5432'" in content
         ), f"docker-compose.test.yml should map host port {ports['postgres']} to postgres container port 5432"
 
-        # Validate redis checkpoint port
+        # Validate consolidated redis port (used for both checkpoints and sessions)
         assert (
             f'"{ports["redis_checkpoints"]}:6379"' in content or f"'{ports['redis_checkpoints']}:6379'" in content
         ), f"docker-compose.test.yml should map host port {ports['redis_checkpoints']} to redis container port 6379"
+
+        # Verify sessions use same port as checkpoints (consolidated)
+        assert ports["redis_sessions"] == ports["redis_checkpoints"], (
+            f"Test environment should use consolidated Redis\n"
+            f"redis_sessions ({ports['redis_sessions']}) should equal "
+            f"redis_checkpoints ({ports['redis_checkpoints']})"
+        )
 
         # Validate OpenFGA HTTP port
         assert (

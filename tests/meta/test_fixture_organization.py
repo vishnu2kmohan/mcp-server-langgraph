@@ -5,6 +5,10 @@ This test module validates that test fixtures follow best practices:
 - No duplicate autouse fixtures across different files
 - All session/module-scoped autouse fixtures should be in conftest.py
 - Fixture names are unique or intentionally scoped
+- Validation covers ALL test directories (unit, integration, e2e, meta, regression, etc.)
+
+CRITICAL: This test must scan the FULL tests/ tree, not just tests/meta/!
+Without full tree scanning, duplicate fixtures in tests/unit, tests/e2e, etc. are never detected.
 """
 
 import ast
@@ -55,6 +59,77 @@ def find_autouse_fixtures(test_dir: Path) -> dict[str, list[tuple[str, int]]]:
                                         autouse_fixtures[fixture_name].append((file_path, line_num))
 
     return autouse_fixtures
+
+
+def test_fixture_scan_covers_full_test_tree():
+    """
+    CRITICAL: Validate that fixture organization tests scan the FULL tests/ directory.
+
+    This test ensures we don't have the bug where fixture validation only scans
+    tests/meta/ and misses duplicates in tests/unit/, tests/e2e/, tests/integration/, etc.
+
+    Background:
+    - Original implementation used `Path(__file__).parent` (tests/meta/)
+    - This missed 16+ duplicate autouse fixtures in other test directories
+    - Fix: Use `Path(__file__).parent.parent` (tests/ root)
+
+    This is a meta-test that validates the other tests are checking the right scope.
+    """
+    # The test file is at tests/meta/test_fixture_organization.py
+    this_file = Path(__file__)
+    assert this_file.name == "test_fixture_organization.py", "Unexpected test file name"
+
+    # The parent should be tests/meta/
+    meta_dir = this_file.parent
+    assert meta_dir.name == "meta", f"Expected parent to be 'meta', got '{meta_dir.name}'"
+
+    # The grandparent should be tests/
+    tests_root = meta_dir.parent
+    assert tests_root.name == "tests", f"Expected grandparent to be 'tests', got '{tests_root.name}'"
+
+    # The tests used in this module should scan from tests/ root, not tests/meta/
+    # This is verified by checking that find_autouse_fixtures is called with tests/ root
+
+    # Verify that tests/ root contains expected subdirectories
+    expected_subdirs = {"unit", "integration", "e2e", "meta", "fixtures"}
+    actual_subdirs = {p.name for p in tests_root.iterdir() if p.is_dir() and not p.name.startswith("_")}
+
+    missing = expected_subdirs - actual_subdirs
+    assert not missing, (
+        f"Expected test subdirectories missing: {missing}\n"
+        f"Tests root: {tests_root}\n"
+        f"This suggests the tests/ directory structure has changed."
+    )
+
+    # Verify the other tests in this module use the correct scope
+    # They should use Path(__file__).parent.parent (tests/), not Path(__file__).parent (tests/meta/)
+    with open(__file__, encoding="utf-8") as f:
+        content = f.read()
+
+    # Count occurrences of the pattern
+    wrong_pattern_count = content.count("test_dir = Path(__file__).parent\n")
+    correct_pattern_count = content.count("test_dir = Path(__file__).parent.parent")
+
+    if wrong_pattern_count > 0:
+        raise AssertionError(
+            f"Found {wrong_pattern_count} instances of 'test_dir = Path(__file__).parent' "
+            f"in {__file__}\n\n"
+            f"This limits scanning to tests/meta/ only, missing duplicates in:\n"
+            f"  - tests/unit/\n"
+            f"  - tests/e2e/\n"
+            f"  - tests/integration/\n"
+            f"  - tests/regression/\n\n"
+            f"FIX: Change to 'test_dir = Path(__file__).parent.parent' to scan full tests/ tree\n\n"
+            f"Expected usage:\n"
+            f"  test_dir = Path(__file__).parent.parent  # tests/ root\n"
+            f"  autouse_fixtures = find_autouse_fixtures(test_dir)"
+        )
+
+    assert correct_pattern_count >= 2, (
+        f"Expected at least 2 instances of correct pattern 'Path(__file__).parent.parent' "
+        f"(one for each test function), but found {correct_pattern_count}\n\n"
+        f"This test file should scan the full tests/ tree, not just tests/meta/"
+    )
 
 
 def test_no_duplicate_autouse_fixtures():

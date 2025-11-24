@@ -26,8 +26,7 @@
 #
 # PORTS (offset by +1000 or +3000 to avoid conflicts with dev environment):
 #   9432  - PostgreSQL (test, offset +4000 from standard 5432)
-#   9379  - Redis checkpoints (test, offset +3000 from standard 6379)
-
+#   9379  - Redis (test, offset +3000 from standard 6379, consolidated for both checkpoints and sessions)
 #   9333  - Qdrant (test, offset +3000 from standard 6333)
 #   9080  - OpenFGA HTTP API (test, offset +1000 from standard 8080)
 #   9081  - OpenFGA gRPC (test, offset +1000 from standard 8081)
@@ -214,8 +213,6 @@ services:
       mcp-test-network:
         aliases:
           - redis
-
-
 
   # ==============================================================================
   # VECTOR DATABASE (for Anthropic Best Practices: Just-in-Time Context)

@@ -590,8 +590,8 @@ def test_infrastructure_ports():
     Port Mappings (from docker-compose.test.yml):
     ==============================================
     - postgres: 9432 -> 5432 (container port)
-    - redis_checkpoints: 9379 -> 6379
-    - redis_sessions: 9380 -> 6379
+    - redis_checkpoints: 9379 -> 6379 (consolidated Redis instance)
+    - redis_sessions: 9379 -> 6379 (consolidated Redis instance, same as checkpoints)
     - qdrant: 9333 -> 6333
     - qdrant_grpc: 9334 -> 6334
     - openfga_http: 9080 -> 8080
@@ -599,18 +599,39 @@ def test_infrastructure_ports():
     - keycloak: 9082 -> 8080
     - keycloak_management: 9900 -> 9000
 
+    Architecture Difference - Test vs Production:
+    =============================================
+    **Production (docker-compose.yml + Kubernetes):**
+    - Separate redis (6379) and redis-sessions (6380) services
+    - Better resource isolation and independent scaling
+
+    **Test (docker-compose.test.yml):**
+    - Single redis-test service on port 9379 (consolidated)
+    - Both redis_checkpoints and redis_sessions point to same port
+    - Logical isolation via DB indices:
+      * DB 0: Sessions
+      * DB 1: Checkpoints/conversation state
+      * DB 2+: Worker-specific DBs
+
+    **Why consolidate for tests?**
+    - Faster startup (one Redis vs two)
+    - Simpler infrastructure management
+    - Lower memory footprint for CI runners
+    - DB index isolation sufficient for test isolation
+
     Returns:
         Dict[str, int]: Fixed port mappings for all infrastructure services
 
     Related:
-        - docker-compose.test.yml (infrastructure definition with fixed ports)
+        - docker-compose.test.yml (test infrastructure with consolidated Redis)
+        - docker/docker-compose.yml (production topology with separate Redis instances)
         - tests/meta/test_infrastructure_singleton.py (validates this architecture)
         - tests/utils/worker_utils.py (provides worker-specific identifiers)
     """
     return {
         "postgres": 9432,
         "redis_checkpoints": 9379,
-        "redis_sessions": 9380,
+        "redis_sessions": 9379,  # Same port as checkpoints (consolidated in test)
         "qdrant": 9333,
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
