@@ -18,6 +18,7 @@ Related Issues:
 - GitHub Issue: Matrix parallelization not working
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -26,6 +27,7 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="integration_script_args")
 class TestIntegrationScriptArgPropagation:
     """Validates integration test script respects pytest arguments."""
 
