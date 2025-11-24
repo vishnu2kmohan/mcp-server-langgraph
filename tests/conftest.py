@@ -569,6 +569,57 @@ def frozen_time():
 # ==============================================================================
 
 
+@pytest.fixture(scope="session")
+def test_infrastructure_ports():
+    """
+    Return fixed infrastructure service ports for ALL pytest-xdist workers.
+
+    Single Shared Infrastructure Architecture:
+    =========================================
+    - ONE docker-compose instance runs on FIXED base ports (9432, 9379, etc.)
+    - ALL xdist workers (gw0, gw1, gw2, ...) connect to the SAME ports
+    - Isolation is achieved via logical separation, NOT port offsets:
+      * PostgreSQL: Separate schemas per worker (test_worker_gw0, test_worker_gw1)
+      * Redis: Separate DB indices per worker (DB 1, 2, 3, ...)
+      * OpenFGA: Separate stores per worker (test_store_gw0, test_store_gw1)
+      * Qdrant: Separate collections per worker
+      * Keycloak: Separate realms per worker
+
+    This is faster and simpler than per-worker infrastructure with dynamic port allocation.
+
+    Port Mappings (from docker-compose.test.yml):
+    ==============================================
+    - postgres: 9432 -> 5432 (container port)
+    - redis_checkpoints: 9379 -> 6379
+    - redis_sessions: 9380 -> 6379
+    - qdrant: 9333 -> 6333
+    - qdrant_grpc: 9334 -> 6334
+    - openfga_http: 9080 -> 8080
+    - openfga_grpc: 9081 -> 8081
+    - keycloak: 9082 -> 8080
+    - keycloak_management: 9900 -> 9000
+
+    Returns:
+        Dict[str, int]: Fixed port mappings for all infrastructure services
+
+    Related:
+        - docker-compose.test.yml (infrastructure definition with fixed ports)
+        - tests/meta/test_infrastructure_singleton.py (validates this architecture)
+        - tests/utils/worker_utils.py (provides worker-specific identifiers)
+    """
+    return {
+        "postgres": 9432,
+        "redis_checkpoints": 9379,
+        "redis_sessions": 9380,
+        "qdrant": 9333,
+        "qdrant_grpc": 9334,
+        "openfga_http": 9080,
+        "openfga_grpc": 9081,
+        "keycloak": 9082,
+        "keycloak_management": 9900,
+    }
+
+
 @pytest.fixture
 def test_app_settings(test_infrastructure_ports):
     """
