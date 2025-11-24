@@ -31,6 +31,10 @@ pytestmark = pytest.mark.meta
 class TestIntegrationScriptArgPropagation:
     """Validates integration test script respects pytest arguments."""
 
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
     @property
     def script_path(self) -> Path:
         """Path to the integration test script."""
@@ -177,8 +181,13 @@ class TestIntegrationScriptArgPropagation:
                 )
 
 
+@pytest.mark.xdist_group(name="integration_script_coverage")
 class TestIntegrationScriptCoverageWorkflow:
     """Validates coverage collection works with matrix parallelization."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_coverage_files_expected_after_matrix_run(self):
         """
@@ -227,8 +236,13 @@ class TestIntegrationScriptCoverageWorkflow:
         assert "unset PYTEST_SPLIT" not in content, "Script should not unset PYTEST_SPLIT environment variables"
 
 
+@pytest.mark.xdist_group(name="integration_script_documentation")
 class TestIntegrationScriptDocumentation:
     """Validates script has proper documentation and usage examples."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_script_has_usage_examples(self):
         """Verify the script documents how to use pytest arguments."""

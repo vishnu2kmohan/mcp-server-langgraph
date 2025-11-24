@@ -15,6 +15,7 @@ Related Issues:
 - Cross-platform CI failures on Windows runners
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -24,8 +25,13 @@ import yaml
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="precommit_cross_platform")
 class TestPreCommitCrossPlatformCompatibility:
     """Validates pre-commit hooks work across all platforms."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def precommit_config_path(self) -> Path:
@@ -312,8 +318,13 @@ class TestPreCommitCrossPlatformCompatibility:
         )
 
 
+@pytest.mark.xdist_group(name="precommit_environment_isolation")
 class TestPreCommitEnvironmentIsolation:
     """Validates hooks use proper environment isolation."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def precommit_config_path(self) -> Path:
