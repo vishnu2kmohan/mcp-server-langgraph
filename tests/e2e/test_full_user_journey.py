@@ -80,7 +80,7 @@ async def test_user_credentials():
 
 
 @pytest_asyncio.fixture
-async def authenticated_session(test_infrastructure_check, test_user_credentials):
+async def authenticated_session(test_infrastructure, test_user_credentials):
     """
     Create authenticated session with JWT token.
 
@@ -131,7 +131,7 @@ class TestStandardUserJourney:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    async def test_01_login(self, test_user_credentials, test_infrastructure_check):
+    async def test_01_login(self, test_user_credentials, test_infrastructure):
         """Step 1: User logs in and receives JWT token"""
         from tests.e2e.real_clients import real_keycloak_auth
 
@@ -1013,7 +1013,7 @@ class TestErrorRecoveryJourney:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    async def test_01_expired_token_refresh(self, test_user_credentials, test_infrastructure_check):
+    async def test_01_expired_token_refresh(self, test_user_credentials, test_infrastructure):
         """
         Test automatic token refresh on expiration.
 
