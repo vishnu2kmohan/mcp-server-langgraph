@@ -96,6 +96,9 @@ jobs:
           severity: 'CRITICAL,HIGH'
           format: 'sarif'
           output: 'trivy-k8s-results.sarif'
+          # Reference .trivyignore for documented exceptions (e.g., Keycloak read-only filesystem)
+          # See: deployments/overlays/production-gke/.trivyignore for Keycloak AVD-KSV-0014 exception
+          trivyignores: 'deployments/overlays/production-gke/.trivyignore'
 
       - name: Check if SARIF was created
         run: |

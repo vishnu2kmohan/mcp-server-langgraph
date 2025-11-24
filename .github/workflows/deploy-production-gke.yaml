@@ -133,6 +133,8 @@ jobs:
           scan-ref: 'deployments/overlays/production-gke'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'  # Fail on critical/high vulnerabilities
+          # Reference .trivyignore for documented exceptions (e.g., Keycloak AVD-KSV-0014)
+          trivyignores: 'deployments/overlays/production-gke/.trivyignore'
 
       - name: Set validation status
         id: validate
