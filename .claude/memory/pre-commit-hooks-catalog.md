@@ -589,7 +589,7 @@ if __name__ == "__main__":
 - Pre-commit Configuration: `.pre-commit-config.yaml`
 - Hook Scripts: `.pre-commit-hooks/` directory
 - Pre-push Test Script: `scripts/run_pre_push_tests.py`
-- Hook Performance Metrics: `scripts/measure_hook_performance.py`
+- Hook Performance Metrics: `scripts/dev/measure_hook_performance.py`
 - CI Workflow: `.github/workflows/ci.yaml`
 - Testing Guide: `TESTING.md#git-hooks-and-validation`
 

@@ -255,10 +255,10 @@ git push  # Runs full integration suite in ~8-12 min
 
 ```bash
 # Measure pre-commit performance
-python scripts/measure_hook_performance.py --stage commit
+python scripts/dev/measure_hook_performance.py --stage commit
 
 # Measure pre-push performance
-python scripts/measure_hook_performance.py --stage push
+python scripts/dev/measure_hook_performance.py --stage push
 ```
 
 #### Bypass (EMERGENCY ONLY)

@@ -288,7 +288,7 @@ make validate-full
 **Performance Monitoring**:
 ```bash
 # Measure hook performance
-python scripts/measure_hook_performance.py --stage all
+python scripts/dev/measure_hook_performance.py --stage all
 ```
 
 **See Also**:

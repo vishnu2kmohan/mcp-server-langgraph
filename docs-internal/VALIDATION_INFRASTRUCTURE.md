@@ -136,7 +136,7 @@ python3 scripts/check_internal_links.py --file docs/guide.mdx
 
 ---
 
-#### `scripts/check_version_consistency.py`
+#### `scripts/validators/check_version_consistency.py`
 
 **Purpose**: Ensure version references match current version
 
@@ -149,10 +149,10 @@ python3 scripts/check_internal_links.py --file docs/guide.mdx
 **Usage**:
 ```bash
 # Check consistency
-python3 scripts/check_version_consistency.py
+python3 scripts/validators/check_version_consistency.py
 
 # With auto-fix (planned)
-python3 scripts/check_version_consistency.py --fix
+python3 scripts/validators/check_version_consistency.py --fix
 ```
 
 **Current Version Detection**: Reads from `pyproject.toml`
@@ -372,7 +372,7 @@ gh workflow run docs-validation.yml
    make docs-audit
 
    # Check version consistency
-   python3 scripts/check_version_consistency.py
+   python3 scripts/validators/check_version_consistency.py
 
    # Validate links
    python3 scripts/check_internal_links.py --all
@@ -382,7 +382,7 @@ gh workflow run docs-validation.yml
    ```bash
    # Update pyproject.toml version
    # Then check for version references to update
-   python3 scripts/check_version_consistency.py
+   python3 scripts/validators/check_version_consistency.py
    ```
 
 3. **Before Release**:

@@ -175,7 +175,7 @@ jobs:
         run: |
           echo "::group::Version Consistency Check"
           pip install toml
-          python scripts/check_version_consistency.py
+          python scripts/validators/check_version_consistency.py
           echo "::endgroup::"
         continue-on-error: true
 

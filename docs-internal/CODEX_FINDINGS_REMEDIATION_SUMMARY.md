@@ -211,7 +211,7 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 - Keep `require_serial: true` for test suites
 
 **Phase 4:** Performance monitoring (30 min)
-- Create `scripts/measure_hook_performance.py`
+- Create `scripts/dev/measure_hook_performance.py`
 - Add CI job for performance regression detection
 
 ---
@@ -228,7 +228,7 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 
 ### Deliverable
 
-**File:** `scripts/validate_pre_push_hook.py` (updated, +100 lines)
+**File:** `scripts/validators/validate_pre_push_hook.py` (updated, +100 lines)
 
 **Changes:**
 1. Added `is_pre_commit_wrapper()` detection function
@@ -256,7 +256,7 @@ else:
 
 **Test Results:**
 ```bash
-$ uv run python scripts/validate_pre_push_hook.py
+$ uv run python scripts/validators/validate_pre_push_hook.py
 ℹ️  Detected pre-commit framework wrapper
    Validating .pre-commit-config.yaml for required hooks...
 ✅ Found 43 pre-push hooks in .pre-commit-config.yaml
@@ -391,7 +391,7 @@ def test_reports_are_fresh():
 6. `docs-internal/HOOK_PERFORMANCE_OPTIMIZATION_PLAN.md` (550 lines) - Detailed plan
 
 #### Phase 3: Validator Update
-7. `scripts/validate_pre_push_hook.py` (updated, +100 lines) - Pre-commit support
+7. `scripts/validators/validate_pre_push_hook.py` (updated, +100 lines) - Pre-commit support
 
 #### Meta Documentation
 8. `docs-internal/CODEX_FINDINGS_REMEDIATION_SUMMARY.md` (this file, 650+ lines)
@@ -406,7 +406,7 @@ $ uv run pytest tests/helpers/test_async_mock_helpers.py -xvs
 
 **Validator tested:**
 ```bash
-$ uv run python scripts/validate_pre_push_hook.py
+$ uv run python scripts/validators/validate_pre_push_hook.py
 ✅ Found 43 pre-push hooks in .pre-commit-config.yaml
 ℹ️  Info: Some expected hook categories not found (may be organized differently)
 ```
