@@ -137,20 +137,21 @@ class TestMakefileMyPyBlocking:
         makefile_path = Path("Makefile")
         makefile_content = makefile_path.read_text()
 
-        # Search for MyPy execution in validate-pre-push
+        # Search for MyPy execution in validate-pre-push sub-targets
+        # (validate-pre-push-full and validate-pre-push-quick)
         mypy_lines = []
-        in_validate_pre_push = False
+        in_relevant_target = False
         for line in makefile_content.split("\n"):
-            if "validate-pre-push:" in line:
-                in_validate_pre_push = True
-            elif in_validate_pre_push and line and not line.startswith("\t") and not line.startswith(" "):
+            if "validate-pre-push-full:" in line or "validate-pre-push-quick:" in line:
+                in_relevant_target = True
+            elif in_relevant_target and line and not line.startswith("\t") and not line.startswith(" "):
                 # End of target
-                break
-            elif in_validate_pre_push and "mypy" in line.lower():
+                in_relevant_target = False
+            elif in_relevant_target and "mypy" in line.lower():
                 mypy_lines.append(line)
 
         if not mypy_lines:
-            pytest.fail("No MyPy execution found in validate-pre-push target")
+            pytest.fail("No MyPy execution found in validate-pre-push sub-targets")
 
         # Check each MyPy line for blocking behavior
         for line in mypy_lines:

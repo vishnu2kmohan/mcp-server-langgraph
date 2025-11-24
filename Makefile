@@ -558,12 +558,47 @@ test-workflow-%:
 	@echo "Testing workflow: $*.yaml"
 	@act push -W .github/workflows/$*.yaml
 
-validate-workflows:
-	@echo "Validating all workflow YAML syntax..."
-	@for file in .github/workflows/*.yaml; do \
-		python -c "import yaml; yaml.safe_load(open('$$file'))" 2>/dev/null && echo "  ✓ $$(basename $$file)" || echo "  ✗ $$(basename $$file) INVALID"; \
-	done
-	@echo "✓ Workflow syntax validation complete"
+validate-workflows:  ## Comprehensive workflow validation (matches CI exactly)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Comprehensive Workflow Validation (CI-Equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ STEP 1: Install actionlint (if needed)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if ! command -v actionlint >/dev/null 2>&1; then \
+		echo "actionlint not found - installing..."; \
+		wget -q https://github.com/rhysd/actionlint/releases/latest/download/actionlint_1.7.5_linux_amd64.tar.gz -O /tmp/actionlint.tar.gz && \
+		tar -xzf /tmp/actionlint.tar.gz -C /tmp && \
+		sudo mv /tmp/actionlint /usr/local/bin/ && \
+		sudo chmod +x /usr/local/bin/actionlint && \
+		rm -f /tmp/actionlint.tar.gz && \
+		echo "✓ actionlint installed"; \
+	else \
+		echo "✓ actionlint already installed ($$(actionlint --version))"; \
+	fi
+	@echo ""
+	@echo "▶ STEP 2: Run actionlint on all workflow files"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@actionlint -color -shellcheck= .github/workflows/*.{yml,yaml} && echo "✓ actionlint validation passed" || (echo "✗ actionlint validation failed" && exit 1)
+	@echo ""
+	@echo "▶ STEP 3: Run workflow validation test suite"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Running: test_workflow_syntax.py, test_workflow_security.py,"
+	@echo "         test_workflow_dependencies.py, test_docker_paths.py"
+	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest \
+		tests/meta/ci/test_workflow_syntax.py \
+		tests/meta/ci/test_workflow_security.py \
+		tests/meta/ci/test_workflow_dependencies.py \
+		tests/meta/infrastructure/test_docker_paths.py \
+		-v --tb=short && echo "✓ Workflow test suite passed" || (echo "✗ Workflow tests failed" && exit 1)
+	@echo ""
+	@echo "▶ STEP 4: Validate pytest configuration compatibility"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@$(UV_RUN) python scripts/validation/validate_pytest_config.py && echo "✓ Pytest config validation passed" || (echo "✗ Pytest config validation failed" && exit 1)
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ All workflow validations passed (CI-equivalent)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Tiered Validation System (2025-11-16 - CI/CD Optimization)
@@ -779,8 +814,21 @@ validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integr
 	@echo "✓ Your push should pass all CI checks"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-## validate-pre-push: Alias to validate-pre-push-quick (common case, no Docker needed)
-validate-pre-push: validate-pre-push-quick  ## Pre-push validation (default: quick, no Docker)
+## validate-pre-push: Smart routing based on CI_PARITY environment variable
+## Includes: Lockfile check, dependency validation, MyPy type checking, test suite, pre-commit hooks
+validate-pre-push:  ## Pre-push validation (auto-detects CI_PARITY for full vs quick)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if [ "$$CI_PARITY" = "1" ]; then \
+		echo "🔍 CI_PARITY=1 detected - Running FULL CI-equivalent validation"; \
+		echo "   This includes integration tests and matches CI exactly"; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		$(MAKE) validate-pre-push-full; \
+	else \
+		echo "🚀 Running QUICK validation (skip integration, use testmon)"; \
+		echo "   💡 Tip: Use 'CI_PARITY=1 make validate-pre-push' for full CI validation"; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		$(MAKE) validate-pre-push-quick; \
+	fi
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."
@@ -830,47 +878,33 @@ security-scan-full:
 	@echo ""
 	@cat security-reports/security-scan-report.md
 
-# Enhanced lint targets for pre-commit/pre-push workflow
-lint-check:
-	@echo "🔍 Running comprehensive lint checks in parallel (non-destructive)..."
-	@echo ""
-	@echo "Running 5 linters in parallel..."
-	@( \
-		echo "1/5 Running flake8..." && $(UV_RUN) flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | sed 's/^/[flake8] /' || true \
-	) & pid1=$$!; \
-	( \
-		echo "2/5 Checking black formatting..." && $(UV_RUN) black --check src/ --line-length=127 2>&1 | sed 's/^/[black] /' || true \
-	) & pid2=$$!; \
-	( \
-		echo "3/5 Checking isort import order..." && $(UV_RUN) isort --check src/ --profile=black --line-length=127 2>&1 | sed 's/^/[isort] /' || true \
-	) & pid3=$$!; \
-	( \
-		echo "4/5 Running mypy type checking..." && $(UV_RUN) mypy src/ --ignore-missing-imports --show-error-codes 2>&1 | sed 's/^/[mypy] /' || true \
-	) & pid4=$$!; \
-	( \
-		echo "5/5 Running bandit security scan..." && $(UV_RUN) bandit -r src/ -ll 2>&1 | sed 's/^/[bandit] /' || true \
-	) & pid5=$$!; \
-	wait $$pid1 $$pid2 $$pid3 $$pid4 $$pid5
-	@echo ""
-	@echo "✓ Lint check complete (see above for any issues)"
-	@echo "  Speedup: ~80% faster with parallel execution"
+# Modern Ruff-based lint targets (replaces flake8, black, isort)
+lint-check:  ## Run Ruff linter (replaces flake8, isort checks)
+	@echo "🔍 Running Ruff linter..."
+	@$(UV_RUN) ruff check src/ tests/ --output-format=concise
+	@echo "✓ Lint check complete (Ruff)"
 
-lint-fix:
-	@echo "🔧 Auto-fixing formatting issues in parallel..."
-	@echo ""
-	@echo "Running black and isort in parallel..."
-	@( \
-		echo "Formatting with black..." && $(UV_RUN) black src/ --line-length=127 2>&1 | sed 's/^/[black] /' \
-	) & pid1=$$!; \
-	( \
-		echo "Sorting imports with isort..." && $(UV_RUN) isort src/ --profile=black --line-length=127 2>&1 | sed 's/^/[isort] /' \
-	) & pid2=$$!; \
-	wait $$pid1 $$pid2
-	@echo ""
-	@echo "✓ Auto-fix complete"
-	@echo "  Speedup: ~50% faster with parallel execution"
-	@echo ""
-	@echo "Run 'make lint-check' to verify remaining issues"
+lint-fix:  ## Auto-fix linting issues with Ruff
+	@echo "🔧 Auto-fixing with Ruff..."
+	@$(UV_RUN) ruff check src/ tests/ --fix
+	@$(UV_RUN) ruff format src/ tests/
+	@echo "✓ Auto-fix complete (Ruff)"
+
+lint-format:  ## Format code with Ruff (replaces black)
+	@echo "🎨 Formatting with Ruff..."
+	@$(UV_RUN) ruff format src/ tests/
+	@echo "✓ Format complete (Ruff)"
+
+# Keep mypy and bandit separate (not replaced by Ruff)
+lint-type-check:  ## Run mypy type checking
+	@echo "🔍 Running mypy type checking..."
+	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary
+	@echo "✓ Type check complete (mypy)"
+
+lint-security:  ## Run bandit security scan
+	@echo "🔒 Running bandit security scan..."
+	@$(UV_RUN) bandit -r src/ -ll
+	@echo "✓ Security scan complete (bandit)"
 
 lint-pre-commit:
 	@echo "🎯 Simulating pre-commit hook (runs on staged files)..."
@@ -879,13 +913,13 @@ lint-pre-commit:
 
 lint-pre-push:
 	@echo "🚀 Simulating pre-push hook (runs on changed files)..."
-	@bash .git/hooks/pre-push
+	@bash $$(git rev-parse --git-common-dir)/hooks/pre-push
 	@echo "✓ Pre-push simulation complete"
 
 lint-install:
 	@echo "📦 Installing/reinstalling lint hooks..."
 	@$(UV_RUN) pre-commit install
-	@chmod +x .git/hooks/pre-push
+	@chmod +x $$(git rev-parse --git-common-dir)/hooks/pre-push
 	@echo "✓ Hooks installed:"
 	@echo "  • pre-commit (auto-fix Ruff formatter, run Ruff linter/MyPy/bandit)"
 	@echo "  • pre-push (comprehensive validation before push)"
