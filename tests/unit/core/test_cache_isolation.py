@@ -15,22 +15,12 @@ Expected to FAIL until:
 from unittest.mock import MagicMock, patch
 
 import pytest
-import gc
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 
-
-@pytest.mark.xdist_group(name="cache_isolation")
-class TestCacheIsolation:
-    """Test class with xdist memory safety."""
-
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
-
-    def test_api_key_cache_uses_separate_database(monkeypatch, self):
+def test_api_key_cache_uses_separate_database(monkeypatch):
     """
     🟢 GREEN: Test that API key cache uses different Redis DB than L2 cache.
 
@@ -65,8 +55,8 @@ class TestCacheIsolation:
     )
 
 
-    @pytest.mark.xdist_group(name="cache_isolation")
-    def test_cache_clear_without_pattern_does_not_use_flushdb(self):
+@pytest.mark.xdist_group(name="cache_isolation")
+def test_cache_clear_without_pattern_does_not_use_flushdb():
     """
     🟢 GREEN: Test that cache.clear() without pattern uses pattern-based deletion, not flushdb().
 
@@ -99,8 +89,8 @@ class TestCacheIsolation:
             mock_redis.delete.assert_called()  # Should delete them
 
 
-    @pytest.mark.xdist_group(name="cache_isolation")
-    def test_cache_service_clear_with_pattern_works(self):
+@pytest.mark.xdist_group(name="cache_isolation")
+def test_cache_service_clear_with_pattern_works():
     """
     Verify that cache.clear(pattern="foo:*") works correctly.
 

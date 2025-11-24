@@ -22,16 +22,7 @@ class TestNetworkModeLogic:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-
-@pytest.mark.xdist_group(name="network_mode_logic")
-class TestNetworkModeLogic:
-    """Test class with xdist memory safety."""
-
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
-
-        def test_allowlist_mode_fails_closed_with_domains(self):
+    def test_allowlist_mode_fails_closed_with_domains(self):
         """
         🟢 GREEN: Test that allowlist mode returns "none" when domains are specified.
 
@@ -70,7 +61,7 @@ class TestNetworkModeLogic:
                 # Should fail closed to "none", NOT "bridge"
                 assert network_mode == "none", f"Allowlist mode with domains must fail closed to 'none'. Got: {network_mode}"
 
-        def test_allowlist_mode_with_no_domains_returns_none(self):
+    def test_allowlist_mode_with_no_domains_returns_none(self):
         """
         Test that allowlist mode with no domains returns "none".
         """
@@ -101,7 +92,7 @@ class TestNetworkModeLogic:
 
                 assert network_mode == "none"
 
-        def test_network_mode_none_returns_none(self):
+    def test_network_mode_none_returns_none(self):
         """Test that network_mode="none" returns "none"."""
         with patch.dict(
             "sys.modules",
@@ -127,7 +118,7 @@ class TestNetworkModeLogic:
 
                 assert network_mode == "none"
 
-        def test_network_mode_unrestricted_returns_bridge(self):
+    def test_network_mode_unrestricted_returns_bridge(self):
         """Test that network_mode="unrestricted" returns "bridge"."""
         with patch.dict(
             "sys.modules",
