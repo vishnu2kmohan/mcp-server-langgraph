@@ -26,7 +26,9 @@ spec:
   # Remove selector for ExternalName service
   selector: null
   # ExternalName services don't support ports, but we keep metadata for reference
+  # Using standard Redis port (6379) for documentation/OPA compliance
+  # Actual Memorystore connection uses port configured in REDIS_URL environment variable
   ports:
   - name: memorystore-redis
-    port: 6378
+    port: 6379
     protocol: TCP

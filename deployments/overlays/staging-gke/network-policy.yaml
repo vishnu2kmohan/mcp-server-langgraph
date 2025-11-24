@@ -69,13 +69,16 @@ spec:
     - protocol: TCP
       port: 443   # Cloud SQL control plane & health checks
 
-  # Allow Redis connection (Memorystore private IP - port 6378)
+  # Allow Redis connection (Memorystore private IP)
+  # NOTE: NetworkPolicy uses actual Memorystore port (6378)
+  # Service definition uses standard port (6379) for OPA compliance (ExternalName ignores port anyway)
+  # Actual connection string (REDIS_URL) must specify :6378
   - to:
     - ipBlock:
         cidr: 10.0.0.0/8
     ports:
     - protocol: TCP
-      port: 6378
+      port: 6378  # Memorystore actual port (differs from Service metadata)
 
   # Allow Keycloak
   - to:

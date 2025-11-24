@@ -37,7 +37,7 @@ data:
   # NOTE: redis_url and checkpoint_redis_url are injected via env vars from secrets
   # because they require passwords. See deployment-patch.yaml env section.
   redis_host: "redis-staging.staging.internal"
-  redis_port: "6379"
+  redis_port: "6378"  # Memorystore actual port (non-standard for staging)
   redis_ssl: "false"  # Not required for private VPC connection
 
   # Observability
