@@ -13,11 +13,14 @@ spec:
         - name: management
           containerPort: 9000
           protocol: TCP
+        # NOTE: readOnlyRootFilesystem: false required for Quarkus JIT compilation
+        # See deployments/base/keycloak-deployment.yaml for full security justification
+        # and deployments/base/.trivyignore for Trivy exception (AVD-KSV-0014)
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
           runAsUser: 10000
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: false  # Required for Quarkus JIT (issue #10150)
           capabilities:
             drop:
             - ALL

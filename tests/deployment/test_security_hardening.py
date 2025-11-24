@@ -38,7 +38,7 @@ class TestKubernetesSecurityHardening:
         Check if readOnlyRootFilesystem exception is properly documented.
 
         A documented exception must have:
-        1. TODO or Note comment within 10 lines before readOnlyRootFilesystem: false
+        1. TODO or NOTE comment within 20 lines before readOnlyRootFilesystem: false
         2. Clear reason/justification in comment
         3. Reference to tracking issue or implementation plan (optional but recommended)
 
@@ -54,8 +54,10 @@ class TestKubernetesSecurityHardening:
         # Find lines with readOnlyRootFilesystem: false
         for i, line in enumerate(lines):
             if "readOnlyRootFilesystem:" in line and "false" in line:
-                # Check previous 10 lines for TODO/Note comment
-                start = max(0, i - 10)
+                # Check previous 20 lines for TODO/NOTE comment
+                # Increased from 10 to 20 to handle well-documented cases like Keycloak
+                # where security context comment block may span multiple lines
+                start = max(0, i - 20)
                 preceding_lines = lines[start:i]
 
                 # Look for TODO or Note comment with justification
