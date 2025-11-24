@@ -142,23 +142,33 @@ class TestMarkerConsistency:
 
     def test_makefile_includes_smoke_tests(self):
         """
-        Test that Makefile's validate-pre-push runs smoke tests.
+        Test that Makefile's validate-pre-push sub-targets run smoke tests.
 
         Smoke tests are marked with 'unit' marker and should be included
         in pre-push validation.
+
+        validate-pre-push is a router that delegates to:
+        - validate-pre-push-full (with integration tests)
+        - validate-pre-push-quick (without integration tests)
         """
         makefile = Path("Makefile")
         assert makefile.exists(), "Makefile not found"
 
         content = makefile.read_text()
 
-        # Find validate-pre-push target
-        validate_section = re.search(r"validate-pre-push:.*?^[a-zA-Z]", content, re.MULTILINE | re.DOTALL)
+        # Find validate-pre-push sub-targets
+        full_match = re.search(r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        if not validate_section:
-            pytest.fail("validate-pre-push target not found in Makefile")
+        if not (full_match or quick_match):
+            pytest.fail("validate-pre-push sub-targets not found in Makefile")
 
-        section_text = validate_section.group(0)
+        # Combine both sub-targets
+        section_text = ""
+        if full_match:
+            section_text += full_match.group(0)
+        if quick_match:
+            section_text += quick_match.group(0)
 
         # Check that smoke tests are mentioned or that 'unit' marker is used
         # Smoke tests should be included in the unit marker
@@ -167,7 +177,7 @@ class TestMarkerConsistency:
 
         if not (has_smoke_mention or has_unit_marker):
             pytest.fail(
-                "Makefile validate-pre-push does not include smoke tests!\n"
+                "Makefile validate-pre-push sub-targets do not include smoke tests!\n"
                 "Smoke tests are critical for pre-push validation.\n"
                 "Fix: Ensure 'unit' marker includes smoke tests, or explicitly mention smoke tests"
             )
