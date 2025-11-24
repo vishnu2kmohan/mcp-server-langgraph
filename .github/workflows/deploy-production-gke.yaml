@@ -64,7 +64,7 @@ jobs:
       validation_passed: ${{ steps.validate.outputs.passed }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate image tag format
         id: validate_tag
@@ -156,7 +156,7 @@ jobs:
       image_digest: ${{ steps.push.outputs.digest }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate required environment variables
         run: |
@@ -272,7 +272,7 @@ jobs:
       url: https://console.cloud.google.com/kubernetes/workload/overview?project=${{ env.GCP_PROJECT_ID }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud
@@ -519,7 +519,7 @@ jobs:
     if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud
@@ -619,7 +619,7 @@ jobs:
     if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud

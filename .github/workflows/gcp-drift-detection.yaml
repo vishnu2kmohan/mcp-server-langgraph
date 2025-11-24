@@ -71,7 +71,7 @@ jobs:
       drift_detected: ${{ steps.plan.outputs.drift_detected }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -191,7 +191,7 @@ jobs:
       name: production-drift-remediation
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -270,7 +270,7 @@ jobs:
     if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

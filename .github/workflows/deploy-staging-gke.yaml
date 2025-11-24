@@ -54,7 +54,7 @@ jobs:
       validation_passed: ${{ steps.validate.outputs.passed }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate Kustomize configuration
         run: |
@@ -123,7 +123,7 @@ jobs:
       image_tag: ${{ steps.image.outputs.tag }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Validate required environment variables
         run: |
@@ -214,7 +214,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Authenticate to Google Cloud
       - id: auth
@@ -387,7 +387,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - id: auth
         name: Authenticate to Google Cloud

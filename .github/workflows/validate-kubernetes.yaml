@@ -34,7 +34,7 @@ jobs:
     name: Validate Helm Charts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.1
@@ -78,7 +78,7 @@ jobs:
       matrix:
         overlay: [dev, staging, production, production-gke, staging-gke]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Kustomize
         run: |
@@ -98,7 +98,7 @@ jobs:
     name: Validate YAML Syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -117,7 +117,7 @@ jobs:
     name: Security Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Fetch full git history for Gitleaks
 
@@ -161,7 +161,7 @@ jobs:
     name: Run Deployment Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -182,7 +182,7 @@ jobs:
     name: Validate Version Consistency
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Check version alignment
         run: |

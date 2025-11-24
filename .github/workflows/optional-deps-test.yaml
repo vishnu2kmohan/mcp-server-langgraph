@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -60,7 +60,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -95,7 +95,7 @@ jobs:
     timeout-minutes: 15  # Embeddings may take longer
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 15  # All extras installation may take longer
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -165,7 +165,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -215,7 +215,7 @@ jobs:
             flags: "ENABLE_PARALLEL_EXECUTION=false ENABLE_DYNAMIC_CONTEXT_LOADING=false"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
