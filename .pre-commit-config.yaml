@@ -104,7 +104,6 @@ repos:
     types: [python]
     files: ^tests/.*\.py$
     stages:
-    - pre-commit
     - pre-push
   - id: check-banned-imports
     name: Validate no banned/deprecated imports
@@ -120,7 +119,6 @@ repos:
     language: system
     types: [python]
     stages:
-    - pre-commit
     - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
