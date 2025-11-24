@@ -161,11 +161,11 @@ jobs:
       # Authenticate to Google Cloud using Workload Identity Federation (keyless)
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
-          token_format: access_token
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          token-format: access_token
 
       # Configure Docker to use gcloud credentials
       - name: Configure Docker for Artifact Registry
@@ -219,10 +219,10 @@ jobs:
       # Authenticate to Google Cloud
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       # Get GKE credentials
       - name: Get GKE Credentials
@@ -391,10 +391,10 @@ jobs:
 
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3
@@ -488,10 +488,10 @@ jobs:
     steps:
       - id: auth
         name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+        uses: ./.github/actions/setup-gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
+          workload-identity-provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service-account: ${{ secrets.GCP_STAGING_SA_EMAIL }}
 
       - name: Get GKE Credentials
         uses: google-github-actions/get-gke-credentials@v3

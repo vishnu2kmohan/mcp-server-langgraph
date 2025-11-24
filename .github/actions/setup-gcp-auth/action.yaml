@@ -1,0 +1,48 @@
+name: 'Setup GCP Authentication'
+description: 'Authenticate to Google Cloud using Workload Identity Federation'
+author: 'Vishnu Mohan <vmohan@emergence.ai>'
+
+inputs:
+  workload-identity-provider:
+    description: 'Workload Identity Provider ID (e.g., projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID)'
+    required: true
+  service-account:
+    description: 'Service Account email (e.g., SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com)'
+    required: true
+  token-format:
+    description: 'Token format to use (none, access_token, id_token). Default: none (uses Application Default Credentials)'
+    required: false
+    default: ''
+  auth-version:
+    description: 'Version of google-github-actions/auth to use (e.g., v3, v3.0.0). Default: v3'
+    required: false
+    default: 'v3'
+
+outputs:
+  project_id:
+    description: 'Project ID from authenticated service account'
+    value: ${{ steps.auth.outputs.project_id }}
+  access_token:
+    description: 'Access token (only when token-format is access_token)'
+    value: ${{ steps.auth.outputs.access_token }}
+  id_token:
+    description: 'ID token (only when token-format is id_token)'
+    value: ${{ steps.auth.outputs.id_token }}
+  credentials_file_path:
+    description: 'Path to credentials file'
+    value: ${{ steps.auth.outputs.credentials_file_path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: auth
+      name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: ${{ inputs.workload-identity-provider }}
+        service_account: ${{ inputs.service-account }}
+        token_format: ${{ inputs.token-format }}
+
+branding:
+  icon: 'cloud'
+  color: 'blue'
