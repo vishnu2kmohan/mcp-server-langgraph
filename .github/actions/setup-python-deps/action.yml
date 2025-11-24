@@ -64,6 +64,12 @@ runs:
         # Workflows should use extras: 'dev builder' instead of install-test: 'true'
       shell: bash
 
+    - name: Activate virtual environment
+      run: |
+        echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+      shell: bash
+
     - name: Validate dependency consistency
       run: |
         set -euo pipefail  # Exit on error, undefined vars, pipe failures
