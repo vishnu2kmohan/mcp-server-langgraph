@@ -27,7 +27,7 @@ help-common:
 	@echo "🚀 Getting Started (< 5 minutes):"
 	@echo "  1. make install-dev        # Install dependencies (~1 min)"
 	@echo "  2. make quick-start        # Start with defaults (~2 min)"
-	@echo "  3. make test-dev           # Verify everything works (~1 min)"
+	@echo "  3. make test-dev           # Verify everything works (~2-3 min)"
 	@echo ""
 	@echo "📝 Daily Development:"
 	@echo "  make test-dev              🚀 Run tests (fast, parallel, recommended)"
@@ -705,14 +705,9 @@ validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, sec
 # NOTE: validate-push (Tier 2) is now the recommended target for pre-push validation
 # This target is kept for CI/CD parity and backward compatibility
 ## validate-pre-push-quick: Fast pre-push validation (skip integration tests)
-validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 min)
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🔍 Running pre-push validation (QUICK - no integration tests)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "Skipping integration tests (no Docker required)"
-	@echo "Run 'make validate-pre-push-full' for comprehensive validation with Docker"
-	@echo ""
+## _validate-pre-push-phases-1-2-4: Shared validation phases (Phase 1, 2, 4)
+## Internal target - not meant to be called directly
+_validate-pre-push-phases-1-2-4:
 	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
@@ -732,6 +727,31 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "▶ MyPy Type Checking (Critical)..."
 	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
 	@echo ""
+
+## _validate-pre-push-phase-4: Shared Phase 4 (Pre-commit hooks)
+## Internal target - not meant to be called directly
+_validate-pre-push-phase-4:
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
+	@# Skip hooks already run in manual phases to avoid duplicate work
+	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
+	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
+	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
+	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
+	@echo ""
+
+validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 min)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🔍 Running pre-push validation (QUICK - no integration tests)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "Skipping integration tests (no Docker required)"
+	@echo "Run 'make validate-pre-push-full' for comprehensive validation with Docker"
+	@echo ""
+	@$(MAKE) _validate-pre-push-phases-1-2-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -744,17 +764,7 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo ""
 	@echo "⚠ Skipping integration tests (use validate-pre-push-full for comprehensive validation)"
 	@echo ""
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
-	@# Skip hooks already run in manual phases to avoid duplicate work
-	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
-	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
-	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
-	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
-	@echo ""
+	@$(MAKE) _validate-pre-push-phase-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed (QUICK)!"
 	@echo "✓ Your push should pass most CI checks"
@@ -766,25 +776,7 @@ validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integr
 	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ Lockfile Validation..."
-	@uv lock --check && echo "✓ Lockfile valid" || (echo "✗ Lockfile validation failed" && exit 1)
-	@echo ""
-	@echo "▶ Dependency Tree Validation..."
-	@uv pip check && echo "✓ Dependencies valid" || (echo "✗ Dependency conflicts detected" && exit 1)
-	@echo ""
-	@echo "▶ Workflow Validation Tests..."
-	@OTEL_SDK_DISABLED=true $(UV_RUN) pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short && echo "✓ Workflow tests passed" || (echo "✗ Workflow validation failed" && exit 1)
-	@echo ""
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 2: Type Checking (Critical - matches CI)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ MyPy Type Checking (Critical)..."
-	@$(UV_RUN) mypy src/mcp_server_langgraph --no-error-summary && echo "✓ MyPy passed" || (echo "✗ MyPy found type errors" && exit 1)
-	@echo ""
+	@$(MAKE) _validate-pre-push-phases-1-2-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -798,17 +790,7 @@ validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integr
 	@echo "▶ Running Integration Tests (Docker - requires Docker daemon)..."
 	@./scripts/test-integration.sh && echo "✓ Integration tests passed" || (echo "✗ Integration tests failed" && exit 1)
 	@echo ""
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "PHASE 4: Pre-commit Hooks (All Files - pre-push stage)"
-	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo ""
-	@echo "▶ Pre-commit Hooks (All Files - Pre-Push Stage)..."
-	@# Skip hooks already run in manual phases to avoid duplicate work
-	@# Codex Finding #2 Fix (2025-11-23): Removed validate-pytest-config, check-test-memory-safety,
-	@# check-async-mock-usage, validate-test-ids from SKIP list. These must run to maintain CI/local parity.
-	@# They are no longer in validate-fast.py (see Phase 1.1) and run as individual hooks.
-	@SKIP=uv-lock-check,uv-pip-check,mypy,run-pre-push-tests pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure && echo "✓ Pre-commit hooks passed" || (echo "✗ Pre-commit hooks failed" && exit 1)
-	@echo ""
+	@$(MAKE) _validate-pre-push-phase-4
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✓ All pre-push validations passed (FULL)!"
 	@echo "✓ Your push should pass all CI checks"
@@ -1366,10 +1348,11 @@ test-fast-unit:
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short -m "unit and not slow"
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short -m "(unit or api or property) and not llm and not slow"
 	@echo "✓ Development tests complete"
 	@echo ""
 	@echo "Features: Parallel execution, stop on first failure, skip slow tests"
+	@echo "Coverage: unit + API + property tests (matches CI validation)"
 
 test-fast-core:
 	@echo "⚡ Running core unit tests only (fastest iteration)..."

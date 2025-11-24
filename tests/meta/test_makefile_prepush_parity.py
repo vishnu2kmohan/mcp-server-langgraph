@@ -82,9 +82,18 @@ class TestMakefilePrePushParity:
         validate-pre-push is a router that delegates to sub-targets:
         - validate-pre-push-full (with integration tests)
         - validate-pre-push-quick (without integration tests)
+        - _validate-pre-push-phases-1-2-4 (shared Phase 1 & 2)
+        - _validate-pre-push-phase-4 (shared Phase 4)
 
-        This fixture returns the combined content of both sub-targets.
+        This fixture returns the combined content of all targets.
         """
+        # Extract shared targets (after Makefile consolidation)
+        shared_phases_12_pattern = r"^_validate-pre-push-phases-1-2-4:.*?(?=^##|\Z)"
+        shared_phases_12_match = re.search(shared_phases_12_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        shared_phase_4_pattern = r"^_validate-pre-push-phase-4:.*?(?=^\S|\Z)"
+        shared_phase_4_match = re.search(shared_phase_4_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
         # Extract validate-pre-push-full target
         full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
         full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
@@ -95,8 +104,12 @@ class TestMakefilePrePushParity:
 
         assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
 
-        # Combine both sub-targets
+        # Combine all targets (shared + quick + full)
         combined = ""
+        if shared_phases_12_match:
+            combined += shared_phases_12_match.group(0) + "\n"
+        if shared_phase_4_match:
+            combined += shared_phase_4_match.group(0) + "\n"
         if full_match:
             combined += full_match.group(0) + "\n"
         if quick_match:
@@ -390,6 +403,179 @@ class TestMakefilePrePushParity:
             "  - Result: 'works locally, fails on push' confusion\n"
             "\n"
             "Reference: OpenAI Codex Finding 1a\n"
+        )
+
+
+@pytest.mark.xdist_group(name="testmakefiletestdevparity")
+class TestMakefileTestDevParity:
+    """Test that Makefile test-dev target matches CI validation or has accurate help text."""
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    @pytest.fixture
+    def repo_root(self) -> Path:
+        """Get repository root directory."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True, timeout=60
+        )
+        return Path(result.stdout.strip())
+
+    @pytest.fixture
+    def makefile_path(self, repo_root: Path) -> Path:
+        """Get path to Makefile."""
+        return repo_root / "Makefile"
+
+    @pytest.fixture
+    def ci_workflow_path(self, repo_root: Path) -> Path:
+        """Get path to CI workflow."""
+        return repo_root / ".github" / "workflows" / "ci.yaml"
+
+    @pytest.fixture
+    def makefile_content(self, makefile_path: Path) -> str:
+        """Read Makefile content."""
+        with open(makefile_path) as f:
+            return f.read()
+
+    @pytest.fixture
+    def ci_workflow_content(self, ci_workflow_path: Path) -> str:
+        """Read CI workflow content."""
+        with open(ci_workflow_path) as f:
+            return f.read()
+
+    def test_test_dev_marker_matches_ci_or_help_is_accurate(self, makefile_content: str, ci_workflow_content: str):
+        """
+        Test that test-dev marker expression matches CI or help text is accurate.
+
+        CONFIGURATION DRIFT: Makefile line 30 advertises test-dev as "Verify everything works"
+        but line 1369 only runs 'pytest -m "unit and not slow"'.
+
+        Meanwhile, CI (ci.yaml:296) runs 'pytest -m "(unit or api or property) and not llm"'.
+
+        This creates a local/CI parity violation where:
+        - Developers think test-dev validates "everything" (help text)
+        - test-dev only runs fast unit tests (actual behavior)
+        - CI runs additional API and property tests
+        - Developers can't reproduce CI failures locally
+
+        Impact:
+        - False confidence: "make test-dev passed" != "CI will pass"
+        - API and property tests only run in CI, not locally
+        - Developers discover failures only after pushing
+
+        Solution (choose one):
+
+        Option A - Update help text to reflect actual behavior:
+            @echo "  3. make test-dev           # Verify fast unit tests work (~1 min)"
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^ Accurate
+
+        Option B - Expand test-dev to match CI (recommended):
+            test-dev:
+                OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short \\
+                    -m "(unit or api or property) and not llm and not slow"
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Matches CI
+
+        This test validates EITHER:
+        - test-dev marker matches CI marker, OR
+        - test-dev help text accurately describes limited scope
+
+        Reference: Codex Audit Finding - Make/Test Flow Issue 1.1
+        """
+        # Extract CI marker expression
+        ci_marker_pattern = r'pytest.*-m\s+"([^"]+)".*--cov'
+        ci_marker_match = re.search(ci_marker_pattern, ci_workflow_content)
+        assert ci_marker_match, "Could not find pytest marker in CI workflow"
+        ci_marker = ci_marker_match.group(1)  # Expected: "(unit or api or property) and not llm"
+
+        # Extract test-dev target content
+        test_dev_pattern = r"^test-dev:.*?(?=^\S|\Z)"
+        test_dev_match = re.search(test_dev_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+        assert test_dev_match, "Could not find test-dev target in Makefile"
+        test_dev_content = test_dev_match.group(0)
+
+        # Extract test-dev marker expression (matches both pytest and $(PYTEST))
+        test_dev_marker_pattern = r'(?:pytest|\$\(PYTEST\)).*-m\s+"([^"]+)"'
+        test_dev_marker_match = re.search(test_dev_marker_pattern, test_dev_content)
+        assert test_dev_marker_match, "Could not find pytest marker in test-dev target"
+        test_dev_marker = test_dev_marker_match.group(1)  # Current: "unit and not slow"
+
+        # Extract help text for test-dev
+        help_pattern = r"make test-dev\s+#\s+([^\n]+)"
+        help_match = re.search(help_pattern, makefile_content)
+        assert help_match, "Could not find help text for test-dev"
+        help_text = help_match.group(1)  # Current: "Verify everything works (~1 min)"
+
+        # Normalize markers for comparison (remove "and not llm and not slow" for comparison)
+        # CI runs: (unit or api or property) and not llm
+        # test-dev should run: (unit or api or property) and not llm and not slow
+        # Both are valid if test-dev adds "and not slow" to CI marker
+
+        ci_marker_normalized = ci_marker.replace(" and not llm", "")
+        test_dev_marker_normalized = test_dev_marker.replace(" and not slow", "")
+
+        markers_match = ci_marker_normalized in test_dev_marker or test_dev_marker_normalized == ci_marker_normalized
+
+        # Help text is accurate if it doesn't claim "everything" or "comprehensive"
+        misleading_terms = ["everything", "verify everything", "comprehensive", "all tests"]
+        help_is_accurate = not any(term in help_text.lower() for term in misleading_terms)
+
+        # Test passes if EITHER marker matches CI OR help text is accurate
+        assert markers_match or help_is_accurate, (
+            "test-dev target MUST either match CI marker OR have accurate help text\n"
+            "\n"
+            "CURRENT STATE:\n"
+            f"  - test-dev marker: '{test_dev_marker}'\n"
+            f"  - CI marker: '{ci_marker}'\n"
+            f"  - test-dev help: '{help_text}'\n"
+            "\n"
+            "PROBLEM:\n"
+            "  - Help text says 'Verify everything works' (misleading)\n"
+            "  - Marker only runs 'unit and not slow' (limited scope)\n"
+            "  - CI runs '(unit or api or property) and not llm' (broader scope)\n"
+            "  - Developers get false confidence from test-dev\n"
+            "\n"
+            "LOCAL/CI PARITY VIOLATION:\n"
+            "  - test-dev: Only unit tests (fast subset)\n"
+            "  - CI: unit + API + property tests (comprehensive)\n"
+            "  - Gap: API and property tests only run in CI\n"
+            "  - Impact: Failures discovered only after push\n"
+            "\n"
+            "SOLUTION - Choose one approach:\n"
+            "\n"
+            "Option A - Update help text (quick fix):\n"
+            "  Makefile line 30:\n"
+            "    From: @echo '  3. make test-dev           # Verify everything works (~1 min)'\n"
+            "    To:   @echo '  3. make test-dev           # Verify fast unit tests (~1 min)'\n"
+            "                                                  ^^^^^^^^^^^^^^^^^^^^^^^ Accurate\n"
+            "\n"
+            "  Makefile line 33:\n"
+            "    From: @echo '  make test-dev              🚀 Run tests (fast, parallel, recommended)'\n"
+            "    To:   @echo '  make test-dev              🚀 Run fast unit tests (recommended for iteration)'\n"
+            "\n"
+            "Option B - Expand marker to match CI (recommended for local/CI parity):\n"
+            "  Makefile line 1369:\n"
+            "    From: -m 'unit and not slow'\n"
+            "    To:   -m '(unit or api or property) and not llm and not slow'\n"
+            "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Matches CI\n"
+            "\n"
+            "  Update help text to reflect comprehensive scope:\n"
+            "    @echo '  3. make test-dev           # Verify everything works (~2-3 min)'\n"
+            "                                          ^^^^^^^^^^^^^^^^^^^ Now accurate\n"
+            "\n"
+            "RECOMMENDED: Option B\n"
+            "  - Achieves local/CI parity (same tests run locally and in CI)\n"
+            "  - Developers catch API/property failures before pushing\n"
+            "  - Still fast (~2-3 min vs 8-12 min for full pre-push)\n"
+            "  - Help text remains accurate ('everything' = unit+api+property)\n"
+            "\n"
+            "TIME IMPACT:\n"
+            "  - Current test-dev: ~1 min (unit only)\n"
+            "  - Expanded test-dev: ~2-3 min (unit+api+property)\n"
+            "  - Full pre-push: 8-12 min (all tests + all hooks)\n"
+            "  - Trade-off: 2x slower but catches 3x more issues\n"
+            "\n"
+            "Reference: Codex Audit Finding - Make/Test Flow Issue 1.1\n"
         )
 
 
