@@ -705,9 +705,9 @@ validate-full:  ## Tier 3: Comprehensive validation (12-15 min) - all tests, sec
 # NOTE: validate-push (Tier 2) is now the recommended target for pre-push validation
 # This target is kept for CI/CD parity and backward compatibility
 ## validate-pre-push-quick: Fast pre-push validation (skip integration tests)
-## _validate-pre-push-phases-1-2-4: Shared validation phases (Phase 1, 2, 4)
+## _validate-pre-push-phases-1-2: Shared validation phases (Phase 1, 2)
 ## Internal target - not meant to be called directly
-_validate-pre-push-phases-1-2-4:
+_validate-pre-push-phases-1-2:
 	@echo "PHASE 1: Fast Checks (Lockfile & Workflow Validation)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
@@ -751,7 +751,7 @@ validate-pre-push-quick:  ## Pre-push validation without integration tests (5-7 
 	@echo "Skipping integration tests (no Docker required)"
 	@echo "Run 'make validate-pre-push-full' for comprehensive validation with Docker"
 	@echo ""
-	@$(MAKE) _validate-pre-push-phases-1-2-4
+	@$(MAKE) _validate-pre-push-phases-1-2
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -776,7 +776,7 @@ validate-pre-push-full:  ## Comprehensive pre-push validation with Docker integr
 	@echo "🔍 Running comprehensive pre-push validation (FULL - CI-equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@$(MAKE) _validate-pre-push-phases-1-2-4
+	@$(MAKE) _validate-pre-push-phases-1-2
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "PHASE 3: Test Suite Validation"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
