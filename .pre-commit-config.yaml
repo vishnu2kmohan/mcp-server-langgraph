@@ -126,6 +126,33 @@ repos:
     language: system
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
+    stages:
+    - pre-push
+  - id: uv-pip-check
+    name: Validate no dependency conflicts
+    entry: bash -c 'uv pip check || (echo "ERROR - Dependency conflicts detected. Run uv pip check to see details"; exit 1)'
+    language: system
+    pass_filenames: false
+    stages:
+    - pre-push
+    description: 'Validates that installed dependencies have no conflicts.
+
+
+      Why this check is critical:
+      - uv lock --check validates lockfile is current
+      - uv pip check validates no dependency conflicts exist
+      - Both are needed for comprehensive dependency validation
+
+      Example failure this prevents:
+      1. Package A requires foo>=2.0, Package B requires foo<2.0
+      2. uv lock succeeds and generates lockfile (lock check passes)
+      3. uv pip check FAILS (conflict detected)
+      4. Without this hook: conflict pushed to CI and fails there
+
+      Matches CI validation in .github/workflows/ci.yaml
+      Test: tests/meta/test_local_ci_parity.py::test_pre_push_includes_uv_pip_check
+
+      '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
     entry: scripts/run_pre_push_tests.py

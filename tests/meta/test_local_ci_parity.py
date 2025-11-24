@@ -1796,28 +1796,48 @@ class TestPrePushDependencyValidation:
             with open(config_path) as f:
                 config_content = f.read()
 
-            # Look for uv lock check or uv pip check hooks
-            has_uv_check = (
-                "uv lock --check" in config_content or "uv pip check" in config_content or "uv-lock-check" in config_content
+            # BOTH checks required for comprehensive dependency validation
+            has_uv_lock_check = "uv lock --check" in config_content or "uv-lock-check" in config_content
+            has_uv_pip_check = "uv pip check" in config_content
+
+            assert has_uv_lock_check, (
+                "Pre-commit config MUST include 'uv lock --check'\n"
+                "\n"
+                "Required hook: uv-lock-check\n"
+                "Purpose: Validates lockfile is in sync with pyproject.toml\n"
+                "\n"
+                "Fix: Add to .pre-commit-config.yaml:\n"
+                "  - id: uv-lock-check\n"
+                "    name: Validate uv.lock is in sync\n"
+                "    entry: bash -c 'uv lock --check || (echo \"ERROR\"; exit 1)'\n"
+                "    language: system\n"
+                "    stages: [pre-push]"
             )
 
-            assert has_uv_check, (
-                "Pre-commit config MUST include uv dependency validation\n"
+            assert has_uv_pip_check, (
+                "Pre-commit config MUST include 'uv pip check'\n"
                 "\n"
-                "Expected hooks in .pre-commit-config.yaml:\n"
-                "  - uv-lock-check (validates lockfile is current)\n"
-                "  - OR explicit 'uv pip check' command\n"
+                "CRITICAL: Without this check, dependency conflicts pass locally but fail in CI\n"
                 "\n"
-                "Current migration status:\n"
-                "  - Pre-push hook is pre-commit framework wrapper\n"
-                "  - Dependency validation should be in .pre-commit-config.yaml\n"
-                "  - Not found: no uv lock/pip check hooks configured\n"
+                "Why both checks are needed:\n"
+                "  - uv lock --check: Validates lockfile is current\n"
+                "  - uv pip check: Validates no dependency conflicts exist\n"
                 "\n"
-                "Impact:\n"
-                "  - Conflicting dependencies pass locally, fail in CI\n"
-                "  - Version mismatches undetected until push\n"
+                "Example failure scenario:\n"
+                "  1. Developer updates pyproject.toml with conflicting deps\n"
+                "  2. Runs uv lock (generates lockfile - passes lock check)\n"
+                "  3. Package A requires foo>=2.0, Package B requires foo<2.0\n"
+                "  4. Lock check passes (lockfile is current)\n"
+                "  5. Pip check would FAIL (conflict detected)\n"
+                "  6. Without pip check: conflict pushed to CI and fails there\n"
                 "\n"
-                "Fix: Add uv validation hook to .pre-commit-config.yaml"
+                "Fix: Add to .pre-commit-config.yaml:\n"
+                "  - id: uv-pip-check\n"
+                "    name: Validate no dependency conflicts\n"
+                "    entry: bash -c 'uv pip check || (echo \"ERROR\"; exit 1)'\n"
+                "    language: system\n"
+                "    pass_filenames: false\n"
+                "    stages: [pre-push]"
             )
         else:
             # Legacy bash script: check for Phase 1 with uv pip check
