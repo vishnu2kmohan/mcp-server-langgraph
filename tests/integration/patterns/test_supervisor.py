@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
+from mcp_server_langgraph.patterns.supervisor import Supervisor, SupervisorState
 
 # xdist_group for integration test worker isolation
 pytestmark = pytest.mark.xdist_group(name="integration_patterns_supervisor_tests")

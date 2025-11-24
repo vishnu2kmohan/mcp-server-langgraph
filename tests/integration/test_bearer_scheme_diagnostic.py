@@ -186,9 +186,9 @@ class TestBearerSchemeOverrideDiagnostic:
         app = FastAPI()
 
         # Create mocks
-        from src.mcp_server_langgraph.auth.keycloak import KeycloakClient
-        from src.mcp_server_langgraph.auth.openfga import OpenFGAClient
-        from src.mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+        from mcp_server_langgraph.auth.keycloak import KeycloakClient
+        from mcp_server_langgraph.auth.openfga import OpenFGAClient
+        from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
         from tests.conftest import get_user_id
 
         mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)

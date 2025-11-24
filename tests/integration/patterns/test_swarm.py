@@ -8,7 +8,7 @@ import gc
 
 import pytest
 
-from src.mcp_server_langgraph.patterns.swarm import Swarm, SwarmState
+from mcp_server_langgraph.patterns.swarm import Swarm, SwarmState
 
 # xdist_group for integration test worker isolation
 pytestmark = pytest.mark.xdist_group(name="integration_patterns_swarm_tests")

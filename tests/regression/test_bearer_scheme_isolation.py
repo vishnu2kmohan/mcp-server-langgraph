@@ -371,7 +371,7 @@ class TestCodexReloadScenario:
         app = FastAPI()
 
         # Mock service principal manager
-        from src.mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
+        from mcp_server_langgraph.auth.service_principal import ServicePrincipalManager
 
         mock_sp_manager = AsyncMock(spec=ServicePrincipalManager)
         mock_sp_manager.get_service_principal.return_value = {
