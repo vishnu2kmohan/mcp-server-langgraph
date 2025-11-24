@@ -110,17 +110,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          # Pin pytest to <9.0 to avoid breaking change with [tool.pytest.ini_options]
-          # pytest 9.0+ prohibits [tool.pytest.ini_options] + [tool.pytest.benchmark] combination
-          # See: https://github.com/pytest-dev/pytest/releases/tag/9.0.0
-          pip install 'pytest>=8.4.2,<9.0' pyyaml
+          extras: 'dev'
+          cache-key-prefix: 'validate-k8s-pytest'
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
@@ -135,7 +130,8 @@ jobs:
       - name: Run regression tests
         run: |
           # Run only the deployment regression tests
-          python3 -m pytest tests/integration/regression/test_pod_deployment_regression.py -v --no-header --tb=short
+          # Uses locked pytest 8.4.2 from uv.lock (via composite action)
+          uv run pytest tests/integration/regression/test_pod_deployment_regression.py -v --no-header --tb=short
 
   summary:
     name: Validation Summary
