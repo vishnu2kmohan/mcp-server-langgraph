@@ -35,12 +35,22 @@ Full async Redis migration deferred to future PR (lower priority fallback featur
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import gc
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
 
 
-def test_conversation_store_uses_async_redis_client():
+
+@pytest.mark.xdist_group(name="conversation_store_async")
+class TestConversationStoreAsync:
+    """Test class with xdist memory safety."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_conversation_store_uses_async_redis_client(self):
     """
     🟢 GREEN: Test that ConversationStore uses async Redis client.
 
@@ -72,8 +82,8 @@ def test_conversation_store_uses_async_redis_client():
             pytest.fail("ConversationStore still uses synchronous redis instead of redis.asyncio")
 
 
-@pytest.mark.asyncio
-async def test_record_conversation_does_not_block_event_loop():
+    @pytest.mark.asyncio
+    async def test_record_conversation_does_not_block_event_loop():
     """
     🟢 GREEN: Test that record_conversation doesn't block the event loop.
 
@@ -98,8 +108,8 @@ async def test_record_conversation_does_not_block_event_loop():
     assert conversation.message_count == 5
 
 
-@pytest.mark.asyncio
-async def test_get_conversation_does_not_block_event_loop():
+    @pytest.mark.asyncio
+    async def test_get_conversation_does_not_block_event_loop():
     """
     🟢 GREEN: Test that get_conversation doesn't block the event loop.
 
@@ -121,8 +131,8 @@ async def test_get_conversation_does_not_block_event_loop():
     assert result.thread_id == "thread-1"
 
 
-@pytest.mark.asyncio
-async def test_list_user_conversations_does_not_block_event_loop():
+    @pytest.mark.asyncio
+    async def test_list_user_conversations_does_not_block_event_loop():
     """
     🟢 GREEN: Test that list_user_conversations doesn't block the event loop.
 
@@ -146,7 +156,7 @@ async def test_list_user_conversations_does_not_block_event_loop():
     assert all(c.user_id == "user-123" for c in conversations)
 
 
-def test_redis_backend_requires_async_operations():
+    def test_redis_backend_requires_async_operations(self):
     """
     Test that Redis backend uses async operations, not sync.
 
