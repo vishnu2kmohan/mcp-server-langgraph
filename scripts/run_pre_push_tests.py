@@ -220,10 +220,10 @@ def main() -> int:
             marker_expression = "(unit or api or property or integration) and not llm and not meta"
             pytest_args[marker_index] = marker_expression  # Use stored index instead of fragile .index()
         else:
-            print("⚠ CI_PARITY=1 detected but Docker not available")
-            print("  Integration tests require Docker daemon")
-            print("  Start Docker and retry, or omit CI_PARITY=1 for faster pre-push")
-            print("  Continuing with standard test suite...")
+            print("⚠  CI_PARITY=1 detected but Docker unavailable")
+            print("✓ Will run: unit, api, property tests")
+            print("✗ Won't run: integration tests (require Docker daemon)")
+            print("→ Action: Start Docker Desktop or omit CI_PARITY=1 for faster pre-push")
 
     # Ensure OTEL_SDK_DISABLED and HYPOTHESIS_PROFILE for consistent environment
     env = os.environ.copy()
