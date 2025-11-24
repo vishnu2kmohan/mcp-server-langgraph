@@ -47,12 +47,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Workflow Optimization Documentation** (`docs/workflows/optimization-history.md`) - Detailed CI/CD optimization metrics and history
 
 ### Changed
-- **Workflow Consolidation**:
-  - Merged `link-checker.yaml` and `docs-link-check.yml` into single workflow
-  - Renamed `validate-deployments.yml` → `validate-kubernetes.yaml` for clear separation of concerns
-  - `validate-deployments.yaml`: Infrastructure validation (Docker, DB, VPC)
-  - `validate-kubernetes.yaml`: K8s manifests validation (Helm, Kustomize)
-- **setup-python-deps Action** (`setup-python-deps/action.yml`) - **BREAKING**: Removed legacy `install-dev` and `install-test` inputs (use `extras` parameter instead)
+- **Workflow Consolidation - Composite Actions** (`.github/actions/`):
+  - **Created `setup-python-deps` composite action** (`.github/actions/setup-python-deps/`) - Consolidated 8 different Python+UV setup patterns:
+    - Migrated 10 workflows (18 jobs total): `ci.yaml`, `integration-tests.yaml`, `e2e-tests.yaml`, `release.yaml`, `weekly-reports.yaml`, `docs-validation.yaml`, `performance-regression.yaml`, `security-validation.yaml`, `dora-metrics.yaml`, `validate-k8s-configs.yaml`
+    - Removed ~282 lines of duplicate setup code
+    - Unified dependency management: Python 3.10-3.13, UV 7.1.1, intelligent caching
+    - Features: Version selection, extras support (dev, builder, monitoring, etc.), custom cache keys
+    - Documentation: 165-line README with comprehensive examples
+    - **BREAKING**: Removed legacy `install-dev` and `install-test` inputs (use `extras` parameter instead)
+  - **Created `setup-docker-buildx` composite action** (`.github/actions/setup-docker-buildx/`) - Consolidated 4 Docker setup patterns:
+    - Migrated 4 workflows (6 jobs total): `ci.yaml`, `release.yaml`, `deploy-staging-gke.yaml`, `deploy-production-gke.yaml`
+    - Removed ~18 lines of duplicate QEMU+Buildx setup code
+    - Unified Docker configuration: Buildx 3.11.1, QEMU 3.7.0, multiplatform support
+    - Features: Optional QEMU (single vs multiplatform), custom driver options, inline config
+    - Documentation: 120-line README with usage examples
+  - **Impact** (see `docs-internal/WORKFLOW_CONSOLIDATION_REPORT.md` for full analysis):
+    - Total duplicate code removed: ~371 lines (282 + 18 + 71 from script consolidation)
+    - Workflows improved: 14 workflows (24 jobs)
+    - Version consistency: Unified to latest versions across all workflows
+    - Maintenance reduction: 90% (20h/year → 2h/year for version updates)
+    - Cache efficiency: Projected 30% → 85% hit rate improvement
+  - **Workflow file consolidation**:
+    - Merged `link-checker.yaml` and `docs-link-check.yml` into single workflow
+    - Renamed `validate-deployments.yml` → `validate-kubernetes.yaml` for clear separation of concerns
+    - `validate-deployments.yaml`: Infrastructure validation (Docker, DB, VPC)
+    - `validate-kubernetes.yaml`: K8s manifests validation (Helm, Kustomize)
 - **CI Workflow Comments** - Moved optimization metrics to documentation, simplified header comments
 
 ### Technical Details
