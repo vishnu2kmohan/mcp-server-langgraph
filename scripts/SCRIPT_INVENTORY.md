@@ -1,6 +1,6 @@
 # Scripts Directory Inventory
 
-**Last Updated**: 2025-11-24 12:43:56
+**Last Updated**: 2025-11-24 12:47:15
 **Auto-generated** by `scripts/generate_script_inventory.py`
 **Total Scripts**: 192
 **Python Scripts**: 143
@@ -151,13 +151,13 @@ These scripts are not referenced in .pre-commit-config.yaml, Makefile, or GitHub
 **ci/**: 1 scripts
   - `__init__.py`
 
-**completed/**: 32 scripts
+**completed/**: 34 scripts
   - `add_colorbrewer_styling.py`
   - `add_comprehensive_test_hooks.py`
   - `add_diagram_styling.py`
   - `add_gc_import.py`
   - `add_memory_safety_to_tests.py`
-  - *... and 27 more*
+  - *... and 29 more*
 
 **deployment/**: 1 scripts
   - `deploy_langgraph_platform.sh`
@@ -174,9 +174,7 @@ These scripts are not referenced in .pre-commit-config.yaml, Makefile, or GitHub
   - `update_documentation.py`
   - `update_imports.py`
 
-**docs/**: 3 scripts
-  - `add_missing_frontmatter.py`
-  - `add_seo_fields.py`
+**docs/**: 1 scripts
   - `sync-adrs.py`
 
 **gcp/**: 4 scripts
