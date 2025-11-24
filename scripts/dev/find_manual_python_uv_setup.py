@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""
+Find workflows using manual Python + UV setup instead of composite action.
+
+This script identifies workflows that should be migrated to use the
+./.github/actions/setup-python-deps composite action for consistency.
+
+Target: Phase 5.5.1 - Migrate workflows to use setup-python-deps
+"""
+
+import re
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+import yaml
+
+
+class ManualSetupFinder:
+    """Find manual Python + UV setup sequences in workflows."""
+
+    def __init__(self, workflows_dir: Path):
+        """Initialize finder."""
+        self.workflows_dir = Path(workflows_dir)
+        self.manual_setups: dict[str, list[tuple[str, int]]] = defaultdict(list)
+
+    def load_workflows(self) -> None:
+        """Load all workflow files."""
+        for pattern in ["*.yml", "*.yaml"]:
+            for workflow_file in self.workflows_dir.glob(pattern):
+                try:
+                    with open(workflow_file) as f:
+                        content = yaml.safe_load(f)
+                        if content:
+                            self.analyze_workflow(workflow_file.name, content)
+                except Exception as e:
+                    print(f"⚠️  Error loading {workflow_file.name}: {e}")
+
+    def analyze_workflow(self, workflow_name: str, workflow: dict) -> None:
+        """Analyze a single workflow for manual Python + UV setup."""
+        jobs = workflow.get("jobs", {})
+        for job_name, job_config in jobs.items():
+            steps = job_config.get("steps", [])
+
+            # Check if job uses composite action (skip these)
+            uses_composite = any(step.get("uses", "").endswith("/setup-python-deps") for step in steps)
+            if uses_composite:
+                continue
+
+            # Check for manual 3-step sequence
+            has_setup_python = False
+            has_setup_uv = False
+
+            for i, step in enumerate(steps):
+                uses = step.get("uses", "")
+
+                if "actions/setup-python" in uses:
+                    has_setup_python = True
+                elif "astral-sh/setup-uv" in uses:
+                    has_setup_uv = True
+
+            # If job has manual Python + UV setup, record it
+            if has_setup_python and has_setup_uv:
+                self.manual_setups[workflow_name].append((job_name, len(steps)))
+
+    def generate_report(self) -> str:
+        """Generate migration report."""
+        report = []
+        report.append("=" * 80)
+        report.append("Manual Python + UV Setup Migration Report")
+        report.append("=" * 80)
+        report.append("")
+
+        if not self.manual_setups:
+            report.append("✅ No workflows found using manual Python + UV setup!")
+            report.append("All workflows already use ./.github/actions/setup-python-deps")
+            report.append("")
+            return "\n".join(report)
+
+        report.append("📊 Summary")
+        total_jobs = sum(len(jobs) for jobs in self.manual_setups.values())
+        report.append(f"  Workflows with manual setup: {len(self.manual_setups)}")
+        report.append(f"  Total jobs to migrate: {total_jobs}")
+        report.append("")
+
+        report.append("🔄 Workflows to Migrate")
+        report.append("")
+
+        for workflow_name in sorted(self.manual_setups.keys()):
+            jobs = self.manual_setups[workflow_name]
+            report.append(f"  {workflow_name} ({len(jobs)} jobs)")
+            for job_name, step_count in jobs:
+                report.append(f"    • {job_name} ({step_count} steps)")
+        report.append("")
+
+        report.append("=" * 80)
+        report.append("💡 Migration Instructions")
+        report.append("=" * 80)
+        report.append("")
+        report.append("Replace this manual sequence:")
+        report.append("```yaml")
+        report.append("- name: Set up Python")
+        report.append("  uses: actions/setup-python@v6")
+        report.append("  with:")
+        report.append("    python-version: '3.12'")
+        report.append("")
+        report.append("- name: Install uv")
+        report.append("  uses: astral-sh/setup-uv@v5")
+        report.append("  with:")
+        report.append('    version: "latest"')
+        report.append("")
+        report.append("- name: Install dependencies")
+        report.append("  run: uv sync --frozen")
+        report.append("```")
+        report.append("")
+        report.append("With composite action:")
+        report.append("```yaml")
+        report.append("- name: Set up Python and dependencies")
+        report.append("  uses: ./.github/actions/setup-python-deps")
+        report.append("  with:")
+        report.append("    python-version: '3.12'")
+        report.append("    extras: ''  # Add extras if needed (e.g., 'dev builder')")
+        report.append("```")
+        report.append("")
+
+        report.append("=" * 80)
+        report.append("Generated by: scripts/dev/find_manual_python_uv_setup.py")
+        report.append("=" * 80)
+
+        return "\n".join(report)
+
+
+def main():
+    """Run manual setup finder."""
+    workflows_dir = Path(".github/workflows")
+
+    if not workflows_dir.exists():
+        print(f"❌ Workflows directory not found: {workflows_dir}")
+        return 1
+
+    print("🔍 Finding workflows with manual Python + UV setup...\n")
+
+    finder = ManualSetupFinder(workflows_dir)
+
+    print("Loading workflows...")
+    finder.load_workflows()
+    print("✓ Loaded workflow files\n")
+
+    print("Generating report...\n")
+    report = finder.generate_report()
+    print(report)
+
+    # Save report
+    report_path = Path("docs-internal/PYTHON_UV_SETUP_MIGRATION.md")
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report)
+    print(f"\n📄 Report saved to: {report_path}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())

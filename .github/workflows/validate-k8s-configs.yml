@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'deployments/**'
-      - 'scripts/validation/validate_gke_autopilot_compliance.py'
+      - 'scripts/validators/validate_gke_autopilot_compliance.py'
       - 'tests/integration/regression/test_pod_deployment_regression.py'
       - '.github/workflows/validate-k8s-configs.yml'
   push:
@@ -12,7 +12,7 @@ on:
       - main
     paths:
       - 'deployments/**'
-      - 'scripts/validation/validate_gke_autopilot_compliance.py'
+      - 'scripts/validators/validate_gke_autopilot_compliance.py'
 
 jobs:
   validate-kustomize:
@@ -100,7 +100,7 @@ jobs:
 
       - name: Run GKE Autopilot validation
         run: |
-          python3 scripts/validation/validate_gke_autopilot_compliance.py deployments/overlays
+          python3 scripts/validators/validate_gke_autopilot_compliance.py deployments/overlays
 
   test-regression:
     name: Run Regression Tests
