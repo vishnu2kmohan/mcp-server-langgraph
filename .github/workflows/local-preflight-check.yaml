@@ -86,6 +86,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install pre-commit
+        # NOTE: Using pip for single-tool install (pre-commit only). For full project deps, use uv sync --frozen
         run: pip install pre-commit
 
       - name: Run fast pre-commit hooks
