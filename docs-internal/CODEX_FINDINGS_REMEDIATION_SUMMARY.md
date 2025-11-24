@@ -159,7 +159,7 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 **Current State:**
 - 43 hooks with `stages: [pre-push]`
 - Multiple hooks run same test file (e.g., 4 hooks for `test_helm_configuration.py`)
-- No incremental testing (pytest-testmon)
+- ~~No incremental testing (pytest-testmon)~~ **UPDATE (2025-11-24):** pytest-testmon removed due to xdist incompatibility
 - Sequential execution (no parallelization)
 
 **Performance Breakdown:**
@@ -190,7 +190,7 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 
 **Expected Results:**
 - **Full push:** 12 min → 4 min (67% faster)
-- **Incremental push (with testmon):** 12 min → 1.5-2 min (83% faster)
+- ~~**Incremental push (with testmon):** 12 min → 1.5-2 min (83% faster)~~ **OBSOLETE:** testmon removed
 - **Hook count:** 43 → ~13 (70% reduction)
 
 ### Implementation Plan (3-4 hours)
@@ -201,10 +201,10 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 - Merge documentation hooks: 5 → 1
 - Update `.pre-commit-config.yaml`
 
-**Phase 2:** Add pytest-testmon (30 min)
-- Install: `uv add --dev pytest-testmon`
-- Configure in `pyproject.toml`
-- Update hook entries with `--testmon` flag
+**Phase 2:** ~~Add pytest-testmon~~ **OBSOLETE** (removed due to xdist incompatibility)
+- ~~Install: `uv add --dev pytest-testmon`~~
+- ~~Configure in `pyproject.toml`~~
+- ~~Update hook entries with `--testmon` flag~~
 
 **Phase 3:** Enable parallelization (30 min)
 - Add `require_serial: false` to independent hooks

@@ -472,7 +472,7 @@ Tests run in parallel across multiple GitHub Actions workflows for comprehensive
 - Each group runs independently for maximum CI efficiency
 
 **Pre-push Hooks**:
-- **Fast mode** (default): Optimized unit tests (~2-3 min) via pytest-testmon
+- **Fast mode** (default): Optimized unit tests (~2-3 min) via pytest-xdist parallel execution
 - **Comprehensive mode**: `make validate-pre-push` runs all test suites including integration tests (~8-12 min)
 
 **Best Practice**: All workflows run in parallel for fast feedback. Integration tests now have **full CI visibility** with parallelization, catching infrastructure issues before merge.
@@ -678,7 +678,7 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 - `make test-unit` - Fast unit tests with mocked dependencies
 - `make test-integration` - End-to-end with real infrastructure
 - `make test-coverage` - Generate coverage report
-- `make validate-pre-push` - Quick validation (skip integration, use testmon)
+- `make validate-pre-push` - Quick validation (skip integration tests)
 - `CI_PARITY=1 make validate-pre-push` - Full CI-equivalent validation (includes integration tests)
 
 **Development**: Branch protection, conventional commits, code review required, 59 ADRs documenting architectural decisions.
