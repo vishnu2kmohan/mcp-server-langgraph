@@ -493,12 +493,12 @@ test-quick-new:
 # Validation
 validate-openapi:
 	@echo "Validating OpenAPI schema..."
-	OTEL_SDK_DISABLED=true $(UV_RUN) python scripts/validation/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"
+	OTEL_SDK_DISABLED=true $(UV_RUN) python scripts/validators/validate_openapi.py 2>&1 | grep -v -E "(WARNING|trace_id|span_id|resource\.|Transient error|exporter\.py|Traceback|File \"|ImportError:|pydantic-ai|fall back)"
 	@echo "✓ OpenAPI validation complete"
 
 validate-deployments:
 	@echo "Validating all deployment configurations..."
-	$(UV_RUN) python scripts/validation/validate_deployments.py
+	$(UV_RUN) python scripts/validators/validate_deployments.py
 	@echo "✓ Deployment validation complete"
 
 validate-docker-compose:
@@ -508,7 +508,7 @@ validate-docker-compose:
 
 validate-docker-image:
 	@echo "Validating Docker test image freshness..."
-	@./scripts/validation/validate_docker_image_freshness.sh --check-commits
+	@./scripts/validators/validate_docker_image_freshness.sh --check-commits
 	@echo "✓ Docker image is up-to-date"
 
 validate-helm:
@@ -594,7 +594,7 @@ validate-workflows:  ## Comprehensive workflow validation (matches CI exactly)
 	@echo ""
 	@echo "▶ STEP 4: Validate pytest configuration compatibility"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@$(UV_RUN) python scripts/validation/validate_pytest_config.py && echo "✓ Pytest config validation passed" || (echo "✗ Pytest config validation failed" && exit 1)
+	@$(UV_RUN) python scripts/validators/validate_pytest_config.py && echo "✓ Pytest config validation passed" || (echo "✗ Pytest config validation failed" && exit 1)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "✅ All workflow validations passed (CI-equivalent)"
@@ -1269,10 +1269,10 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 	@echo "🔧 SUPPLEMENTARY: Specialized validators"
 	@echo "   Note: Code block validation disabled (caused more trouble than it's worth)"
 	@echo "🔍 Validating ADR synchronization..."
-	@python scripts/validation/adr_sync_validator.py || \
+	@python scripts/validators/adr_sync_validator.py || \
 		(echo "❌ ADR synchronization failed." && exit 1)
 	@echo "🔍 Validating MDX file extensions..."
-	@python scripts/validation/mdx_extension_validator.py --docs-dir docs || \
+	@python scripts/validators/mdx_extension_validator.py --docs-dir docs || \
 		(echo "❌ MDX extension validation failed." && exit 1)
 	@echo "✅ Specialized validators passed"
 
@@ -1284,7 +1284,7 @@ docs-validate-specialized:  ## SUPPLEMENTARY: Run specialized validators (ADR sy
 
 docs-validate-version:
 	@echo "🏷️  Checking version consistency..."
-	@python3 scripts/validation/check_version_consistency.py || \
+	@python3 scripts/validators/check_version_consistency.py || \
 		(echo "⚠️  Version inconsistencies found (review recommended)." && exit 0)
 
 docs-fix-mdx:
@@ -1313,11 +1313,11 @@ generate-reports:  ## Regenerate all test infrastructure scan reports
 	@echo "📊 Regenerating test infrastructure reports..."
 	@echo ""
 	@echo "🔍 Running AsyncMock configuration scan..."
-	@$(UV_RUN) python scripts/validation/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validators/check_async_mock_configuration.py tests/**/*.py > docs-internal/reports/ASYNC_MOCK_SCAN.md 2>&1 || true
 	@echo "✅ AsyncMock scan complete"
 	@echo ""
 	@echo "🔍 Running memory safety scan..."
-	@$(UV_RUN) python scripts/validation/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
+	@$(UV_RUN) python scripts/validators/check_test_memory_safety.py tests/**/*.py > docs-internal/reports/MEMORY_SAFETY_SCAN.md 2>&1 || true
 	@echo "✅ Memory safety scan complete"
 	@echo ""
 	@echo "📈 Generating test suite statistics..."
