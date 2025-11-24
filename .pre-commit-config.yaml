@@ -637,6 +637,29 @@ repos:
       Consolidation: Part of validator consolidation effort (2025-11-17)\n\
       See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md\n\
       Test: tests/meta/test_consolidated_workflow_validator.py\n"
+  - id: validate-workflow-file-references
+    name: Validate Workflow File References
+    entry: uv run python scripts/validation/validate_workflow_file_references.py
+    language: system
+    files: ^\.github/workflows/.*\.ya?ml$
+    pass_filenames: false
+    stages:
+      - pre-commit
+    description: "Validates that files referenced in GitHub Actions workflows exist:\n\n\
+      Checks:\n\
+      1. Script paths (python scripts/, bash scripts/)\n\
+      2. Test file paths (pytest tests/)\n\
+      3. Path trigger conditions (pull_request/push paths:)\n\
+      4. Deployment manifests (deployments/)\n\n\
+      Prevents:\n\
+      - Script paths that moved but workflows not updated\n\
+      - Test paths that reorganized but workflows still reference old locations\n\
+      - Missing files that cause silent failures with || true patterns\n\n\
+      Example prevented issues:\n\
+      - scripts/validate_gke_autopilot_compliance.py → scripts/validation/validate_gke_autopilot_compliance.py\n\
+      - tests/regression/test_pod_deployment_regression.py → tests/integration/regression/test_pod_deployment_regression.py\n\n\
+      Created: 2025-11-24 (commit 6efbd73f configuration drift remediation)\n\
+      See: scripts/validation/validate_workflow_file_references.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
     entry: uv run python scripts/validation/validate_gke_autopilot_compliance.py

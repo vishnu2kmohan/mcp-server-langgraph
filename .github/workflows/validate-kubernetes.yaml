@@ -56,8 +56,9 @@ jobs:
 
       - name: Lint Helm Chart
         run: |
-          helm lint deployments/helm/mcp-server-langgraph/ || true
-          # Note: Ignoring known false positive for prometheus-rules-sla.yaml
+          # Helm lint now passes cleanly - no need for || true
+          # Previous comment about prometheus-rules-sla.yaml false positive is resolved
+          helm lint deployments/helm/mcp-server-langgraph/
 
       - name: Template Helm Chart
         run: |

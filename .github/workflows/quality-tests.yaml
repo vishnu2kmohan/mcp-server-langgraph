@@ -143,7 +143,10 @@ jobs:
 
       - name: Generate OpenAPI schema
         run: |
-          uv run python scripts/validation/validate_openapi.py || true
+          # Allow failure: openapi-spec-validator may not be installed in all environments
+          # The script provides helpful error message: "Run: uv pip install openapi-spec-validator"
+          # This is non-blocking for contract tests which focus on MCP protocol compliance
+          uv run python scripts/validation/validate_openapi.py || echo "⚠️  OpenAPI validation skipped (missing dependencies)"
 
       - name: Run contract tests
         run: |

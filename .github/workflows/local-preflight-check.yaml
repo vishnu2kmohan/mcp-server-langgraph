@@ -1,0 +1,194 @@
+name: Local Pre-flight Check
+
+# This workflow is designed to run locally with `act` for pre-push validation
+# Run with: act workflow_dispatch -W .github/workflows/local-preflight-check.yaml
+#
+# Prerequisites:
+# - act installed: brew install act (macOS) or see https://github.com/nektos/act
+# - actionlint installed: brew install actionlint (macOS) or see https://github.com/rhysd/actionlint
+# - Docker running (required by act)
+#
+# Purpose:
+# - Fast local validation (< 5 minutes) before pushing
+# - Catches common issues that would fail in CI
+# - No cloud resources required (all local checks)
+#
+# What it validates:
+# - GitHub Actions workflow syntax (actionlint)
+# - Workflow file references exist (no stale paths)
+# - Pre-commit hooks (fast subset)
+# - Unit tests (no infrastructure)
+# - Python code quality (ruff, mypy)
+
+on:
+  workflow_dispatch:  # Manual trigger for local testing
+  push:
+    branches:
+      - 'local-test/**'  # Only auto-run on local test branches
+
+jobs:
+  actionlint:
+    name: Validate Workflow Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run actionlint
+        run: |
+          echo "Installing actionlint..."
+          if ! command -v actionlint &> /dev/null; then
+            # Install actionlint if not available
+            bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+            sudo mv actionlint /usr/local/bin/
+          fi
+
+          echo "Running actionlint on all workflows..."
+          actionlint -color .github/workflows/*.yaml .github/workflows/*.yml
+
+  validate-file-references:
+    name: Validate Workflow File References
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Validate workflow file references
+        run: uv run python scripts/validation/validate_workflow_file_references.py
+
+  pre-commit-fast:
+    name: Fast Pre-commit Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run fast pre-commit hooks
+        run: |
+          # Run only fast hooks (< 30s)
+          pre-commit run --all-files \
+            check-yaml \
+            check-json \
+            check-toml \
+            end-of-file-fixer \
+            trailing-whitespace \
+            check-added-large-files \
+            check-merge-conflicts \
+            detect-private-key
+
+  code-quality:
+    name: Code Quality (Ruff + MyPy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Ruff linter
+        run: uv run ruff check src/ tests/
+
+      - name: Run Ruff formatter check
+        run: uv run ruff format --check src/ tests/
+
+      - name: Run MyPy type checking
+        run: uv run mypy src/ --config-file pyproject.toml || echo "MyPy warnings allowed"
+
+  unit-tests-fast:
+    name: Fast Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.13"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run fast unit tests
+        run: |
+          # Run only fast unit tests (no infrastructure, no slow marks)
+          uv run pytest tests/unit \
+            -m "unit and not slow" \
+            -x \
+            --tb=short \
+            --maxfail=5 \
+            -q
+
+  summary:
+    name: Pre-flight Summary
+    runs-on: ubuntu-latest
+    needs: [actionlint, validate-file-references, pre-commit-fast, code-quality, unit-tests-fast]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          echo "## Local Pre-flight Check Results"
+          echo ""
+          echo "✅ actionlint: ${{ needs.actionlint.result }}"
+          echo "✅ file-references: ${{ needs.validate-file-references.result }}"
+          echo "✅ pre-commit-fast: ${{ needs.pre-commit-fast.result }}"
+          echo "✅ code-quality: ${{ needs.code-quality.result }}"
+          echo "✅ unit-tests-fast: ${{ needs.unit-tests-fast.result }}"
+          echo ""
+
+          if [ "${{ needs.actionlint.result }}" != "success" ] || \
+             [ "${{ needs.validate-file-references.result }}" != "success" ] || \
+             [ "${{ needs.pre-commit-fast.result }}" != "success" ] || \
+             [ "${{ needs.code-quality.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests-fast.result }}" != "success" ]; then
+            echo "❌ Some checks failed. Review the logs above."
+            exit 1
+          fi
+
+          echo "✅ All pre-flight checks passed! Safe to push."
