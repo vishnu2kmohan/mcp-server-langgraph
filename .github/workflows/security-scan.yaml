@@ -53,6 +53,7 @@ permissions:
   contents: read
   security-events: write
   issues: write  # To create security vulnerability alerts
+  pull-requests: write  # To comment on pull requests with Trivy report
 
 jobs:
   trivy-scan:

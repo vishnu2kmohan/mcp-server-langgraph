@@ -12,6 +12,7 @@ Expected to FAIL until:
 2. flushdb() replaced with pattern-based deletion (cache.py)
 """
 
+import gc
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -56,60 +57,74 @@ def test_api_key_cache_uses_separate_database(monkeypatch):
 
 
 @pytest.mark.xdist_group(name="cache_isolation")
-def test_cache_clear_without_pattern_does_not_use_flushdb():
+class TestCacheIsolation:
     """
-    🟢 GREEN: Test that cache.clear() without pattern uses pattern-based deletion, not flushdb().
+    Tests for cache isolation and pattern-based deletion.
 
-    PROBLEM: cache.clear() without pattern calls flushdb() which clears entire Redis DB.
-    This affects all data in that DB, including API key cache if sharing DB 2.
+    Uses xdist_group for proper worker isolation and teardown_method
+    with gc.collect() to prevent memory leaks in pytest-xdist.
 
-    This test should PASS after replacing flushdb() with pattern-based deletion.
+    References:
+    - tests/MEMORY_SAFETY_GUIDELINES.md
+    - ADR-0052: Pytest-xdist Isolation Strategy
     """
-    # Mock Redis
-    mock_redis = MagicMock()
-    mock_redis.keys.return_value = [b"cache:key1", b"cache:key2", b"cache:key3"]
 
-    with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
-        from mcp_server_langgraph.core.cache import CacheService
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
-        cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
+    def test_cache_clear_without_pattern_does_not_use_flushdb(self):
+        """
+        🟢 GREEN: Test that cache.clear() without pattern uses pattern-based deletion, not flushdb().
 
-        # Clear all cache without pattern
-        cache.clear()
+        PROBLEM: cache.clear() without pattern calls flushdb() which clears entire Redis DB.
+        This affects all data in that DB, including API key cache if sharing DB 2.
 
-        # Should NOT call flushdb
-        assert not mock_redis.flushdb.called, (
-            "cache.clear() should NOT use flushdb() - it clears entire Redis DB! "
-            "Use pattern-based deletion (keys('*') + delete) instead."
-        )
+        This test should PASS after replacing flushdb() with pattern-based deletion.
+        """
+        # Mock Redis
+        mock_redis = MagicMock()
+        mock_redis.keys.return_value = [b"cache:key1", b"cache:key2", b"cache:key3"]
 
-        # Should use pattern-based deletion
-        mock_redis.keys.assert_called()  # Should scan for keys
-        if mock_redis.keys.return_value:  # If keys exist
-            mock_redis.delete.assert_called()  # Should delete them
+        with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
+            from mcp_server_langgraph.core.cache import CacheService
 
+            cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
 
-@pytest.mark.xdist_group(name="cache_isolation")
-def test_cache_service_clear_with_pattern_works():
-    """
-    Verify that cache.clear(pattern="foo:*") works correctly.
+            # Clear all cache without pattern
+            cache.clear()
 
-    This should work both before and after the fix.
-    """
-    mock_redis = MagicMock()
-    mock_redis.keys.return_value = [b"foo:1", b"foo:2"]
+            # Should NOT call flushdb
+            assert not mock_redis.flushdb.called, (
+                "cache.clear() should NOT use flushdb() - it clears entire Redis DB! "
+                "Use pattern-based deletion (keys('*') + delete) instead."
+            )
 
-    with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
-        from mcp_server_langgraph.core.cache import CacheService
+            # Should use pattern-based deletion
+            mock_redis.keys.assert_called()  # Should scan for keys
+            if mock_redis.keys.return_value:  # If keys exist
+                mock_redis.delete.assert_called()  # Should delete them
 
-        cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
+    def test_cache_service_clear_with_pattern_works(self):
+        """
+        Verify that cache.clear(pattern="foo:*") works correctly.
 
-        # Clear with pattern
-        cache.clear(pattern="foo:*")
+        This should work both before and after the fix.
+        """
+        mock_redis = MagicMock()
+        mock_redis.keys.return_value = [b"foo:1", b"foo:2"]
 
-        # Should use keys() + delete()
-        mock_redis.keys.assert_called_with("foo:*")
-        mock_redis.delete.assert_called_once_with(b"foo:1", b"foo:2")
+        with patch("mcp_server_langgraph.core.cache.redis.from_url", return_value=mock_redis):
+            from mcp_server_langgraph.core.cache import CacheService
 
-        # Should NOT use flushdb
-        assert not mock_redis.flushdb.called
+            cache = CacheService(redis_url="redis://localhost:6379", redis_db=2)
+
+            # Clear with pattern
+            cache.clear(pattern="foo:*")
+
+            # Should use keys() + delete()
+            mock_redis.keys.assert_called_with("foo:*")
+            mock_redis.delete.assert_called_once_with(b"foo:1", b"foo:2")
+
+            # Should NOT use flushdb
+            assert not mock_redis.flushdb.called

@@ -244,8 +244,10 @@ repos:
     entry: >
       bash -c 'if command -v actionlint >/dev/null 2>&1; then
       actionlint -no-color -shellcheck= .github/workflows/*.yml .github/workflows/*.yaml 2>&1;
-      else echo "Skipping: actionlint not installed (install from https://github.com/rhysd/actionlint)";
-      exit 0; fi'
+      else echo "ERROR: actionlint not installed. Install from https://github.com/rhysd/actionlint";
+      echo "  macOS: brew install actionlint";
+      echo "  Linux: go install github.com/rhysd/actionlint/cmd/actionlint@latest";
+      exit 1; fi'
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -255,7 +257,10 @@ repos:
     description: 'Advanced GitHub Actions workflow validation using actionlint.
 
 
-      CLI Availability Guard: Gracefully skips if actionlint is not installed.
+      REQUIRED: actionlint must be installed. The hook will FAIL if not available.
+
+
+      Install: brew install actionlint (macOS) or go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
 
       Catches issues like:

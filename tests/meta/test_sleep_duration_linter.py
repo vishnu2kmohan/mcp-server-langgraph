@@ -23,7 +23,7 @@ class TestSleepDurationLinter:
 
     def test_linter_detects_long_sleep_in_unit_test(self):
         """Linter should detect time.sleep() > 0.5s in unit tests."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         # Simulated unit test file content
         test_content = """
@@ -43,7 +43,7 @@ def test_something():
 
     def test_linter_allows_short_sleep_in_unit_test(self):
         """Linter should allow time.sleep() <= 0.5s in unit tests."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 import time
@@ -58,7 +58,7 @@ def test_something():
 
     def test_linter_detects_long_sleep_in_integration_test(self):
         """Linter should detect time.sleep() > 2.0s in integration tests."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 import time
@@ -77,7 +77,7 @@ def test_something():
 
     def test_linter_allows_long_sleep_in_integration_test(self):
         """Linter should allow time.sleep() <= 2.0s in integration tests."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 import time
@@ -93,7 +93,7 @@ def test_something():
 
     def test_linter_detects_asyncio_sleep(self):
         """Linter should detect asyncio.sleep() violations."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 import asyncio
@@ -112,7 +112,7 @@ async def test_something():
 
     def test_linter_detects_multiple_violations(self):
         """Linter should detect multiple violations in one file."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 import time
@@ -132,7 +132,7 @@ def test_two():
 
     def test_linter_ignores_comments(self):
         """Linter should ignore sleep calls in comments."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """
 def test_something():
@@ -145,7 +145,7 @@ def test_something():
 
     def test_linter_reports_line_numbers(self):
         """Linter should report accurate line numbers."""
-        from scripts.validation.check_test_sleep_duration import check_file
+        from scripts.validators.check_test_sleep_duration import check_file
 
         test_content = """import time
 
@@ -160,7 +160,7 @@ def test_something():
     def test_linter_checks_actual_test_files(self):
         """Linter should successfully check real test files."""
 
-        from scripts.validation.check_test_sleep_duration import check_test_files
+        from scripts.validators.check_test_sleep_duration import check_test_files
 
         # Check our optimized test files
         test_files = [

@@ -49,9 +49,9 @@ class TestEnforcementMechanisms:
         root = Path(__file__).parent.parent.parent
 
         required_scripts = [
-            "scripts/validation/check_test_memory_safety.py",
-            "scripts/validation/validate_test_isolation.py",
-            "scripts/validation/validate_test_fixtures.py",
+            "scripts/validators/check_test_memory_safety.py",
+            "scripts/validators/validate_test_isolation.py",
+            "scripts/validators/validate_test_fixtures.py",
         ]
 
         for script_path in required_scripts:
@@ -73,9 +73,11 @@ class TestEnforcementMechanisms:
         content = pre_commit_config.read_text()
 
         # Verify critical hooks exist
+        # Note: check-async-mock-usage was renamed to check-async-mock-configuration
+        # per commit 5268d9a8 (remove duplicate AsyncMock hook)
         required_hooks = [
             "check-test-memory-safety",
-            "check-async-mock-usage",
+            "check-async-mock-configuration",
             "validate-test-isolation",
             "validate-test-fixtures",
         ]

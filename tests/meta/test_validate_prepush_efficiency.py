@@ -100,13 +100,23 @@ class TestValidatePrePushEfficiency:
         - uv lock --check (Phase 1)
         - MyPy (Phase 2)
         - Test suite (Phase 3)
+
+        Note: validate-pre-push-quick delegates to internal targets, so we need to
+        check both the main target and its delegated targets for the commands.
         """
         content = self.makefile_path.read_text()
 
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Find main target
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        assert quick_match, "Could not find validate-pre-push-quick target"
 
-        assert match, "Could not find validate-pre-push-quick target"
-        target_content = match.group(0)
+        # Find delegated targets (internal targets start with _)
+        phases_1_2_match = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+
+        # Combine content from main target and delegated targets
+        target_content = quick_match.group(0)
+        if phases_1_2_match:
+            target_content += "\n" + phases_1_2_match.group(0)
 
         # Critical checks that should be manual for visibility
         critical_checks = {

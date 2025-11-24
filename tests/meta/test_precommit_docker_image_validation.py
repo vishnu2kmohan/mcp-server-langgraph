@@ -36,7 +36,7 @@ class TestDockerImageValidationHook:
         WHEN: Checking for validate_docker_image_contents.py
         THEN: The script should exist and be executable
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_docker_image_contents.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "validate_docker_image_contents.py"
         assert script_path.exists(), f"Hook script not found: {script_path}"
         assert script_path.is_file(), "Hook script must be a file"
 
@@ -76,7 +76,7 @@ CMD ["pytest", "-m", "integration"]
         try:
             # Run validation script
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -111,7 +111,7 @@ CMD ["pytest"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -147,7 +147,7 @@ CMD ["pytest"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -183,7 +183,7 @@ CMD ["pytest"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -220,7 +220,7 @@ CMD ["pytest"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -259,7 +259,7 @@ CMD ["pytest"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -305,7 +305,7 @@ CMD ["pytest", "-m", "integration"]
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_docker_image_contents.py", str(temp_file)],
+                ["python", "scripts/validators/validate_docker_image_contents.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -328,7 +328,7 @@ CMD ["pytest", "-m", "integration"]
         assert dockerfile.exists(), "Dockerfile not found"
 
         result = subprocess.run(
-            ["python", "scripts/validation/validate_docker_image_contents.py", str(dockerfile)],
+            ["python", "scripts/validators/validate_docker_image_contents.py", str(dockerfile)],
             capture_output=True,
             text=True,
             timeout=60,
