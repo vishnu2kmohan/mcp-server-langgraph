@@ -129,6 +129,7 @@ repos:
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
     stages:
+    - pre-commit
     - pre-push
   - id: uv-pip-check
     name: Validate no dependency conflicts
@@ -136,6 +137,7 @@ repos:
     language: system
     pass_filenames: false
     stages:
+    - pre-commit
     - pre-push
     description: 'Validates that installed dependencies have no conflicts.
 
