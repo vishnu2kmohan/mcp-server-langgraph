@@ -720,4 +720,23 @@ class TestFixtureDecorators:
                 except (SyntaxError, UnicodeDecodeError):
                     continue
 
+        # Also search fixtures directory (loaded via pytest_plugins in conftest.py)
+        fixtures_dir = tests_dir / "fixtures"
+        if fixtures_dir.exists():
+            for fixture_file in fixtures_dir.glob("*.py"):
+                if fixture_file.name == "__init__.py":
+                    continue
+                try:
+                    with open(fixture_file, encoding="utf-8") as f:
+                        content = f.read()
+                        tree = ast.parse(content, filename=str(fixture_file))
+
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.FunctionDef):
+                            if self._has_fixture_decorator(node):
+                                fixtures.add(node.name)
+
+                except (SyntaxError, UnicodeDecodeError):
+                    continue
+
         return fixtures

@@ -2,7 +2,7 @@
 """
 Validation script for test naming conventions.
 
-This script is a thin wrapper around tests.validation_lib.test_naming module.
+This script is a thin wrapper around tests.validation_lib.naming module.
 All validation logic lives in the shared library for better testability and consistency.
 
 The test naming conventions require:
@@ -39,7 +39,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 # Import validation logic from shared library
-from tests.validation_lib import test_naming  # noqa: E402
+from tests.validation_lib import naming as test_naming  # noqa: E402
 
 
 def main() -> int:

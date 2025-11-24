@@ -76,13 +76,33 @@ class TestMakefilePrePushParity:
 
     @pytest.fixture
     def makefile_validate_target(self, makefile_content: str) -> str:
-        """Extract validate-pre-push target content from Makefile."""
-        # Match from validate-pre-push: to the next target (line starting with non-whitespace)
-        # Targets in Makefile start at column 0 (no indentation)
-        pattern = r"^validate-pre-push:.*?(?=^\S|\Z)"
-        match = re.search(pattern, makefile_content, re.MULTILINE | re.DOTALL)
-        assert match, "Could not find validate-pre-push target in Makefile"
-        return match.group(0)
+        """
+        Extract validate-pre-push sub-targets content from Makefile.
+
+        validate-pre-push is a router that delegates to sub-targets:
+        - validate-pre-push-full (with integration tests)
+        - validate-pre-push-quick (without integration tests)
+
+        This fixture returns the combined content of both sub-targets.
+        """
+        # Extract validate-pre-push-full target
+        full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
+        full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        # Extract validate-pre-push-quick target
+        quick_pattern = r"^validate-pre-push-quick:.*?(?=^\S|\Z)"
+        quick_match = re.search(quick_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+
+        assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
+
+        # Combine both sub-targets
+        combined = ""
+        if full_match:
+            combined += full_match.group(0) + "\n"
+        if quick_match:
+            combined += quick_match.group(0) + "\n"
+
+        return combined
 
     def test_makefile_includes_uv_pip_check(self, makefile_validate_target: str):
         """
