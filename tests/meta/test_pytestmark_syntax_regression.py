@@ -260,8 +260,8 @@ class TestAutomationScriptFix:
 
         Test ID: TEST-META-PYTESTMARK-003-01
         """
-        script_file = Path("scripts/fix_missing_pytestmarks.py")
-        assert script_file.exists(), "Automation script must exist"
+        script_file = Path("scripts/archive/unused/fix_missing_pytestmarks.py")
+        assert script_file.exists(), "Automation script must exist (archived in scripts/archive/unused/)"
 
         content = script_file.read_text()
 

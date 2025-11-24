@@ -336,10 +336,26 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 # ==============================================================================
-# LEGACY TOOLS - Keep during migration, will remove after validation
+# LEGACY TOOLS - DEPRECATED (Use Ruff instead)
+# ==============================================================================
+# DEPRECATION NOTICE (2025-11-23):
+# These tools are deprecated and will be removed in a future release.
+#
+# Migration Guide:
+#   - black → ruff format
+#   - isort → ruff check --select I (import sorting)
+#   - flake8 → ruff check (linting)
+#
+# New Commands:
+#   make lint-check   # Ruff linter (replaces flake8, isort checks)
+#   make lint-fix     # Ruff auto-fix + format (replaces black, isort)
+#   make lint-format  # Ruff format only (replaces black)
+#
+# See: docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md for complete guide
 # ==============================================================================
 
 [tool.black]
+# DEPRECATED: Use 'ruff format' instead
 line-length = 127
 target-version = ["py310", "py311", "py312"]
 include = '\.pyi?$'
@@ -355,11 +371,13 @@ exclude = '''
 '''
 
 [tool.isort]
+# DEPRECATED: Use 'ruff check --select I' instead
 profile = "black"
 line_length = 127
 skip_gitignore = true
 
 [tool.flake8]
+# DEPRECATED: Use 'ruff check' instead
 max-line-length = 127
 exclude = [
     ".git",

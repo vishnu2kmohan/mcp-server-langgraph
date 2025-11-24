@@ -413,12 +413,11 @@ pytest tests/test_rate_limit.py -xvs
 git commit -m "feat: implement rate limiting middleware"
 
 # Automatically runs:
-# - black (auto-format code)
-# - isort (auto-sort imports)
-# - flake8 (lint code)
+# - ruff format (auto-format code - replaces black)
+# - ruff check --fix (auto-fix linting - replaces isort + flake8)
 # - bandit (security scan)
 # - shellcheck (bash scripts)
-# Duration: 15-30 seconds
+# Duration: 15-30 seconds (45% faster with Ruff consolidation)
 ```bash
 **Pre-push Hooks (8-12 min - Comprehensive Validation)**:
 ```bash
@@ -648,7 +647,7 @@ Claude Code automatically detects:
 - Python virtual environment (.venv)
 - Package manager (uv, pip, poetry)
 - Test framework (pytest)
-- Code style tools (black, isort, mypy)
+- Code style tools (Ruff, mypy, bandit)
 
 ### Git Hooks Configuration
 
@@ -661,15 +660,15 @@ Auto-runs on `git commit` for changed files only.
 
 **What Claude Code needs to know:**
 - Commits are fast (15-30s) - no need to wait long
-- Auto-fixers run automatically (black, isort)
+- Auto-fixers run automatically (Ruff format + auto-fix)
 - Only changed files are validated
 - Can commit frequently without performance penalty
 
 ```bash
 # When Claude Code commits changes
 git commit -m "feat: implement feature"
-# Runs: black, isort, flake8, bandit, shellcheck, etc.
-# Duration: < 30 seconds
+# Runs: ruff format, ruff check --fix, bandit, shellcheck, etc.
+# Duration: < 30 seconds (45% faster with Ruff consolidation)
 ```bash
 #### Pre-push Hooks (Comprehensive - 8-12 min)
 Auto-runs on `git push` for all files. Matches CI exactly.
@@ -737,13 +736,16 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 markers = ["unit", "integration", "e2e"]
 
-[tool.black]
-line-length = 120
-target-version = ['py312']
+[tool.ruff]
+line-length = 127
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-line_length = 120
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]  # pycodestyle, pyflakes, isort, pyupgrade, bugbear
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 ```bash
 ## Tips for Maximum Productivity
 
@@ -784,7 +786,7 @@ Claude Code maintains:
 - **Type safety**: Full type hints with mypy validation
 - **Test coverage**: 70%+ coverage target (achieved 86% in Phase 2)
 - **Documentation**: Docstrings for all public APIs
-- **Code style**: Black, isort, flake8 compliance
+- **Code style**: Ruff linting + formatting (10-100x faster than legacy tools)
 - **Security**: Bandit scanning for vulnerabilities
 
 ## Example Claude Code Workflow
@@ -893,9 +895,11 @@ make deploy-rollback-production  # Rollback production deployment
 ### Code Quality Commands
 
 ```bash
-make lint                 # Run linters (flake8, mypy)
-make format               # Format code (black, isort)
-make security-check       # Run security scans (bandit)
+make lint-check           # Run Ruff linter (replaces flake8 + isort checks)
+make lint-fix             # Auto-fix linting + format code (replaces black + isort)
+make lint-format          # Format code only (replaces black)
+make lint-type-check      # Run mypy type checking
+make lint-security        # Run bandit security scan
 make pre-commit-setup     # Setup pre-commit hooks
 ```bash
 ### Running & Monitoring

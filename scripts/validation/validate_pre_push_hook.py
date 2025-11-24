@@ -38,8 +38,46 @@ def get_repo_root() -> Path:
         capture_output=True,
         text=True,
         check=True,
+        timeout=60,
     )
     return Path(result.stdout.strip())
+
+
+def get_hook_path(repo_root: Path) -> Path:
+    """
+    Get path to pre-push hook (worktree-safe).
+
+    This function correctly resolves hook paths in both:
+    - Main repository (.git is a directory)
+    - Git worktrees (.git is a file pointing to common dir)
+
+    Args:
+        repo_root: Repository root directory
+
+    Returns:
+        Absolute path to pre-push hook
+
+    Implementation:
+        Uses `git rev-parse --git-common-dir` to get the common git directory,
+        which handles both main repos and worktrees correctly.
+
+    Fixes: Codex Finding #1 - Hard-coded .git/hooks/ breaks worktrees
+    """
+    result = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+        cwd=repo_root,
+    )
+    git_common_dir = Path(result.stdout.strip())
+
+    # If path is relative, make it absolute relative to repo_root
+    if not git_common_dir.is_absolute():
+        git_common_dir = repo_root / git_common_dir
+
+    return git_common_dir / "hooks" / "pre-push"
 
 
 def is_pre_commit_wrapper(content: str) -> bool:
@@ -185,7 +223,7 @@ def check_pre_push_hook() -> tuple[bool, list[str]]:
     """
     errors = []
     repo_root = get_repo_root()
-    pre_push_path = repo_root / ".git" / "hooks" / "pre-push"
+    pre_push_path = get_hook_path(repo_root)  # Worktree-safe hook resolution
 
     # Check 1: File exists
     if not pre_push_path.exists():

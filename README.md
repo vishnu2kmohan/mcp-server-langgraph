@@ -665,13 +665,25 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 
 **Quality Score: 9.6/10** across 7 dimensions (Code Organization, Testing, Type Safety, Documentation, Error Handling, Observability, Security).
 
-**Quality Gates**: Pre-commit hooks (black, isort, flake8, mypy, bandit) + CI/CD (unit/integration/property/contract/regression/mutation tests, OpenAPI validation). All tests run on Python 3.10-3.12.
+**Quality Gates**: Pre-commit hooks (Ruff linting + formatting, mypy type checking, bandit security scanning) + CI/CD (unit/integration/property/contract/regression/mutation tests, OpenAPI validation). All tests run on Python 3.10-3.12.
 
-**Commands**: `make format`, `make lint`, `make test-unit`, `make test-all-quality`, `make test-coverage`
+**Linting & Formatting** (consolidated to Ruff for 10-100x faster performance):
+- `make lint-check` - Run Ruff linter (replaces flake8 + isort checks)
+- `make lint-fix` - Auto-fix linting issues + format code (replaces black + isort)
+- `make lint-format` - Format code only (replaces black)
+- `make lint-type-check` - Run mypy type checking (unchanged)
+- `make lint-security` - Run bandit security scan (unchanged)
 
-**Development**: Branch protection, conventional commits, code review required, 25 ADRs documenting architectural decisions.
+**Testing**:
+- `make test-unit` - Fast unit tests with mocked dependencies
+- `make test-integration` - End-to-end with real infrastructure
+- `make test-coverage` - Generate coverage report
+- `make validate-pre-push` - Quick validation (skip integration, use testmon)
+- `CI_PARITY=1 make validate-pre-push` - Full CI-equivalent validation (includes integration tests)
 
-**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md)
+**Development**: Branch protection, conventional commits, code review required, 59 ADRs documenting architectural decisions.
+
+**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md) | [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md)
 
 ## Contributors
 

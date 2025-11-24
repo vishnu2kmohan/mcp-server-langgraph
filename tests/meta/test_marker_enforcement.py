@@ -39,11 +39,11 @@ MARKER_EXEMPT_FILES: set[str] = {
 
 # Critical guard-rail tests that must have both 'unit' AND 'meta' markers
 CRITICAL_GUARD_RAIL_TESTS: set[str] = {
-    "tests/test_gitignore_validation.py",
-    "tests/test_documentation_integrity.py",
-    "tests/test_workflow_security.py",
-    "tests/test_mdx_validation.py",
-    "tests/test_validate_mintlify_docs.py",
+    "tests/meta/validation/test_gitignore_validation.py",
+    "tests/meta/validation/test_documentation_integrity.py",
+    "tests/meta/ci/test_workflow_security.py",
+    "tests/meta/validation/test_mdx_validation.py",
+    "tests/meta/validation/test_validate_mintlify_docs.py",
 }
 
 # Meta test classes that must have xdist_group markers (OpenAI Codex Finding #5)

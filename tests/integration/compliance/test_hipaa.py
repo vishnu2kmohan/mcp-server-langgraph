@@ -10,10 +10,6 @@ Covers HIPAA Security Rule technical safeguards:
 import gc
 
 import pytest
-from tests.conftest import get_user_id
-
-pytestmark = pytest.mark.integration
-
 from mcp_server_langgraph.auth.hipaa import (
     DataIntegrityCheck,
     EmergencyAccessRequest,
@@ -22,8 +18,9 @@ from mcp_server_langgraph.auth.hipaa import (
     get_hipaa_controls,
     set_hipaa_controls,
 )
+from tests.conftest import get_user_id
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.unit
