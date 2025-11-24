@@ -65,12 +65,16 @@ def main() -> int:
         0 if all tests pass, non-zero otherwise
     """
     # Build pytest arguments
+    # NOTE: --testmon removed due to pytest-xdist incompatibility (Codex Audit 2025-11-24)
+    # Testmon's change tracking doesn't work reliably with xdist's worker isolation.
+    # This can lead to tests being skipped incorrectly or stale cache issues after branch switches.
+    # Trade-off: Slightly longer test runs (~10-15% slower) but guaranteed correctness.
+    # See: docs-internal/HOOK_PERFORMANCE_OPTIMIZATION_PLAN.md:392-409
     pytest_args = [
         "pytest",
         "-n",
         "auto",  # Parallel execution with pytest-xdist
         "-x",  # Stop on first failure (fail-fast)
-        "--testmon",  # Optimize test execution with pytest-testmon
         "--tb=short",  # Short traceback format
     ]
 
