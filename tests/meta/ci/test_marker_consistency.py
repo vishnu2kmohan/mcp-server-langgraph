@@ -12,6 +12,7 @@ Regression prevention for validation audit finding:
 - This creates "works locally, fails CI" scenario
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -21,8 +22,13 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="marker_consistency")
 class TestMarkerConsistency:
     """Test that pytest markers are consistent across all sources"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_all_three_sources_use_identical_marker(self):
         """

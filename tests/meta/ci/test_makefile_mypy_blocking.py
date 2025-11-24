@@ -11,6 +11,7 @@ Regression prevention for validation audit finding:
 - Creates "works locally, fails CI" scenario
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -20,8 +21,13 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="makefile_mypy_blocking")
 class TestMakefileMyPyBlocking:
     """Test that Makefile treats MyPy errors as blocking"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_makefile_mypy_is_blocking(self):
         """

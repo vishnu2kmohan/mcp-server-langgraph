@@ -117,7 +117,14 @@ class TestMypyEnforcement:
         )
 
     def test_mypy_targets_correct_package(self, pre_commit_config):
-        """Verify mypy is configured to check the correct source package."""
+        """Verify mypy is configured to check the correct source package.
+
+        The package target can be specified either via:
+        1. files pattern (e.g., files: ^src/mcp_server_langgraph/)
+        2. entry command (e.g., entry: uv run mypy src/mcp_server_langgraph)
+
+        Both approaches are valid - the test accepts either.
+        """
         repos = pre_commit_config.get("repos", [])
 
         # Find mypy hook
@@ -131,12 +138,19 @@ class TestMypyEnforcement:
 
         assert mypy_hook is not None, "Mypy hook not found in configuration"
 
-        # Check files pattern
+        # Check files pattern OR entry command
         files = mypy_hook.get("files", "")
+        entry = mypy_hook.get("entry", "")
 
-        # Should target source package
-        assert "src/mcp_server_langgraph" in files or "^src/" in files, (
-            f"Mypy should target src/mcp_server_langgraph package. " f"Current files pattern: {files}"
+        # Should target source package via files pattern OR entry command
+        targets_package_via_files = "src/mcp_server_langgraph" in files or "^src/" in files
+        targets_package_via_entry = "src/mcp_server_langgraph" in entry or "src/" in entry
+
+        assert targets_package_via_files or targets_package_via_entry, (
+            f"Mypy should target src/mcp_server_langgraph package.\n"
+            f"Current files pattern: {files}\n"
+            f"Current entry command: {entry}\n"
+            f"Expected: Either files pattern includes 'src/' OR entry includes 'src/mcp_server_langgraph'"
         )
 
     def test_mypy_has_appropriate_configuration(self, pre_commit_config):

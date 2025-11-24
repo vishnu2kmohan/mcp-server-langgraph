@@ -21,6 +21,7 @@ Fix Pattern:
 """
 
 import asyncio
+import gc
 
 import pytest
 
@@ -28,8 +29,13 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="openfga_lazy_init")
 class TestOpenFGALazyInitialization:
     """Test OpenFGA client lazy async initialization pattern"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_get_openfga_client_no_event_loop_error(self, monkeypatch):
         """
@@ -152,8 +158,13 @@ class TestOpenFGALazyInitialization:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="openfga_implementation")
 class TestOpenFGAClientImplementation:
     """Test OpenFGAClient implementation details"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_openfga_client_init_does_not_create_event_loop_resources(self):
         """

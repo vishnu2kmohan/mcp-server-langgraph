@@ -11,6 +11,7 @@ Regression prevention for validation audit finding:
 - Should be on 'pre-push' stage and fail on errors
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -20,8 +21,13 @@ import yaml
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="precommit_mypy_config")
 class TestPreCommitMyPyConfiguration:
     """Test that pre-commit hooks have MyPy configured as blocking"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_mypy_hook_exists_in_precommit_config(self):
         """
@@ -113,25 +119,36 @@ class TestPreCommitMyPyConfiguration:
         Test that MyPy hooks target the src/ directory.
 
         Ensures MyPy runs on the actual source code, not just tests.
+        The target can be specified via files pattern OR entry command.
         """
         config_path = Path(".pre-commit-config.yaml")
 
         with open(config_path) as f:
             config = yaml.safe_load(f)
 
-        # Find MyPy hooks and check files pattern
+        # Find MyPy hooks and check files pattern OR entry command
         src_mypy_hooks = []
         for repo in config.get("repos", []):
             for hook in repo.get("hooks", []):
                 if "mypy" in hook.get("id", "").lower() or "mypy" in hook.get("name", "").lower():
                     files_pattern = hook.get("files", "")
-                    if "src" in files_pattern or "mcp_server_langgraph" in files_pattern:
+                    entry_cmd = hook.get("entry", "")
+
+                    # Check if hook targets src/ via files pattern OR entry command
+                    if (
+                        "src" in files_pattern
+                        or "mcp_server_langgraph" in files_pattern
+                        or "src" in entry_cmd
+                        or "mcp_server_langgraph" in entry_cmd
+                    ):
                         src_mypy_hooks.append(hook.get("name", hook.get("id")))
 
         assert len(src_mypy_hooks) > 0, (
             "No MyPy hooks configured to check src/ directory!\n"
             "MyPy should validate source code type annotations.\n"
-            "Add: files: ^src/mcp_server_langgraph/ to MyPy hook"
+            "Add either:\n"
+            "  - files: ^src/mcp_server_langgraph/ OR\n"
+            "  - entry: uv run mypy src/mcp_server_langgraph"
         )
 
     def test_precommit_hook_validates_correctly(self):

@@ -12,6 +12,7 @@ Regression prevention for validation audit finding:
 """
 
 import ast
+import gc
 import re
 from pathlib import Path
 
@@ -20,8 +21,13 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="hardcoded_test_ids")
 class TestHardcodedTestIDs:
     """Test that integration tests don't have hardcoded test IDs"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_no_hardcoded_user_ids_in_compliance_tests(self):
         """

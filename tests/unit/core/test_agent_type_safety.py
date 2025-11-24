@@ -12,6 +12,7 @@ Regression prevention for validation audit findings:
 - ainvoke type incompatibility with list[BaseMessage]
 """
 
+import gc
 import subprocess
 from pathlib import Path
 
@@ -20,8 +21,13 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.xdist_group(name="agent_type_compliance")
 class TestAgentTypeCompliance:
     """Test that agent.py passes MyPy type checking"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_agent_module_passes_mypy(self):
         """
@@ -123,8 +129,13 @@ class TestAgentTypeCompliance:
 
 
 @pytest.mark.unit
+@pytest.mark.xdist_group(name="agent_message_handling")
 class TestAgentMessageHandling:
     """Test that message handling works correctly with the fixed types"""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     def test_message_list_operations(self):
         """
