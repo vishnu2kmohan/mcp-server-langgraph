@@ -55,21 +55,35 @@ class TestValidatePrePushEfficiency:
         assert re.search(r"^validate-pre-push:", content, re.MULTILINE), "validate-pre-push target not found in Makefile"
 
     def test_validate_pre_push_has_phases(self):
-        """Verify validate-pre-push has multiple phases with progress indicators."""
+        """Verify validate-pre-push has multiple phases with progress indicators.
+
+        Note: validate-pre-push-quick delegates to sub-targets:
+        - _validate-pre-push-phases-1-2 (contains PHASE 1, 2)
+        - inline PHASE 3
+        - _validate-pre-push-phase-4 (contains PHASE 4)
+
+        We need to check the combined content of all these targets.
+        """
         content = self.makefile_path.read_text()
 
-        # Find the validate-pre-push-quick target (where implementation lives)
-        match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        # Extract all three targets that make up validate-pre-push-quick
+        quick_match = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phases_1_2_match = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
+        phase_4_match = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
 
-        assert match, "Could not find validate-pre-push-quick target"
+        assert quick_match, "Could not find validate-pre-push-quick target"
+        assert phases_1_2_match, "Could not find _validate-pre-push-phases-1-2 target"
+        assert phase_4_match, "Could not find _validate-pre-push-phase-4 target"
 
-        target_content = match.group(0)
+        # Combine all target content
+        combined_content = quick_match.group(0) + "\n" + phases_1_2_match.group(0) + "\n" + phase_4_match.group(0)
 
         # Should have PHASE markers for visibility
-        phases = re.findall(r"PHASE \d+:", target_content)
+        phases = re.findall(r"PHASE \d+:", combined_content)
         assert len(phases) >= 3, (
-            f"Expected at least 3 phases in validate-pre-push-quick, found {len(phases)}\n"
-            f"Phases provide explicit progress visibility (user-selected hybrid approach)"
+            f"Expected at least 3 phases in validate-pre-push-quick (combined), found {len(phases)}\n"
+            f"Phases provide explicit progress visibility (user-selected hybrid approach)\n"
+            f"Targets checked: validate-pre-push-quick, _validate-pre-push-phases-1-2, _validate-pre-push-phase-4"
         )
 
     def test_manual_phases_run_critical_checks(self):

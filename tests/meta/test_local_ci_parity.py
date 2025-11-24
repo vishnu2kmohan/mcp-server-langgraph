@@ -191,8 +191,9 @@ def shared_validate_pre_push_sub_targets_content(shared_makefile_content: str) -
     The validate-pre-push target is a router that calls:
     - validate-pre-push-full (with integration tests)
     - validate-pre-push-quick (without integration tests)
+    - _validate-pre-push-phases-1-2 (shared phases called by both full and quick)
 
-    This fixture returns the combined content of both sub-targets.
+    This fixture returns the combined content of all sub-targets.
     """
     # Extract validate-pre-push-full target
     full_match = re.search(
@@ -208,11 +209,20 @@ def shared_validate_pre_push_sub_targets_content(shared_makefile_content: str) -
         re.MULTILINE | re.DOTALL,
     )
 
+    # Extract _validate-pre-push-phases-1-2 target (contains actual lockfile validation)
+    phases_match = re.search(
+        r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z]|\Z)",
+        shared_makefile_content,
+        re.MULTILINE | re.DOTALL,
+    )
+
     combined = ""
     if full_match:
         combined += full_match.group(0) + "\n"
     if quick_match:
         combined += quick_match.group(0) + "\n"
+    if phases_match:
+        combined += phases_match.group(0) + "\n"
 
     return combined
 
