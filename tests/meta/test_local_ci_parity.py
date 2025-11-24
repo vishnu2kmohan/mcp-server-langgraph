@@ -2211,22 +2211,33 @@ class TestContractTestMarkerParity:
                         break
 
         # Extract from Makefile
-        unit_lines = [
-            line
-            for line in makefile_content.split("\n")
-            if "pytest" in line
-            and "-m" in line
-            and "unit" in line
-            and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
-            and "test_" not in line
-            and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
-        ]
-        if unit_lines:
-            for line in unit_lines:
-                marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
-                if marker_match:
-                    markers_found["Makefile"] = marker_match.group(1)
-                    break
+        # Modern Makefile uses consolidated script, so extract marker from that script instead
+        if "scripts/run_pre_push_tests.py" in makefile_content:
+            # Makefile delegates to run_pre_push_tests.py - use the marker from that script
+            marker_match = re.search(
+                r'marker_expression\s*=\s*["\']([^"\']+)["\']',
+                shared_run_pre_push_tests_content,
+            )
+            if marker_match:
+                markers_found["Makefile"] = marker_match.group(1)
+        else:
+            # Legacy Makefile with explicit pytest commands
+            unit_lines = [
+                line
+                for line in makefile_content.split("\n")
+                if "pytest" in line
+                and "-m" in line
+                and "unit" in line
+                and ("HYPOTHESIS_PROFILE" in line or "OTEL_SDK_DISABLED" in line)
+                and "test_" not in line
+                and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
+            ]
+            if unit_lines:
+                for line in unit_lines:
+                    marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
+                    if marker_match:
+                        markers_found["Makefile"] = marker_match.group(1)
+                        break
 
         # Extract from CI workflow
         unit_lines = [
@@ -2235,7 +2246,6 @@ class TestContractTestMarkerParity:
             if "pytest" in line
             and "-m" in line
             and "unit" in line
-            and "api" not in line
             and "test_" not in line
             and not line.strip().startswith("echo")  # Exclude doc lines, allow pytest commands with echo output
             # Note: tests/ check removed for CI - some CI workflows use relative paths or don't specify path
@@ -2244,8 +2254,12 @@ class TestContractTestMarkerParity:
             for line in unit_lines:
                 marker_match = re.search(r'-m\s+["\']([^"\']+)["\']', line)
                 if marker_match:
-                    markers_found["CI workflow"] = marker_match.group(1)
-                    break
+                    marker = marker_match.group(1)
+                    # Accept consolidated markers like "(unit or api or property)" or base markers like "unit and not llm"
+                    # Exclude API-specific markers like "api and unit" (where api comes first)
+                    if marker.startswith("(unit") or (marker.startswith("unit") and not marker.startswith("api")):
+                        markers_found["CI workflow"] = marker
+                        break
 
         # All three should contain the base marker (or start with unit for consolidated expressions)
         # For pre-commit framework: "(unit or api or property) and not llm" is valid
