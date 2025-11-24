@@ -22,6 +22,7 @@ Related Issues:
 - CI/CD pipeline optimization
 """
 
+import gc
 import re
 from pathlib import Path
 
@@ -30,8 +31,13 @@ import pytest
 pytestmark = pytest.mark.meta
 
 
+@pytest.mark.xdist_group(name="validate_prepush_efficiency")
 class TestValidatePrePushEfficiency:
     """Validates validate-pre-push doesn't duplicate work."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:
@@ -342,8 +348,13 @@ class TestValidatePrePushEfficiency:
                     )
 
 
+@pytest.mark.xdist_group(name="validate_prepush_performance")
 class TestValidatePrePushPerformance:
     """Validates validate-pre-push performance characteristics."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:
@@ -432,8 +443,13 @@ class TestValidatePrePushPerformance:
         )
 
 
+@pytest.mark.xdist_group(name="validate_prepush_documentation")
 class TestValidatePrePushDocumentation:
     """Validates validate-pre-push target is well-documented."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @property
     def makefile_path(self) -> Path:

@@ -10,6 +10,7 @@ TDD Approach:
 3. REFACTOR: Clean up code while keeping tests green
 """
 
+import gc
 import re
 import subprocess
 from pathlib import Path
@@ -21,6 +22,7 @@ import yaml
 pytestmark = [pytest.mark.meta, pytest.mark.unit]
 
 
+@pytest.mark.xdist_group(name="validator_deduplication")
 class TestValidatorDeduplication:
     """
     Test that validators don't run twice via validate-fast wrapper AND individual hooks.
@@ -35,6 +37,10 @@ class TestValidatorDeduplication:
     Solution: Remove duplicate scripts from validate_fast.py and rely on
     individual hooks for better fail-fast behavior and clearer error messages.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
@@ -138,6 +144,7 @@ class TestValidatorDeduplication:
         )
 
 
+@pytest.mark.xdist_group(name="makefile_prepush_parity")
 class TestMakefilePrePushParity:
     """
     Test that 'make validate-pre-push' matches actual pre-push hook behavior.
@@ -149,6 +156,10 @@ class TestMakefilePrePushParity:
 
     Solution: Remove skipped validators from SKIP list so Makefile matches hook.
     """
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
 
     @pytest.fixture
     def repo_root(self) -> Path:
