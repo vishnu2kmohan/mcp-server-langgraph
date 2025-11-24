@@ -54,7 +54,9 @@ def test_ports_are_intentionally_fixed(test_infrastructure_ports):
     assert (
         test_infrastructure_ports["redis_checkpoints"] == 9379
     ), "Redis checkpoints port should be fixed at 9379 for all workers"
-    assert test_infrastructure_ports["redis_sessions"] == 9380, "Redis sessions port should be fixed at 9380 for all workers"
+    assert (
+        test_infrastructure_ports["redis_sessions"] == 9379
+    ), "Redis sessions port should be fixed at 9379 for all workers (consolidated with checkpoints)"
     assert test_infrastructure_ports["qdrant"] == 9333, "Qdrant port should be fixed at 9333 for all workers"
     assert test_infrastructure_ports["qdrant_grpc"] == 9334, "Qdrant gRPC port should be fixed at 9334 for all workers"
     assert test_infrastructure_ports["openfga_http"] == 9080, "OpenFGA HTTP port should be fixed at 9080 for all workers"
@@ -77,7 +79,7 @@ def test_all_workers_share_same_ports(test_infrastructure_ports):
     base_ports = {
         "postgres": 9432,
         "redis_checkpoints": 9379,
-        "redis_sessions": 9380,
+        "redis_sessions": 9379,  # Consolidated with checkpoints (same port, different DB index)
         "qdrant": 9333,
         "qdrant_grpc": 9334,
         "openfga_http": 9080,
