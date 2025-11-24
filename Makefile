@@ -806,7 +806,7 @@ validate-pre-push:  ## Pre-push validation (auto-detects CI_PARITY for full vs q
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		$(MAKE) validate-pre-push-full; \
 	else \
-		echo "🚀 Running QUICK validation (skip integration, use testmon)"; \
+		echo "🚀 Running QUICK validation (skip integration tests)"; \
 		echo "   💡 Tip: Use 'CI_PARITY=1 make validate-pre-push' for full CI validation"; \
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		$(MAKE) validate-pre-push-quick; \
@@ -826,7 +826,7 @@ format: lint-fix  ## Alias for lint-fix (Ruff formatter)
 
 security-check:
 	@echo "Running bandit security scan..."
-	bandit -r . -x ./tests,./.venv -ll
+	$(UV_RUN) bandit -r . -x ./tests,./.venv -ll
 
 security-scan-full:
 	@echo "🔒 Running comprehensive security scan..."

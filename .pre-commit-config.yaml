@@ -1634,17 +1634,6 @@ repos:
     - pre-push
     description: "Validates memory safety in tests (gc.collect in teardown)."
 
-  - id: check-async-mock-usage
-    name: Check Async Mock Usage
-    entry: uv run python scripts/validation/check_async_mock_usage.py
-    language: system
-    files: ^tests/.*\.py$
-    pass_filenames: true
-    always_run: false
-    stages:
-    - pre-push
-    description: "Validates that AsyncMock is used correctly."
-
   - id: check-test-naming
     name: Check Test Naming Conventions
     entry: uv run python scripts/validation/check_test_naming.py

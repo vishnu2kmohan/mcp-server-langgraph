@@ -238,3 +238,117 @@ class TestRunPrePushTestsMetaConditional:
         except (ImportError, AttributeError):
             # Function not implemented yet (TDD RED phase)
             pytest.skip("should_run_meta_tests() not implemented yet")
+
+    def test_pre_commit_env_vars_used_when_available(self):
+        """
+        Test that should_run_meta_tests() uses PRE_COMMIT_FROM_REF and PRE_COMMIT_TO_REF
+        when available (provided by pre-commit during hook execution).
+
+        Modern Best Practice (Phase 3.1 refactor):
+        - PRE_COMMIT_FROM_REF: Git ref being pushed from (e.g., abc123)
+        - PRE_COMMIT_TO_REF: Git ref being pushed to (e.g., def456)
+        - Use: git diff --name-only $FROM_REF $TO_REF
+
+        Why:
+        - Matches pre-commit's actual changed file detection
+        - More accurate than git diff HEAD (which misses committed changes)
+        - Enables meta tests to run when workflow files changed in ANY commit in push range
+
+        Reference: Phase 3.1 - Modern best practice for pre-commit integration
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        # Mock environment with pre-commit refs
+        with patch.dict("os.environ", {"PRE_COMMIT_FROM_REF": "abc123", "PRE_COMMIT_TO_REF": "def456"}, clear=False):
+            with patch("subprocess.run") as mock_run:
+                # Scenario: Workflow file changed between abc123 and def456
+                mock_run.return_value = MagicMock(stdout=".github/workflows/ci.yaml\n", returncode=0)
+
+                result = should_run_meta_tests()
+
+                # Verify correct git command was used
+                mock_run.assert_called()
+                call_args = mock_run.call_args[0][0]
+                assert "diff" in call_args, "Should call git diff"
+                assert "abc123" in call_args, "Should use PRE_COMMIT_FROM_REF"
+                assert "def456" in call_args, "Should use PRE_COMMIT_TO_REF"
+                assert result is True, "Should detect workflow file change"
+
+    def test_merge_base_fallback_when_no_pre_commit_refs(self):
+        """
+        Test that should_run_meta_tests() falls back to git merge-base @{u} HEAD
+        when PRE_COMMIT_FROM_REF/TO_REF are not available.
+
+        Fallback Strategy (Phase 3.1 refactor):
+        1. Try PRE_COMMIT_FROM_REF/TO_REF (pre-commit hook execution)
+        2. Fall back to: git merge-base @{u} HEAD (find upstream merge base)
+        3. Final fallback: git diff HEAD (current behavior)
+
+        Why merge-base @{u} HEAD:
+        - @{u} = upstream tracking branch (e.g., origin/main)
+        - Shows all changes since last push to upstream
+        - More accurate than HEAD for pre-push validation
+
+        Reference: Phase 3.1 - Modern best practice
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        # Mock environment WITHOUT pre-commit refs
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as mock_run:
+                # First call: git merge-base @{u} HEAD (returns merge base commit)
+                # Second call: git diff --name-only <merge-base> HEAD
+                mock_run.side_effect = [
+                    MagicMock(stdout="abc123\n", returncode=0),  # merge-base result
+                    MagicMock(stdout=".pre-commit-config.yaml\n", returncode=0),  # diff result
+                ]
+
+                result = should_run_meta_tests()
+
+                # Verify merge-base was called
+                assert mock_run.call_count == 2, "Should call merge-base then diff"
+                first_call_args = mock_run.call_args_list[0][0][0]
+                assert "merge-base" in first_call_args, "Should call git merge-base"
+                assert "@{u}" in first_call_args, "Should use upstream tracking branch"
+
+                assert result is True, "Should detect workflow file change"
+
+    def test_git_diff_head_final_fallback(self):
+        """
+        Test that should_run_meta_tests() falls back to git diff HEAD when:
+        1. PRE_COMMIT_FROM_REF/TO_REF not available
+        2. git merge-base @{u} HEAD fails (no upstream branch)
+
+        Fallback Chain (Phase 3.1 refactor):
+        1. PRE_COMMIT_FROM_REF/TO_REF ← Best (matches pre-commit)
+        2. merge-base @{u} HEAD ← Better (shows unpushed changes)
+        3. diff HEAD ← Current (works everywhere)
+
+        Why final fallback needed:
+        - Detached HEAD state (no upstream)
+        - New repository (no remote)
+        - Local-only branch
+
+        Reference: Phase 3.1 - Modern best practice with robust fallback
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        # Mock environment WITHOUT pre-commit refs
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as mock_run:
+                # First call: git merge-base @{u} HEAD (fails - no upstream)
+                # Second call: git diff --name-only HEAD (fallback)
+                mock_run.side_effect = [
+                    subprocess.CalledProcessError(128, "git merge-base"),  # merge-base fails
+                    MagicMock(stdout="tests/conftest.py\n", returncode=0),  # diff HEAD succeeds
+                ]
+
+                result = should_run_meta_tests()
+
+                # Verify fallback to diff HEAD
+                assert mock_run.call_count == 2, "Should try merge-base then fall back to diff HEAD"
+                second_call_args = mock_run.call_args_list[1][0][0]
+                assert "diff" in second_call_args, "Should call git diff"
+                assert "HEAD" in second_call_args, "Should use HEAD"
+
+                assert result is True, "Should detect workflow file change via fallback"

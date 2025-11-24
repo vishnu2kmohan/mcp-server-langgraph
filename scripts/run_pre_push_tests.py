@@ -65,6 +65,12 @@ def should_run_meta_tests() -> bool:
     They should run when workflow-related files change, but can be skipped for
     regular code changes to maintain fast pre-push validation.
 
+    Modern Best Practice (Phase 3.1 refactor - 2025-11-24):
+    Uses 3-level fallback strategy to determine changed files:
+    1. PRE_COMMIT_FROM_REF/TO_REF (provided by pre-commit during hooks)
+    2. git merge-base @{u} HEAD (shows unpushed changes)
+    3. git diff HEAD (fallback for detached/local branches)
+
     Returns:
         True if workflow files changed (run meta tests)
         False if only non-workflow files changed (skip meta tests for performance)
@@ -76,6 +82,7 @@ def should_run_meta_tests() -> bool:
     - tests/conftest.py (shared fixtures)
 
     Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
+    Reference: Phase 3.1 - Modern best practice with pre-commit alignment
     """
     # Workflow-related files that trigger meta tests
     workflow_patterns = [
@@ -86,15 +93,48 @@ def should_run_meta_tests() -> bool:
         "tests/conftest.py",
     ]
 
-    # Get changed files from git (staged + unstaged)
+    # Strategy 1: Use PRE_COMMIT_FROM_REF/TO_REF if available (during pre-commit hook execution)
+    from_ref = os.getenv("PRE_COMMIT_FROM_REF")
+    to_ref = os.getenv("PRE_COMMIT_TO_REF")
+
     try:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "HEAD"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=5,
-        )
+        if from_ref and to_ref:
+            # Pre-commit provides exact ref range being pushed
+            result = subprocess.run(
+                ["git", "diff", "--name-only", from_ref, to_ref],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=5,
+            )
+        else:
+            # Strategy 2: Try merge-base with upstream tracking branch
+            # This shows all changes since last push to upstream
+            try:
+                merge_base_result = subprocess.run(
+                    ["git", "merge-base", "@{u}", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=5,
+                )
+                merge_base = merge_base_result.stdout.strip()
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", merge_base, "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=5,
+                )
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                # Strategy 3: Final fallback to diff HEAD (detached HEAD, no upstream, etc.)
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=5,
+                )
     except subprocess.TimeoutExpired:
         # Can't determine changes, run meta tests to be safe
         return True
@@ -161,6 +201,9 @@ def main() -> int:
     else:
         # Only code files changed - skip meta tests for performance
         marker_expression = "(unit or api or property) and not llm and not meta"
+
+    # Store marker index for later modification (CI_PARITY support)
+    marker_index = len(pytest_args) + 1  # +1 because "-m" is inserted first
     pytest_args.extend(["-m", marker_expression])
 
     # Specify test directory
@@ -175,7 +218,7 @@ def main() -> int:
             # Add integration marker to expression (but still exclude meta-tests)
             # (unit or api or property or integration) and not llm and not meta
             marker_expression = "(unit or api or property or integration) and not llm and not meta"
-            pytest_args[pytest_args.index("(unit or api or property) and not llm and not meta")] = marker_expression
+            pytest_args[marker_index] = marker_expression  # Use stored index instead of fragile .index()
         else:
             print("⚠ CI_PARITY=1 detected but Docker not available")
             print("  Integration tests require Docker daemon")

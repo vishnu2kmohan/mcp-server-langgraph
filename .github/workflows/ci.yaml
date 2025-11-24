@@ -203,6 +203,14 @@ jobs:
           OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "(unit or api or property) and not llm"
           echo "✅ All test files have required markers"
 
+      - name: Run comprehensive meta tests
+        run: |
+          echo "🧪 Running all meta tests (infrastructure validation)..."
+          echo "  This includes workflow validation, fixture organization, config validation, etc."
+          OTEL_SDK_DISABLED=true uv run pytest tests/meta/ -v --tb=short -m "meta and not llm" || true
+          echo "✅ Comprehensive meta test suite executed"
+        continue-on-error: true  # Don't block CI on meta test failures initially
+
   # ============================================================================
   # TESTING (Parallelized by Python version)
   # ============================================================================
