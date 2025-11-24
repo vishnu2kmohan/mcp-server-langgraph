@@ -375,6 +375,7 @@ def get_project_modules() -> set[str]:
         "validate_pytest_markers",  # Script for pytest marker validation
         "fix_missing_pytestmarks",  # Script for fixing missing pytestmark declarations
         "check_e2e_completion",  # Script for E2E test completion tracking
+        "profile_hooks",  # Script for profiling pre-commit hooks
     }
 
 
