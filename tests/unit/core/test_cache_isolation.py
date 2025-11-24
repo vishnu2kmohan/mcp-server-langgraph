@@ -55,6 +55,7 @@ def test_api_key_cache_uses_separate_database(monkeypatch):
     )
 
 
+@pytest.mark.xdist_group(name="cache_isolation")
 def test_cache_clear_without_pattern_does_not_use_flushdb():
     """
     🟢 GREEN: Test that cache.clear() without pattern uses pattern-based deletion, not flushdb().
@@ -88,6 +89,7 @@ def test_cache_clear_without_pattern_does_not_use_flushdb():
             mock_redis.delete.assert_called()  # Should delete them
 
 
+@pytest.mark.xdist_group(name="cache_isolation")
 def test_cache_service_clear_with_pattern_works():
     """
     Verify that cache.clear(pattern="foo:*") works correctly.

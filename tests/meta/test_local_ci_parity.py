@@ -97,7 +97,7 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
             "  pre-commit install --hook-type pre-commit --hook-type pre-push\n"
             "\n"
             "📖 Documentation: CONTRIBUTING.md (line 30-32)\n"
-            "🔍 Validation: scripts/validate_pre_push_hook.py\n"
+            "🔍 Validation: scripts/validators/validate_pre_push_hook.py\n"
             "\n"
             "After installation, re-run tests to validate hook configuration.\n"
         )

@@ -154,7 +154,7 @@ jobs:
       - name: Validate pre-push hook configuration
         run: |
           echo "🔍 Validating pre-push hook configuration..."
-          uv run python scripts/validate_pre_push_hook.py
+          uv run python scripts/validators/validate_pre_push_hook.py
           echo "✅ Pre-push hook configuration is valid"
 
       - name: Run local/CI parity tests

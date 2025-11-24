@@ -144,6 +144,43 @@ def check_file_name(file_path: str) -> list[Violation]:
     return violations
 
 
+def _is_fixture_decorator(dec: ast.expr) -> bool:
+    """
+    Check if a decorator is a pytest fixture decorator.
+
+    Handles:
+    - @fixture
+    - @pytest.fixture
+    - @fixture(...)
+    - @pytest.fixture(...)
+
+    Args:
+        dec: AST decorator node
+
+    Returns:
+        True if fixture decorator
+    """
+    # @fixture (ast.Name)
+    if isinstance(dec, ast.Name) and dec.id == "fixture":
+        return True
+
+    # @pytest.fixture (ast.Attribute)
+    if isinstance(dec, ast.Attribute) and dec.attr == "fixture":
+        return True
+
+    # @fixture(...) or @pytest.fixture(...) (ast.Call)
+    if isinstance(dec, ast.Call):
+        func = dec.func
+        # @fixture(...)
+        if isinstance(func, ast.Name) and func.id == "fixture":
+            return True
+        # @pytest.fixture(...)
+        if isinstance(func, ast.Attribute) and func.attr == "fixture":
+            return True
+
+    return False
+
+
 def check_test_function_name(func_name: str, file_path: str, line: int) -> list[Violation]:
     """
     Check if test function name follows conventions.
@@ -205,11 +242,16 @@ def check_file(file_path: str) -> list[Violation]:
     violations = []
 
     # Skip conftest.py files entirely (pytest configuration, not tests)
-    if Path(file_path).name == "conftest.py":
+    file_name = Path(file_path).name
+    if file_name == "conftest.py" or file_name.startswith("conftest_"):
         return violations
 
     # Skip validation library files
     if "validation_lib" in file_path:
+        return violations
+
+    # Skip fixtures directory (contains fixture definitions, not tests)
+    if "/fixtures/" in file_path or "\\fixtures\\" in file_path:
         return violations
 
     # Check file name
@@ -227,10 +269,8 @@ def check_file(file_path: str) -> list[Violation]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             # Skip fixtures - they can have any name including test_ prefix
-            is_fixture = any(
-                isinstance(dec, ast.Name) and dec.id == "fixture" or isinstance(dec, ast.Attribute) and dec.attr == "fixture"
-                for dec in node.decorator_list
-            )
+            # Fixtures can be: @fixture, @pytest.fixture, @fixture(...), @pytest.fixture(...)
+            is_fixture = any(_is_fixture_decorator(dec) for dec in node.decorator_list)
 
             if is_fixture:
                 continue  # Skip pytest fixtures
