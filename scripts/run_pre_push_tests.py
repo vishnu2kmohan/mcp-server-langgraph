@@ -57,6 +57,63 @@ def check_docker_available() -> bool:
         return False
 
 
+def should_run_meta_tests() -> bool:
+    """
+    Check if meta tests should run based on changed files.
+
+    Meta tests validate test infrastructure (hooks, CI workflows, fixtures, etc.)
+    They should run when workflow-related files change, but can be skipped for
+    regular code changes to maintain fast pre-push validation.
+
+    Returns:
+        True if workflow files changed (run meta tests)
+        False if only non-workflow files changed (skip meta tests for performance)
+
+    Workflow-related patterns that trigger meta tests:
+    - .github/ (CI workflows, actions)
+    - .pre-commit-config.yaml (hook configuration)
+    - pytest.ini or pyproject.toml (test configuration)
+    - tests/conftest.py (shared fixtures)
+
+    Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
+    """
+    # Workflow-related files that trigger meta tests
+    workflow_patterns = [
+        ".github/",
+        ".pre-commit-config.yaml",
+        "pytest.ini",
+        "pyproject.toml",
+        "tests/conftest.py",
+    ]
+
+    # Get changed files from git (staged + unstaged)
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+    except subprocess.TimeoutExpired:
+        # Can't determine changes, run meta tests to be safe
+        return True
+
+    if result.returncode != 0:
+        # Can't determine changes, run meta tests to be safe
+        return True
+
+    changed_files = result.stdout.strip().split("\n") if result.stdout.strip() else []
+
+    # Check if any workflow file changed
+    for changed_file in changed_files:
+        for pattern in workflow_patterns:
+            if pattern in changed_file:
+                return True
+
+    return False
+
+
 def main() -> int:
     """
     Run consolidated pre-push test suite.
@@ -90,13 +147,20 @@ def main() -> int:
     # Note: API tests are marked as "api and unit", so covered by "api"
     # Note: MCP server tests are in tests/unit/, marked as unit
     #
-    # Codex Finding #5 Fix (2025-11-23): Exclude meta-tests from pre-push
-    # Meta-tests validate infrastructure (git hooks, CI workflows, etc.)
-    # They shell out to external processes and should run separately in CI
+    # Codex Audit Fix (2025-11-24): Conditional meta-test inclusion
+    # Meta-tests validate infrastructure (git hooks, CI workflows, fixtures, etc.)
+    # They should run when workflow files change, but can be skipped for performance
+    # when only regular code changes. This prevents workflow drift while maintaining
+    # fast pre-push validation.
     #
-    # Final expression: (unit or api or property) and not llm and not meta
-    # This covers ALL tests from the 5 original hooks, excluding meta-tests
-    marker_expression = "(unit or api or property) and not llm and not meta"
+    # Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
+    if should_run_meta_tests():
+        # Workflow files changed - include meta tests for infrastructure validation
+        marker_expression = "(unit or api or property or meta) and not llm"
+        print("🔍 Workflow files changed - including meta tests (infrastructure validation)")
+    else:
+        # Only code files changed - skip meta tests for performance
+        marker_expression = "(unit or api or property) and not llm and not meta"
     pytest_args.extend(["-m", marker_expression])
 
     # Specify test directory
