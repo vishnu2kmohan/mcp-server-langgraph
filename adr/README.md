@@ -143,7 +143,7 @@ Each ADR follows this structure:
 
 4. Sync to Mintlify documentation:
    ```bash
-   python scripts/sync-adrs.py
+   python scripts/docs/sync-adrs.py
    ```
 
 5. Update this index:
@@ -160,7 +160,7 @@ To validate ADR numbering and sync status:
 pytest tests/regression/test_documentation_structure.py::TestADRNumbering::test_no_duplicate_adr_numbers
 
 # Check ADR sync status
-python scripts/sync-adrs.py --check
+python scripts/docs/sync-adrs.py --check
 
 # Validate this index is up-to-date
 python scripts/generate_adr_index.py --check
@@ -170,7 +170,7 @@ python scripts/generate_adr_index.py --check
 
 - [Architecture Overview](../docs/architecture/overview.mdx) - High-level system architecture
 - [Mintlify ADRs](../docs/architecture/) - User-friendly ADR documentation
-- [ADR Sync Script](../scripts/sync-adrs.py) - Keep ADRs in sync with Mintlify
+- [ADR Sync Script](../scripts/docs/sync-adrs.py) - Keep ADRs in sync with Mintlify
 
 ---
 

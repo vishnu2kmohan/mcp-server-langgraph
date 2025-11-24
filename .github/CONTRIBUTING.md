@@ -292,7 +292,7 @@ python scripts/measure_hook_performance.py --stage all
 ```
 
 **See Also**:
-- [Git Hooks Guide](../TESTING.md#git-hooks-and-validation) - Complete guide
+- [Git Hooks Guide](../docs-internal/testing/TESTING.md#git-hooks-and-validation) - Complete guide
 - [Hook Categorization](../docs-internal/HOOK_CATEGORIZATION.md) - Detailed hook breakdown
 - [Remediation Report](../docs-internal/CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md) - Optimization rationale
 
