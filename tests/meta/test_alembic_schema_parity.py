@@ -18,6 +18,7 @@ TDD Phase: RED - Test written first, implementation follows
 """
 
 import os
+import socket
 import subprocess
 import tempfile
 from pathlib import Path
@@ -27,6 +28,29 @@ import pytest
 
 # Module-level pytest marker (required by pre-commit hook)
 pytestmark = pytest.mark.meta
+
+
+def is_postgres_available() -> bool:
+    """
+    Check if PostgreSQL is available at configured host/port.
+
+    Returns:
+        bool: True if Postgres is reachable, False otherwise
+    """
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = int(os.getenv("POSTGRES_PORT", "5432"))
+
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            return True
+    except (TimeoutError, OSError, ConnectionRefusedError):
+        return False
+
+
+# Skip all tests in this module if Postgres isn't available
+SKIP_REASON = "PostgreSQL not available. " "Run 'make setup-infra' or 'docker-compose up -d postgres' to start infrastructure."
+skip_without_postgres = pytest.mark.skipif(not is_postgres_available(), reason=SKIP_REASON)
+
 
 # Test configuration
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -56,6 +80,7 @@ def get_alembic_dsn(db_name: str) -> str:
 
 @pytest.mark.asyncio
 @pytest.mark.xdist_group(name="testalembicschemaparity")
+@skip_without_postgres
 class TestAlembicSchemaParity:
     """Validate Alembic migrations match raw SQL schema."""
 
