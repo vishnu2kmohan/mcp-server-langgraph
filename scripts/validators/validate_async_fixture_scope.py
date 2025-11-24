@@ -16,12 +16,16 @@ References:
 import sys
 from pathlib import Path
 
+# Use tomllib (Python 3.11+) with fallback to tomli for older versions
 try:
-    import tomli
+    import tomllib as tomli  # type: ignore[import-not-found,unused-ignore]
 except ImportError:
-    print("❌ Error: tomli package not installed (required for reading pyproject.toml)")
-    print("   Install with: uv pip install tomli")
-    sys.exit(1)
+    try:
+        import tomli  # type: ignore[import-not-found,unused-ignore]
+    except ImportError:
+        print("❌ Error: tomli package not installed (required for reading pyproject.toml on Python < 3.11)")
+        print("   Upgrade to Python 3.11+ or install with: uv pip install tomli")
+        sys.exit(1)
 
 
 def main() -> int:
