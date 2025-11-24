@@ -170,6 +170,53 @@ def shared_run_pre_push_tests_content(shared_run_pre_push_tests_script: Path) ->
         return f.read()
 
 
+@pytest.fixture(scope="module")
+def shared_makefile_path(shared_repo_root: Path) -> Path:
+    """Get path to Makefile (shared across all tests in module)."""
+    return shared_repo_root / "Makefile"
+
+
+@pytest.fixture(scope="module")
+def shared_makefile_content(shared_makefile_path: Path) -> str:
+    """Read Makefile content (shared across all tests in module)."""
+    with open(shared_makefile_path) as f:
+        return f.read()
+
+
+@pytest.fixture(scope="module")
+def shared_validate_pre_push_sub_targets_content(shared_makefile_content: str) -> str:
+    """
+    Get combined content of validate-pre-push sub-targets (shared across all tests).
+
+    The validate-pre-push target is a router that calls:
+    - validate-pre-push-full (with integration tests)
+    - validate-pre-push-quick (without integration tests)
+
+    This fixture returns the combined content of both sub-targets.
+    """
+    # Extract validate-pre-push-full target
+    full_match = re.search(
+        r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)",
+        shared_makefile_content,
+        re.MULTILINE | re.DOTALL,
+    )
+
+    # Extract validate-pre-push-quick target
+    quick_match = re.search(
+        r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)",
+        shared_makefile_content,
+        re.MULTILINE | re.DOTALL,
+    )
+
+    combined = ""
+    if full_match:
+        combined += full_match.group(0) + "\n"
+    if quick_match:
+        combined += quick_match.group(0) + "\n"
+
+    return combined
+
+
 def find_hook_by_id(hooks: list[dict], hook_id: str) -> dict:
     """Find a hook by its ID."""
     for hook in hooks:
@@ -430,22 +477,14 @@ class TestMakefileValidationTarget:
         gc.collect()
 
     @pytest.fixture
-    def makefile_path(self) -> Path:
-        """Get path to Makefile."""
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-        )
-        return Path(result.stdout.strip()) / "Makefile"
+    def makefile_content(self, shared_makefile_content: str) -> str:
+        """Delegate to shared Makefile content fixture."""
+        return shared_makefile_content
 
     @pytest.fixture
-    def makefile_content(self, makefile_path: Path) -> str:
-        """Read Makefile content."""
-        with open(makefile_path) as f:
-            return f.read()
+    def validate_pre_push_sub_targets_content(self, shared_validate_pre_push_sub_targets_content: str) -> str:
+        """Delegate to shared validate-pre-push sub-targets content fixture."""
+        return shared_validate_pre_push_sub_targets_content
 
     def test_validate_pre_push_target_exists(self, makefile_content: str):
         """Test that validate-pre-push target exists in Makefile."""
@@ -462,29 +501,16 @@ class TestMakefileValidationTarget:
         phony_line = phony_match.group(0)
         assert "validate-pre-push" in phony_line, "validate-pre-push must be declared in .PHONY targets"
 
-    def test_validate_pre_push_runs_lockfile_check(self, makefile_content: str):
-        """Test that validate-pre-push target validates lockfile."""
-        # Find validate-pre-push target section
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target"
+    def test_validate_pre_push_runs_lockfile_check(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets validate lockfile."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
+        assert (
+            "uv lock --check" in validate_pre_push_sub_targets_content
+        ), "validate-pre-push must run 'uv lock --check' in one of its sub-targets"
 
-        target_content = target_match.group(0)
-        assert "uv lock --check" in target_content, "validate-pre-push target must run 'uv lock --check'"
-
-    def test_validate_pre_push_runs_workflow_tests(self, makefile_content: str):
-        """Test that validate-pre-push target runs workflow validation tests."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target"
-
-        target_content = target_match.group(0)
+    def test_validate_pre_push_runs_workflow_tests(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets run workflow validation tests."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         required_tests = [
             "test_workflow_syntax.py",
@@ -494,42 +520,27 @@ class TestMakefileValidationTarget:
         ]
 
         for test in required_tests:
-            assert test in target_content, f"validate-pre-push must run {test}"
+            assert test in validate_pre_push_sub_targets_content, f"validate-pre-push sub-targets must run {test}"
 
-    def test_validate_pre_push_runs_mypy(self, makefile_content: str):
-        """Test that validate-pre-push target runs MyPy."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target"
+    def test_validate_pre_push_runs_mypy(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets run MyPy."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
+        assert (
+            "mypy src/mcp_server_langgraph" in validate_pre_push_sub_targets_content
+        ), "validate-pre-push sub-targets must run MyPy type checking"
 
-        target_content = target_match.group(0)
-        assert "mypy src/mcp_server_langgraph" in target_content, "validate-pre-push must run MyPy type checking"
+    def test_validate_pre_push_runs_precommit_all_files(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets run pre-commit on all files."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
+        assert (
+            "pre-commit run --all-files" in validate_pre_push_sub_targets_content
+        ), "validate-pre-push sub-targets must run 'pre-commit run --all-files'"
 
-    def test_validate_pre_push_runs_precommit_all_files(self, makefile_content: str):
-        """Test that validate-pre-push runs pre-commit on all files."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target"
+    def test_validate_pre_push_runs_property_tests_with_ci_profile(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets run property tests with CI profile."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
-        target_content = target_match.group(0)
-        assert "pre-commit run --all-files" in target_content, "validate-pre-push must run 'pre-commit run --all-files'"
-
-    def test_validate_pre_push_runs_property_tests_with_ci_profile(self, makefile_content: str):
-        """Test that validate-pre-push runs property tests with CI profile."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target"
-
-        target_content = target_match.group(0)
+        target_content = validate_pre_push_sub_targets_content
 
         # Check for direct setting OR use of the consolidated script (which handles it)
         has_ci_profile = "HYPOTHESIS_PROFILE=ci" in target_content
@@ -1134,27 +1145,14 @@ class TestMakefilePrePushParity:
         gc.collect()
 
     @pytest.fixture
-    def repo_root(self) -> Path:
-        """Get repository root."""
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-        )
-        return Path(result.stdout.strip())
+    def makefile_content(self, shared_makefile_content: str) -> str:
+        """Delegate to shared Makefile content fixture."""
+        return shared_makefile_content
 
     @pytest.fixture
-    def makefile_path(self, repo_root: Path) -> Path:
-        """Get path to Makefile."""
-        return repo_root / "Makefile"
-
-    @pytest.fixture
-    def makefile_content(self, makefile_path: Path) -> str:
-        """Read Makefile content."""
-        with open(makefile_path) as f:
-            return f.read()
+    def validate_pre_push_sub_targets_content(self, shared_validate_pre_push_sub_targets_content: str) -> str:
+        """Delegate to shared validate-pre-push sub-targets content fixture."""
+        return shared_validate_pre_push_sub_targets_content
 
     @pytest.fixture
     def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
@@ -1167,57 +1165,48 @@ class TestMakefilePrePushParity:
         with open(pre_push_hook_path) as f:
             return f.read()
 
-    def test_makefile_includes_unit_tests(self, makefile_content: str):
-        """Test that Makefile validate-pre-push runs unit tests."""
-        # Extract validate-pre-push target
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+    def test_makefile_includes_unit_tests(self, validate_pre_push_sub_targets_content: str):
+        """Test that Makefile validate-pre-push sub-targets run unit tests."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # Should run unit tests (or use consolidated script)
-        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
-        has_unit_tests = ("unit" in target_content and "-m" in target_content) or uses_consolidated_script
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in validate_pre_push_sub_targets_content
+        has_unit_tests = (
+            "unit" in validate_pre_push_sub_targets_content and "-m" in validate_pre_push_sub_targets_content
+        ) or uses_consolidated_script
 
         assert has_unit_tests, (
-            "Makefile validate-pre-push must run unit tests to match pre-push hook\n"
+            "Makefile validate-pre-push sub-targets must run unit tests to match pre-push hook\n"
             "\n"
             "Pre-push hook runs (Phase 3a):\n"
             "  OTEL_SDK_DISABLED=true uv run pytest -n auto tests/ -m 'unit and not contract'\n"
             "\n"
-            "Makefile should include this in validate-pre-push target\n"
+            "Makefile sub-targets should include this\n"
             "\n"
             "Without unit tests in Makefile:\n"
             "  - 'make validate-pre-push' gives false confidence\n"
             "  - Documentation claims it matches hook, but it doesn't\n"
             "  - Misleading for developers\n"
             "\n"
-            "Fix: Add unit test phase to Makefile:~540 validate-pre-push target"
+            "Fix: Add unit test phase to validate-pre-push-full/quick targets"
         )
 
-    def test_makefile_includes_smoke_tests(self, makefile_content: str):
-        """Test that Makefile validate-pre-push runs smoke tests (covered by unit)."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+    def test_makefile_includes_smoke_tests(self, validate_pre_push_sub_targets_content: str):
+        """Test that Makefile validate-pre-push sub-targets run smoke tests (covered by unit)."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # Smoke tests are unit tests, so they are covered if unit tests are run
         # Check for unit marker or smoke specific path
-        has_smoke_tests = "unit" in target_content or "tests/smoke" in target_content or "smoke" in target_content
+        has_smoke_tests = (
+            "unit" in validate_pre_push_sub_targets_content
+            or "tests/smoke" in validate_pre_push_sub_targets_content
+            or "smoke" in validate_pre_push_sub_targets_content
+        )
 
         assert has_smoke_tests, (
-            "Makefile validate-pre-push must run smoke tests (covered by unit tests)\n"
+            "Makefile validate-pre-push sub-targets must run smoke tests (covered by unit tests)\n"
             "Pre-push hook runs unit tests which includes smoke tests\n"
-            "Fix: Ensure 'unit' marker is present in Makefile validate-pre-push target"
+            "Fix: Ensure 'unit' marker is present in validate-pre-push-full/quick targets"
         )
 
     def test_makefile_includes_integration_tests(self, makefile_content: str):
@@ -1226,67 +1215,50 @@ class TestMakefilePrePushParity:
         # Skipped enforcement for now
         return
 
-    def test_makefile_includes_api_mcp_tests(self, makefile_content: str):
-        """Test that Makefile validate-pre-push runs API/MCP tests."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+    def test_makefile_includes_api_mcp_tests(self, validate_pre_push_sub_targets_content: str):
+        """Test that Makefile validate-pre-push sub-targets run API/MCP tests."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # Should run API/MCP tests (or use consolidated script)
-        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
-        has_api_tests = "api" in target_content or "test_mcp_stdio_server" in target_content or uses_consolidated_script
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in validate_pre_push_sub_targets_content
+        has_api_tests = (
+            "api" in validate_pre_push_sub_targets_content
+            or "test_mcp_stdio_server" in validate_pre_push_sub_targets_content
+            or uses_consolidated_script
+        )
 
         assert has_api_tests, (
-            "Makefile validate-pre-push must run API/MCP tests to match pre-push hook\n"
+            "Makefile validate-pre-push sub-targets must run API/MCP tests to match pre-push hook\n"
             "Pre-push hook should run:\n"
             "  - API tests: pytest -m 'api and unit'\n"
             "  - MCP tests: pytest tests/unit/test_mcp_stdio_server.py\n"
-            "Fix: Add API/MCP test phases to Makefile validate-pre-push target"
+            "Fix: Add API/MCP test phases to validate-pre-push-full/quick targets"
         )
 
-    def test_makefile_uses_n_auto(self, makefile_content: str):
-        """Test that Makefile validate-pre-push uses -n auto like pre-push hook."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+    def test_makefile_uses_n_auto(self, validate_pre_push_sub_targets_content: str):
+        """Test that Makefile validate-pre-push sub-targets use -n auto like pre-push hook."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # If it runs pytest, it should use -n auto (or delegate to script)
-        uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
+        uses_consolidated_script = "scripts/run_pre_push_tests.py" in validate_pre_push_sub_targets_content
 
-        if "pytest" in target_content and not uses_consolidated_script:
-            assert "-n auto" in target_content, (
-                "Makefile validate-pre-push must use '-n auto' to match pre-push hook\n"
-                "All pytest commands in validate-pre-push should include -n auto\n"
-                "Fix: Add -n auto to pytest commands in Makefile validate-pre-push target"
+        if "pytest" in validate_pre_push_sub_targets_content and not uses_consolidated_script:
+            assert "-n auto" in validate_pre_push_sub_targets_content, (
+                "Makefile validate-pre-push sub-targets must use '-n auto' to match pre-push hook\n"
+                "All pytest commands in sub-targets should include -n auto\n"
+                "Fix: Add -n auto to pytest commands in validate-pre-push-full/quick targets"
             )
 
-    def test_makefile_sets_otel_sdk_disabled(self, makefile_content: str):
-        """Test that Makefile validate-pre-push sets OTEL_SDK_DISABLED=true."""
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+    def test_makefile_sets_otel_sdk_disabled(self, validate_pre_push_sub_targets_content: str):
+        """Test that Makefile validate-pre-push sub-targets set OTEL_SDK_DISABLED=true."""
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # If it runs pytest, it should set OTEL_SDK_DISABLED=true
-        if "pytest" in target_content:
-            assert "OTEL_SDK_DISABLED=true" in target_content, (
-                "Makefile validate-pre-push must set OTEL_SDK_DISABLED=true to match pre-push hook\n"
+        if "pytest" in validate_pre_push_sub_targets_content:
+            assert "OTEL_SDK_DISABLED=true" in validate_pre_push_sub_targets_content, (
+                "Makefile validate-pre-push sub-targets must set OTEL_SDK_DISABLED=true to match pre-push hook\n"
                 "All pytest commands should be prefixed with OTEL_SDK_DISABLED=true\n"
-                "Fix: Add OTEL_SDK_DISABLED=true to pytest commands in Makefile"
+                "Fix: Add OTEL_SDK_DISABLED=true to pytest commands in validate-pre-push-full/quick targets"
             )
 
 
@@ -1894,58 +1866,36 @@ class TestPreCommitHookStageFlag:
         gc.collect()
 
     @pytest.fixture
-    def repo_root(self) -> Path:
-        """Get repository root."""
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-        )
-        return Path(result.stdout.strip())
+    def makefile_content(self, shared_makefile_content: str) -> str:
+        """Delegate to shared Makefile content fixture."""
+        return shared_makefile_content
 
     @pytest.fixture
-    def makefile_path(self, repo_root: Path) -> Path:
-        """Get path to Makefile."""
-        return repo_root / "Makefile"
+    def validate_pre_push_sub_targets_content(self, shared_validate_pre_push_sub_targets_content: str) -> str:
+        """Delegate to shared validate-pre-push sub-targets content fixture."""
+        return shared_validate_pre_push_sub_targets_content
 
-    @pytest.fixture
-    def makefile_content(self, makefile_path: Path) -> str:
-        """Read Makefile content."""
-        with open(makefile_path) as f:
-            return f.read()
-
-    def test_validate_pre_push_uses_hook_stage_push(self, makefile_content: str):
-        """Test that validate-pre-push includes --hook-stage push/pre-push flag.
+    def test_validate_pre_push_uses_hook_stage_push(self, validate_pre_push_sub_targets_content: str):
+        """Test that validate-pre-push sub-targets include --hook-stage push/pre-push flag.
 
         CRITICAL: Without --hook-stage push (or pre-push), the 45 push-stage hooks
         configured in .pre-commit-config.yaml won't execute, creating false confidence.
 
         NOTE: Both 'push' and 'pre-push' are valid hook stage names (they're equivalent).
         """
-        # Find validate-pre-push target
-        target_match = re.search(
-            r"^validate-pre-push:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-
-        assert target_match, "Could not find validate-pre-push target in Makefile"
-
-        target_content = target_match.group(0)
+        assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
 
         # Find pre-commit run commands
-        precommit_commands = re.findall(r"pre-commit run[^\n]*", target_content)
+        precommit_commands = re.findall(r"pre-commit run[^\n]*", validate_pre_push_sub_targets_content)
 
-        assert precommit_commands, "validate-pre-push should run pre-commit"
+        assert precommit_commands, "validate-pre-push sub-targets should run pre-commit"
 
         # At least one pre-commit command should have --hook-stage push or --hook-stage pre-push
         # Both forms are equivalent and valid
         has_hook_stage_push = any("--hook-stage push" in cmd or "--hook-stage pre-push" in cmd for cmd in precommit_commands)
 
         assert has_hook_stage_push, (
-            "Makefile validate-pre-push MUST use '--hook-stage push' (or '--hook-stage pre-push') flag\n"
+            "Makefile validate-pre-push sub-targets MUST use '--hook-stage push' (or '--hook-stage pre-push') flag\n"
             "\n"
             "Current issue (Codex finding #3):\n"
             "  - Makefile runs: pre-commit run --all-files\n"
@@ -1968,7 +1918,7 @@ class TestPreCommitHookStageFlag:
             "Git pre-push hook behavior:\n"
             "  Uses: pre-commit run --all-files --hook-stage push ✅\n"
             "\n"
-            "Fix: Update Makefile validate-pre-push target\n"
+            "Fix: Update Makefile validate-pre-push-full/quick targets\n"
             "  From: pre-commit run --all-files\n"
             "  To:   pre-commit run --all-files --hook-stage pre-push\n"
             "\n"
