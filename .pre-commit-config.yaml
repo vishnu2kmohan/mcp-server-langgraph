@@ -660,6 +660,32 @@ repos:
       - tests/regression/test_pod_deployment_regression.py → tests/integration/regression/test_pod_deployment_regression.py\n\n\
       Created: 2025-11-24 (commit 6efbd73f configuration drift remediation)\n\
       See: scripts/validation/validate_workflow_file_references.py\n"
+  - id: validate-pytest-fixtures
+    name: Validate Pytest Fixture Dependencies
+    entry: uv run python scripts/validation/validate_pytest_fixtures.py
+    language: system
+    files: ^tests/.*\.py$
+    pass_filenames: false
+    stages:
+      - pre-commit
+    description: "Validates pytest fixture dependencies before test execution:\n\n\
+      Catches errors like:\n\
+      - fixture 'test_infrastructure_check' not found\n\
+      - Circular fixture dependencies\n\
+      - Fixture scope mismatches\n\n\
+      Handles:\n\
+      - pytest.fixture and pytest_asyncio.fixture decorators\n\
+      - Hypothesis @given (keyword and positional args)\n\
+      - pytest.mark.parametrize decorators\n\
+      - unittest.mock @patch decorators (mock_* patterns)\n\
+      - Built-in fixtures (capsys, monkeypatch, tmp_path)\n\
+      - Custom fixtures from conftest.py and tests/fixtures/\n\n\
+      Prevents:\n\
+      - Missing fixture errors at execution time\n\
+      - 17 E2E test failures from fixture 'test_infrastructure_check' not found\n\
+      - pytest --collect-only doesn't catch these (fixtures resolved at execution)\n\n\
+      Created: 2025-11-24 (improved pre-commit validation)\n\
+      See: scripts/validation/validate_pytest_fixtures.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
     entry: uv run python scripts/validation/validate_gke_autopilot_compliance.py
