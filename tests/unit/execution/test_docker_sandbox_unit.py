@@ -87,21 +87,24 @@ class TestDockerSandboxNetworkMode:
             allowed_domains=("httpbin.org", "example.com"),
         )
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Patch logger BEFORE creating sandbox to capture all warnings
+        with (
+            patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker,
+            patch("mcp_server_langgraph.execution.docker_sandbox.logger") as mock_logger,
+        ):
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
 
-            # Should log warning about unimplemented feature
-            with patch("mcp_server_langgraph.execution.docker_sandbox.logger") as mock_logger:
-                result = sandbox._get_network_mode()
+            # Call the method that should log warning
+            result = sandbox._get_network_mode()
 
-                # Verify warning was logged
-                assert mock_logger.warning.called
-                warning_msg = str(mock_logger.warning.call_args)
-                assert "not implemented" in warning_msg.lower()
+            # Verify warning was logged about unimplemented feature
+            assert mock_logger.warning.called, "Warning should be logged for unimplemented allowlist"
+            warning_msg = str(mock_logger.warning.call_args)
+            assert "not implemented" in warning_msg.lower()
 
         assert result == "none", (
             "SECURITY: Unimplemented allowlist mode MUST fail closed to 'none'. "
