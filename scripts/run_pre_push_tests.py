@@ -241,12 +241,14 @@ def main() -> int:
     # Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
     if should_run_meta_tests():
         # Workflow files changed - include meta tests for infrastructure validation
-        marker_expression = "(unit or api or property or meta) and not llm"
+        # Exclude integration tests - they require Docker infrastructure (use CI_PARITY=1 to include)
+        marker_expression = "(unit or api or property or meta) and not llm and not integration"
         if not quiet:
             print("🔍 Workflow files changed - including meta tests (infrastructure validation)")
     else:
         # Only code files changed - skip meta tests for performance
-        marker_expression = "(unit or api or property) and not llm and not meta"
+        # Exclude integration tests - they require Docker infrastructure (use CI_PARITY=1 to include)
+        marker_expression = "(unit or api or property) and not llm and not meta and not integration"
 
     # Store marker index for later modification (CI_PARITY support)
     marker_index = len(pytest_args) + 1  # +1 because "-m" is inserted first
