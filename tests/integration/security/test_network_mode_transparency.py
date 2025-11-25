@@ -20,23 +20,18 @@ References:
 
 import gc
 import logging
-from unittest.mock import MagicMock
 
 import pytest
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
+# Docker is an optional dependency - use the module's availability check
+from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+from mcp_server_langgraph.execution import docker_sandbox
+
 pytestmark = pytest.mark.integration
 
-# Docker is an optional dependency - mock if not available
-try:
-    import docker  # noqa: F401
-    from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-
-    DOCKER_AVAILABLE = True
-except ImportError:
-    DOCKER_AVAILABLE = False
-    DockerSandbox = MagicMock
+DOCKER_AVAILABLE = docker_sandbox.DOCKER_AVAILABLE
 
 
 @pytest.mark.security

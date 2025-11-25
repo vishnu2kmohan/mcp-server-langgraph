@@ -16,7 +16,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 # Add scripts/validation directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validation"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validators"))
 
 
 @pytest.mark.xdist_group(name="testinternallinkparsing")

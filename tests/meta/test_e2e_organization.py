@@ -68,7 +68,7 @@ class TestE2EOrganization:
         References:
         - scripts/validation/check_e2e_completion.py:17 - E2E_TEST_FILE path constant
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_e2e_completion.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "check_e2e_completion.py"
 
         assert script_path.exists(), f"check_e2e_completion.py not found at {script_path}"
 

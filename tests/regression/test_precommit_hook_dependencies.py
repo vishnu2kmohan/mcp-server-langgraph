@@ -398,7 +398,7 @@ class TestPreCommitHookDependencies:
 
         This ensures our regression test is testing the right thing.
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_workflow_test_deps.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "validate_workflow_test_deps.py"
 
         if not script_path.exists():
             pytest.skip("Script not found")

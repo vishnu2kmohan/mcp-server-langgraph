@@ -1520,7 +1520,7 @@ class TestIsolationValidationStrictness:
     @pytest.fixture
     def validation_script_path(self, repo_root: Path) -> Path:
         """Get path to validation script."""
-        return repo_root / "scripts" / "validation" / "validate_test_isolation.py"
+        return repo_root / "scripts" / "validators" / "validate_test_isolation.py"
 
     @pytest.fixture
     def validation_script_content(self, validation_script_path: Path) -> str:

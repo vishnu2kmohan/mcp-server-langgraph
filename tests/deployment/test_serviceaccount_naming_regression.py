@@ -217,7 +217,7 @@ class TestValidationScript:
     def test_validation_script_passes_on_correct_naming(self):
         """Validation script should pass when all ServiceAccounts are correctly named."""
         result = subprocess.run(
-            ["python", "scripts/validation/validate_serviceaccount_names.py"],
+            ["python", "scripts/validators/validate_serviceaccount_names.py"],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
@@ -229,7 +229,7 @@ class TestValidationScript:
 
     def test_validation_script_is_executable(self):
         """Validation script should be executable."""
-        script_path = REPO_ROOT / "scripts" / "validation" / "validate_serviceaccount_names.py"
+        script_path = REPO_ROOT / "scripts" / "validators" / "validate_serviceaccount_names.py"
         assert script_path.exists(), "Validation script not found"
 
         # Check if file is executable (Unix permissions)

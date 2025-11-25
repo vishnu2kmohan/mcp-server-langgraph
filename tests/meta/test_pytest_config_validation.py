@@ -47,10 +47,10 @@ def test_pytest_addopts_flags_have_required_plugins():
     instead of duplicating the validation logic. The script is the source of truth.
     """
     repo_root = Path(__file__).parent.parent.parent
-    script_path = repo_root / "scripts/validation/validate_pytest_config.py"
+    script_path = repo_root / "scripts/validators/validate_pytest_config.py"
 
     assert script_path.exists(), (
-        f"Validation script not found: {script_path}\n" "Expected: scripts/validation/validate_pytest_config.py"
+        f"Validation script not found: {script_path}\n" "Expected: scripts/validators/validate_pytest_config.py"
     )
 
     # Run the validation script - it will exit with code 1 if validation fails
@@ -79,11 +79,11 @@ def test_validation_script_exists_and_is_executable():
     It should be executable and return exit code 0 when validation passes.
     """
     repo_root = Path(__file__).parent.parent.parent
-    script_path = repo_root / "scripts/validation/validate_pytest_config.py"
+    script_path = repo_root / "scripts/validators/validate_pytest_config.py"
 
     assert script_path.exists(), (
         f"Validation script not found: {script_path}\n"
-        "Expected: scripts/validation/validate_pytest_config.py\n"
+        "Expected: scripts/validators/validate_pytest_config.py\n"
         "This script should validate pytest addopts against installed plugins."
     )
 

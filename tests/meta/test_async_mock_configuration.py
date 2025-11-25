@@ -43,7 +43,7 @@ def test_all_async_mocks_have_return_values():
         pytest.skip("No test files found to check")
 
     # Run the AsyncMock configuration checker
-    script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_async_mock_configuration.py"
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "check_async_mock_configuration.py"
 
     result = subprocess.run(
         [sys.executable, str(script_path)] + [str(f) for f in test_files], capture_output=True, text=True, timeout=60
@@ -103,9 +103,9 @@ def test_async_mock_guidelines_exist():
 @pytest.mark.meta
 def test_async_mock_checker_script_exists():
     """Verify AsyncMock configuration checker script exists."""
-    script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "check_async_mock_configuration.py"
+    script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "check_async_mock_configuration.py"
     assert script_path.exists(), (
-        "AsyncMock configuration checker script missing!\n" "Expected: scripts/validation/check_async_mock_configuration.py"
+        "AsyncMock configuration checker script missing!\n" "Expected: scripts/validators/check_async_mock_configuration.py"
     )
     assert script_path.stat().st_mode & 0o111, (
         "AsyncMock configuration checker script is not executable!\n" f"Run: chmod +x {script_path}"

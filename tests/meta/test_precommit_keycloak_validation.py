@@ -37,7 +37,7 @@ class TestKeycloakConfigValidationHook:
         WHEN: Checking for validate_keycloak_config.py
         THEN: The script should exist and be executable
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_keycloak_config.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "validate_keycloak_config.py"
         assert script_path.exists(), f"Hook script not found: {script_path}"
         assert script_path.is_file(), "Hook script must be a file"
 
@@ -77,7 +77,7 @@ class TestKeycloakConfigValidationHook:
         try:
             # Run validation script
             result = subprocess.run(
-                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -108,7 +108,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -143,7 +143,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -183,7 +183,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -232,7 +232,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validation/validate_keycloak_config.py", str(temp_file)],
+                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -258,7 +258,7 @@ class TestKeycloakConfigValidationHook:
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
         result = subprocess.run(
-            ["python", "scripts/validation/validate_keycloak_config.py", str(compose_file)],
+            ["python", "scripts/validators/validate_keycloak_config.py", str(compose_file)],
             capture_output=True,
             text=True,
             timeout=60,

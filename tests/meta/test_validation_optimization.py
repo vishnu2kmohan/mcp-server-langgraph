@@ -57,7 +57,7 @@ class TestValidatorDeduplication:
     @pytest.fixture
     def validate_fast_scripts(self, repo_root: Path) -> list[str]:
         """Parse SCRIPTS list from validate_fast.py"""
-        validate_fast_file = repo_root / "scripts" / "validation" / "validate_fast.py"
+        validate_fast_file = repo_root / "scripts" / "validators" / "validate_fast.py"
         content = validate_fast_file.read_text()
 
         # Extract SCRIPTS list using regex
