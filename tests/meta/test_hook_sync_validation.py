@@ -131,21 +131,26 @@ class TestPrePushHookSync:
         makefile_path = repo_root / "Makefile"
         makefile_content = makefile_path.read_text()
 
-        # Extract validate-pre-push sub-targets (router delegates to these)
+        # Extract validate-pre-push sub-targets and shared internal targets
+        # MyPy is in the shared _validate-pre-push-phases-1-2 target
         full_pattern = r"^validate-pre-push-full:.*?(?=^\S|\Z)"
         quick_pattern = r"^validate-pre-push-quick:.*?(?=^\S|\Z)"
+        phases_12_pattern = r"^_validate-pre-push-phases-1-2:.*?(?=^##|\Z)"
 
         full_match = re.search(full_pattern, makefile_content, re.MULTILINE | re.DOTALL)
         quick_match = re.search(quick_pattern, makefile_content, re.MULTILINE | re.DOTALL)
+        phases_12_match = re.search(phases_12_pattern, makefile_content, re.MULTILINE | re.DOTALL)
 
         assert full_match or quick_match, "Could not find validate-pre-push sub-targets in Makefile"
 
-        # Combine both sub-targets to check
+        # Combine sub-targets and shared internal targets to check
         target_content = ""
         if full_match:
             target_content += full_match.group(0)
         if quick_match:
             target_content += quick_match.group(0)
+        if phases_12_match:
+            target_content += phases_12_match.group(0)
 
         # Find MyPy command
         mypy_pattern = r"mypy src/mcp_server_langgraph.*"

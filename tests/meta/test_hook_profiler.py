@@ -395,7 +395,7 @@ class TestHookProfiler:
             ["python", str(self.profiler_script), "--help"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,  # Minimum timeout for flaky CI (per test_subprocess_safety.py)
         )
 
         assert result.returncode == 0

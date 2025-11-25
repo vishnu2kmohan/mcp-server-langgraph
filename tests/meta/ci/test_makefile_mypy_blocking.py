@@ -137,16 +137,19 @@ class TestMakefileMyPyBlocking:
         makefile_path = Path("Makefile")
         makefile_content = makefile_path.read_text()
 
-        # Search for MyPy execution in validate-pre-push sub-targets
-        # (validate-pre-push-full and validate-pre-push-quick)
+        # Search for MyPy execution in validate-pre-push sub-targets and shared internal targets
+        # MyPy is in the shared _validate-pre-push-phases-1-2 target
         mypy_lines = []
         in_relevant_target = False
         for line in makefile_content.split("\n"):
-            if "validate-pre-push-full:" in line or "validate-pre-push-quick:" in line:
+            if any(
+                x in line for x in ["validate-pre-push-full:", "validate-pre-push-quick:", "_validate-pre-push-phases-1-2:"]
+            ):
                 in_relevant_target = True
             elif in_relevant_target and line and not line.startswith("\t") and not line.startswith(" "):
-                # End of target
-                in_relevant_target = False
+                # End of target (next target or section starts)
+                if line.startswith("#") or line.startswith("##"):
+                    in_relevant_target = False
             elif in_relevant_target and "mypy" in line.lower():
                 mypy_lines.append(line)
 

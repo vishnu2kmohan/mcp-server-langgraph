@@ -6,11 +6,15 @@ with actual retry behavior.
 """
 
 import gc
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.infrastructure]
+
+# Use configurable Postgres port (default 9432 for test isolation)
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "9432")
 
 
 @pytest.mark.xdist_group(name="testretryintegration")
@@ -48,7 +52,9 @@ class TestDatabaseRetryIntegration:
 
         with patch("asyncpg.create_pool", side_effect=create_pool_with_retry):
             # Should succeed after one retry
-            await initialize_gdpr_storage(backend="postgres", postgres_url="postgresql://test:test@localhost:5432/gdpr")
+            await initialize_gdpr_storage(
+                backend="postgres", postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr"
+            )
 
         # Should have called twice
         assert call_count == 2
@@ -76,7 +82,9 @@ class TestDatabaseRetryIntegration:
 
         with patch("asyncpg.create_pool", side_effect=create_pool_always_fails):
             with pytest.raises(Exception, match="Failed after 4 attempts"):
-                await initialize_gdpr_storage(backend="postgres", postgres_url="postgresql://test:test@localhost:5432/gdpr")
+                await initialize_gdpr_storage(
+                    backend="postgres", postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr"
+                )
 
         # Should have tried 4 times (initial + 3 retries)
         assert call_count == 4
@@ -98,7 +106,7 @@ class TestDatabaseRetryIntegration:
         settings = Settings(
             environment="test",
             gdpr_storage_backend="postgres",
-            gdpr_postgres_url="postgresql://test:test@localhost:5432/gdpr_test",
+            gdpr_postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr_test",
         )
         container = create_test_container(settings=settings)
 
@@ -150,7 +158,9 @@ class TestDatabaseRetryIntegration:
 
         with patch("asyncpg.create_pool", side_effect=create_pool_with_retry):
             with patch("asyncio.sleep", side_effect=mock_sleep):
-                await initialize_gdpr_storage(backend="postgres", postgres_url="postgresql://test:test@localhost:5432/gdpr")
+                await initialize_gdpr_storage(
+                    backend="postgres", postgres_url="postgresql://test:test@localhost:{POSTGRES_PORT}/gdpr"
+                )
 
         # Should have 3 sleep calls (after each of the 3 failures)
         assert len(sleep_delays) == 3

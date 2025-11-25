@@ -403,18 +403,36 @@ class TestValidatePrePushPerformance:
         Each test command (run_pre_push_tests.py, test-integration.sh, pytest)
         should appear at most once in the manual phases, with pre-commit hooks
         properly skipped.
+
+        Note: validate-pre-push-quick delegates to _validate-pre-push-phases-1-2
+        and _validate-pre-push-phase-4, so we need to check all targets combined.
         """
         content = self.makefile_path.read_text()
 
-        # Check validate-pre-push-quick (no integration tests)
+        # Check validate-pre-push-quick and its delegated targets
         match_quick = re.search(r"^validate-pre-push-quick:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
         assert match_quick, "Could not find validate-pre-push-quick target"
         quick_content = match_quick.group(0)
 
-        # Check validate-pre-push-full (with integration tests)
+        # Also include delegated targets for quick (phases-1-2 and phase-4)
+        match_phases_1_2 = re.search(r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+        match_phase_4 = re.search(r"^_validate-pre-push-phase-4:.*?(?=^[a-zA-Z_]|\Z)", content, re.MULTILINE | re.DOTALL)
+
+        if match_phases_1_2:
+            quick_content += "\n" + match_phases_1_2.group(0)
+        if match_phase_4:
+            quick_content += "\n" + match_phase_4.group(0)
+
+        # Check validate-pre-push-full and its delegated targets
         match_full = re.search(r"^validate-pre-push-full:.*?(?=^[a-zA-Z]|\Z)", content, re.MULTILINE | re.DOTALL)
         assert match_full, "Could not find validate-pre-push-full target"
         full_content = match_full.group(0)
+
+        # Also include delegated targets for full
+        if match_phases_1_2:
+            full_content += "\n" + match_phases_1_2.group(0)
+        if match_phase_4:
+            full_content += "\n" + match_phase_4.group(0)
 
         # Count invocations in quick target
         run_pre_push_count_quick = quick_content.count("run_pre_push_tests.py")

@@ -1314,9 +1314,10 @@ class TestActionlintHookStrictness:
         CRITICAL: Without this test, developers can push invalid workflows that
         only fail in CI, wasting time and breaking builds.
         """
-        # Find the actionlint hook entry
+        # Find the actionlint hook entry - it's under local repo hooks
+        # Look for the specific hook id or name containing actionlint
         actionlint_section_match = re.search(
-            r"- repo:.*actionlint.*?(?=- repo:|\Z)",
+            r"- id: actionlint.*?(?=\n  - id:|\n- repo:|\Z)",
             pre_commit_config_content,
             re.DOTALL,
         )
@@ -1473,14 +1474,15 @@ class TestMyPyBlockingParity:
 
     def test_ci_mypy_is_blocking(self, ci_workflow_content: str):
         """Test that CI MyPy step is blocking (no continue-on-error)."""
-        # Find the mypy step - match only until the next step starts
+        # Find the dedicated mypy step - look for "Run mypy" in the step name
+        # to avoid matching meta test step that just mentions "mypy" in output
         mypy_step_match = re.search(
-            r"(- name:.*mypy.*?\n\s+run:.*?)(?=\n\s+- name:|\Z)",
+            r"(- name:\s*Run mypy.*?\n.*?)(?=\n\s+- name:|\n\s+[a-z-]+:|\Z)",
             ci_workflow_content,
             re.DOTALL | re.IGNORECASE,
         )
 
-        assert mypy_step_match, "Could not find mypy step in CI workflow"
+        assert mypy_step_match, "Could not find dedicated 'Run mypy' step in CI workflow"
 
         mypy_step = mypy_step_match.group(1)
 
@@ -1713,9 +1715,18 @@ class TestMakefileDependencyExtras:
 
     def test_ci_uses_dev_and_builder_extras(self, ci_workflow_content: str):
         """Verify that CI uses both dev and builder extras (baseline check)."""
-        # CI should have both extras
-        assert "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content, (
-            "CI workflow must use both --extra dev and --extra builder\n"
+        # CI should have both extras - check both formats:
+        # 1. Command-line format: --extra dev --extra builder
+        # 2. Action input format: extras: 'dev builder'
+        has_cli_format = "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content
+        has_action_format = (
+            "extras:" in ci_workflow_content and "dev" in ci_workflow_content and "builder" in ci_workflow_content
+        )
+        assert has_cli_format or has_action_format, (
+            "CI workflow must use both dev and builder extras\n"
+            "Accepted formats:\n"
+            "  - Command-line: --extra dev --extra builder\n"
+            "  - Action input: extras: 'dev builder'\n"
             "This is the baseline that local install-dev should match\n"
             "If CI doesn't use these extras, update this test"
         )
@@ -2289,10 +2300,16 @@ class TestCIPushStageValidatorsJob:
         jobs = ci_workflow.get("jobs", {})
 
         # Look for a job that runs push-stage validators
+        # Accept both '--hook-stage push' and '--hook-stage pre-push' (pre-push is canonical)
         push_stage_jobs = []
         for job_name, job_config in jobs.items():
             job_str = str(job_config).lower()
-            if "--hook-stage push" in job_str or "push-stage" in job_name.lower() or "push stage" in job_str:
+            if (
+                "--hook-stage push" in job_str
+                or "--hook-stage pre-push" in job_str
+                or "push-stage" in job_name.lower()
+                or "push stage" in job_str
+            ):
                 push_stage_jobs.append(job_name)
 
         assert push_stage_jobs, (
@@ -2349,13 +2366,14 @@ class TestCIPushStageValidatorsJob:
         if not push_stage_job:
             pytest.skip("Push-stage validators job not found (will be caught by previous test)")
 
-        # Check that it runs pre-commit with --hook-stage push
+        # Check that it runs pre-commit with --hook-stage push or --hook-stage pre-push
+        # Both 'push' and 'pre-push' are valid stage names (pre-push is the canonical name)
         job_str = str(push_stage_job)
 
-        assert "--hook-stage push" in job_str, (
-            "Push-stage validators job MUST run 'pre-commit run --all-files --hook-stage push'\n"
+        assert "--hook-stage push" in job_str or "--hook-stage pre-push" in job_str, (
+            "Push-stage validators job MUST run 'pre-commit run --all-files --hook-stage pre-push'\n"
             "\n"
-            "Without --hook-stage push, the job won't execute push-stage hooks\n"
+            "Without --hook-stage pre-push, the job won't execute push-stage hooks\n"
         )
 
         assert "--all-files" in job_str, (

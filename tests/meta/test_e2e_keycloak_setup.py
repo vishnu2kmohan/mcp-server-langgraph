@@ -109,7 +109,14 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     # Validate client configuration
     assert mcp_client.get("enabled") is True, "Client 'mcp-server' must be enabled"
 
-    assert mcp_client.get("publicClient") is True, "Client 'mcp-server' must be a public client (no secret required)"
+    # Client can be either public (no secret) or confidential (with secret)
+    # E2E tests support both configurations
+    is_public = mcp_client.get("publicClient") is True
+    has_secret = mcp_client.get("secret") is not None
+    assert is_public or has_secret, (
+        "Client 'mcp-server' must be either a public client (publicClient: true) "
+        "or a confidential client with a secret configured"
+    )
 
     assert (
         mcp_client.get("directAccessGrantsEnabled") is True

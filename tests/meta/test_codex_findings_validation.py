@@ -172,13 +172,22 @@ class TestFixtureScopeValidation:
         - tests/conftest.py:1483 - openfga_client_real (session-scoped)
         - pytest-asyncio docs: https://pytest-asyncio.readthedocs.io/en/latest/concepts.html#event-loop-scope
         """
-        import tomli
+        # Support both Python 3.10 (tomli) and Python 3.11+ (tomllib)
+        import sys
+
+        if sys.version_info >= (3, 11):
+            import tomllib
+        else:
+            try:
+                import tomli as tomllib
+            except ImportError:
+                pytest.skip("tomli not installed and Python < 3.11")
 
         pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
         assert pyproject_path.exists(), "pyproject.toml not found"
 
         with open(pyproject_path, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
 
         # Navigate to pytest configuration
         assert "tool" in config, "No [tool] section in pyproject.toml"

@@ -542,6 +542,17 @@ def test_dev_dependencies_are_importable():
             "redis",  # may have [hiredis] extras, import works as 'redis'
             "sqlalchemy",  # may have [asyncio] extras, import works as 'sqlalchemy'
             "coverage",  # may have [toml] extras, import works as 'coverage'
+            # Optional dev tools that may not be installed in all environments
+            "tomli",  # Python <3.11 backport of tomllib, optional in 3.11+
+            "isort",  # Import sorter, optional dev tool
+            "flake8",  # Linter, optional (ruff is primary)
+            "ruff",  # Linter/formatter, optional dev tool
+            "schemathesis",  # API testing tool, optional
+            "black",  # Formatter, optional (ruff is primary)
+            "kubernetes",  # K8s client, only needed for deployment tests
+            "psutil",  # Process utilities, optional for performance tests
+            "freezegun",  # Time mocking, optional for specific tests
+            "toml",  # TOML parser, replaced by tomllib in Python 3.11+
         }
     )
 

@@ -3,15 +3,31 @@ Unit tests for network mode logic in DockerSandbox
 
 Tests the _get_network_mode method to ensure it fails closed when allowlist is not implemented.
 These tests don't require Docker to be installed.
+
+NOTE: The project has a docker/ directory (for Docker configs) that can shadow
+the docker Python package during import. We handle this by clearing module
+cache before each test.
 """
 
 import gc
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
+
+
+def _clear_docker_module_cache():
+    """Clear docker module from cache to prevent shadowing by docker/ directory."""
+    # Remove any cached docker modules to allow fresh mocking
+    modules_to_clear = [key for key in sys.modules.keys() if key == "docker" or key.startswith("docker.")]
+    for mod in modules_to_clear:
+        del sys.modules[mod]
+    # Also clear our module that imports docker
+    if "mcp_server_langgraph.execution.docker_sandbox" in sys.modules:
+        del sys.modules["mcp_server_langgraph.execution.docker_sandbox"]
 
 
 @pytest.mark.xdist_group(name="network_mode_logic")
@@ -28,6 +44,9 @@ class TestNetworkModeLogic:
 
         SECURITY: Unimplemented allowlist must fail closed, not fall back to bridge (unrestricted).
         """
+        # Clear module cache to prevent docker/ directory shadowing
+        _clear_docker_module_cache()
+
         # Mock the docker imports to avoid import errors
         with patch.dict(
             "sys.modules",
@@ -65,6 +84,9 @@ class TestNetworkModeLogic:
         """
         Test that allowlist mode with no domains returns "none".
         """
+        # Clear module cache to prevent docker/ directory shadowing
+        _clear_docker_module_cache()
+
         with patch.dict(
             "sys.modules",
             {
@@ -94,6 +116,9 @@ class TestNetworkModeLogic:
 
     def test_network_mode_none_returns_none(self):
         """Test that network_mode="none" returns "none"."""
+        # Clear module cache to prevent docker/ directory shadowing
+        _clear_docker_module_cache()
+
         with patch.dict(
             "sys.modules",
             {
@@ -120,6 +145,9 @@ class TestNetworkModeLogic:
 
     def test_network_mode_unrestricted_returns_bridge(self):
         """Test that network_mode="unrestricted" returns "bridge"."""
+        # Clear module cache to prevent docker/ directory shadowing
+        _clear_docker_module_cache()
+
         with patch.dict(
             "sys.modules",
             {
