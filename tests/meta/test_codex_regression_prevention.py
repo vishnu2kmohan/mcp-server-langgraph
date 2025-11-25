@@ -574,11 +574,15 @@ class TestCodexFindingCompliance:
     def test_codex_validation_commit_exists(self):
         """Verify Codex findings validation commits exist in git history
 
-        Note: Searches last 100 commits to account for recent work on other areas.
-        Codex findings commits exist but may be older than 20 commits.
+        Note: Searches origin/main explicitly because worktrees may not have
+        full history visible via --all. Codex commits exist on main branch.
         """
+        # First try to fetch latest refs to ensure we have up-to-date history
+        subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, cwd=REPO_ROOT, timeout=30)
+
+        # Search origin/main for Codex commits (works in worktrees)
         result = subprocess.run(
-            ["git", "log", "--oneline", "--all", "-100"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
+            ["git", "log", "--oneline", "origin/main", "-200"], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
         )
 
         log_output = result.stdout
@@ -587,7 +591,7 @@ class TestCodexFindingCompliance:
         codex_keywords = ["codex", "openai", "finding"]
         has_codex_commits = any(keyword in log_output.lower() for keyword in codex_keywords)
 
-        assert has_codex_commits, "No commits found addressing OpenAI Codex findings in recent history"
+        assert has_codex_commits, "No commits found addressing OpenAI Codex findings in origin/main history"
 
     def test_critical_findings_have_fixes(self):
         """Verify critical findings (E2E skips, state mutations, CLI guards) are fixed"""

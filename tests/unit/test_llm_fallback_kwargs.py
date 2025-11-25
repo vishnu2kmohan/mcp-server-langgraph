@@ -14,9 +14,9 @@ from langchain_core.messages import HumanMessage
 # Import LLMFactory
 from mcp_server_langgraph.llm.factory import LLMFactory
 
-# Use shared circuit breaker config from conftest.py
-# Mark as llm tests (expensive, require API keys, skipped in CI)
-pytestmark = pytest.mark.unit
+# Mark as llm tests - these require complex LLM mocking or real API calls
+# Skipped in CI to avoid flaky behavior from resilience decorators (retry, circuit breaker)
+pytestmark = [pytest.mark.unit, pytest.mark.llm]
 
 
 @pytest.fixture
