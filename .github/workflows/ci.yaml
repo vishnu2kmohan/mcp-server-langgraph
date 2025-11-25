@@ -175,7 +175,9 @@ jobs:
   xdist-enforcement:
     name: Validate Pytest-xdist Isolation
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Increased from 5 to 10 minutes (2x safety margin)
+    # Profile results: Local ~10s for xdist tests, but CI has 4 steps with 2-3x I/O overhead
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
