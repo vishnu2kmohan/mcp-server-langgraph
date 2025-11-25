@@ -526,6 +526,9 @@ filterwarnings = [
     # External library warnings (cannot fix directly)
     "ignore:.*enable_cleanup_closed ignored.*:DeprecationWarning:aiohttp",
     "ignore:Using.*@model_validator.*classmethod.*:DeprecationWarning:google.genai",
+    # Kubernetes client uses deprecated urllib3 API - upstream issue not fixed yet
+    # See: https://github.com/kubernetes-client/python/issues/2024
+    "ignore:HTTPResponse.getheaders\\(\\) is deprecated.*:DeprecationWarning:kubernetes.client.rest",
     # Litellm async cleanup warning (OpenAI Codex Finding 2025-11-15)
     # Root cause: litellm's atexit handler calls loop.create_task() without awaiting
     # Our pytest_sessionfinish hook already handles cleanup properly
