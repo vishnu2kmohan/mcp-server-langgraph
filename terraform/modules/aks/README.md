@@ -30,5 +30,6 @@ This module is a work in progress. Contributions welcome! See the GKE and EKS mo
 ## Manual Deployment
 
 Until this module is complete, use the manual deployment guide:
-- [AKS Manual Deployment](../../../../docs/deployment/kubernetes/aks.mdx)
-- [Azure CLI Setup](../../../../scripts/deploy-azure-aks.sh)
+- [Azure CLI Setup](../../../scripts/deploy-azure-aks.sh)
+
+For AKS deployment documentation, see the Mintlify docs in the `docs/` directory.

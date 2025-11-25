@@ -481,7 +481,7 @@ make lint-type-check
 make lint-security
 ```
 
-**Migration Note**: Legacy tools (black, isort, flake8) are deprecated. See [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md) for details.
+**Note**: Legacy tools (black, isort, flake8) have been replaced by Ruff. All configuration is in `pyproject.toml`.
 
 ### Configuration
 

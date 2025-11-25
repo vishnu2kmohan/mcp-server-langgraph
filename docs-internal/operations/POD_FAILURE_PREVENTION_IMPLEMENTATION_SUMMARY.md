@@ -610,8 +610,8 @@ The framework provides:
 - [Troubleshooting Runbook](./POD_FAILURE_TROUBLESHOOTING_RUNBOOK.md)
 - [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md)
 - [ADR-0054: Pod Failure Prevention Framework](../../adr/adr-0054-pod-failure-prevention-framework.md)
-- [Validation Script](../../scripts/validate_gke_autopilot_compliance.py)
-- [Regression Tests](../../tests/regression/test_pod_deployment_regression.py)
+- [Validation Script](../../scripts/validators/validate_gke_autopilot_compliance.py)
+- [Regression Tests](../../tests/integration/regression/test_pod_deployment_regression.py)
 
 ---
 

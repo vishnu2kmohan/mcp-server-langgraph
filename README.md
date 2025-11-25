@@ -683,7 +683,7 @@ See **[MCP Registry Guide](reference/mcp-registry.md)** for registry deployment 
 
 **Development**: Branch protection, conventional commits, code review required, 59 ADRs documenting architectural decisions.
 
-**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md) | [Ruff Migration Guide](docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md)
+**See**: [Complete Development Guide](.github/CLAUDE.md) | [Testing Strategy](docs/advanced/testing.mdx) | [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Contributors
 

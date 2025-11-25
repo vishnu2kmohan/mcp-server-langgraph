@@ -250,11 +250,10 @@ terraform plan
 
 ## Examples
 
-See [examples/vpc](../../examples/vpc/) for:
+See the usage examples in this README for:
 - Minimal VPC (development)
 - Full VPC (production)
 - VPC with custom CIDR ranges
-- VPC with KMS-encrypted flow logs
 
 ## References
 

@@ -364,7 +364,7 @@ We actively seek community input on roadmap priorities. Vote and discuss at:
 1. **Check Current Status**: Review [Projects](https://github.com/vishnu2kmohan/mcp-server-langgraph/projects)
 2. **Find Open Issues**: Look for `help-wanted` or `good-first-issue` labels
 3. **Propose New Features**: Create feature request with business case
-4. **Submit PRs**: Follow [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+4. **Submit PRs**: Follow [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
 

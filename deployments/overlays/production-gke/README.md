@@ -174,7 +174,7 @@ kubectl describe pod -n production-mcp-server-langgraph \
 
 ## References
 
-- [Helm Chart Documentation](../../helm/mcp-server-langgraph/README.md)
+- [Helm Chart Configuration](../../helm/mcp-server-langgraph/Chart.yaml)
 - [Production Values File](../../helm/values-production-gke.yaml)
 - [Kustomize Documentation](https://kustomize.io/)
 - [Workload Identity Setup](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)

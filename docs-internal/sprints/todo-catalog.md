@@ -355,10 +355,9 @@ results = tavily.search(query, max_results=5)
 
 ## Related Documents
 
-- [Technical Debt Sprint Plan](../TECHNICAL_DEBT_SPRINT.md)
-- [Monitoring Architecture](../docs/architecture/monitoring.md)
-- [Compliance Framework](../docs/compliance/README.md)
-- [ADR-0012: Compliance Framework Integration](../adr/adr-0012-compliance-framework-integration.md)
+- [ADR-0012: Compliance Framework Integration](../../adr/adr-0012-compliance-framework-integration.md)
+
+For monitoring and compliance documentation, see the Mintlify docs in the `docs/` directory.
 
 ---
 

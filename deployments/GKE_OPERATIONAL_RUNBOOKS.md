@@ -696,5 +696,5 @@ gcloud monitoring time-series list \
 
 **Related Documents**:
 - [Deployment Guide](./GKE_DEPLOYMENT_GUIDE.md)
-- [Implementation Status](../GCP_GKE_IMPLEMENTATION_COMPLETE.md)
-- [Cost Optimization](../GCP_COST_OPTIMIZATION_PLAYBOOK.md) (to be created)
+- [GKE Best Practices](../archive/best-practices/GCP_GKE_BEST_PRACTICES_SUMMARY.md)
+- [Cost Optimization](../archive/best-practices/GCP_COST_OPTIMIZATION_PLAYBOOK.md)

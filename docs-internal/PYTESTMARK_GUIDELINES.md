@@ -392,10 +392,10 @@ def test_with_freezegun():
 
 ### Related Files
 
-- **Validator Script:** [`scripts/validate_pytest_markers.py`](../scripts/validate_pytest_markers.py)
-- **Meta-Test:** [`tests/meta/test_pytestmark_placement.py`](meta/test_pytestmark_placement.py)
+- **Validator Script:** [`scripts/validators/validate_pytest_markers.py`](../scripts/validators/validate_pytest_markers.py)
+- **Meta-Test:** [`tests/meta/test_pytestmark_placement.py`](../tests/meta/test_pytestmark_placement.py)
 - **Pre-Commit Config:** [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) (line 742)
-- **Auto-Fix Script:** [`scripts/fix_missing_pytestmarks.py`](../scripts/fix_missing_pytestmarks.py) (lines 108-129)
+- **Auto-Fix Script:** [`scripts/archive/unused/fix_missing_pytestmarks.py`](../scripts/archive/unused/fix_missing_pytestmarks.py) (lines 108-129)
 
 
 ### Git History

@@ -201,9 +201,6 @@ Or use the GitHub Actions workflow (`.github/workflows/mintlify.yml`)
 
 - [Mintlify Documentation](https://mintlify.com/docs)
 - [MDX Syntax](https://mdxjs.com/)
-- [Repository Structure](../REPOSITORY_STRUCTURE.md)
-- [Mintlify Usage Guide](./MINTLIFY_USAGE.md)
-
 ---
 
-**Note:** This directory is exclusively for Mintlify documentation. All other documentation types should be placed in their respective directories at the project root. See [REPOSITORY_STRUCTURE.md](../REPOSITORY_STRUCTURE.md) for details.
+**Note:** This directory is for Mintlify documentation. All other documentation types should be placed in their respective directories (see the main [README.md](../README.md) for details).
