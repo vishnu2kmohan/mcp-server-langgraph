@@ -301,7 +301,8 @@ services:
       # Authentication
       - AUTH_PROVIDER=keycloak
       # Use Docker internal network for reliable CI/CD (host.docker.internal doesn't work in GitHub Actions)
-      - KEYCLOAK_URL=http://keycloak-test:8080
+      # IMPORTANT: Must use KEYCLOAK_SERVER_URL (not KEYCLOAK_URL) to match Settings field name
+      - KEYCLOAK_SERVER_URL=http://keycloak-test:8080
       - KEYCLOAK_REALM=master
       - KEYCLOAK_CLIENT_ID=mcp-server
       - KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests
