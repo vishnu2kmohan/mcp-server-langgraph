@@ -48,8 +48,10 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="none")
 
-        with patch("docker.DockerClient") as mock_docker_client:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker_client:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker_client.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
             result = sandbox._get_network_mode()
@@ -64,8 +66,10 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="unrestricted")
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
             result = sandbox._get_network_mode()
@@ -83,8 +87,10 @@ class TestDockerSandboxNetworkMode:
             allowed_domains=("httpbin.org", "example.com"),
         )
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
 
@@ -116,8 +122,11 @@ class TestDockerSandboxInitialization:
         """Test that initialization connects to Docker daemon"""
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Patch docker module where it's used in docker_sandbox
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()  # Ensure ping() doesn't fail
+            mock_client.images.get = MagicMock()  # _ensure_image() check
             mock_docker.return_value = mock_client
 
             sandbox = DockerSandbox(limits=limits)
@@ -133,7 +142,7 @@ class TestDockerSandboxInitialization:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_docker.side_effect = Exception("Cannot connect to Docker daemon")
 
             with pytest.raises(SandboxError) as exc_info:
@@ -147,8 +156,10 @@ class TestDockerSandboxInitialization:
         limits = ResourceLimits.testing()
         custom_image = "python:3.11-alpine"
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits, image=custom_image)
 
@@ -172,8 +183,9 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
             # Mock the images.get to raise ImageNotFound during _ensure_image
             mock_client.images.get.side_effect = ImageNotFound("Image not found")
             mock_client.images.pull.side_effect = ImageNotFound("Pull failed")
@@ -193,8 +205,10 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             mock_container = MagicMock()
             mock_container.stop.side_effect = NotFound("Container not found")
@@ -212,8 +226,10 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             mock_container = MagicMock()
             mock_container.stop.side_effect = Exception("Stop failed")
