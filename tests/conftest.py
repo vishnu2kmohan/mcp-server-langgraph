@@ -579,6 +579,50 @@ def frozen_time():
 
 
 # ==============================================================================
+# Mock App Settings Fixture (DRY pattern for app.settings mocking)
+# ==============================================================================
+
+
+@pytest.fixture
+def mock_app_settings():
+    """
+    Complete mock for app settings with all required attributes.
+
+    Use this fixture when patching mcp_server_langgraph.app.settings
+    to ensure auth factory validation passes. The auth factory validates
+    settings.auth_provider.lower() against ["inmemory", "keycloak"].
+
+    This fixture provides all attributes that create_app() requires:
+    - auth_provider: For UserProvider factory validation
+    - jwt_secret_key: For JWT token signing/verification
+    - environment: For environment-specific behavior
+    - use_password_hashing: For auth mode configuration
+    - cors_allowed_origins: For CORS middleware setup
+    - get_cors_origins(): Method for CORS configuration
+
+    Usage:
+        def test_cors_config(self, mock_app_settings):
+            mock_app_settings.cors_allowed_origins = ["http://localhost:3000"]
+            mock_app_settings.get_cors_origins = MagicMock(
+                return_value=["http://localhost:3000"]
+            )
+            with patch("mcp_server_langgraph.app.settings", mock_app_settings):
+                app = create_app()
+                assert isinstance(app, FastAPI)
+    """
+    mock = MagicMock()
+    # Required for auth factory validation (see auth/factory.py:43-110)
+    mock.auth_provider = "inmemory"
+    mock.jwt_secret_key = "test-jwt-secret-key-for-testing"
+    mock.environment = "development"
+    mock.use_password_hashing = False
+    # CORS settings
+    mock.cors_allowed_origins = []
+    mock.get_cors_origins = MagicMock(return_value=[])
+    return mock
+
+
+# ==============================================================================
 # E2E FastAPI App Fixtures
 # ==============================================================================
 

@@ -98,11 +98,13 @@ class TestCORSConfiguration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_cors_disabled_when_no_origins_configured(self):
+    def test_cors_disabled_when_no_origins_configured(self, mock_app_settings):
         """Test CORS is not added when cors_allowed_origins is empty"""
-        with patch("mcp_server_langgraph.app.settings") as mock_settings:
-            mock_settings.cors_allowed_origins = []
+        # Configure for this test case
+        mock_app_settings.cors_allowed_origins = []
+        mock_app_settings.get_cors_origins.return_value = []
 
+        with patch("mcp_server_langgraph.app.settings", mock_app_settings):
             app = create_app()
 
             # Check that CORS middleware was not added
@@ -110,22 +112,25 @@ class TestCORSConfiguration:
             # Note: FastAPI might have default CORS, so we just check our config wasn't added
             assert isinstance(app, FastAPI)
 
-    def test_cors_enabled_with_configured_origins(self):
+    def test_cors_enabled_with_configured_origins(self, mock_app_settings):
         """Test CORS is configured when origins are set"""
-        with patch("mcp_server_langgraph.app.settings") as mock_settings:
-            mock_settings.cors_allowed_origins = ["http://localhost:3000", "http://localhost:8000"]
+        # Configure for this test case
+        mock_app_settings.cors_allowed_origins = ["http://localhost:3000", "http://localhost:8000"]
+        mock_app_settings.get_cors_origins.return_value = ["http://localhost:3000", "http://localhost:8000"]
 
+        with patch("mcp_server_langgraph.app.settings", mock_app_settings):
             app = create_app()
 
             # CORS middleware should be in the stack
             assert isinstance(app, FastAPI)
 
-    def test_cors_does_not_use_hardcoded_wildcard(self):
+    def test_cors_does_not_use_hardcoded_wildcard(self, mock_app_settings):
         """Test CORS does not use hardcoded ['*'] origins"""
-        # This test verifies the fix - ensure we're using settings, not hardcoded values
-        with patch("mcp_server_langgraph.app.settings") as mock_settings:
-            mock_settings.cors_allowed_origins = ["http://example.com"]
+        # Configure for this test case
+        mock_app_settings.cors_allowed_origins = ["http://example.com"]
+        mock_app_settings.get_cors_origins.return_value = ["http://example.com"]
 
+        with patch("mcp_server_langgraph.app.settings", mock_app_settings):
             with patch("mcp_server_langgraph.app.CORSMiddleware") as mock_cors_middleware:
                 with patch("mcp_server_langgraph.app.setup_rate_limiting"):
                     _ = create_app()
@@ -245,13 +250,15 @@ class TestAppIntegration:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_app_creation_with_all_settings(self):
+    def test_app_creation_with_all_settings(self, mock_app_settings):
         """Test app creation with all settings configured"""
-        with patch("mcp_server_langgraph.app.settings") as mock_settings:
-            mock_settings.cors_allowed_origins = ["http://localhost:3000"]
-            mock_settings.jwt_secret_key = "test-secret"
-            mock_settings.jwt_algorithm = "HS256"
+        # Configure for this test case
+        mock_app_settings.cors_allowed_origins = ["http://localhost:3000"]
+        mock_app_settings.get_cors_origins.return_value = ["http://localhost:3000"]
+        mock_app_settings.jwt_secret_key = "test-secret"
+        mock_app_settings.jwt_algorithm = "HS256"
 
+        with patch("mcp_server_langgraph.app.settings", mock_app_settings):
             app = create_app()
 
             assert isinstance(app, FastAPI)

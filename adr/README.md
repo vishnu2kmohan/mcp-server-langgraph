@@ -170,7 +170,7 @@ python scripts/generate_adr_index.py --check
 
 - [Architecture Overview](../docs/architecture/overview.mdx) - High-level system architecture
 - [Mintlify ADRs](../docs/architecture/) - User-friendly ADR documentation
-- [ADR Sync Script](../scripts/sync-adrs.py) - Keep ADRs in sync with Mintlify
+- [ADR Sync Script](../scripts/docs/sync-adrs.py) - Keep ADRs in sync with Mintlify
 
 ---
 

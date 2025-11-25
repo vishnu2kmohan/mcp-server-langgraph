@@ -166,6 +166,10 @@ class TestBearerSchemeOverrideDiagnostic:
         else:
             print(f"✗ FAILED: Still need bearer_scheme override (got {response.status_code})")
 
+    @pytest.mark.xfail(
+        strict=False,
+        reason="Diagnostic test requires external infrastructure (Keycloak, OpenFGA) - may fail in CI due to network unavailability",
+    )
     def test_actual_service_principal_router_with_diagnostic(self):
         """
         Diagnostic: Test actual service principals router with detailed logging.
