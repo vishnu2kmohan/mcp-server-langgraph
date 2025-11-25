@@ -25,7 +25,9 @@ from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import AnyUrl, BaseModel, Field
 
-from mcp_server_langgraph.auth.factory import create_auth_middleware
+from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
+from mcp_server_langgraph.auth.factory import create_auth_middleware, create_user_provider
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
@@ -194,6 +196,23 @@ try:
     )
 except Exception as e:
     _module_logger.warning(f"Failed to initialize rate limiting: {e}. Requests will proceed without rate limits.")
+
+# Authentication middleware for REST API endpoints (GDPR, API Keys, Service Principals, SCIM)
+# This must be added AFTER rate limiting but BEFORE routes are defined
+# Uses module-level auth middleware creation (lazy init for observability compatibility)
+try:
+    # Create user provider and auth middleware for REST API authentication
+    # This enables request.state.user for all protected endpoints
+    _module_user_provider = create_user_provider(settings)
+    _module_auth_middleware = AuthMiddleware(
+        secret_key=settings.jwt_secret_key,
+        settings=settings,
+        user_provider=_module_user_provider,
+    )
+    app.add_middleware(AuthRequestMiddleware, auth_middleware=_module_auth_middleware)
+    _module_logger.info("AuthRequestMiddleware enabled for REST API authentication")
+except Exception as e:
+    _module_logger.warning(f"Failed to initialize AuthRequestMiddleware: {e}. REST API endpoints will require manual auth.")
 
 
 class ChatInput(BaseModel):
@@ -486,20 +505,21 @@ class MCPAgentStreamableServer:
                     )
 
                 # Extract user_id from validated token payload
-                if not token_verification.payload or "sub" not in token_verification.payload:
-                    logger.error("Token payload missing 'sub' claim")
+                if not token_verification.payload:
+                    logger.error("Token payload is empty")
                     metrics.auth_failures.add(1)
                     raise PermissionError("Invalid token: missing user identifier")
 
                 # Extract username with defensive fallback
                 # Priority: preferred_username > username claim > sub parsing
                 # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
+                # NOTE: Some Keycloak configurations may not include 'sub' in access tokens
                 username = token_verification.payload.get("preferred_username")
                 if not username:
                     # Try 'username' claim (alternative standard claim)
                     username = token_verification.payload.get("username")
                 if not username:
-                    # Fallback: extract from sub if it's in "user:username" format
+                    # Fallback: extract from sub if available
                     sub = token_verification.payload.get("sub", "")
                     if sub.startswith("user:"):
                         username = sub.split(":", 1)[1]
@@ -510,8 +530,12 @@ class MCPAgentStreamableServer:
                             extra={"sub_prefix": sub[:8]},
                         )
                         username = sub
-                    else:
-                        raise PermissionError("Invalid token: cannot extract username from claims")
+
+                # Final check: ensure we have a username
+                if not username:
+                    logger.error("Token missing user identifier (no sub, preferred_username, or username claim)")
+                    metrics.auth_failures.add(1)
+                    raise PermissionError("Invalid token: cannot extract username from claims")
 
                 # Normalize user_id to "user:username" format for OpenFGA compatibility
                 user_id = f"user:{username}" if not username.startswith("user:") else username
