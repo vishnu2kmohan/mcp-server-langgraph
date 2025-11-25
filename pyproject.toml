@@ -28,7 +28,7 @@ keywords = ["mcp", "model-context-protocol", "langgraph", "llm", "agent", "anthr
 dependencies = [
     "langgraph>=1.0.3",
     "langgraph-checkpoint-redis>=0.1.2",  # Redis checkpointer for distributed conversation state
-    "langchain-core>=1.0.4",
+    "langchain-core>=1.1.0",  # Updated from 1.0.4 for security fixes
     "langsmith>=0.4.37",
     "litellm>=1.80.0",  # Latest stable with Gemini 3 Pro support (gemini-3-pro-preview)
     "mcp>=1.18.0",
@@ -46,10 +46,13 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",
-    "pydantic-ai>=0.0.13",  # Type-safe AI agent framework for structured routing
+    "pydantic-ai>=1.22.0",  # Type-safe AI agent framework for structured routing (updated for dependency consistency)
     "httpx>=0.28.1",
+    # NOTE: urllib3 capped at <2.4.0 by kubernetes client (34.1.0)
+    # CVE-2025-50181, CVE-2025-50182 fixes in 2.5.0 pending kubernetes-client/python#2439
+    # https://github.com/kubernetes-client/python/issues/2458 tracks the blocker
     "fastapi>=0.120.3",
-    "starlette>=0.48.0",  # Explicitly listed (also transitively via FastAPI) for direct imports
+    "starlette>=0.50.0",  # Updated from 0.48.0, fixes CVE-2025-62727 (Range header DoS)
     "uvicorn[standard]>=0.38.0",
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",
