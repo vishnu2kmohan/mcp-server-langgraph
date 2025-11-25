@@ -55,7 +55,11 @@ class TestMCPServerSettingsInjection:
         # THEN: Server should use global settings
         from mcp_server_langgraph.core import config
 
-        assert server.settings is config.settings
+        # NOTE: Use equality check (==) instead of identity (is) for xdist compatibility.
+        # In pytest-xdist parallel mode, module imports may result in different
+        # Settings instances across workers. What matters functionally is that
+        # the settings values are equivalent, not that they're the same object.
+        assert server.settings == config.settings
 
     @pytest.mark.asyncio
     async def test_code_execution_tools_appear_when_enabled(self):
