@@ -108,6 +108,10 @@ EXEMPT_FILES = [
     "test_pytest_xdist_isolation.py",  # Documents FastAPI dependency override patterns
     "test_bearer_scheme_isolation.py",  # Documents bearer_scheme singleton isolation patterns
     "test_fastapi_auth_override_sanity.py",  # Documents TDD backstop pattern for auth overrides
+    # Pure function unit tests (test string parsing, no database interaction)
+    "test_middleware_helpers.py",  # Tests normalize_user_id() - pure function input/output
+    "test_session_data_model.py",  # Tests Pydantic model validation - pure data model tests
+    "test_security_utils.py",  # Tests sanitize_for_logging() - pure function input/output
 ]
 
 
