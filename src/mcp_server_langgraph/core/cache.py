@@ -154,7 +154,7 @@ class CacheService:
             redis_ssl = getattr(settings, "redis_ssl", False)
 
         # Declare redis with Optional type for proper type checking
-        self.redis: redis.Redis[bytes] | None = None
+        self.redis: redis.Redis[bytes] | None = None  # type: ignore[type-arg]
 
         try:
             # Build Redis URL with database number using helper function
@@ -163,7 +163,7 @@ class CacheService:
 
             # Create Redis client using from_url() with full configuration
             # This matches the pattern in dependencies.py:215-220 (API key manager)
-            self.redis = redis.from_url(
+            self.redis = redis.from_url(  # type: ignore[no-untyped-call]
                 redis_url_with_db,
                 password=redis_password,
                 ssl=redis_ssl,
@@ -227,7 +227,7 @@ class CacheService:
             try:
                 data = self.redis.get(key)
                 if data:
-                    value = pickle.loads(data)
+                    value = pickle.loads(data)  # type: ignore[arg-type]
 
                     # Promote to L1
                     self.l1_cache[key] = value
@@ -325,7 +325,7 @@ class CacheService:
                 search_pattern = pattern if pattern else "*"
                 keys = self.redis.keys(search_pattern)
                 if keys:
-                    self.redis.delete(*keys)
+                    self.redis.delete(*keys)  # type: ignore[misc]
                     logger.info(f"Cleared L2 cache by pattern: {search_pattern} ({len(cast(list[Any], keys))} keys)")
                 else:
                     logger.info(f"No L2 cache keys matched pattern: {search_pattern}")

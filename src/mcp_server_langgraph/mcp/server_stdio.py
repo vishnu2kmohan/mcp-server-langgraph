@@ -151,11 +151,13 @@ class MCPAgentServer:
         var changes didn't take effect due to module-level settings caching.
         """
         # Store settings for runtime configuration
-        # Import config module to ensure we get the exact same settings object reference
-        # This is required for identity checks like `server.settings is config.settings`
-        from mcp_server_langgraph.core import config as config_module
+        # NOTE: When settings=None, we must reference the module-level 'settings'
+        # imported at the top of this file (line 26). This allows tests to mock
+        # settings via @patch("mcp_server_langgraph.mcp.server_stdio.settings", ...)
+        # Do NOT import settings fresh here - it bypasses the test mock.
+        import mcp_server_langgraph.mcp.server_stdio as this_module
 
-        self.settings = settings if settings is not None else config_module.settings
+        self.settings = settings if settings is not None else this_module.settings  # type: ignore[attr-defined]
 
         self.server = Server("langgraph-agent")
 
