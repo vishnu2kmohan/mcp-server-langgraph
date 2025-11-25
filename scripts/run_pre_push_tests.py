@@ -154,6 +154,36 @@ def should_run_meta_tests() -> bool:
     return False
 
 
+def is_quiet_mode() -> bool:
+    """
+    Check if quiet mode should be enabled.
+
+    Quiet mode suppresses verbose pytest output while still showing errors/failures.
+    This prevents BlockingIOError when git push output buffer fills up.
+
+    Quiet mode is enabled when:
+    - QUIET_MODE=1 environment variable is set
+    - Running inside a pre-commit hook (GIT_AUTHOR_NAME set by git)
+    - Output is not a TTY (piped/redirected)
+
+    Returns:
+        True if quiet mode should be enabled
+    """
+    # Explicit environment variable
+    if os.getenv("QUIET_MODE") == "1":
+        return True
+
+    # Running in pre-commit hook context (pre-commit sets this)
+    if os.getenv("PRE_COMMIT") == "1":
+        return True
+
+    # Output is piped/redirected (not a terminal)
+    if not sys.stdout.isatty():
+        return True
+
+    return False
+
+
 def main() -> int:
     """
     Run consolidated pre-push test suite.
@@ -161,6 +191,9 @@ def main() -> int:
     Returns:
         0 if all tests pass, non-zero otherwise
     """
+    # Check if quiet mode should be enabled
+    quiet = is_quiet_mode()
+
     # Build pytest arguments
     # NOTE: --testmon removed due to pytest-xdist incompatibility (Codex Audit 2025-11-24)
     # Testmon's change tracking doesn't work reliably with xdist's worker isolation.
@@ -172,8 +205,20 @@ def main() -> int:
         "-n",
         "auto",  # Parallel execution with pytest-xdist
         "-x",  # Stop on first failure (fail-fast)
-        "--tb=short",  # Short traceback format
     ]
+
+    if quiet:
+        # Quiet mode: minimal output, but show errors/failures/warnings
+        pytest_args.extend(
+            [
+                "-q",  # Quiet mode (dots instead of verbose)
+                "--tb=line",  # Single-line tracebacks (still shows errors)
+                "--no-header",  # Skip pytest header
+            ]
+        )
+    else:
+        # Normal mode: verbose output
+        pytest_args.append("--tb=short")  # Short traceback format
 
     # Combined marker expression that covers all 5 original hooks:
     # 1. unit and not llm (run-unit-tests)
@@ -197,7 +242,8 @@ def main() -> int:
     if should_run_meta_tests():
         # Workflow files changed - include meta tests for infrastructure validation
         marker_expression = "(unit or api or property or meta) and not llm"
-        print("🔍 Workflow files changed - including meta tests (infrastructure validation)")
+        if not quiet:
+            print("🔍 Workflow files changed - including meta tests (infrastructure validation)")
     else:
         # Only code files changed - skip meta tests for performance
         marker_expression = "(unit or api or property) and not llm and not meta"
@@ -214,16 +260,18 @@ def main() -> int:
     if ci_parity:
         # User requested CI-equivalent validation
         if check_docker_available():
-            print("▶ CI_PARITY=1 detected: Including integration tests (Docker available)")
+            if not quiet:
+                print("▶ CI_PARITY=1 detected: Including integration tests (Docker available)")
             # Add integration marker to expression (but still exclude meta-tests)
             # (unit or api or property or integration) and not llm and not meta
             marker_expression = "(unit or api or property or integration) and not llm and not meta"
             pytest_args[marker_index] = marker_expression  # Use stored index instead of fragile .index()
         else:
-            print("⚠  CI_PARITY=1 detected but Docker unavailable")
-            print("✓ Will run: unit, api, property tests")
-            print("✗ Won't run: integration tests (require Docker daemon)")
-            print("→ Action: Start Docker Desktop or omit CI_PARITY=1 for faster pre-push")
+            if not quiet:
+                print("⚠  CI_PARITY=1 detected but Docker unavailable")
+                print("✓ Will run: unit, api, property tests")
+                print("✗ Won't run: integration tests (require Docker daemon)")
+                print("→ Action: Start Docker Desktop or omit CI_PARITY=1 for faster pre-push")
 
     # Ensure OTEL_SDK_DISABLED and HYPOTHESIS_PROFILE for consistent environment
     env = os.environ.copy()
@@ -245,12 +293,13 @@ def main() -> int:
     examples_count = "100" if hypothesis_profile == "ci" else "25"
 
     # Run pytest via uv run (auto-syncs if needed)
-    print(f"▶ Running consolidated pre-push tests: {' '.join(pytest_args)}")
-    print(f"  Marker expression: {marker_expression}")
-    print(f"  Hypothesis profile: {hypothesis_profile} ({examples_count} examples)")
-    if hypothesis_profile == "dev":
-        print("  💡 Tip: Use CI_PARITY=1 git push for full CI validation (100 examples)")
-    print()
+    if not quiet:
+        print(f"▶ Running consolidated pre-push tests: {' '.join(pytest_args)}")
+        print(f"  Marker expression: {marker_expression}")
+        print(f"  Hypothesis profile: {hypothesis_profile} ({examples_count} examples)")
+        if hypothesis_profile == "dev":
+            print("  💡 Tip: Use CI_PARITY=1 git push for full CI validation (100 examples)")
+        print()
 
     result = subprocess.run(
         ["uv", "run"] + pytest_args,
@@ -258,10 +307,12 @@ def main() -> int:
     )
 
     if result.returncode == 0:
-        print()
-        print("✓ All pre-push tests passed")
-        print("  Tests consolidated from 5 sessions → 1 session (8-20s faster)")
+        if not quiet:
+            print()
+            print("✓ All pre-push tests passed")
+            print("  Tests consolidated from 5 sessions → 1 session (8-20s faster)")
     else:
+        # Always show failure message (even in quiet mode)
         print()
         print("✗ Pre-push tests failed")
         print("  Fix failing tests before pushing")
