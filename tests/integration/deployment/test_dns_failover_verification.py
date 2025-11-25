@@ -26,6 +26,15 @@ from tests.fixtures.tool_fixtures import requires_tool
 
 pytestmark = pytest.mark.integration
 
+
+@pytest.fixture
+def skip_if_no_cluster(kubectl_connected):
+    """Skip test if kubectl is not connected to a Kubernetes cluster."""
+    if not kubectl_connected:
+        pytest.skip("kubectl not connected to a Kubernetes cluster (required for OpenAPI validation)")
+    return True
+
+
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -235,7 +244,7 @@ spec:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
 
-    def test_cloudsql_dns_test_pod_manifest_valid(self):
+    def test_cloudsql_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for cloudsql-staging (DRY-RUN).
 
@@ -256,7 +265,7 @@ spec:
         assert "kind: Pod" in output
         assert "cloudsql-staging.staging.internal" in output
 
-    def test_redis_dns_test_pod_manifest_valid(self):
+    def test_redis_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for redis-staging (DRY-RUN).
         """
@@ -272,7 +281,7 @@ spec:
         assert "securityContext" in output
         assert "runAsNonRoot: true" in output
 
-    def test_redis_session_dns_test_pod_manifest_valid(self):
+    def test_redis_session_dns_test_pod_manifest_valid(self, skip_if_no_cluster):
         """
         Validate DNS test pod manifest for redis-session-staging (DRY-RUN).
         """

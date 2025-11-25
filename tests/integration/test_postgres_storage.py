@@ -81,7 +81,7 @@ class TestPostgresAuditLogStore:
             action="conversation.create",
             resource_type="conversation",
             resource_id="conv_123",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             ip_address="192.168.1.1",
             user_agent="Mozilla/5.0",
             metadata={"source": "test", "priority": "high"},
@@ -116,21 +116,21 @@ class TestPostgresAuditLogStore:
                 user_id=get_user_id("alice"),
                 action="login",
                 resource_type="auth",
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             ),
             AuditLogEntry(
                 log_id=f"log_alice_2_{uuid.uuid4().hex[:8]}",
                 user_id=get_user_id("alice"),
                 action="conversation.view",
                 resource_type="conversation",
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             ),
             AuditLogEntry(
                 log_id=f"log_bob_1_{uuid.uuid4().hex[:8]}",
                 user_id=get_user_id("bob"),
                 action="login",
                 resource_type="auth",
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             ),
         ]
 
@@ -159,14 +159,12 @@ class TestPostgresAuditLogStore:
             user_id=get_user_id("alice"),
             action="data.access",
             resource_type="user_data",
-            timestamp=now.isoformat() + "Z",
+            timestamp=now.isoformat(),
         )
         await audit_store.log(entry)
 
         # Query logs from yesterday to tomorrow (should include today's log)
-        logs = await audit_store.get_logs_by_date_range(
-            start_date=yesterday.isoformat() + "Z", end_date=tomorrow.isoformat() + "Z"
-        )
+        logs = await audit_store.get_logs_by_date_range(start_date=yesterday.isoformat(), end_date=tomorrow.isoformat())
 
         # Should include the log we just created
         log_ids = [log.log_id for log in logs]
@@ -185,7 +183,7 @@ class TestPostgresAuditLogStore:
             user_id=get_user_id("charlie"),
             action="data.view",
             resource_type="personal_data",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             ip_address="10.0.0.5",
             user_agent="Chrome/100",
         )
@@ -219,7 +217,7 @@ class TestPostgresAuditLogStore:
             user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             metadata={},  # Empty metadata
         )
 
@@ -236,7 +234,7 @@ class TestPostgresAuditLogStore:
             user_id=get_user_id("test"),
             action="complex.action",
             resource_type="test",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             metadata={
                 "nested": {"level1": {"level2": "value"}},
                 "array": [1, 2, 3],
@@ -263,7 +261,7 @@ class TestPostgresAuditLogStore:
                 user_id=get_user_id(f"concurrent_{i}"),
                 action="concurrent.test",
                 resource_type="test",
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
             return await audit_store.log(entry)
 
@@ -329,7 +327,7 @@ class TestPostgresConsentStore:
             user_id=get_user_id("alice"),
             consent_type="analytics",
             granted=True,
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             ip_address="192.168.1.1",
             user_agent="Mozilla/5.0",
             metadata={"version": "1.0"},
@@ -351,7 +349,7 @@ class TestPostgresConsentStore:
             user_id=get_user_id("bob"),
             consent_type="marketing",
             granted=False,  # Initially declined
-            timestamp=(datetime.now(timezone.utc) - timedelta(hours=2)).isoformat() + "Z",
+            timestamp=(datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
         )
 
         consent_2 = ConsentRecord(
@@ -359,7 +357,7 @@ class TestPostgresConsentStore:
             user_id=get_user_id("bob"),
             consent_type="marketing",
             granted=True,  # Later accepted
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
         await consent_store.create(consent_1)
@@ -387,21 +385,21 @@ class TestPostgresConsentStore:
                 user_id=user_id,
                 consent_type="analytics",
                 granted=True,
-                timestamp=(datetime.now(timezone.utc) - timedelta(days=10)).isoformat() + "Z",
+                timestamp=(datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
             ),
             ConsentRecord(
                 consent_id=f"consent_2_{uuid.uuid4().hex[:8]}",
                 user_id=user_id,
                 consent_type="analytics",
                 granted=False,
-                timestamp=(datetime.now(timezone.utc) - timedelta(days=5)).isoformat() + "Z",
+                timestamp=(datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
             ),
             ConsentRecord(
                 consent_id=f"consent_3_{uuid.uuid4().hex[:8]}",
                 user_id=user_id,
                 consent_type="analytics",
                 granted=True,
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             ),
         ]
 
@@ -430,7 +428,7 @@ class TestPostgresConsentStore:
                 user_id=user_id,
                 consent_type=consent_type,
                 granted=(consent_type in ["analytics", "marketing"]),  # Some granted, some not
-                timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+                timestamp=datetime.now(timezone.utc).isoformat(),
             )
             await consent_store.create(record)
 
@@ -448,7 +446,7 @@ class TestPostgresConsentStore:
             user_id=get_user_id("metadata_test"),
             consent_type="marketing",
             granted=True,
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             metadata={
                 "source": "web_form",
                 "version": "2.0",
@@ -520,7 +518,7 @@ class TestPostgresStorageEdgeCases:
             user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             # All optional fields None
             resource_id=None,
             ip_address=None,
@@ -543,7 +541,7 @@ class TestPostgresStorageEdgeCases:
             user_id=get_user_id("test"),
             action="test.action",
             resource_type="test",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             metadata={
                 "sql_injection": "'; DROP TABLE audit_logs; --",
                 "unicode": "こんにちは 🎉",
@@ -571,7 +569,7 @@ class TestPostgresStorageEdgeCases:
             user_id=get_user_id("test"),
             action="test.large",
             resource_type="test",
-            timestamp=datetime.now(timezone.utc).isoformat() + "Z",
+            timestamp=datetime.now(timezone.utc).isoformat(),
             metadata=large_metadata,
         )
 

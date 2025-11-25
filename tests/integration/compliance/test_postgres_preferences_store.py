@@ -42,17 +42,17 @@ async def db_pool(postgres_connection_real) -> AsyncGenerator[asyncpg.Pool, None
     """
     pool = postgres_connection_real
 
-    # Clean up test data
+    # Clean up test data - use 'user:test_%' pattern since get_user_id returns 'user:test_gw0_...'
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM user_preferences WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM user_preferences WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
 
     yield pool
 
     # Clean up after test
     async with pool.acquire() as conn:
-        await conn.execute("DELETE FROM user_preferences WHERE user_id LIKE 'test_%'")
-        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'test_%'")
+        await conn.execute("DELETE FROM user_preferences WHERE user_id LIKE 'user:test_%'")
+        await conn.execute("DELETE FROM user_profiles WHERE user_id LIKE 'user:test_%'")
 
     # Note: Don't close the pool - it's session-scoped and shared across all tests
 
