@@ -171,16 +171,28 @@ class TestBearerSchemeOverrideDiagnostic:
         Diagnostic: Test actual service principals router with detailed logging.
 
         This mimics the actual test setup to identify where the override breaks.
-        """
-        from unittest.mock import AsyncMock
 
-        from mcp_server_langgraph.api.service_principals import router
-        from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
-        from mcp_server_langgraph.core.dependencies import (
-            get_keycloak_client,
-            get_openfga_client,
-            get_service_principal_manager,
-        )
+        NOTE: This test may be skipped in CI if infrastructure (Keycloak, OpenFGA)
+        isn't available, as module imports may trigger network connections.
+        """
+        import httpx
+
+        try:
+            from unittest.mock import AsyncMock
+
+            from mcp_server_langgraph.api.service_principals import router
+            from mcp_server_langgraph.auth.middleware import bearer_scheme, get_current_user
+            from mcp_server_langgraph.core.dependencies import (
+                get_keycloak_client,
+                get_openfga_client,
+                get_service_principal_manager,
+            )
+        except httpx.ConnectError as e:
+            pytest.skip(f"Infrastructure not available: {e}")
+        except Exception as e:
+            # Also catch other network-related errors during import
+            if "Name or service not known" in str(e) or "Connection refused" in str(e):
+                pytest.skip(f"Infrastructure not available: {e}")
 
         # Create fresh app
         app = FastAPI()

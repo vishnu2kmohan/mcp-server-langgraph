@@ -378,8 +378,14 @@ class TestGracefulDegradationSmoke:
         monkeypatch.setenv("OPENFGA_STORE_ID", "")
         monkeypatch.setenv("OPENFGA_MODEL_ID", "")
 
-        # Reset singletons
+        # Reset singletons - IMPORTANT: Must also reload settings
+        import mcp_server_langgraph.core.config as config_module
         import mcp_server_langgraph.core.dependencies as deps
+
+        # Reload settings to pick up monkeypatched environment variables
+        config_module.settings = config_module.Settings()
+        # Also update the reference in deps module
+        deps.settings = config_module.settings
 
         deps._keycloak_client = None
         deps._openfga_client = None
