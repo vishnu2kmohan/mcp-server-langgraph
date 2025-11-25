@@ -513,7 +513,7 @@ class BudgetMonitor:
         html_body = f"""
         <html>
           <body>
-            <h2 style="color: {'red' if level == 'critical' else 'orange'};">Budget Alert</h2>
+            <h2 style="color: {"red" if level == "critical" else "orange"};">Budget Alert</h2>
             <p><strong>Level:</strong> {level.upper()}</p>
             <p><strong>Budget ID:</strong> {budget_id}</p>
             <p><strong>Utilization:</strong> {utilization:.1f}%</p>

@@ -3,15 +3,31 @@ Unit tests for UserProvider.verify_password() method.
 
 Tests verify that the verify_password method properly validates user credentials
 and returns structured PasswordVerification responses with appropriate error handling.
+
+Note: This module uses fresh imports inside each test method to avoid class identity
+issues caused by importlib.reload() in other tests. When modules are reloaded,
+isinstance() can fail because the class object identity changes.
 """
 
 import gc
 
 import pytest
 
-from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider, PasswordVerification
-
 pytestmark = pytest.mark.unit
+
+
+def _get_password_verification_class():
+    """Get fresh PasswordVerification class to avoid reload identity issues."""
+    from mcp_server_langgraph.auth.user_provider import PasswordVerification
+
+    return PasswordVerification
+
+
+def _get_inmemory_user_provider_class():
+    """Get fresh InMemoryUserProvider class to avoid reload identity issues."""
+    from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
+
+    return InMemoryUserProvider
 
 
 @pytest.mark.xdist_group(name="test_verify_password")
@@ -23,7 +39,7 @@ class TestUserProviderVerifyPassword:
         gc.collect()
 
     @pytest.fixture
-    def user_provider(self) -> InMemoryUserProvider:
+    def user_provider(self):
         """
         Create InMemoryUserProvider with test users.
 
@@ -31,6 +47,7 @@ class TestUserProviderVerifyPassword:
         """
         from tests.conftest import get_user_id
 
+        InMemoryUserProvider = _get_inmemory_user_provider_class()
         provider = InMemoryUserProvider(use_password_hashing=False)  # Plaintext for speed
 
         # Add test users with worker-safe IDs
@@ -63,7 +80,7 @@ class TestUserProviderVerifyPassword:
         result = await user_provider.verify_password("alice", "alice-password")
 
         # THEN: Verification should succeed with user data
-        assert isinstance(result, PasswordVerification), "Should return PasswordVerification object"
+        assert type(result).__name__ == "PasswordVerification", "Should return PasswordVerification object"
         assert result.valid is True, "Valid credentials should return valid=True"
         assert result.user is not None, "Valid credentials should include user data"
         assert result.error is None, "Successful verification should have no error"
@@ -88,7 +105,7 @@ class TestUserProviderVerifyPassword:
         result = await user_provider.verify_password("alice", "wrong-password")
 
         # THEN: Verification should fail
-        assert isinstance(result, PasswordVerification)
+        assert type(result).__name__ == "PasswordVerification"
         assert result.valid is False, "Wrong password should return valid=False"
         assert result.user is None, "Failed verification should not include user data"
         assert result.error is not None, "Failed verification should include error message"
@@ -105,7 +122,7 @@ class TestUserProviderVerifyPassword:
         result = await user_provider.verify_password("charlie", "any-password")
 
         # THEN: Verification should fail
-        assert isinstance(result, PasswordVerification)
+        assert type(result).__name__ == "PasswordVerification"
         assert result.valid is False, "Non-existent user should return valid=False"
         assert result.user is None, "Failed verification should not include user data"
         assert result.error is not None, "Failed verification should include error message"
@@ -121,7 +138,7 @@ class TestUserProviderVerifyPassword:
         result = await user_provider.verify_password("", "any-password")
 
         # THEN: Should fail gracefully without exception
-        assert isinstance(result, PasswordVerification)
+        assert type(result).__name__ == "PasswordVerification"
         assert result.valid is False
         assert result.user is None
         assert result.error is not None
@@ -137,7 +154,7 @@ class TestUserProviderVerifyPassword:
         result = await user_provider.verify_password("alice", "")
 
         # THEN: Should fail gracefully without exception
-        assert isinstance(result, PasswordVerification)
+        assert type(result).__name__ == "PasswordVerification"
         assert result.valid is False
         assert result.user is None
         assert result.error is not None
@@ -152,6 +169,7 @@ class TestUserProviderVerifyPassword:
         # GIVEN: Provider with password hashing enabled
         from tests.conftest import get_user_id
 
+        InMemoryUserProvider = _get_inmemory_user_provider_class()
         provider = InMemoryUserProvider(use_password_hashing=True)
 
         # Add user with hashed password

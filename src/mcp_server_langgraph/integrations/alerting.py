@@ -319,14 +319,14 @@ class EmailProvider(AlertProvider):
         return f"""
         <html>
         <body style="font-family: Arial, sans-serif;">
-            <div style="border-left: 4px solid {severity_color.get(alert.severity, '#808080')}; padding-left: 12px;">
+            <div style="border-left: 4px solid {severity_color.get(alert.severity, "#808080")}; padding-left: 12px;">
                 <h2 style="color: {severity_color.get(alert.severity)};">{alert.title}</h2>
                 <p>{alert.description}</p>
                 <table style="margin-top: 20px;">
                     <tr><td><strong>Severity</strong></td><td>{alert.severity.value.upper()}</td></tr>
                     <tr><td><strong>Category</strong></td><td>{alert.category.value}</td></tr>
                     <tr><td><strong>Source</strong></td><td>{alert.source}</td></tr>
-                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}</td></tr>
+                    <tr><td><strong>Time</strong></td><td>{alert.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}</td></tr>
                     {metadata_rows}
                 </table>
             </div>

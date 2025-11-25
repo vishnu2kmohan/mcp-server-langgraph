@@ -295,8 +295,9 @@ class FixtureValidator:
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef) and node.name == test_name:
                     return node.lineno
-        except Exception:
-            pass
+        except (OSError, SyntaxError):
+            # File read errors or invalid Python syntax - line number unavailable
+            return None
         return None
 
     def _print_results(self) -> bool:

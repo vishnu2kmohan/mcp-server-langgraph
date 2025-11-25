@@ -212,7 +212,7 @@ def get_api_key_manager(
                 )
 
                 # Create Redis client with configured credentials
-                redis_client = redis.from_url(  # type: ignore[no-untyped-call]
+                redis_client = redis.from_url(
                     redis_url_with_db,
                     password=settings.redis_password,
                     ssl=settings.redis_ssl,

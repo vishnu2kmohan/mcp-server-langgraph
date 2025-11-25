@@ -491,14 +491,27 @@ class MCPAgentStreamableServer:
                     metrics.auth_failures.add(1)
                     raise PermissionError("Invalid token: missing user identifier")
 
-                # Extract username: prefer preferred_username (Keycloak) over sub
+                # Extract username with defensive fallback
+                # Priority: preferred_username > username claim > sub parsing
                 # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
                 username = token_verification.payload.get("preferred_username")
                 if not username:
-                    # Fallback to sub (for non-Keycloak IdPs)
-                    sub = token_verification.payload["sub"]
-                    # If sub is in "user:username" format, extract username
-                    username = sub.replace("user:", "") if sub.startswith("user:") else sub
+                    # Try 'username' claim (alternative standard claim)
+                    username = token_verification.payload.get("username")
+                if not username:
+                    # Fallback: extract from sub if it's in "user:username" format
+                    sub = token_verification.payload.get("sub", "")
+                    if sub.startswith("user:"):
+                        username = sub.split(":", 1)[1]
+                    elif sub and ":" not in sub:
+                        # Log warning for UUID-style subs (may cause issues)
+                        logger.warning(
+                            f"Using sub as username fallback (may be UUID): {sub[:8]}...",
+                            extra={"sub_prefix": sub[:8]},
+                        )
+                        username = sub
+                    else:
+                        raise PermissionError("Invalid token: cannot extract username from claims")
 
                 # Normalize user_id to "user:username" format for OpenFGA compatibility
                 user_id = f"user:{username}" if not username.startswith("user:") else username

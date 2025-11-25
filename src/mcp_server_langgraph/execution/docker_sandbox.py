@@ -72,7 +72,7 @@ class DockerSandbox(Sandbox):
 
         # Check if docker package is available
         if not DOCKER_AVAILABLE:
-            raise SandboxError("Docker package not installed. " "Install it with: pip install docker or uv add docker")
+            raise SandboxError("Docker package not installed. Install it with: pip install docker or uv add docker")
 
         self.image = image
         self.socket_path = socket_path

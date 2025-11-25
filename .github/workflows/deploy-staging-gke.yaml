@@ -238,11 +238,13 @@ jobs:
           kubectl get nodes
 
       # Install kustomize
-      - name: Install kustomize
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-          kustomize version
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.0.0"
+
+      - name: Verify kustomize
+        run: kustomize version
 
       # Verify External Secrets Operator (installed by infrastructure script)
       - name: Verify External Secrets Operator

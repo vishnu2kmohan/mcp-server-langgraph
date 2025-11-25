@@ -170,7 +170,7 @@ class PostgresUserProfileStore(UserProfileStore):
         # SET clause is built from validated field names, values are passed as parameters
         query = f"""
             UPDATE user_profiles
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE user_id = ${param_num}
         """  # nosec B608 - See security comment above
 
@@ -613,7 +613,7 @@ class PostgresConversationStore(ConversationStore):
         # Parameterized query, field names validated, values as parameters
         query = f"""
             UPDATE conversations
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE conversation_id = ${param_num}
         """  # nosec B608 - Safe: field names validated (lines 587-595), values parameterized
 
@@ -775,7 +775,7 @@ class PostgresAuditLogStore(AuditLogStore):
         query = f"""
             SELECT log_id, user_id, action, resource_type, resource_id, timestamp, ip_address, user_agent, metadata
             FROM audit_logs
-            WHERE {' AND '.join(conditions)}
+            WHERE {" AND ".join(conditions)}
             ORDER BY timestamp DESC
             LIMIT ${param_num}
         """  # nosec B608 - Safe: conditions programmatic (lines 747-759), values parameterized

@@ -386,7 +386,29 @@ class MCPAgentServer:
                 metrics.auth_failures.add(1)
                 raise PermissionError("Invalid token: missing user identifier")
 
-            user_id = token_verification.payload["sub"]
+            # Extract username with defensive fallback
+            # Priority: preferred_username > username claim > sub parsing
+            username = token_verification.payload.get("preferred_username")
+            if not username:
+                # Try 'username' claim (alternative standard claim)
+                username = token_verification.payload.get("username")
+            if not username:
+                # Fallback: extract from sub if it's in "user:username" format
+                sub = token_verification.payload.get("sub", "")
+                if sub.startswith("user:"):
+                    username = sub.split(":", 1)[1]
+                elif sub and ":" not in sub:
+                    # Log warning for UUID-style subs (may cause issues)
+                    logger.warning(
+                        f"Using sub as username fallback (may be UUID): {sub[:8]}...",
+                        extra={"sub_prefix": sub[:8]},
+                    )
+                    username = sub
+                else:
+                    raise PermissionError("Invalid token: cannot extract username from claims")
+
+            # Normalize user_id to "user:username" format for OpenFGA compatibility
+            user_id = f"user:{username}" if not username.startswith("user:") else username
             span.set_attribute("user.id", user_id)
 
             logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})

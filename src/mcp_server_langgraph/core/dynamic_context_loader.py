@@ -57,7 +57,7 @@ def _create_embeddings(
             )
 
         if not google_api_key:
-            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. " "Set via environment variable or Infisical.")
+            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical.")
 
         # Create Google embeddings with task type optimization
         from pydantic import SecretStr
@@ -111,7 +111,7 @@ def _create_embeddings(
             )
 
     else:
-        raise ValueError(f"Unsupported embedding provider: {provider}. " f"Supported providers: 'google', 'local'")
+        raise ValueError(f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'")
 
 
 class ContextReference(BaseModel):
@@ -614,9 +614,7 @@ class DynamicContextLoader:
 
         for ctx in loaded_contexts:
             message = SystemMessage(
-                content=f'<context type="{ctx.reference.ref_type}" id="{ctx.reference.ref_id}">\n'
-                f"{ctx.content}\n"
-                f"</context>"
+                content=f'<context type="{ctx.reference.ref_type}" id="{ctx.reference.ref_id}">\n{ctx.content}\n</context>'
             )
             messages.append(message)
 
