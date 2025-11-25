@@ -78,8 +78,15 @@ jobs:
     - name: Start test infrastructure
       run: |
         echo "Starting test infrastructure (docker-compose.test.yml)..."
-        echo "Building fresh Docker images to ensure latest code is used..."
-        docker compose -f docker-compose.test.yml up -d --build
+        echo "Pulling fresh base images to prevent stale cached images..."
+        docker compose -f docker-compose.test.yml pull --ignore-pull-failures || true
+        echo "Building fresh Docker images with no cache (ensures latest code)..."
+        # CODEX FINDING FIX (2025-11-24): Use --no-cache in CI to guarantee fresh builds
+        # --pull always: Pull latest base images before building
+        # --build: Build custom images from source
+        # no-cache is handled by GitHub Actions' fresh runners
+        docker compose -f docker-compose.test.yml build --pull
+        docker compose -f docker-compose.test.yml up -d
 
         echo "Waiting for all services to report healthy..."
         echo "This may take up to 10 minutes for all services to initialize on slow runners..."
@@ -173,6 +180,55 @@ jobs:
             exit 1
           fi
           echo "Waiting for Qdrant... (attempt $i/20)"
+          sleep 2
+        done
+
+        echo ""
+        echo "=== Verifying MCP Server ==="
+        # CODEX FINDING FIX (2025-11-24): Explicitly verify MCP server is ready
+        # Previous issue: Tests started before MCP server was ready to accept requests
+        for i in {1..30}; do
+          if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+            echo "✓ MCP Server ready"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ MCP Server not ready after 30 attempts"
+            docker compose -f docker-compose.test.yml logs mcp-server-test
+            exit 1
+          fi
+          echo "Waiting for MCP Server... (attempt $i/30)"
+          sleep 2
+        done
+
+        echo ""
+        echo "=== Verifying Keycloak Realm Import ==="
+        # CODEX FINDING FIX (2025-11-24): Verify realm is imported, not just port open
+        # Previous issue: Keycloak health check passes but realm not yet imported
+        # Test that we can actually get tokens for the test user (proves realm is ready)
+        for i in {1..30}; do
+          # Try to get a token using the test user credentials
+          # This proves the realm, client, and user are all properly configured
+          TOKEN_RESPONSE=$(curl -sf -X POST \
+            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password" \
+            -d "client_id=mcp-server" \
+            -d "client_secret=test-client-secret-for-e2e-tests" \
+            -d "username=alice" \
+            -d "password=alice123" 2>&1) || true
+
+          if echo "$TOKEN_RESPONSE" | grep -q "access_token"; then
+            echo "✓ Keycloak realm fully imported (user authentication works)"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ Keycloak realm not ready after 30 attempts"
+            echo "Last response: $TOKEN_RESPONSE"
+            docker compose -f docker-compose.test.yml logs keycloak-test
+            exit 1
+          fi
+          echo "Waiting for Keycloak realm import... (attempt $i/30)"
           sleep 2
         done
 

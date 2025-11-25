@@ -9,6 +9,7 @@ Following TDD principles:
 """
 
 import gc
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -16,6 +17,17 @@ import pytest
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
+
+
+def is_gitleaks_available() -> bool:
+    """Check if gitleaks binary is available on the system."""
+    return shutil.which("gitleaks") is not None
+
+
+# Skip all gitleaks execution tests if binary not available
+requires_gitleaks = pytest.mark.skipif(
+    not is_gitleaks_available(), reason="gitleaks binary not found. Install from https://github.com/gitleaks/gitleaks"
+)
 
 
 def get_repo_root() -> Path:
@@ -68,6 +80,7 @@ class TestGitleaksConfig:
         assert config is not None, "Gitleaks config should parse as valid TOML"
         assert isinstance(config, dict), "Gitleaks config should be a dictionary"
 
+    @requires_gitleaks
     def test_gitleaks_ignores_documentation_examples(self):
         """
         Test that gitleaks doesn't flag documentation examples as secrets.
@@ -147,6 +160,7 @@ class TestGitleaksConfig:
         # Should exclude generated code
         assert any("clients" in path for path in paths), "Gitleaks config should exclude generated client directories"
 
+    @requires_gitleaks
     def test_gitleaks_detects_real_secrets(self):
         """
         Test that gitleaks still detects real secrets (not a false negative factory).

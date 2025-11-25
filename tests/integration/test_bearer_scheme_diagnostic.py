@@ -191,8 +191,13 @@ class TestBearerSchemeOverrideDiagnostic:
             pytest.skip(f"Infrastructure not available: {e}")
         except Exception as e:
             # Also catch other network-related errors during import
-            if "Name or service not known" in str(e) or "Connection refused" in str(e):
+            error_msg = str(e)
+            if any(
+                pattern in error_msg
+                for pattern in ["Name or service not known", "Connection refused", "Temporary failure in name resolution"]
+            ):
                 pytest.skip(f"Infrastructure not available: {e}")
+            raise  # Re-raise if not a network error
 
         # Create fresh app
         app = FastAPI()

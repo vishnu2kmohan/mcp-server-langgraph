@@ -16,6 +16,7 @@ Compliance:
 """
 
 import gc
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -147,7 +148,7 @@ class TestPostgresAuditLogStore:
         assert len(bob_logs) >= 1
         assert all(log.user_id == get_user_id("bob") for log in bob_logs)
 
-    @pytest.mark.skip(reason="get_logs_by_date_range not implemented in PostgresAuditLogStore")
+    @pytest.mark.xfail(strict=True, reason="get_logs_by_date_range not yet implemented in PostgresAuditLogStore")
     async def test_get_logs_by_date_range(self, audit_store):
         """Test retrieving logs within date range
 
@@ -257,7 +258,10 @@ class TestPostgresAuditLogStore:
         assert retrieved.metadata["array"] == [1, 2, 3]
         assert retrieved.metadata["mixed"]["num"] == 42
 
-    @pytest.mark.skip(reason="SimplePool test fixture doesn't support concurrent operations; use real pool")
+    @pytest.mark.skipif(
+        os.getenv("RUN_CONCURRENT_POOL_TESTS") != "true",
+        reason="Requires RUN_CONCURRENT_POOL_TESTS=true and real asyncpg pool (SimplePool doesn't support concurrent operations)",
+    )
     async def test_concurrent_audit_log_writes(self, audit_store):
         """Test concurrent writes to audit log (thread safety)
 

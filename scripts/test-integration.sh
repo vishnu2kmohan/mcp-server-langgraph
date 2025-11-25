@@ -219,7 +219,18 @@ echo ""
 #
 # The MCP server depends on all infrastructure services being healthy
 # before it starts, ensuring proper initialization order.
-docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d \
+#
+# CODEX FINDING FIX (2025-11-24): Add --pull always to prevent stale images
+# Pull fresh base images first, then start services
+log_info "Pulling fresh base images to prevent stale cached images..."
+docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" pull --quiet \
+    postgres-test \
+    openfga-test \
+    keycloak-test \
+    redis-test \
+    qdrant-test 2>/dev/null || log_warning "Some images failed to pull (may use cache)"
+
+docker compose $COMPOSE_OPTS -f "$COMPOSE_FILE" up -d --pull always \
     "${BUILD_ARGS[@]}" \
     postgres-test \
     openfga-migrate-test \
@@ -238,6 +249,37 @@ log_info "Waiting for services to be healthy..."
 if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloak-test openfga-test redis-test qdrant-test mcp-server-test; then
     log_success "All services healthy"
     echo ""
+
+    # CODEX FINDING FIX (2025-11-24): Verify Keycloak realm is actually imported
+    # Docker health check passes but realm may not be fully imported yet
+    log_info "Verifying Keycloak realm is fully imported..."
+    KEYCLOAK_READY=false
+    for i in {1..30}; do
+        # Try to get a token using the test user credentials
+        # This proves the realm, client, and user are all properly configured
+        TOKEN_RESPONSE=$(curl -sf -X POST \
+            "http://localhost:9082/realms/master/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password" \
+            -d "client_id=mcp-server" \
+            -d "client_secret=test-client-secret-for-e2e-tests" \
+            -d "username=alice" \
+            -d "password=alice123" 2>&1) || true
+
+        if echo "$TOKEN_RESPONSE" | grep -q "access_token"; then
+            log_success "Keycloak realm fully imported (user authentication works)"
+            KEYCLOAK_READY=true
+            break
+        fi
+        echo -n "."
+        sleep 2
+    done
+    echo ""
+
+    if [ "$KEYCLOAK_READY" = false ]; then
+        log_warning "Keycloak realm may not be fully imported (auth test failed)"
+        log_info "Some tests requiring authentication may fail"
+    fi
 
     # Verify PostgreSQL actually accepts connections (not just reports healthy)
     # This matches CI workflow behavior (integration-tests.yaml lines 203-220)

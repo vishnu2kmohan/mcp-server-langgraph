@@ -151,7 +151,11 @@ class MCPAgentServer:
         var changes didn't take effect due to module-level settings caching.
         """
         # Store settings for runtime configuration
-        self.settings = settings if settings is not None else globals()["settings"]
+        # Import config module to ensure we get the exact same settings object reference
+        # This is required for identity checks like `server.settings is config.settings`
+        from mcp_server_langgraph.core import config as config_module
+
+        self.settings = settings if settings is not None else config_module.settings
 
         self.server = Server("langgraph-agent")
 

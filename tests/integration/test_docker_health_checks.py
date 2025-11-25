@@ -414,7 +414,12 @@ class TestDockerComposeHealthChecksIntegration:
 
         Timeout Note: Test waits up to 90s for service health (line 447), so pytest timeout
         must be > 90s to avoid premature termination. Set to 150s for safety margin.
+
+        CODEX FINDING FIX (2025-11-24): Added port conflict detection and project isolation
+        to prevent failures when main test infrastructure is already running.
         """
+        import uuid
+
         compose_file = PROJECT_ROOT / "docker-compose.minimal.yml"
 
         if not compose_file.exists():
@@ -434,13 +439,31 @@ class TestDockerComposeHealthChecksIntegration:
         # Test first service with health check
         service_name = services_with_health_checks[0]
 
-        print(f"\n🐳 Starting {service_name} service from minimal compose...")
+        # CODEX FINDING FIX (2025-11-24): Port Conflict Detection
+        # Check if common ports used by minimal compose are already in use
+        # Prevents "port already allocated" errors when test infrastructure is running
+        POSTGRES_PORT = 5432  # From docker-compose.minimal.yml
+        REDIS_PORT = 6379  # From docker-compose.minimal.yml
+        if is_port_in_use(POSTGRES_PORT) or is_port_in_use(REDIS_PORT):
+            pytest.skip(
+                f"Ports {POSTGRES_PORT} or {REDIS_PORT} already in use. "
+                f"Cannot run minimal compose health check test in parallel with other infrastructure."
+            )
+
+        # CODEX FINDING FIX (2025-11-24): Isolated project name
+        # Prevents interference with main test infrastructure during cleanup
+        unique_project_name = f"minimal-health-test-{uuid.uuid4().hex[:8]}"
+        test_env = os.environ.copy()
+        test_env["COMPOSE_PROJECT_NAME"] = unique_project_name
+
+        print(f"\n🐳 Starting {service_name} in isolated project '{unique_project_name}'...")
         result = run_docker_compose(
             compose_file,
             "up",
             "-d",
             service_name,
             timeout=60,
+            env=test_env,
         )
 
         if result.returncode != 0:
@@ -448,9 +471,9 @@ class TestDockerComposeHealthChecksIntegration:
 
         try:
             print(f"⏳ Waiting for {service_name} to become healthy...")
-            is_healthy = wait_for_health(compose_file, service_name, timeout=90)
+            is_healthy = wait_for_health(compose_file, service_name, timeout=90, env=test_env)
 
-            final_health = get_service_health(compose_file, service_name)
+            final_health = get_service_health(compose_file, service_name, env=test_env)
 
             assert is_healthy, (
                 f"{service_name} did not become healthy. "
@@ -463,12 +486,13 @@ class TestDockerComposeHealthChecksIntegration:
         finally:
             # CODEX FINDING FIX (2025-11-21): Docker Health-Check Teardown Interference
             # See test_qdrant_health_check_works for detailed explanation
-            print(f"\n🧹 Cleaning up {service_name}...")
+            print(f"\n🧹 Cleaning up isolated project '{unique_project_name}'...")
             run_docker_compose(
                 compose_file,
                 "down",
                 # Removed: "--remove-orphans" - causes interference with main test infrastructure
                 timeout=30,
+                env=test_env,
             )
 
 

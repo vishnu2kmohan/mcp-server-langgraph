@@ -608,31 +608,9 @@ class TestLocalCIParity:
             return yaml.safe_load(f)
 
     @pytest.fixture
-    def pre_push_hook_path(self) -> Path:
-        """Get path to pre-push hook (handles git worktrees)."""
-        # Get repository root
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-        )
-        repo_root = Path(result.stdout.strip())
-        # Use git rev-parse to get common git directory (handles worktrees)
-        result = subprocess.run(
-            ["git", "rev-parse", "--git-common-dir"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-            cwd=repo_root,
-        )
-        git_common_dir = Path(result.stdout.strip())
-        # If path is relative, make it relative to repo_root
-        if not git_common_dir.is_absolute():
-            git_common_dir = repo_root / git_common_dir
-        return git_common_dir / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:

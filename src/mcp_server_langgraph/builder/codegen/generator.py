@@ -36,13 +36,36 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# Optional black formatter - gracefully degrade if not available
-try:
-    import black  # type: ignore[import-not-found]
 
-    BLACK_AVAILABLE = True
-except ImportError:
-    BLACK_AVAILABLE = False
+def _format_with_ruff(code: str) -> str:
+    """
+    Format code using ruff format.
+
+    Ruff is the project's standardized formatter (replaces black).
+    Falls back to unformatted code if ruff is not available or fails.
+    """
+    import shutil
+    import subprocess
+
+    if not shutil.which("ruff"):
+        # Ruff not available, return unformatted
+        return code
+
+    try:
+        result = subprocess.run(
+            ["ruff", "format", "--stdin-filename", "generated.py", "-"],
+            input=code,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            return result.stdout
+        # Formatting failed, return original
+        return code
+    except Exception:
+        # Any error, return unformatted
+        return code
 
 
 class NodeDefinition(BaseModel):
@@ -441,17 +464,8 @@ if __name__ == "__main__":
             graph_construction=graph_construction,
         )
 
-        # Format with black (if available)
-        if BLACK_AVAILABLE:
-            try:
-                formatted_code = black.format_str(code, mode=black.FileMode())
-                return formatted_code  # type: ignore[no-any-return]
-            except Exception:
-                # If black formatting fails, return unformatted
-                return code
-        else:
-            # Black not available, return unformatted code
-            return code
+        # Format with ruff (standardized formatter, replaces black)
+        return _format_with_ruff(code)
 
     def generate_to_file(self, workflow: WorkflowDefinition, output_path: str) -> None:
         """

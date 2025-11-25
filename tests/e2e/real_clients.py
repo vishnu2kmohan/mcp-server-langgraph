@@ -46,7 +46,7 @@ class RealKeycloakAuth:
         self.client_id = os.getenv("KEYCLOAK_CLIENT_ID", "mcp-server")
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
         # Keycloak requires client authentication for introspection endpoint
-        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
+        self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "test-client-secret-for-e2e-tests")
         self.client = httpx.AsyncClient(timeout=30.0)
 
     async def login(self, username: str, password: str) -> dict[str, str]:
