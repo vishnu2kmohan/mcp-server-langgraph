@@ -302,5 +302,5 @@ Set up Prometheus alerts at multiple thresholds:
 
 - [Redis Memory Optimization](https://redis.io/topics/memory-optimization)
 - [Redis Eviction Policies](https://redis.io/docs/manual/eviction/)
-- [Deployment Configuration](../deployments/kubernetes/base/redis-session-deployment.yaml)
+- [Deployment Configuration](../deployments/base/redis-session-deployment.yaml)
 - [Session Management Code](../src/mcp_server_langgraph/auth/session.py)

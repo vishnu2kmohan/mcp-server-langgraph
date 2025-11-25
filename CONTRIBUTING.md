@@ -295,7 +295,7 @@ pre-commit run --all-files --hook-stage push  # Phase 4
 
 #### Documentation
 
-- Full guide: [TESTING.md](TESTING.md#git-hooks-and-validation)
+- Full guide: [TESTING.md](docs-internal/testing/TESTING.md#git-hooks-and-validation)
 - Categorization: `docs-internal/HOOK_CATEGORIZATION.md`
 - Migration guide: `docs-internal/PRE_COMMIT_PRE_PUSH_REORGANIZATION.md`
 

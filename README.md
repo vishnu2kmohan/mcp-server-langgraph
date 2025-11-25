@@ -40,7 +40,7 @@ Pick the quickstart that matches your needs:
 
 This project uses **19 GitHub Actions workflows** with Google Cloud Platform (GCP) Workload Identity Federation for secure deployments.
 
-**Quick setup**: [SECRETS.md](SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md](.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md)
+**Quick setup**: [SECRETS.md](.github/SECRETS.md) | **Full CI/CD status**: [docs/ci-cd/badges.mdx](docs/ci-cd/badges.mdx) | **Workflow details**: [.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md](.github/archive/audits-2025-11/WORKFLOW_AUDIT_REMAINING.md)
 
 ---
 
@@ -277,7 +277,7 @@ print(f'Databases: {list(result.databases.keys())}')
 "
 ```
 
-**See**: [ADR-0056: Database Architecture](adr/adr-0056-database-architecture-and-naming-convention.md) | [Migration Script](migrations/000_init_databases.sh) | [Database Validation Module](src/mcp_server_langgraph/health/database_checks.py)
+**See**: [ADR-0060: Database Architecture](adr/adr-0060-database-architecture-and-naming-convention.md) | [Migration Script](migrations/000_init_databases.sh) | [Database Validation Module](src/mcp_server_langgraph/health/database_checks.py)
 
 ## Quick Start
 
@@ -329,7 +329,7 @@ curl http://localhost:8000/health    # Test
 - **Pre-commit** (< 30s): Fast validation on changed files - commit frequently!
 - **Pre-push** (8-12 min): Comprehensive validation matching CI - prevents surprises!
 
-**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx) | [Git Hooks Guide](TESTING.md#git-hooks-and-validation)
+**See**: [Complete Installation Guide](docs/getting-started/installation.mdx) | [Day-1 Developer Guide](docs/getting-started/day-1-developer.mdx) | [Git Hooks Guide](docs-internal/testing/TESTING.md#git-hooks-and-validation)
 
 ### 👤 Creating Test Users
 

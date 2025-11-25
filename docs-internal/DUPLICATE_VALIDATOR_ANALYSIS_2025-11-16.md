@@ -566,5 +566,5 @@ def test_pytest_addopts_flags_have_required_plugins():
 
 - [Codex Findings Remediation Report](./CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md)
 - [Script Inventory](../scripts/SCRIPT_INVENTORY.md)
-- [Testing Strategy](../TESTING.md)
+- [Testing Strategy](testing/TESTING.md)
 - [Validation Strategy](../docs/development/VALIDATION_STRATEGY.md)

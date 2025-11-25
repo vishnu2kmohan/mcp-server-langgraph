@@ -368,4 +368,4 @@ If issue persists after tuning:
 - [Redis Connection Pooling](https://redis.io/docs/manual/clients/)
 - [redis-py Documentation](https://redis-py.readthedocs.io/en/stable/connections.html)
 - [Session Store Implementation](../src/mcp_server_langgraph/auth/session.py)
-- [Deployment Configuration](../deployments/kubernetes/base/deployment.yaml)
+- [Deployment Configuration](../deployments/base/deployment.yaml)

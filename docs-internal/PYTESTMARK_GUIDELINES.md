@@ -426,4 +426,4 @@ def test_with_freezegun():
 
 ---
 
-**Questions or issues?** See [TESTING.md](TESTING.md) or open a GitHub issue.
+**Questions or issues?** See [TESTING.md](testing/TESTING.md) or open a GitHub issue.

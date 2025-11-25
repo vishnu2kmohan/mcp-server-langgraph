@@ -467,7 +467,7 @@ Following the pattern successfully applied to pytest config and ADR synchronizat
 
 - [Duplicate Validator Analysis](./DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md)
 - [Codex Findings Remediation Report](./CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md)
-- [Testing Strategy](../TESTING.md)
+- [Testing Strategy](testing/TESTING.md)
 - [Validation Strategy](../docs/development/VALIDATION_STRATEGY.md)
 
 ---

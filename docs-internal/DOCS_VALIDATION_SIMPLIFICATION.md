@@ -506,7 +506,7 @@ git push
 ### Documentation
 - [Archive README](../scripts/validators/archive/README.md) - Deprecated validators
 - [CLAUDE.md](../CLAUDE.md) - Updated developer workflow
-- [TESTING.md](../TESTING.md) - Updated testing and validation approach
+- [TESTING.md](testing/TESTING.md) - Updated testing and validation approach
 - [Makefile](../Makefile) - Updated documentation targets
 
 ### Code

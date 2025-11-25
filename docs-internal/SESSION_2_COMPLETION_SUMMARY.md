@@ -262,7 +262,7 @@ python scripts/audit_resource_ratios.py: All ratios ≤ 4.0 ✅
 - [SESSION_2_INDEX.md](./SESSION_2_INDEX.md) - Navigation and context
 
 ### Related ADRs
-- [ADR-0054: Pod Failure Prevention Framework](./adr/adr-0054-pod-failure-prevention-framework.md)
+- [ADR-0054: Pod Failure Prevention Framework](../adr/adr-0054-pod-failure-prevention-framework.md)
 
 ### External References
 - [GKE Autopilot Resource Limits](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests)

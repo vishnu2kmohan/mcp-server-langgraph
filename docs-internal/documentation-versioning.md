@@ -450,7 +450,7 @@ Example:
 For questions about documentation versioning:
 1. Review this guide
 2. Check recent documentation commits
-3. Review [ADR-0018: Semantic Versioning Strategy](../adr/0018-semantic-versioning-strategy.md)
+3. Review [ADR-0018: Semantic Versioning Strategy](../adr/adr-0018-semantic-versioning-strategy.md)
 4. Open a discussion on GitHub
 
 ---

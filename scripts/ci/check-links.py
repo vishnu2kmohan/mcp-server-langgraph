@@ -113,7 +113,8 @@ def main():
 
     # Always exclude infrastructure directories (venv, node_modules, etc.)
     # These are not user-maintained docs and should never be checked
-    infrastructure_excludes = [".venv/", "venv/", "node_modules/", "__pycache__/", ".git/"]
+    # Also exclude template files which contain intentional placeholder links
+    infrastructure_excludes = [".venv/", "venv/", "node_modules/", "__pycache__/", ".git/", ".claude/templates/"]
     all_excludes = list(set(args.exclude + infrastructure_excludes))
 
     print("🔍 Checking for broken internal links...")
