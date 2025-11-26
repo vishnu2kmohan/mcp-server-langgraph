@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 """
-Pre-push test orchestrator - consolidates 5 separate pytest sessions into one.
+Pre-push test orchestrator - consolidates 21 separate pytest sessions into one.
 
 This script addresses OpenAI Codex Finding 2a: Duplicate pytest sessions.
 
 Problem:
-  .pre-commit-config.yaml had 5 separate pytest invocations which caused:
-  - 5x test discovery overhead (10-25s wasted)
-  - 5 separate Python interpreter processes
-  - Lock contention on .pytest_cache and .coverage files
-
-  Each session performed full test discovery, causing:
-  - 5x test discovery overhead (10-25s wasted)
-  - 5 separate Python interpreter processes
+  .pre-commit-config.yaml had 21 separate pytest invocations which caused:
+  - 21x test discovery overhead (~4.5 minutes wasted)
+  - 21 separate Python interpreter processes
   - Lock contention on .pytest_cache and .coverage files
 
 Solution:
   Single pytest session with combined marker logic:
-  - Discovers tests once (2-5s instead of 10-25s)
+  - Discovers tests once (~13s instead of ~4.5 min)
   - Single Python process with xdist workers
   - No cache/coverage lock contention
   - Same test coverage as before
 
-Time savings: 8-20 seconds per pre-push
+Time savings: ~4 minutes per pre-push
+
+Consolidated test categories:
+  - unit: Unit tests (fast, no external dependencies)
+  - api: API endpoint tests
+  - property: Property-based tests (Hypothesis)
+  - validation: Deployment/configuration validation tests (Helm, Kustomize, etc.)
+  - meta: Meta tests (conditionally, when workflow files change)
 
 Environment variables:
   - OTEL_SDK_DISABLED=true (set by pre-commit hook)
@@ -220,35 +222,31 @@ def main() -> int:
         # Normal mode: verbose output
         pytest_args.append("--tb=short")  # Short traceback format
 
-    # Combined marker expression that covers all 5 original hooks:
-    # 1. unit and not llm (run-unit-tests)
-    # 2. smoke tests (run-smoke-tests)
-    # 3. api and unit and not llm (run-api-tests)
-    # 4. mcp-server tests (run-mcp-server-tests)
-    # 5. property tests (run-property-tests)
+    # Combined marker expression that consolidates 21 separate pytest hooks:
     #
-    # Strategy: Use marker OR logic to combine all test categories
-    # Note: Smoke tests are unit tests in tests/smoke/, so covered by "unit"
-    # Note: API tests are marked as "api and unit", so covered by "api"
-    # Note: MCP server tests are in tests/unit/, marked as unit
+    # Always included:
+    # - unit: Unit tests (fast, no external dependencies)
+    # - api: API endpoint tests
+    # - property: Property-based tests (Hypothesis)
+    # - validation: Deployment/configuration validation tests
     #
-    # Codex Audit Fix (2025-11-24): Conditional meta-test inclusion
-    # Meta-tests validate infrastructure (git hooks, CI workflows, fixtures, etc.)
-    # They should run when workflow files change, but can be skipped for performance
-    # when only regular code changes. This prevents workflow drift while maintaining
-    # fast pre-push validation.
+    # Conditionally included:
+    # - meta: Meta tests (only when workflow files change)
     #
+    # Excluded:
+    # - llm: LLM tests (expensive, require API keys)
+    # - integration: Integration tests (require Docker, use CI_PARITY=1 to include)
+    #
+    # This consolidation reduces test discovery overhead from ~4.5 min to ~13 sec.
     # Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
     if should_run_meta_tests():
         # Workflow files changed - include meta tests for infrastructure validation
-        # Exclude integration tests - they require Docker infrastructure (use CI_PARITY=1 to include)
-        marker_expression = "(unit or api or property or meta) and not llm and not integration"
+        marker_expression = "(unit or api or property or validation or meta) and not llm and not integration"
         if not quiet:
             print("🔍 Workflow files changed - including meta tests (infrastructure validation)")
     else:
         # Only code files changed - skip meta tests for performance
-        # Exclude integration tests - they require Docker infrastructure (use CI_PARITY=1 to include)
-        marker_expression = "(unit or api or property) and not llm and not meta and not integration"
+        marker_expression = "(unit or api or property or validation) and not llm and not meta and not integration"
 
     # Store marker index for later modification (CI_PARITY support)
     marker_index = len(pytest_args) + 1  # +1 because "-m" is inserted first
@@ -265,13 +263,12 @@ def main() -> int:
             if not quiet:
                 print("▶ CI_PARITY=1 detected: Including integration tests (Docker available)")
             # Add integration marker to expression (but still exclude meta-tests)
-            # (unit or api or property or integration) and not llm and not meta
-            marker_expression = "(unit or api or property or integration) and not llm and not meta"
+            marker_expression = "(unit or api or property or validation or integration) and not llm and not meta"
             pytest_args[marker_index] = marker_expression  # Use stored index instead of fragile .index()
         else:
             if not quiet:
                 print("⚠  CI_PARITY=1 detected but Docker unavailable")
-                print("✓ Will run: unit, api, property tests")
+                print("✓ Will run: unit, api, property, validation tests")
                 print("✗ Won't run: integration tests (require Docker daemon)")
                 print("→ Action: Start Docker Desktop or omit CI_PARITY=1 for faster pre-push")
 
@@ -312,7 +309,7 @@ def main() -> int:
         if not quiet:
             print()
             print("✓ All pre-push tests passed")
-            print("  Tests consolidated from 5 sessions → 1 session (8-20s faster)")
+            print("  Tests consolidated from 21 sessions → 1 session (~4 min faster)")
     else:
         # Always show failure message (even in quiet mode)
         print()

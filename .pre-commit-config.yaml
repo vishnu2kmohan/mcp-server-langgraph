@@ -160,23 +160,23 @@ repos:
     entry: python -u scripts/run_pre_push_tests.py
     language: system
     pass_filenames: false
-    files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
+    files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml|deployments/.*\.(yaml|yml)|docker/.*\.(yaml|yml)|\.github/.*\.ya?ml)$
     always_run: false
     stages:
     - pre-push
     description: 'Consolidated pre-push test suite (OpenAI Codex Finding 2a fix).
 
 
-      Combines 5 separate pytest sessions into 1 for efficiency:
+      Consolidates 21 separate pytest invocations into 1 for efficiency:
 
-      - Combined marker: -m "(unit or api or property) and not llm"
+      - Combined marker: -m "(unit or api or property or validation) and not llm"
 
-      - This covers: unit tests, smoke tests, API tests, MCP server tests, property tests
+      - This covers: unit tests, smoke tests, API tests, property tests, deployment validation
 
-      - Property tests use dev profile (25 examples) locally, ci profile (100 examples) in CI
+      - Meta tests included conditionally when workflow files change
 
 
-      Time savings: 10-25 seconds vs separate sessions (no duplicate test discovery)
+      Time savings: ~4 minutes (reduced test discovery from 21 sessions to 1)
 
 
       CI_PARITY mode: Set CI_PARITY=1 to include integration tests (requires Docker)
@@ -186,7 +186,7 @@ repos:
 
       Benefits:
 
-      - Single test discovery (2-5s instead of 10-25s for 5 sessions)
+      - Single test discovery (~13s instead of ~4.5 min for 21 sessions)
 
       - No pytest cache/coverage lock contention
 
@@ -516,38 +516,12 @@ repos:
       Regression prevention for REC-001 from documentation audit (2025-11-12).
 
       '
-  - id: validate-deployment-secrets
-    name: Validate deployment secret keys alignment
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template -v --tb=short
-    language: system
-    files: ^deployments/helm/.*\.(yaml|yml)$
-    pass_filenames: false
-    stages:
-    - pre-push
-  - id: validate-cors-security
-    name: Validate CORS security configuration
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials -v --tb=short
-    language: system
-    files: ^deployments/(kong|base)/.*\.(yaml|yml)$
-    pass_filenames: false
-    stages:
-    - pre-push
-  - id: check-hardcoded-credentials
-    name: Check for hard-coded credentials
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap -v --tb=short
-    language: system
-    files: ^deployments/base/configmap\.yaml$
-    pass_filenames: false
-    stages:
-    - pre-push
-  - id: validate-redis-password-required
-    name: Ensure Redis password is mandatory
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional -v --tb=short
-    language: system
-    files: ^deployments/base/redis-session-deployment\.yaml$
-    pass_filenames: false
-    stages:
-    - pre-push
+  # NOTE: validate-deployment-secrets, validate-cors-security, check-hardcoded-credentials,
+  # validate-redis-password-required hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via (unit or validation) marker
+  # Tests in tests/deployment/test_helm_configuration.py are marked as unit tests
+  # and run automatically when deployment files change.
+  # This reduces pytest invocations from 21 to 1, saving ~4 minutes per pre-push.
   - id: trivy-scan-k8s-manifests
     name: Trivy Security Scan for Kubernetes Manifests
     entry: "bash -c 'if ! command -v trivy &> /dev/null; then\n  echo \"\u26A0\uFE0F  Trivy not installed - skipping security\
@@ -605,25 +579,9 @@ repos:
       Moved to manual stage 2025-11-16 (CI/CD optimization - Phase 1)
 
       '
-  - id: prevent-local-config-commits
-    name: Prevent Local Config Files from Being Committed
-    entry: uv run pytest tests/meta/validation/test_gitignore_validation.py -v
-    language: system
-    pass_filenames: false
-    always_run: true
-    stages:
-      - pre-push
-    description: 'Prevents accidental commits of local configuration files like:
-
-      - .claude/settings.local.json
-
-      - *.local.json
-
-      - .env.local
-
-      Per TDD best practices, this ensures local configs never reach version control.
-
-      '
+  # NOTE: prevent-local-config-commits hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/validation/test_gitignore_validation.py runs with other meta tests
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
     entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
@@ -831,68 +789,9 @@ repos:
       Regression prevention for commit a57fcc95.
 
       '
-  - id: validate-fixture-organization
-    name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/meta/test_fixture_organization.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^tests/.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Prevents duplicate autouse fixtures across test files.
-
-
-      Issue fixed: 25 duplicate init_test_observability fixtures were found
-
-      across test modules, causing duplicate initialization overhead.
-
-
-      Best practice: Module/session-scoped autouse fixtures should be defined
-
-      in tests/conftest.py to avoid initialization conflicts and improve test
-
-      performance. This hook ensures fixtures remain consolidated.
-
-
-      See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
-
-      '
-
-
-
-  - id: regression-prevention-tests
-    name: CI/CD Regression Prevention Tests
-    entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Prevents regression of critical CI/CD and testing infrastructure issues.
-
-
-      Issues prevented:
-
-      1. Missing pytest fixture decorators (Issue #6 - Quality Tests)
-
-      2. Invalid class-scoped fixtures (Issue #6)
-
-      3. Settings singleton not reloaded after monkeypatch (Issue #7 - Smoke Tests)
-
-      4. Use of archived tools like kubeval (Issue #8 - Deployment Workflows)
-
-      5. Outdated GitHub Action versions
-
-      6. Invalid workflow YAML syntax
-
-
-      Following TDD principles, these tests FAIL if regressions are introduced.
-
-      See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
-
-      '
+  # NOTE: validate-fixture-organization, regression-prevention-tests hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_fixture_organization.py and test_regression_prevention.py run automatically
   - id: detect-dead-test-code
     name: Detect Dead Code in Test Fixtures (Codex P0)
     entry: uv run python scripts/archive/unused/detect_dead_test_code.py tests/
@@ -946,118 +845,17 @@ repos:
       Note: Many sleep calls are in skipped tests or testing actual sleep functionality.
 
       '
-  - id: validate-meta-test-quality
-    name: Run Meta-Tests for Test Quality Validation
-    entry: uv run pytest tests/meta/test_property_test_quality.py tests/meta/test_context_manager_quality.py tests/meta/test_kubectl_safety.py
-      -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^tests/.*test_.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs meta-tests that validate test suite quality (Codex Findings Prevention):
-
-
-      1. Property Test Quality: Ensures @given tests have assertions
-
-      2. Context Manager Quality: Validates __exit__ assertions
-
-      3. Kubectl Safety: Enforces --dry-run or safety guards
-
-
-      Prevents regression of Codex Findings #3, #4, #9
-
-      '
+  # NOTE: validate-meta-test-quality hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_property_test_quality.py, test_context_manager_quality.py,
+  # test_kubectl_safety.py run automatically with other meta tests
   # NOTE: validate-github-action-versions hook REMOVED (2025-11-17)
   # Consolidated into validate-github-workflows-comprehensive (above)
   # See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md
-  - id: validate-kustomize-builds
-    name: Validate Kustomize Overlays Build Successfully
-    entry: uv run pytest tests/deployment/test_kustomize_builds.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that all Kustomize overlays build successfully without errors.
-
-
-      Prevents critical deployment blockers identified in Codex audit:
-
-      1. NetworkPolicy port mismatches (3307 vs 5432 for PostgreSQL)
-
-      2. Redis StatefulSet deletion using wrong kind (Deployment vs StatefulSet)
-
-      3. Service Account namespace mismatches
-
-      4. Cloud SQL Proxy missing health check flags
-
-      5. PodDisruptionBudget namespace mismatches
-
-      6. Istio config inline comments in host strings
-
-      7. Orphaned ResourceQuotas for undefined namespaces
-
-
-      TDD-based validation suite ensures these issues never recur.
-
-      See: docs-internal/CLOUD_SQL_CONNECTION_STRATEGY.md
-
-      '
-  - id: validate-network-policies
-    name: Validate NetworkPolicy Port Configurations
-    entry: uv run pytest tests/deployment/test_network_policies.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*network-policy\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates NetworkPolicy configurations use correct database ports.
-
-
-      Critical validations:
-
-      - PostgreSQL uses port 5432 (NOT 3307 for MySQL)
-
-      - Redis uses port 6379
-
-      - Cloud SQL connections properly configured
-
-      - No overly permissive egress rules
-
-
-      Prevents production connectivity failures from port misconfigurations.
-
-      '
-  - id: validate-service-accounts
-    name: Validate Service Account Separation and RBAC
-    entry: uv run pytest tests/deployment/test_service_accounts.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*serviceaccount.*\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates Service Account configuration follows least-privilege principles.
-
-
-      Checks:
-
-      - Components use separate ServiceAccounts (postgres, redis, keycloak, etc.)
-
-      - Workload Identity annotations are correctly formatted
-
-      - RoleBindings reference existing ServiceAccounts
-
-      - No overly permissive RBAC rules (wildcards)
-
-
-      Ensures security best practices and prevents privilege escalation.
-
-      '
+  # NOTE: validate-kustomize-builds, validate-network-policies, validate-service-accounts
+  # hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/deployment/*.py run automatically when deployment files change
 
   - id: check-helm-placeholders
     name: Check Helm values for unresolved placeholders
@@ -1104,38 +902,9 @@ repos:
       Regression prevention for Codex findings: values-staging.yaml:108, values-production.yaml:139
 
       '
-  - id: validate-docker-compose-health-checks
-    name: Validate Docker Compose health check configurations
-    entry: uv run pytest tests/security/test_deployment_security_regression.py::TestQdrantHealthCheckSecurity::test_qdrant_uses_tcp_health_check
-      -v --tb=short
-    language: system
-    files: ^.*docker-compose.*\.(yaml|yml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates Docker Compose health check configurations (TDD).
-
-
-      Critical checks:
-
-      - Qdrant services MUST use grpc_health_probe (not wget/curl)
-
-      - Prevents using commands not available in container images
-
-      - Validates health check syntax and structure
-
-
-      Background:
-
-      Qdrant v1.15+ removed wget/curl for security (GitHub issue #3491).
-
-      This hook prevents health checks from failing due to missing commands.
-
-
-      Regression prevention for Codex finding: docker-compose.test.yml:227-232
-
-      '
+  # NOTE: validate-docker-compose-health-checks hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/security/test_deployment_security_regression.py runs automatically
   - id: validate-keycloak-config
     name: Validate Keycloak service configuration in docker-compose.test.yml
     entry: uv run python scripts/validators/validate_keycloak_config.py docker/docker-compose.test.yml
@@ -1440,24 +1209,9 @@ repos:
       Regression tests: tests/regression/test_pytest_xdist_isolation.py
 
       '
-  - id: validate-test-dependencies
-    name: Validate Test Import Dependencies
-    entry: uv run pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v --tb=short
-    language: system
-    files: ^(tests/.*\.py|pyproject\.toml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Prevents CI failures from missing test dependencies by validating that\nevery package imported in tests/\
-      \ is available in project dependencies.\n\nThis hook catches the issue that caused 10 CI job failures on 2025-11-12:\n\
-      - ModuleNotFoundError: docker.errors in 7 quality test jobs\n- Same error in E2E tests\n- Root cause: docker/kubernetes\
-      \ in code-execution extras, not dev extras\n\nValidations:\n- All test imports have corresponding dependencies (main\
-      \ or optional)\n- Package vs import name mismatches (PyJWT\u2192jwt, pyyaml\u2192yaml)\n- Stdlib backports handled (tomli\u2192\
-      tomllib)\n- Third-party helpers excluded (bats-core)\n\nQuick fix: Add missing package to appropriate extras in pyproject.toml\n\
-      - Test dependencies \u2192 [project.optional-dependencies.dev]\n- Code execution \u2192 [project.optional-dependencies.code-execution]\n\
-      - CLI tools \u2192 [project.optional-dependencies.cli]\n\nRegression prevention for commit 7b51437 (2025-11-12)\nSee:\
-      \ tests/regression/test_dev_dependencies.py for implementation\n"
+  # NOTE: validate-test-dependencies hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/regression/test_dev_dependencies.py runs automatically
   - id: validate-workflow-test-deps
     name: Validate Workflow Test Dependencies
     entry: uv run python scripts/validators/validate_workflow_test_deps.py
@@ -1475,27 +1229,9 @@ repos:
       \ action\n\nQuick fix: Add or update 'extras' parameter in setup-python-deps step:\n  - uses: ./.github/actions/setup-python-deps\n\
       \    with:\n      extras: 'dev'  # or 'dev builder' for multiple\n\nRegression prevention for commit 7b51437 (2025-11-12)\n\
       See: scripts/validators/validate_workflow_test_deps.py for implementation\n"
-  - id: validate-fixture-scopes
-    name: Validate Pytest Fixture Scopes
-    entry: uv run pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible -v --tb=short
-    language: system
-    files: ^tests/conftest\.py$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Prevents pytest ScopeMismatch errors by validating fixture scope compatibility.\n\nValidates that fixtures\
-      \ with wider scopes don't depend on fixtures with narrower scopes.\n\nScope hierarchy (widest to narrowest):\n- session:\
-      \ Fixture runs once per test session\n- module: Fixture runs once per module\n- class: Fixture runs once per class\n\
-      - function: Fixture runs once per test function (default)\n\nRULE: A fixture can only depend on fixtures with equal\
-      \ or wider scope.\n\nCommon violations:\n- session-scoped fixture depending on function-scoped fixture \u274C\n- module-scoped\
-      \ fixture depending on function-scoped fixture \u274C\n- function-scoped fixture depending on session-scoped fixture\
-      \ \u2705 (OK)\n\nThis hook catches the issue that caused integration test failures with pytest-xdist:\n- ScopeMismatch:\
-      \ session-scoped fixtures (postgres_connection_real, redis_client_real,\n  openfga_client_real) depended on function-scoped\
-      \ fixture (integration_test_env)\n- Tests passed individually but failed in parallel execution\n- Root cause: integration_test_env\
-      \ missing scope=\"session\" parameter\n\nQuick fix: Add or update scope parameter in fixture decorator:\n  @pytest.fixture(scope=\"\
-      session\")\n  def my_fixture(dependency_fixture):\n      ...\n\nPrevention: This hook runs automatically on conftest.py\
-      \ changes\nSee: tests/meta/test_fixture_validation.py for implementation\nRegression test added: 2025-11-13\n"
+  # NOTE: validate-fixture-scopes hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_fixture_validation.py runs automatically with other meta tests
   - id: validate-minimum-coverage
     name: "Validate Minimum Test Coverage Threshold (\u2265 64%)"
     entry: uv run pytest tests/meta/test_coverage_enforcement.py -v --tb=short
