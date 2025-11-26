@@ -30,9 +30,9 @@ Example:
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ApprovalStatus(str, Enum):
@@ -56,12 +56,17 @@ class ApprovalRequired(BaseModel):
     action_description: str = Field(description="What action needs approval")
     risk_level: str = Field(default="medium", description="Risk level: low, medium, high, critical")
     context: dict[str, Any] = Field(default_factory=dict, description="Additional context for decision")
-    requested_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When approval was requested"
-    )
+    requested_at: str | None = Field(default=None, description="When approval was requested (set at validation time)")
     requested_by: str = Field(default="system", description="Who/what requested approval")
     expires_at: str | None = Field(default=None, description="Optional expiration time")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+    @model_validator(mode="after")
+    def set_requested_at_timestamp(self) -> Self:
+        """Set requested_at timestamp if not provided. Ensures freezegun compatibility."""
+        if self.requested_at is None:
+            self.requested_at = datetime.now(timezone.utc).isoformat()
+        return self
 
 
 class ApprovalResponse(BaseModel):
@@ -72,11 +77,16 @@ class ApprovalResponse(BaseModel):
     approval_id: str = Field(description="ID of the approval request")
     status: ApprovalStatus = Field(description="Approval decision")
     approved_by: str = Field(description="Who approved/rejected")
-    approved_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="When decision was made"
-    )
+    approved_at: str | None = Field(default=None, description="When decision was made (set at validation time)")
     reason: str | None = Field(default=None, description="Reason for decision")
     modifications: dict[str, Any] | None = Field(default=None, description="Modifications to proposed action")
+
+    @model_validator(mode="after")
+    def set_approved_at_timestamp(self) -> Self:
+        """Set approved_at timestamp if not provided. Ensures freezegun compatibility."""
+        if self.approved_at is None:
+            self.approved_at = datetime.now(timezone.utc).isoformat()
+        return self
 
 
 class ApprovalNode:
