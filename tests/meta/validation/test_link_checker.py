@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 # Add scripts/validation directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "scripts" / "validators"))

@@ -25,7 +25,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 # Test fixtures and helpers
 

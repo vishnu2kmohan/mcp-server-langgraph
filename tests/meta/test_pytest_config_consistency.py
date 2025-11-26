@@ -39,6 +39,7 @@ class TestPytestConfigConsistency:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
+    @pytest.mark.timeout(180)  # Extended timeout for filesystem-heavy rglob operations in parallel execution
     def test_no_duplicate_pytest_ini_files(self):
         """
         GIVEN: Project root and all subdirectories

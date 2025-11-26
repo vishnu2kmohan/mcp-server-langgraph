@@ -151,17 +151,17 @@ class TestRunPrePushTestsMetaConditional:
             "\n"
             "Expected pattern:\n"
             "  if should_run_meta_tests():\n"
-            '      marker_expression = "(unit or api or property or meta) and not llm"\n'
+            '      marker_expression = "(unit or api or property or validation or meta) and not llm and not integration"\n'
             "  else:\n"
-            '      marker_expression = "(unit or api or property) and not llm and not meta"\n'
+            '      marker_expression = "(unit or api or property or validation) and not llm and not meta and not integration"\n'
         )
 
-        # Verify both marker expressions exist
+        # Verify both marker expressions exist (updated 2025-11-26: added 'validation' marker)
         assert (
-            "(unit or api or property or meta) and not llm" in script_content
+            "(unit or api or property or validation or meta) and not llm and not integration" in script_content
         ), "Script should include meta tests when workflow files change"
         assert (
-            "(unit or api or property) and not llm and not meta" in script_content
+            "(unit or api or property or validation) and not llm and not meta and not integration" in script_content
         ), "Script should exclude meta tests when only code files change"
 
     def test_performance_impact_of_meta_tests(self, repo_root: Path):

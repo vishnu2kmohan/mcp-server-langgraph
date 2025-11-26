@@ -395,7 +395,7 @@ class DynamicContextLoader:
 
                 # Search Qdrant
                 results = await asyncio.to_thread(
-                    self.client.search,
+                    self.client.search,  # type: ignore[attr-defined]
                     collection_name=self.collection_name,
                     query_vector=query_embedding,  # Already a list from embed_query
                     limit=top_k,

@@ -30,9 +30,10 @@ Example:
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Self
+from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
+from typing_extensions import Self
 
 
 class ApprovalStatus(str, Enum):

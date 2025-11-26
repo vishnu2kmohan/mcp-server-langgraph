@@ -370,6 +370,7 @@ def test_save_workflow_with_valid_workflow_saves_to_file(client, valid_workflow)
     """Test POST /api/builder/save saves workflow to file."""
     # Arrange
     import tempfile
+    from pathlib import Path
 
     # Use allowed directory for builder output (security validation)
     output_path = f"{tempfile.gettempdir()}/mcp-server-workflows/test_agent.py"  # nosec B108
@@ -385,11 +386,20 @@ def test_save_workflow_with_valid_workflow_saves_to_file(client, valid_workflow)
         data = response.json()
 
         assert data["success"] is True
-        assert output_path in data["message"]
-        assert data["path"] == output_path
+        # Resolve paths to handle macOS symlinks (/var -> /private/var) for both assertions
+        resolved_output_path = str(Path(output_path).resolve())
+        assert resolved_output_path in data["message"] or output_path in data["message"]
+        # Compare resolved paths to handle macOS symlinks (/var -> /private/var)
+        assert Path(data["path"]).resolve() == Path(output_path).resolve()
 
-        # Verify file was opened for writing
-        mock_file.assert_called_once_with(output_path, "w")
+        # Verify file was opened for writing (with resolved path on macOS)
+        # Check if the call is in the call list (not the only call, due to Python imports)
+        from unittest.mock import call
+
+        assert call(resolved_output_path, "w") in mock_file.call_args_list, (
+            f"Expected open('{resolved_output_path}', 'w') to be called, "
+            f"but got calls: {[str(c) for c in mock_file.call_args_list if 'test_agent.py' in str(c)]}"
+        )
 
 
 def test_save_workflow_with_io_error_returns_500(client, valid_workflow):

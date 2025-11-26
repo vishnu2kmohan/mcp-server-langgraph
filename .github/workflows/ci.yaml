@@ -281,8 +281,8 @@ jobs:
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
         # Exclude expensive LLM tests (marked with @pytest.mark.llm) - these run in scheduled workflow
-        # Run all fast tests: unit, api, property (matches local pre-push via scripts/run_pre_push_tests.py)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
+        # Run all fast tests: unit, api, property, validation (matches local pre-push via scripts/run_pre_push_tests.py)
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci pytest -n auto -m "(unit or api or property or validation) and not llm" --cov=src/mcp_server_langgraph --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
     - name: Run new test suites
       run: |

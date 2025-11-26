@@ -18,7 +18,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 def find_placeholders_in_file(file_path: Path) -> dict:

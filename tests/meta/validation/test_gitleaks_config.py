@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 def is_gitleaks_available() -> bool:

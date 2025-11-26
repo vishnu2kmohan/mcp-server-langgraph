@@ -21,7 +21,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 # Define paths to all Kustomize overlays
 REPO_ROOT = Path(__file__).parent.parent.parent

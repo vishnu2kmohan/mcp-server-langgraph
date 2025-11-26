@@ -16,7 +16,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 CLOUD_OVERLAYS_DIR = REPO_ROOT / "deployments" / "kubernetes" / "overlays"

@@ -1348,11 +1348,11 @@ test-fast-unit:
 
 test-dev:
 	@echo "🚀 Running tests in development mode (parallel, fast-fail, no coverage)..."
-	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short -m "(unit or api or property) and not llm and not slow"
+	OTEL_SDK_DISABLED=true $(PYTEST) -n auto -x --maxfail=3 --tb=short -m "(unit or api or property or validation) and not llm and not slow"
 	@echo "✓ Development tests complete"
 	@echo ""
 	@echo "Features: Parallel execution, stop on first failure, skip slow tests"
-	@echo "Coverage: unit + API + property tests (matches CI validation)"
+	@echo "Coverage: unit + API + property + validation tests (matches CI validation)"
 
 test-fast-core:
 	@echo "⚡ Running core unit tests only (fastest iteration)..."

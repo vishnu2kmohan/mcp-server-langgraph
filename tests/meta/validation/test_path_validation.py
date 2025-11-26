@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 # Mark as unit test (validates test infrastructure)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 @pytest.fixture(scope="module")

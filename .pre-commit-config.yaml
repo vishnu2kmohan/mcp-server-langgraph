@@ -99,7 +99,7 @@ repos:
       Fix: Add timeout=60 parameter to subprocess.run() calls.
 
       '
-    entry: python -u .pre-commit-hooks/check_subprocess_timeout.py
+    entry: uv run python -u .pre-commit-hooks/check_subprocess_timeout.py
     language: system
     types: [python]
     files: ^tests/.*\.py$
@@ -115,7 +115,7 @@ repos:
       - import imp (removed in Python 3.12+)
 
       '
-    entry: python -u .pre-commit-hooks/check_banned_imports.py
+    entry: uv run python -u .pre-commit-hooks/check_banned_imports.py
     language: system
     types: [python]
     stages:
@@ -157,7 +157,7 @@ repos:
       '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
-    entry: python -u scripts/run_pre_push_tests.py
+    entry: uv run python -u scripts/run_pre_push_tests.py
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml|deployments/.*\.(yaml|yml)|docker/.*\.(yaml|yml)|\.github/.*\.ya?ml)$
@@ -279,7 +279,7 @@ repos:
       '
   - id: check-test-sleep-duration
     name: Check Test Sleep Durations
-    entry: uv run python scripts/validators/check_test_sleep_duration.py
+    entry: uv run python -u scripts/validators/check_test_sleep_duration.py
     language: system
     files: ^tests/.*\.py$
     exclude: ^tests/meta/test_sleep_duration_linter\.py$
@@ -299,7 +299,7 @@ repos:
       '
   - id: validate-fast
     name: Run Fast Validators (Consolidated)
-    entry: uv run python scripts/validators/validate_fast.py
+    entry: uv run python -u scripts/validators/validate_fast.py
     language: system
     pass_filenames: false
     always_run: true
@@ -309,7 +309,7 @@ repos:
 
   - id: validate-mdx-extensions
     name: Validate MDX File Extensions in docs/
-    entry: uv run python scripts/validators/mdx_extension_validator.py
+    entry: uv run python -u scripts/validators/mdx_extension_validator.py
     language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
@@ -339,14 +339,14 @@ repos:
       '
   - id: check-frontmatter-quotes
     name: Check Frontmatter Quote Style
-    entry: uv run python scripts/docs/standardize_frontmatter.py docs --dry-run
+    entry: uv run python -u scripts/docs/standardize_frontmatter.py docs --dry-run
     language: system
     files: \.mdx$
     pass_filenames: false
     always_run: false
   - id: validate-file-naming-conventions
     name: Validate Documentation File Naming Conventions
-    entry: uv run python scripts/validators/file_naming_validator.py --path docs
+    entry: uv run python -u scripts/validators/file_naming_validator.py --path docs
     language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
@@ -366,7 +366,7 @@ repos:
       Tests: tests/unit/documentation/test_file_naming_validator.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
-    entry: uv run python scripts/validators/todo_audit.py --quiet
+    entry: uv run python -u scripts/validators/todo_audit.py --quiet
     language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
@@ -379,7 +379,7 @@ repos:
       \ tests/unit/documentation/test_todo_audit.py (14 tests \u2705)\n"
   - id: validate-adr-sync
     name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
-    entry: uv run python scripts/validators/adr_sync_validator.py
+    entry: uv run python -u scripts/validators/adr_sync_validator.py
     language: system
     files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
     pass_filenames: false
@@ -565,7 +565,7 @@ repos:
       '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
-    entry: uv run python scripts/validators/check_mermaid_styling.py
+    entry: uv run python -u scripts/validators/check_mermaid_styling.py
     language: system
     files: ^docs/.*\.mdx$
     pass_filenames: true
@@ -584,7 +584,7 @@ repos:
   # tests/meta/validation/test_gitignore_validation.py runs with other meta tests
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
-    entry: uv run python scripts/validators/validate_github_workflows_comprehensive.py
+    entry: uv run python -u scripts/validators/validate_github_workflows_comprehensive.py
     language: system
     files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
@@ -606,7 +606,7 @@ repos:
       Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-workflow-file-references
     name: Validate Workflow File References
-    entry: uv run python scripts/validators/validate_workflow_file_references.py
+    entry: uv run python -u scripts/validators/validate_workflow_file_references.py
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -629,7 +629,7 @@ repos:
       See: scripts/validators/validate_workflow_file_references.py\n"
   - id: validate-pytest-fixtures
     name: Validate Pytest Fixture Dependencies
-    entry: uv run python scripts/validators/validate_pytest_fixtures.py
+    entry: uv run python -u scripts/validators/validate_pytest_fixtures.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: false
@@ -655,7 +655,7 @@ repos:
       See: scripts/validators/validate_pytest_fixtures.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
-    entry: uv run python scripts/validators/validate_gke_autopilot_compliance.py
+    entry: uv run python -u scripts/validators/validate_gke_autopilot_compliance.py
     language: system
     files: ^deployments/.*\.ya?ml$
     pass_filenames: false
@@ -692,7 +692,7 @@ repos:
       '
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
-    entry: uv run python scripts/validators/validate_test_fixtures.py
+    entry: uv run python -u scripts/validators/validate_test_fixtures.py
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
@@ -730,7 +730,7 @@ repos:
       '
   - id: validate-pytest-markers
     name: Validate Pytest Markers & Placement
-    entry: uv run python scripts/validators/validate_pytest_markers.py
+    entry: uv run python -u scripts/validators/validate_pytest_markers.py
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
@@ -794,7 +794,7 @@ repos:
   # tests/meta/test_fixture_organization.py and test_regression_prevention.py run automatically
   - id: detect-dead-test-code
     name: Detect Dead Code in Test Fixtures (Codex P0)
-    entry: uv run python scripts/archive/unused/detect_dead_test_code.py tests/
+    entry: uv run python -u scripts/archive/unused/detect_dead_test_code.py tests/
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
@@ -811,7 +811,7 @@ repos:
 
   - id: check-e2e-completion
     name: Check E2E Test Implementation Progress
-    entry: uv run python scripts/validators/check_e2e_completion.py --min-percent 25
+    entry: uv run python -u scripts/validators/check_e2e_completion.py --min-percent 25
     language: system
     pass_filenames: false
     files: ^tests/e2e/test_full_user_journey\.py$
@@ -824,7 +824,7 @@ repos:
       \ | Target: 80%\n"
   - id: check-test-sleep-budget
     name: Monitor Test Wall-Clock Sleep Time Budget
-    entry: uv run python scripts/validators/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+    entry: uv run python -u scripts/validators/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
     language: system
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
@@ -907,7 +907,7 @@ repos:
   # tests/security/test_deployment_security_regression.py runs automatically
   - id: validate-keycloak-config
     name: Validate Keycloak service configuration in docker-compose.test.yml
-    entry: uv run python scripts/validators/validate_keycloak_config.py docker/docker-compose.test.yml
+    entry: uv run python -u scripts/validators/validate_keycloak_config.py docker/docker-compose.test.yml
     language: system
     files: ^docker/docker-compose\.test\.yml$
     pass_filenames: false
@@ -939,7 +939,7 @@ repos:
       '
   - id: validate-docker-image-contents
     name: Validate Docker image contents in Dockerfile (final-test stage)
-    entry: uv run python scripts/validators/validate_docker_image_contents.py docker/Dockerfile
+    entry: uv run python -u scripts/validators/validate_docker_image_contents.py docker/Dockerfile
     language: system
     files: ^docker/Dockerfile$
     pass_filenames: false
@@ -1082,7 +1082,7 @@ repos:
 
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
-    entry: uv run python scripts/validators/check_async_mock_configuration.py
+    entry: uv run python -u scripts/validators/check_async_mock_configuration.py
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
@@ -1131,7 +1131,7 @@ repos:
       '
   - id: check-asyncmock-instantiation
     name: Check AsyncMock Instantiation (prevent class assignment)
-    entry: uv run python scripts/validators/check_asyncmock_usage.py
+    entry: uv run python -u scripts/validators/check_asyncmock_usage.py
     language: system
     files: ^tests/.*test_.*\.py$
     exclude: ^tests/meta/test_asyncmock_validation\.py$
@@ -1169,7 +1169,7 @@ repos:
       '
   - id: validate-test-isolation
     name: Validate Test Isolation for Pytest-xdist
-    entry: python -u scripts/validators/validate_test_isolation.py tests/
+    entry: uv run python -u scripts/validators/validate_test_isolation.py tests/
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
@@ -1214,7 +1214,7 @@ repos:
   # tests/regression/test_dev_dependencies.py runs automatically
   - id: validate-workflow-test-deps
     name: Validate Workflow Test Dependencies
-    entry: uv run python scripts/validators/validate_workflow_test_deps.py
+    entry: uv run python -u scripts/validators/validate_workflow_test_deps.py
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -1361,7 +1361,7 @@ repos:
       '
   - id: validate-pytest-config
     name: Validate Pytest Configuration
-    entry: uv run python scripts/validators/validate_pytest_config.py
+    entry: uv run python -u scripts/validators/validate_pytest_config.py
     language: system
     files: ^pyproject\.toml$
     pass_filenames: false
@@ -1372,7 +1372,7 @@ repos:
 
   - id: check-test-memory-safety
     name: Check Test Memory Safety
-    entry: uv run python scripts/validators/check_test_memory_safety.py
+    entry: uv run python -u scripts/validators/check_test_memory_safety.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true
@@ -1383,7 +1383,7 @@ repos:
 
   - id: check-test-naming
     name: Check Test Naming Conventions
-    entry: uv run python scripts/validators/check_test_naming.py
+    entry: uv run python -u scripts/validators/check_test_naming.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true
@@ -1404,7 +1404,7 @@ repos:
 
   - id: validate-test-ids
     name: Validate Test IDs (xdist isolation)
-    entry: uv run python scripts/validators/validate_test_ids.py
+    entry: uv run python -u scripts/validators/validate_test_ids.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true
