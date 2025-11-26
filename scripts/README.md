@@ -270,7 +270,7 @@ make docs-validate-links
 ```
 
 **Validates**:
-- Markdown links: `[text](../docs/example.mdx)`
+- Markdown links: `[text] (path/to/file.mdx)`
 - Absolute links: `[text](/api-reference/auth)`
 - MDX Link components: `<Link href="/path">text</Link>`
 - Card/Button hrefs: `<Card href="/path">`

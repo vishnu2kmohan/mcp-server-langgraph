@@ -1151,7 +1151,7 @@ VERIFICATION_MODE=standard
 
 **Score Improvement**: 7.5/10 → 9.5/10 on Anthropic's best practices
 
-**See**: [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md), [Summary](reports/TOOL_IMPROVEMENTS_SUMMARY_20251017.md)
+**See**: [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md)
 
 ---
 
@@ -1183,7 +1183,7 @@ VERIFICATION_MODE=standard
 - **Broken Links Fixed**: 26
 - **Mintlify ADRs**: 22 → 24 (complete)
 
-**See**: [Documentation Audit Report](reports/DOCUMENTATION_AUDIT_REPORT_20251018.md)
+**See**: [Documentation Audit Report](docs-internal/DOCUMENTATION_AUDIT_REPORT.md)
 
 ---
 

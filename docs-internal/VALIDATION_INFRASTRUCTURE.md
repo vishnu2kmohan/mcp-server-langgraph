@@ -589,11 +589,11 @@ pytest tests/test_mdx_validation.py --pdb
 3. **Use Correct Internal Links**
    ```markdown
    ✅ Good:
-   [Guide](../guides/installation.mdx)
+   [Guide](../docs/getting-started/installation.mdx)
    [API](/api-reference/authentication)
 
    ❌ Bad:
-   [Guide](../guides/nonexistent.mdx)  ← 404!
+   [Guide] (../guides/nonexistent.mdx)  ← 404!
    ```
 
 4. **Escape MDX Special Characters**

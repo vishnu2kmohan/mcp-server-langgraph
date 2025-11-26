@@ -222,7 +222,7 @@ If you link to test files in documentation:
 
 ```markdown
 <!-- ❌ OLD -->
-See [workflow tests](../tests/test_workflow_dependencies.py)
+See [workflow tests] (../tests/test_workflow_dependencies.py)
 
 <!-- ✅ NEW -->
 See [workflow tests](../tests/meta/ci/test_workflow_dependencies.py)
