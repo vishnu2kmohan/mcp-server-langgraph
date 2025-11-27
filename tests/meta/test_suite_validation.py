@@ -14,6 +14,11 @@ These tests ensure the test suite remains maintainable and follows best practice
 References:
 - OpenAI Codex findings: Conflicting markers, unguarded imports, pytest.fail usage
 - pytest best practices
+
+Performance Optimization (2025-11-27):
+- Uses tests/validation_lib/ast_cache for cached file reading and AST parsing
+- Fast regex checks used for presence detection (1000x faster than AST)
+- AST parsing reserved for structural analysis only
 """
 
 import ast
@@ -21,6 +26,8 @@ import gc
 from pathlib import Path
 
 import pytest
+
+from tests.validation_lib.ast_cache import cached_parse_ast, cached_read_file, has_pattern
 
 pytestmark = pytest.mark.meta
 
@@ -177,28 +184,24 @@ class TestMarkerConsistency:
             if test_file.parent.name in ["meta", "e2e"]:
                 continue
 
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    content = f.read()
-                    tree = ast.parse(content, filename=str(test_file))
-
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
-                        # Check if test has integration marker
-                        has_integration_marker = self._has_marker(node, "integration")
-
-                        if not has_integration_marker:
-                            # Check for infrastructure usage
-                            detected_pattern = self._detect_infrastructure_usage(
-                                node, infrastructure_fixtures, infrastructure_keywords
-                            )
-
-                            if detected_pattern:
-                                rel_path = test_file.relative_to(tests_dir.parent)
-                                violations.append((str(rel_path), node.name, node.lineno, detected_pattern))
-
-            except (SyntaxError, UnicodeDecodeError):
+            tree, content = cached_parse_ast(str(test_file))
+            if tree is None:
                 continue
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+                    # Check if test has integration marker
+                    has_integration_marker = self._has_marker(node, "integration")
+
+                    if not has_integration_marker:
+                        # Check for infrastructure usage
+                        detected_pattern = self._detect_infrastructure_usage(
+                            node, infrastructure_fixtures, infrastructure_keywords
+                        )
+
+                        if detected_pattern:
+                            rel_path = test_file.relative_to(tests_dir.parent)
+                            violations.append((str(rel_path), node.name, node.lineno, detected_pattern))
 
         return violations
 
@@ -274,24 +277,20 @@ class TestMarkerConsistency:
                 # Skip meta-tests
                 continue
 
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    tree = ast.parse(f.read(), filename=str(test_file))
-
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
-                        markers = self._extract_markers_from_class(node)
-
-                        # Check each marker pair for conflicts
-                        for marker1, marker2 in marker_pairs:
-                            if marker1 in markers and marker2 in markers:
-                                rel_path = test_file.relative_to(tests_dir.parent)
-                                conflicts.append((str(rel_path), node.name, markers))
-                                break  # Only report each class once
-
-            except (SyntaxError, UnicodeDecodeError):
-                # Skip files that can't be parsed
+            tree, _ = cached_parse_ast(str(test_file))
+            if tree is None:
                 continue
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+                    markers = self._extract_markers_from_class(node)
+
+                    # Check each marker pair for conflicts
+                    for marker1, marker2 in marker_pairs:
+                        if marker1 in markers and marker2 in markers:
+                            rel_path = test_file.relative_to(tests_dir.parent)
+                            conflicts.append((str(rel_path), node.name, markers))
+                            break  # Only report each class once
 
         return conflicts
 
@@ -354,44 +353,40 @@ class TestMarkerConsistency:
             if test_file.parent.name == "meta":
                 continue
 
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    content = f.read()
-                    tree = ast.parse(content, filename=str(test_file))
-
-                # Build a map of nodes to their parents (single pass)
-                parent_map = {}
-                for parent in ast.walk(tree):
-                    for child in ast.iter_child_nodes(parent):
-                        parent_map[child] = parent
-
-                # Check test functions and classes for integration marker
-                for node in ast.walk(tree):
-                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
-                        # Check if test or its parent class has integration marker
-                        has_integration_marker = self._has_marker(node, "integration")
-
-                        # Also check parent class if this is a method
-                        if not has_integration_marker:
-                            # Look up parent from pre-built map (O(1) instead of O(n))
-                            parent = parent_map.get(node)
-                            if parent and isinstance(parent, ast.ClassDef):
-                                has_integration_marker = self._has_marker(parent, "integration")
-
-                        if has_integration_marker:
-                            # Check for hard skip markers
-                            skip_reason = None
-                            for decorator in node.decorator_list:
-                                skip_reason = self._extract_skip_reason(decorator)
-                                if skip_reason:
-                                    break
-
-                            if skip_reason:
-                                rel_path = test_file.relative_to(tests_dir.parent)
-                                violations.append((str(rel_path), node.name, node.lineno, skip_reason))
-
-            except (SyntaxError, UnicodeDecodeError):
+            tree, content = cached_parse_ast(str(test_file))
+            if tree is None:
                 continue
+
+            # Build a map of nodes to their parents (single pass)
+            parent_map = {}
+            for parent in ast.walk(tree):
+                for child in ast.iter_child_nodes(parent):
+                    parent_map[child] = parent
+
+            # Check test functions and classes for integration marker
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+                    # Check if test or its parent class has integration marker
+                    has_integration_marker = self._has_marker(node, "integration")
+
+                    # Also check parent class if this is a method
+                    if not has_integration_marker:
+                        # Look up parent from pre-built map (O(1) instead of O(n))
+                        parent = parent_map.get(node)
+                        if parent and isinstance(parent, ast.ClassDef):
+                            has_integration_marker = self._has_marker(parent, "integration")
+
+                    if has_integration_marker:
+                        # Check for hard skip markers
+                        skip_reason = None
+                        for decorator in node.decorator_list:
+                            skip_reason = self._extract_skip_reason(decorator)
+                            if skip_reason:
+                                break
+
+                        if skip_reason:
+                            rel_path = test_file.relative_to(tests_dir.parent)
+                            violations.append((str(rel_path), node.name, node.lineno, skip_reason))
 
         return violations
 
@@ -419,26 +414,22 @@ class TestMarkerConsistency:
             if test_file.parent.name == "meta":
                 continue
 
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    content = f.read()
-                    tree = ast.parse(content, filename=str(test_file))
-
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
-                        # Check decorators for skip markers
-                        for decorator in node.decorator_list:
-                            skip_reason = self._extract_skip_reason(decorator)
-
-                            if skip_reason:
-                                # Check if reason indicates unimplemented feature
-                                reason_lower = skip_reason.lower()
-                                if any(keyword in reason_lower for keyword in unimplemented_keywords):
-                                    rel_path = test_file.relative_to(tests_dir.parent)
-                                    violations.append((str(rel_path), node.name, node.lineno, skip_reason))
-
-            except (SyntaxError, UnicodeDecodeError):
+            tree, _ = cached_parse_ast(str(test_file))
+            if tree is None:
                 continue
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+                    # Check decorators for skip markers
+                    for decorator in node.decorator_list:
+                        skip_reason = self._extract_skip_reason(decorator)
+
+                        if skip_reason:
+                            # Check if reason indicates unimplemented feature
+                            reason_lower = skip_reason.lower()
+                            if any(keyword in reason_lower for keyword in unimplemented_keywords):
+                                rel_path = test_file.relative_to(tests_dir.parent)
+                                violations.append((str(rel_path), node.name, node.lineno, skip_reason))
 
         return violations
 
@@ -505,11 +496,10 @@ class TestImportGuards:
                 # Skip meta-tests
                 continue
 
-            # Read file content
+            # Read file content with caching
             try:
-                with open(test_file, encoding="utf-8") as f:
-                    content = f.read()
-                    lines = content.split("\n")
+                content = cached_read_file(str(test_file))
+                lines = content.split("\n")
 
                 # Check for unguarded module-level imports
                 for package in optional_packages:
@@ -542,7 +532,7 @@ class TestImportGuards:
                                 rel_path = test_file.relative_to(tests_dir.parent)
                                 issues.append(f"{rel_path}:{line_num} - Unguarded import of optional package '{package}'")
 
-            except (UnicodeDecodeError, FileNotFoundError):
+            except OSError:
                 continue
 
         if issues:
@@ -571,8 +561,7 @@ class TestInfrastructureFixtures:
         """
         conftest_path = Path(__file__).parent.parent / "conftest.py"
 
-        with open(conftest_path, encoding="utf-8") as f:
-            content = f.read()
+        content = cached_read_file(str(conftest_path))
 
         # Check that pytest.fail is NOT used in infrastructure health checks
         # but pytest.skip IS used
@@ -662,32 +651,28 @@ class TestCLIToolGuards:
             if test_file.parent.name == "meta":
                 continue
 
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    content = f.read()
-                    tree = ast.parse(content, filename=str(test_file))
-
-                # Find all test functions and their parent classes
-                for node in ast.walk(tree):
-                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
-                        # Check for CLI tool invocations in this test
-                        cli_tool_used = self._detect_cli_tool_usage(node, cli_tools.keys(), content)
-
-                        if cli_tool_used:
-                            # Check if test has guard (skipif decorator, runtime check, requires_* marker, or class marker)
-                            has_guard = (
-                                self._has_skipif_guard(node, cli_tools[cli_tool_used])
-                                or self._has_runtime_skip_check(node, cli_tool_used, content)
-                                or self._has_requires_marker(node, cli_tools[cli_tool_used])
-                                or self._has_class_marker(node, tree, cli_tools[cli_tool_used])
-                            )
-
-                            if not has_guard:
-                                rel_path = test_file.relative_to(tests_dir.parent)
-                                violations.append((str(rel_path), node.name, node.lineno, cli_tool_used))
-
-            except (SyntaxError, UnicodeDecodeError):
+            tree, content = cached_parse_ast(str(test_file))
+            if tree is None:
                 continue
+
+            # Find all test functions and their parent classes
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+                    # Check for CLI tool invocations in this test
+                    cli_tool_used = self._detect_cli_tool_usage(node, cli_tools.keys(), content)
+
+                    if cli_tool_used:
+                        # Check if test has guard (skipif decorator, runtime check, requires_* marker, or class marker)
+                        has_guard = (
+                            self._has_skipif_guard(node, cli_tools[cli_tool_used])
+                            or self._has_runtime_skip_check(node, cli_tool_used, content)
+                            or self._has_requires_marker(node, cli_tools[cli_tool_used])
+                            or self._has_class_marker(node, tree, cli_tools[cli_tool_used])
+                        )
+
+                        if not has_guard:
+                            rel_path = test_file.relative_to(tests_dir.parent)
+                            violations.append((str(rel_path), node.name, node.lineno, cli_tool_used))
 
         return violations
 

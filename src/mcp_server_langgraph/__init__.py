@@ -216,6 +216,33 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         import mcp_server_langgraph.schedulers as schedulers_module
 
         return schedulers_module
+    elif name == "resilience":
+        # Allow access to resilience submodule for resilience pattern tests
+        module_name = f"{__name__}.resilience"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.resilience as resilience_module
+
+        return resilience_module
+    elif name == "mcp":
+        # Allow access to mcp submodule for MCP server tests
+        module_name = f"{__name__}.mcp"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.mcp as mcp_module
+
+        return mcp_module
+    elif name == "observability":
+        # Allow access to observability submodule for telemetry tests
+        module_name = f"{__name__}.observability"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.observability as observability_module
+
+        return observability_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

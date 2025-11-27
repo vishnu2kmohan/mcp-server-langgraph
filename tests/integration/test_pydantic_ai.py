@@ -11,7 +11,7 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
 # xdist_group for integration test worker isolation
-pytestmark = pytest.mark.xdist_group(name="integration_pydantic_ai_tests")
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="integration_pydantic_ai_tests")]
 
 
 def teardown_module():

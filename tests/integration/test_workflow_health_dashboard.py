@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="workflow_health_dashboard")]
 
 
 def teardown_module():
