@@ -32,6 +32,9 @@ kubectl = "1.29"
 # Security scanning (required for K8s manifest validation)
 trivy = "0.50"
 
+# Infrastructure-as-Code (required for Terraform validation hooks)
+terraform = "1.6"
+
 # CI/CD validation (required for workflow linting)
 actionlint = "1.6"
 

@@ -35,6 +35,7 @@ REQUIRED_TOOLS = {
     "helm": "Validates Helm chart syntax (deployments/helm/)",
     "kubectl": "Validates Kustomize overlays (deployments/kubernetes/)",
     "trivy": "Security scans on Kubernetes manifests",
+    "terraform": "Validates Terraform configurations (deployments/terraform/)",
     "actionlint": "Validates GitHub Actions workflow syntax",
     "node": "Required for Mintlify docs validation",
 }

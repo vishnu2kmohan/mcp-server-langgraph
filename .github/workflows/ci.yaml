@@ -469,6 +469,45 @@ jobs:
         extras: 'dev builder'
         cache-key-prefix: 'push-validators'
 
+    # Tool versions match mise.toml for local dev parity
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.6.6'
+
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: '3.14.0'
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: '1.29.0'
+
+    - name: Install actionlint
+      run: |
+        go install github.com/rhysd/actionlint/cmd/actionlint@v1.6.27
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+
+    - name: Install Trivy
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.50.0
+        trivy --version
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Cache pre-commit environments
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: push-validators-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          push-validators-${{ runner.os }}-
+
     - name: Install pre-commit
       run: |
         uv tool install pre-commit
