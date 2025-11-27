@@ -100,14 +100,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install yamllint
-        # NOTE: Using pip for single-tool install (yamllint only). For full project deps, use uv sync --frozen
-        run: pip install yamllint
+          extras: 'dev'
+          cache-key-prefix: 'k8s-yaml-lint'
 
       - name: Lint YAML files
         # Use repository's .yamllint.yml configuration

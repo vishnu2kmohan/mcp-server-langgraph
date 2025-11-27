@@ -2765,6 +2765,7 @@ coverage-tools = [
 dev = [
     { name = "bandit" },
     { name = "black" },
+    { name = "coverage", extra = ["toml"] },
     { name = "docker" },
     { name = "flake8" },
     { name = "freezegun" },
@@ -2778,6 +2779,7 @@ dev = [
     { name = "mutmut" },
     { name = "mypy" },
     { name = "openapi-spec-validator" },
+    { name = "pre-commit" },
     { name = "psutil" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2797,6 +2799,7 @@ dev = [
     { name = "types-redis" },
     { name = "types-requests" },
     { name = "validators" },
+    { name = "yamllint" },
 ]
 embeddings = [
     { name = "sentence-transformers" },
@@ -2872,6 +2875,7 @@ requires-dist = [
     { name = "cachetools", specifier = ">=5.3.0" },
     { name = "click", marker = "extra == 'cli'", specifier = ">=8.1.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'coverage-tools'", specifier = ">=7.0.0" },
+    { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "cryptography", specifier = ">=46.0.3" },
     { name = "docker", marker = "extra == 'code-execution'", specifier = ">=7.1.0" },
     { name = "docker", marker = "extra == 'dev'", specifier = ">=7.1.0" },
@@ -2916,6 +2920,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-http", marker = "extra == 'observability-http'", specifier = ">=1.38.0" },
     { name = "opentelemetry-instrumentation-logging", specifier = ">=0.59b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.38.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.2.0" },
     { name = "prometheus-api-client", specifier = ">=0.5.5" },
     { name = "prometheus-client", specifier = ">=0.20.0" },
     { name = "psutil", marker = "extra == 'code-execution'", specifier = ">=6.1.0" },
@@ -2965,6 +2970,7 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'playground'", specifier = ">=0.38.0" },
     { name = "validators", marker = "extra == 'dev'", specifier = ">=0.34.0" },
     { name = "websockets", marker = "extra == 'playground'", specifier = ">=12.0" },
+    { name = "yamllint", marker = "extra == 'dev'", specifier = ">=1.37.1" },
 ]
 provides-extras = ["dev", "secrets", "cli", "playground", "builder", "code-execution", "coverage-tools", "monitoring", "release-tools", "embeddings-api", "embeddings-local", "embeddings", "observability-grpc", "observability-http", "observability-full", "all", "all-full"]
 
@@ -6314,6 +6320,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/50/55/15a7b8a56590e66ccd374bbfa3f9ffc45b810886c8c3b614e3f90bd2367c/xxhash-3.6.0-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:881b47fc47e051b37d94d13e7455131054b56749b91b508b0907eb07900d1c13", size = 36251, upload-time = "2025-10-02T14:37:04.44Z" },
     { url = "https://files.pythonhosted.org/packages/62/b2/5ac99a041a29e58e95f907876b04f7067a0242cb85b5f39e726153981503/xxhash-3.6.0-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c6dc31591899f5e5666f04cc2e529e69b4072827085c1ef15294d91a004bc1bd", size = 32481, upload-time = "2025-10-02T14:37:05.869Z" },
     { url = "https://files.pythonhosted.org/packages/7b/d9/8d95e906764a386a3d3b596f3c68bb63687dfca806373509f51ce8eea81f/xxhash-3.6.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:15e0dac10eb9309508bfc41f7f9deaa7755c69e35af835db9cb10751adebc35d", size = 31565, upload-time = "2025-10-02T14:37:06.966Z" },
+]
+
+[[package]]
+name = "yamllint"
+version = "1.37.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pathspec" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/f2/cd8b7584a48ee83f0bc94f8a32fea38734cefcdc6f7324c4d3bfc699457b/yamllint-1.37.1.tar.gz", hash = "sha256:81f7c0c5559becc8049470d86046b36e96113637bcbe4753ecef06977c00245d", size = 141613, upload-time = "2025-05-04T08:25:54.355Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/b9/be7a4cfdf47e03785f657f94daea8123e838d817be76c684298305bd789f/yamllint-1.37.1-py3-none-any.whl", hash = "sha256:364f0d79e81409f591e323725e6a9f4504c8699ddf2d7263d8d2b539cd66a583", size = 68813, upload-time = "2025-05-04T08:25:52.552Z" },
 ]
 
 [[package]]

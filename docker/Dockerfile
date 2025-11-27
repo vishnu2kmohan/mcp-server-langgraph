@@ -14,12 +14,16 @@
 #   docker build --target final-test -t mcp-server-langgraph:test -f docker/Dockerfile .
 #
 # OPTIMIZATION HIGHLIGHTS:
+#   - Uses `uv sync --frozen` for consistency with local/CI (same as Makefile)
 #   - Distroless runtime (no shell, minimal attack surface)
 #   - Layer ordering optimized for cache hits
-#   - Separate build stages for each variant
 #   - BuildKit cache mounts throughout
 #   - 62% smaller base image (530MB → 200MB)
 #   - 94% smaller test image (13.3GB → 800MB)
+#
+# REFERENCES:
+#   - https://docs.astral.sh/uv/guides/integration/docker/
+#   - https://hynek.me/articles/docker-uv/
 #
 # ==============================================================================
 
@@ -49,113 +53,67 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-base-builder,sharing=p
 # Install uv - Fast Python package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
+# UV environment variables for optimal Docker builds
+# See: https://docs.astral.sh/uv/guides/integration/docker/
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
 # Copy dependency files FIRST (changes rarely)
 COPY pyproject.toml uv.lock ./
 
 # ==============================================================================
-# STAGE: dependencies-base
-# Lightweight dependencies (no ML, no secrets management)
-# ==============================================================================
-FROM base-builder AS dependencies-base
-
-# Export base dependencies (exclude heavy optional packages)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv export --frozen \
-    --no-hashes \
-    --no-emit-project \
-    --no-extra embeddings-local \
-    --no-extra embeddings \
-    --no-extra secrets \
-    --no-extra all \
-    > /tmp/requirements-base.txt
-
-# Show what we're installing for transparency
-RUN echo "=== Base Dependencies ===" && \
-    grep -E "^(langchain|langgraph|litellm|mcp|opentelemetry|fastapi)" /tmp/requirements-base.txt | head -20
-
-# ==============================================================================
-# STAGE: dependencies-full
-# Complete dependencies including ML models
-# Note: Excludes infisical-python (secrets extra) due to platform wheel availability
-# Application falls back to environment variables when infisical is not available
-# ==============================================================================
-FROM base-builder AS dependencies-full
-
-# Export full dependencies (includes embeddings-local, excludes secrets)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv export --frozen \
-    --no-hashes \
-    --no-emit-project \
-    --extra embeddings-local \
-    --no-extra secrets \
-    > /tmp/requirements-full.txt
-
-# ==============================================================================
-# STAGE: dependencies-test
-# Test dependencies only (no production runtime)
-# ==============================================================================
-FROM base-builder AS dependencies-test
-
-# Export test dependencies (dev extras, no heavy embeddings)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv export --frozen \
-    --no-hashes \
-    --no-emit-project \
-    --extra dev \
-    --no-extra embeddings-local \
-    --no-extra embeddings \
-    --no-extra all \
-    > /tmp/requirements-test.txt
-
-# ==============================================================================
 # STAGE: build-base
-# Build base variant packages
+# Build base variant packages (production, minimal dependencies)
 # ==============================================================================
-FROM dependencies-base AS build-base
+FROM base-builder AS build-base
 
 # Copy source code (changes frequently, after dependencies)
 COPY src/ ./src/
 
-# Create virtual environment and install base dependencies
+# Install dependencies using uv sync --frozen (same as local/CI)
+# --frozen: Use lockfile exactly, fail if out of sync
+# --no-dev: Exclude development dependencies
+# --no-editable: Non-editable install for production
 RUN --mount=type=cache,target=/root/.cache/uv \
-    python -m venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    uv pip install --python /opt/venv/bin/python --no-cache \
-    -r /tmp/requirements-base.txt && \
-    uv pip install --python /opt/venv/bin/python --no-cache --no-deps .
+    uv sync --frozen --no-dev --no-editable \
+    --no-extra embeddings-local \
+    --no-extra embeddings \
+    --no-extra secrets \
+    --no-extra all
 
 # ==============================================================================
 # STAGE: build-full
-# Build full variant packages (with ML, without secrets management)
+# Build full variant packages (production, with local embeddings)
+# Note: Excludes infisical-python (secrets extra) due to platform wheel availability
+# Application falls back to environment variables when infisical is not available
 # ==============================================================================
-FROM dependencies-full AS build-full
+FROM base-builder AS build-full
 
 COPY src/ ./src/
 
-# Create virtual environment and install full dependencies (includes PyTorch, sentence-transformers)
+# Install full dependencies (includes PyTorch, sentence-transformers)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    python -m venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    uv pip install --python /opt/venv/bin/python --no-cache \
-    -r /tmp/requirements-full.txt && \
-    uv pip install --python /opt/venv/bin/python --no-cache --no-deps .
+    uv sync --frozen --no-dev --no-editable \
+    --extra embeddings-local \
+    --no-extra secrets
 
 # ==============================================================================
 # STAGE: build-test
-# Build test variant packages
+# Build test variant packages (development dependencies)
 # ==============================================================================
-FROM dependencies-test AS build-test
+FROM base-builder AS build-test
 
 COPY src/ ./src/
 COPY tests/ ./tests/
 
-# Create virtual environment and install test dependencies
+# Install test dependencies (dev extras)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    python -m venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    uv pip install --python /opt/venv/bin/python --no-cache \
-    -r /tmp/requirements-test.txt && \
-    uv pip install --python /opt/venv/bin/python --no-cache --no-deps .
+    uv sync --frozen --extra dev --extra builder \
+    --no-extra embeddings-local \
+    --no-extra embeddings \
+    --no-extra all
 
 # ==============================================================================
 # STAGE: runtime-distroless
@@ -201,9 +159,9 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime-slim,sharing=p
 FROM runtime-distroless AS final-base
 
 # Copy virtual environment from build stage
-COPY --from=build-base --chown=nonroot:users /opt/venv /opt/venv
+COPY --from=build-base --chown=nonroot:users /app/.venv /app/.venv
 
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
@@ -226,9 +184,9 @@ CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 FROM runtime-distroless AS final-full
 
 # Copy virtual environment from build stage
-COPY --from=build-full --chown=nonroot:users /opt/venv /opt/venv
+COPY --from=build-full --chown=nonroot:users /app/.venv /app/.venv
 
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=nonroot:nonroot src/ ./src/
@@ -251,7 +209,7 @@ CMD ["python", "-m", "mcp_server_langgraph.mcp.server_streamable"]
 FROM runtime-slim AS final-test
 
 # Copy virtual environment from builder
-COPY --from=build-test /opt/venv /opt/venv
+COPY --from=build-test /app/.venv /app/.venv
 
 # Copy application and test code
 COPY src/ ./src/
@@ -265,7 +223,7 @@ COPY pyproject.toml ./
 COPY adr/ ./adr/
 
 # Set PATH to use virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Disable observability during tests
 ENV ENABLE_TRACING=false \
@@ -279,7 +237,7 @@ LABEL org.opencontainers.image.variant="test"
 LABEL org.opencontainers.image.size="~800MB"
 
 # Default command runs integration tests
-CMD ["/opt/venv/bin/pytest", "-m", "integration", "-v", "--tb=short"]
+CMD ["/app/.venv/bin/pytest", "-m", "integration", "-v", "--tb=short"]
 
 # No health check for test variant
 HEALTHCHECK NONE

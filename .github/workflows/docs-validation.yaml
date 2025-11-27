@@ -170,12 +170,18 @@ jobs:
           echo "::endgroup::"
         continue-on-error: true
 
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'docs-version-check'
+
       - name: Check Version Consistency
         id: version-check
         run: |
           echo "::group::Version Consistency Check"
-          pip install toml
-          python scripts/validators/check_version_consistency.py
+          uv run python scripts/validators/check_version_consistency.py
           echo "::endgroup::"
         continue-on-error: true
 

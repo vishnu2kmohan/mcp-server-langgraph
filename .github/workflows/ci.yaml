@@ -145,10 +145,6 @@ jobs:
           extras: 'dev'
           cache-key-prefix: 'parity-validation'
 
-      - name: Install pre-commit (for local hook validation)
-        run: |
-          pip install pre-commit
-
       - name: Install git hooks
         run: |
           pre-commit install --hook-type pre-commit --hook-type pre-push
@@ -627,9 +623,9 @@ jobs:
       run: |
         # Use correct Python path based on variant
         # - Distroless (base, full): /usr/bin/python3 (system Python)
-        # - Slim (test): /opt/venv/bin/python (venv Python)
+        # - Slim (test): /app/.venv/bin/python (uv-managed venv)
         if [[ "${{ matrix.variant }}" == "test" ]]; then
-          PYTHON_PATH="/opt/venv/bin/python"
+          PYTHON_PATH="/app/.venv/bin/python"
         else
           PYTHON_PATH="/usr/bin/python3"
         fi

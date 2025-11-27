@@ -124,6 +124,11 @@ dev = [
     "validators>=0.34.0",  # URL and data validation for MDX documentation tests
     # Deployment tools
     "langgraph-cli>=0.1.0",
+    # Git hooks and CI tools
+    "pre-commit>=4.2.0",  # Git hooks framework for code quality
+    "yamllint>=1.37.1",  # YAML linting for Kubernetes manifests and configs
+    # Coverage tools (also available separately via coverage-tools extra)
+    "coverage[toml]>=7.0.0",  # Coverage.py with TOML support
 ]
 
 secrets = [

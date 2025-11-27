@@ -72,14 +72,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-
-      - name: Install pre-commit
-        # NOTE: Using pip for single-tool install (pre-commit only). For full project deps, use uv sync --frozen
-        run: pip install pre-commit
+          extras: 'dev'
+          cache-key-prefix: 'preflight-hooks'
 
       - name: Run fast pre-commit hooks
         run: |

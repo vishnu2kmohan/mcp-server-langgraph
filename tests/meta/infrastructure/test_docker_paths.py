@@ -35,7 +35,7 @@ def test_docker_python_path_consistency():
     Different Docker base images have Python installed at different paths:
     - python:3.12-slim - Python at /usr/local/bin/python3
     - Distroless - Python at /usr/bin/python3 (if using distroless/python)
-    - Custom builds - Python at /opt/venv/bin/python (if using venv)
+    - uv-managed venv - Python at /app/.venv/bin/python (uv sync installs here)
 
     The smoke test must use the correct path for each variant to avoid:
     "exec: /usr/bin/python3: not found" errors
@@ -210,7 +210,7 @@ def test_docker_smoke_test_validates_variants():
     Test that smoke tests are variant-aware and test each variant appropriately.
 
     Different variants may have different:
-    - Python locations (/usr/bin vs /usr/local/bin vs /opt/venv/bin)
+    - Python locations (/usr/bin vs /usr/local/bin vs /app/.venv/bin)
     - Installed packages (test variant has test dependencies, base does not)
     - Entrypoints (some use venv activation, others don't)
 

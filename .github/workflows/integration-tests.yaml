@@ -131,14 +131,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-
-    - name: Install coverage tools
-      run: |
-        pip install coverage[toml]
+        extras: 'coverage-tools'
+        cache-key-prefix: 'coverage-merge'
 
     - name: Download all coverage artifacts
       uses: actions/download-artifact@v6
