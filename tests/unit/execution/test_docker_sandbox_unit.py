@@ -137,8 +137,9 @@ class TestDockerSandboxInitialization:
 
             sandbox = DockerSandbox(limits=limits)
 
-        assert mock_docker.called
-        assert sandbox.client is not None
+            # Assert inside context manager to ensure mock is valid in xdist workers
+            assert mock_docker.called, "DockerClient should be instantiated"
+            assert sandbox.client is not None, "sandbox.client should be set"
 
     def test_init_handles_docker_unavailable_gracefully(self):
         """
