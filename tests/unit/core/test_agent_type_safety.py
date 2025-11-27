@@ -49,8 +49,12 @@ class TestAgentTypeCompliance:
         assert agent_file.exists(), f"Agent file not found: {agent_file}"
 
         # Run MyPy on agent.py
+        # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
         result = subprocess.run(
-            ["uv", "run", "mypy", str(agent_file), "--no-error-summary"], capture_output=True, text=True, timeout=30
+            ["uv", "run", "--frozen", "mypy", str(agent_file), "--no-error-summary"],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
 
         # Check for specific type errors that need to be fixed
@@ -113,8 +117,12 @@ class TestAgentTypeCompliance:
         introduce errors elsewhere.
         """
         # CI runners are slower - allow 90 seconds for full codebase mypy check
+        # Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
         result = subprocess.run(
-            ["uv", "run", "mypy", "src/mcp_server_langgraph", "--no-error-summary"], capture_output=True, text=True, timeout=90
+            ["uv", "run", "--frozen", "mypy", "src/mcp_server_langgraph", "--no-error-summary"],
+            capture_output=True,
+            text=True,
+            timeout=90,
         )
 
         if result.returncode != 0:

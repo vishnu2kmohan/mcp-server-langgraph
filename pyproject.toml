@@ -114,7 +114,7 @@ dev = [
     "flake8>=7.0.0",  # Keep for now during migration, will remove after validation
     "mypy>=1.18.2",
     "types-PyYAML",
-    "types-redis",
+    "types-redis>=4.6.0,<4.7.0",  # Pinned: >=4.7 requires stricter generic params (Belt-and-suspenders)
     "types-requests",
     "isort>=7.0.0",  # Keep for now during migration, will remove after validation
     "bandit>=1.7.6",

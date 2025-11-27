@@ -212,10 +212,13 @@ class TestMypyEnforcement:
 
         # Use same args as pre-commit hook to ensure parity
         # Pre-commit now uses --config-file=pyproject.toml (strict mode with per-module overrides)
+        # CRITICAL: Use --frozen to ensure lockfile-pinned versions are used, not latest
+        # This prevents CI failures due to version drift when uv recreates the virtualenv
         result = subprocess.run(
             [
                 "uv",
                 "run",
+                "--frozen",  # Use lockfile-pinned versions (prevents version drift in CI)
                 "mypy",
                 "src/mcp_server_langgraph",
                 "--config-file=pyproject.toml",

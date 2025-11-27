@@ -563,18 +563,20 @@ validate-workflows:  ## Comprehensive workflow validation (matches CI exactly)
 	@echo "🔍 Comprehensive Workflow Validation (CI-Equivalent)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "▶ STEP 1: Install actionlint (if needed)"
+	@echo "▶ STEP 1: Check actionlint is available"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@if ! command -v actionlint >/dev/null 2>&1; then \
-		echo "actionlint not found - installing..."; \
-		wget -q https://github.com/rhysd/actionlint/releases/latest/download/actionlint_1.7.5_linux_amd64.tar.gz -O /tmp/actionlint.tar.gz && \
-		tar -xzf /tmp/actionlint.tar.gz -C /tmp && \
-		sudo mv /tmp/actionlint /usr/local/bin/ && \
-		sudo chmod +x /usr/local/bin/actionlint && \
-		rm -f /tmp/actionlint.tar.gz && \
-		echo "✓ actionlint installed"; \
+		echo "ERROR: actionlint not found."; \
+		echo ""; \
+		echo "Install via mise (recommended):"; \
+		echo "  curl https://mise.run | sh && mise install"; \
+		echo ""; \
+		echo "Or install manually:"; \
+		echo "  brew install actionlint  # macOS"; \
+		echo "  go install github.com/rhysd/actionlint/cmd/actionlint@latest  # Go"; \
+		exit 1; \
 	else \
-		echo "✓ actionlint already installed ($$(actionlint --version))"; \
+		echo "✓ actionlint available ($$(actionlint --version))"; \
 	fi
 	@echo ""
 	@echo "▶ STEP 2: Run actionlint on all workflow files"
@@ -811,6 +813,22 @@ validate-pre-push:  ## Pre-push validation (auto-detects CI_PARITY for full vs q
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		$(MAKE) validate-pre-push-quick; \
 	fi
+
+## validate-pre-push-ci: Run validation on ALL files (exact CI match)
+## This is different from git hooks which run on CHANGED files only for speed
+validate-pre-push-ci:  ## Pre-push CI-equivalent validation (all files, not just changed)
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🎯 CI-EQUIVALENT VALIDATION (All Files)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo ""
+	@echo "This runs the same validation as CI on ALL files."
+	@echo "Git hooks run on CHANGED files only for speed."
+	@echo ""
+	@echo "Use case: Pre-release audit, major refactoring, CI debugging"
+	@echo ""
+	@echo "Reference: P0-2 - Pre-commit/Pre-push Hook Remediation Plan"
+	@echo ""
+	CI_PARITY=1 $(MAKE) validate-pre-push-full
 
 act-dry-run:
 	@echo "Showing what would execute in CI workflows..."

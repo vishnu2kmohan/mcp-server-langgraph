@@ -115,7 +115,8 @@ jobs:
         run: uv run ruff format --check src/ tests/
 
       - name: Run MyPy type checking
-        run: uv run mypy src/ --config-file pyproject.toml || echo "MyPy warnings allowed"
+        # Use --frozen to ensure lockfile-pinned versions (prevents version drift)
+        run: uv run --frozen mypy src/ --config-file pyproject.toml || echo "MyPy warnings allowed"
 
   unit-tests-fast:
     name: Fast Unit Tests

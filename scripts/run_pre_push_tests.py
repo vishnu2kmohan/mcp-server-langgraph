@@ -39,8 +39,12 @@ Usage:
 
   # With integration tests (if Docker available)
   CI_PARITY=1 python scripts/run_pre_push_tests.py
+
+  # Run all tests without stopping on first failure (CI diagnostics)
+  python scripts/run_pre_push_tests.py --no-fail-fast
 """
 
+import argparse
 import os
 import subprocess
 import sys
@@ -67,11 +71,12 @@ def should_run_meta_tests() -> bool:
     They should run when workflow-related files change, but can be skipped for
     regular code changes to maintain fast pre-push validation.
 
-    Modern Best Practice (Phase 3.1 refactor - 2025-11-24):
-    Uses 3-level fallback strategy to determine changed files:
+    Enhanced Fallback Strategy (P0-1 fix - 2025-11-27):
+    Uses 4-level fallback strategy to determine changed files:
     1. PRE_COMMIT_FROM_REF/TO_REF (provided by pre-commit during hooks)
     2. git merge-base @{u} HEAD (shows unpushed changes)
-    3. git diff HEAD (fallback for detached/local branches)
+    3. git merge-base origin/main HEAD (for new branches without upstream)
+    4. git show --name-only HEAD (shows last commit's files)
 
     Returns:
         True if workflow files changed (run meta tests)
@@ -80,20 +85,34 @@ def should_run_meta_tests() -> bool:
     Workflow-related patterns that trigger meta tests:
     - .github/ (CI workflows, actions)
     - .pre-commit-config.yaml (hook configuration)
-    - pytest.ini or pyproject.toml (test configuration)
+    - pytest.ini (test configuration)
+    - pyproject.toml (root only, not clients/*/pyproject.toml)
     - tests/conftest.py (shared fixtures)
 
     Reference: Codex Audit Finding - Make/Test Flow Issue 1.4
-    Reference: Phase 3.1 - Modern best practice with pre-commit alignment
+    Reference: P0-1 - Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan
     """
-    # Workflow-related files that trigger meta tests
-    workflow_patterns = [
-        ".github/",
-        ".pre-commit-config.yaml",
-        "pytest.ini",
-        "pyproject.toml",
-        "tests/conftest.py",
-    ]
+
+    def matches_workflow_pattern(changed_file: str) -> bool:
+        """Check if a changed file matches workflow patterns."""
+        # Directory patterns (prefix match)
+        if changed_file.startswith(".github/"):
+            return True
+        if changed_file.startswith("tests/conftest.py"):
+            return True
+
+        # Exact file patterns (not substring match)
+        exact_patterns = [
+            ".pre-commit-config.yaml",
+            "pytest.ini",
+            "pyproject.toml",  # Only root pyproject.toml, not clients/*/pyproject.toml
+        ]
+        for pattern in exact_patterns:
+            # Match only if file is exactly the pattern or ends with /pattern
+            if changed_file == pattern:
+                return True
+
+        return False
 
     # Strategy 1: Use PRE_COMMIT_FROM_REF/TO_REF if available (during pre-commit hook execution)
     from_ref = os.getenv("PRE_COMMIT_FROM_REF")
@@ -129,14 +148,33 @@ def should_run_meta_tests() -> bool:
                     timeout=5,
                 )
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                # Strategy 3: Final fallback to diff HEAD (detached HEAD, no upstream, etc.)
-                result = subprocess.run(
-                    ["git", "diff", "--name-only", "HEAD"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                    timeout=5,
-                )
+                # Strategy 3: Try merge-base with origin/main (for new branches)
+                try:
+                    merge_base_result = subprocess.run(
+                        ["git", "merge-base", "origin/main", "HEAD"],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        timeout=5,
+                    )
+                    merge_base = merge_base_result.stdout.strip()
+                    result = subprocess.run(
+                        ["git", "diff", "--name-only", merge_base, "HEAD"],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        timeout=5,
+                    )
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                    # Strategy 4: Final fallback to git show (shows last commit)
+                    # Better than git diff HEAD which shows uncommitted changes
+                    result = subprocess.run(
+                        ["git", "show", "--name-only", "--format=", "HEAD"],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        timeout=5,
+                    )
     except subprocess.TimeoutExpired:
         # Can't determine changes, run meta tests to be safe
         return True
@@ -149,9 +187,8 @@ def should_run_meta_tests() -> bool:
 
     # Check if any workflow file changed
     for changed_file in changed_files:
-        for pattern in workflow_patterns:
-            if pattern in changed_file:
-                return True
+        if matches_workflow_pattern(changed_file):
+            return True
 
     return False
 
@@ -186,6 +223,20 @@ def is_quiet_mode() -> bool:
     return False
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Run consolidated pre-push test suite.",
+        epilog="Reference: Codex Audit Finding 2a - Duplicate pytest sessions",
+    )
+    parser.add_argument(
+        "--no-fail-fast",
+        action="store_true",
+        help="Run all tests even if some fail (useful for CI diagnostics)",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
     """
     Run consolidated pre-push test suite.
@@ -193,6 +244,9 @@ def main() -> int:
     Returns:
         0 if all tests pass, non-zero otherwise
     """
+    # Parse command-line arguments
+    args = parse_args()
+
     # Check if quiet mode should be enabled
     quiet = is_quiet_mode()
 
@@ -206,8 +260,13 @@ def main() -> int:
         "pytest",
         "-n",
         "auto",  # Parallel execution with pytest-xdist
-        "-x",  # Stop on first failure (fail-fast)
     ]
+
+    # P2-2 (2025-11-27): Configurable fail-fast behavior
+    # Default: -x (stop on first failure) for fast feedback during development
+    # --no-fail-fast: Run all tests even if some fail (useful for CI diagnostics)
+    if not args.no_fail_fast:
+        pytest_args.append("-x")  # Stop on first failure (fail-fast)
 
     if quiet:
         # Quiet mode: minimal output, but show errors/failures/warnings

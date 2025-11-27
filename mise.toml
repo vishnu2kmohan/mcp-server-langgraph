@@ -1,0 +1,48 @@
+# mise.toml - Developer toolchain management
+#
+# This file ensures all developers have the same tool versions installed,
+# matching what CI uses. This eliminates "works on my machine" issues.
+#
+# INSTALLATION:
+#   curl https://mise.run | sh   # Install mise
+#   mise install                  # Install all tools defined here
+#
+# USAGE:
+#   mise which helm              # Shows which helm binary is active
+#   mise doctor                  # Check for tool issues
+#   mise outdated                # Check for newer versions
+#
+# WHY THESE TOOLS ARE REQUIRED:
+#   - helm: Validates Helm chart syntax (deployments/helm/)
+#   - kubectl: Validates Kustomize overlays (deployments/kubernetes/)
+#   - trivy: Security scans on Kubernetes manifests
+#   - actionlint: Validates GitHub Actions workflow syntax
+#   - node: Required for Mintlify docs validation
+#
+# If you're seeing hook failures about missing tools, run:
+#   mise install
+#
+# Reference: Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan (P0-3)
+
+[tools]
+# Kubernetes tooling (required for deployment validation)
+helm = "3.14"
+kubectl = "1.29"
+
+# Security scanning (required for K8s manifest validation)
+trivy = "0.50"
+
+# CI/CD validation (required for workflow linting)
+actionlint = "1.6"
+
+# Node.js (required for Mintlify docs validation)
+node = "20"
+
+[settings]
+# Let uv manage Python virtual environments (mise handles tool versioning)
+# This enables mise to automatically detect and activate uv-managed venvs
+python.uv_venv_auto = true
+
+[env]
+# Add local bin directories to PATH for project-local tools
+_.path = ["./node_modules/.bin", "./.bin"]

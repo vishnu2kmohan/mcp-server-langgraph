@@ -191,49 +191,40 @@ class TestRunPrePushTestsMetaConditional:
         # This test documents the trade-off for review
         # No assertion needed - just documentation
 
-    def test_git_diff_command_correctness(self):
+    def test_ultimate_fallback_uses_git_show(self):
         """
-        Test that git diff command uses correct arguments.
+        Test that ultimate fallback uses git show --name-only HEAD.
 
-        CRITICAL: Must use 'git diff --name-only HEAD' (staged + unstaged)
-        NOT 'git diff --name-only --cached' (staged only)
+        CRITICAL: Must use 'git show --name-only HEAD' (shows committed files)
+        NOT 'git diff --name-only HEAD' (shows uncommitted changes)
 
-        Why:
-        - Pre-push should validate ALL uncommitted changes
-        - Both staged and unstaged changes affect test results
-        - Matches developer expectation: "validate current state"
+        Updated (P0-1 fix - 2025-11-27):
+        - Pre-push validates what will be PUSHED (committed changes)
+        - Uncommitted changes are not pushed and thus irrelevant
+        - git show HEAD shows files changed in the last commit
 
-        Example:
-        - Developer edits .github/workflows/ci.yaml (unstaged)
-        - Runs pre-push validation
-        - Expects meta tests to run
-        - If using --cached, meta tests skipped (wrong!)
+        Fallback Chain:
+        1. PRE_COMMIT_FROM_REF/TO_REF (best - exact push range)
+        2. merge-base @{u} HEAD (all unpushed commits)
+        3. merge-base origin/main HEAD (for new branches)
+        4. git show --name-only HEAD (last commit only)
         """
-        # This test documents the correct git diff command
-        # Implementation should use: git diff --name-only HEAD
-
-        expected_command = ["git", "diff", "--name-only", "HEAD"]
-
-        # After implementation, verify the command
-        # (This will fail until implemented - TDD RED phase)
         import inspect
 
         try:
             from scripts.run_pre_push_tests import should_run_meta_tests
 
             source = inspect.getsource(should_run_meta_tests)
-            assert "git diff --name-only HEAD" in source or 'git", "diff", "--name-only", "HEAD"' in source, (
-                "should_run_meta_tests() MUST use 'git diff --name-only HEAD'\n"
+            assert 'git", "show", "--name-only"' in source or "git show --name-only" in source, (
+                "should_run_meta_tests() MUST use 'git show --name-only HEAD' as ultimate fallback\n"
                 "\n"
-                "CORRECT: git diff --name-only HEAD\n"
-                "  - Shows staged + unstaged changes\n"
-                "  - Validates current working state\n"
+                "CORRECT: git show --name-only HEAD\n"
+                "  - Shows files changed in last commit\n"
+                "  - These are what will be pushed\n"
                 "\n"
-                "WRONG: git diff --name-only --cached\n"
-                "  - Shows only staged changes\n"
-                "  - Misses unstaged workflow edits\n"
-                "\n"
-                f"Expected command: {' '.join(expected_command)}\n"
+                "WRONG: git diff --name-only HEAD\n"
+                "  - Shows uncommitted changes\n"
+                "  - Not relevant for push validation\n"
             )
         except (ImportError, AttributeError):
             # Function not implemented yet (TDD RED phase)
@@ -313,45 +304,10 @@ class TestRunPrePushTestsMetaConditional:
 
                 assert result is True, "Should detect workflow file change"
 
-    def test_git_diff_head_final_fallback(self):
-        """
-        Test that should_run_meta_tests() falls back to git diff HEAD when:
-        1. PRE_COMMIT_FROM_REF/TO_REF not available
-        2. git merge-base @{u} HEAD fails (no upstream branch)
-
-        Fallback Chain (Phase 3.1 refactor):
-        1. PRE_COMMIT_FROM_REF/TO_REF ← Best (matches pre-commit)
-        2. merge-base @{u} HEAD ← Better (shows unpushed changes)
-        3. diff HEAD ← Current (works everywhere)
-
-        Why final fallback needed:
-        - Detached HEAD state (no upstream)
-        - New repository (no remote)
-        - Local-only branch
-
-        Reference: Phase 3.1 - Modern best practice with robust fallback
-        """
-        from scripts.run_pre_push_tests import should_run_meta_tests
-
-        # Mock environment WITHOUT pre-commit refs
-        with patch.dict("os.environ", {}, clear=True):
-            with patch("subprocess.run") as mock_run:
-                # First call: git merge-base @{u} HEAD (fails - no upstream)
-                # Second call: git diff --name-only HEAD (fallback)
-                mock_run.side_effect = [
-                    subprocess.CalledProcessError(128, "git merge-base"),  # merge-base fails
-                    MagicMock(stdout="tests/conftest.py\n", returncode=0),  # diff HEAD succeeds
-                ]
-
-                result = should_run_meta_tests()
-
-                # Verify fallback to diff HEAD
-                assert mock_run.call_count == 2, "Should try merge-base then fall back to diff HEAD"
-                second_call_args = mock_run.call_args_list[1][0][0]
-                assert "diff" in second_call_args, "Should call git diff"
-                assert "HEAD" in second_call_args, "Should use HEAD"
-
-                assert result is True, "Should detect workflow file change via fallback"
+    # NOTE: test_git_diff_head_final_fallback REMOVED (2025-11-27)
+    # Reason: Now covered by TestMetaTestDiffLogicFixes::test_git_show_fallback_when_all_merge_base_fail
+    # The old fallback chain (diff HEAD) was replaced with git show --name-only HEAD
+    # See P0-1 fix in scripts/run_pre_push_tests.py
 
     def test_ci_parity_with_docker_available_includes_integration(self):
         """
@@ -447,3 +403,176 @@ class TestRunPrePushTestsMetaConditional:
         with patch("subprocess.run") as mock_run:
             mock_run.side_effect = subprocess.TimeoutExpired("docker info", 5)
             assert check_docker_available() is False, "Should return False on timeout"
+
+
+@pytest.mark.xdist_group(name="test_run_pre_push_tests_diff_logic")
+class TestMetaTestDiffLogicFixes:
+    """
+    Tests for P0-1: Meta-test diff logic fixes.
+
+    Issues addressed:
+    1. When @{u} fails, should try origin/main before final fallback
+    2. pyproject.toml pattern should not match clients/python/pyproject.toml
+    3. Use git show --name-only HEAD as ultimate fallback (shows committed files)
+
+    Reference: Pre-commit/Pre-push Hook & CI Pipeline Remediation Plan (P0-1)
+    """
+
+    def teardown_method(self) -> None:
+        """Force GC to prevent mock accumulation in xdist workers"""
+        gc.collect()
+
+    def test_fallback_uses_merge_base_origin_main_when_upstream_unavailable(self):
+        """
+        When @{u} fails (no upstream tracking), should try origin/main before diff HEAD.
+
+        Fallback Chain (enhanced):
+        1. PRE_COMMIT_FROM_REF/TO_REF (pre-commit provides)
+        2. merge-base @{u} HEAD (upstream tracking branch)
+        3. merge-base origin/main HEAD (common base branch) ← NEW
+        4. git show --name-only HEAD (last commit) ← NEW fallback
+
+        Why origin/main:
+        - New feature branches have no upstream (@{u})
+        - But they're typically based on origin/main
+        - merge-base origin/main HEAD shows all changes since branch creation
+        - More accurate than git diff HEAD (staged+unstaged only)
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        # Mock environment WITHOUT pre-commit refs
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as mock_run:
+                # Call sequence:
+                # 1. merge-base @{u} HEAD (fails - no upstream)
+                # 2. merge-base origin/main HEAD (succeeds) ← NEW expected call
+                # 3. diff --name-only <merge-base> HEAD
+                mock_run.side_effect = [
+                    subprocess.CalledProcessError(128, "git merge-base @{u}"),  # @{u} fails
+                    MagicMock(stdout="abc123\n", returncode=0),  # origin/main succeeds
+                    MagicMock(stdout=".github/workflows/ci.yaml\n", returncode=0),  # diff result
+                ]
+
+                result = should_run_meta_tests()
+
+                # Verify origin/main fallback was attempted
+                assert mock_run.call_count >= 2, "Should try multiple fallback strategies"
+
+                # Find the origin/main merge-base call
+                origin_main_call = None
+                for call in mock_run.call_args_list:
+                    args = call[0][0] if call[0] else []
+                    if "merge-base" in args and "origin/main" in args:
+                        origin_main_call = call
+                        break
+
+                assert origin_main_call is not None, (
+                    "Should try 'git merge-base origin/main HEAD' when @{u} fails\n"
+                    f"Actual calls: {[c[0][0] for c in mock_run.call_args_list]}"
+                )
+                assert result is True, "Should detect workflow file change"
+
+    def test_pyproject_toml_pattern_does_not_match_client_subdirs(self):
+        """
+        pyproject.toml pattern should NOT match clients/python/pyproject.toml.
+
+        Problem:
+        - Pattern 'pyproject.toml' in changed_file uses substring matching
+        - 'clients/python/pyproject.toml' contains 'pyproject.toml'
+        - This triggers meta tests unnecessarily for client library changes
+
+        Solution:
+        - Use exact match for root pyproject.toml
+        - Pattern should be: file == 'pyproject.toml' or file.endswith('/pyproject.toml') with check
+
+        Test scenario:
+        - Only clients/python/pyproject.toml changed
+        - Should NOT trigger meta tests
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        with patch.dict("os.environ", {"PRE_COMMIT_FROM_REF": "abc", "PRE_COMMIT_TO_REF": "def"}, clear=False):
+            with patch("subprocess.run") as mock_run:
+                # Only client pyproject.toml changed - should NOT trigger meta tests
+                mock_run.return_value = MagicMock(
+                    stdout="clients/python/pyproject.toml\nclients/python/src/client.py\n",
+                    returncode=0,
+                )
+
+                result = should_run_meta_tests()
+
+                assert result is False, (
+                    "clients/python/pyproject.toml should NOT trigger meta tests\n"
+                    "Only root pyproject.toml affects test configuration\n"
+                    "Pattern matching should use exact path, not substring"
+                )
+
+    def test_root_pyproject_toml_still_triggers_meta_tests(self):
+        """
+        Root pyproject.toml changes should still trigger meta tests.
+
+        This is a regression test to ensure the fix for client subdirs
+        doesn't break the intended behavior for root pyproject.toml.
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        with patch.dict("os.environ", {"PRE_COMMIT_FROM_REF": "abc", "PRE_COMMIT_TO_REF": "def"}, clear=False):
+            with patch("subprocess.run") as mock_run:
+                # Root pyproject.toml changed - SHOULD trigger meta tests
+                mock_run.return_value = MagicMock(
+                    stdout="pyproject.toml\nsrc/core/agent.py\n",
+                    returncode=0,
+                )
+
+                result = should_run_meta_tests()
+
+                assert result is True, (
+                    "Root pyproject.toml MUST trigger meta tests\n"
+                    "It contains pytest configuration that affects test behavior"
+                )
+
+    def test_git_show_fallback_when_all_merge_base_fail(self):
+        """
+        When all merge-base strategies fail, use git show --name-only HEAD.
+
+        Why git show instead of git diff HEAD:
+        - git diff HEAD: Shows staged + unstaged changes (uncommitted)
+        - git show HEAD: Shows files changed in the last commit (committed)
+
+        For pre-push validation, we care about committed changes since
+        those are what will be pushed. Uncommitted changes are irrelevant.
+
+        Fallback Chain (final):
+        1. PRE_COMMIT_FROM_REF/TO_REF
+        2. merge-base @{u} HEAD
+        3. merge-base origin/main HEAD
+        4. git show --name-only --format= HEAD ← Ultimate fallback
+        """
+        from scripts.run_pre_push_tests import should_run_meta_tests
+
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as mock_run:
+                # All merge-base strategies fail
+                mock_run.side_effect = [
+                    subprocess.CalledProcessError(128, "git merge-base @{u}"),  # @{u} fails
+                    subprocess.CalledProcessError(128, "git merge-base origin/main"),  # origin/main fails
+                    MagicMock(stdout=".pre-commit-config.yaml\n", returncode=0),  # git show succeeds
+                ]
+
+                result = should_run_meta_tests()
+
+                # Find the git show call
+                git_show_call = None
+                for call in mock_run.call_args_list:
+                    args = call[0][0] if call[0] else []
+                    if "show" in args and "--name-only" in args:
+                        git_show_call = call
+                        break
+
+                assert git_show_call is not None, (
+                    "Should use 'git show --name-only HEAD' as ultimate fallback\n"
+                    "git show shows committed files (what will be pushed)\n"
+                    "git diff HEAD shows uncommitted files (not relevant for push)\n"
+                    f"Actual calls: {[c[0][0] for c in mock_run.call_args_list]}"
+                )
+                assert result is True, "Should detect workflow file change via git show"

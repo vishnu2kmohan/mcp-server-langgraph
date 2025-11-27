@@ -88,13 +88,20 @@ runs:
         set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
         # Run uv pip check and capture output
+        # NOTE: Hard-fail enabled after P0-5 audit (2025-11-27)
+        # Pre-audit: Warning only to avoid blocking CI
+        # Post-audit: Confirmed no conflicts exist, now blocking
         if ! CHECK_OUTPUT=$(uv pip check 2>&1); then
-          echo "::warning::Dependency conflicts detected in CI (may be false positive):"
+          echo "::error::Dependency conflicts detected in CI:"
           echo "$CHECK_OUTPUT"
           echo ""
-          echo "Note: This check passes locally but may fail in CI due to environment differences."
-          echo "If tests pass despite this warning, the conflicts are likely non-breaking."
-          # Don't fail the job - let tests determine if there are real issues
+          echo "Resolution options:"
+          echo "  1. Run: uv pip check (locally to reproduce)"
+          echo "  2. Run: uv lock --upgrade-package CONFLICTING_PKG"
+          echo "  3. Check pyproject.toml for incompatible version constraints"
+          echo ""
+          echo "Reference: P0-5 - Pre-commit/Pre-push Hook Remediation Plan"
+          exit 1
         else
           echo "✓ All dependencies are consistent (no conflicts detected)"
         fi
