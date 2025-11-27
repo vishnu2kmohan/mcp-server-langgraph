@@ -189,9 +189,9 @@ install:
 	@echo "  Note: Uses uv.lock for reproducible builds"
 
 install-dev:
-	uv sync --extra dev --extra builder
-	@echo "✓ Development dependencies installed"
-	@echo "  Note: Includes all [dependency-groups] from pyproject.toml plus dev and builder extras"
+	uv sync --frozen --extra dev --extra builder
+	@echo "✓ Development dependencies installed from lockfile"
+	@echo "  Note: Uses uv.lock with dev and builder extras for CI parity"
 
 setup-infra:
 	$(DOCKER_COMPOSE) up -d

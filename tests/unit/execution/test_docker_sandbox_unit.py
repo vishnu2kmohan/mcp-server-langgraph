@@ -24,6 +24,7 @@ except ImportError:
     ImageNotFound = Exception  # type: ignore[misc, assignment]
     NotFound = Exception  # type: ignore[misc, assignment]
 
+from mcp_server_langgraph.execution import docker_sandbox
 from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import SandboxError
@@ -87,10 +88,12 @@ class TestDockerSandboxNetworkMode:
             allowed_domains=("httpbin.org", "example.com"),
         )
 
-        # Patch logger BEFORE creating sandbox to capture all warnings
+        # Patch logger using patch.object on the imported module to ensure xdist isolation
+        # Using patch.object() is more reliable than patching the import path when multiple
+        # workers may have already loaded the module with cached references.
         with (
             patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker,
-            patch("mcp_server_langgraph.execution.docker_sandbox.logger") as mock_logger,
+            patch.object(docker_sandbox, "logger") as mock_logger,
         ):
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
