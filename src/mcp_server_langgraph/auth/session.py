@@ -509,7 +509,7 @@ class RedisSessionStore(SessionStore):
         self.decode_responses = decode_responses
 
         # Initialize Redis client
-        self.redis = redis.from_url(  # type: ignore[no-untyped-call]
+        self.redis = redis.from_url(
             redis_url,
             password=password,
             ssl=ssl,
