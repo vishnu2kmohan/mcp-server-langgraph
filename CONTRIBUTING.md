@@ -415,14 +415,14 @@ This project follows TDD principles (see global CLAUDE.md for details):
 If you need to test multiple Python versions locally:
 
 ```bash
-# Using Docker to test against Python 3.10
-docker run --rm -v $(pwd):/app -w /app python:3.10 bash -c "pip install uv && uv sync && uv run pytest tests/"
-
 # Using Docker to test against Python 3.11
 docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run pytest tests/"
 
 # Using Docker to test against Python 3.12
 docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run pytest tests/"
+
+# Using Docker to test against Python 3.13
+docker run --rm -v $(pwd):/app -w /app python:3.13 bash -c "pip install uv && uv sync && uv run pytest tests/"
 ```
 
 #### Python Version Compatibility

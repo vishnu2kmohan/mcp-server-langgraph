@@ -17,13 +17,13 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.14"
 keywords = ["mcp", "model-context-protocol", "langgraph", "llm", "agent", "anthropic", "openai", "openfga", "authorization", "observability", "opentelemetry", "langchain", "litellm", "multi-llm", "ai-agent"]
 dependencies = [
     "langgraph>=1.0.3",
@@ -61,7 +61,7 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.0",  # Async ORM for cost tracking persistence
     "alembic>=1.15.0",  # Database migrations for GDPR schema (async-ready with SQLAlchemy 2.0)
     "pyyaml>=6.0.3",
-    "apscheduler>=3.11.0",
+    "apscheduler>=3.11.0,<4.0.0",  # Pin to 3.x - APScheduler 4.x has breaking API changes
     "python-json-logger>=4.0.0",
     "tiktoken>=0.5.0",  # Token counting for response optimization
     # Anthropic Best Practices Enhancements (ADR-0025)
@@ -91,7 +91,6 @@ dev = [
     "pytest-testmon>=2.1.0",  # Selective test execution based on code changes
     "pytest-timeout>=2.2.0",  # Prevent tests from hanging indefinitely (async mock safety)
     "psutil>=6.1.0",  # Memory monitoring for auto-tuning pytest-xdist workers
-    "tomli>=2.0.1; python_version < '3.11'",  # TOML parser backport for Python <3.11 (tomllib compat)
     # Docker infrastructure management
     # NOTE: Infrastructure lifecycle managed by shell scripts (make test-integration), not Python libraries
     # pytest-docker-compose-v2 and python-on-whales removed - plugin fixtures not used, custom fixtures in conftest.py instead

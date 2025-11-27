@@ -63,7 +63,7 @@ def _create_quickstart_project(project_dir: Path, name: str) -> None:
 name = "{name}"
 version = "0.1.0"
 description = "MCP Server with LangGraph - Quick Start Project"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "mcp-server-langgraph>=2.8.0",
     "fastapi>=0.115.0",
