@@ -16,16 +16,7 @@ References:
 import sys
 from pathlib import Path
 
-# Use tomllib (Python 3.11+) with fallback to tomli for older versions
-try:
-    import tomllib as tomli  # type: ignore[import-not-found,unused-ignore]
-except ImportError:
-    try:
-        import tomli  # type: ignore[import-not-found,unused-ignore]
-    except ImportError:
-        print("❌ Error: tomli package not installed (required for reading pyproject.toml on Python < 3.11)")
-        print("   Upgrade to Python 3.11+ or install with: uv pip install tomli")
-        sys.exit(1)
+import tomllib
 
 
 def main() -> int:
@@ -38,7 +29,7 @@ def main() -> int:
         return 1
 
     with open(pyproject_path, "rb") as f:
-        config = tomli.load(f)
+        config = tomllib.load(f)
 
     # Navigate to pytest configuration
     if "tool" not in config:

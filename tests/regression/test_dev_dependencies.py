@@ -14,11 +14,7 @@ This test follows TDD principles:
 import ast
 import sys
 
-# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -401,7 +397,7 @@ def get_import_name_mapping() -> dict[str, str]:
         # Pydantic internals
         "pydantic_core": "pydantic",  # pydantic_core is included with pydantic
         # Backwards compatibility
-        "tomli": "tomllib",  # tomli for Python < 3.11, tomllib is stdlib in 3.11+
+        "tomllib": "tomllib",  # stdlib since Python 3.11
         # Note: hyphen/underscore normalization is handled in _normalize_package_name()
         # so python-on-whales → python_on_whales is automatic
     }
@@ -444,7 +440,6 @@ def test_test_imports_have_dev_dependencies():
         if _normalize_package_name(package_name) in all_deps:
             normalized_deps.add(import_name)
         # Special case: if package_name is in stdlib, allow the import_name
-        # Example: tomli (backport) allowed if tomllib (stdlib) available
         if package_name in stdlib:
             normalized_deps.add(import_name)
 
@@ -543,7 +538,6 @@ def test_dev_dependencies_are_importable():
             "sqlalchemy",  # may have [asyncio] extras, import works as 'sqlalchemy'
             "coverage",  # may have [toml] extras, import works as 'coverage'
             # Optional dev tools that may not be installed in all environments
-            "tomli",  # Python <3.11 backport of tomllib, optional in 3.11+
             "isort",  # Import sorter, optional dev tool
             "flake8",  # Linter, optional (ruff is primary)
             "ruff",  # Linter/formatter, optional dev tool

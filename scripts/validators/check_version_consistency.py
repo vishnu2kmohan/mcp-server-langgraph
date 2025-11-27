@@ -17,10 +17,7 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    import tomli as tomllib  # Backport for <3.11
+import tomllib
 
 
 def get_current_version() -> str:

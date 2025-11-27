@@ -16,13 +16,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.meta
+import tomllib
 
-# Use built-in tomllib (Python 3.11+) or fallback to tomli for Python 3.10
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+pytestmark = pytest.mark.meta
 
 
 def get_registered_markers() -> set[str]:

@@ -69,10 +69,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)
@@ -117,10 +114,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)
@@ -146,10 +140,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)

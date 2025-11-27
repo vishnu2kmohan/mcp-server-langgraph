@@ -8,21 +8,12 @@ Ensures that version is consistent across:
 - observability telemetry
 """
 
-import sys
+import tomllib
 from pathlib import Path
 
 import pytest
 
 pytestmark = pytest.mark.unit
-
-# Python 3.11+ has tomllib built-in, older versions need tomli
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        pytest.skip("tomli not available", allow_module_level=True)
 
 
 @pytest.mark.unit

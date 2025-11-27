@@ -19,12 +19,9 @@ import re
 import subprocess
 from pathlib import Path
 
-import pytest
+import tomllib
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    import tomli as tomllib  # Fallback for Python 3.10
+import pytest
 
 # Mark as unit+meta test to ensure it runs in CI (validates test infrastructure)
 pytestmark = pytest.mark.unit

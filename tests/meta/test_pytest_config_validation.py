@@ -14,12 +14,7 @@ Reference: Codex finding - pytest addopts compatibility validation
 
 import subprocess
 import sys
-
-# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import tomllib
 from pathlib import Path
 
 import pytest

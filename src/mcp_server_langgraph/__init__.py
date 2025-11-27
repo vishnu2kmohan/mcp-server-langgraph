@@ -6,28 +6,17 @@ featuring multi-LLM support, fine-grained authorization, and comprehensive obser
 """
 
 import sys
+import tomllib
 from pathlib import Path
 
 # Read version from pyproject.toml (single source of truth)
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        # Fallback if tomli not available (shouldn't happen with uv)
-        tomllib = None
-
-if tomllib:
-    try:
-        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-        with open(pyproject_path, "rb") as f:
-            pyproject_data = tomllib.load(f)
-        __version__ = pyproject_data["project"]["version"]
-    except Exception:
-        # Fallback if reading fails
-        __version__ = "2.8.0"
-else:
+try:
+    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        pyproject_data = tomllib.load(f)
+    __version__ = pyproject_data["project"]["version"]
+except Exception:
+    # Fallback if reading fails
     __version__ = "2.8.0"
 
 # Core exports (lightweight - eagerly imported)

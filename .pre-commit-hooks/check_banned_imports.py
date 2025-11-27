@@ -25,13 +25,12 @@ from pathlib import Path
 # Banned import patterns with replacement suggestions
 BANNED_IMPORTS = {
     "toml": {
-        "reason": "Deprecated in Python 3.11+ (use built-in tomllib or tomli backport)",
-        "fix": (
-            "try:\n"
-            "    import tomllib  # Python 3.11+\n"
-            "except ImportError:\n"
-            "    import tomli as tomllib  # Backport for <3.11"
-        ),
+        "reason": "Deprecated (use built-in tomllib for Python 3.11+)",
+        "fix": "import tomllib",
+    },
+    "tomli": {
+        "reason": "Not needed (Python 3.11+ has tomllib in stdlib, project minimum is 3.11)",
+        "fix": "import tomllib",
     },
     "imp": {
         "reason": "Removed in Python 3.12+ (use importlib instead)",
