@@ -4,7 +4,7 @@ author: 'MCP Server LangGraph Team'
 
 inputs:
   python-version:
-    description: 'Python version to set up (e.g., 3.12 or ["3.10", "3.11", "3.12"])'
+    description: 'Python version to set up (e.g., 3.12 or ["3.11", "3.12", "3.13"])'
     required: false
     default: '3.12'
 

@@ -34,7 +34,7 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 
 ### Prerequisites
 
-- Python 3.10+ (3.11+ recommended)
+- Python 3.11+ (3.12 recommended)
 - Docker and Docker Compose
 - Git
 - kubectl (optional, for Kubernetes development)

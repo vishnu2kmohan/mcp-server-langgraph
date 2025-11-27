@@ -110,7 +110,7 @@ uv add "langgraph@^0.7.0"
 - [ ] Verify UI still works (if frontend deps updated)
 
 ### Compatibility Tests
-- [ ] Test with different Python versions (3.10, 3.11, 3.12)
+- [ ] Test with different Python versions (3.11, 3.12, 3.13)
 - [ ] Test on different platforms (Linux, macOS, Windows - if applicable)
 - [ ] Test in Docker container
 - [ ] Test deployment to staging

@@ -6,7 +6,7 @@ name: CI/CD Pipeline (Optimized)
 #
 # WORKFLOW DEPENDENCY GRAPH:
 #
-#   test (3.10, 3.11, 3.12) ──> docker-build (base, full, test)
+#   test (3.11, 3.12, 3.13) ──> docker-build (base, full, test)
 #
 # Jobs:
 #   - test: Unit tests across Python versions with parallel execution
