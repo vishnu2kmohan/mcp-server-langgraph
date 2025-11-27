@@ -59,7 +59,7 @@ class TestMiseToolchain:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def repo_root(self) -> Path:
         """Get repository root directory."""
         result = subprocess.run(
@@ -71,12 +71,12 @@ class TestMiseToolchain:
         )
         return Path(result.stdout.strip())
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def mise_toml_path(self, repo_root: Path) -> Path:
         """Get path to mise.toml."""
         return repo_root / "mise.toml"
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def mise_config(self, mise_toml_path: Path) -> dict:
         """Parse mise.toml configuration."""
         if not mise_toml_path.exists():
@@ -158,7 +158,7 @@ class TestHookToolBehavior:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def repo_root(self) -> Path:
         """Get repository root directory."""
         result = subprocess.run(
@@ -170,12 +170,12 @@ class TestHookToolBehavior:
         )
         return Path(result.stdout.strip())
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def precommit_config_path(self, repo_root: Path) -> Path:
         """Get path to .pre-commit-config.yaml."""
         return repo_root / ".pre-commit-config.yaml"
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def precommit_config_content(self, precommit_config_path: Path) -> str:
         """Read .pre-commit-config.yaml content."""
         return precommit_config_path.read_text()
@@ -288,7 +288,7 @@ class TestMakefileSudoSafety:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def repo_root(self) -> Path:
         """Get repository root directory."""
         result = subprocess.run(
@@ -300,7 +300,7 @@ class TestMakefileSudoSafety:
         )
         return Path(result.stdout.strip())
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture
     def makefile_content(self, repo_root: Path) -> str:
         """Read Makefile content."""
         return (repo_root / "Makefile").read_text()
