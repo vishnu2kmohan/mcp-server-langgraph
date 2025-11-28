@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Python 3.11/3.13 CI Failures (PR #121)** - Fixed version-specific dependency issues:
+  - **Click 8.3.x** (`pyproject.toml:144`) - Pinned to `<8.3.0` due to internal `_textwrap` module missing on Python 3.11/3.13
+  - **Hypothesis 6.148.x** (`pyproject.toml:104,738`) - Pinned to `<6.148.0` due to `internal.conjecture.optimiser` module removal
+  - Root cause: Bleeding-edge releases (Click 8.3.1 on Nov 15, Hypothesis 6.148.3 on Nov 27) with breaking internal changes
+  - Impact: 34 tests failed on Python 3.11/3.13 while passing on Python 3.12
+
 - **Integration Test Infrastructure** (`scripts/test-integration.sh:242-244`) - Fixed Python environment configuration:
   - Resolved bad interpreter error (`/usr/bin/python3.5: No such file or directory`)
   - Updated to use `uv run pytest` for correct Python 3.12 environment
@@ -28,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Gated scheduled jobs (`gcp-drift-detection.yaml`, `cost-tracking.yaml`) behind secret checks to prevent fork failures
 
 ### Added
+- **Multi-Python Version Smoke Testing** - Prevention for version-specific CI failures:
+  - **Script** (`scripts/test_python_versions.sh`) - Runs smoke tests on Python 3.11, 3.12, 3.13
+  - **Pre-push Hook** (`.pre-commit-config.yaml:207-231`) - Automatic execution during git push
+  - **Documentation** (`.claude/memory/python-environment-usage.md:431-505`) - Multi-Python testing guidance
+  - Features: Auto-detect available Python versions, graceful skip if version missing, --quick and --ci modes
+  - Motivation: Local venv used Python 3.12 only, missed Python 3.11/3.13 issues caught by CI
+
 - **Codex Findings Validation Test Suite** - TDD-compliant validation tests preventing regression:
   - `tests/meta/test_mypy_enforcement.py` (7 tests) - Validates mypy hook configuration and enforcement
   - `tests/meta/test_subprocess_safety.py` (5 tests) - Enforces timeout parameters on subprocess calls (detects 119 violations for gradual fixing)

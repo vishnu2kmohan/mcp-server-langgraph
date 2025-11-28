@@ -204,6 +204,31 @@ repos:
       Full CI-equivalent validation: make validate-pre-push or CI_PARITY=1 git push
 
       '
+  - id: python-version-smoke-test
+    name: Multi-Python Version Smoke Test (quick)
+    entry: scripts/test_python_versions.sh --quick
+    language: script
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-push
+    description: 'Run smoke tests on all available Python versions (3.11, 3.12, 3.13).
+
+      Added 2025-11-28 in response to PR #121 CI failures where Python 3.11/3.13
+      failed but 3.12 passed due to bleeding-edge dependency issues.
+
+      This hook catches version-specific dependency problems before they reach CI:
+      - Tests Click CLI functionality (catches _textwrap issues)
+      - Tests Hypothesis property tests (catches internal module changes)
+
+      Runs in --quick mode for speed (~30s per available version).
+      Skips gracefully if a Python version is not installed locally.
+
+      To run manually: ./scripts/test_python_versions.sh
+      To run full suite: ./scripts/test_python_versions.sh (without --quick)
+      For CI mode (fail on missing versions): ./scripts/test_python_versions.sh --ci
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
     entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'

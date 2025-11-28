@@ -428,6 +428,84 @@ uv run --frozen pytest --version
 
 ---
 
+## Multi-Python Version Testing
+
+### Why Multi-Python Testing Matters
+
+**Context**: PR #121 (2025-11-28) revealed that CI tests can fail on Python 3.11/3.13 while passing on Python 3.12 due to version-specific dependency issues. This section documents how to catch these issues locally before they reach CI.
+
+**Root Cause Pattern**:
+- Bleeding-edge dependencies (released within last 7 days)
+- Internal module restructuring in dependencies
+- Python version-specific behavior in universal wheels
+
+### Multi-Python Smoke Test Script
+
+A pre-push hook runs `scripts/test_python_versions.sh` automatically:
+
+```bash
+# Runs automatically on git push
+git push
+
+# Manual execution (full suite)
+./scripts/test_python_versions.sh
+
+# Quick mode (faster, fewer tests)
+./scripts/test_python_versions.sh --quick
+
+# CI mode (fail if Python version missing)
+./scripts/test_python_versions.sh --ci
+```
+
+### Installing Multiple Python Versions
+
+To maximize local CI parity, install Python 3.11, 3.12, and 3.13:
+
+**Using pyenv (Recommended)**:
+```bash
+# Install pyenv
+curl https://pyenv.run | bash
+
+# Add to shell profile (~/.bashrc or ~/.zshrc)
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Install Python versions
+pyenv install 3.11.8
+pyenv install 3.12.12
+pyenv install 3.13.7
+
+# Make all versions available
+pyenv global 3.12.12 3.11.8 3.13.7
+```
+
+**On Gentoo Linux**:
+```bash
+# Python 3.11
+emerge -av dev-lang/python:3.11
+
+# Python 3.12 (usually default)
+emerge -av dev-lang/python:3.12
+
+# Python 3.13
+emerge -av dev-lang/python:3.13
+```
+
+### Version-Specific Dependency Issues (Known Patterns)
+
+**Click 8.3.x** (Discovered 2025-11-28):
+- Internal `_textwrap` module missing on Python 3.11/3.13
+- Pinned to `<8.3.0` until upstream fix
+
+**Hypothesis 6.148.x** (Discovered 2025-11-28):
+- `internal.conjecture.optimiser` module removed
+- Pinned to `<6.148.0` until upstream fix
+
+When encountering similar issues, update `pyproject.toml` with version upper bounds.
+
+---
+
 ## Summary Checklist
 
 Before running any Python command, verify:
@@ -453,9 +531,9 @@ Before running any Python command, verify:
 
 ---
 
-**Last Updated**: 2025-10-21
+**Last Updated**: 2025-11-28
 **Virtual Environment Python Version**: 3.12.12
 **Package Manager**: uv (latest)
-**pyproject.toml Python Requirement**: >=3.10, below 3.13
+**pyproject.toml Python Requirement**: >=3.11, <3.14
 
 _This is active configuration. All Python commands must follow these guidelines._
