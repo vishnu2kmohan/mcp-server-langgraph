@@ -478,12 +478,12 @@ jobs:
     - name: Install Helm
       uses: azure/setup-helm@v4
       with:
-        version: '3.14.0'
+        version: 'v3.14.0'
 
     - name: Install kubectl
       uses: azure/setup-kubectl@v4
       with:
-        version: '1.29.0'
+        version: 'v1.29.0'
 
     - name: Install actionlint
       run: |
