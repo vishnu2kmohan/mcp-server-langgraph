@@ -49,12 +49,16 @@ runs:
         uv venv --python ${{ inputs.python-version }}
 
         # Build extras flags if provided
+        EXTRAS_INPUT="${{ inputs.extras }}"
         EXTRA_FLAGS=""
-        if [ -n "${{ inputs.extras }}" ]; then
-          for extra in ${{ inputs.extras }}; do
+        if [ -n "$EXTRAS_INPUT" ]; then
+          # Use read to properly handle space-separated extras
+          for extra in $EXTRAS_INPUT; do
             EXTRA_FLAGS="$EXTRA_FLAGS --extra $extra"
           done
-          echo "Installing with extras: ${{ inputs.extras }}"
+          echo "Installing with extras: $EXTRAS_INPUT"
+          echo "Extra flags: $EXTRA_FLAGS"
+          # shellcheck disable=SC2086 - Word splitting is intentional for EXTRA_FLAGS
           uv sync --frozen --python ${{ inputs.python-version }} $EXTRA_FLAGS
         else
           uv sync --frozen --python ${{ inputs.python-version }}
