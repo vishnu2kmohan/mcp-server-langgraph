@@ -98,7 +98,7 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          extras: 'dev builder'
+          extras: 'dev'
           cache-key-prefix: 'property-tests'
 
       - name: Run property-based tests
@@ -142,7 +142,7 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          extras: 'dev builder'
+          extras: 'dev'
           cache-key-prefix: 'contract-tests'
 
       - name: Generate OpenAPI schema
@@ -195,7 +195,7 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          extras: 'dev builder'
+          extras: 'dev'
           cache-key-prefix: 'regression-tests'
 
       - name: Run regression tests
@@ -249,7 +249,7 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          extras: 'dev builder'
+          extras: 'dev'
           cache-key-prefix: 'mutation-tests'
 
       - name: Run mutation tests
@@ -286,7 +286,7 @@ jobs:
         uses: ./.github/actions/setup-python-deps
         with:
           python-version: '3.12'
-          extras: 'dev builder'
+          extras: 'dev'
           cache-key-prefix: 'benchmark-tests'
 
       - name: Run benchmarks

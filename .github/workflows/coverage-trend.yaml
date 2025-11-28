@@ -65,7 +65,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'dev builder'
+        extras: 'dev'
         cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data

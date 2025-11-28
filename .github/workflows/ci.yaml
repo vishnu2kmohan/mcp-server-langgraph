@@ -232,7 +232,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: ${{ matrix.python-version }}
-        extras: 'dev builder'
+        extras: 'dev'
         cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
@@ -332,7 +332,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'coverage-tools'
+        extras: 'dev'
         cache-key-prefix: 'coverage-merge'
 
     - name: Download unit test coverage
@@ -466,7 +466,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'dev builder'
+        extras: 'dev'
         cache-key-prefix: 'push-validators'
 
     # Tool versions match mise.toml for local dev parity

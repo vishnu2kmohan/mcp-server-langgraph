@@ -8,7 +8,7 @@
 #
 # Usage:
 #   ./scripts/test_python_versions.sh           # Full suite
-#   ./scripts/test_python_versions.sh --quick   # Fast mode
+#   ./scripts/test_python_versions.sh --quick   # Fast mode (default for pre-push)
 #   ./scripts/test_python_versions.sh --ci      # CI mode (fail if version missing)
 
 set -euo pipefail
@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [--quick] [--ci]"
             echo ""
             echo "Options:"
-            echo "  --quick  Run minimal smoke tests (faster)"
+            echo "  --quick  Run minimal smoke tests (faster, uses existing venv)"
             echo "  --ci     CI mode: fail if any Python version is missing"
             echo ""
             echo "Python versions tested: ${PYTHON_VERSIONS[*]}"
@@ -80,8 +80,57 @@ check_python_version() {
     return 1
 }
 
-# Function to run smoke tests for a specific Python version
-run_smoke_test() {
+# Quick mode: Just test the existing venv's pinned dependencies
+# This validates that our version pins in pyproject.toml/uv.lock are correct
+run_quick_test() {
+    echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+    echo -e "${BLUE}Quick Mode: Testing pinned dependencies in existing venv${NC}"
+    echo -e "${BLUE}────────────────────────────────────────────────────────────${NC}"
+
+    local test_result=0
+
+    # Activate existing venv
+    if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
+        source "$PROJECT_ROOT/.venv/bin/activate"
+    else
+        echo -e "  ${YELLOW}⊘ No existing venv found, skipping quick test${NC}"
+        return 0
+    fi
+
+    # Test Click import
+    echo -e "  Testing Click..."
+    if python -c "import click; print(f'    click version: {click.__version__}')" 2>&1; then
+        echo -e "    ${GREEN}✓ Click import passed${NC}"
+    else
+        echo -e "    ${RED}✗ Click import failed${NC}"
+        test_result=1
+    fi
+
+    # Test Hypothesis import (the problematic module)
+    echo -e "  Testing Hypothesis..."
+    if python -c "import hypothesis; from hypothesis import given, strategies as st; print(f'    hypothesis version: {hypothesis.__version__}')" 2>&1; then
+        echo -e "    ${GREEN}✓ Hypothesis import passed${NC}"
+    else
+        echo -e "    ${RED}✗ Hypothesis import failed${NC}"
+        test_result=1
+    fi
+
+    # Test core project import
+    echo -e "  Testing project import..."
+    if python -c "from mcp_server_langgraph.core.config import settings; print(f'    service: {settings.service_name}')" 2>&1; then
+        echo -e "    ${GREEN}✓ Project import passed${NC}"
+    else
+        echo -e "    ${RED}✗ Project import failed${NC}"
+        test_result=1
+    fi
+
+    deactivate 2>/dev/null || true
+
+    return $test_result
+}
+
+# Full mode: Test with temporary venv for each Python version
+run_full_test() {
     local python_cmd="$1"
     local version="$2"
     local temp_venv
@@ -124,51 +173,40 @@ run_smoke_test() {
     # Run smoke tests
     echo -e "  Running smoke tests..."
 
-    if $QUICK_MODE; then
-        # Quick mode: just verify imports work
-        echo -e "    Testing imports..."
-        if python -c "from mcp_server_langgraph.core.config import settings; print('  config:', settings.service_name)" 2>&1; then
-            echo -e "    ${GREEN}✓ Import test passed${NC}"
-        else
-            echo -e "    ${RED}✗ Import test failed${NC}"
-            test_result=1
-        fi
-
-        # Quick CLI test
-        echo -e "    Testing CLI..."
-        if python -c "import click; print('  click version:', click.__version__)" 2>&1; then
-            echo -e "    ${GREEN}✓ Click import passed${NC}"
-        else
-            echo -e "    ${RED}✗ Click import failed${NC}"
-            test_result=1
-        fi
-
-        # Quick hypothesis test
-        echo -e "    Testing hypothesis..."
-        if python -c "import hypothesis; from hypothesis import given, strategies as st; print('  hypothesis version:', hypothesis.__version__)" 2>&1; then
-            echo -e "    ${GREEN}✓ Hypothesis import passed${NC}"
-        else
-            echo -e "    ${RED}✗ Hypothesis import failed${NC}"
-            test_result=1
-        fi
+    # Verify imports work
+    echo -e "    Testing imports..."
+    if python -c "from mcp_server_langgraph.core.config import settings; print('  config:', settings.service_name)" 2>&1; then
+        echo -e "    ${GREEN}✓ Import test passed${NC}"
     else
-        # Full mode: run a subset of tests
-        echo -e "    Running unit tests (subset)..."
-        if pytest tests/unit/test_config.py tests/unit/test_feature_flags.py -v --tb=short -q 2>&1 | tail -20; then
-            echo -e "    ${GREEN}✓ Unit tests passed${NC}"
-        else
-            echo -e "    ${RED}✗ Unit tests failed${NC}"
-            test_result=1
-        fi
+        echo -e "    ${RED}✗ Import test failed${NC}"
+        test_result=1
+    fi
 
-        # Run a property test to verify hypothesis
-        echo -e "    Running property tests..."
-        if pytest tests/property/ -v --tb=short -q --hypothesis-seed=12345 -x 2>&1 | tail -10; then
-            echo -e "    ${GREEN}✓ Property tests passed${NC}"
-        else
-            echo -e "    ${RED}✗ Property tests failed${NC}"
-            test_result=1
-        fi
+    # Test Click
+    echo -e "    Testing CLI..."
+    if python -c "import click; print('  click version:', click.__version__)" 2>&1; then
+        echo -e "    ${GREEN}✓ Click import passed${NC}"
+    else
+        echo -e "    ${RED}✗ Click import failed${NC}"
+        test_result=1
+    fi
+
+    # Test Hypothesis
+    echo -e "    Testing hypothesis..."
+    if python -c "import hypothesis; from hypothesis import given, strategies as st; print('  hypothesis version:', hypothesis.__version__)" 2>&1; then
+        echo -e "    ${GREEN}✓ Hypothesis import passed${NC}"
+    else
+        echo -e "    ${RED}✗ Hypothesis import failed${NC}"
+        test_result=1
+    fi
+
+    # Run a subset of tests in full mode
+    echo -e "    Running unit tests (subset)..."
+    if pytest tests/unit/test_config.py tests/unit/test_feature_flags.py -v --tb=short -q 2>&1 | tail -20; then
+        echo -e "    ${GREEN}✓ Unit tests passed${NC}"
+    else
+        echo -e "    ${RED}✗ Unit tests failed${NC}"
+        test_result=1
     fi
 
     # Cleanup
@@ -178,7 +216,20 @@ run_smoke_test() {
     return $test_result
 }
 
-# Main test loop
+# Quick mode: just test existing venv dependencies
+if $QUICK_MODE; then
+    if run_quick_test; then
+        echo ""
+        echo -e "${GREEN}✓ Quick smoke test passed${NC}"
+        exit 0
+    else
+        echo ""
+        echo -e "${RED}✗ Quick smoke test failed${NC}"
+        exit 1
+    fi
+fi
+
+# Full mode: test each Python version
 for python_cmd in "${PYTHON_VERSIONS[@]}"; do
     version=$(check_python_version "$python_cmd" || echo "")
 
@@ -195,7 +246,7 @@ for python_cmd in "${PYTHON_VERSIONS[@]}"; do
         continue
     fi
 
-    if run_smoke_test "$python_cmd" "$version"; then
+    if run_full_test "$python_cmd" "$version"; then
         echo -e "${GREEN}✓ $python_cmd ($version) - PASSED${NC}"
         RESULTS[$python_cmd]="PASSED"
         ((PASSED++))

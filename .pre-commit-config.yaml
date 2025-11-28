@@ -1436,7 +1436,7 @@ repos:
       \ 'dev' in extras parameter\n\nChecks:\n- Workflows using setup-python-deps + pytest must install 'dev' extras\n- Skips\
       \ workflows using uv run (auto-installs) or other methods\n- Only validates workflows that explicitly use setup-python-deps\
       \ action\n\nQuick fix: Add or update 'extras' parameter in setup-python-deps step:\n  - uses: ./.github/actions/setup-python-deps\n\
-      \    with:\n      extras: 'dev'  # or 'dev builder' for multiple\n\nRegression prevention for commit 7b51437 (2025-11-12)\n\
+      \    with:\n      extras: 'dev'\n\nRegression prevention for commit 7b51437 (2025-11-12)\n\
       See: scripts/validators/validate_workflow_test_deps.py for implementation\n"
   # NOTE: validate-fixture-scopes hook REMOVED (2025-11-25)
   # Reason: Consolidated into run-pre-push-tests hook via meta marker

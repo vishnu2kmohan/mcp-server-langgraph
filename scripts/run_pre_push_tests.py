@@ -237,6 +237,44 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def sync_dev_dependencies(quiet: bool = False) -> bool:
+    """
+    Sync dev dependencies to ensure CI parity.
+
+    Pre-push hook uses `uv run --frozen` which relies on existing venv state.
+    CI explicitly installs dev extras via `uv sync --frozen --extra dev`.
+    This function ensures local pre-push has the same dependencies as CI.
+
+    Added 2025-11-28 to fix CI parity gap where tests could fail locally
+    due to missing dev dependencies (e.g., yamllint) that CI always has.
+
+    Args:
+        quiet: If True, suppress output messages.
+
+    Returns:
+        True if sync succeeded, False otherwise.
+    """
+    if not quiet:
+        print("▶ Syncing dev dependencies for CI parity...")
+
+    result = subprocess.run(
+        ["uv", "sync", "--frozen", "--extra", "dev"],
+        capture_output=quiet,
+        timeout=120,  # 2 minute timeout for sync
+    )
+
+    if result.returncode != 0:
+        print("✗ Failed to sync dev dependencies")
+        if quiet and result.stderr:
+            print(result.stderr.decode())
+        return False
+
+    if not quiet:
+        print("✓ Dev dependencies synced")
+
+    return True
+
+
 def main() -> int:
     """
     Run consolidated pre-push test suite.
@@ -249,6 +287,13 @@ def main() -> int:
 
     # Check if quiet mode should be enabled
     quiet = is_quiet_mode()
+
+    # Sync dev dependencies for CI parity (added 2025-11-28)
+    # This ensures pre-push tests have the same dependencies as CI.
+    # Without this, tests could fail due to missing dev dependencies
+    # (e.g., yamllint) that CI always has via `uv sync --extra dev`.
+    if not sync_dev_dependencies(quiet):
+        return 1
 
     # Build pytest arguments
     # NOTE: --testmon removed due to pytest-xdist incompatibility (Codex Audit 2025-11-24)

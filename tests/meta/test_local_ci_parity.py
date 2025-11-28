@@ -1689,22 +1689,24 @@ class TestMakefileDependencyExtras:
             "Fix: Update Makefile:182 to include both extras"
         )
 
-    def test_ci_uses_dev_and_builder_extras(self, ci_workflow_content: str):
-        """Verify that CI uses both dev and builder extras (baseline check)."""
-        # CI should have both extras - check both formats:
-        # 1. Command-line format: --extra dev --extra builder
-        # 2. Action input format: extras: 'dev builder'
-        has_cli_format = "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content
-        has_action_format = (
-            "extras:" in ci_workflow_content and "dev" in ci_workflow_content and "builder" in ci_workflow_content
-        )
+    def test_ci_uses_dev_extra(self, ci_workflow_content: str):
+        """Verify that CI uses dev extra (baseline check).
+
+        Updated 2025-11-28: CI workflow now only uses 'dev' extra.
+        The 'builder' extra was removed as builder dependencies are included in dev.
+        """
+        # CI should have dev extra - check both formats:
+        # 1. Command-line format: --extra dev
+        # 2. Action input format: extras: 'dev'
+        has_cli_format = "--extra dev" in ci_workflow_content
+        has_action_format = "extras:" in ci_workflow_content and "dev" in ci_workflow_content
         assert has_cli_format or has_action_format, (
-            "CI workflow must use both dev and builder extras\n"
+            "CI workflow must use dev extra\n"
             "Accepted formats:\n"
-            "  - Command-line: --extra dev --extra builder\n"
-            "  - Action input: extras: 'dev builder'\n"
+            "  - Command-line: --extra dev\n"
+            "  - Action input: extras: 'dev'\n"
             "This is the baseline that local install-dev should match\n"
-            "If CI doesn't use these extras, update this test"
+            "If CI doesn't use this extra, update this test"
         )
 
 

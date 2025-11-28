@@ -27,7 +27,7 @@ jobs:
           python-version: '3.12'
           # Note: Using explicit extras list instead of --all-extras
           # Composite action doesn't support --all-extras flag
-          extras: 'dev builder monitoring coverage-tools release-tools'
+          extras: 'dev monitoring release-tools'
           cache-key-prefix: 'weekly-reports'
 
       - name: Create reports directory

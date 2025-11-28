@@ -154,13 +154,12 @@ playground = [
     "jinja2>=3.1.0",  # Template rendering
 ]
 
-builder = [
-    # Visual workflow builder dependencies
-    "fastapi>=0.122.0",  # Already in core deps (updated 2025-11-28)
-    "jinja2>=3.1.0",  # Code generation templates
-    "ruff>=0.14.6",  # Code formatting for generated code (replaces black)
-    "ast-comments>=1.2.0",  # AST manipulation for code import
-]
+# NOTE: `builder` extra REMOVED (2025-11-28) - Dead code analysis:
+# - fastapi: Already in core deps (redundant)
+# - jinja2: Already in cli extra (redundant)
+# - ruff: Already in dev extra (redundant)
+# - ast-comments: Not imported anywhere in src/ (unused)
+# Workflows updated to use `dev` instead.
 
 code-execution = [
     # Code execution sandbox dependencies
@@ -174,10 +173,9 @@ code-execution = [
 # CI/CD AND WORKFLOW TOOLS
 # ==============================================================================
 
-coverage-tools = [
-    # Test coverage measurement and reporting
-    "coverage[toml]>=7.0.0",  # Coverage.py with TOML support
-]
+# NOTE: `coverage-tools` extra REMOVED (2025-11-28) - Redundant:
+# - coverage[toml]>=7.0.0 is already in `dev` extra
+# Workflows updated to use `dev` instead.
 
 monitoring = [
     # Workflow monitoring and metrics collection

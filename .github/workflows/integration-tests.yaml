@@ -153,7 +153,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'coverage-tools'
+        extras: 'dev'
         cache-key-prefix: 'coverage-merge'
 
     - name: Download all coverage artifacts
