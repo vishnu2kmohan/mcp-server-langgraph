@@ -1,5 +1,5 @@
 name: 'Setup Python and Dependencies'
-description: 'Set up Python environment with caching and install project dependencies'
+description: 'Set up Python environment with reproducible dependency installation via uv lockfile'
 author: 'MCP Server LangGraph Team'
 
 inputs:
@@ -14,7 +14,7 @@ inputs:
     default: ''
 
   cache-key-prefix:
-    description: 'Prefix for cache key (e.g., "lint", "test")'
+    description: 'Legacy parameter (ignored). Caching is now managed by astral-sh/setup-uv via uv.lock.'
     required: false
     default: 'deps'
 
@@ -26,21 +26,16 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
+    # Modern best practice (2025): Use astral-sh/setup-uv's built-in caching
+    # The cache is keyed by uv.lock, ensuring reproducibility while maintaining speed
+    # See: https://docs.astral.sh/uv/guides/integration/github/
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
-        version: "latest"
-
-    - name: Cache uv dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/uv
-        # Cache version v2: Bust stale caches causing dependency conflicts (2025-11-17)
-        # Increment version number to force fresh cache if conflicts persist
-        key: ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-v2-${{ inputs.cache-key-prefix }}-
-          ${{ runner.os }}-uv-v2-
+        version: "0.7.12"  # Pin version for reproducibility (best practice per uv docs)
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+        cache-suffix: ${{ inputs.python-version }}  # Separate cache per Python version
 
     - name: Install base dependencies
       run: |
@@ -59,6 +54,7 @@ runs:
           echo "Installing with extras: $EXTRAS_INPUT"
           echo "Extra flags: $EXTRA_FLAGS"
           # shellcheck disable=SC2086 - Word splitting is intentional for EXTRA_FLAGS
+          # --frozen ensures lockfile is used exactly as-is (reproducible builds)
           uv sync --frozen --python ${{ inputs.python-version }} $EXTRA_FLAGS
         else
           uv sync --frozen --python ${{ inputs.python-version }}
