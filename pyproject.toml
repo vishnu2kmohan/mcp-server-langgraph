@@ -323,7 +323,23 @@ ignore = [
     "B904",  # Exception chaining
     "UP028", # yield-in-for-loop
     "UP035", # deprecated-import
-    "UP038", # isinstance with tuple - REMOVED rule, no longer exists
+    # RUF rules temporarily ignored during migration (341 violations):
+    # These are style/preference issues, not bugs. Can fix incrementally.
+    "RUF001", # ambiguous-unicode-character-string (ℹ️ emoji)
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
+    "RUF005", # collection-literal-concatenation
+    "RUF010", # explicit-f-string-type-conversion
+    "RUF012", # mutable-class-default (ClassVar annotation)
+    "RUF013", # implicit-optional
+    "RUF015", # unnecessary-iterable-allocation-for-first-element
+    "RUF019", # unnecessary-key-check
+    "RUF021", # parenthesize-chained-operators
+    "RUF022", # unsorted-dunder-all
+    "RUF034", # useless-if-else (archived scripts)
+    "RUF043", # ambiguous-unicode-name
+    "RUF059", # unused-unpacked-variable
+    "RUF100", # unused-noqa (will clean up noqa directives separately)
     # Temporarily disabled during Ruff migration (can re-enable incrementally):
     # N-series (naming): 404 violations - will fix in separate PR
     # C4 (comprehensions): Low priority - readability improvements
