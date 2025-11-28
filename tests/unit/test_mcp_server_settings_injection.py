@@ -52,14 +52,16 @@ class TestMCPServerSettingsInjection:
         # WHEN: Creating server without settings parameter
         server = MCPAgentServer()
 
-        # THEN: Server should use global settings
-        from mcp_server_langgraph.core import config
+        # THEN: Server should use the module-level settings from server_stdio
+        import mcp_server_langgraph.mcp.server_stdio as server_module
 
-        # NOTE: Use equality check (==) instead of identity (is) for xdist compatibility.
-        # In pytest-xdist parallel mode, module imports may result in different
-        # Settings instances across workers. What matters functionally is that
-        # the settings values are equivalent, not that they're the same object.
-        assert server.settings == config.settings
+        # Identity check: verify server uses the same settings object imported in server_stdio.
+        # This is more reliable than equality check (==) with pytest-xdist because:
+        # 1. server_stdio.py line 160 uses `this_module.settings` as default
+        # 2. Different workers may import config.settings at different times relative to
+        #    conftest.py fixture that sets GOOGLE_API_KEY, OPENFGA_* env vars
+        # 3. Identity check against server_module.settings verifies the exact import chain
+        assert server.settings is server_module.settings
 
     @pytest.mark.asyncio
     async def test_code_execution_tools_appear_when_enabled(self):

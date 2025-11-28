@@ -31,7 +31,7 @@ from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
-from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.security import sanitize_for_logging
 from mcp_server_langgraph.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -285,14 +285,45 @@ class SearchConversationsInput(BaseModel):
 class MCPAgentStreamableServer:
     """MCP Server with StreamableHTTP transport"""
 
-    def __init__(self, openfga_client: OpenFGAClient | None = None) -> None:
+    def __init__(
+        self,
+        openfga_client: OpenFGAClient | None = None,
+        settings: Settings | None = None,
+    ) -> None:
+        """
+        Initialize MCP Agent Streamable Server with optional dependency injection.
+
+        Args:
+            openfga_client: Optional OpenFGA client for authorization.
+                           If None, creates one from settings.
+            settings: Optional Settings instance for runtime configuration.
+                     If provided, enables dynamic feature toggling (e.g., code execution).
+                     If None, uses global settings. This allows tests to inject custom
+                     configuration without module reloading.
+
+        Example:
+            # Default creation (production):
+            server = MCPAgentStreamableServer()
+
+            # Custom settings injection (testing):
+            test_settings = Settings(enable_code_execution=True)
+            server = MCPAgentStreamableServer(settings=test_settings)
+        """
+        # Store settings for runtime configuration
+        # NOTE: When settings=None, we must reference the module-level 'settings'
+        # imported at the top of this file. This allows tests to mock settings via
+        # @patch("mcp_server_langgraph.mcp.server_streamable.settings", ...)
+        import mcp_server_langgraph.mcp.server_streamable as this_module
+
+        self.settings = settings if settings is not None else this_module.settings  # type: ignore[attr-defined]
+
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
 
         # Validate JWT secret is configured (fail-closed security pattern)
-        if not settings.jwt_secret_key:
+        if not self.settings.jwt_secret_key:
             raise ValueError(
                 "CRITICAL: JWT secret key not configured. "
                 "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
@@ -300,7 +331,7 @@ class MCPAgentStreamableServer:
             )
 
         # SECURITY: Fail-closed pattern - require OpenFGA in production
-        if settings.environment == "production" and self.openfga is None:
+        if self.settings.environment == "production" and self.openfga is None:
             raise ValueError(
                 "CRITICAL: OpenFGA authorization is required in production mode. "
                 "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
@@ -309,19 +340,21 @@ class MCPAgentStreamableServer:
             )
 
         # Initialize auth using factory (respects settings.auth_provider)
-        self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
+        self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
         self._setup_handlers()
 
     def _create_openfga_client(self) -> OpenFGAClient | None:
         """Create OpenFGA client from settings"""
-        if settings.openfga_store_id and settings.openfga_model_id:
+        if self.settings.openfga_store_id and self.settings.openfga_model_id:
             logger.info(
                 "Initializing OpenFGA client",
-                extra={"store_id": settings.openfga_store_id, "model_id": settings.openfga_model_id},
+                extra={"store_id": self.settings.openfga_store_id, "model_id": self.settings.openfga_model_id},
             )
             return OpenFGAClient(
-                api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
+                api_url=self.settings.openfga_api_url,
+                store_id=self.settings.openfga_store_id,
+                model_id=self.settings.openfga_model_id,
             )
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
@@ -451,7 +484,7 @@ class MCPAgentStreamableServer:
             )
 
             # Add execute_python if code execution is enabled
-            if settings.enable_code_execution:
+            if self.settings.enable_code_execution:
                 from mcp_server_langgraph.tools.code_execution_tools import ExecutePythonInput
 
                 tools.append(
@@ -1157,9 +1190,9 @@ async def login(request: LoginRequest) -> LoginResponse:
             # InMemoryUserProvider needs to create token
             try:
                 access_token = mcp_server_instance.auth.create_token(
-                    username=request.username, expires_in=settings.jwt_expiration_seconds
+                    username=request.username, expires_in=mcp_server_instance.settings.jwt_expiration_seconds
                 )
-                expires_in = settings.jwt_expiration_seconds
+                expires_in = mcp_server_instance.settings.jwt_expiration_seconds
             except Exception as e:
                 logger.error(f"Failed to create token: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail="Failed to create authentication token")
@@ -1268,7 +1301,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
 
                 # Issue new token
                 new_token = mcp_server_instance.auth.create_token(
-                    username=username, expires_in=settings.jwt_expiration_seconds
+                    username=username, expires_in=mcp_server_instance.settings.jwt_expiration_seconds
                 )
 
                 logger.info("Token refreshed for user", extra={"username": username})
@@ -1276,7 +1309,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
                 return RefreshTokenResponse(
                     access_token=new_token,
                     token_type="bearer",
-                    expires_in=settings.jwt_expiration_seconds,
+                    expires_in=mcp_server_instance.settings.jwt_expiration_seconds,
                 )
 
             except HTTPException:
@@ -1325,12 +1358,13 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
 
             # Handle different MCP methods
             if method == "initialize":
+                mcp_server = get_mcp_server()
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
                         "protocolVersion": "2024-11-05",
-                        "serverInfo": {"name": "langgraph-agent", "version": settings.service_version},
+                        "serverInfo": {"name": "langgraph-agent", "version": mcp_server.settings.service_version},
                         "capabilities": {
                             "tools": {"listChanged": False},
                             "resources": {"listChanged": False},

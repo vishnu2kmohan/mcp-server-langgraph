@@ -7,6 +7,12 @@ Following TDD - targets low-coverage methods from Codex audit.
 Coverage targets:
 - _get_network_mode() - Network isolation security logic (~2% coverage)
 - Security configurations and error handling
+
+Note on mocking:
+These tests use `patch.object(docker_sandbox, "docker")` to patch the docker module
+at the point where it's used in the docker_sandbox module. This is more reliable
+than patching the import path directly, especially with pytest-xdist where module
+imports may be cached across workers.
 """
 
 import gc
@@ -49,7 +55,8 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="none")
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker_client:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker_client:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
@@ -67,7 +74,8 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="unrestricted")
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
@@ -88,11 +96,11 @@ class TestDockerSandboxNetworkMode:
             allowed_domains=("httpbin.org", "example.com"),
         )
 
-        # Patch logger using patch.object on the imported module to ensure xdist isolation
-        # Using patch.object() is more reliable than patching the import path when multiple
-        # workers may have already loaded the module with cached references.
+        # Use patch.object on both docker module and logger for xdist compatibility
+        # patch.object() patches at the module namespace level, which works even when
+        # other workers have already cached the module imports.
         with (
-            patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker,
+            patch.object(docker_sandbox.docker, "DockerClient") as mock_docker,
             patch.object(docker_sandbox, "logger") as mock_logger,
         ):
             mock_client = MagicMock()
@@ -128,8 +136,8 @@ class TestDockerSandboxInitialization:
         """Test that initialization connects to Docker daemon"""
         limits = ResourceLimits.testing()
 
-        # Patch docker module where it's used in docker_sandbox
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()  # Ensure ping() doesn't fail
             mock_client.images.get = MagicMock()  # _ensure_image() check
@@ -149,7 +157,8 @@ class TestDockerSandboxInitialization:
         """
         limits = ResourceLimits.testing()
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_docker.side_effect = Exception("Cannot connect to Docker daemon")
 
             with pytest.raises(SandboxError) as exc_info:
@@ -163,7 +172,8 @@ class TestDockerSandboxInitialization:
         limits = ResourceLimits.testing()
         custom_image = "python:3.11-alpine"
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
@@ -190,7 +200,8 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             # Mock the images.get to raise ImageNotFound during _ensure_image
@@ -212,7 +223,8 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
@@ -233,7 +245,8 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("mcp_server_langgraph.execution.docker_sandbox.docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
             mock_client.ping = MagicMock()
             mock_client.images.get = MagicMock()
