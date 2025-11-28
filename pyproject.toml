@@ -101,7 +101,7 @@ dev = [
     # Time mocking for deterministic tests
     "freezegun>=1.5.1",  # Freeze time for deterministic timestamp testing
     # Property-based testing
-    "hypothesis>=6.148.3",  # Updated 2025-11-28: Minor bugfixes
+    "hypothesis>=6.100.0,<6.148.0",  # Pin <6.148.0: 6.148.x removed internal.conjecture.optimiser (breaks xdist on 3.11/3.13)
     "hypothesis-jsonschema>=0.22.1",
     # Contract testing
     "jsonschema>=4.21.0",
@@ -141,7 +141,7 @@ secrets = [
 
 cli = [
     # CLI scaffolding tools
-    "click>=8.1.0",  # Command-line interface framework
+    "click>=8.1.0,<8.3.0",  # Command-line interface framework (8.3.x has _textwrap issues on Python 3.11/3.13)
     "jinja2>=3.1.0",  # Template engine for code generation
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
 ]
@@ -295,6 +295,7 @@ exclude = [
     ".pytest_cache",
     "*.egg-info",
     "scripts/archive",  # Archived/unused scripts - intentionally excluded
+    "clients/python",   # Auto-generated OpenAPI client - do not lint
 ]
 
 [tool.ruff.lint]
@@ -378,12 +379,26 @@ split-on-trailing-comma = true
     "S608",  # hardcoded-sql-expression - test SQL queries
     "B904",  # raise-without-from-inside-except - test exception handling
 ]
-# Scripts may use subprocess and shell commands intentionally
+# Scripts may use subprocess, shell commands, and local dev patterns intentionally
 "scripts/**/*.py" = [
+    "S106",  # hardcoded-password-func-arg - setup scripts use dev defaults
+    "S108",  # hardcoded-temp-file - scripts use /tmp for temp storage
+    "S112",  # try-except-continue - scripts handle errors gracefully
+    "S501",  # request-with-no-cert-validation - local dev/setup scripts
     "S602",  # subprocess-popen-with-shell-equals-true
     "S603",  # subprocess-without-shell-equals-true
     "S605",  # start-process-with-a-shell
     "S607",  # start-process-with-partial-path
+]
+# Examples and hooks use dev patterns
+"examples/**/*.py" = [
+    "S106",  # hardcoded-password-func-arg - examples use dev credentials
+    "S501",  # request-with-no-cert-validation - examples show local dev usage
+]
+"hooks/**/*.py" = [
+    "S108",  # hardcoded-temp-file - hooks use temp directories
+    "S112",  # try-except-continue - hooks handle errors gracefully
+    "S607",  # start-process-with-partial-path - hooks run git commands
 ]
 # False positives - these files don't contain actual secrets
 "src/mcp_server_langgraph/auth/keycloak.py" = [
@@ -734,7 +749,7 @@ dict_synonyms = "Struct,NamedStruct"
 [dependency-groups]
 dev = [
     "bandit>=1.8.0",
-    "hypothesis>=6.148.3",  # Updated 2025-11-28: Minor bugfixes
+    "hypothesis>=6.100.0,<6.148.0",  # Pin <6.148.0: 6.148.x removed internal.conjecture.optimiser (breaks xdist on 3.11/3.13)
     "hypothesis-jsonschema>=0.23.1",
     "mypy>=1.19.0",  # Updated 2025-11-28: 40% faster type checking
     "pre-commit>=4.5.0",  # Updated 2025-11-28: Latest updates
