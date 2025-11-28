@@ -163,9 +163,9 @@ class TestValidatePrePushEfficiency:
             if "pre-commit run" in line:
                 precommit_lines.append(line)
 
-        assert (
-            len(precommit_lines) > 0
-        ), "No 'pre-commit run' invocation found in validate-pre-push or _validate-pre-push-phase-4"
+        assert len(precommit_lines) > 0, (
+            "No 'pre-commit run' invocation found in validate-pre-push or _validate-pre-push-phase-4"
+        )
 
         # At least one invocation should use SKIP to avoid duplicates
         has_skip = any("SKIP=" in line for line in precommit_lines)
@@ -456,20 +456,19 @@ class TestValidatePrePushPerformance:
         )
 
         assert mypy_count_quick == 1, (
-            f"MyPy appears {mypy_count_quick} times in quick\n"
-            f"Expected: 1 (manual phase only, skipped in pre-commit via SKIP)"
+            f"MyPy appears {mypy_count_quick} times in quick\nExpected: 1 (manual phase only, skipped in pre-commit via SKIP)"
         )
 
         # Full target: same plus integration tests once
         assert run_pre_push_count_full == 1, (
-            f"run_pre_push_tests.py appears {run_pre_push_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+            f"run_pre_push_tests.py appears {run_pre_push_count_full} times in full\nExpected: 1 (manual phase only)"
         )
 
         assert test_integration_count_full == 1, (
-            f"test-integration.sh appears {test_integration_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+            f"test-integration.sh appears {test_integration_count_full} times in full\nExpected: 1 (manual phase only)"
         )
 
-        assert mypy_count_full == 1, f"MyPy appears {mypy_count_full} times in full\n" f"Expected: 1 (manual phase only)"
+        assert mypy_count_full == 1, f"MyPy appears {mypy_count_full} times in full\nExpected: 1 (manual phase only)"
 
     def test_progress_indicators_for_user_experience(self):
         """

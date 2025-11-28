@@ -443,7 +443,7 @@ class TestMonkeypatchUsage:
         if monkeypatch_count > 0:
             usage_percent = (monkeypatch_param_count / monkeypatch_count) * 100
             assert usage_percent >= 50, (
-                f"Only {usage_percent:.0f}% of tests use monkeypatch. " f"Expected 50%+ for settings isolation"
+                f"Only {usage_percent:.0f}% of tests use monkeypatch. Expected 50%+ for settings isolation"
             )
 
 

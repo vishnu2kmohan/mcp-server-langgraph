@@ -108,14 +108,12 @@ dev = [
     # Mutation testing
     "mutmut>=3.3.1",
     # Code quality
-    "ruff>=0.8.0",  # Replaces black, isort, and flake8 (10-100x faster, Rust-based)
-    "black>=25.9.0",  # Keep for now during migration, will remove after validation
-    "flake8>=7.0.0",  # Keep for now during migration, will remove after validation
+    "ruff>=0.14.6",  # Replaces black, isort, and flake8 (10-100x faster, Rust-based) - synced with pre-commit
+    # NOTE: black, flake8, isort removed (2025-11-28) - fully replaced by Ruff
     "mypy>=1.18.2",
     "types-PyYAML",
     "types-redis>=4.6.0,<4.7.0",  # Pinned: >=4.7 requires stricter generic params (Belt-and-suspenders)
     "types-requests",
-    "isort>=7.0.0",  # Keep for now during migration, will remove after validation
     "bandit>=1.7.6",
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
@@ -157,7 +155,7 @@ builder = [
     # Visual workflow builder dependencies
     "fastapi>=0.120.3",  # Already in core deps
     "jinja2>=3.1.0",  # Code generation templates
-    "black>=25.9.0",  # Code formatting for generated code
+    "ruff>=0.14.6",  # Code formatting for generated code (replaces black)
     "ast-comments>=1.2.0",  # AST manipulation for code import
 ]
 
@@ -323,6 +321,7 @@ ignore = [
     "B904",  # Exception chaining
     "UP028", # yield-in-for-loop
     "UP035", # deprecated-import
+    # NOTE: UP038 was removed in Ruff v0.13.0 (isinstance union is slower, not recommended)
     # RUF rules temporarily ignored during migration (341 violations):
     # These are style/preference issues, not bugs. Can fix incrementally.
     "RUF001", # ambiguous-unicode-character-string (ℹ️ emoji)
@@ -338,7 +337,7 @@ ignore = [
     "RUF022", # unsorted-dunder-all
     "RUF034", # useless-if-else (archived scripts)
     "RUF043", # ambiguous-unicode-name
-    "RUF059", # unused-unpacked-variable
+    "RUF059", # unused-unpacked-variable (low priority style fix)
     "RUF100", # unused-noqa (will clean up noqa directives separately)
     # Temporarily disabled during Ruff migration (can re-enable incrementally):
     # N-series (naming): 404 violations - will fix in separate PR
@@ -360,62 +359,17 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 # ==============================================================================
-# LEGACY TOOLS - DEPRECATED (Use Ruff instead)
+# LEGACY TOOLS REMOVED (2025-11-28)
 # ==============================================================================
-# DEPRECATION NOTICE (2025-11-23):
-# These tools are deprecated and will be removed in a future release.
+# Migration Complete: black, isort, flake8 → Ruff
 #
-# Migration Guide:
-#   - black → ruff format
-#   - isort → ruff check --select I (import sorting)
-#   - flake8 → ruff check (linting)
+# Commands:
+#   make lint-check   # Ruff linter
+#   make lint-fix     # Ruff auto-fix + format
+#   make lint-format  # Ruff format only
 #
-# New Commands:
-#   make lint-check   # Ruff linter (replaces flake8, isort checks)
-#   make lint-fix     # Ruff auto-fix + format (replaces black, isort)
-#   make lint-format  # Ruff format only (replaces black)
-#
-# See: docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md for complete guide
+# See: docs-internal/TOOLING_CONSOLIDATION_MIGRATION.md for migration guide
 # ==============================================================================
-
-[tool.black]
-# DEPRECATED: Use 'ruff format' instead
-line-length = 127
-target-version = ["py310", "py311", "py312"]
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.venv
-  | venv
-  | build
-  | dist
-  | __pycache__
-)/
-'''
-
-[tool.isort]
-# DEPRECATED: Use 'ruff check --select I' instead
-profile = "black"
-line_length = 127
-skip_gitignore = true
-
-[tool.flake8]
-# DEPRECATED: Use 'ruff check' instead
-max-line-length = 127
-exclude = [
-    ".git",
-    "__pycache__",
-    ".venv",
-    "venv",
-    "build",
-    "dist",
-    "htmlcov",
-    ".pytest_cache",
-    "*.egg-info",
-]
-# Align with black formatting
-extend-ignore = ["E203", "W503", "E501"]
 
 [tool.mypy]
 python_version = "3.11"

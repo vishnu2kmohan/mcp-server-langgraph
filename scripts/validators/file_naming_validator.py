@@ -162,7 +162,7 @@ def validate_filename_convention(file_path: Path) -> list[str]:
     # Check if filename is kebab-case
     if not is_kebab_case(filename):
         suggested = to_kebab_case(filename)
-        errors.append(f"{file_path}: Filename should be lowercase kebab-case. " f"Suggested: {suggested}")
+        errors.append(f"{file_path}: Filename should be lowercase kebab-case. Suggested: {suggested}")
 
         # Provide specific guidance
         stem = Path(filename).stem

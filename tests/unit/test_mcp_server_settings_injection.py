@@ -144,9 +144,9 @@ class TestMCPServerSettingsInjection:
         server = MCPAgentServer(settings=custom_settings)
 
         # THEN: Global settings should remain unchanged
-        assert (
-            config.settings.enable_code_execution == original_code_execution
-        ), "Global settings should not be modified by injecting custom settings"
+        assert config.settings.enable_code_execution == original_code_execution, (
+            "Global settings should not be modified by injecting custom settings"
+        )
 
         # AND: Server should use custom settings
         assert server.settings.enable_code_execution == (not original_code_execution)

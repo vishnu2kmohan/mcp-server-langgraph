@@ -233,9 +233,9 @@ class TestResponseSchemas:
                         endpoints_without_errors.append(f"{method.upper()} {path}")
 
         # FIXED: Convert skip to assertion to fail loudly on missing error documentation
-        assert (
-            len(endpoints_without_errors) == 0
-        ), f"Mutation endpoints missing error documentation (violates API contract best practices): {endpoints_without_errors}"
+        assert len(endpoints_without_errors) == 0, (
+            f"Mutation endpoints missing error documentation (violates API contract best practices): {endpoints_without_errors}"
+        )
 
 
 @pytest.mark.contract
@@ -312,9 +312,9 @@ class TestAPIContractIntegration:
                             response = client.get(path)
                             # Validate response status code is documented
                             responses = operations["get"].get("responses", {})
-                            assert (
-                                str(response.status_code) in responses
-                            ), f"{path} returned undocumented status {response.status_code}"
+                            assert str(response.status_code) in responses, (
+                                f"{path} returned undocumented status {response.status_code}"
+                            )
 
                             tested_count += 1
                         except Exception as e:

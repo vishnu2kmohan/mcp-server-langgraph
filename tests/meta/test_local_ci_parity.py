@@ -157,8 +157,7 @@ def shared_run_pre_push_tests_script(shared_repo_root: Path) -> Path:
     script_path = shared_repo_root / "scripts" / "run_pre_push_tests.py"
     if not script_path.exists():
         pytest.skip(
-            f"run_pre_push_tests.py script not found at {script_path}\n"
-            "This script is required for pre-push test validation."
+            f"run_pre_push_tests.py script not found at {script_path}\nThis script is required for pre-push test validation."
         )
     return script_path
 
@@ -293,7 +292,7 @@ class TestPrePushHookConfiguration:
     def test_pre_push_hook_is_executable(self, pre_push_hook_path: Path):
         """Test that pre-push hook has execute permissions."""
         assert os.access(pre_push_hook_path, os.X_OK), (
-            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\n" f"Fix: chmod +x {pre_push_hook_path}"
+            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\nFix: chmod +x {pre_push_hook_path}"
         )
 
     def test_pre_push_hook_is_bash_script(self, pre_push_hook_path: Path):
@@ -406,7 +405,7 @@ class TestPrePushHookConfiguration:
             # Legacy bash script: must explicitly call pre-commit run --all-files
             content = hook_content
             assert "pre-commit run --all-files" in content, (
-                "Pre-push hook must run 'pre-commit run --all-files'\n" "Running on changed files only causes CI surprises"
+                "Pre-push hook must run 'pre-commit run --all-files'\nRunning on changed files only causes CI surprises"
             )
 
     def test_pre_push_hook_runs_property_tests_with_ci_profile(self, repo_root: Path, pre_push_hook_path: Path):
@@ -424,7 +423,7 @@ class TestPrePushHookConfiguration:
             # Note: Default dev profile (25 examples), CI_PARITY=1 enables CI profile (100 examples)
             # Updated 2025-11-18: Consolidated test hook approach
             assert "run-pre-push-tests" in config_content or "property" in config_content, (
-                "Pre-push hook must run property tests\n" "Expected: run-pre-push-tests hook or explicit property test marker"
+                "Pre-push hook must run property tests\nExpected: run-pre-push-tests hook or explicit property test marker"
             )
         else:
             # Legacy bash script: check for explicit CI profile
@@ -443,8 +442,7 @@ class TestPrePushHookConfiguration:
         # Pre-commit framework: phases are organized via .pre-commit-config.yaml structure
         if is_pre_commit_wrapper(hook_content):
             pytest.skip(
-                "Pre-commit framework hook - phases organized via .pre-commit-config.yaml structure, "
-                "not inline PHASE markers"
+                "Pre-commit framework hook - phases organized via .pre-commit-config.yaml structure, not inline PHASE markers"
             )
 
         # Legacy bash script: check for phase markers
@@ -499,7 +497,7 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_target_exists(self, makefile_content: str):
         """Test that validate-pre-push target exists in Makefile."""
         assert re.search(r"^validate-pre-push:", makefile_content, re.MULTILINE), (
-            "Makefile must have 'validate-pre-push' target\n" "This provides manual validation matching pre-push hook"
+            "Makefile must have 'validate-pre-push' target\nThis provides manual validation matching pre-push hook"
         )
 
     def test_validate_pre_push_in_phony_targets(self, makefile_content: str):
@@ -514,9 +512,9 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_runs_lockfile_check(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets validate lockfile."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "uv lock --check" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push must run 'uv lock --check' in one of its sub-targets"
+        assert "uv lock --check" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push must run 'uv lock --check' in one of its sub-targets"
+        )
 
     def test_validate_pre_push_runs_workflow_tests(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run workflow validation tests."""
@@ -535,16 +533,16 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_runs_mypy(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run MyPy."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "mypy src/mcp_server_langgraph" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push sub-targets must run MyPy type checking"
+        assert "mypy src/mcp_server_langgraph" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push sub-targets must run MyPy type checking"
+        )
 
     def test_validate_pre_push_runs_precommit_all_files(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run pre-commit on all files."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "pre-commit run --all-files" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push sub-targets must run 'pre-commit run --all-files'"
+        assert "pre-commit run --all-files" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push sub-targets must run 'pre-commit run --all-files'"
+        )
 
     def test_validate_pre_push_runs_property_tests_with_ci_profile(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run property tests with CI profile."""
@@ -556,9 +554,9 @@ class TestMakefileValidationTarget:
         has_ci_profile = "HYPOTHESIS_PROFILE=ci" in target_content
         uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
 
-        assert (
-            has_ci_profile or uses_consolidated_script
-        ), "validate-pre-push must set HYPOTHESIS_PROFILE=ci (or use run_pre_push_tests.py)"
+        assert has_ci_profile or uses_consolidated_script, (
+            "validate-pre-push must set HYPOTHESIS_PROFILE=ci (or use run_pre_push_tests.py)"
+        )
 
         # Same for property tests check
         has_property = "property" in target_content
@@ -893,7 +891,7 @@ class TestPytestXdistParity:
         """Verify that CI uses -n auto (this is the baseline we're matching)."""
         # CI should use -n auto for unit tests
         assert "pytest -n auto" in ci_workflow_content, (
-            "CI workflow must use 'pytest -n auto' for parallel execution\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must use 'pytest -n auto' for parallel execution\nIf CI doesn't use it, this test needs updating"
         )
 
 
@@ -997,7 +995,7 @@ class TestOtelSdkDisabledParity:
     def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
         """Verify that CI sets OTEL_SDK_DISABLED=true (this is the baseline)."""
         assert "OTEL_SDK_DISABLED=true" in ci_workflow_content, (
-            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must set OTEL_SDK_DISABLED=true for tests\nIf CI doesn't use it, this test needs updating"
         )
 
 
@@ -1339,9 +1337,9 @@ class TestActionlintHookStrictness:
         actionlint_section = actionlint_section_match.group(0)
 
         # Should be configured for pre-push stage
-        assert (
-            "stages:" in actionlint_section and "push" in actionlint_section
-        ), "Actionlint hook should be configured to run during pre-push stage"
+        assert "stages:" in actionlint_section and "push" in actionlint_section, (
+            "Actionlint hook should be configured to run during pre-push stage"
+        )
 
 
 @pytest.mark.xdist_group(name="testmypyblockingparity")

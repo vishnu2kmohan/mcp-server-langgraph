@@ -124,9 +124,9 @@ class TestGDPRSingletonParallelIsolation:
         # Retrieve and validate
         retrieved = await storage.user_profiles.get(user_id)
         assert retrieved is not None, f"Profile {user_id} should exist"
-        assert (
-            retrieved.metadata.get("worker") == worker_id
-        ), f"Worker ID mismatch: expected {worker_id}, got {retrieved.metadata.get('worker')}"
+        assert retrieved.metadata.get("worker") == worker_id, (
+            f"Worker ID mismatch: expected {worker_id}, got {retrieved.metadata.get('worker')}"
+        )
 
         # CRITICAL VALIDATION: Check for cross-worker pollution
         # If global singleton is used, other workers' data might be visible
@@ -182,7 +182,7 @@ class TestGDPRSingletonParallelIsolation:
         # Data should be gone after reset
         retrieved = await new_storage.user_profiles.get(user_id)
         assert retrieved is None, (
-            f"After reset and re-initialization, previous data should be gone. " f"Found profile: {retrieved}"
+            f"After reset and re-initialization, previous data should be gone. Found profile: {retrieved}"
         )
 
     @pytest.mark.asyncio
@@ -265,9 +265,9 @@ class TestGDPRSingletonParallelIsolation:
             user_id = f"user:concurrent_{worker_id}_{i}"
             profile = await storage.user_profiles.get(user_id)
             assert profile is not None, f"Profile {user_id} should exist"
-            assert (
-                profile.metadata["worker"] == worker_id
-            ), f"Profile should belong to worker {worker_id}, got {profile.metadata.get('worker')}"
+            assert profile.metadata["worker"] == worker_id, (
+                f"Profile should belong to worker {worker_id}, got {profile.metadata.get('worker')}"
+            )
             assert profile.metadata["index"] == i, f"Profile index should be {i}, got {profile.metadata.get('index')}"
 
 

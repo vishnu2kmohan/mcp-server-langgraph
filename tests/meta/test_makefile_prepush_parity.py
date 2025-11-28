@@ -228,9 +228,9 @@ class TestMakefilePrePushParity:
         """
         # Verify pre-push test orchestrator uses -n auto (baseline)
         # scripts/run_pre_push_tests.py adds -n auto to all pytest invocations
-        assert (
-            '"-n"' in pre_push_content or "-n auto" in pre_push_content
-        ), "Pre-push test orchestrator should use '-n auto' for parallel execution as baseline"
+        assert '"-n"' in pre_push_content or "-n auto" in pre_push_content, (
+            "Pre-push test orchestrator should use '-n auto' for parallel execution as baseline"
+        )
 
         # Check if xdist enforcement tests run via orchestrator (modern approach)
         # OR via explicit pytest command (legacy approach)

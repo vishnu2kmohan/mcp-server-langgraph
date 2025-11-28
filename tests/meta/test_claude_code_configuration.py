@@ -53,7 +53,7 @@ class TestClaudeCodeConfiguration:
         """Test that .claude/settings.json exists."""
         settings_file = claude_dir / "settings.json"
         assert settings_file.exists(), (
-            ".claude/settings.json does not exist. " "Create it with allowedTools configuration for WebFetch and Bash."
+            ".claude/settings.json does not exist. Create it with allowedTools configuration for WebFetch and Bash."
         )
 
     def test_claude_settings_json_valid_json(self, claude_dir: Path):
@@ -77,7 +77,7 @@ class TestClaudeCodeConfiguration:
         with open(settings_file) as f:
             config = json.load(f)
 
-        assert "allowedTools" in config, "settings.json missing 'allowedTools' key. " "Add WebFetch and Bash tool permissions."
+        assert "allowedTools" in config, "settings.json missing 'allowedTools' key. Add WebFetch and Bash tool permissions."
 
     def test_claude_settings_has_webfetch_domains(self, claude_dir: Path):
         """Test that settings.json has WebFetch allowed_domains."""
@@ -93,9 +93,9 @@ class TestClaudeCodeConfiguration:
 
         assert "WebFetch" in config["allowedTools"], "settings.json missing WebFetch in allowedTools"
 
-        assert (
-            "allowed_domains" in config["allowedTools"]["WebFetch"]
-        ), "settings.json missing allowed_domains in WebFetch configuration"
+        assert "allowed_domains" in config["allowedTools"]["WebFetch"], (
+            "settings.json missing allowed_domains in WebFetch configuration"
+        )
 
         domains = config["allowedTools"]["WebFetch"]["allowed_domains"]
         assert isinstance(domains, list), "allowed_domains must be a list"
@@ -146,19 +146,19 @@ class TestClaudeCodeConfiguration:
         )
 
         # Check for phase descriptions
-        assert (
-            "Phase 1: EXPLORE" in content or "EXPLORE (Research First)" in content
-        ), "CLAUDE.md missing EXPLORE phase documentation"
+        assert "Phase 1: EXPLORE" in content or "EXPLORE (Research First)" in content, (
+            "CLAUDE.md missing EXPLORE phase documentation"
+        )
 
-        assert (
-            "Phase 2: PLAN" in content or "PLAN (Think Before Acting)" in content
-        ), "CLAUDE.md missing PLAN phase documentation"
+        assert "Phase 2: PLAN" in content or "PLAN (Think Before Acting)" in content, (
+            "CLAUDE.md missing PLAN phase documentation"
+        )
 
         assert "Phase 3: CODE" in content or "CODE (TDD Cycle)" in content, "CLAUDE.md missing CODE phase documentation"
 
-        assert (
-            "Phase 4: COMMIT" in content or "COMMIT (Automated Validation)" in content
-        ), "CLAUDE.md missing COMMIT phase documentation"
+        assert "Phase 4: COMMIT" in content or "COMMIT (Automated Validation)" in content, (
+            "CLAUDE.md missing COMMIT phase documentation"
+        )
 
     def test_slash_commands_directory_exists(self, claude_dir: Path):
         """Test that .claude/commands/ directory exists."""
@@ -206,7 +206,7 @@ class TestClaudeCodeConfiguration:
                 missing_commands.append(cmd)
 
         assert len(missing_commands) == 0, (
-            f"Missing recommended slash commands: {missing_commands}. " f"Create them in .claude/commands/"
+            f"Missing recommended slash commands: {missing_commands}. Create them in .claude/commands/"
         )
 
     def test_templates_directory_exists(self, claude_dir: Path):
@@ -254,7 +254,7 @@ class TestClaudeCodeConfiguration:
 
         # Check for settings.local.json or *.local.json pattern
         assert "settings.local.json" in gitignore_content or "*.local.json" in gitignore_content, (
-            ".gitignore should contain pattern to exclude settings.local.json " "to prevent committing local configurations"
+            ".gitignore should contain pattern to exclude settings.local.json to prevent committing local configurations"
         )
 
 

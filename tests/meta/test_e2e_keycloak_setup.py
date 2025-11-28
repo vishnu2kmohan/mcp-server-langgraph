@@ -119,9 +119,9 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
         "or a confidential client with a secret configured"
     )
 
-    assert (
-        mcp_client.get("directAccessGrantsEnabled") is True
-    ), "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    assert mcp_client.get("directAccessGrantsEnabled") is True, (
+        "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    )
 
 
 def test_realm_json_has_test_users(repo_root: Path):
@@ -208,7 +208,7 @@ def test_docker_compose_imports_realm(repo_root: Path):
     keycloak_service = services.get("keycloak-test")
 
     assert keycloak_service is not None, (
-        "Service 'keycloak-test' not found in docker-compose.test.yml\n" f"Available services: {list(services.keys())}"
+        f"Service 'keycloak-test' not found in docker-compose.test.yml\nAvailable services: {list(services.keys())}"
     )
 
     # Check for volume mount

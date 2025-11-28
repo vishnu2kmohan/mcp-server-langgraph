@@ -264,7 +264,7 @@ def create_regression_issue(regression: dict) -> str:
 
 | Metric | Baseline | Current | Degradation |
 |--------|----------|---------|-------------|
-| {metric_name} | {regression['baseline']:.2f} | {regression['current']:.2f} | {degradation:.1f}% |
+| {metric_name} | {regression["baseline"]:.2f} | {regression["current"]:.2f} | {degradation:.1f}% |
 
 ### Details
 

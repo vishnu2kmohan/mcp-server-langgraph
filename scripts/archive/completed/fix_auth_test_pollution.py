@@ -79,14 +79,14 @@ def add_setup_method(file_path: Path, class_name: str, class_lineno: int) -> boo
             indent = 4
 
         # Create setup_method code
-        setup_code = f'''{' ' * indent}def setup_method(self):
-{' ' * indent}    """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
-{' ' * indent}    import os
-{' ' * indent}    import mcp_server_langgraph.auth.middleware as middleware_module
-{' ' * indent}
-{' ' * indent}    middleware_module._global_auth_middleware = None
-{' ' * indent}    os.environ["MCP_SKIP_AUTH"] = "false"
-{' ' * indent}
+        setup_code = f'''{" " * indent}def setup_method(self):
+{" " * indent}    """Reset state BEFORE test to prevent MCP_SKIP_AUTH pollution"""
+{" " * indent}    import os
+{" " * indent}    import mcp_server_langgraph.auth.middleware as middleware_module
+{" " * indent}
+{" " * indent}    middleware_module._global_auth_middleware = None
+{" " * indent}    os.environ["MCP_SKIP_AUTH"] = "false"
+{" " * indent}
 '''
 
         # Insert the setup_method

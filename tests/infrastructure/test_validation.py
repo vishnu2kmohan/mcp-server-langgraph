@@ -359,7 +359,7 @@ class TestDocumentation:
         has_summary = any(os.path.exists(loc) for loc in summary_locations) or len(session_summaries) > 0
 
         assert has_summary, (
-            f"No implementation summary found. Checked: {summary_locations}, " f"session summaries: {session_summaries}"
+            f"No implementation summary found. Checked: {summary_locations}, session summaries: {session_summaries}"
         )
 
     def test_restore_procedure_exists(self):

@@ -65,9 +65,9 @@ class TestPrePushHookSync:
 
         This is the actual validation logic, not the auto-generated hook wrapper.
         """
-        assert (
-            pre_push_script_path.exists()
-        ), "Pre-push test orchestrator script does not exist at scripts/run_pre_push_tests.py"
+        assert pre_push_script_path.exists(), (
+            "Pre-push test orchestrator script does not exist at scripts/run_pre_push_tests.py"
+        )
         return pre_push_script_path.read_text()
 
     def test_all_pytest_calls_use_n_auto(self, pre_push_hook_content: str):

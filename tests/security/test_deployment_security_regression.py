@@ -186,9 +186,9 @@ class TestOpenFGAWorkloadIdentity:
             content = f.read()
 
         # Check for documentation of minimal permissions
-        assert (
-            "minimal permissions" in content.lower() or "least privilege" in content.lower()
-        ), "ServiceAccount should document minimal permissions principle"
+        assert "minimal permissions" in content.lower() or "least privilege" in content.lower(), (
+            "ServiceAccount should document minimal permissions principle"
+        )
 
 
 @pytest.mark.security
@@ -315,9 +315,9 @@ class TestHelmPlaceholderSecurity:
             if has_placeholders:
                 # If placeholders exist, verify they are documented
                 # Look for comments explaining they need to be replaced
-                assert (
-                    "# Replace with" in content or "TODO" in content or "# For" in content
-                ), f"{values_file.name} has placeholders but no documentation on replacing them"
+                assert "# Replace with" in content or "TODO" in content or "# For" in content, (
+                    f"{values_file.name} has placeholders but no documentation on replacing them"
+                )
 
     def test_helm_values_are_valid_yaml(self):
         """

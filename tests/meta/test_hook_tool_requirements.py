@@ -225,7 +225,7 @@ class TestHookToolBehavior:
 
                 if not has_exit_1:
                     issues.append(
-                        f"  - {hook_id}: Uses 'exit 0' without 'exit 1' path. " f"Hook silently skips when {tool} missing."
+                        f"  - {hook_id}: Uses 'exit 0' without 'exit 1' path. Hook silently skips when {tool} missing."
                     )
 
         if issues:

@@ -279,7 +279,7 @@ class TestPreCommitCrossPlatformCompatibility:
         )
 
         assert "bash -c" not in hook_entry or "source .venv" not in hook_entry, (
-            f"validate-test-dependencies hook should not use 'bash -c source .venv'\n" f"Current entry: {hook_entry}"
+            f"validate-test-dependencies hook should not use 'bash -c source .venv'\nCurrent entry: {hook_entry}"
         )
 
     def test_validate_fixture_scopes_hook_uses_uv(self):
@@ -314,7 +314,7 @@ class TestPreCommitCrossPlatformCompatibility:
         )
 
         assert "bash -c" not in hook_entry or "source .venv" not in hook_entry, (
-            f"validate-fixture-scopes hook should not use 'bash -c source .venv'\n" f"Current entry: {hook_entry}"
+            f"validate-fixture-scopes hook should not use 'bash -c source .venv'\nCurrent entry: {hook_entry}"
         )
 
 

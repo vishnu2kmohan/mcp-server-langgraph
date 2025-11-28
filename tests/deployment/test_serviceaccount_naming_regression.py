@@ -162,9 +162,9 @@ class TestOverlayServiceAccountNaming:
                             continue
 
                         # Must match base naming
-                        assert (
-                            clean_name in base_names
-                        ), f"ServiceAccount '{sa_name}' (clean: '{clean_name}') in {sa_file.name} doesn't match base. Available: {base_names}"
+                        assert clean_name in base_names, (
+                            f"ServiceAccount '{sa_name}' (clean: '{clean_name}') in {sa_file.name} doesn't match base. Available: {base_names}"
+                        )
 
 
 @pytest.mark.xdist_group(name="testworkloadidentityannotations")

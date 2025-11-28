@@ -100,14 +100,14 @@ class TestIntegrationScriptArgPropagation:
 
         # Should check if PYTEST_ARGS is empty and set defaults
         # Pattern: if [ ${#PYTEST_ARGS[@]} -eq 0 ]; then
-        assert re.search(
-            r"if\s+\[\s+\$\{#PYTEST_ARGS\[@\]\}\s+-eq\s+0\s+\];?\s+then", content
-        ), "Script should check if PYTEST_ARGS is empty and set defaults"
+        assert re.search(r"if\s+\[\s+\$\{#PYTEST_ARGS\[@\]\}\s+-eq\s+0\s+\];?\s+then", content), (
+            "Script should check if PYTEST_ARGS is empty and set defaults"
+        )
 
         # Default should include integration marker
-        assert re.search(
-            r"PYTEST_ARGS=\([^)]*-m\s+integration[^)]*\)", content
-        ), "Default PYTEST_ARGS should include '-m integration' marker"
+        assert re.search(r"PYTEST_ARGS=\([^)]*-m\s+integration[^)]*\)", content), (
+            "Default PYTEST_ARGS should include '-m integration' marker"
+        )
 
     def test_script_documents_pytest_args_usage(self):
         """Verify the script documents how to pass pytest arguments."""
@@ -145,7 +145,7 @@ class TestIntegrationScriptArgPropagation:
         if has_double_dash:
             # If using '--' separator, verify pytest flags are passed
             assert re.search(r"--\s+.*(?:--splits|--group|--cov)", content), (
-                "Workflow should pass pytest flags (--splits, --group, --cov) " "after '--' separator"
+                "Workflow should pass pytest flags (--splits, --group, --cov) after '--' separator"
             )
 
     def test_no_hard_coded_markers_in_invocation(self):

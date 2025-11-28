@@ -213,13 +213,13 @@ def generate_inventory(
 
     content = f"""# Scripts Directory Inventory
 
-**Last Updated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+**Last Updated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 **Auto-generated** by `scripts/generate_script_inventory.py`
 **Total Scripts**: {total}
 **Python Scripts**: {python_count}
 **Shell Scripts**: {shell_count}
-**Actively Used**: {used_count} ({used_count/total*100:.1f}%)
-**Unused/Utilities**: {unused_count} ({unused_count/total*100:.1f}%)
+**Actively Used**: {used_count} ({used_count / total * 100:.1f}%)
+**Unused/Utilities**: {unused_count} ({unused_count / total * 100:.1f}%)
 
 ---
 
@@ -227,14 +227,14 @@ def generate_inventory(
 
 | Category | Count | Percentage | Description |
 |----------|-------|------------|-------------|
-| **Multi-System** | {len(categories["multi_system"])} | {len(categories["multi_system"])/total*100:.1f}% | Used in hooks + Makefile + workflows |
-| **Hooks + Makefile** | {len(categories["hooks_makefile"])} | {len(categories["hooks_makefile"])/total*100:.1f}% | Dual integration (hooks + Make) |
-| **Hooks + Workflows** | {len(categories["hooks_workflows"])} | {len(categories["hooks_workflows"])/total*100:.1f}% | Dual integration (hooks + CI/CD) |
-| **Makefile + Workflows** | {len(categories["makefile_workflows"])} | {len(categories["makefile_workflows"])/total*100:.1f}% | Dual integration (Make + CI/CD) |
-| **Hooks Only** | {len(categories["hooks_only"])} | {len(categories["hooks_only"])/total*100:.1f}% | Pre-commit hooks only |
-| **Makefile Only** | {len(categories["makefile_only"])} | {len(categories["makefile_only"])/total*100:.1f}% | Makefile targets only |
-| **Workflows Only** | {len(categories["workflows_only"])} | {len(categories["workflows_only"])/total*100:.1f}% | GitHub Actions only |
-| **Unused/Utilities** | {unused_count} | {unused_count/total*100:.1f}% | Not referenced in active systems |
+| **Multi-System** | {len(categories["multi_system"])} | {len(categories["multi_system"]) / total * 100:.1f}% | Used in hooks + Makefile + workflows |
+| **Hooks + Makefile** | {len(categories["hooks_makefile"])} | {len(categories["hooks_makefile"]) / total * 100:.1f}% | Dual integration (hooks + Make) |
+| **Hooks + Workflows** | {len(categories["hooks_workflows"])} | {len(categories["hooks_workflows"]) / total * 100:.1f}% | Dual integration (hooks + CI/CD) |
+| **Makefile + Workflows** | {len(categories["makefile_workflows"])} | {len(categories["makefile_workflows"]) / total * 100:.1f}% | Dual integration (Make + CI/CD) |
+| **Hooks Only** | {len(categories["hooks_only"])} | {len(categories["hooks_only"]) / total * 100:.1f}% | Pre-commit hooks only |
+| **Makefile Only** | {len(categories["makefile_only"])} | {len(categories["makefile_only"]) / total * 100:.1f}% | Makefile targets only |
+| **Workflows Only** | {len(categories["workflows_only"])} | {len(categories["workflows_only"]) / total * 100:.1f}% | GitHub Actions only |
+| **Unused/Utilities** | {unused_count} | {unused_count / total * 100:.1f}% | Not referenced in active systems |
 
 ---
 
@@ -454,9 +454,9 @@ def main():
         print(f"\n✅ Inventory written to: {output_path}")
         print(f"   Total scripts: {len(scripts['all'])}")
         print(
-            f"   Used: {len(scripts['all']) - len(categories['unused'])} ({(len(scripts['all']) - len(categories['unused']))/len(scripts['all'])*100:.1f}%)"
+            f"   Used: {len(scripts['all']) - len(categories['unused'])} ({(len(scripts['all']) - len(categories['unused'])) / len(scripts['all']) * 100:.1f}%)"
         )
-        print(f"   Unused: {len(categories['unused'])} ({len(categories['unused'])/len(scripts['all'])*100:.1f}%)")
+        print(f"   Unused: {len(categories['unused'])} ({len(categories['unused']) / len(scripts['all']) * 100:.1f}%)")
 
 
 if __name__ == "__main__":

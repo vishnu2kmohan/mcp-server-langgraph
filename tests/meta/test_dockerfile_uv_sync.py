@@ -67,7 +67,7 @@ class TestDockerfileUvSyncConsistency:
         """
         # Should NOT use uv export (old approach)
         assert "uv export" not in main_dockerfile, (
-            "Dockerfile should NOT use 'uv export'. " "Use 'uv sync --frozen' directly for consistency with local/CI."
+            "Dockerfile should NOT use 'uv export'. Use 'uv sync --frozen' directly for consistency with local/CI."
         )
 
         # Should use uv sync
@@ -99,7 +99,7 @@ class TestDockerfileUvSyncConsistency:
         """
         # Should NOT manually create venv
         assert "python -m venv" not in main_dockerfile, (
-            "Dockerfile should NOT use 'python -m venv'. " "Let uv manage the virtual environment via UV_PROJECT_ENVIRONMENT."
+            "Dockerfile should NOT use 'python -m venv'. Let uv manage the virtual environment via UV_PROJECT_ENVIRONMENT."
         )
 
     def test_main_dockerfile_no_uv_pip_install(self, main_dockerfile):
@@ -109,7 +109,7 @@ class TestDockerfileUvSyncConsistency:
         'uv pip install' bypasses the lockfile resolution. Use 'uv sync' instead.
         """
         assert "uv pip install" not in main_dockerfile, (
-            "Dockerfile should NOT use 'uv pip install'. " "Use 'uv sync --frozen' which respects the lockfile."
+            "Dockerfile should NOT use 'uv pip install'. Use 'uv sync --frozen' which respects the lockfile."
         )
 
     def test_main_dockerfile_has_uv_env_vars(self, main_dockerfile):
@@ -130,8 +130,7 @@ class TestDockerfileUvSyncConsistency:
         """
         # Should NOT use uv export
         assert "uv export" not in test_dockerfile, (
-            "Dockerfile.test should NOT use 'uv export'. "
-            "Use 'uv sync --frozen --extra dev --extra builder' for consistency."
+            "Dockerfile.test should NOT use 'uv export'. Use 'uv sync --frozen --extra dev --extra builder' for consistency."
         )
 
         # Should use uv sync
@@ -140,14 +139,14 @@ class TestDockerfileUvSyncConsistency:
     def test_test_dockerfile_uses_frozen_flag(self, test_dockerfile):
         """Verify test Dockerfile uses --frozen flag with uv sync."""
         uv_sync_pattern = re.compile(r"uv\s+sync\s+[^#\n]*--frozen")
-        assert uv_sync_pattern.search(
-            test_dockerfile
-        ), "Dockerfile.test should use 'uv sync --frozen' to ensure lockfile is used exactly."
+        assert uv_sync_pattern.search(test_dockerfile), (
+            "Dockerfile.test should use 'uv sync --frozen' to ensure lockfile is used exactly."
+        )
 
     def test_test_dockerfile_no_uv_pip_install(self, test_dockerfile):
         """Verify test Dockerfile does not use 'uv pip install'."""
         assert "uv pip install" not in test_dockerfile, (
-            "Dockerfile.test should NOT use 'uv pip install'. " "Use 'uv sync --frozen' which respects the lockfile."
+            "Dockerfile.test should NOT use 'uv pip install'. Use 'uv sync --frozen' which respects the lockfile."
         )
 
 
@@ -175,9 +174,9 @@ class TestDockerfileUvSyncExtras:
 
         Test images need dev dependencies for running pytest, etc.
         """
-        assert (
-            "--extra dev" in test_dockerfile or "--all-extras" in test_dockerfile
-        ), "Dockerfile.test should include '--extra dev' for test dependencies."
+        assert "--extra dev" in test_dockerfile or "--all-extras" in test_dockerfile, (
+            "Dockerfile.test should include '--extra dev' for test dependencies."
+        )
 
 
 @pytest.mark.xdist_group(name="dockerfile_uv_sync_paths")

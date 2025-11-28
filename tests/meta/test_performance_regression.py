@@ -252,9 +252,9 @@ class TestPollingOptimizations:
             content = f.read()
 
         # Should import poll_until
-        assert (
-            "from tests.helpers.polling import poll_until" in content
-        ), "Kubernetes sandbox tests should use poll_until() for cleanup waits"
+        assert "from tests.helpers.polling import poll_until" in content, (
+            "Kubernetes sandbox tests should use poll_until() for cleanup waits"
+        )
 
         # Should not have long time.sleep calls (> 2s) in test code (not in string literals)
         import re
@@ -290,9 +290,9 @@ class TestPollingOptimizations:
             content = f.read()
 
         # Should import poll_until
-        assert (
-            "from tests.helpers.polling import poll_until" in content
-        ), "Docker sandbox tests should use poll_until() for cleanup waits"
+        assert "from tests.helpers.polling import poll_until" in content, (
+            "Docker sandbox tests should use poll_until() for cleanup waits"
+        )
 
 
 @pytest.mark.xdist_group(name="testvirtualclockavailability")

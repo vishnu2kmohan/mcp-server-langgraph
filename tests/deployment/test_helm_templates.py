@@ -133,9 +133,9 @@ class TestHelmLint:
 
         # Helm lint success messages
         output = result.stdout + result.stderr
-        assert (
-            "linted" in output.lower() or "no failures" in output.lower()
-        ), f"Helm lint output doesn't indicate success:\n{output}"
+        assert "linted" in output.lower() or "no failures" in output.lower(), (
+            f"Helm lint output doesn't indicate success:\n{output}"
+        )
 
 
 @pytest.mark.xdist_group(name="testhelmdependencies")

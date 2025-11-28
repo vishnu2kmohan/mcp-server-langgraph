@@ -328,7 +328,7 @@ class TestObservabilityInitialization:
 
                             if first_log >= 0 and first_init >= 0:
                                 assert first_init < first_log, (
-                                    f"init_observability() must be called BEFORE logger.info(). " f"Call order: {call_order}"
+                                    f"init_observability() must be called BEFORE logger.info(). Call order: {call_order}"
                                 )
 
     def test_no_try_except_workarounds_for_logger(self):
@@ -350,7 +350,7 @@ class TestObservabilityInitialization:
         ]
 
         for pattern in workaround_patterns:
-            assert pattern not in source, f"app.py still has old-style RuntimeError workaround! " f"Pattern found: {pattern}"
+            assert pattern not in source, f"app.py still has old-style RuntimeError workaround! Pattern found: {pattern}"
 
         # Should have removed suppression comments
         assert "Observability not initialized yet" not in source or source.count("Observability not initialized yet") <= 1

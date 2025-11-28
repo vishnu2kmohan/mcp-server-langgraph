@@ -239,9 +239,9 @@ class TestKeycloakConfigValidationHook:
             )
 
             # Hook should warn or fail about inadequate start_period
-            assert (
-                result.returncode == 1 or "start_period" in result.stdout.lower() or "60s" in result.stdout.lower()
-            ), "Hook should warn about inadequate start_period"
+            assert result.returncode == 1 or "start_period" in result.stdout.lower() or "60s" in result.stdout.lower(), (
+                "Hook should warn about inadequate start_period"
+            )
         finally:
             temp_file.unlink()
 

@@ -71,9 +71,9 @@ def test_actionlint_command_when_required_is_available_in_system_path():
     """
     result = subprocess.run(["which", "actionlint"], capture_output=True, timeout=60)
 
-    assert (
-        result.returncode == 0
-    ), "actionlint is not installed. Install with: go install github.com/rhysd/actionlint/cmd/actionlint@latest"
+    assert result.returncode == 0, (
+        "actionlint is not installed. Install with: go install github.com/rhysd/actionlint/cmd/actionlint@latest"
+    )
 
 
 def test_workflows_directory_exists():

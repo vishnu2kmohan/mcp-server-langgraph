@@ -112,11 +112,11 @@ class TestHardcodedTestIDs:
 
         # Check that helpers are defined
         assert "def get_user_id(" in content, (
-            "get_user_id() helper not found in conftest.py!\n" "This helper is required for worker-safe test IDs"
+            "get_user_id() helper not found in conftest.py!\nThis helper is required for worker-safe test IDs"
         )
 
         assert "def get_api_key_id(" in content, (
-            "get_api_key_id() helper not found in conftest.py!\n" "This helper is required for worker-safe test IDs"
+            "get_api_key_id() helper not found in conftest.py!\nThis helper is required for worker-safe test IDs"
         )
 
     def test_cleanup_queries_use_correct_prefix(self):

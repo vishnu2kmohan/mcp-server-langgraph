@@ -165,7 +165,7 @@ class TestAsyncPGFixtureConfiguration:
         uses_create_pool = "asyncpg.create_pool" in content or "create_pool(" in content
 
         if not uses_create_pool:
-            pytest.skip("asyncpg.create_pool not found in conftest.py. " "May be using alternative connection pattern.")
+            pytest.skip("asyncpg.create_pool not found in conftest.py. May be using alternative connection pattern.")
 
 
 @pytest.mark.xdist_group(name="async_fixture_validation_tests")

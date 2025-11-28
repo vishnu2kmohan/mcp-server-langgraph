@@ -116,9 +116,9 @@ class TestCheckpointConfigValidator:
 
             error_msg = str(exc_info.value).lower()
             # At least one keyword should be in the error message
-            assert any(
-                keyword in error_msg for keyword in expected_keywords
-            ), f"Expected one of {expected_keywords} in error for URL: {url}"
+            assert any(keyword in error_msg for keyword in expected_keywords), (
+                f"Expected one of {expected_keywords} in error for URL: {url}"
+            )
 
     def test_validator_provides_fix_suggestion(self):
         """Test that validation error provides actionable fix suggestion."""

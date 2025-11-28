@@ -108,7 +108,7 @@ class TestAuthorizationFallbackControls:
 
         # Should be allowed when fallback is explicitly enabled
         assert authorized is True, (
-            "Tool execution should be allowed when allow_auth_fallback=True " "and user has appropriate roles"
+            "Tool execution should be allowed when allow_auth_fallback=True and user has appropriate roles"
         )
 
     @pytest.mark.asyncio
@@ -170,9 +170,9 @@ class TestAuthorizationFallbackControls:
             await middleware.authorize(user_id=get_user_id("alice"), relation="executor", resource="tool:test")
 
         # Should log warning about using fallback authorization
-        assert any(
-            "fallback authorization" in record.message.lower() for record in caplog.records
-        ), "Expected warning about fallback authorization not found in logs"
+        assert any("fallback authorization" in record.message.lower() for record in caplog.records), (
+            "Expected warning about fallback authorization not found in logs"
+        )
 
     @pytest.mark.asyncio
     async def test_admin_users_denied_when_fallback_disabled(self):
@@ -238,9 +238,9 @@ class TestAuthorizationFallbackControls:
         """
         settings = Settings()
 
-        assert (
-            settings.allow_auth_fallback is False
-        ), "SECURITY FAILURE: allow_auth_fallback must default to False for secure-by-default behavior"
+        assert settings.allow_auth_fallback is False, (
+            "SECURITY FAILURE: allow_auth_fallback must default to False for secure-by-default behavior"
+        )
 
     def test_config_fallback_can_be_explicitly_enabled(self):
         """

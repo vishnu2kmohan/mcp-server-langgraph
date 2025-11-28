@@ -141,9 +141,9 @@ class TestRunPrePushTestsMetaConditional:
             script_content = f.read()
 
         # Verify conditional logic is implemented
-        assert (
-            "should_run_meta_tests" in script_content
-        ), "should_run_meta_tests() function should be implemented and used in main()"
+        assert "should_run_meta_tests" in script_content, (
+            "should_run_meta_tests() function should be implemented and used in main()"
+        )
 
         # Verify conditional marker expression
         assert "if should_run_meta_tests():" in script_content, (
@@ -157,12 +157,12 @@ class TestRunPrePushTestsMetaConditional:
         )
 
         # Verify both marker expressions exist (updated 2025-11-26: added 'validation' marker)
-        assert (
-            "(unit or api or property or validation or meta) and not llm and not integration" in script_content
-        ), "Script should include meta tests when workflow files change"
-        assert (
-            "(unit or api or property or validation) and not llm and not meta and not integration" in script_content
-        ), "Script should exclude meta tests when only code files change"
+        assert "(unit or api or property or validation or meta) and not llm and not integration" in script_content, (
+            "Script should include meta tests when workflow files change"
+        )
+        assert "(unit or api or property or validation) and not llm and not meta and not integration" in script_content, (
+            "Script should exclude meta tests when only code files change"
+        )
 
     def test_performance_impact_of_meta_tests(self, repo_root: Path):
         """
@@ -527,8 +527,7 @@ class TestMetaTestDiffLogicFixes:
                 result = should_run_meta_tests()
 
                 assert result is True, (
-                    "Root pyproject.toml MUST trigger meta tests\n"
-                    "It contains pytest configuration that affects test behavior"
+                    "Root pyproject.toml MUST trigger meta tests\nIt contains pytest configuration that affects test behavior"
                 )
 
     def test_git_show_fallback_when_all_merge_base_fail(self):

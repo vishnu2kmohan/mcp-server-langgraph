@@ -192,7 +192,7 @@ def test_no_hardcoded_credentials_in_configmap(base_configmap):
         actual_creds = [m for m in matches if "{{" not in m and "$(" not in m and m.strip() != '://""@']
 
         assert not actual_creds, (
-            f"Found hard-coded credentials in configmap: {actual_creds}\n" f"Use environment variable substitution instead"
+            f"Found hard-coded credentials in configmap: {actual_creds}\nUse environment variable substitution instead"
         )
 
 

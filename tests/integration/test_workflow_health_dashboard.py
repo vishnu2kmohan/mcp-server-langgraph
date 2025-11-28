@@ -78,9 +78,9 @@ def test_dashboard_success_rate_calculation():
         # Calculate success rate (simulating dashboard logic)
         success_rate = (successful_runs * 100) / total_runs
 
-        assert (
-            abs(success_rate - expected) < 0.01
-        ), f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs}"
+        assert abs(success_rate - expected) < 0.01, (
+            f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs}"
+        )
 
 
 def test_dashboard_bc_command_edge_cases():

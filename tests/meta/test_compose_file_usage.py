@@ -109,13 +109,13 @@ class TestComposeFileConsolidation:
             # Accept: ../docker-compose.test.yml, docker-compose.test.yml, etc.
             assert "docker-compose.test.yml" in compose_path, f"test-integration.sh uses wrong compose file: {compose_path}"
             # Should NOT use docker/ subdirectory
-            assert (
-                "docker/docker-compose.test.yml" not in compose_path
-            ), "test-integration.sh must NOT use legacy docker/docker-compose.test.yml"
+            assert "docker/docker-compose.test.yml" not in compose_path, (
+                "test-integration.sh must NOT use legacy docker/docker-compose.test.yml"
+            )
 
         # Should NOT reference test-runner container (legacy pattern)
         assert "test-runner" not in content or "# LEGACY: test-runner" in content, (
-            "test-integration.sh should not use containerized test-runner pattern. " "Tests should run on host for CI parity."
+            "test-integration.sh should not use containerized test-runner pattern. Tests should run on host for CI parity."
         )
 
     def test_makefile_uses_root_compose(self):
@@ -148,9 +148,9 @@ class TestComposeFileConsolidation:
         for compose_path in compose_commands:
             if "docker-compose.test.yml" in compose_path:
                 # Should use root file, not docker/ subdirectory
-                assert (
-                    "docker/docker-compose.test.yml" not in compose_path
-                ), f"Makefile must NOT use legacy docker/docker-compose.test.yml: {compose_path}"
+                assert "docker/docker-compose.test.yml" not in compose_path, (
+                    f"Makefile must NOT use legacy docker/docker-compose.test.yml: {compose_path}"
+                )
 
     def test_docker_fixtures_uses_root_compose(self):
         """
@@ -170,14 +170,14 @@ class TestComposeFileConsolidation:
 
         # Should return ../../docker-compose.test.yml (relative to tests/fixtures/)
         # Pattern: return Path(...) / "docker-compose.test.yml"
-        assert (
-            "docker-compose.test.yml" in content
-        ), "docker_fixtures.py docker_compose_file fixture must return root compose file"
+        assert "docker-compose.test.yml" in content, (
+            "docker_fixtures.py docker_compose_file fixture must return root compose file"
+        )
 
         # Should NOT reference docker/ subdirectory
-        assert (
-            "docker/docker-compose.test.yml" not in content
-        ), "docker_fixtures.py must NOT use legacy docker/docker-compose.test.yml"
+        assert "docker/docker-compose.test.yml" not in content, (
+            "docker_fixtures.py must NOT use legacy docker/docker-compose.test.yml"
+        )
 
     def test_ci_workflows_use_root_compose(self):
         """
@@ -197,14 +197,14 @@ class TestComposeFileConsolidation:
         content = integration_workflow.read_text()
 
         # Should reference docker-compose.test.yml
-        assert (
-            "docker-compose.test.yml" in content or "docker-compose" in content
-        ), "integration-tests.yaml must reference docker-compose.test.yml"
+        assert "docker-compose.test.yml" in content or "docker-compose" in content, (
+            "integration-tests.yaml must reference docker-compose.test.yml"
+        )
 
         # Should NOT reference docker/ subdirectory
-        assert (
-            "docker/docker-compose.test.yml" not in content
-        ), "integration-tests.yaml must NOT use legacy docker/docker-compose.test.yml"
+        assert "docker/docker-compose.test.yml" not in content, (
+            "integration-tests.yaml must NOT use legacy docker/docker-compose.test.yml"
+        )
 
     def test_no_test_runner_container_references(self):
         """
@@ -317,7 +317,7 @@ class TestComposeFileConsistency:
 
         for port in expected_ports:
             assert port in content, (
-                f"Expected test port {port} not found in compose file. " "Verify port mappings are consistent."
+                f"Expected test port {port} not found in compose file. Verify port mappings are consistent."
             )
 
     def test_compose_services_match_conftest_expectations(self):

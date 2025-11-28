@@ -917,9 +917,9 @@ class TestRedisAPICacheConfiguration:
             with patch("redis.asyncio.from_url"):
                 manager = get_api_key_manager(keycloak=mock_keycloak)
 
-                assert (
-                    manager.cache_ttl == custom_ttl
-                ), f"Cache TTL should be {custom_ttl} from settings, got {manager.cache_ttl}"
+                assert manager.cache_ttl == custom_ttl, (
+                    f"Cache TTL should be {custom_ttl} from settings, got {manager.cache_ttl}"
+                )
 
         # Cleanup
         deps_module._api_key_manager = None
@@ -955,9 +955,9 @@ class TestRedisAPICacheConfiguration:
                 call_args = mock_from_url.call_args
                 redis_url_arg = call_args[0][0] if call_args[0] else call_args.kwargs.get("url")
 
-                assert "/5" in redis_url_arg or redis_url_arg.endswith(
-                    "/5"
-                ), f"Redis URL should include database /5, got: {redis_url_arg}"
+                assert "/5" in redis_url_arg or redis_url_arg.endswith("/5"), (
+                    f"Redis URL should include database /5, got: {redis_url_arg}"
+                )
 
         # Cleanup
         deps_module._api_key_manager = None
@@ -1045,10 +1045,10 @@ class TestRedisAPICacheConfiguration:
 
                 # CRITICAL: Verify Redis was used for caching
                 assert mock_redis.get.called, (
-                    "Redis get() should be called to check cache. " "This proves dependencies.py wired Redis client correctly."
+                    "Redis get() should be called to check cache. This proves dependencies.py wired Redis client correctly."
                 )
                 assert mock_redis.setex.called, (
-                    "Redis setex() should be called to cache result. " "This proves caching is active."
+                    "Redis setex() should be called to cache result. This proves caching is active."
                 )
 
         # Cleanup

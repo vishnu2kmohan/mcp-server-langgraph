@@ -89,10 +89,7 @@ class TestGitignoreValidation:
         has_settings_local = any("settings.local.json" in p for p in patterns)
 
         assert has_local_json or has_settings_local, (
-            ".gitignore should contain patterns like:\n"
-            "  *.local.json\n"
-            "  **/*.local.json\n"
-            "  .claude/settings.local.json"
+            ".gitignore should contain patterns like:\n  *.local.json\n  **/*.local.json\n  .claude/settings.local.json"
         )
 
     def test_no_env_local_files_tracked(self):

@@ -91,7 +91,7 @@ class TestUVLockfileSynchronization:
         lockfile = project_root / "uv.lock"
 
         assert lockfile.exists(), (
-            "uv.lock not found! This file is required for reproducible builds. " "Run 'uv lock' to create it."
+            "uv.lock not found! This file is required for reproducible builds. Run 'uv lock' to create it."
         )
 
         assert lockfile.stat().st_size > 0, "uv.lock exists but is empty!"
@@ -141,9 +141,9 @@ class TestUVLockfileSynchronization:
 
                         # Should trigger on pyproject.toml or uv.lock changes
                         files_pattern = hook.get("files", "")
-                        assert (
-                            "pyproject" in files_pattern or "uv\\.lock" in files_pattern
-                        ), "uv-lock-check hook must monitor pyproject.toml and uv.lock files"
+                        assert "pyproject" in files_pattern or "uv\\.lock" in files_pattern, (
+                            "uv-lock-check hook must monitor pyproject.toml and uv.lock files"
+                        )
 
                         break
 
@@ -181,9 +181,9 @@ class TestUVLockfileSynchronization:
         # Check that error message provides remediation
         if "uv lock --check" in workflow_content:
             # Find the section with uv lock --check
-            assert (
-                "Run 'uv lock'" in workflow_content or "uv lock" in workflow_content
-            ), "Lockfile validation error should tell developers how to fix it"
+            assert "Run 'uv lock'" in workflow_content or "uv lock" in workflow_content, (
+                "Lockfile validation error should tell developers how to fix it"
+            )
 
 
 @pytest.mark.regression
@@ -324,7 +324,7 @@ class TestFastAPIDependencyOverridesPattern:
             content = f.read()
 
         assert "app.dependency_overrides[" in content, (
-            "API keys tests must use app.dependency_overrides.\n" "See commit 709adda for implementation."
+            "API keys tests must use app.dependency_overrides.\nSee commit 709adda for implementation."
         )
 
 

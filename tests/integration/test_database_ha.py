@@ -181,9 +181,9 @@ class TestDatabaseHA:
 
         # At minimum, deployment should reference database configuration
         # CloudSQL proxy is optional and conditional, so we check for either explicit proxy or general DB config
-        assert (
-            has_cloudsql_reference or has_database_config
-        ), "Helm deployment template should support CloudSQL proxy sidecar or have database configuration"
+        assert has_cloudsql_reference or has_database_config, (
+            "Helm deployment template should support CloudSQL proxy sidecar or have database configuration"
+        )
 
     def test_database_connection_pooling_configured(self):
         """Test database connection pooling (PgBouncer) is available."""

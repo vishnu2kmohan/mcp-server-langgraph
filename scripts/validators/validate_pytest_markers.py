@@ -177,7 +177,7 @@ def validate_pytestmark_placement() -> list[str]:
 
         # Validate pytestmark appears AFTER all imports
         if last_import_line > 0 and pytestmark_line < last_import_line:
-            violations.append(f"{test_file}:{pytestmark_line} " f"(pytestmark before import at line {last_import_line})")
+            violations.append(f"{test_file}:{pytestmark_line} (pytestmark before import at line {last_import_line})")
 
     return violations
 

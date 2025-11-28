@@ -140,9 +140,9 @@ class TestDockerComposeHealthChecks:
         )
 
         # Should use native Keycloak command or built-in health endpoint
-        assert (
-            "kc.sh" in test_str or "/health" in test_str
-        ), "Keycloak health check should use native command or health endpoint"
+        assert "kc.sh" in test_str or "/health" in test_str, (
+            "Keycloak health check should use native command or health endpoint"
+        )
 
     def test_qdrant_health_check_uses_available_command(self, docker_compose_file):
         """

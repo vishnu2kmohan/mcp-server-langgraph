@@ -131,7 +131,7 @@ def test_no_slow_unit_tests():
 
     if new_slow_tests:
         error_msg = (
-            f"Found {len(new_slow_tests)} new slow tests (> 10s):\n\n" "These tests should be optimized before merging:\n\n"
+            f"Found {len(new_slow_tests)} new slow tests (> 10s):\n\nThese tests should be optimized before merging:\n\n"
         )
 
         for test_name, duration in sorted(new_slow_tests, key=lambda x: x[1], reverse=True):

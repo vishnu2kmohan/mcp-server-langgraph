@@ -54,7 +54,7 @@ def test_awk_percentage_calculation():
         success_rate = result.stdout.strip()
 
         assert success_rate == expected, (
-            f"Expected {expected}%, got {success_rate}% " f"for {successful_runs}/{total_runs} using awk"
+            f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs} using awk"
         )
 
 
@@ -83,7 +83,7 @@ def test_awk_comparison_calculations():
         comparison_result = result.stdout.strip()
 
         assert comparison_result == expected, (
-            f"Expected {expected} for {success_rate} >= {threshold}, " f"got {comparison_result} using awk"
+            f"Expected {expected} for {success_rate} >= {threshold}, got {comparison_result} using awk"
         )
 
 
@@ -111,7 +111,7 @@ def test_awk_duration_formatting():
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
+            f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
         )
 
 
@@ -139,7 +139,7 @@ def test_awk_integer_formatting():
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
+            f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
         )
 
 

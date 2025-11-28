@@ -343,18 +343,19 @@ class TestOTELCollectorConfiguration:
 
             # Check for bash-style env var syntax (should use ${env:VAR} instead)
             assert ":-" not in content, (
-                f"{config_file}: Contains bash-style env var syntax ':-'. " "Use static values or ${{env:VAR}} syntax instead."
+                f"{config_file}: Contains bash-style env var syntax ':-'. "
+                "Use static values or ${{env:VAR}} syntax instead."
             )
 
             # Check for deprecated googlecloud exporter keys
             if "googlecloud:" in content:
                 # These keys are deprecated/invalid in newer versions
-                assert (
-                    "use_insecure:" not in content
-                ), f"{config_file}: Contains deprecated 'use_insecure' key in googlecloud exporter"
-                assert (
-                    "retry_on_failure:" not in content
-                ), f"{config_file}: Contains deprecated 'retry_on_failure' key in googlecloud exporter"
+                assert "use_insecure:" not in content, (
+                    f"{config_file}: Contains deprecated 'use_insecure' key in googlecloud exporter"
+                )
+                assert "retry_on_failure:" not in content, (
+                    f"{config_file}: Contains deprecated 'retry_on_failure' key in googlecloud exporter"
+                )
 
 
 @pytest.mark.requires_kubectl

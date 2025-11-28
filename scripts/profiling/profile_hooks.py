@@ -263,7 +263,7 @@ class HookProfiler:
         f.write("|---------|-------|------|-----|-----|----------|\n")
         for r in results:
             f.write(
-                f"| `{r.hook_id}` | {r.stage} | {r.mean_ms:.0f}ms | " f"{r.p90_ms:.0f}ms | {r.p95_ms:.0f}ms | {r.category} |\n"
+                f"| `{r.hook_id}` | {r.stage} | {r.mean_ms:.0f}ms | {r.p90_ms:.0f}ms | {r.p95_ms:.0f}ms | {r.category} |\n"
             )
 
     @staticmethod

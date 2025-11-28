@@ -102,9 +102,9 @@ class TestGitleaksConfig:
         # Should either succeed (0) or fail but NOT due to documentation examples
         if result.returncode != 0:
             # Check if failures are from documentation
-            assert (
-                ".openai/codex-instructions.md" not in result.stdout
-            ), "Documentation examples should be allowlisted in .gitleaks.toml"
+            assert ".openai/codex-instructions.md" not in result.stdout, (
+                "Documentation examples should be allowlisted in .gitleaks.toml"
+            )
 
     def test_gitleaks_ignores_venv_directories(self):
         """Test that gitleaks config excludes .venv and similar directories."""
@@ -182,9 +182,9 @@ DATABASE_PASSWORD=SuperSecretPassword123!
             )
 
             # Should detect secrets in the test file
-            assert (
-                result.returncode != 0 or "gitleaks-validation-file.txt" in result.stdout
-            ), f"Gitleaks should detect real secrets in {test_file.name}"
+            assert result.returncode != 0 or "gitleaks-validation-file.txt" in result.stdout, (
+                f"Gitleaks should detect real secrets in {test_file.name}"
+            )
 
         finally:
             # Clean up test file

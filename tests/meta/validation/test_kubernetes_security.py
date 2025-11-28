@@ -115,13 +115,13 @@ class TestSecurityContexts:
                         continue  # Skip readOnly check for documented exceptions
 
                     # All other containers must have readOnlyRootFilesystem: true
-                    assert (
-                        "readOnlyRootFilesystem" in security_context
-                    ), f"{patch_file.name}: Container '{container_name}' missing securityContext.readOnlyRootFilesystem"
+                    assert "readOnlyRootFilesystem" in security_context, (
+                        f"{patch_file.name}: Container '{container_name}' missing securityContext.readOnlyRootFilesystem"
+                    )
 
-                    assert (
-                        security_context["readOnlyRootFilesystem"] is True
-                    ), f"{patch_file.name}: Container '{container_name}' must have readOnlyRootFilesystem: true"
+                    assert security_context["readOnlyRootFilesystem"] is True, (
+                        f"{patch_file.name}: Container '{container_name}' must have readOnlyRootFilesystem: true"
+                    )
 
     def test_writable_volumes_mounted_as_emptydir(self, deployment_patch_files):
         """
@@ -198,9 +198,9 @@ class TestSecurityContexts:
                     # Init containers should also have readOnlyRootFilesystem
                     # (unless they specifically need write access)
                     if "securityContext" in init_container:
-                        assert isinstance(
-                            security_context, dict
-                        ), f"{patch_file.name}: Init container '{container_name}' has invalid securityContext"
+                        assert isinstance(security_context, dict), (
+                            f"{patch_file.name}: Init container '{container_name}' has invalid securityContext"
+                        )
 
 
 @pytest.mark.requires_kubectl
@@ -364,9 +364,9 @@ class TestKubernetesValidation:
         )
 
         # Should not have validation errors
-        assert (
-            validate_result.returncode == 0
-        ), f"Kubeconform validation failed:\n{validate_result.stdout}\n{validate_result.stderr}"
+        assert validate_result.returncode == 0, (
+            f"Kubeconform validation failed:\n{validate_result.stdout}\n{validate_result.stderr}"
+        )
 
     @requires_tool("kubectl")
     def test_kustomize_builds_successfully(self, deployments_dir):

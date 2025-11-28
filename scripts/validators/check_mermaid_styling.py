@@ -132,9 +132,7 @@ def check_file(file_path: Path) -> list[str]:
 
         # Check for deprecated graph syntax
         if uses_deprecated_graph_syntax(block):
-            issues.append(
-                f"{file_path}:{line_num}: ❌ Uses deprecated 'graph' syntax - " f"use 'flowchart TD/TB/LR/BT' instead"
-            )
+            issues.append(f"{file_path}:{line_num}: ❌ Uses deprecated 'graph' syntax - use 'flowchart TD/TB/LR/BT' instead")
 
         # Check flowchart diagrams for ColorBrewer2 styling
         if is_flowchart_diagram(block) and not has_colorbrewer2_styling(block):

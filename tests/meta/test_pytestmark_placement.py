@@ -135,7 +135,7 @@ class TestPytestmarkPlacement:
                 # pytestmark placement issues which CAUSE syntax errors.
                 # If we can't parse the file at all, it might be due to
                 # the very issue we're testing for.
-                violations.append(f"{test_file.relative_to(tests_dir.parent)}:PARSE_ERROR " f"(cannot parse: {e})")
+                violations.append(f"{test_file.relative_to(tests_dir.parent)}:PARSE_ERROR (cannot parse: {e})")
                 continue
 
             # Find pytestmark assignment line (module-level only)
@@ -168,21 +168,21 @@ class TestPytestmarkPlacement:
 
         # Generate detailed assertion message
         assert not violations, (
-            f"\n{'='*80}\n"
+            f"\n{'=' * 80}\n"
             f"❌ PYTESTMARK PLACEMENT VIOLATIONS DETECTED\n"
-            f"{'='*80}\n\n"
+            f"{'=' * 80}\n\n"
             f"Found {len(violations)} file(s) with pytestmark inside import blocks:\n\n"
-            + "\n".join(f"  {i+1}. {v}" for i, v in enumerate(violations))
+            + "\n".join(f"  {i + 1}. {v}" for i, v in enumerate(violations))
             + f"\n\n"
-            f"{'='*80}\n"
+            f"{'=' * 80}\n"
             f"ROOT CAUSE\n"
-            f"{'='*80}\n\n"
+            f"{'=' * 80}\n\n"
             f"Python requires ALL import statements to appear at the module top\n"
             f"(after docstrings). Placing pytestmark INSIDE or BETWEEN imports\n"
             f"causes SyntaxError during test collection.\n\n"
-            f"{'='*80}\n"
+            f"{'=' * 80}\n"
             f"HOW TO FIX\n"
-            f"{'='*80}\n\n"
+            f"{'=' * 80}\n\n"
             f"Move pytestmark declaration to AFTER the closing parenthesis\n"
             f"of all import statements:\n\n"
             f"  ❌ WRONG:\n"
@@ -197,22 +197,22 @@ class TestPytestmarkPlacement:
             f"        Symbol2,\n"
             f"    )\n\n"
             f"    pytestmark = pytest.mark.unit  # After all imports\n\n"
-            f"{'='*80}\n"
+            f"{'=' * 80}\n"
             f"STATISTICS\n"
-            f"{'='*80}\n\n"
+            f"{'=' * 80}\n\n"
             f"  Files checked: {files_checked}\n"
             f"  Files with pytestmark: {files_with_pytestmark}\n"
             f"  Violations found: {len(violations)}\n"
             f"  Compliance rate: {((files_with_pytestmark - len(violations)) / max(files_with_pytestmark, 1) * 100):.1f}%\n\n"
-            f"{'='*80}\n"
+            f"{'=' * 80}\n"
             f"PREVENTION\n"
-            f"{'='*80}\n\n"
+            f"{'=' * 80}\n\n"
             f"This test runs automatically via pre-commit hook:\n"
             f"  - Hook: validate-pytestmark-placement\n"
             f"  - Script: scripts/validate_pytest_markers.py\n"
             f"  - Test: tests/meta/test_pytestmark_placement.py (this file)\n\n"
             f"See: docs-internal/PYTESTMARK_GUIDELINES.md for complete guidelines\n\n"
-            f"{'='*80}\n"
+            f"{'=' * 80}\n"
         )
 
 
@@ -236,12 +236,7 @@ class TestPytestmarkPlacementEdgeCases:
         """
         test_file = tmp_path / "test_no_imports.py"
         test_file.write_text(
-            '"""Test file with no imports"""\n'
-            "\n"
-            "pytestmark = pytest.mark.unit\n"
-            "\n"
-            "def test_something():\n"
-            "    assert True\n"
+            '"""Test file with no imports"""\n\npytestmark = pytest.mark.unit\n\ndef test_something():\n    assert True\n'
         )
 
         # Parse and validate

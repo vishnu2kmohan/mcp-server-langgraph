@@ -85,7 +85,7 @@ class TestPytestmarkPlacementRegression:
                                         (
                                             test_file,
                                             i + 1,  # Convert back to 1-indexed for reporting
-                                            f"pytestmark found inside import statement (lines {start_line+1}-{end_line+1})",
+                                            f"pytestmark found inside import statement (lines {start_line + 1}-{end_line + 1})",
                                         )
                                     )
                                     break
@@ -269,9 +269,9 @@ class TestAutomationScriptFix:
         assert "end_lineno" in content, "Script must use end_lineno to handle multi-line imports"
 
         # Check that there's documentation about the fix
-        assert (
-            "end_lineno" in content and "multi-line" in content.lower()
-        ), "Script must document the end_lineno fix for multi-line imports"
+        assert "end_lineno" in content and "multi-line" in content.lower(), (
+            "Script must document the end_lineno fix for multi-line imports"
+        )
 
     def test_automation_script_has_unit_tests(self):
         """Test that the automation script has comprehensive unit tests.

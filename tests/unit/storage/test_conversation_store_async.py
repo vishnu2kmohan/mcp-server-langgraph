@@ -81,9 +81,9 @@ class TestConversationStoreAsync:
 
                 # Should use redis.asyncio, not sync redis
                 # If using async, _redis_client should be AsyncMock or async client
-                assert hasattr(store._redis_client, "__aenter__") or isinstance(
-                    store._redis_client, AsyncMock
-                ), "ConversationStore should use async Redis client (redis.asyncio), not sync redis"
+                assert hasattr(store._redis_client, "__aenter__") or isinstance(store._redis_client, AsyncMock), (
+                    "ConversationStore should use async Redis client (redis.asyncio), not sync redis"
+                )
 
             except Exception:
                 # If it fails because sync redis was used, that's expected in RED phase

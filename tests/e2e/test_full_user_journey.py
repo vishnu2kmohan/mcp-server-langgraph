@@ -48,8 +48,7 @@ def test_infrastructure_check_verifies_services_running(test_infrastructure):
 
     if not test_infrastructure["ready"]:
         pytest.skip(
-            "E2E infrastructure services not ready. "
-            "Ensure Docker is running and docker-compose.test.yml services are healthy."
+            "E2E infrastructure services not ready. Ensure Docker is running and docker-compose.test.yml services are healthy."
         )
 
     return True
@@ -418,9 +417,9 @@ class TestGDPRComplianceJourney:
             for section in expected_sections:
                 # Section should exist or be explicitly documented as empty
                 if section in user_data:
-                    assert isinstance(
-                        user_data[section], (list, dict, type(None))
-                    ), f"Data section '{section}' should be structured"
+                    assert isinstance(user_data[section], (list, dict, type(None))), (
+                        f"Data section '{section}' should be structured"
+                    )
 
             # Verify we got meaningful data back
             assert len(user_data.keys()) > 0, "Data access should return user information"
@@ -460,9 +459,9 @@ class TestGDPRComplianceJourney:
             expected_sections = ["user_profile", "conversations", "api_keys"]
             for section in expected_sections:
                 if section in export_data:
-                    assert isinstance(
-                        export_data[section], (list, dict)
-                    ), f"Export section '{section}' should be structured data"
+                    assert isinstance(export_data[section], (list, dict)), (
+                        f"Export section '{section}' should be structured data"
+                    )
 
             # Verify export is comprehensive (not just partial data)
             assert len(export_data.keys()) > 0, "Export should contain user data"
@@ -714,9 +713,9 @@ class TestServicePrincipalJourney:
 
             # Verify service_id format
             service_id = sp_data.get("service_id") or sp_data.get("id")
-            assert service_id.startswith("sp:") or service_id.startswith(
-                "service:"
-            ), "Service principal ID should have appropriate prefix"
+            assert service_id.startswith("sp:") or service_id.startswith("service:"), (
+                "Service principal ID should have appropriate prefix"
+            )
 
     @pytest.mark.xfail(strict=True, reason="Implement when SP API is integrated")
     async def test_02_list_service_principals(self, authenticated_session):
@@ -933,9 +932,9 @@ class TestAPIKeyJourney:
 
             # Security: Verify actual API key values are NOT returned
             for key_item in keys_list:
-                assert (
-                    "api_key" not in key_item or key_item["api_key"] is None
-                ), "List endpoint should NOT return actual API key values (security risk)"
+                assert "api_key" not in key_item or key_item["api_key"] is None, (
+                    "List endpoint should NOT return actual API key values (security risk)"
+                )
                 # Should have metadata instead
                 assert "key_id" in key_item or "id" in key_item
                 assert "name" in key_item
@@ -1022,9 +1021,9 @@ class TestAPIKeyJourney:
                 keys_list = keys_data if isinstance(keys_data, list) else keys_data.get("api_keys", [])
 
                 # Verify deleted key is not in list
-                assert not any(
-                    (k.get("key_id") == key_id or k.get("id") == key_id) for k in keys_list
-                ), "Revoked API key should not appear in list"
+                assert not any((k.get("key_id") == key_id or k.get("id") == key_id) for k in keys_list), (
+                    "Revoked API key should not appear in list"
+                )
 
 
 # ==============================================================================

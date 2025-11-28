@@ -203,12 +203,11 @@ class TestResourceLimits:
 
                     if "ephemeral-storage" not in limits:
                         violations.append(
-                            f"{file_path.name}: {kind}/{name} container '{container_name}' " f"missing ephemeral-storage limit"
+                            f"{file_path.name}: {kind}/{name} container '{container_name}' missing ephemeral-storage limit"
                         )
                     if "ephemeral-storage" not in requests:
                         violations.append(
-                            f"{file_path.name}: {kind}/{name} container '{container_name}' "
-                            f"missing ephemeral-storage request"
+                            f"{file_path.name}: {kind}/{name} container '{container_name}' missing ephemeral-storage request"
                         )
 
         if violations:

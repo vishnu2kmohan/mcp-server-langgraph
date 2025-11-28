@@ -82,7 +82,9 @@ def test_docker_python_path_consistency():
 
                 is_configured = has_path_variable or has_conditional or uses_simple_python
 
-                assert is_configured, f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
+                assert is_configured, (
+                    f"Docker test step in {job_name} doesn't properly configure Python path:\n{step.get('name', 'unnamed step')}"
+                )
 
 
 def test_docker_variant_matrix_complete():
@@ -136,9 +138,9 @@ def test_docker_variant_matrix_complete():
 
             # At least one expected variant should exist
             common = expected_variants & actual_variants
-            assert (
-                common
-            ), f"No common Docker variants found in {job_name}. Expected one of: {expected_variants}, got: {actual_variants}"
+            assert common, (
+                f"No common Docker variants found in {job_name}. Expected one of: {expected_variants}, got: {actual_variants}"
+            )
 
 
 def test_docker_image_verification_comprehensive():
@@ -172,9 +174,9 @@ def test_docker_image_verification_comprehensive():
     # All verification steps should be present
     missing = [desc for desc, found in verification_patterns.items() if desc not in found_verifications]
 
-    assert (
-        len(found_verifications) >= 2
-    ), f"Docker build verification is incomplete. Found: {list(found_verifications.keys())}, Missing checks: {missing}"
+    assert len(found_verifications) >= 2, (
+        f"Docker build verification is incomplete. Found: {list(found_verifications.keys())}, Missing checks: {missing}"
+    )
 
 
 def test_docker_entrypoint_configuration():
@@ -200,9 +202,9 @@ def test_docker_entrypoint_configuration():
     has_import_test = "import " in content and ("mcp_server" in content or "core.agent" in content)
 
     assert has_entrypoint_test, "CI workflow doesn't test Docker entrypoint. Add: docker run --entrypoint <python> <image>"
-    assert (
-        has_import_test
-    ), "CI workflow doesn't test Python imports. Add: docker run <image> python -c 'import mcp_server_langgraph'"
+    assert has_import_test, (
+        "CI workflow doesn't test Python imports. Add: docker run <image> python -c 'import mcp_server_langgraph'"
+    )
 
 
 def test_docker_smoke_test_validates_variants():

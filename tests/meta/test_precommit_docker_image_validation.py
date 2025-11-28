@@ -227,9 +227,9 @@ CMD ["pytest"]
             )
 
             # Hook should warn about scripts/ being copied
-            assert (
-                result.returncode == 1 or "scripts/" in result.stderr.lower() or "scripts/" in result.stdout.lower()
-            ), "Hook should warn about scripts/ directory being copied"
+            assert result.returncode == 1 or "scripts/" in result.stderr.lower() or "scripts/" in result.stdout.lower(), (
+                "Hook should warn about scripts/ directory being copied"
+            )
         finally:
             temp_file.unlink()
 

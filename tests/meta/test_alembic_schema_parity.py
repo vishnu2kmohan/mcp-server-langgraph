@@ -48,7 +48,7 @@ def is_postgres_available() -> bool:
 
 
 # Skip all tests in this module if Postgres isn't available
-SKIP_REASON = "PostgreSQL not available. " "Run 'make setup-infra' or 'docker-compose up -d postgres' to start infrastructure."
+SKIP_REASON = "PostgreSQL not available. Run 'make setup-infra' or 'docker-compose up -d postgres' to start infrastructure."
 skip_without_postgres = pytest.mark.skipif(not is_postgres_available(), reason=SKIP_REASON)
 
 

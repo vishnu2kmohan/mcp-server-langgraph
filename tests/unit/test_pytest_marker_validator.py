@@ -50,8 +50,7 @@ class TestMarkerRegistration:
         unregistered = used - registered - allowed_unregistered
 
         assert not unregistered, (
-            f"Found unregistered markers: {sorted(unregistered)}. "
-            f"Add them to pyproject.toml [tool.pytest.ini_options.markers]"
+            f"Found unregistered markers: {sorted(unregistered)}. Add them to pyproject.toml [tool.pytest.ini_options.markers]"
         )
 
     def test_critical_markers_are_registered(self):

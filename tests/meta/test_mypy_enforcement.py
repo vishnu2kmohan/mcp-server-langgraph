@@ -46,7 +46,7 @@ class TestMypyEnforcement:
                 break
 
         assert mypy_repo is not None, (
-            "Mypy hook not found in .pre-commit-config.yaml. " "Expected repo: https://github.com/pre-commit/mirrors-mypy"
+            "Mypy hook not found in .pre-commit-config.yaml. Expected repo: https://github.com/pre-commit/mirrors-mypy"
         )
 
     def test_mypy_hook_is_not_commented_out(self):
@@ -184,9 +184,7 @@ class TestMypyEnforcement:
         # This is informational - we document if recommended flags are missing
         if not has_recommended_flag:
             print(
-                f"\nINFO: Mypy configuration could benefit from recommended flags:\n"
-                f"{recommended_flags}\n"
-                f"Current args: {args}"
+                f"\nINFO: Mypy configuration could benefit from recommended flags:\n{recommended_flags}\nCurrent args: {args}"
             )
 
     def test_mypy_passes_on_current_codebase(self):

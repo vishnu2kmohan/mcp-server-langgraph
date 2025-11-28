@@ -57,9 +57,9 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=False)
 
-        assert (
-            "alice" not in provider.users_db
-        ), "SECURITY FAILURE: Hard-coded 'alice' user still exists in InMemoryUserProvider"
+        assert "alice" not in provider.users_db, (
+            "SECURITY FAILURE: Hard-coded 'alice' user still exists in InMemoryUserProvider"
+        )
 
     def test_no_bob_user_exists_by_default(self):
         """
@@ -79,9 +79,9 @@ class TestNoHardcodedCredentials:
         """
         provider = InMemoryUserProvider(use_password_hashing=False)
 
-        assert (
-            "admin" not in provider.users_db
-        ), "SECURITY FAILURE: Hard-coded 'admin' user still exists in InMemoryUserProvider"
+        assert "admin" not in provider.users_db, (
+            "SECURITY FAILURE: Hard-coded 'admin' user still exists in InMemoryUserProvider"
+        )
 
     def test_users_can_be_created_explicitly(self):
         """
@@ -181,7 +181,7 @@ class TestNoHardcodedCredentialsInSourceCode:
         for pattern in suspicious_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
             assert len(matches) == 0, (
-                f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' " f"in user_provider.py: {matches}"
+                f"SECURITY FAILURE: Found hard-coded credential pattern '{pattern}' in user_provider.py: {matches}"
             )
 
     def test_no_init_users_method_exists(self):
@@ -263,7 +263,7 @@ class TestCredentialCreationDocumentation:
         )
 
         assert has_user_creation_docs, (
-            "README.md should document how to create test users now that " "hard-coded credentials have been removed"
+            "README.md should document how to create test users now that hard-coded credentials have been removed"
         )
 
     def test_add_user_method_has_docstring(self):
@@ -273,9 +273,9 @@ class TestCredentialCreationDocumentation:
         This is the recommended way to create users for testing.
         """
         # Check that add_user method is documented
-        assert (
-            InMemoryUserProvider.add_user.__doc__ is not None
-        ), "The add_user() method should have a docstring explaining how to use it"
+        assert InMemoryUserProvider.add_user.__doc__ is not None, (
+            "The add_user() method should have a docstring explaining how to use it"
+        )
 
         docstring = InMemoryUserProvider.add_user.__doc__
         assert "username" in docstring.lower()

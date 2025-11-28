@@ -170,7 +170,7 @@ def check_tests_exist() -> list[str]:
 
     for test_file, description in required_tests:
         if not Path(test_file).exists():
-            errors.append(f"⚠️  WARNING: Missing {description}\n" f"   Expected: {test_file}")
+            errors.append(f"⚠️  WARNING: Missing {description}\n   Expected: {test_file}")
 
     return errors
 

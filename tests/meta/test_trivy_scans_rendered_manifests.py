@@ -70,8 +70,7 @@ def test_deploy_staging_gke_workflow_renders_manifests_before_trivy_scan():
 
     # Validate that we found both steps
     assert kustomize_render_step is not None, (
-        "Missing step to render Kustomize manifests. "
-        "Expected a step with 'kubectl kustomize deployments/overlays/staging-gke'"
+        "Missing step to render Kustomize manifests. Expected a step with 'kubectl kustomize deployments/overlays/staging-gke'"
     )
 
     assert trivy_step is not None, "Missing Trivy security scan step. Expected step using aquasecurity/trivy-action"
@@ -204,9 +203,9 @@ def test_rendered_manifests_include_security_contexts():
     security_context = qdrant_container.get("securityContext", {})
 
     # Validate security hardening
-    assert (
-        security_context.get("readOnlyRootFilesystem") is True
-    ), "Expected readOnlyRootFilesystem: true from qdrant-patch.yaml"
+    assert security_context.get("readOnlyRootFilesystem") is True, (
+        "Expected readOnlyRootFilesystem: true from qdrant-patch.yaml"
+    )
     assert security_context.get("runAsNonRoot") is True, "Expected runAsNonRoot: true for security hardening"
 
     capabilities = security_context.get("capabilities", {})

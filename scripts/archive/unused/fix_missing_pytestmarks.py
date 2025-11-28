@@ -239,11 +239,11 @@ class FileFixer:
                             if next_line.strip() and not next_line.strip().startswith("#"):
                                 # Insert teardown_method
                                 class_indent = indent + 4
-                                modified_lines.append(f'{" " * class_indent}def teardown_method(self):')
+                                modified_lines.append(f"{' ' * class_indent}def teardown_method(self):")
                                 modified_lines.append(
                                     f'{" " * class_indent}    """Force GC to prevent mock accumulation in xdist workers"""'
                                 )
-                                modified_lines.append(f'{" " * class_indent}    gc.collect()')
+                                modified_lines.append(f"{' ' * class_indent}    gc.collect()")
                                 modified_lines.append("")
                                 modified_lines.append(next_line)
                                 break

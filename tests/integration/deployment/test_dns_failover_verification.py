@@ -146,7 +146,7 @@ class TestDNSConfiguration:
 
         for required_record in required_records:
             assert required_record in existing_records, (
-                f"DNS record missing: {required_record}\n" f"Run: scripts/setup-cloud-dns-staging.sh"
+                f"DNS record missing: {required_record}\nRun: scripts/setup-cloud-dns-staging.sh"
             )
 
 
@@ -340,9 +340,9 @@ class TestServiceConfiguration:
         assert service["spec"]["type"] == "ExternalName", "Service should be type ExternalName for DNS-based approach"
 
         # Verify it uses the DNS name
-        assert (
-            service["spec"]["externalName"] == "redis-session-staging.staging.internal"
-        ), f"Service should use DNS name, got: {service['spec'].get('externalName')}"
+        assert service["spec"]["externalName"] == "redis-session-staging.staging.internal", (
+            f"Service should use DNS name, got: {service['spec'].get('externalName')}"
+        )
 
     @requires_tool("kubectl")
     def test_configmap_uses_dns_names(self):
@@ -450,7 +450,7 @@ class TestDNSFailoverSimulation:
 
         # TTL should be low for fast failover
         assert ttl <= 600, (
-            f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\n" f"Recommended: 300 seconds (5 minutes)"
+            f"DNS TTL should be <= 600 seconds for fast failover, got: {ttl}\nRecommended: 300 seconds (5 minutes)"
         )
 
     @requires_tool("kubectl")

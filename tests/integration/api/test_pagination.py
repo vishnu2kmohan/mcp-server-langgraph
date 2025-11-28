@@ -125,9 +125,9 @@ class TestPaginationOpenAPISchema:
         schemas = openapi.get("components", {}).get("schemas", {})
 
         # Should have PaginationParams schema
-        assert "PaginationParams" in schemas or "Pagination" in str(
-            schemas
-        ), "PaginationParams schema should be in OpenAPI components"
+        assert "PaginationParams" in schemas or "Pagination" in str(schemas), (
+            "PaginationParams schema should be in OpenAPI components"
+        )
 
     def test_pagination_metadata_in_openapi(self, test_client):
         """Pagination metadata should be documented in OpenAPI schema"""
@@ -135,9 +135,9 @@ class TestPaginationOpenAPISchema:
         schemas = openapi.get("components", {}).get("schemas", {})
 
         # Should have PaginationMetadata schema
-        assert "PaginationMetadata" in schemas or "Pagination" in str(
-            schemas
-        ), "PaginationMetadata schema should be in OpenAPI components"
+        assert "PaginationMetadata" in schemas or "Pagination" in str(schemas), (
+            "PaginationMetadata schema should be in OpenAPI components"
+        )
 
 
 @pytest.mark.unit
@@ -191,9 +191,9 @@ class TestPaginationResponse:
                 page_size=page_size,
                 total_pages=expected_pages,  # We're providing it, but should be calculated
             )
-            assert (
-                metadata.total_pages == expected_pages
-            ), f"total_pages calculation wrong for total={total}, page_size={page_size}"
+            assert metadata.total_pages == expected_pages, (
+                f"total_pages calculation wrong for total={total}, page_size={page_size}"
+            )
 
 
 @pytest.mark.unit

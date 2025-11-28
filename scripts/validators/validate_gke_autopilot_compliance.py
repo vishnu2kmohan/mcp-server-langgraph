@@ -139,23 +139,23 @@ class GKEAutopilotValidator:
 
             if has_value and has_value_from:
                 self.errors.append(
-                    f"{deployment_name}/{container_name}: Env var '{name}' " f"has both 'value' and 'valueFrom' specified"
+                    f"{deployment_name}/{container_name}: Env var '{name}' has both 'value' and 'valueFrom' specified"
                 )
 
             # Check for empty valueFrom
             if has_value_from and not env["valueFrom"]:
-                self.errors.append(f"{deployment_name}/{container_name}: Env var '{name}' " f"has empty 'valueFrom'")
+                self.errors.append(f"{deployment_name}/{container_name}: Env var '{name}' has empty 'valueFrom'")
 
             # Check valueFrom has exactly one source
             if has_value_from and env["valueFrom"]:
                 sources = [k for k in env["valueFrom"].keys() if k != "optional"]
                 if len(sources) > 1:
                     self.errors.append(
-                        f"{deployment_name}/{container_name}: Env var '{name}' " f"has multiple valueFrom sources: {sources}"
+                        f"{deployment_name}/{container_name}: Env var '{name}' has multiple valueFrom sources: {sources}"
                     )
                 elif len(sources) == 0:
                     self.errors.append(
-                        f"{deployment_name}/{container_name}: Env var '{name}' " f"has valueFrom but no source specified"
+                        f"{deployment_name}/{container_name}: Env var '{name}' has valueFrom but no source specified"
                     )
 
     def validate_readonly_filesystem(

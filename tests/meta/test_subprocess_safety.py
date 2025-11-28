@@ -214,7 +214,7 @@ class TestSubprocessSafety:
                 break
 
         assert timeout_arg is not None, (
-            "run_cli_tool() must have timeout parameter with default value. " "Example: def run_cli_tool(..., timeout=60)"
+            "run_cli_tool() must have timeout parameter with default value. Example: def run_cli_tool(..., timeout=60)"
         )
 
         # Extract default value

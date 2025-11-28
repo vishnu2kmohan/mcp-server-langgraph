@@ -62,9 +62,9 @@ class TestSerializableLLMMockValidation:
         Ensure SerializableLLMMock properly inherits from Pydantic BaseModel.
         """
         # Verify it's a Pydantic model through BaseChatModel
-        assert issubclass(
-            SerializableLLMMock, BaseModel
-        ), "SerializableLLMMock must inherit from BaseChatModel (which is a Pydantic BaseModel)"
+        assert issubclass(SerializableLLMMock, BaseModel), (
+            "SerializableLLMMock must inherit from BaseChatModel (which is a Pydantic BaseModel)"
+        )
 
     def test_serializable_llm_mock_uses_pydantic_fields(self):
         """

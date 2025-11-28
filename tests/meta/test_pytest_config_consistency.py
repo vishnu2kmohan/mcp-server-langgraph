@@ -111,9 +111,9 @@ class TestPytestConfigConsistency:
         ]
 
         for setting in required_settings:
-            assert (
-                f"{setting} =" in content or f"{setting} = [" in content
-            ), f"pyproject.toml [tool.pytest.ini_options] missing required setting: {setting}"
+            assert f"{setting} =" in content or f"{setting} = [" in content, (
+                f"pyproject.toml [tool.pytest.ini_options] missing required setting: {setting}"
+            )
 
     def test_pytest_config_includes_timeout_protection(self):
         """

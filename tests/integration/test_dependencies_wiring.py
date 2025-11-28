@@ -95,9 +95,9 @@ class TestOpenFGAClientWiring:
             mock_settings.openfga_store_id = None
             mock_settings.openfga_model_id = None
             client = get_openfga_client()
-            assert (
-                client is None
-            ), "get_openfga_client() should return None when store_id or model_id is missing, not create a broken client that will fail at runtime"
+            assert client is None, (
+                "get_openfga_client() should return None when store_id or model_id is missing, not create a broken client that will fail at runtime"
+            )
 
     @pytest.mark.asyncio
     async def test_openfga_client_created_when_config_complete(self):

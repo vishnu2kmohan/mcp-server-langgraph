@@ -57,7 +57,7 @@ class TestPydanticModelNameFormatting:
         pydantic_model_name = wrapper.pydantic_model_name
 
         assert pydantic_model_name == "google-gla:gemini-2.5-flash", (
-            "Google Gemini models must use 'google-gla:' prefix for pydantic-ai. " f"Got: {pydantic_model_name}"
+            f"Google Gemini models must use 'google-gla:' prefix for pydantic-ai. Got: {pydantic_model_name}"
         )
 
     def test_gemini_provider_alias_has_google_gla_prefix(self, mock_pydantic_agent_class):
@@ -67,7 +67,7 @@ class TestPydanticModelNameFormatting:
         pydantic_model_name = wrapper.pydantic_model_name
 
         assert pydantic_model_name == "google-gla:gemini-2.5-flash", (
-            "Provider 'gemini' should map to 'google-gla:' prefix. " f"Got: {pydantic_model_name}"
+            f"Provider 'gemini' should map to 'google-gla:' prefix. Got: {pydantic_model_name}"
         )
 
     def test_anthropic_claude_model_has_anthropic_prefix(self, mock_pydantic_agent_class):
@@ -77,7 +77,7 @@ class TestPydanticModelNameFormatting:
         pydantic_model_name = wrapper.pydantic_model_name
 
         assert pydantic_model_name == "anthropic:claude-sonnet-4-5-20250929", (
-            "Anthropic Claude models must use 'anthropic:' prefix. " f"Got: {pydantic_model_name}"
+            f"Anthropic Claude models must use 'anthropic:' prefix. Got: {pydantic_model_name}"
         )
 
     def test_openai_model_has_openai_prefix(self, mock_pydantic_agent_class):
@@ -86,7 +86,7 @@ class TestPydanticModelNameFormatting:
 
         pydantic_model_name = wrapper.pydantic_model_name
 
-        assert pydantic_model_name == "openai:gpt-4", "OpenAI models must use 'openai:' prefix. " f"Got: {pydantic_model_name}"
+        assert pydantic_model_name == "openai:gpt-4", f"OpenAI models must use 'openai:' prefix. Got: {pydantic_model_name}"
 
     def test_unknown_provider_still_adds_prefix(self, mock_pydantic_agent_class):
         """Unknown providers should still get a prefix (provider:model format)"""
@@ -95,7 +95,7 @@ class TestPydanticModelNameFormatting:
         pydantic_model_name = wrapper.pydantic_model_name
 
         assert pydantic_model_name == "custom-provider:custom-model", (
-            "Unknown providers should use 'provider:model' format. " f"Got: {pydantic_model_name}"
+            f"Unknown providers should use 'provider:model' format. Got: {pydantic_model_name}"
         )
 
     def test_settings_default_model_works_with_pydantic_ai(self, mock_pydantic_agent_class):

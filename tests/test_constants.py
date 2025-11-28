@@ -52,9 +52,9 @@ def test_mock_jwt_token_uses_constant():
     fixture_code = fixture_match.group(0)
 
     # Verify it imports and uses TEST_JWT_SECRET
-    assert (
-        "from tests.constants import TEST_JWT_SECRET" in conftest_content
-    ), "conftest.py must import TEST_JWT_SECRET from tests.constants"
+    assert "from tests.constants import TEST_JWT_SECRET" in conftest_content, (
+        "conftest.py must import TEST_JWT_SECRET from tests.constants"
+    )
     assert "TEST_JWT_SECRET" in fixture_code, "mock_jwt_token fixture must use TEST_JWT_SECRET constant"
 
 
@@ -157,5 +157,5 @@ def test_jwt_secret_not_in_production_config():
 
     # Check that we're not using weak secrets
     assert len(constants.TEST_JWT_SECRET) >= 16, (
-        f"TEST_JWT_SECRET should be at least 16 characters for security. " f"Current length: {len(constants.TEST_JWT_SECRET)}"
+        f"TEST_JWT_SECRET should be at least 16 characters for security. Current length: {len(constants.TEST_JWT_SECRET)}"
     )

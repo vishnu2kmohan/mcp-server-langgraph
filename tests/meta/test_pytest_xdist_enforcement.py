@@ -161,9 +161,9 @@ class TestEnforcementMechanisms:
         content_db = cached_read_file(str(database_fixtures))
 
         # test_infrastructure_ports should use FIXED ports (current architecture)
-        assert (
-            "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db
-        ), "Worker-aware logic missing"
+        assert "PYTEST_XDIST_WORKER" in content_conftest or "test_infrastructure_ports" in content_db, (
+            "Worker-aware logic missing"
+        )
 
         # postgres_connection_clean should use worker schema
         assert "test_worker_" in content_db, "Worker-scoped schema missing from database_fixtures.py"
@@ -858,7 +858,7 @@ class TestXdistGroupCoverage:
 
         if missing_teardown:
             error_msg = (
-                f"Found {len(missing_teardown)} files with xdist_group but missing " "teardown_method() with gc.collect():\n\n"
+                f"Found {len(missing_teardown)} files with xdist_group but missing teardown_method() with gc.collect():\n\n"
             )
             for rel_path in missing_teardown:
                 error_msg += f"  - {rel_path}\n"
@@ -937,7 +937,7 @@ class TestXdistGroupCoverage:
             import warnings
 
             warnings.warn(
-                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% " f"(target: {TARGET_COVERAGE}%)",
+                f"Integration test xdist_group coverage: {coverage_percentage:.1f}% (target: {TARGET_COVERAGE}%)",
                 UserWarning,
                 stacklevel=2,
             )

@@ -292,9 +292,9 @@ class TestCreateServicePrincipal:
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["authentication_mode"] == "client_credentials"
-        assert (
-            data["inherit_permissions"] is True
-        ), "Default inherit_permissions should be True when creating service principal with minimal fields (this locks in the API contract for default behavior)"
+        assert data["inherit_permissions"] is True, (
+            "Default inherit_permissions should be True when creating service principal with minimal fields (this locks in the API contract for default behavior)"
+        )
 
     def test_create_service_principal_service_account_mode(self, sp_test_client, mock_sp_manager):
         """Test creating service principal with service_account_user mode"""

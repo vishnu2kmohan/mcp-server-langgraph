@@ -182,5 +182,5 @@ def test_marker_naming_conventions():
             invalid_markers.append(marker)
 
     assert not invalid_markers, (
-        f"The following markers don't follow naming conventions (snake_case):\n" f"  {sorted(invalid_markers)}"
+        f"The following markers don't follow naming conventions (snake_case):\n  {sorted(invalid_markers)}"
     )
