@@ -110,3 +110,13 @@ runs:
           echo "✓ All dependencies are consistent (no conflicts detected)"
         fi
       shell: bash
+
+    - name: Prune cache for CI optimization
+      run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
+        # Prune cache to reduce size and remove stale entries
+        # This helps prevent cache mismatch issues when Python versions change
+        # See: https://docs.astral.sh/uv/guides/integration/github/
+        uv cache prune --ci
+        echo "✓ Cache pruned for CI optimization"
+      shell: bash
