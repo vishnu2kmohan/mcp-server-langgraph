@@ -223,7 +223,8 @@ def test_dashboard_workflow_syntax():
 
     This ensures the workflow can be parsed and executed by GitHub Actions.
     """
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Use correct path: tests/integration/ -> tests/ -> repo_root/
+    workflow_file = Path(__file__).parent.parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     if not workflow_file.exists():
         pytest.skip("Workflow file not found")

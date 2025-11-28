@@ -43,19 +43,25 @@ class TestKustomizeConfigurations:
         gc.collect()
 
     @pytest.fixture
-    def kustomize_overlays(self) -> list[Path]:
-        """Get all Kustomize overlay directories"""
-        deployments_dir = Path(__file__).parent.parent / "deployments" / "overlays"
-        if not deployments_dir.exists():
-            pytest.skip("Deployments directory not found")
+    def kustomize_overlays(self, deployments_dir) -> list[Path]:
+        """Get all Kustomize overlay directories.
 
-        overlays = [d for d in deployments_dir.iterdir() if d.is_dir() and (d / "kustomization.yaml").exists()]
+        Uses shared deployments_dir fixture from conftest.py (DRY pattern).
+        """
+        overlays_dir = deployments_dir / "overlays"
+        if not overlays_dir.exists():
+            pytest.skip("Deployments overlays directory not found")
+
+        overlays = [d for d in overlays_dir.iterdir() if d.is_dir() and (d / "kustomization.yaml").exists()]
         return overlays
 
     @pytest.fixture
-    def kustomize_base(self) -> Path:
-        """Get the Kustomize base directory"""
-        base_dir = Path(__file__).parent.parent / "deployments" / "base"
+    def kustomize_base(self, deployments_dir) -> Path:
+        """Get the Kustomize base directory.
+
+        Uses shared deployments_dir fixture from conftest.py (DRY pattern).
+        """
+        base_dir = deployments_dir / "base"
         if not base_dir.exists():
             pytest.skip("Base deployments directory not found")
         return base_dir
@@ -200,18 +206,24 @@ class TestGitHubActionsWorkflows:
         gc.collect()
 
     @pytest.fixture
-    def workflow_files(self) -> list[Path]:
-        """Get all GitHub Actions workflow files"""
-        workflows_dir = Path(__file__).parent.parent / ".github" / "workflows"
+    def workflow_files(self, repo_root) -> list[Path]:
+        """Get all GitHub Actions workflow files.
+
+        Uses shared repo_root fixture from conftest.py (DRY pattern).
+        """
+        workflows_dir = repo_root / ".github" / "workflows"
         if not workflows_dir.exists():
             pytest.skip("GitHub workflows directory not found")
 
         return list(workflows_dir.glob("*.yaml")) + list(workflows_dir.glob("*.yml"))
 
     @pytest.fixture
-    def composite_actions(self) -> list[Path]:
-        """Get all composite action files"""
-        actions_dir = Path(__file__).parent.parent / ".github" / "actions"
+    def composite_actions(self, repo_root) -> list[Path]:
+        """Get all composite action files.
+
+        Uses shared repo_root fixture from conftest.py (DRY pattern).
+        """
+        actions_dir = repo_root / ".github" / "actions"
         if not actions_dir.exists():
             pytest.skip("GitHub actions directory not found")
 

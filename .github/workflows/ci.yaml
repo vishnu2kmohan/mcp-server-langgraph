@@ -121,13 +121,13 @@ jobs:
       - name: Run workflow validation tests
         run: |
           echo "🧪 Running workflow validation test suite..."
-          uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
+          uv run --frozen pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short
           echo "✅ All workflow validation tests passed"
 
       - name: Validate pytest configuration compatibility
         run: |
           echo "🔍 Validating pytest addopts against installed plugins..."
-          uv run python scripts/validators/validate_pytest_config.py
+          uv run --frozen python scripts/validators/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
   validate-local-ci-parity:
@@ -152,13 +152,13 @@ jobs:
       - name: Validate pre-push hook configuration
         run: |
           echo "🔍 Validating pre-push hook configuration..."
-          uv run python scripts/validators/validate_pre_push_hook.py
+          uv run --frozen python scripts/validators/validate_pre_push_hook.py
           echo "✅ Pre-push hook configuration is valid"
 
       - name: Run local/CI parity tests
         run: |
           echo "🧪 Running local/CI parity validation tests..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_local_ci_parity.py -v --tb=short
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_local_ci_parity.py -v --tb=short
           echo "✅ Local validation matches CI validation"
 
       - name: Verify Makefile validate-pre-push target
@@ -188,26 +188,26 @@ jobs:
       - name: Run xdist enforcement meta-tests
         run: |
           echo "🧪 Running pytest-xdist isolation enforcement tests..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "meta and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_pytest_xdist_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ Pytest-xdist isolation patterns validated"
 
       - name: Run xfail strict enforcement test
         run: |
           echo "🧪 Running xfail strict enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "meta and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_xfail_strict_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ All xfail markers use strict=True"
 
       - name: Run marker enforcement test
         run: |
           echo "🧪 Running marker enforcement test..."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "meta and not llm"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_marker_enforcement.py -v --tb=short -m "meta and not llm"
           echo "✅ All test files have required markers"
 
       - name: Run comprehensive meta tests
         run: |
           echo "🧪 Running all meta tests (infrastructure validation)..."
           echo "  This includes workflow validation, fixture organization, config validation, etc."
-          OTEL_SDK_DISABLED=true uv run pytest tests/meta/ -v --tb=short -m "meta and not llm" || true
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ -v --tb=short -m "meta and not llm" || true
           echo "✅ Comprehensive meta test suite executed"
         continue-on-error: true  # Don't block CI on meta test failures initially
 

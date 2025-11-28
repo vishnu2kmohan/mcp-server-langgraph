@@ -83,7 +83,7 @@ Analyzed all 40 pre-commit hooks using `language: system` to determine conversio
 **Current**:
 ```yaml
 - id: validate-github-workflows
-  entry: uv run python scripts/validate_github_workflows.py
+  entry: uv run --frozen python scripts/validate_github_workflows.py
   language: system
 ```
 
@@ -106,7 +106,7 @@ Analyzed all 40 pre-commit hooks using `language: system` to determine conversio
 **Current**:
 ```yaml
 - id: validate-gke-autopilot-compliance
-  entry: uv run python scripts/validate_gke_autopilot_compliance.py
+  entry: uv run --frozen python scripts/validate_gke_autopilot_compliance.py
   language: system
 ```
 
@@ -132,7 +132,7 @@ Analyzed all 40 pre-commit hooks using `language: system` to determine conversio
 All pytest hooks are wrapped in `bash -c` primarily to set environment variables:
 
 ```yaml
-entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest ...'
+entry: bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run --frozen pytest ...'
 language: system
 ```
 
@@ -182,7 +182,7 @@ language: system
 
 Examples:
 - `uv-lock-check` - bash -c 'uv lock --check || ...'
-- `run-unit-tests` - bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest ...'
+- `run-unit-tests` - bash -c 'OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run --frozen pytest ...'
 - `actionlint-workflow-validation` - bash -c 'actionlint ...'
 - And 5 more with complex bash logic
 

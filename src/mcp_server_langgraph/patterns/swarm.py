@@ -31,6 +31,7 @@ Example:
 from collections.abc import Callable
 from typing import Annotated, Any, Literal
 
+from langchain_core.runnables import RunnableLambda
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
@@ -210,14 +211,13 @@ class Swarm:
 
         graph: StateGraph[SwarmState] = StateGraph(SwarmState)
 
-        # Add all agent nodes
+        # Add all agent nodes (wrapped with RunnableLambda for type safety)
         for agent_name, agent_func in self.agents.items():
             agent_wrapper = self._create_agent_wrapper(agent_name, agent_func)
-            # LangGraph typing is strict; wrapper signature validated at runtime
-            graph.add_node(agent_name, agent_wrapper)  # type: ignore
+            graph.add_node(agent_name, RunnableLambda(agent_wrapper))
 
-        # Add aggregator
-        graph.add_node("aggregate", self._aggregate_results)
+        # Add aggregator (wrapped with RunnableLambda for type safety)
+        graph.add_node("aggregate", RunnableLambda(self._aggregate_results))
 
         # All agents run in parallel from start
         for agent_name in self.agents.keys():

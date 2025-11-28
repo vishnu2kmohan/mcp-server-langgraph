@@ -171,7 +171,7 @@ jobs:
       - name: Run deployment validation tests
         run: |
           if [ -f tests/deployment/test_helm_configuration.py ]; then
-            uv run pytest tests/deployment/test_helm_configuration.py -v --tb=short
+            uv run --frozen pytest tests/deployment/test_helm_configuration.py -v --tb=short
           else
             echo "⚠️  Deployment tests not found, skipping"
           fi

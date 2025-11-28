@@ -93,7 +93,7 @@ Implemented 11 missing functions to satisfy test specifications:
 
 **Test Results:**
 ```bash
-$ uv run pytest tests/ci/test_dora_metrics.py -v
+$ uv run --frozen pytest tests/ci/test_dora_metrics.py -v
 ===================== 15 passed in 9.82s =====================
 ```
 
@@ -115,7 +115,7 @@ $ uv run pytest tests/ci/test_dora_metrics.py -v
 
 **Evidence:**
 ```bash
-$ uv run pytest tests/meta/test_subprocess_safety.py -xvs
+$ uv run --frozen pytest tests/meta/test_subprocess_safety.py -xvs
 FAILED - Found 119 subprocess.run() call(s) without timeout parameter
 ```
 

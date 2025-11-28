@@ -28,6 +28,7 @@ import sys  # noqa: E402
 import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
+from pathlib import Path  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
 import pytest  # noqa: E402
@@ -620,6 +621,38 @@ def mock_app_settings():
     mock.cors_allowed_origins = []
     mock.get_cors_origins = MagicMock(return_value=[])
     return mock
+
+
+# ==============================================================================
+# Repository Path Fixtures (DRY - prevents path resolution bugs)
+# ==============================================================================
+
+
+@pytest.fixture(scope="session")
+def repo_root() -> Path:
+    """Get the repository root directory.
+
+    Use this fixture instead of manual Path(__file__).parents[N] navigation
+    to prevent path resolution bugs in tests. The conftest.py is always in
+    tests/, so parent.parent gets us to the repo root.
+
+    Returns:
+        Path to repository root directory
+    """
+    return Path(__file__).parent.parent
+
+
+@pytest.fixture(scope="session")
+def deployments_dir(repo_root: Path) -> Path:
+    """Get the deployments directory.
+
+    Args:
+        repo_root: Repository root path (injected by pytest)
+
+    Returns:
+        Path to deployments/ directory
+    """
+    return repo_root / "deployments"
 
 
 # ==============================================================================

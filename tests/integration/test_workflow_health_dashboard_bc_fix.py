@@ -151,7 +151,8 @@ def test_workflow_uses_awk_not_bc():
     This ensures we don't depend on bc which is not available
     in Ubuntu 24.04 GitHub Actions runners.
     """
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Use correct path: tests/integration/ -> tests/ -> repo_root/
+    workflow_file = Path(__file__).parent.parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     if not workflow_file.exists():
         pytest.skip("Workflow file not found")

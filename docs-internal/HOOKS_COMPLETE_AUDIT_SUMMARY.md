@@ -88,7 +88,7 @@ Total:                         8-12 min   Matches CI exactly ✅
 - Impact: Quality Tests workflow failed
 
 **GREEN (After):**
-- Updated 11 hooks: `python -m pytest` → `uv run pytest`
+- Updated 11 hooks: `python -m pytest` → `uv run --frozen pytest`
 - Pattern: Hooks using `uv run` should use `language: system`
 - Reason: uv/venv manage their own dependencies
 
@@ -625,7 +625,7 @@ python scripts/validate_pytest_markers.py
 # Expected: ✅ All 35 used markers are registered
 
 # Test hook dependencies
-uv run pytest tests/regression/test_precommit_hook_dependencies.py -v
+uv run --frozen pytest tests/regression/test_precommit_hook_dependencies.py -v
 # Expected: ✅ 8/8 passed
 ```
 

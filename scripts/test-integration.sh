@@ -332,7 +332,8 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
     # Run pytest directly on host (same as CI)
     # Set PostgreSQL connection parameters inline (MUST match docker-compose.test.yml and CI)
     # This ensures local/CI parity and prevents connection failures
-    # Use uv run to ensure correct Python environment (fixes bad interpreter issue)
+    # Use uv run --frozen to ensure correct Python environment and reproducible builds
+    # --frozen prevents lockfile modifications and ensures CI/local parity
     #
     # NOTE: Default to "-m integration -v --tb=short" if no args provided
     if [ ${#PYTEST_ARGS[@]} -eq 0 ]; then
@@ -347,7 +348,7 @@ if bash scripts/utils/wait_for_services.sh "$COMPOSE_FILE" postgres-test keycloa
        POSTGRES_USER=postgres \
        POSTGRES_PASSWORD=postgres \
        KEYCLOAK_CLIENT_SECRET=test-client-secret-for-e2e-tests \
-       uv run pytest "${PYTEST_ARGS[@]}"; then
+       uv run --frozen pytest "${PYTEST_ARGS[@]}"; then
         END_TIME=$(date +%s)
 
         DURATION=$((END_TIME - START_TIME))

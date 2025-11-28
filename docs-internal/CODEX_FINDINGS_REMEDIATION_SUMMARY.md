@@ -82,7 +82,7 @@ configured_async_mock_raise(exception)
 
 **Validation:**
 ```bash
-$ uv run pytest tests/helpers/test_async_mock_helpers.py -xvs
+$ uv run --frozen pytest tests/helpers/test_async_mock_helpers.py -xvs
 ===================== 21 passed, 1 skipped in 3.69s =====================
 ```
 
@@ -134,7 +134,7 @@ python scripts/bulk_fix_async_mock.py tests/test_example.py
 **Validation:**
 ```bash
 # After remediation should show:
-$ uv run python scripts/check_async_mock_configuration.py tests/**/*.py
+$ uv run --frozen python scripts/check_async_mock_configuration.py tests/**/*.py
 ✅ All AsyncMock instances are properly configured!
 Violations: 0
 ```
@@ -152,7 +152,7 @@ Move hook from `[manual]` to `[pre-push]` in `.pre-commit-config.yaml:1169`.
 
 **Confirmed:** 43 pre-push hooks, 8-12 min push time
 **Impact:** HIGH - Developer productivity bottleneck
-**Root Cause:** 43 separate `uv run pytest` invocations (~64-129s overhead)
+**Root Cause:** 43 separate `uv run --frozen pytest` invocations (~64-129s overhead)
 
 ### Analysis
 
@@ -256,7 +256,7 @@ else:
 
 **Test Results:**
 ```bash
-$ uv run python scripts/validators/validate_pre_push_hook.py
+$ uv run --frozen python scripts/validators/validate_pre_push_hook.py
 ℹ️  Detected pre-commit framework wrapper
    Validating .pre-commit-config.yaml for required hooks...
 ✅ Found 43 pre-push hooks in .pre-commit-config.yaml
@@ -295,9 +295,9 @@ $ uv run python scripts/validators/validate_pre_push_hook.py
 .PHONY: generate-reports
 generate-reports:  ## Regenerate all test infrastructure reports
 	@echo "Regenerating test infrastructure reports..."
-	uv run python scripts/check_test_memory_safety.py $(TESTS) > docs-internal/MEMORY_SAFETY_REPORT.md
-	uv run python scripts/check_async_mock_configuration.py $(TESTS) > docs-internal/ASYNC_MOCK_REPORT.md
-	uv run python scripts/generate_test_suite_stats.py > docs-internal/TEST_SUITE_STATS.md
+	uv run --frozen python scripts/check_test_memory_safety.py $(TESTS) > docs-internal/MEMORY_SAFETY_REPORT.md
+	uv run --frozen python scripts/check_async_mock_configuration.py $(TESTS) > docs-internal/ASYNC_MOCK_REPORT.md
+	uv run --frozen python scripts/generate_test_suite_stats.py > docs-internal/TEST_SUITE_STATS.md
 	@echo "✅ Reports regenerated"
 ```
 
@@ -400,13 +400,13 @@ def test_reports_are_fresh():
 
 **All new code tested:**
 ```bash
-$ uv run pytest tests/helpers/test_async_mock_helpers.py -xvs
+$ uv run --frozen pytest tests/helpers/test_async_mock_helpers.py -xvs
 ===================== 21 passed, 1 skipped in 3.69s =====================
 ```
 
 **Validator tested:**
 ```bash
-$ uv run python scripts/validators/validate_pre_push_hook.py
+$ uv run --frozen python scripts/validators/validate_pre_push_hook.py
 ✅ Found 43 pre-push hooks in .pre-commit-config.yaml
 ℹ️  Info: Some expected hook categories not found (may be organized differently)
 ```

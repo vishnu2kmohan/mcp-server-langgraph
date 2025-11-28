@@ -66,12 +66,14 @@ runs:
 
     - name: Activate virtual environment
       run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
         echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
         echo "$PWD/.venv/bin" >> $GITHUB_PATH
       shell: bash
 
     - name: Verify Python version
       run: |
+        set -euo pipefail  # Exit on error, undefined vars, pipe failures
         EXPECTED="${{ inputs.python-version }}"
         ACTUAL=$(.venv/bin/python --version | awk '{print $2}')
         echo "Expected Python: $EXPECTED"

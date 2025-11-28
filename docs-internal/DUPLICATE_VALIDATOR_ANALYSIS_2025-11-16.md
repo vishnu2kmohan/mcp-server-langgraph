@@ -325,7 +325,7 @@ def test_pytest_addopts_flags_have_required_plugins():
 
 ```yaml
 - id: validate-fixture-organization
-  entry: uv run pytest tests/test_fixture_organization.py -v --tb=short
+  entry: uv run --frozen pytest tests/test_fixture_organization.py -v --tb=short
 ```
 
 **Found In**: 12+ hooks (fixture organization, documentation integrity, etc.)

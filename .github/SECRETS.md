@@ -203,7 +203,7 @@ if: github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 2. Make your changes
 3. Run tests locally:
    ```bash
-   uv run pytest tests/
+   uv run --frozen pytest tests/
    ```
 4. Push to your fork
 5. Create pull request
@@ -334,7 +334,7 @@ To validate your secrets configuration:
 
 ```bash
 # Run workflow validation tests
-uv run pytest tests/test_workflow_validation.py -v
+uv run --frozen pytest tests/test_workflow_validation.py -v
 
 # Test includes:
 # - GCP auth steps have repository checks

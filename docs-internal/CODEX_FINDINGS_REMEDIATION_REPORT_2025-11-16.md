@@ -407,7 +407,7 @@ grep -r "\.venv/bin/" Makefile
 
 # Test pytest invocation
 make test-unit
-# Should use: uv run pytest
+# Should use: uv run --frozen pytest
 
 # Test coverage invocation
 make test-coverage

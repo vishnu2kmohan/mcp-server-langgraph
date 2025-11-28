@@ -100,10 +100,10 @@ This reorganization separates fast, essential hooks (pre-commit) from slow, comp
 - `mypy src/mcp_server_langgraph` - Type checking (non-blocking)
 
 #### Phase 3: Test Suite Validation (3-5 min) **NEW**
-- `uv run pytest tests/ -m unit -x --tb=short` - Unit tests
-- `uv run pytest tests/smoke/ -v --tb=short` - Smoke tests
-- `uv run pytest tests/integration/ -x --tb=short --lf` - Integration tests (last failed, non-blocking)
-- `HYPOTHESIS_PROFILE=ci uv run pytest -m property -x --tb=short` - Property tests (100 examples)
+- `uv run --frozen pytest tests/ -m unit -x --tb=short` - Unit tests
+- `uv run --frozen pytest tests/smoke/ -v --tb=short` - Smoke tests
+- `uv run --frozen pytest tests/integration/ -x --tb=short --lf` - Integration tests (last failed, non-blocking)
+- `HYPOTHESIS_PROFILE=ci uv run --frozen pytest -m property -x --tb=short` - Property tests (100 examples)
 
 #### Phase 4: Pre-commit Hooks (5-8 min) **UPDATED**
 - `pre-commit run --all-files --hook-stage push --show-diff-on-failure` - All push-stage hooks

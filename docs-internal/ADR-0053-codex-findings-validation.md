@@ -212,7 +212,7 @@ Meta-tests run automatically:
 
 **🔴 RED Phase** (Write failing tests first):
 ```bash
-$ uv run pytest tests/meta/test_codex_findings_validation.py
+$ uv run --frozen pytest tests/meta/test_codex_findings_validation.py
 # Result: 5 failed, 6 passed (Keycloak tests failed as expected)
 ```
 
@@ -220,7 +220,7 @@ $ uv run pytest tests/meta/test_codex_findings_validation.py
 ```bash
 # Enabled Keycloak service in docker-compose.test.yml
 # Fixed AST parsing for AsyncFunctionDef fixtures
-$ uv run pytest tests/meta/test_codex_findings_validation.py
+$ uv run --frozen pytest tests/meta/test_codex_findings_validation.py
 # Result: 11 passed ✅
 ```
 

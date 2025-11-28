@@ -1,0 +1,19 @@
+# Trivy Security Scanner Suppressions
+# Root-level suppressions for pre-commit hooks running from repo root.
+#
+# DOCUMENTATION: See subdirectory files for detailed justifications:
+# - deployments/base/.trivyignore (comprehensive base documentation)
+# - deployments/overlays/staging-gke/.trivyignore (staging-specific)
+# - deployments/overlays/production-gke/.trivyignore (production-specific)
+
+# AVD-KSV-0014: Keycloak readOnlyRootFilesystem (Quarkus JIT requirement)
+# See: deployments/base/.trivyignore for full justification
+# Review: 2026-02-20
+AVD-KSV-0014
+
+# AVD-KSV-0109: ConfigMap false positive (LLM token config, not secrets)
+AVD-KSV-0109
+
+# AVD-KSV-0108: ExternalName Service for Redis (Cloud DNS integration)
+# See: deployments/overlays/staging-gke/.trivyignore, ADR-0051
+AVD-KSV-0108

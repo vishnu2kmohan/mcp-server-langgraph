@@ -213,7 +213,7 @@ curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/inst
 **GitHub Actions** (`.github/workflows/quality-tests.yaml`):
 ```yaml
 - name: Validate pre-commit hook configuration
-  run: uv run pytest tests/regression/test_precommit_hook_dependencies.py -v
+  run: uv run --frozen pytest tests/regression/test_precommit_hook_dependencies.py -v
 ```
 
 Validates:
@@ -233,7 +233,7 @@ Automated tests validate:
 
 **Run tests**:
 ```bash
-uv run pytest tests/deployment/test_security_hardening.py -v
+uv run --frozen pytest tests/deployment/test_security_hardening.py -v
 ```
 
 **Pre-deployment Validation** (`tests/deployment/test_staging_deployment_requirements.py`):

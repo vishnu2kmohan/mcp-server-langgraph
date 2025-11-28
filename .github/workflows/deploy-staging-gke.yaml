@@ -72,7 +72,7 @@ jobs:
         run: |
           # Run Kustomize validation tests
           echo "Running Kustomize staging-gke validation tests..."
-          uv run pytest tests/kubernetes/test_kustomize_staging_gke.py -v
+          uv run --frozen pytest tests/kubernetes/test_kustomize_staging_gke.py -v
 
           echo "✅ Kustomize configuration correctness validated"
 

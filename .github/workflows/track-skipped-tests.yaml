@@ -67,9 +67,9 @@ jobs:
     - name: Run skipped test tracker
       id: track
       run: |
-        uv run python scripts/ci/track-skipped-tests.py --format summary > summary.md
-        uv run python scripts/ci/track-skipped-tests.py --format action > action-items.md
-        uv run python scripts/ci/track-skipped-tests.py --format json > skipped-tests.json
+        uv run --frozen python scripts/ci/track-skipped-tests.py --format summary > summary.md
+        uv run --frozen python scripts/ci/track-skipped-tests.py --format action > action-items.md
+        uv run --frozen python scripts/ci/track-skipped-tests.py --format json > skipped-tests.json
 
         # Extract metrics
         TOTAL=$(jq '.total_skipped' skipped-tests.json)

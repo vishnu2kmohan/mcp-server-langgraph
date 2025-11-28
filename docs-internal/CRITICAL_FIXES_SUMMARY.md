@@ -66,7 +66,7 @@ class TestRateLimiterUserExtraction:
 
 **Validation:**
 ```bash
-uv run pytest tests/test_health_check.py tests/test_rate_limiter.py -v
+uv run --frozen pytest tests/test_health_check.py tests/test_rate_limiter.py -v
 # Result: ✅ 37 passed, 1 xfailed, 2 warnings in 3.34s
 ```
 
@@ -122,7 +122,7 @@ from mcp_server_langgraph.core.dependencies import get_keycloak_client
 
 **Validation:**
 ```bash
-uv run pytest tests/integration/test_app_startup_validation.py -v
+uv run --frozen pytest tests/integration/test_app_startup_validation.py -v
 # Result: ✅ 16 passed, 2 warnings in 3.78s
 ```
 

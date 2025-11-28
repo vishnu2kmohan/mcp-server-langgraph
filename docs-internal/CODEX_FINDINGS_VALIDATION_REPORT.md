@@ -380,7 +380,7 @@ All fixes validated through comprehensive targeted test suite:
 
 **Phase 1 & 2 Tests (Critical & High-Priority):**
 ```bash
-uv run pytest -xvs \
+uv run --frozen pytest -xvs \
   tests/meta/test_codex_findings_validation.py::TestDockerImageContents::test_dockerfile_copies_required_directories_for_integration_tests \
   tests/meta/test_codex_findings_validation.py::TestDockerImageContents::test_meta_tests_run_on_host_not_docker \
   tests/meta/test_documentation_references.py::TestDocumentationReferences::test_documentation_cross_references_are_valid \
@@ -393,7 +393,7 @@ uv run pytest -xvs \
 
 **Phase 3 Tests (Medium-Priority):**
 ```bash
-uv run pytest -xvs -k "test_deployment_zone_spreading_allows_single_zone or test_no_hard_coded_ports_in_conftest_health_checks or test_no_placeholder_tests_with_only_pass"
+uv run --frozen pytest -xvs -k "test_deployment_zone_spreading_allows_single_zone or test_no_hard_coded_ports_in_conftest_health_checks or test_no_placeholder_tests_with_only_pass"
 
 # Result: 3 passed, 4927 deselected in 46.94s ✅
 ```

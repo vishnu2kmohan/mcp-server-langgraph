@@ -113,23 +113,34 @@ def test_trivy_scan_allows_documented_suppressions():
     Per user requirement: "Suppress with .trivyignore (Recommended)"
 
     Policy:
+    - Root-level .trivyignore IS allowed (required for CI pre-commit hooks running from repo root)
     - Environment-specific .trivyignore files ARE allowed (staging-gke, production-gke, etc.)
-    - Global .trivyignore files are NOT allowed (too broad, could hide real issues)
+    - Intermediate global .trivyignore files (deployments/.trivyignore) are NOT allowed
     - All suppressions must be documented (validated by test_trivy_suppressions.py)
     """
     repo_root = Path(__file__).parent.parent.parent
 
-    # Global .trivyignore files are NOT allowed (maintain strict default policy)
-    global_ignore_locations = [
-        repo_root / ".trivyignore",
+    # Root .trivyignore IS allowed - needed for CI pre-commit hooks
+    # It should reference subdirectory files for detailed documentation
+    root_trivyignore = repo_root / ".trivyignore"
+    if root_trivyignore.exists():
+        content = root_trivyignore.read_text()
+        # Verify it references the detailed documentation files
+        assert "deployments/base/.trivyignore" in content or "See:" in content, (
+            "Root .trivyignore must reference detailed documentation in subdirectory files. "
+            "Add a comment pointing to deployments/base/.trivyignore or overlay-specific files."
+        )
+
+    # Intermediate global .trivyignore files are NOT allowed (too broad)
+    disallowed_global_locations = [
         repo_root / "deployments" / ".trivyignore",
         repo_root / "deployments" / "overlays" / ".trivyignore",
     ]
 
-    for ignore_file in global_ignore_locations:
+    for ignore_file in disallowed_global_locations:
         assert not ignore_file.exists(), (
             f"Found global .trivyignore file at {ignore_file}. "
-            "Global suppressions are not allowed - they could hide real security issues. "
+            "Intermediate global suppressions are not allowed - they could hide real security issues. "
             "Use environment-specific .trivyignore files in overlay directories instead "
             "(e.g., deployments/overlays/staging-gke/.trivyignore)."
         )

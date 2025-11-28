@@ -21,8 +21,8 @@ uv add package-name
 uv add --dev package-name
 
 # Run commands with uv
-uv run pytest
-uv run python script.py
+uv run --frozen pytest
+uv run --frozen python script.py
 
 # Export for compatibility (Docker, etc.)
 uv export --frozen --no-hashes > requirements.txt
@@ -125,7 +125,7 @@ RUN pip install -r requirements.txt
   run: uv sync --all-extras
 
 - name: Run tests
-  run: uv run pytest tests/
+  run: uv run --frozen pytest tests/
 
 # ❌ Incorrect
 - name: Install dependencies
@@ -142,7 +142,7 @@ before_script:
 
 test:
   script:
-    - uv run pytest tests/
+    - uv run --frozen pytest tests/
 ```
 
 ---
@@ -230,7 +230,7 @@ The project has pre-commit hooks that:
 | Install deps | `uv sync` | ~~`pip install -r requirements.txt`~~ |
 | Install dev deps | `uv sync --extra dev` | ~~`pip install -r requirements-dev.txt`~~ |
 | Add dependency | `uv add package` | ~~`pip install package`~~ |
-| Run tests | `uv run pytest` | ~~`python -m pytest`~~ |
+| Run tests | `uv run --frozen pytest` | ~~`python -m pytest`~~ |
 | Export for Docker | `uv export > req.txt` | N/A |
 
 ---

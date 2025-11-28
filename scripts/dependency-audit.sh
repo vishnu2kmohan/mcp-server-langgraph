@@ -91,12 +91,12 @@ check_outdated() {
     else
         echo -e "${YELLOW}⚠ Found $outdated_count outdated packages:${NC}"
         echo ""
-        uv run pip list --outdated --format=columns
+        uv run --frozen pip list --outdated --format=columns
 
         # Show critical outdated packages
         echo ""
         echo -e "${YELLOW}Critical packages requiring updates:${NC}"
-        uv run pip list --outdated --format=json | jq -r '.[] | select(.name | test("langgraph|fastapi|pydantic|cryptography|pyjwt|openfga")) | "\(.name): \(.version) → \(.latest_version)"'
+        uv run --frozen pip list --outdated --format=json | jq -r '.[] | select(.name | test("langgraph|fastapi|pydantic|cryptography|pyjwt|openfga")) | "\(.name): \(.version) → \(.latest_version)"'
     fi
 
     echo ""

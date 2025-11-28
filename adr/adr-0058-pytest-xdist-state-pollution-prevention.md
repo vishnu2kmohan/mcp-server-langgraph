@@ -179,7 +179,7 @@ The `check_test_memory_safety.py` script detects:
 # .github/workflows/ci.yaml (Phase 1)
 - name: Fast Checks
   run: |
-    uv run python scripts/check_test_memory_safety.py
+    uv run --frozen python scripts/check_test_memory_safety.py
     # Fails build if violations detected
 ```
 

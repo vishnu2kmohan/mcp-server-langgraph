@@ -61,7 +61,7 @@ All changes to `.github/workflows/*.yaml` files **MUST** be tested locally with 
 **Why?** Recent CI failures were caused by issues that `act` would have caught:
 - Missing dependencies (ModuleNotFoundError)
 - Missing system tools (jq: command not found)
-- Incorrect Python usage (bare `python` instead of `uv run python`)
+- Incorrect Python usage (bare `python` instead of `uv run --frozen python`)
 
 ### Quick Testing
 
@@ -197,8 +197,8 @@ Run pre-push validation manually anytime:
 make validate-pre-push
 
 # Or run specific phases
-uv run pytest tests/ -m unit           # Phase 3: Unit tests
-uv run pytest tests/smoke/             # Phase 3: Smoke tests
+uv run --frozen pytest tests/ -m unit           # Phase 3: Unit tests
+uv run --frozen pytest tests/smoke/             # Phase 3: Smoke tests
 pre-commit run --all-files --hook-stage pre-push  # Phase 4
 ```
 
@@ -288,7 +288,7 @@ pre-commit run ruff --all-files
 **Pre-push failures:**
 ```bash
 # Run specific phase
-uv run pytest tests/ -m unit     # Phase 3: Unit tests
+uv run --frozen pytest tests/ -m unit     # Phase 3: Unit tests
 uv lock --check                  # Phase 1: Lockfile
 pre-commit run --all-files --hook-stage push  # Phase 4
 ```
@@ -416,13 +416,13 @@ If you need to test multiple Python versions locally:
 
 ```bash
 # Using Docker to test against Python 3.11
-docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run pytest tests/"
+docker run --rm -v $(pwd):/app -w /app python:3.11 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
 
 # Using Docker to test against Python 3.12
-docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run pytest tests/"
+docker run --rm -v $(pwd):/app -w /app python:3.12 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
 
 # Using Docker to test against Python 3.13
-docker run --rm -v $(pwd):/app -w /app python:3.13 bash -c "pip install uv && uv sync && uv run pytest tests/"
+docker run --rm -v $(pwd):/app -w /app python:3.13 bash -c "pip install uv && uv sync && uv run --frozen pytest tests/"
 ```
 
 #### Python Version Compatibility
@@ -574,7 +574,7 @@ git commit -S -m "feat: add feature"
 
 **MUST**:
 - ✅ Use `uv` for all Python operations (not `pip`)
-- ✅ Use `uv run python` for scripts (not bare `python`)
+- ✅ Use `uv run --frozen python` for scripts (not bare `python`)
 - ✅ Use `uv sync --extra dev --extra builder` for tests
 - ✅ Test with `act` before committing
 - ✅ Add timeouts to all jobs

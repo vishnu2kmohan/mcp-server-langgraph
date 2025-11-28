@@ -30,7 +30,7 @@ ERROR_MSG="$ARGUMENTS"
 If no argument, look for recent errors:
 ```bash
 # Check recent test failures
-uv run pytest --lf -v 2>&1 | tee /tmp/test_errors.txt
+uv run --frozen pytest --lf -v 2>&1 | tee /tmp/test_errors.txt
 
 # Check recent git commits for fix mentions
 git log -10 --oneline | grep -i "fix"
@@ -124,7 +124,7 @@ python --version
 **For Test Failures**:
 ```bash
 # Run failing test in verbose mode
-uv run pytest {test_file}::{test_name} -vv -s
+uv run --frozen pytest {test_file}::{test_name} -vv -s
 
 # Check test dependencies
 grep -r "import.*{module}" tests/
@@ -406,7 +406,7 @@ git commit -m "fix: add missing session store functions"
 
 After fix, run:
 ```bash
-uv run pytest tests/test_auth.py::test_login -v
+uv run --frozen pytest tests/test_auth.py::test_login -v
 ```
 ```
 
@@ -448,7 +448,7 @@ but the loop gets closed before the fixture cleanup runs.
 
 After fix, run:
 ```bash
-uv run pytest tests/ -v -k "redis"
+uv run --frozen pytest tests/ -v -k "redis"
 ```
 
 ```bash
@@ -486,7 +486,7 @@ redis-cli ping  # Should return PONG
 
 After service is up, re-run tests:
 ```bash
-uv run pytest tests/test_session.py -v
+uv run --frozen pytest tests/test_session.py -v
 ```bash
 Prevention:
 Add to .claude/memory/:

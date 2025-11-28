@@ -368,7 +368,7 @@ Required test coverage of 66.0% reached. Total coverage: 73.48% ✅
 \`\`\`bash
 make test-unit
 # Expands to:
-OTEL_SDK_DISABLED=true uv run pytest -n auto -m unit --cov=src/mcp_server_langgraph
+OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto -m unit --cov=src/mcp_server_langgraph
 \`\`\`
 
 **CI Command** (`.github/workflows/ci.yaml:247`):

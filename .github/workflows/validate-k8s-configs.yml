@@ -129,7 +129,7 @@ jobs:
         run: |
           # Run only the deployment regression tests
           # Uses locked pytest 8.4.2 from uv.lock (via composite action)
-          uv run pytest tests/integration/regression/test_pod_deployment_regression.py -v --no-header --tb=short
+          uv run --frozen pytest tests/integration/regression/test_pod_deployment_regression.py -v --no-header --tb=short
 
   summary:
     name: Validation Summary

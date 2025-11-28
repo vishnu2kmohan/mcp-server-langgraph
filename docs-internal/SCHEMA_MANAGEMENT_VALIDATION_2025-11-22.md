@@ -110,7 +110,7 @@ These are functionally identical but have different internal object IDs. The tes
 
 ```bash
 $ POSTGRES_HOST=localhost POSTGRES_PORT=9432 \
-  uv run pytest tests/meta/test_alembic_schema_parity.py -v
+  uv run --frozen pytest tests/meta/test_alembic_schema_parity.py -v
 
 tests/meta/test_alembic_schema_parity.py::TestAlembicSchemaParity::test_alembic_migration_creates_all_tables PASSED
 tests/meta/test_alembic_schema_parity.py::TestAlembicSchemaParity::test_sql_schema_creates_all_tables PASSED

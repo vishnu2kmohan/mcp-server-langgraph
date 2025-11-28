@@ -64,12 +64,13 @@ class TestIntegrationScriptArgPropagation:
         """
         content = self.script_path.read_text()
 
-        # Find the main pytest invocation (should be after "uv run pytest")
-        # Pattern: Look for "uv run pytest" followed by argument usage
-        pytest_invocations = re.findall(r"uv run pytest\s+([^\n]+)", content, re.MULTILINE)
+        # Find the main pytest invocation (should be after "uv run [--frozen] pytest")
+        # Pattern: Look for "uv run [--frozen] pytest" followed by argument usage
+        # Note: --frozen flag is used for reproducible builds
+        pytest_invocations = re.findall(r"uv run\s+(?:--frozen\s+)?pytest\s+([^\n]+)", content, re.MULTILINE)
 
         # There should be at least one pytest invocation
-        assert len(pytest_invocations) > 0, "No 'uv run pytest' invocations found in script"
+        assert len(pytest_invocations) > 0, "No 'uv run [--frozen] pytest' invocations found in script"
 
         # Find the main test execution invocation (not the manual psql verification)
         # This is the one that should use PYTEST_ARGS
@@ -87,8 +88,8 @@ class TestIntegrationScriptArgPropagation:
         # This enables matrix splitting, coverage collection, custom markers, etc.
         assert '"${PYTEST_ARGS[@]}"' in main_invocation or "${PYTEST_ARGS[@]}" in main_invocation, (
             f"Main pytest invocation does not use PYTEST_ARGS array!\n"
-            f"Found: uv run pytest {main_invocation}\n"
-            f'Expected: uv run pytest "${{PYTEST_ARGS[@]}}"\n\n'
+            f"Found: uv run [--frozen] pytest {main_invocation}\n"
+            f'Expected: uv run --frozen pytest "${{PYTEST_ARGS[@]}}"\n\n'
             f"This breaks GitHub Actions matrix parallelization and coverage collection.\n"
             f"The workflow passes '--splits 4 --group N --cov' but they are ignored."
         )
@@ -156,8 +157,8 @@ class TestIntegrationScriptArgPropagation:
         """
         content = self.script_path.read_text()
 
-        # Find all pytest invocations
-        pytest_invocations = re.findall(r"uv run pytest\s+([^\n;]+)", content)
+        # Find all pytest invocations (including uv run --frozen pytest)
+        pytest_invocations = re.findall(r"uv run\s+(?:--frozen\s+)?pytest\s+([^\n;]+)", content)
 
         for invocation in pytest_invocations:
             # Skip verification commands

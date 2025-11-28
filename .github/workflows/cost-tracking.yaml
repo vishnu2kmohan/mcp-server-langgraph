@@ -130,7 +130,7 @@ jobs:
         PERIOD_DAYS: ${{ steps.fetch.outputs.period }}
       run: |
         # Run cost analysis using external script
-        uv run python scripts/ci/track_costs.py
+        uv run --frozen python scripts/ci/track_costs.py
 
         # Load metrics into outputs
         source cost-metrics.txt

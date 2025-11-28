@@ -30,9 +30,13 @@ class TestSecurityContexts:
         gc.collect()
 
     @pytest.fixture
-    def deployment_patch_files(self):
-        """Get all deployment patch files."""
-        overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
+    def deployment_patch_files(self, deployments_dir):
+        """Get all deployment patch files.
+
+        Uses the shared deployments_dir fixture from conftest.py to prevent
+        path resolution bugs (DRY pattern).
+        """
+        overlays_dir = deployments_dir / "overlays" / "staging-gke"
         return [
             overlays_dir / "deployment-patch.yaml",
             overlays_dir / "openfga-patch.yaml",
@@ -209,9 +213,9 @@ class TestImagePullPolicy:
         gc.collect()
 
     @pytest.fixture
-    def staging_overlay_dir(self):
-        """Get staging overlay directory."""
-        return Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
+    def staging_overlay_dir(self, deployments_dir):
+        """Get staging overlay directory using shared fixture."""
+        return deployments_dir / "overlays" / "staging-gke"
 
     @requires_tool("kubectl")
     def test_staging_overlay_has_imagepullpolicy_always(self, staging_overlay_dir):
@@ -289,16 +293,14 @@ class TestRedisExternalNameService:
         """Force GC to prevent mock accumulation in xdist workers"""
         gc.collect()
 
-    def test_redis_service_configuration(self):
+    def test_redis_service_configuration(self, deployments_dir):
         """
         Test Redis service configuration for AVD-KSV-0108 compliance.
 
         Per user preference: Investigate before deciding on approach.
         This test documents the current state and expected fixes.
         """
-        redis_service_file = (
-            Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke" / "redis-session-service-patch.yaml"
-        )
+        redis_service_file = deployments_dir / "overlays" / "staging-gke" / "redis-session-service-patch.yaml"
 
         if not redis_service_file.exists():
             pytest.skip("Redis service patch not found")
@@ -337,9 +339,9 @@ class TestKubernetesValidation:
         gc.collect()
 
     @requires_tool("kubectl")
-    def test_kubeconform_validates_manifests(self):
+    def test_kubeconform_validates_manifests(self, deployments_dir):
         """Test that manifests pass kubeconform validation."""
-        overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
+        overlays_dir = deployments_dir / "overlays" / "staging-gke"
 
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")
@@ -367,9 +369,9 @@ class TestKubernetesValidation:
         ), f"Kubeconform validation failed:\n{validate_result.stdout}\n{validate_result.stderr}"
 
     @requires_tool("kubectl")
-    def test_kustomize_builds_successfully(self):
+    def test_kustomize_builds_successfully(self, deployments_dir):
         """Test that Kustomize overlays build without errors."""
-        overlays_dir = Path(__file__).parent.parent / "deployments" / "overlays" / "staging-gke"
+        overlays_dir = deployments_dir / "overlays" / "staging-gke"
 
         if not overlays_dir.exists():
             pytest.skip("Overlays directory not found")

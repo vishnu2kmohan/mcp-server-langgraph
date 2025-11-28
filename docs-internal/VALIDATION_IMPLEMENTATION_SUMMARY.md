@@ -94,7 +94,7 @@ make docs-validate-links                         # Via Makefile
 **Usage**:
 ```bash
 python3 scripts/validators/check_version_consistency.py     # Check
-uv run python3 scripts/validators/check_version_consistency.py  # With deps
+uv run --frozen python3 scripts/validators/check_version_consistency.py  # With deps
 make docs-validate-version                       # Via Makefile
 ```
 
@@ -852,7 +852,7 @@ python3 scripts/check_internal_links.py --all
 
 # Version consistency
 make docs-validate-version
-uv run python3 scripts/validators/check_version_consistency.py
+uv run --frozen python3 scripts/validators/check_version_consistency.py
 
 # Mintlify build
 make docs-validate-mintlify

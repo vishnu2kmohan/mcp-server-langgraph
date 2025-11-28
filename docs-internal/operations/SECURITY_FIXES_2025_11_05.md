@@ -321,14 +321,14 @@ Total: 41 passed, 4 skipped
 
 ```bash
 # Run all security tests
-uv run pytest tests/api/test_service_principals_security.py \
+uv run --frozen pytest tests/api/test_service_principals_security.py \
                 tests/api/test_scim_security.py -v
 
 # Run with coverage
-uv run pytest tests/api/ -k "security" --cov=src/mcp_server_langgraph --cov-report=html
+uv run --frozen pytest tests/api/ -k "security" --cov=src/mcp_server_langgraph --cov-report=html
 
 # Run specific vulnerability test
-uv run pytest tests/api/test_service_principals_security.py::TestServicePrincipalSecurity::test_prevent_unauthorized_admin_impersonation -xvs
+uv run --frozen pytest tests/api/test_service_principals_security.py::TestServicePrincipalSecurity::test_prevent_unauthorized_admin_impersonation -xvs
 ```
 
 ---

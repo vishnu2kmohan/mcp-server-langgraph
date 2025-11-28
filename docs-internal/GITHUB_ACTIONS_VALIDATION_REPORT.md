@@ -258,7 +258,7 @@ Created pre-commit hook to prevent future regressions:
 ```yaml
 - id: validate-github-action-versions
   name: Validate GitHub Actions Action Versions
-  entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
+  entry: uv run --frozen pytest tests/meta/test_github_actions_validation.py -v --tb=short
   language: system
   pass_filenames: false
   files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
@@ -464,7 +464,7 @@ This comprehensive review demonstrated that:
 ### RED Phase (Initial Test Run)
 
 ```bash
-$ uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
+$ uv run --frozen pytest tests/meta/test_github_actions_validation.py -v --tb=short
 
 ======================== test session starts =========================
 FAILED test_astral_sh_setup_uv_version_is_valid
@@ -487,7 +487,7 @@ PASSED test_all_workflows_are_valid_yaml
 ### GREEN Phase (Final Test Run)
 
 ```bash
-$ uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
+$ uv run --frozen pytest tests/meta/test_github_actions_validation.py -v --tb=short
 
 ======================== test session starts =========================
 PASSED test_astral_sh_setup_uv_version_is_valid

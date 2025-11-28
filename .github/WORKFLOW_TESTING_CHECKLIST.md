@@ -99,7 +99,7 @@ Check these in act output:
 #### Script Execution
 ```
 | Run skipped test tracker
-| uv run python scripts/ci/track-skipped-tests.py
+| uv run --frozen python scripts/ci/track-skipped-tests.py
 - ✅ GOOD
 ```
 
@@ -234,7 +234,7 @@ gh run list --limit=5
 - run: python scripts/ci/check-links.py
 
 # ✅ GOOD
-- run: uv run python scripts/ci/check-links.py
+- run: uv run --frozen python scripts/ci/check-links.py
 ```
 
 **Test with act**: Shows if python is in PATH correctly
