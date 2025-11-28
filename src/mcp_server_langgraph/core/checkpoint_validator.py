@@ -262,7 +262,7 @@ class CheckpointConfigValidator:
 
             # Attempt to create client (will fail if URL is malformed)
             # Note: This doesn't actually connect, just validates URL parsing
-            redis_async.from_url(url)  # type: ignore[no-untyped-call]
+            _ = redis_async.from_url(url)  # type: ignore[no-untyped-call]
 
             # Close the client (cleanup)
             # In production, actual connection test would be async

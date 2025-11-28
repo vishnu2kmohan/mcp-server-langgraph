@@ -305,7 +305,8 @@ exclude = [
 # UP: pyupgrade (modernize Python syntax)
 # B: flake8-bugbear (common bugs)
 # RUF: Ruff-specific rules (unreachable code, etc.)
-select = ["E", "F", "I", "UP", "B", "RUF"]
+# S: flake8-bandit security rules (CodeQL parity - PR #121)
+select = ["E", "F", "I", "UP", "B", "RUF", "S"]
 
 # Ignore specific rules to align with black formatting and reduce noise during migration
 ignore = [
@@ -321,7 +322,9 @@ ignore = [
     "B017",  # assert-raises-exception
     "B018",  # useless-expression
     "B028",  # no-explicit-stacklevel
-    "B904",  # Exception chaining
+    # TODO: B904 (exception chaining) - 51 violations across src/, fix incrementally
+    # B904 is best practice but low-severity. Tracked for future PR.
+    "B904",  # raise-without-from-inside-except
     "UP028", # yield-in-for-loop
     "UP035", # deprecated-import
     # NOTE: UP038 was removed in Ruff v0.13.0 (isinstance union is slower, not recommended)
@@ -342,6 +345,11 @@ ignore = [
     "RUF043", # ambiguous-unicode-name
     "RUF059", # unused-unpacked-variable (low priority style fix)
     "RUF100", # unused-noqa (will clean up noqa directives separately)
+    # S (security) rules - selectively ignored where appropriate:
+    "S101",  # assert - used intentionally in tests and debug code
+    "S104",  # hardcoded-bind-all-interfaces - 0.0.0.0 intentional for container networking
+    "S110",  # try-except-pass - TODO: Fix incrementally (16 in src/, 38 in tests/)
+    "S311",  # suspicious-non-cryptographic-random-usage - random used for non-security purposes
     # Temporarily disabled during Ruff migration (can re-enable incrementally):
     # N-series (naming): 404 violations - will fix in separate PR
     # C4 (comprehensions): Low priority - readability improvements
@@ -353,6 +361,61 @@ ignore = [
 force-single-line = false
 force-wrap-aliases = false
 split-on-trailing-comma = true
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use hardcoded passwords, subprocess, temp files for test fixtures
+"tests/**/*.py" = [
+    "S105",  # hardcoded-password-string - test fixtures use known passwords
+    "S106",  # hardcoded-password-func-arg - test fixtures
+    "S107",  # hardcoded-password-default - test fixtures
+    "S108",  # hardcoded-temp-file - test temp directories
+    "S112",  # try-except-continue - test error handling patterns
+    "S301",  # suspicious-pickle-usage - testing serialization
+    "S602",  # subprocess-popen-with-shell-equals-true - test process management
+    "S603",  # subprocess-without-shell-equals-true - test process management
+    "S605",  # start-process-with-a-shell - test shell commands
+    "S607",  # start-process-with-partial-path - test executables
+    "S608",  # hardcoded-sql-expression - test SQL queries
+    "B904",  # raise-without-from-inside-except - test exception handling
+]
+# Scripts may use subprocess and shell commands intentionally
+"scripts/**/*.py" = [
+    "S602",  # subprocess-popen-with-shell-equals-true
+    "S603",  # subprocess-without-shell-equals-true
+    "S605",  # start-process-with-a-shell
+    "S607",  # start-process-with-partial-path
+]
+# False positives - these files don't contain actual secrets
+"src/mcp_server_langgraph/auth/keycloak.py" = [
+    "S107",  # False positive: "urn:ietf:params:oauth:token-type:access_token" is OAuth2 spec, not password
+]
+"src/mcp_server_langgraph/builder/codegen/generator.py" = [
+    "S607",  # False positive: "ruff" is a known dev tool
+]
+"src/mcp_server_langgraph/compliance/gdpr/postgres_storage.py" = [
+    "S608",  # False positive: SQL injection - field names validated, values parameterized (see code comments)
+]
+"src/mcp_server_langgraph/core/cache.py" = [
+    "S301",  # False positive: pickle used for internal Redis cache only, not untrusted data
+]
+"src/mcp_server_langgraph/core/config.py" = [
+    "S105",  # False positive: checking FOR hardcoded password, not using one
+]
+"src/mcp_server_langgraph/core/security.py" = [
+    "S105",  # False positive: "[REDACTED]" is a placeholder for sanitizing, not a password
+]
+"src/mcp_server_langgraph/execution/docker_sandbox.py" = [
+    "S108",  # False positive: Docker tmpfs mount paths, ephemeral in-memory storage
+]
+"src/mcp_server_langgraph/health/database_checks.py" = [
+    "S107",  # False positive: default credentials for local dev health checks only
+]
+"src/mcp_server_langgraph/mcp/server_streamable.py" = [
+    "S106",  # False positive: "bearer" is OAuth2 token type (RFC 6750), not a password
+]
+"src/mcp_server_langgraph/monitoring/cost_tracker.py" = [
+    "S106",  # False positive: "input"/"output" are LLM token types, not auth tokens
+]
 
 [tool.ruff.format]
 # Use black-compatible formatting

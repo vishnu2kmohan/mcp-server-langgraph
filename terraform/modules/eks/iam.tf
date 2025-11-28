@@ -441,38 +441,46 @@ resource "aws_iam_role" "application" {
 }
 
 resource "aws_iam_policy" "application_secrets" {
-  count = var.create_application_irsa_role ? 1 : 0
+  # Only create if IRSA role is enabled AND at least one ARN list is non-empty
+  count = var.create_application_irsa_role && (length(var.application_secrets_arns) > 0 || length(var.application_kms_key_arns) > 0) ? 1 : 0
 
   name_prefix = "${local.cluster_name}-app-secrets-"
   description = "Application Secrets Manager access for ${local.cluster_name}"
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = var.application_secrets_arns
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "kms:Decrypt",
-          "kms:DescribeKey"
-        ]
-        Resource = var.application_kms_key_arns
-      }
-    ]
+    Statement = concat(
+      # Secrets Manager access (only if ARNs are specified)
+      length(var.application_secrets_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue",
+            "secretsmanager:DescribeSecret"
+          ]
+          Resource = var.application_secrets_arns
+        }
+      ] : [],
+      # KMS access (only if ARNs are specified)
+      length(var.application_kms_key_arns) > 0 ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "kms:Decrypt",
+            "kms:DescribeKey"
+          ]
+          Resource = var.application_kms_key_arns
+        }
+      ] : []
+    )
   })
 
   tags = local.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "application_secrets" {
-  count = var.create_application_irsa_role ? 1 : 0
+  # Only attach if the policy was created (matching the policy's count condition)
+  count = var.create_application_irsa_role && (length(var.application_secrets_arns) > 0 || length(var.application_kms_key_arns) > 0) ? 1 : 0
 
   role       = aws_iam_role.application[0].name
   policy_arn = aws_iam_policy.application_secrets[0].arn

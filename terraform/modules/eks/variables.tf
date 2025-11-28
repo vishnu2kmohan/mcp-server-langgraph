@@ -390,15 +390,25 @@ variable "application_service_account_namespace" {
 }
 
 variable "application_secrets_arns" {
-  description = "List of Secrets Manager ARNs the application can access"
+  description = "List of Secrets Manager ARNs the application can access. Must be specific ARNs, not wildcards."
   type        = list(string)
-  default     = ["*"]
+  default     = []
+
+  validation {
+    condition     = alltrue([for arn in var.application_secrets_arns : arn != "*"])
+    error_message = "Wildcard ARNs ('*') are not allowed. Please specify explicit Secrets Manager ARNs for security."
+  }
 }
 
 variable "application_kms_key_arns" {
-  description = "List of KMS key ARNs the application can use for decryption"
+  description = "List of KMS key ARNs the application can use for decryption. Must be specific ARNs, not wildcards."
   type        = list(string)
-  default     = ["*"]
+  default     = []
+
+  validation {
+    condition     = alltrue([for arn in var.application_kms_key_arns : arn != "*"])
+    error_message = "Wildcard ARNs ('*') are not allowed. Please specify explicit KMS key ARNs for security."
+  }
 }
 
 variable "enable_xray" {
