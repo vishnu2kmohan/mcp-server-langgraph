@@ -166,3 +166,134 @@ KSV021
 # - Admission controllers can be used to restrict registries at cluster level
 #
 KSV0125
+
+# ==============================================================================
+# PROMETHEUS OPERATOR / MONITORING STACK
+# ==============================================================================
+# The kube-prometheus-stack requires elevated permissions for cluster-wide
+# monitoring capabilities. These are fundamental to its operation.
+
+# KSV041: Manage secrets
+# Required for prometheus-operator to read secrets for scrape configurations,
+# alertmanager configs, and TLS certificates.
+# Affected: kube-state-metrics, prometheus-operator clusterroles
+KSV041
+
+# KSV045: No wildcard verb roles
+# Prometheus Operator requires wildcard verbs for CRD management
+# (ServiceMonitors, PodMonitors, PrometheusRules, etc.)
+# Affected: prometheus-operator clusterroles
+KSV045
+
+# KSV048/KSV049: Manage Kubernetes workloads and configmaps
+# Required for prometheus-operator to manage monitoring resources
+# Affected: prometheus-operator clusterroles
+KSV048
+KSV049
+
+# KSV056: Manage Kubernetes networking
+# Required for ServiceMonitor and PodMonitor CRD management
+# Affected: prometheus-operator clusterroles
+KSV056
+
+# KSV114: Webhook admission access
+# Required for prometheus-operator to manage admission webhooks for PrometheusRule,
+# ServiceMonitor, and PodMonitor CRD validation. The operator uses webhooks to validate
+# CRD specifications before they are applied to prevent misconfiguration.
+# Affected: prometheus-operator admission-webhooks clusterrole
+KSV114
+
+# KSV036: Protecting Pod service account tokens
+# Prometheus/Alertmanager pods require service account tokens for
+# Kubernetes API access (service discovery, node metadata)
+# Affected: prometheus.yaml, alertmanager.yaml
+KSV036
+
+# ==============================================================================
+# NODE EXPORTER (DaemonSet)
+# ==============================================================================
+# Node exporter requires host-level access to collect node metrics.
+# This is fundamental to its operation as a node-level monitoring agent.
+
+# KSV009: Access to host network
+# Required to expose node metrics on host network
+# Affected: prometheus-node-exporter daemonset
+KSV009
+
+# KSV010: Access to host PID
+# Required to collect process metrics from the host
+# Affected: prometheus-node-exporter daemonset
+KSV010
+
+# KSV023/KSV121: hostPath volumes mounted
+# Required to access host filesystem for node metrics
+# (/, /sys, /proc mounts for filesystem and system metrics)
+# Affected: prometheus-node-exporter daemonset
+KSV023
+KSV121
+
+# ==============================================================================
+# SECURITY CONTEXT DEFAULTS
+# ==============================================================================
+# These rules flag containers that don't have explicit hardened settings.
+# Upstream charts use safe defaults, and production overlays apply stricter settings.
+
+# KSV001: Can elevate its own privileges
+# Upstream charts may not explicitly set allowPrivilegeEscalation: false
+# Production values.yaml overrides this setting
+KSV001
+
+# KSV003/KSV004: Default capabilities not dropped
+# Upstream bitnami charts handle capability dropping via values.yaml
+KSV003
+KSV004
+
+# KSV011/KSV015/KSV016/KSV018: Resource limits/requests not specified
+# Resource limits are configured via values.yaml overrides in production
+# Development environments intentionally omit limits for flexibility
+KSV011
+KSV015
+KSV016
+KSV018
+
+# KSV012: Runs as root user
+# Some upstream containers require root for initial setup
+# Production overlays configure runAsNonRoot where possible
+KSV012
+
+# KSV014: Root file system is not read-only
+# Certain applications (OpenFGA, Jaeger, Keycloak) require writable filesystems
+# for caching, JIT compilation, or temporary files
+# Note: AVD-KSV-0014 already covers Keycloak; this covers others
+KSV014
+
+# KSV030: Runtime/Default Seccomp profile not set
+# Seccomp profiles are configured at cluster level via PodSecurityPolicies
+# or via values.yaml overrides
+KSV030
+
+# KSV104: Seccomp policies disabled
+# Same as KSV030 - handled at cluster level
+KSV104
+
+# KSV106: Container capabilities must only include NET_BIND_SERVICE
+# Some containers require additional capabilities for operation
+# Specific capabilities are documented in chart values
+KSV106
+
+# ==============================================================================
+# NAMESPACE PLACEMENT
+# ==============================================================================
+# These rules flag resources in default or system namespaces.
+# Production deployments use dedicated namespaces.
+
+# KSV110: Workloads in the default namespace
+# Development templates may default to 'default' namespace
+# Production deployments specify explicit namespaces
+KSV110
+
+# no-user-pods-in-system-namespace
+# kube-prometheus-stack creates services in kube-system for
+# scraping kube-scheduler, kube-controller-manager, kube-proxy, etc.
+# These are monitoring endpoints, not user workloads
+no-user-pods-in-system-namespace

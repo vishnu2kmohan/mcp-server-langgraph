@@ -294,6 +294,7 @@ exclude = [
     "htmlcov",
     ".pytest_cache",
     "*.egg-info",
+    "scripts/archive",  # Archived/unused scripts - intentionally excluded
 ]
 
 [tool.ruff.lint]
@@ -311,7 +312,7 @@ ignore = [
     "E501",  # Line too long (handled by formatter)
     "E402",  # module-import-not-at-top-of-file
     "E721",  # type-comparison
-    "E722",  # Bare except (will fix separately)
+    # E722 (bare except) now ENABLED - scripts/archive excluded from linting (PR #121 CodeQL gap analysis)
     # F401 (unused imports) and F811 (redefinition) now ENABLED - fixes applied via PR #121
     "I001",  # unsorted-imports
     "B007",  # Loop variable not used
