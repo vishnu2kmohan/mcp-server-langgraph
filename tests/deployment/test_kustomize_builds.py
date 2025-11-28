@@ -21,7 +21,8 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = [pytest.mark.unit, pytest.mark.validation]
+# Note: usefixtures is included here (not at module end) to avoid pytestmark redefinition
+pytestmark = [pytest.mark.unit, pytest.mark.validation, pytest.mark.usefixtures("check_kustomize_installed")]
 
 # Define paths to all Kustomize overlays
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -485,7 +486,3 @@ def check_kustomize_installed():
             "kustomize is not installed. Install it with:\n"
             "  curl -s 'https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh' | bash"
         )
-
-
-# Use the fixture in all tests
-pytestmark = pytest.mark.usefixtures("check_kustomize_installed")

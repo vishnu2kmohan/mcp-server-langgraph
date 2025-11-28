@@ -82,15 +82,16 @@ class PydanticAIAgentWrapper:
         self.pydantic_model_name = self._get_pydantic_model_name()
 
         # Create specialized agents for different tasks with XML-structured prompts
-        self.router_agent = Agent(  # type: ignore[call-overload]
+        # Note: output_type replaces deprecated result_type in pydantic-ai 0.1.0+
+        self.router_agent = Agent(
             self.pydantic_model_name,
-            result_type=RouterDecision,
+            output_type=RouterDecision,
             system_prompt=ROUTER_SYSTEM_PROMPT,
         )
 
-        self.response_agent = Agent(  # type: ignore[call-overload]
+        self.response_agent = Agent(
             self.pydantic_model_name,
-            result_type=AgentResponse,
+            output_type=AgentResponse,
             system_prompt=RESPONSE_SYSTEM_PROMPT,
         )
 
@@ -171,8 +172,10 @@ class PydanticAIAgentWrapper:
                     prompt = f"Context:\n{context_str}\n\nUser message: {message}"
 
                 # Get routing decision
+                # Note: .output replaces deprecated .data in pydantic-ai 1.0+
+                # See: https://ai.pydantic.dev/changelog/
                 result = await self.router_agent.run(prompt)
-                decision = result.data
+                decision = result.output
 
                 span.set_attribute("decision.action", decision.action)
                 span.set_attribute("decision.confidence", decision.confidence)
@@ -184,7 +187,7 @@ class PydanticAIAgentWrapper:
 
                 metrics.successful_calls.add(1, {"operation": "route_message"})
 
-                return decision  # type: ignore[no-any-return]
+                return decision
 
             except Exception as e:
                 logger.error(f"Routing failed: {e}", extra={"user_message": message}, exc_info=True)
@@ -216,8 +219,10 @@ class PydanticAIAgentWrapper:
                     conversation = f"Context:\n{context_str}\n\n{conversation}"
 
                 # Generate response
+                # Note: .output replaces deprecated .data in pydantic-ai 1.0+
+                # See: https://ai.pydantic.dev/changelog/
                 result = await self.response_agent.run(conversation)
-                response = result.data
+                response = result.output
 
                 span.set_attribute("response.length", len(response.content))
                 span.set_attribute("response.confidence", response.confidence)
@@ -234,7 +239,7 @@ class PydanticAIAgentWrapper:
 
                 metrics.successful_calls.add(1, {"operation": "generate_response"})
 
-                return response  # type: ignore[no-any-return]
+                return response
 
             except Exception as e:
                 logger.error(f"Response generation failed: {e}", extra={"message_count": len(messages)}, exc_info=True)

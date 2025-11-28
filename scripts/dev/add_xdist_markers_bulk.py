@@ -25,7 +25,6 @@ import argparse
 import ast
 import re
 from pathlib import Path
-from textwrap import indent
 
 
 def should_add_gc_import(content: str) -> bool:
@@ -195,25 +194,7 @@ def transform_to_class_based(content: str, group_name: str, test_functions: list
     if not test_blocks:
         return content  # No test functions found
 
-    # Build new content
-    result_lines = []
-
-    # Add gc import if needed
-    content_before_tests = "\n".join(lines[: test_blocks[0][0]])
-    if should_add_gc_import(content_before_tests):
-        # Find import section and add gc import
-        import_added = False
-        for i, line in enumerate(lines[: test_blocks[0][0]]):
-            result_lines.append(line)
-            if line.strip().startswith("import ") and not import_added:
-                # Add gc import after first import
-                pass  # We'll add it before the class instead for safety
-        if not result_lines:
-            result_lines = lines[: test_blocks[0][0]]
-        else:
-            result_lines = lines[: test_blocks[0][0]]
-
-    # Add everything before the first test function
+    # Build new content: start with everything before the first test function
     first_test_start = test_blocks[0][0]
     result_lines = lines[:first_test_start]
 

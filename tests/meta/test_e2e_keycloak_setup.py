@@ -60,9 +60,10 @@ def test_keycloak_realm_import_file_exists(repo_root: Path):
     # Verify it's valid JSON
     with open(realm_file) as f:
         try:
-            realm_config = json.load(f)
+            realm_config: dict = json.load(f)
         except json.JSONDecodeError as e:
             pytest.fail(f"Realm file is not valid JSON: {e}")
+            return  # Unreachable but satisfies static analysis
 
     assert isinstance(realm_config, dict), f"Realm file must contain a JSON object, got: {type(realm_config)}"
 
@@ -197,9 +198,10 @@ def test_docker_compose_imports_realm(repo_root: Path):
 
     with open(docker_compose_file) as f:
         try:
-            compose_config = yaml.safe_load(f)
+            compose_config: dict = yaml.safe_load(f)
         except yaml.YAMLError as e:
             pytest.fail(f"docker-compose.test.yml is not valid YAML: {e}")
+            return  # Unreachable but satisfies static analysis
 
     # Find keycloak-test service
     services = compose_config.get("services", {})

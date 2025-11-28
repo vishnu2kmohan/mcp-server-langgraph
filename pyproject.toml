@@ -302,7 +302,8 @@ exclude = [
 # I: isort (import sorting)
 # UP: pyupgrade (modernize Python syntax)
 # B: flake8-bugbear (common bugs)
-select = ["E", "F", "I", "UP", "B"]
+# RUF: Ruff-specific rules (unreachable code, etc.)
+select = ["E", "F", "I", "UP", "B", "RUF"]
 
 # Ignore specific rules to align with black formatting and reduce noise during migration
 ignore = [
