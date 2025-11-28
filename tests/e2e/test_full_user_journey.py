@@ -314,7 +314,6 @@ class TestStandardUserJourney:
         Requires OpenFGA tuples: user:alice executor tool:agent_chat, tool:conversation_get
         """
         from tests.e2e.real_clients import real_mcp_client
-        from tests.conftest import get_user_id
 
         access_token = authenticated_session["access_token"]
         # real_clients.py uses get_user_id("test") for creating conversation if user_id is not provided

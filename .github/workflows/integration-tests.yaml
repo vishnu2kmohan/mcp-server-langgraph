@@ -20,8 +20,9 @@ name: Integration Tests
 #   - No conflicts with development environment
 #
 # PARALLELIZATION:
-#   - Uses pytest-split for 4x parallelization
-#   - Matrix strategy with 4 groups for faster execution
+#   - Uses pytest-xdist for parallel test execution within each job
+#   - Matrix strategy with test categories for faster execution
+#   - Replaced pytest-split (2025-11-28) to enable pytest 9.x upgrade
 #
 # ==============================================================================
 
@@ -60,14 +61,30 @@ jobs:
   # ============================================================================
 
   integration-tests:
-    name: Integration Tests (Group ${{ matrix.split-group }}/4)
+    name: Integration Tests (${{ matrix.test-category }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        split-group: [1, 2, 3, 4]
+        # Matrix strategy with test categories for parallel execution
+        # Each category runs its tests with pytest-xdist for intra-job parallelism
+        # This replaces pytest-split (2025-11-28) to enable pytest 9.x upgrade
+        test-category: [auth, api, database, infrastructure]
+        include:
+          - test-category: auth
+            markers: "integration and auth"
+            label: "auth"
+          - test-category: api
+            markers: "integration and api"
+            label: "api"
+          - test-category: database
+            markers: "integration and (database or gdpr)"
+            label: "database"
+          - test-category: infrastructure
+            markers: "integration and not auth and not api and not database and not gdpr"
+            label: "infra"
 
     steps:
     - name: Checkout code
@@ -80,34 +97,35 @@ jobs:
         extras: 'dev'
         cache-key-prefix: 'integration-tests'
 
-    - name: Run Integration Tests via Script (Group ${{ matrix.split-group }}/4)
+    - name: Run Integration Tests via Script (${{ matrix.test-category }})
       run: |
         # Use the orchestration script to manage infrastructure and execution
         # This ensures 100% parity between local and CI execution
         # Passing arguments after '--' injects them into the pytest command
         # Generate both .coverage file (for combining) and XML (for upload)
+        # Using pytest-xdist (-n auto) for parallel execution within this category
         ./scripts/test-integration.sh -- \
-          --splits 4 \
-          --group ${{ matrix.split-group }} \
-          -m integration \
+          -n auto \
+          --dist loadgroup \
+          -m "${{ matrix.markers }}" \
           -v --tb=short \
           --cov=src/mcp_server_langgraph \
-          --cov-report=xml:coverage-integration-${{ matrix.split-group }}.xml \
+          --cov-report=xml:coverage-integration-${{ matrix.label }}.xml \
           --cov-fail-under=0
 
-        # Rename .coverage to include group number for combining
+        # Rename .coverage to include category for combining
         if [ -f .coverage ]; then
-          mv .coverage .coverage.${{ matrix.split-group }}
+          mv .coverage .coverage.${{ matrix.label }}
         fi
 
     - name: Upload integration coverage artifact
       if: always()
       uses: actions/upload-artifact@v5
       with:
-        name: coverage-integration-${{ matrix.split-group }}
+        name: coverage-integration-${{ matrix.label }}
         path: |
-          coverage-integration-${{ matrix.split-group }}.xml
-          .coverage.${{ matrix.split-group }}
+          coverage-integration-${{ matrix.label }}.xml
+          .coverage.${{ matrix.label }}
         retention-days: 1
 
     - name: Cleanup infrastructure

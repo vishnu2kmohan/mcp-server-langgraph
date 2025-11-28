@@ -468,7 +468,6 @@ def create_behavioral_llm_provider(
         def test_llm(mock_completion):
             # 10+ lines of setup...
     """
-    from unittest.mock import MagicMock
     import asyncio
 
     mock = AsyncMock()

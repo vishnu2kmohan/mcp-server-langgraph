@@ -13,7 +13,6 @@ Finding: Broken E2E tracking tooling - script pointed to wrong path
 
 import ast
 import gc
-import re
 from pathlib import Path
 
 import pytest

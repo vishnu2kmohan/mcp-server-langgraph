@@ -82,7 +82,6 @@ class TestAgentTypeCompliance:
         """
         from mcp_server_langgraph.core.agent import AgentState
         from typing import get_type_hints, get_args, get_origin
-        from collections.abc import Sequence
 
         # Get type hints for AgentState
         hints = get_type_hints(AgentState, include_extras=True)

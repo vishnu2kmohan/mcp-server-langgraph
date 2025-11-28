@@ -13,7 +13,6 @@ Usage:
 """
 
 import argparse
-import re
 from pathlib import Path
 
 # Mapping of old paths to new paths

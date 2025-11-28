@@ -16,7 +16,6 @@ Test Coverage:
 4. No hardcoded parent counts without marker file validation
 """
 
-import ast
 import gc
 from pathlib import Path
 

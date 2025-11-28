@@ -8,10 +8,8 @@ This script identifies workflows that should be migrated to use the
 Target: Phase 5.5.1 - Migrate workflows to use setup-python-deps
 """
 
-import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import yaml
 

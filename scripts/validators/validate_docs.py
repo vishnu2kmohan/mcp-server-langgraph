@@ -37,7 +37,6 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Type alias for violations: (line_number, code, message)
 Violation = tuple[int, str, str]

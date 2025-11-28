@@ -31,7 +31,6 @@ import pytest
 from tests.validation_lib.ast_cache import (
     cached_parse_ast,
     cached_read_file,
-    has_pattern,
     has_xdist_group,
 )
 

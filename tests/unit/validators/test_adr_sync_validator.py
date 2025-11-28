@@ -14,7 +14,7 @@ Target: 80%+ code coverage for scripts/validators/adr_sync_validator.py
 
 import gc
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 

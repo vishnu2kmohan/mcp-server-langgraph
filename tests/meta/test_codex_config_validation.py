@@ -143,18 +143,22 @@ class TestCodexConfigurationRecommendations:
 
     def test_benchmark_config_allows_marker_filtering(self, pyproject_config):
         """
-        Verify that pytest-benchmark config allows marker-based filtering.
+        Verify that pytest-benchmark is controlled via addopts.
+
+        NOTE: pytest 9.x (2025-01+) no longer allows [tool.pytest.benchmark] alongside
+        [tool.pytest.ini_options]. Benchmark configuration must be done via addopts.
 
         Codex notes that benchmarks should use marker-based filtering
         rather than complete disablement.
         """
-        benchmark_config = pyproject_config.get("tool", {}).get("pytest", {}).get("benchmark", {})
-        disable = benchmark_config.get("disable")
+        pytest_config = pyproject_config.get("tool", {}).get("pytest", {}).get("ini_options", {})
+        addopts = pytest_config.get("addopts", "")
 
-        # disable should be False to allow marker-based filtering
-        assert disable is False, (
-            "pytest-benchmark disable should be False for marker-based filtering. "
-            "Actual disable setting: {disable}\n"
-            "Fix: Set 'disable = false' in [tool.pytest.benchmark] "
-            "(we use --benchmark-disable in addopts for default behavior)"
+        # pytest 9.x: benchmark config must be in addopts, not [tool.pytest.benchmark]
+        # --benchmark-disable in addopts disables by default, --benchmark-enable enables on demand
+        assert "--benchmark-disable" in addopts, (
+            "pytest addopts should include --benchmark-disable to control benchmarks. "
+            f"Current addopts: {addopts!r}\n"
+            "Fix: Add '--benchmark-disable' to tool.pytest.ini_options.addopts in pyproject.toml\n"
+            "NOTE: pytest 9.x does not support [tool.pytest.benchmark] section"
         )

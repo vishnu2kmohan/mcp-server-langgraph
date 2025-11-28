@@ -13,7 +13,6 @@ Test ID: TEST-META-PYTESTMARK-001
 
 import ast
 from pathlib import Path
-from typing import List, Tuple
 
 import pytest
 

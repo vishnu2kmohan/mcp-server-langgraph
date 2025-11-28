@@ -154,7 +154,6 @@ class TestMCPServerBehavioralPattern:
         )
 
         # Act: Verify new conversation behavior
-        from unittest.mock import MagicMock
 
         thread_id = "thread-123"
         config = {"configurable": {"thread_id": thread_id}}

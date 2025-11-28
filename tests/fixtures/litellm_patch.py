@@ -6,7 +6,6 @@ It monkey-patches litellm's atexit registration to prevent RuntimeWarnings.
 """
 
 import atexit
-import sys
 import warnings
 
 # Store original atexit.register

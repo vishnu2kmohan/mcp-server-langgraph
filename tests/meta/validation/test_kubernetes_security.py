@@ -10,7 +10,6 @@ Following TDD principles:
 
 import gc
 import subprocess
-from pathlib import Path
 
 import pytest
 import yaml

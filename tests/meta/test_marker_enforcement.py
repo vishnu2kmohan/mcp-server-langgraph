@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.validation_lib.ast_cache import cached_parse_ast, cached_read_file, has_xdist_group
+from tests.validation_lib.ast_cache import cached_parse_ast
 
 pytestmark = pytest.mark.meta
 

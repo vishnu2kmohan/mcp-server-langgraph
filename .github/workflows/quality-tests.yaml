@@ -181,26 +181,15 @@ jobs:
           retention-days: 30
 
   regression-tests:
-    name: Performance Regression Tests (Split ${{ matrix.split-group }}/4)
+    name: Performance Regression Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    strategy:
-      fail-fast: false
-      matrix:
-        split-group: [1, 2, 3, 4]  # Split into 4 parallel jobs
+    # Simplified to single job with pytest-xdist for parallel execution
+    # Replaced pytest-split matrix (2025-11-28) to enable pytest 9.x upgrade
+    # pytest-xdist handles parallelization internally with -n auto
 
     steps:
       - uses: actions/checkout@v5
-
-      - name: Checkout with duration history
-        run: |
-          # Ensure .test_durations file is available for pytest-split
-          if [ ! -f .test_durations ]; then
-            echo "Warning: .test_durations not found, pytest-split will use round-robin distribution"
-          else
-            echo "Found .test_durations file for optimal test distribution"
-          fi
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -209,43 +198,39 @@ jobs:
           extras: 'dev builder'
           cache-key-prefix: 'regression-tests'
 
-      - name: Run regression tests (split ${{ matrix.split-group }}/4)
+      - name: Run regression tests
         run: |
-          # Use pytest-split to run only this group's tests
-          # --splits 4: Total number of groups
-          # --group $N: Which group to run (1-based indexing)
-          # -n auto: pytest-xdist parallel execution within this split
-          # --dist loadscope: Distribute by test scope for better cache locality
-          # Note: Regression tests run in isolation (split), coverage threshold set to 0 (overrides pyproject.toml's 66%)
+          # Use pytest-xdist for parallel execution
+          # -n auto: Automatically detect number of CPUs
+          # --dist loadgroup: Distribute by xdist_group marker for better isolation
+          # Note: Regression tests focus on performance, coverage threshold set to 0
           OTEL_SDK_DISABLED=true uv run --frozen pytest \
-            --splits 4 \
-            --group ${{ matrix.split-group }} \
             -n auto \
-            --dist loadscope \
+            --dist loadgroup \
             -m regression \
             -v --tb=short \
             --cov=src/mcp_server_langgraph \
-            --cov-report=xml:coverage-regression-split-${{ matrix.split-group }}.xml \
+            --cov-report=xml:coverage-regression.xml \
             --cov-fail-under=0
 
       - name: Check for performance regressions
         run: |
-          echo "Comparing against baseline metrics for split ${{ matrix.split-group }}/4..."
+          echo "Comparing against baseline metrics..."
           # Results are checked within the tests themselves
 
-      - name: Upload regression test coverage for split ${{ matrix.split-group }}
+      - name: Upload regression test coverage
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: coverage-regression-split-${{ matrix.split-group }}
-          path: coverage-regression-split-${{ matrix.split-group }}.xml
+          name: coverage-regression
+          path: coverage-regression.xml
           retention-days: 1
 
-      - name: Upload regression results for split ${{ matrix.split-group }}
+      - name: Upload regression results
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: regression-results-split-${{ matrix.split-group }}
+          name: regression-results
           path: |
             tests/regression/
             .benchmarks/

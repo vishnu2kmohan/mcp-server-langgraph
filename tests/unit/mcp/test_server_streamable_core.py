@@ -9,7 +9,6 @@ import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from mcp.types import TextContent
 
 pytestmark = [pytest.mark.unit, pytest.mark.mcp]
 

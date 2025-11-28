@@ -20,7 +20,6 @@ TDD Phase: RED - Test written first, implementation follows
 import os
 import socket
 import subprocess
-import tempfile
 from pathlib import Path
 
 import asyncpg

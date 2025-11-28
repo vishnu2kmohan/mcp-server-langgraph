@@ -12,6 +12,7 @@ Implements Anthropic's best practices for writing tools for agents:
 
 import json
 import logging
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any, Literal
@@ -313,9 +314,8 @@ class MCPAgentStreamableServer:
         # NOTE: When settings=None, we must reference the module-level 'settings'
         # imported at the top of this file. This allows tests to mock settings via
         # @patch("mcp_server_langgraph.mcp.server_streamable.settings", ...)
-        import mcp_server_langgraph.mcp.server_streamable as this_module
-
-        self.settings = settings if settings is not None else this_module.settings  # type: ignore[attr-defined]
+        # Using sys.modules[__name__] to avoid self-import (CodeQL py/import-own-module)
+        self.settings = settings if settings is not None else sys.modules[__name__].settings
 
         self.server = Server("langgraph-agent")
 
@@ -389,7 +389,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_tools()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -507,7 +507,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
 
-        @self.server.call_tool()  # type: ignore[misc]  # MCP library decorator lacks type stubs
+        @self.server.call_tool()  # type: ignore[untyped-decorator]  # MCP library decorator lacks type stubs
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
@@ -608,7 +608,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_resources()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

@@ -1,0 +1,168 @@
+# Trivy Security Scanner Suppressions for Helm Charts
+#
+# This file documents security exceptions for the main Helm chart and its dependencies.
+# For comprehensive documentation, see deployments/base/.trivyignore
+#
+# Review frequency: Quarterly
+# Last reviewed: 2025-11-28
+# Next review: 2026-02-28
+
+# ==============================================================================
+# AVD-KSV-0014: Containers should run with readOnlyRootFilesystem
+# ==============================================================================
+#
+# Affected Component: Keycloak identity provider (bitnami/keycloak subchart)
+#
+# Justification:
+# Keycloak uses the Quarkus framework which performs Just-In-Time (JIT) compilation
+# at runtime to optimize performance. JIT compilation requires write access to the
+# filesystem to generate and load dynamic bytecode, making readOnlyRootFilesystem
+# incompatible with Keycloak's runtime requirements.
+#
+# Compensating Controls:
+# - runAsNonRoot: true (prevents root execution)
+# - runAsUser: 10000 (non-privileged UID)
+# - allowPrivilegeEscalation: false
+# - capabilities.drop: ALL
+# - EmptyDir volume isolation for writable paths
+# - NetworkPolicy restrictions
+#
+# References:
+# - Keycloak Issue #10150: https://github.com/keycloak/keycloak/issues/10150
+# - ADR-0052: Keycloak Security Architecture
+# - deployments/base/.trivyignore (comprehensive justification)
+#
+exp:2026-02-28 AVD-KSV-0014
+
+# ==============================================================================
+# KSV118: Default security context configured
+# ==============================================================================
+#
+# Affected Component: OpenFGA subchart (openfga/openfga)
+#
+# Justification:
+# The OpenFGA Helm chart uses default security contexts that are configured via
+# values.yaml overrides. The upstream chart may not have explicit security context
+# settings, but we configure them via values.yaml.
+#
+# Compensating Controls:
+# - Security context overrides in values.yaml
+# - Pod security policies enforced at cluster level
+# - Network policies restrict access
+#
+# Note: This is an upstream chart limitation. Security context is configured
+# via values.yaml overrides, not template modification.
+#
+exp:2026-02-28 KSV118
+
+# ==============================================================================
+# AVD-KSV-0109: ConfigMaps should not store secrets
+# ==============================================================================
+#
+# Affected Components:
+# - Redis health-configmap.yaml (bitnami/redis subchart)
+# - Redis scripts-configmap.yaml (bitnami/redis subchart)
+# - PostgreSQL scripts (bitnami/postgresql subchart)
+#
+# Justification:
+# False positive - these ConfigMaps contain health check scripts that reference
+# environment variables (e.g., $REDIS_PASSWORD) in bash scripts, not actual
+# hardcoded secrets. The actual secrets are stored in Kubernetes Secrets and
+# injected via environment variables at runtime.
+#
+# Example (health-configmap.yaml):
+#   redis-cli -a "$REDIS_PASSWORD" ping
+#
+# The $REDIS_PASSWORD is a variable reference, not a secret value.
+#
+# Compensating Controls:
+# - Actual secrets stored in Kubernetes Secrets
+# - External Secrets Operator for production
+# - RBAC restricts ConfigMap access
+#
+# Note: This is an upstream bitnami chart pattern that is safe.
+#
+AVD-KSV-0109
+
+# ==============================================================================
+# AVD-KSV-01010: ConfigMap with sensitive content
+# ==============================================================================
+#
+# Affected Components:
+# - Grafana dashboards ConfigMap
+# - Application ConfigMap (token limit settings)
+#
+# Justification:
+# False positive - "token" in these contexts refers to:
+# 1. LLM tokens (text chunks for language models), not auth tokens
+# 2. Dashboard configuration settings, not credentials
+#
+# Examples:
+# - model_max_tokens: "4096" (LLM context size)
+# - dynamic_context_max_tokens: "2000" (context loading limit)
+#
+# Compensating Controls:
+# - No actual secrets in ConfigMaps
+# - Secrets stored in Kubernetes Secrets
+#
+AVD-KSV-01010
+
+# ==============================================================================
+# KSV013: Image tag ":latest" used
+# ==============================================================================
+#
+# Affected Components:
+# - Redis subchart (bitnami/redis)
+# - PostgreSQL subchart (bitnami/postgresql)
+#
+# Justification:
+# Upstream bitnami charts may use dynamic image tags that can resolve to :latest
+# in certain configurations. Our production values.yaml pins specific versions.
+#
+# Compensating Controls:
+# - Production overlays pin specific image versions
+# - values-production.yaml and values-production-gke.yaml pin versions
+# - Container registry policies prevent :latest in production
+#
+# Note: This is typically only triggered in default/dev configurations.
+#
+KSV013
+
+# ==============================================================================
+# KSV020/KSV021: Runs with UID/GID <= 10000
+# ==============================================================================
+#
+# Affected Components:
+# - Various subchart containers
+#
+# Justification:
+# Upstream bitnami charts run as UID 1001 by default, which is standard practice
+# for non-root containers. While UID > 10000 is preferred, UID 1001 is still
+# non-root and provides adequate isolation.
+#
+# Compensating Controls:
+# - runAsNonRoot: true enforced
+# - Pod security policies at cluster level
+# - Network policies restrict container access
+#
+KSV020
+KSV021
+
+# ==============================================================================
+# KSV0125: Restrict container images to trusted registries
+# ==============================================================================
+#
+# Affected Components:
+# - Subchart images (bitnami registry)
+#
+# Justification:
+# Bitnami images are from a trusted, well-maintained registry (docker.io/bitnami).
+# They are widely used in production Kubernetes deployments and undergo security
+# scanning by the Bitnami team.
+#
+# Compensating Controls:
+# - Image digest pinning in production
+# - Container registry scanning in CI/CD
+# - Admission controllers can be used to restrict registries at cluster level
+#
+KSV0125

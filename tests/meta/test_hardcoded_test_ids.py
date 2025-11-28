@@ -11,7 +11,6 @@ Regression prevention for validation audit finding:
 - Should use worker-safe helpers: get_user_id(), get_api_key_id()
 """
 
-import ast
 import gc
 import re
 from pathlib import Path

@@ -572,6 +572,79 @@ repos:
       Regression prevention for: Deploy to GKE Staging failure (Run #19309378657)
 
       '
+  - id: checkov-terraform
+    name: Checkov Terraform Security Scan
+    entry: >
+      bash -c 'if ! command -v checkov &> /dev/null; then
+      echo "WARNING: checkov not installed. Skipping Terraform security scan.";
+      echo "Install via: pip install checkov or brew install checkov";
+      exit 0;
+      fi;
+      checkov -d terraform/ --framework terraform --quiet --compact \
+        --skip-check CKV_TF_1,CKV_TF_2 \
+        --output cli || (echo "Checkov found security issues in Terraform. Run: checkov -d terraform/ --framework terraform"; exit 1)'
+    language: system
+    files: ^terraform/.*\.tf$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Scans Terraform configurations for security misconfigurations using Checkov.
+
+      Detects issues like:
+      - IAM policy with wildcard resources (CKV_AWS_355)
+      - IAM policy without constraints (CKV_AWS_290)
+      - Missing encryption configurations
+      - Overly permissive security groups
+
+      Install Checkov:
+      - pip install checkov
+      - brew install checkov (macOS)
+
+      Skipped checks:
+      - CKV_TF_1: Module source not pinned (we use version constraints)
+      - CKV_TF_2: Provider version not pinned (managed in required_providers)
+
+      If Checkov is not installed, the hook will skip scanning (not fail).
+      CI/CD environments have Checkov installed for mandatory scans.
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
+  - id: trivy-helm-scan
+    name: Trivy Helm Chart Security Scan
+    entry: >
+      bash -c 'if ! command -v trivy &> /dev/null; then
+      echo "WARNING: trivy not installed. Skipping Helm chart security scan.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or: brew install trivy";
+      exit 0;
+      fi;
+      cd deployments/helm/mcp-server-langgraph &&
+      trivy config . --severity CRITICAL,HIGH --exit-code 1 --quiet --skip-dirs charts ||
+      (echo "Security vulnerabilities found in Helm charts. Run: trivy config deployments/helm/mcp-server-langgraph --severity CRITICAL,HIGH"; exit 1)'
+    language: system
+    files: ^deployments/helm/.*\.(yaml|yml|tpl)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Scans Helm charts (including subcharts) for security misconfigurations.
+
+      Extends trivy-scan-k8s-manifests to cover the helm/ directory and subcharts.
+      Uses .trivyignore in deployments/helm/mcp-server-langgraph/ for suppressions.
+
+      Detects issues like:
+      - Missing security contexts (KSV118)
+      - ConfigMaps with secrets (AVD-KSV-0109)
+      - :latest image tags (KSV013)
+      - Privileged containers
+
+      Install Trivy:
+      - macOS: brew install trivy
+      - Linux: See https://aquasecurity.github.io/trivy/latest/getting-started/installation/
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
     entry: uv run --frozen python -u scripts/validators/check_mermaid_styling.py

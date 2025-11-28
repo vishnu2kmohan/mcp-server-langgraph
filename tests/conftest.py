@@ -21,11 +21,10 @@ pytest_plugins = [
     "tests.fixtures.isolation_fixtures",
 ]
 
-import asyncio  # noqa: E402
+import asyncio  # noqa: E402, F401  # used in cleanup_asyncio_clients fixture (line ~1540)
 import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
-import time  # noqa: E402
 import warnings  # noqa: E402
 from datetime import datetime, timedelta, timezone  # noqa: E402
 from pathlib import Path  # noqa: E402

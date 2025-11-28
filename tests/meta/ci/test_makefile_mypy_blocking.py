@@ -13,7 +13,6 @@ Regression prevention for validation audit finding:
 
 import gc
 import re
-import subprocess
 from pathlib import Path
 
 import pytest

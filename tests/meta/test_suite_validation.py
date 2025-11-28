@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.validation_lib.ast_cache import cached_parse_ast, cached_read_file, has_pattern
+from tests.validation_lib.ast_cache import cached_parse_ast, cached_read_file
 
 pytestmark = pytest.mark.meta
 

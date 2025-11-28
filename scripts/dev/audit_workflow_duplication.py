@@ -8,10 +8,8 @@ and opportunities for consolidation via composite actions.
 Target: Phase 5.4 - Audit 29+ workflow files for duplication
 """
 
-import re
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 import yaml
 

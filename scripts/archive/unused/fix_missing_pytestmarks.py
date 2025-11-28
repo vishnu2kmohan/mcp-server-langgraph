@@ -12,7 +12,6 @@ This script:
 import ast
 import re
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 from collections import defaultdict
 
 

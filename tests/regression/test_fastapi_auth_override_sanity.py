@@ -37,7 +37,6 @@ References:
 """
 
 import gc
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import FastAPI

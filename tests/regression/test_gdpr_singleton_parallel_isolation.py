@@ -61,12 +61,10 @@ import asyncio
 import gc
 import os
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock
 
 import pytest
 
 from mcp_server_langgraph.compliance.gdpr.factory import (
-    create_memory_storage,
     get_gdpr_storage,
     initialize_gdpr_storage,
     reset_gdpr_storage,

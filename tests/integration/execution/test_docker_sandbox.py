@@ -37,7 +37,7 @@ def docker_available():
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandbox")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandbox:
     """Test Docker sandbox basic functionality"""
 
@@ -125,7 +125,7 @@ print(data)
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxresourcelimits")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxResourceLimits:
     """Test resource limit enforcement"""
 
@@ -193,7 +193,7 @@ print(f'Duration: {duration:.2f}s')
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxnetworkisolation")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxNetworkIsolation:
     """Test network isolation"""
 
@@ -292,7 +292,7 @@ except Exception as e:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxsecurity")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxSecurity:
     """Test security isolation"""
 
@@ -358,7 +358,7 @@ except PermissionError:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxcleanup")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxCleanup:
     """Test resource cleanup"""
 
@@ -441,7 +441,7 @@ class TestDockerSandboxCleanup:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxconfiguration")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxConfiguration:
     """Test sandbox configuration options"""
 
@@ -484,7 +484,7 @@ print(f'Working dir: {os.getcwd()}')
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxerrorhandling")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxErrorHandling:
     """Test error handling"""
 
@@ -521,13 +521,13 @@ class TestDockerSandboxErrorHandling:
 
 
 # ============================================================================
-# TDD RED Phase: OpenAI Codex Finding #4 - Docker Sandbox Security
+# TDD RED Phase: OpenAI Codex Finding #4 - Docker Sandbox Security Hardening
 # ============================================================================
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxsecurity")
-class TestDockerSandboxSecurity:
+@pytest.mark.xdist_group(name="docker_sandbox")
+class TestDockerSandboxSecurityHardening:
     """
     TDD RED phase tests for Docker sandbox security hardening (OpenAI Codex Finding #4).
 
