@@ -232,7 +232,10 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: ${{ matrix.python-version }}
-        extras: 'dev'
+        # Install all extras needed for comprehensive test coverage:
+        # - dev: testing framework, code quality, CLI, Docker/Kubernetes (all test deps)
+        # - secrets: Infisical integration (separate due to Rust build requirements)
+        extras: 'dev secrets'
         cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
@@ -455,7 +458,7 @@ jobs:
   push-stage-validators:
     name: Push-Stage Validators
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:

@@ -11,19 +11,58 @@ All functions are designed to be defense-in-depth security controls.
 from typing import Any
 
 
+# Comprehensive set of sensitive field names that should be redacted in logs
+# Organized by category for maintainability
+SENSITIVE_FIELDS: frozenset[str] = frozenset(
+    {
+        # Authentication tokens
+        "token",
+        "access_token",
+        "refresh_token",
+        "bearer_token",
+        "auth_token",
+        "jwt",
+        # Session identifiers
+        "session_id",
+        "session_token",
+        # Credentials and secrets
+        "password",
+        "secret",
+        "secret_key",
+        "client_secret",
+        "api_key",
+        "api_key_value",
+        "private_key",
+        "credentials",
+        "credential",
+        # User PII (GDPR/CCPA/HIPAA)
+        "user_id",
+        "username",
+        # HTTP headers containing credentials
+        "authorization",
+    }
+)
+
+# Fields that should be truncated rather than redacted
+TRUNCATABLE_FIELDS: frozenset[str] = frozenset(
+    {
+        "message",
+        "query",
+    }
+)
+
+
 def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> dict[str, Any]:
     """Sanitize sensitive data from arguments before logging.
 
     Prevents CWE-200 (Information Exposure) and CWE-532 (Information Exposure Through Log Files)
-    by redacting authentication tokens, session identifiers, and PII, plus truncating large text fields.
+    by redacting authentication tokens, session identifiers, credentials, and PII,
+    plus truncating large text fields.
 
     This function creates a shallow copy of the input dict and applies the following
     transformations:
-    - Redacts 'token' field value to prevent JWT/credential exposure
-    - Redacts 'session_id' to prevent session hijacking via log access
-    - Redacts 'user_id' to prevent user enumeration and privacy violations
-    - Redacts 'username' to comply with GDPR/CCPA privacy requirements
-    - Truncates 'message' and 'query' fields that exceed max_length
+    - Redacts all fields in SENSITIVE_FIELDS to prevent credential/PII exposure
+    - Truncates fields in TRUNCATABLE_FIELDS that exceed max_length
     - Preserves all other fields as-is (shallow copy)
 
     Args:
@@ -34,16 +73,19 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
         Sanitized copy of arguments safe for logging
 
     Example:
-        >>> args = {"token": "secret_jwt", "session_id": "sess_123", "username": "alice"}
+        >>> args = {"token": "secret_jwt", "api_key": "sk_live_123", "password": "pass123"}
         >>> sanitized = sanitize_for_logging(args)
         >>> sanitized
-        {"token": "[REDACTED]", "session_id": "[REDACTED]", "username": "[REDACTED]"}
+        {"token": "[REDACTED]", "api_key": "[REDACTED]", "password": "[REDACTED]"}
         >>> args["token"]  # Original unchanged
         "secret_jwt"
 
     Security Context:
         - JWT tokens in logs can be extracted and replayed to impersonate users
         - Session IDs in logs enable session hijacking if logs are compromised
+        - API keys allow unauthorized access to external services
+        - Passwords enable account compromise
+        - Client secrets compromise OAuth flows
         - Usernames/user IDs are PII subject to GDPR/CCPA/HIPAA protection
         - Large prompts may contain sensitive user data (PII, credentials, secrets)
         - Centralized logging systems may have broader access than application logs
@@ -55,31 +97,16 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
     # Create shallow copy to avoid modifying original
     sanitized = arguments.copy()
 
-    # Redact authentication token
-    if "token" in sanitized and sanitized["token"] is not None:
-        sanitized["token"] = "[REDACTED]"
+    # Redact all sensitive fields
+    for field in SENSITIVE_FIELDS:
+        if field in sanitized and sanitized[field] is not None:
+            sanitized[field] = "[REDACTED]"
 
-    # Redact session identifiers (prevent session hijacking)
-    if "session_id" in sanitized and sanitized["session_id"] is not None:
-        sanitized["session_id"] = "[REDACTED]"
-
-    # Redact user identifiers (PII protection)
-    if "user_id" in sanitized and sanitized["user_id"] is not None:
-        sanitized["user_id"] = "[REDACTED]"
-
-    # Redact usernames (PII protection)
-    if "username" in sanitized and sanitized["username"] is not None:
-        sanitized["username"] = "[REDACTED]"
-
-    # Truncate long message fields
-    if "message" in sanitized and isinstance(sanitized["message"], str):
-        if len(sanitized["message"]) > max_length:
-            sanitized["message"] = sanitized["message"][:max_length] + "..."
-
-    # Truncate long query fields
-    if "query" in sanitized and isinstance(sanitized["query"], str):
-        if len(sanitized["query"]) > max_length:
-            sanitized["query"] = sanitized["query"][:max_length] + "..."
+    # Truncate long text fields
+    for field in TRUNCATABLE_FIELDS:
+        if field in sanitized and isinstance(sanitized[field], str):
+            if len(sanitized[field]) > max_length:
+                sanitized[field] = sanitized[field][:max_length] + "..."
 
     return sanitized
 

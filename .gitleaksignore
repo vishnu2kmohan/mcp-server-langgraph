@@ -10,3 +10,9 @@ terraform/environments/gcp-prod/main.tf:hashicorp-tf-password:267
 
 # Test file with intentional test secrets for validation
 tests/test_gitleaks_config.py:generic-api-key-with-context:137
+
+# Secrets obfuscation tests - intentionally contain fake test secrets
+# These files validate that secrets are properly redacted/obfuscated
+tests/unit/secrets_obfuscation/test_secrets_obfuscation.py:private-key:395
+tests/unit/secrets_obfuscation/test_secrets_obfuscation.py:generic-api-key:303
+tests/unit/secrets_obfuscation/test_secrets_obfuscation.py:generic-api-key:327

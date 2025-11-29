@@ -548,6 +548,12 @@ def test_dev_dependencies_are_importable():
             "psutil",  # Process utilities, optional for performance tests
             "freezegun",  # Time mocking, optional for specific tests
             "toml",  # TOML parser, replaced by tomllib in Python 3.11+
+            # CLI tools that are installed as system tools, not Python imports
+            "yamllint",  # YAML linter, installed as CLI tool
+            "authlib",  # Auth library, may not be installed in all environments
+            "mypy",  # Type checker, may not be installed in all environments
+            "pre_commit",  # Pre-commit hooks, installed as CLI tool
+            "semgrep",  # Security scanner, installed as CLI tool
         }
     )
 

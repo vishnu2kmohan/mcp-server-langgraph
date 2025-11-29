@@ -693,11 +693,17 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Load secrets on initialization
+# SECURITY: Do not log exception details - may contain credentials (CWE-532)
 try:
     settings.load_secrets()
-except Exception as e:
-    print(f"Warning: Failed to load secrets from Infisical: {e}")
-    print("Using environment variables and defaults")
+except Exception:
+    # Note: We intentionally don't log the exception message as it may contain
+    # Infisical credentials, connection strings, or other sensitive data.
+    # The fallback to environment variables is silent and graceful.
+    import logging
+
+    _logger = logging.getLogger(__name__)
+    _logger.warning("Failed to load secrets from Infisical, using environment fallback")
 
 # Validate fallback model credentials
 settings._validate_fallback_credentials()

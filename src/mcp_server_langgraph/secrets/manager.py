@@ -1,5 +1,9 @@
 """
 Infisical integration for secure secrets management
+
+This module provides:
+- SecretString: A wrapper for secret values that prevents accidental exposure
+- SecretsManager: Integration with Infisical for secure secrets retrieval
 """
 
 import hashlib
@@ -9,6 +13,68 @@ from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Tracer
+
+
+class SecretString:
+    """Wrapper for secret values that prevents accidental exposure in logs and exceptions.
+
+    Implements the same pattern as Pydantic's SecretStr - the actual secret value is
+    hidden in __str__ and __repr__ to prevent accidental logging or exposure in
+    exception tracebacks.
+
+    Security Context:
+    - CWE-200: Information Exposure
+    - CWE-532: Information Exposure Through Log Files
+
+    Example:
+        >>> secret = SecretString("my-api-key-123")
+        >>> print(secret)
+        ***REDACTED***
+        >>> f"Using key: {secret}"
+        'Using key: ***REDACTED***'
+        >>> secret.get_secret_value()
+        'my-api-key-123'
+    """
+
+    __slots__ = ("_value",)
+
+    def __init__(self, value: str) -> None:
+        """Initialize with a secret value.
+
+        Args:
+            value: The secret value to wrap
+        """
+        self._value = value
+
+    def __str__(self) -> str:
+        """Return redacted placeholder instead of actual value."""
+        return "***REDACTED***"
+
+    def __repr__(self) -> str:
+        """Return redacted representation."""
+        return "SecretString('***REDACTED***')"
+
+    def __eq__(self, other: object) -> bool:
+        """Compare secret values for equality."""
+        if isinstance(other, SecretString):
+            return self._value == other._value
+        return False
+
+    def __hash__(self) -> int:
+        """Hash based on actual value for use in sets/dicts."""
+        return hash(self._value)
+
+    def get_secret_value(self) -> str:
+        """Get the actual secret value.
+
+        Use this method explicitly when you need to access the actual secret,
+        such as when making API calls or database connections.
+
+        Returns:
+            The actual secret value
+        """
+        return self._value
+
 
 # Conditional import - infisical-python is an optional dependency
 try:
@@ -120,9 +186,24 @@ class SecretsManager:
             _get_logger().info(
                 "Infisical secrets manager initialized", extra={"site_url": site_url, "environment": environment}
             )
-        except Exception as e:
-            _get_logger().error(f"Failed to initialize Infisical client: {e}", exc_info=True)
+        except Exception:
+            # SECURITY: Do not log exception details - may contain credentials (CWE-532)
+            _get_logger().error("Failed to initialize Infisical client")
             self.client = None
+
+    def __str__(self) -> str:
+        """Return safe string representation without exposing secrets."""
+        return f"SecretsManager(site_url={self.site_url!r}, project_id={self.project_id!r}, environment={self.environment!r})"
+
+    def __repr__(self) -> str:
+        """Return safe repr without exposing secrets."""
+        client_status = "connected" if self.client else "disconnected"
+        return (
+            f"SecretsManager(site_url={self.site_url!r}, "
+            f"project_id={self.project_id!r}, "
+            f"environment={self.environment!r}, "
+            f"client={client_status!r})"
+        )
 
     def get_secret(self, key: str, path: str = "/", use_cache: bool = True, fallback: str | None = None) -> str | None:
         """
