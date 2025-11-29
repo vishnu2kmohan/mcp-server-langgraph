@@ -37,7 +37,7 @@ runs:
         version: "0.9.13"  # Pin version for reproducibility (best practice per uv docs)
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-        cache-suffix: ${{ inputs.python-version }}  # Separate cache per Python version
+        cache-suffix: ${{ inputs.python-version }}-v2  # Bust cache for Hypothesis 6.147.0 fix
 
     - name: Install base dependencies
       run: |
