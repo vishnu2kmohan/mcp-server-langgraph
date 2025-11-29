@@ -55,6 +55,40 @@ rules:
       owasp: A10:2021
 
   # ============================================================================
+  # TYPED EXCEPTION WITH JUST PASS (CodeQL py/empty-except equivalent)
+  # ============================================================================
+  # This catches patterns like: except SomeException: pass
+  # which are missed by the bare-except rule above.
+  # Added: 2025-11-29 (CodeQL parity - PR #121 remediation)
+  - id: python.typed-except-pass
+    patterns:
+      - pattern: |
+          try:
+            ...
+          except $EXCEPTION:
+            pass
+      - pattern-not: |
+          try:
+            ...
+          except:
+            pass
+    message: |
+      Exception '$EXCEPTION' caught but silently ignored with just 'pass'.
+      This can hide bugs and security issues. Either:
+      1. Handle the exception appropriately (log, return, raise)
+      2. Use `# nosemgrep: python.typed-except-pass` with justification
+      3. Catch a more specific exception type
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-390
+      owasp: A10:2021
+      codeql-equivalent: py/empty-except
+      references:
+        - https://cwe.mitre.org/data/definitions/390.html
+        - https://codeql.github.com/codeql-query-help/python/py-empty-except/
+
+  # ============================================================================
   # HARDCODED CREDENTIALS
   # ============================================================================
   - id: python.hardcoded-password-assignment

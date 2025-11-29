@@ -179,13 +179,12 @@ resource "aws_iam_policy" "ebs_csi" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # Read-only Describe actions require Resource = "*" (AWS IAM limitation)
+      # These cannot be scoped to specific ARNs by AWS design
       {
+        Sid    = "EBSCSIDescribeActions"
         Effect = "Allow"
         Action = [
-          "ec2:CreateSnapshot",
-          "ec2:AttachVolume",
-          "ec2:DetachVolume",
-          "ec2:ModifyVolume",
           "ec2:DescribeAvailabilityZones",
           "ec2:DescribeInstances",
           "ec2:DescribeSnapshots",
@@ -194,6 +193,28 @@ resource "aws_iam_policy" "ebs_csi" {
           "ec2:DescribeVolumesModifications"
         ]
         Resource = "*"
+      },
+      # Mutating actions scoped to account and cluster-tagged resources
+      # CKV_AWS_290/CKV_AWS_355: Scoped by account + cluster tag condition
+      {
+        Sid    = "EBSCSIMutatingActions"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateSnapshot",
+          "ec2:AttachVolume",
+          "ec2:DetachVolume",
+          "ec2:ModifyVolume"
+        ]
+        Resource = [
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:volume/*",
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:snapshot/*",
+          "arn:aws:ec2:*:${data.aws_caller_identity.current.account_id}:instance/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/kubernetes.io/cluster/${var.cluster_name}" = "owned"
+          }
+        }
       },
       {
         Effect = "Allow"

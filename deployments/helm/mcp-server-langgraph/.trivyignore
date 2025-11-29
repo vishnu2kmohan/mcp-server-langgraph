@@ -292,8 +292,16 @@ KSV106
 # Production deployments specify explicit namespaces
 KSV110
 
-# no-user-pods-in-system-namespace
+# no-user-pods-in-system-namespace / KSV037
 # kube-prometheus-stack creates services in kube-system for
 # scraping kube-scheduler, kube-controller-manager, kube-proxy, etc.
 # These are monitoring endpoints, not user workloads
 no-user-pods-in-system-namespace
+KSV037
+
+# KSV113: Manage namespace secrets
+# Required for prometheus-operator to manage secrets across namespaces
+# for scrape configurations, TLS certificates, and alertmanager configs.
+# This is fundamental to multi-namespace monitoring capability.
+# Affected: prometheus-operator clusterroles
+KSV113

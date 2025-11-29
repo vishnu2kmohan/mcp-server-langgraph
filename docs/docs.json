@@ -455,7 +455,8 @@
               "architecture/adr-0062-uv-package-management",
               "architecture/adr-0063-mintlify-documentation-platform",
               "architecture/adr-0064-pre-commit-hooks-strategy",
-              "architecture/adr-0065-ruff-code-quality"
+              "architecture/adr-0065-ruff-code-quality",
+              "architecture/adr-0066-helm-chart-security-risk-acceptance"
             ]
           },
           {
