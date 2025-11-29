@@ -356,6 +356,13 @@ class TestHelmChart:
         if not helm_chart_dir.exists():
             pytest.skip("Helm chart directory does not exist")
 
+        # Build dependencies first (required for charts with dependencies like redis, kube-prometheus-stack)
+        dep_result = subprocess.run(
+            ["helm", "dependency", "build", str(helm_chart_dir)], capture_output=True, text=True, timeout=120
+        )
+        if dep_result.returncode != 0:
+            pytest.skip(f"Failed to build Helm dependencies (may need network access):\n{dep_result.stderr}")
+
         result = subprocess.run(
             ["helm", "template", "test-release", str(helm_chart_dir)], capture_output=True, text=True, timeout=60
         )
