@@ -42,12 +42,12 @@ class TestADRSynchronization:
     """
     Verify ADRs are synced between source (adr/) and Mintlify docs (docs/architecture/).
 
-    NOTE: This test calls the validation script (scripts/validators/adr_sync_validator.py)
+    NOTE: This test calls the consolidated validation script (scripts/validators/validate_docs.py)
     instead of duplicating the validation logic. The script is the source of truth.
 
     Architecture Pattern:
-    - Script = Source of truth (scripts/validators/adr_sync_validator.py)
-    - Hook = Trigger (validate-adr-sync in .pre-commit-config.yaml)
+    - Script = Source of truth (scripts/validators/validate_docs.py --adr)
+    - Hook = Trigger (validate-docs in .pre-commit-config.yaml)
     - Meta-Test = Validator of validator (this test)
     """
 
@@ -65,18 +65,18 @@ class TestADRSynchronization:
         3. ADR count matches between source and docs
         4. No uppercase filename violations (should be adr-*, not ADR-*)
 
-        The validation is performed by calling scripts/validators/adr_sync_validator.py,
+        The validation is performed by calling scripts/validators/validate_docs.py --adr,
         which is the authoritative implementation (single source of truth).
         """
-        script_path = PROJECT_ROOT / "scripts" / "validators" / "adr_sync_validator.py"
+        script_path = PROJECT_ROOT / "scripts" / "validators" / "validate_docs.py"
 
         assert script_path.exists(), (
-            f"ADR sync validator script not found: {script_path}\nExpected: scripts/validators/adr_sync_validator.py"
+            f"Documentation validator script not found: {script_path}\nExpected: scripts/validators/validate_docs.py"
         )
 
-        # Run the validation script - it will exit with code 1 if validation fails
+        # Run the validation script with --adr flag
         result = subprocess.run(
-            [sys.executable, str(script_path), "--repo-root", str(PROJECT_ROOT)],
+            [sys.executable, str(script_path), "--adr", "--repo-root", str(PROJECT_ROOT)],
             capture_output=True,
             text=True,
             timeout=60,

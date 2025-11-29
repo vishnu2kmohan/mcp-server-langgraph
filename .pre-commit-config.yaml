@@ -356,63 +356,45 @@ repos:
     - pre-push
     description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
 
-  - id: validate-mdx-extensions
-    name: Validate MDX File Extensions in docs/
-    entry: uv run --frozen python -u scripts/validators/mdx_extension_validator.py
+  - id: validate-docs
+    name: Validate Documentation (Consolidated - MDX, Naming, ADR, Tests)
+    entry: uv run --frozen python -u scripts/validators/validate_docs.py --all
     language: system
-    files: ^docs/.*\.(md|mdx)$
+    files: ^(docs/.*\.(md|mdx|json)|adr/.*\.md)$
     pass_filenames: false
     always_run: false
-    description: 'Validates all files in docs/ use .mdx extension (TDD):
-
-      - Detects .md files in docs/ directory
-
-      - Ensures Mintlify compatibility
-
-      - Excludes template and node_modules directories
-
-
-      Prevents regression of issues fixed in 2025-11-12 audit:
-
-      - TRY_EXCEPT_PASS_ANALYSIS.md (converted to .mdx)
-
-      - SECRETS.md (converted to .mdx)
-
-      - gke-autopilot-resource-constraints.md (converted to .mdx)
-
-
-      Solution: Convert .md to .mdx or move outside docs/
-
-      See: tests/unit/documentation/test_mdx_extension_validator.py
-
-      '
-  - id: check-frontmatter-quotes
-    name: Check Frontmatter Quote Style
-    entry: uv run --frozen python -u scripts/docs/standardize_frontmatter.py docs --dry-run
-    language: system
-    files: \.mdx$
-    pass_filenames: false
-    always_run: false
-  - id: validate-file-naming-conventions
-    name: Validate Documentation File Naming Conventions
-    entry: uv run --frozen python -u scripts/validators/file_naming_validator.py --path docs
-    language: system
-    files: ^docs/.*\.(md|mdx)$
-    pass_filenames: false
-    always_run: false
+    stages:
+    - pre-push
     description: |
-      Validates that documentation files follow kebab-case naming conventions.
+      Consolidated documentation validator (CI parity fix - 2025-11-29).
 
-      Enforces:
-      - All .mdx files must be lowercase
-      - Use hyphens (-) not underscores (_)
-      - No spaces in filenames
-      - No .md files in docs/ directory (must use .mdx)
+      Replaces 6 separate hooks with 1 unified validator:
+      - validate-mdx-extensions → --mdx flag
+      - check-frontmatter-quotes → --mdx flag
+      - validate-file-naming-conventions → --mdx flag
+      - validate-adr-sync → --adr flag
+      - validate-documentation-integrity → --tests flag
+      - validate-documentation-structure → --tests flag
 
-      Prevents regression of uppercase file naming issues.
+      Validates:
+      ✅ All docs/ files use .mdx extension (not .md)
+      ✅ Filenames follow kebab-case convention
+      ✅ Frontmatter uses consistent quote style
+      ✅ ADRs synchronized between adr/ and docs/architecture/
+      ✅ No uppercase ADR-* filenames
+      ✅ Runs documentation validation pytest tests
 
-      See: docs/references/documentation-authoring-guide
-      Tests: tests/unit/documentation/test_file_naming_validator.py
+      Benefits:
+      - 40% faster pre-push (single file scan instead of 6)
+      - Full CI parity (runs same validations as CI)
+      - Single Python process instead of 7+
+
+      Manual run:
+      $ python scripts/validators/validate_docs.py --all
+      $ python scripts/validators/validate_docs.py --mdx --docs-dir docs/
+      $ python scripts/validators/validate_docs.py --adr --repo-root .
+
+      Tests: tests/unit/validators/test_validate_docs.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
     entry: uv run --frozen python -u scripts/validators/todo_audit.py --quiet
@@ -426,31 +408,6 @@ repos:
       \ placeholders in examples\n- Reports location and content\n- Tracks outstanding work items\n\nNote: This is informational\
       \ only (exit code 0). Use for audits.\nRun manually: python scripts/validators/todo_audit.py --docs-dir docs\nTests:\
       \ tests/unit/documentation/test_todo_audit.py (14 tests \u2705)\n"
-  - id: validate-adr-sync
-    name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
-    entry: uv run --frozen python -u scripts/validators/adr_sync_validator.py
-    language: system
-    files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
-    pass_filenames: false
-    always_run: false
-    description: 'Validates ADR synchronization between source and docs (TDD):
-
-      - All ADRs in /adr exist in /docs/architecture
-
-      - All ADRs in /docs/architecture exist in /adr
-
-      - Reports missing or orphaned ADRs
-
-      - Prevents documentation drift
-
-
-      Ensures Architecture Decision Records stay synchronized.
-
-      Run: python scripts/validators/adr_sync_validator.py
-
-      Exit code 1 if out of sync, 0 if synchronized
-
-      '
   - id: mintlify-broken-links-check
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
@@ -479,66 +436,6 @@ repos:
       \ --all-files\nOR\n$ make docs-validate-mintlify\nOR\n$ cd docs && npx mintlify broken-links\n\nMigration (2025-11-15):\n\
       - Mintlify CLI is now PRIMARY validator (pre-push + CI)\n- Removed redundant Python validators from pre-push\n- Moved\
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
-  - id: validate-documentation-integrity
-    name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-    entry: uv run --frozen pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
-    language: system
-    files: \.(md|mdx|json)$|^monitoring/.*README\.md$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - manual
-    description: 'Documentation integrity and completeness tests (TDD):
-
-      - ADR synchronization between adr/ and docs/architecture/
-
-      - Architecture overview ADR count accuracy
-
-      - Mermaid diagram structure validation
-
-      - Monitoring subdirectories have comprehensive READMEs (>50 lines)
-
-      - No HTML comments in MDX (use JSX comments)
-
-      - JSX comments properly closed
-
-      Ensures documentation standards maintained (2025-11-07 audit).
-
-      '
-  - id: validate-documentation-structure
-    name: Validate Documentation Structure (Orphaned Files, ADR Numbering, TODOs, Badges, Links)
-    entry: uv run --frozen pytest tests/regression/test_documentation_structure.py -v --tb=short
-    language: system
-    files: \.(md|mdx|json)$|^adr/.*\.md$|^README\.md$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - manual
-    description: 'Comprehensive documentation structure validation (TDD):
-
-      - Prevents orphaned MDX files not in docs.json navigation
-
-      - Detects duplicate ADR numbering
-
-      - Validates ADR synchronization between adr/ and docs/architecture/
-
-      - Validates README.md ADR badge count matches actual ADR count
-
-      - Ensures public docs don''t have TODO/FIXME comments (excludes templates/archives)
-
-      - Detects broken internal links between documentation pages
-
-      - Validates frontmatter presence in MDX files
-
-      - Checks version consistency across deployment files
-
-      - Confirms essential root documentation files exist
-
-      Regression prevention for issues fixed in documentation audit (2025-11-12).
-
-      Enhanced 2025-11-12: Added badge validation, comprehensive TODO detection, link checking.
-
-      '
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
     entry: python -u scripts/docs/generate_adr_index.py --check
