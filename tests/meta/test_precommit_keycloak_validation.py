@@ -11,6 +11,7 @@ Reference: ADR-0053 Future Work - Pre-commit hook: validate-keycloak-config
 
 import gc
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -75,9 +76,9 @@ class TestKeycloakConfigValidationHook:
             temp_file = Path(f.name)
 
         try:
-            # Run validation script
+            # Run validation script using current interpreter (venv-aware)
             result = subprocess.run(
-                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
+                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -108,7 +109,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
+                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -143,7 +144,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
+                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -183,7 +184,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
+                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -232,7 +233,7 @@ class TestKeycloakConfigValidationHook:
 
         try:
             result = subprocess.run(
-                ["python", "scripts/validators/validate_keycloak_config.py", str(temp_file)],
+                [sys.executable, "scripts/validators/validate_keycloak_config.py", str(temp_file)],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -258,7 +259,7 @@ class TestKeycloakConfigValidationHook:
         assert compose_file.exists(), "docker-compose.test.yml not found"
 
         result = subprocess.run(
-            ["python", "scripts/validators/validate_keycloak_config.py", str(compose_file)],
+            [sys.executable, "scripts/validators/validate_keycloak_config.py", str(compose_file)],
             capture_output=True,
             text=True,
             timeout=60,

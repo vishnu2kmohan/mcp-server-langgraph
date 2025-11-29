@@ -35,6 +35,7 @@ Related:
 
 import gc
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -95,8 +96,10 @@ def test_something():
 """
         )
 
-        # Run validation script
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        # Run validation script using current interpreter (venv-aware)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should fail (exit code 1) and report the violation
         assert result.returncode == 1, f"Expected validation to fail, but got exit code {result.returncode}"
@@ -113,7 +116,9 @@ def test_api_key():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         assert result.returncode == 1
         assert "apikey_" in result.stdout or "apikey_" in result.stderr
@@ -132,7 +137,9 @@ def test_something():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0)
         assert result.returncode == 0, f"Expected validation to pass, but got: {result.stdout}\n{result.stderr}"
@@ -149,7 +156,9 @@ def test_openfga_format():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - assertion validations are allowed
         assert result.returncode == 0, (
@@ -179,7 +188,9 @@ class TestUserProfile:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - unit tests with InMemory can't pollute
         # IDs with safety comments (# ✅ Safe:) are allowed by legitimate pattern matching
@@ -217,7 +228,9 @@ class TestWithMocks:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - mock configurations are allowed
         assert result.returncode == 0, (
@@ -247,7 +260,9 @@ class TestUserAPI:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should fail (exit code 1) - integration tests with hardcoded IDs are violations
         assert result.returncode == 1, (
