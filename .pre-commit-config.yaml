@@ -719,23 +719,29 @@ repos:
   - id: semgrep-security-scan
     name: Semgrep Security Scan (CodeQL Parity)
     entry: >
-      bash -c 'if ! command -v semgrep &> /dev/null; then
-        echo "ERROR: semgrep not installed. This is REQUIRED for security scanning.";
-        echo "";
-        echo "Install semgrep:";
-        echo "  uv sync --group dev   # installs via pyproject.toml";
-        echo "  pip install semgrep   # or install directly";
-        echo "  brew install semgrep  # or via Homebrew";
-        echo "";
-        echo "To skip (not recommended): SKIP_SEMGREP=1 git push";
-        if [ "${SKIP_SEMGREP:-0}" = "1" ]; then
-          echo "WARNING: SKIP_SEMGREP=1 set - skipping security scan (NOT RECOMMENDED)";
-          exit 0;
+      bash -c '
+        # Find semgrep: prefer venv, fallback to system
+        if [ -x ".venv/bin/semgrep" ]; then
+          SEMGREP=".venv/bin/semgrep";
+        elif command -v semgrep &> /dev/null; then
+          SEMGREP="semgrep";
+        else
+          echo "ERROR: semgrep not installed. This is REQUIRED for security scanning.";
+          echo "";
+          echo "Install semgrep:";
+          echo "  uv sync --group dev   # installs via pyproject.toml";
+          echo "  pip install semgrep   # or install directly";
+          echo "  brew install semgrep  # or via Homebrew";
+          echo "";
+          echo "To skip (not recommended): SKIP_SEMGREP=1 git push";
+          if [ "${SKIP_SEMGREP:-0}" = "1" ]; then
+            echo "WARNING: SKIP_SEMGREP=1 set - skipping security scan (NOT RECOMMENDED)";
+            exit 0;
+          fi;
+          exit 1;
         fi;
-        exit 1;
-      fi;
-      semgrep scan --config auto --error --severity ERROR --quiet src/ scripts/ ||
-      (echo "Semgrep found security issues. Run: semgrep scan --config auto src/ scripts/"; exit 1)'
+        $SEMGREP scan --config auto --error --severity ERROR --quiet src/ scripts/ ||
+        (echo "Semgrep found security issues. Run: $SEMGREP scan --config auto src/ scripts/"; exit 1)'
     language: system
     files: ^(src|scripts)/.*\.py$
     pass_filenames: false
