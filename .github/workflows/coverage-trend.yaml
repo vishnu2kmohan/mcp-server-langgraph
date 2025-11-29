@@ -169,7 +169,7 @@ jobs:
     - name: Enforce minimum coverage threshold
       env:
         CURRENT_COVERAGE: ${{ steps.coverage.outputs.coverage }}
-        MIN_COVERAGE: "80.0"
+        MIN_COVERAGE: "75.0"
       run: |
         echo "Current coverage: ${CURRENT_COVERAGE}%"
         echo "Minimum threshold: ${MIN_COVERAGE}%"

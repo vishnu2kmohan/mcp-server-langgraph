@@ -691,8 +691,8 @@ omit = [
 # Prevents coverage regressions and ensures adequate test coverage
 # Current: 66% (incremental progress: +2% from 64%)
 # Target: 80%+ (tracked in GitHub issue, incremental increases per release)
-# Next increment: 68% (target: +2-5% per release)
-fail_under = 66
+# Current: 74.5%, aligned with workflow at 75%
+fail_under = 75
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
