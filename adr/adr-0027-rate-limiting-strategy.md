@@ -1,9 +1,14 @@
-# ADR-0027: Rate Limiting Strategy for API Protection
+# 27. Rate Limiting Strategy for API Protection
 
-**Status**: Accepted
-**Date**: 2025-10-20
-**Deciders**: Engineering Team, Security Team
-**Related**: [ADR-0030: Resilience Patterns](adr-0030-resilience-patterns.md), [Kong Gateway Integration](../integrations/kong.md)
+Date: 2025-10-20
+
+## Status
+
+Accepted
+
+## Category
+
+Performance & Resilience
 
 ## Context
 

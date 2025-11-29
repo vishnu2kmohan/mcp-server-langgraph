@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Infrastructure & Deployment
+
 ## Context
 
 Users deploy to diverse platforms:

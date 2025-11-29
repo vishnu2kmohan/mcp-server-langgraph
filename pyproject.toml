@@ -54,6 +54,7 @@ dependencies = [
     # https://github.com/kubernetes-client/python/issues/2458 tracks the blocker
     "fastapi>=0.122.0",  # Updated 2025-11-28: Python 3.14 support
     "starlette>=0.50.0",  # Updated from 0.48.0, fixes CVE-2025-62727 (Range header DoS)
+    "anyio>=4.4.0,<4.10.0",  # Pin for Starlette/httpx compatibility; 4.10.0+ removed _backends module
     "uvicorn[standard]>=0.38.0",
     "python-keycloak>=5.8.1",
     "authlib>=1.6.5",
@@ -136,6 +137,7 @@ dev = [
     "click>=8.1.0,<8.2.0",  # Command-line interface framework (8.2+ removed _textwrap module)
     "jinja2>=3.1.0",  # Template engine for code generation
     "rich>=13.0.0",  # Rich text and beautiful formatting in the terminal
+    "websockets>=12.0",  # Required for E2E test imports (also in playground extra)
 ]
 
 secrets = [
@@ -579,7 +581,10 @@ python_functions = ["test_*"]
 #                   Tests with same xdist_group run on same worker; others use load balancing
 # --timeout=60: Prevent tests from hanging indefinitely (async mock safety)
 # FAIL FAST: No auto-retries - flaky tests must be fixed at the root cause
-addopts = "-v --strict-markers --tb=short --dist loadgroup --timeout=60 --benchmark-disable"
+# NOTE: -p no:anyio disables anyio's pytest plugin which conflicts with pytest-asyncio's auto mode
+# when running with pytest-xdist. Without this, xdist workers fail with "No such backend: asyncio"
+# See: https://anyio.readthedocs.io/en/stable/testing.html
+addopts = "-v --strict-markers --tb=short --dist loadgroup --timeout=60 --benchmark-disable -p no:anyio"
 # pytest-asyncio configuration (0.23+ uses strict mode by default)
 asyncio_mode = "auto"
 # CODEX FINDING FIX (2025-11-20): Set to "session" to support session-scoped async fixtures

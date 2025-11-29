@@ -1,21 +1,21 @@
 ---
-title: 36. Hybrid Session Model for Long-Running Tasks
-description: 'JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:'
-icon: 'file-lines'
-seoTitle: "ADR-0036: 36. Hybrid Session Model for Long-Running Tasks"
-seoDescription: "Architecture Decision Record 0036: JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "36."]
-contentType: "explanation"
+title: "36. Hybrid Session Model for Long-Running Tasks"
+description: "Architecture Decision Record: 36. Hybrid Session Model for Long-Running Tasks"
 ---
 
+# 36. Hybrid Session Model for Long-Running Tasks
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:
 - Batch ETL jobs running 6-12 hours
@@ -32,11 +32,11 @@ Challenges:
 
 Current system: Stateless JWTs only (no server-side sessions).
 
-### Decision
+## Decision
 
 Implement a **Hybrid Session Model** where standard users use stateless JWTs with client-side refresh, while service principals optionally use server-side sessions with automatic token refresh for long-running tasks.
 
-#### Architecture
+### Architecture
 
 **Mode 1: Stateless JWT (Default for Users)**:
 - 15-minute access tokens
@@ -50,96 +50,7 @@ Implement a **Hybrid Session Model** where standard users use stateless JWTs wit
 - Server-side automatic refresh before expiration
 - Session TTL: 30 days with sliding window
 
-#### Hybrid Session Architecture Comparison
-
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TB
-    subgraph "Mode 1: Stateless JWT (Interactive Users)"
-        U1[User: alice] --> KC1[Keycloak Login]
-        KC1 --> JWT1[Access Token: 15 min<br/>Refresh Token: 30 min]
-        JWT1 --> Client1[Client App]
-        Client1 --> Refresh1{Token expires?}
-        Refresh1 -->|Yes| ClientRefresh[Client refreshes<br/>via Keycloak]
-        ClientRefresh --> JWT1
-        Refresh1 -->|No| API1[API Request]
-        API1 --> Validate1[Validate JWT<br/>No server state]
-        Validate1 --> Response1[Response]
-
-        NoSession1[No Redis Storage] -.->|Not needed| Validate1
-    end
-
-    subgraph "Mode 2: Hybrid Session (Service Principals)"
-        SP1[Service Principal:<br/>batch-etl-job] --> KC2[Client Credentials]
-        KC2 --> JWT2[Access Token: 15 min<br/>Refresh Token: 30 days]
-        JWT2 --> Session[Create Session in Redis]
-        Session --> Redis[(Redis Session Store<br/>TTL: 30 days)]
-
-        SP1 --> API2[API Request<br/>+ Session ID]
-        API2 --> Check[Check Session]
-        Check --> Redis
-        Redis --> AutoRefresh{Expires in &lt;5 min?}
-        AutoRefresh -->|Yes| ServerRefresh[Server auto-refreshes<br/>via Keycloak]
-        ServerRefresh --> UpdateSession[Update session tokens]
-        UpdateSession --> Redis
-        AutoRefresh -->|No| Validate2[Validate JWT]
-        Validate2 --> SlidingWindow[Extend TTL<br/>Sliding window]
-        SlidingWindow --> Redis
-        Validate2 --> Response2[Response]
-    end
-    style NoSession1 fill:#f0f0f0,stroke:#999,stroke-dasharray: 5 5
-
-```
-#### Session Lifecycle Flow
-
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant SP as Service Principal
-    participant App as MCP Server
-    participant Redis as Redis Session Store
-    participant KC as Keycloak
-
-    Note over SP,KC: Initial Authentication
-    SP->>KC: Client Credentials Flow
-    KC-->>SP: Access Token (15 min)<br/>Refresh Token (30 days)
-
-    SP->>App: Create Session<br/>POST /api/sessions
-    App->>Redis: CREATE session<br/>SET session:abc123<br/>TTL: 30 days
-    Redis-->>App: Session created
-    App-->>SP: Session ID: abc123
-
-    Note over SP,Redis: Long-Running Task (Hours/Days)
-    loop Every API Request
-        SP->>App: Request + Session ID<br/>Authorization: Bearer <JWT>
-        App->>Redis: GET session:abc123
-        Redis-->>App: Session data + tokens
-
-        alt Access token expires in less than 5 min
-            App->>App: Auto-refresh needed
-            App->>KC: POST /token<br/>grant_type=refresh_token
-            KC-->>App: New access token (15 min)<br/>New refresh token (30 days)
-            App->>Redis: UPDATE session:abc123<br/>Store new tokens<br/>Extend TTL (sliding window)
-            Redis-->>App: Updated
-        else Access token still valid
-            App->>Redis: EXPIRE session:abc123<br/>Extend TTL (sliding window)
-        end
-
-        App-->>SP: Response
-    end
-
-    Note over SP,Redis: Manual Revocation
-    SP->>App: DELETE /api/sessions/abc123
-    App->>Redis: DEL session:abc123
-    Redis-->>App: Deleted
-    App-->>SP: Session revoked
-
-    Note over Redis: Automatic cleanup after 30 days of inactivity
-
-```
-
-#### Core Principles
+### Core Principles
 
 1. **JWT First**: Always use JWTs for authentication (not opaque session IDs)
 2. **Selective Sessions**: Only service principals use server-side sessions
@@ -148,53 +59,54 @@ sequenceDiagram
 5. **Instant Revocation**: Server-side sessions can be revoked immediately
 6. **Redis Storage**: Distributed session store for multi-replica support
 
-#### Configuration
+### Configuration
 
-```
-## Session Mode
+```bash
+# Session Mode
 AUTH_MODE=hybrid  # stateless for users, session for service principals
 SESSION_BACKEND=redis
 REDIS_URL=redis://localhost:6379/0
 
-## Service Principal Sessions
+# Service Principal Sessions
 SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_SESSION_TTL=2592000  # 30 days
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
 SESSION_SLIDING_WINDOW=true
-SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in &lt;5 min
+SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in \<5 min
 
-## User Sessions (optional)
+# User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
 ```
-### Consequences
 
-#### Positive Consequences
+## Consequences
+
+### Positive Consequences
 - Long-running task support (30-day sessions)
 - Automatic refresh (no client complexity)
 - Instant revocation capability
 - Security maintained (still use short-lived access tokens)
 - Audit trail (session activity logged)
 
-#### Negative Consequences
+### Negative Consequences
 - Redis dependency (infrastructure overhead)
 - Complexity (two modes to maintain)
 - Storage cost (session data in Redis)
 - Potential session leakage if not cleaned up
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - Redis HA setup (cluster mode), automatic TTL expiration
 - Clear documentation on when to use each mode
 - Monitoring: session count, memory usage, refresh failures
 - Cleanup job for orphaned sessions
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Long-Lived JWTs**: Rejected - cannot revoke, security risk
 2. **Sessions for All**: Rejected - stateless architecture preferred for users
 3. **Stateless Only**: Rejected - inadequate for long-running tasks
 4. **Token Exchange**: Rejected - complex, requires admin credentials
 
-### Implementation
+## Implementation
 
 **Session Data Structure**:
 ```python
@@ -223,12 +135,13 @@ class RedisSessionStore:
 
     async def refresh_if_needed(self, session_id):
         session = await self.get_session(session_id)
-        if session.expires_in < 300:  # &lt;5 minutes
+        if session.expires_in < 300:  # \<5 minutes
             new_tokens = await keycloak.refresh_token(session.refresh_token)
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]
             await self.update_session(session)
 ```
+
 **Middleware** (`src/mcp_server_langgraph/auth/middleware.py`):
 ```python
 async def get_current_user(request: Request):
@@ -247,9 +160,9 @@ async def get_current_user(request: Request):
     return payload
 ```
 
-### References
+## References
 
 - Session Store: `src/mcp_server_langgraph/auth/session.py` (existing, to be enhanced)
 - Middleware: `src/mcp_server_langgraph/auth/middleware.py` (to be updated)
-- Related ADRs: [ADR-0006](/architecture/adr-0006-session-storage-architecture), [ADR-0032](/architecture/adr-0032-jwt-standardization), [ADR-0033](/architecture/adr-0033-service-principal-design)
+- Related ADRs: [ADR-0006](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0006-session-storage-architecture.md), [ADR-0032](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0032-jwt-standardization.md), [ADR-0033](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0033-service-principal-design.md)
 - External: [Redis TTL](https://redis.io/commands/expire), [OAuth2 Refresh](https://datatracker.ietf.org/doc/html/rfc6749#section-1.5)

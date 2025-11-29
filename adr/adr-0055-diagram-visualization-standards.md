@@ -1,11 +1,14 @@
-# ADR-0055: Diagram Visualization Standards
+# 55. Diagram Visualization Standards
 
-**Status**: Accepted
-**Date**: 2025-11-15
-**Authors**: Engineering Team, Documentation Team
-**Related ADRs**: ADR-0027 (Rate Limiting), ADR-0028 (Caching Strategy), ADR-0030 (Resilience Patterns)
+Date: 2025-11-15
 
----
+## Status
+
+Accepted
+
+## Category
+
+Development & Tooling
 
 ## Context
 

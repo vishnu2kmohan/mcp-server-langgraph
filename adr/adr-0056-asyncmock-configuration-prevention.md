@@ -1,8 +1,14 @@
-# ADR-0053: AsyncMock Configuration Prevention Mechanisms
+# 56. AsyncMock Configuration Prevention Mechanisms
 
-**Status**: Accepted
-**Date**: 2025-11-13
-**Tags**: #testing #security #pytest-xdist #prevention
+Date: 2025-11-13
+
+## Status
+
+Accepted
+
+## Category
+
+Security & Compliance
 
 ## Context
 

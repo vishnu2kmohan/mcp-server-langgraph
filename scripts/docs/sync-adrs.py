@@ -70,6 +70,11 @@ description: "Architecture Decision Record: {title}"
 """
 
 
+# GitHub repository base URL for fully-qualified links
+GITHUB_REPO_URL = "https://github.com/vishnu2kmohan/mcp-server-langgraph"
+GITHUB_BLOB_BASE = f"{GITHUB_REPO_URL}/blob/main"
+
+
 def convert_adr_to_mdx(md_content: str) -> str:
     """
     Convert ADR markdown to MDX format with frontmatter.
@@ -83,7 +88,57 @@ def convert_adr_to_mdx(md_content: str) -> str:
     title, date = extract_title_and_date(md_content)
     frontmatter = generate_frontmatter(title, date)
 
-    return frontmatter + md_content
+    content = md_content
+
+    # Convert internal ADR links from .md to fully qualified GitHub URLs
+    # Pattern: [ADR-XXXX](adr-XXXX-something.md) -> [ADR-XXXX](https://github.com/.../blob/main/adr/adr-XXXX-something.md)
+    content = re.sub(
+        r"\(adr-(\d{4}-[^)]+\.md)\)",
+        rf"({GITHUB_BLOB_BASE}/adr/adr-\1)",
+        content,
+    )
+
+    # Convert relative paths to other docs (../docs/...) to GitHub URLs
+    # Pattern: (../docs/something.mdx) -> (https://github.com/.../blob/main/docs/something.mdx)
+    content = re.sub(
+        r"\(\.\./docs/([^)]+)\)",
+        rf"({GITHUB_BLOB_BASE}/docs/\1)",
+        content,
+    )
+
+    # Convert relative paths to tests/ to GitHub URLs
+    # Pattern: (../tests/something) -> (https://github.com/.../blob/main/tests/something)
+    content = re.sub(
+        r"\(\.\./tests/([^)]+)\)",
+        rf"({GITHUB_BLOB_BASE}/tests/\1)",
+        content,
+    )
+
+    # Convert relative paths to docs-internal/ to GitHub URLs
+    # Pattern: (../docs-internal/something) -> (https://github.com/.../blob/main/docs-internal/something)
+    content = re.sub(
+        r"\(\.\./docs-internal/([^)]+)\)",
+        rf"({GITHUB_BLOB_BASE}/docs-internal/\1)",
+        content,
+    )
+
+    # Convert relative paths to src/ to GitHub URLs
+    # Pattern: (../src/something) -> (https://github.com/.../blob/main/src/something)
+    content = re.sub(
+        r"\(\.\./src/([^)]+)\)",
+        rf"({GITHUB_BLOB_BASE}/src/\1)",
+        content,
+    )
+
+    # Convert relative paths to scripts/ to GitHub URLs
+    # Pattern: (../scripts/something) -> (https://github.com/.../blob/main/scripts/something)
+    content = re.sub(
+        r"\(\.\./scripts/([^)]+)\)",
+        rf"({GITHUB_BLOB_BASE}/scripts/\1)",
+        content,
+    )
+
+    return frontmatter + content
 
 
 def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
@@ -97,15 +152,15 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
     Returns:
         True if sync was needed, False otherwise
     """
-    source_path = Path(f"adr/{adr_number}-*.md")  # noqa: F841
-    source_files = list(Path("adr").glob(f"{adr_number}-*.md"))
+    source_path = Path(f"adr/adr-{adr_number}-*.md")  # noqa: F841
+    source_files = list(Path("adr").glob(f"adr-{adr_number}-*.md"))
 
     if not source_files:
         print(f"{Colors.RED}✗ ADR {adr_number} not found in adr/{Colors.RESET}")
         return False
 
     source_file = source_files[0]
-    dest_file = Path(f"docs/architecture/adr-{source_file.name.replace('.md', '.mdx')}")
+    dest_file = Path(f"docs/architecture/{source_file.name.replace('.md', '.mdx')}")
 
     # Read source
     with open(source_file, encoding="utf-8") as f:
@@ -120,11 +175,8 @@ def sync_adr(adr_number: str, dry_run: bool = False) -> bool:
         with open(dest_file, encoding="utf-8") as f:
             existing_content = f.read()
 
-        # Extract body (skip frontmatter) for comparison
-        source_body = source_content
-        existing_body = re.sub(r"^---\n.*?\n---\n\n", "", existing_content, flags=re.DOTALL)
-
-        if source_body.strip() == existing_body.strip():
+        # Compare the generated MDX content with existing content
+        if mdx_content.strip() == existing_content.strip():
             needs_update = False
 
     if needs_update:
@@ -164,8 +216,8 @@ def sync_all_adrs(dry_run: bool = False) -> dict[str, int]:
     print(f"\n{Colors.BOLD}Syncing {len(adr_files)} ADRs...{Colors.RESET}\n")
 
     for adr_file in adr_files:
-        # Extract ADR number (e.g., "0001" from "0001-llm-multi-provider.md")
-        match = re.match(r"(\d{4})-", adr_file.name)
+        # Extract ADR number (e.g., "0001" from "adr-0001-llm-multi-provider.md")
+        match = re.match(r"adr-(\d{4})-", adr_file.name)
         if not match:
             continue
 
@@ -257,7 +309,7 @@ Examples:
     args = parser.parse_args()
 
     # Change to repo root
-    repo_root = Path(__file__).parent.parent
+    repo_root = Path(__file__).parent.parent.parent
     import os
 
     os.chdir(repo_root)

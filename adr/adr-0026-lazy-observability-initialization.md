@@ -1,8 +1,14 @@
-# ADR-0026: Lazy Observability Initialization
+# 26. Lazy Observability Initialization
+
+Date: 2025-01-17
 
 ## Status
 
-**Accepted** - 2025-01-17
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 

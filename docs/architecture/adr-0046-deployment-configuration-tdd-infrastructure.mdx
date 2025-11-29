@@ -1,19 +1,19 @@
 ---
-title: 'ADR-0046: Deployment Configuration TDD Infrastructure'
-description: 'On 2025-11-06, OpenAI Codex analysis identified 17 deployment configuration issues across Helm charts, Kustomize overlays, and Kubernetes manifests.'
-icon: 'file-lines'
-seoTitle: "ADR-0046: Deployment Configuration TDD Infrastructure"
-seoDescription: "Architecture Decision Record 0046: Comprehensive Test-Driven Development infrastructure for deployment configurations"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0046", "deployment", "Kubernetes", "Helm", "Kustomize", "TDD", "security", "CORS"]
-contentType: "explanation"
+title: "46. Deployment Configuration TDD Infrastructure"
+description: "Architecture Decision Record: 46. Deployment Configuration TDD Infrastructure"
 ---
 
-# ADR-0046: Deployment Configuration TDD Infrastructure
+# 46. Deployment Configuration TDD Infrastructure
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Authors**: Engineering Team
-**Related**: ADR-0041 (GDPR Storage), ADR-0045 (Test Infrastructure Phase 2)
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -101,6 +101,7 @@ test_base_service_no_cloud_specific_annotations()
 # Validates: Base service has no AWS/GCP/Azure annotations
 # Prevents: Cloud provider conflicts
 ```
+
 #### 2. Validation Script (`scripts/validate-deployments.sh`)
 
 Automated validation script that checks:
@@ -121,7 +122,7 @@ Automated validation script that checks:
 
 **5 Deployment-Specific Hooks**:
 
-```
+```yaml
 - id: validate-deployment-secrets
   # Runs on: deployments/helm/**/*.yaml
   # Validates: Secret key alignment
@@ -205,7 +206,7 @@ Automated validation script that checks:
 
 ### Test Structure
 
-```python
+```
 tests/deployment/
 ├── __init__.py
 ├── test_helm_configuration.py          # 11 tests (485 lines)
@@ -215,7 +216,7 @@ tests/deployment/
 
 ### Validation Flow
 
-```bash
+```
 ┌─────────────────┐
 │ Developer makes │
 │ config change   │

@@ -1,19 +1,19 @@
 ---
-title: 'ADR-0048: PostgreSQL Storage Integration Tests'
-description: 'Following completion of Phases 1 & 2, Phase 3 addresses the critical OpenAI Codex finding: Compliance storage tests stop at Pydantic instantiation; add CRUD coverage for the in-memory stores and integration tests against the actual persistence layer.'
-icon: 'file-lines'
-seoTitle: "ADR-0048: PostgreSQL Storage Integration Tests"
-seoDescription: "Architecture Decision Record 0048: Comprehensive PostgreSQL storage backend validation and integration testing"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0048", "PostgreSQL", "storage", "integration testing", "GDPR", "HIPAA", "compliance"]
-contentType: "explanation"
+title: "48. PostgreSQL Storage Integration Tests"
+description: "Architecture Decision Record: 48. PostgreSQL Storage Integration Tests"
 ---
 
-# ADR-0048: PostgreSQL Storage Integration Tests
+# 48. PostgreSQL Storage Integration Tests
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 3 - Comprehensive PostgreSQL storage backend validation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -150,6 +150,7 @@ class TestPostgresAuditLogStore:
         retrieved = await audit_store.get(log_id)
         assert retrieved.user_id == entry.user_id
 ```
+
 **Fixtures Created**:
 
 1. **postgres_with_schema** (session-scoped):
@@ -206,7 +207,7 @@ class TestPostgresAuditLogStore:
 - Comprehensive coverage (23+ tests)
 - Edge cases tested
 - Concurrent access validated
-- Performance validated (`<100ms` overhead)
+- Performance validated (\<100ms overhead)
 
 ### Negative
 
@@ -283,6 +284,7 @@ async def postgres_with_schema(postgres_connection_real):
     await postgres_connection_real.execute(schema_sql)
     yield postgres_connection_real
 ```
+
 **REFACTOR Phase** ✅:
 - Optimized cleanup (TRUNCATE vs DROP)
 - Added graceful error handling
@@ -369,7 +371,7 @@ psql -h localhost -p 9432 -U postgres -d testdb -c "\di"
 **postgres_connection_clean** (per-test):
 - TRUNCATE operation: ~5-15ms (5 tables)
 - Fallback DROP: ~10-50ms (if schema not created)
-- Impact: Acceptable (`<100ms` per test)
+- Impact: Acceptable (\<100ms per test)
 
 ### Test Execution
 
@@ -381,8 +383,8 @@ psql -h localhost -p 9432 -U postgres -d testdb -c "\di"
 ## Future Work
 
 ### Phase 4: Infrastructure Optimizations
-- Optimize docker-compose.test.yml startup (`<2min` target)
-- Optimize CI/CD E2E test execution (`<15min` target)
+- Optimize docker-compose.test.yml startup (\<2min target)
+- Optimize CI/CD E2E test execution (\<15min target)
 - Update performance baselines with real infrastructure
 
 ### Additional Storage Tests
@@ -399,9 +401,9 @@ psql -h localhost -p 9432 -U postgres -d testdb -c "\di"
 
 ## References
 
-- [ADR-0041: PostgreSQL GDPR Storage](./adr-0041-postgresql-gdpr-storage.mdx)
-- [ADR-0044: Test Infrastructure Quick Wins](./adr-0044-test-infrastructure-quick-wins.mdx)
-- [ADR-0045: Test Infrastructure Phase 2 Foundation](./adr-0045-test-infrastructure-phase-2-foundation.mdx)
+- [ADR-0041: PostgreSQL GDPR Storage](./adr-0041-postgresql-gdpr-storage.md)
+- [ADR-0044: Test Infrastructure Quick Wins](./adr-0044-test-infrastructure-quick-wins.md)
+- [ADR-0045: Test Infrastructure Phase 2 Foundation](./adr-0045-test-infrastructure-phase-2-foundation.md)
 - [GDPR Article 7: Conditions for consent](https://gdpr-info.eu/art-7-gdpr/)
 - [GDPR Article 17: Right to erasure](https://gdpr-info.eu/art-17-gdpr/)
 - [GDPR Article 30: Records of processing activities](https://gdpr-info.eu/art-30-gdpr/)

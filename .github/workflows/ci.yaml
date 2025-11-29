@@ -171,9 +171,9 @@ jobs:
   meta-tests:
     name: Meta Tests (Test Suite Quality)
     runs-on: ubuntu-latest
-    # Timeout: 15 minutes to accommodate comprehensive meta test suite
+    # Timeout: 20 minutes to accommodate comprehensive meta test suite
     # Components: xdist isolation, xfail strict, marker enforcement, infrastructure validation
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

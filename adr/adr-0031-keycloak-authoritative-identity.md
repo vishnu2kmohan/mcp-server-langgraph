@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Modern enterprise applications integrate with multiple identity sources (LDAP, Active Directory, Azure AD, Google Workspace, Okta, GitHub) while maintaining consistent authentication, authorization, and user management. Operating multiple authentication systems in parallel creates significant challenges:

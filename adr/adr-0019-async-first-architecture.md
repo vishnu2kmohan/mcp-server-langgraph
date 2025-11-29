@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Modern AI agents require numerous I/O-bound operations:

@@ -43,13 +43,23 @@ class Colors:
 class ADRMetadata:
     """Metadata extracted from an ADR file."""
 
-    def __init__(self, number: int, filename: str, title: str, status: str, date: str, tags: list[str]):
+    def __init__(
+        self,
+        number: int,
+        filename: str,
+        title: str,
+        status: str,
+        date: str,
+        tags: list[str],
+        category: str = "",
+    ):
         self.number = number
         self.filename = filename
         self.title = title
         self.status = status
         self.date = date
         self.tags = tags
+        self.category = category
 
     def __repr__(self):
         return f"ADR-{self.number:04d}: {self.title} ({self.status})"
@@ -81,15 +91,23 @@ def extract_adr_metadata(file_path: Path) -> ADRMetadata:
     title_match = re.search(r"^# (?:ADR-\d+: )?(.+)$", content, re.MULTILINE)
     title = title_match.group(1).strip() if title_match else "Unknown Title"
 
-    # Extract status
-    status_match = re.search(r"^\*\*Status\*\*:\s*(.+)$", content, re.MULTILINE)
+    # Extract status (try heading format first, then inline format)
+    status_match = re.search(r"^## Status\s*\n\n(\w+)", content, re.MULTILINE)
+    if not status_match:
+        status_match = re.search(r"^\*\*Status[:\*]*\s*(.+)$", content, re.MULTILINE)
     status = status_match.group(1).strip() if status_match else "Unknown"
 
-    # Extract date
-    date_match = re.search(r"^\*\*Date\*\*:\s*(.+)$", content, re.MULTILINE)
+    # Extract date (try "Date: YYYY-MM-DD" format first, then inline format)
+    date_match = re.search(r"^Date:\s*(.+)$", content, re.MULTILINE)
+    if not date_match:
+        date_match = re.search(r"^\*\*Date\*\*:\s*(.+)$", content, re.MULTILINE)
     date = date_match.group(1).strip() if date_match else "Unknown"
 
-    # Extract tags
+    # Extract category (heading format: ## Category\n\nCategory Name)
+    category_match = re.search(r"^## Category\s*\n\n(.+?)$", content, re.MULTILINE)
+    category = category_match.group(1).strip() if category_match else ""
+
+    # Extract tags (inline format)
     tags_match = re.search(r"^\*\*Tags\*\*:\s*(.+)$", content, re.MULTILINE)
     tags = []
     if tags_match:
@@ -104,12 +122,16 @@ def extract_adr_metadata(file_path: Path) -> ADRMetadata:
         status=status,
         date=date,
         tags=tags,
+        category=category,
     )
 
 
 def categorize_adrs(adrs: list[ADRMetadata]) -> dict[str, list[ADRMetadata]]:
     """
-    Categorize ADRs by topic based on tags and titles.
+    Categorize ADRs by topic.
+
+    Uses the explicit Category field if present in the ADR, otherwise falls back
+    to keyword matching based on title and tags.
 
     Args:
         adrs: List of ADR metadata objects
@@ -119,7 +141,7 @@ def categorize_adrs(adrs: list[ADRMetadata]) -> dict[str, list[ADRMetadata]]:
     """
     categories = defaultdict(list)
 
-    # Define category keywords
+    # Define category keywords (fallback for ADRs without explicit category)
     category_keywords = {
         "Core Architecture": ["architecture", "llm", "provider", "observability", "mcp"],
         "Authentication & Authorization": ["auth", "keycloak", "jwt", "openfga", "permission", "scim", "identity"],
@@ -151,7 +173,12 @@ def categorize_adrs(adrs: list[ADRMetadata]) -> dict[str, list[ADRMetadata]]:
     }
 
     for adr in adrs:
-        # Combine title and tags for matching
+        # Use explicit category if present
+        if adr.category:
+            categories[adr.category].append(adr)
+            continue
+
+        # Fall back to keyword matching
         text = f"{adr.title.lower()} {' '.join(adr.tags).lower()}"
 
         # Find matching category

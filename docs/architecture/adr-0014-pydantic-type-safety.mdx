@@ -1,20 +1,21 @@
 ---
-title: 14. Pydantic Type Safety Strategy
-description: 'Architecture Decision Record: 14. Pydantic Type Safety Strategy'
-icon: 'file-lines'
-seoTitle: "ADR-0014: 14. Pydantic Type Safety Strategy"
-seoDescription: "Architecture Decision Record 0014: Architecture Decision Record: 14. Pydantic Type Safety Strategy"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "14."]
-contentType: "explanation"
+title: "14. Pydantic Type Safety Strategy"
+description: "Architecture Decision Record: 14. Pydantic Type Safety Strategy"
 ---
+
+# 14. Pydantic Type Safety Strategy
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Core Architecture
+
+## Context
 
 Python's dynamic typing creates runtime errors that could be caught at development time:
 - Invalid data passed to functions
@@ -28,11 +29,11 @@ Production systems need:
 - Self-documenting code
 - IDE support (autocomplete, type checking)
 
-### Decision
+## Decision
 
 Use **Pydantic BaseModel** for all data structures requiring validation.
 
-#### Implementation
+### Implementation
 
 ```python
 from pydantic import BaseModel, Field, field_validator
@@ -52,9 +53,9 @@ class SessionData(BaseModel):
         return v
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 
 - **Runtime Validation**: Automatic validation of all fields
 - **Type Safety**: mypy catches type errors
@@ -62,26 +63,26 @@ class SessionData(BaseModel):
 - **Self-Documenting**: Field descriptions in schema
 - **JSON Serialization**: Built-in model_dump_json()
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Performance**: Validation overhead (~10-50µs per model)
 - **Boilerplate**: More code than plain dicts
 - **Learning Curve**: Pydantic-specific patterns
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **dataclasses**: No validation, just structure
 2. **TypedDict**: No runtime validation
 3. **Plain dicts**: No type safety
 
-### Usage Across Codebase
+## Usage Across Codebase
 
 - **Session Management**: SessionData model (src/mcp_server_langgraph/auth/session.py:30)
 - **Authentication**: UserData, AuthResponse models (src/mcp_server_langgraph/auth/user_provider.py:26)
 - **Configuration**: Settings, FeatureFlags (src/mcp_server_langgraph/core/config.py)
 - **Compliance**: All GDPR, SOC 2, HIPAA models
 
-### References
+## References
 
 - Dependency: `pyproject.toml:44` - `pydantic>=2.5.3`
-- Related ADRs: [ADR-0005](/architecture/adr-0005-pydantic-ai-integration)
+- Related ADRs: [ADR-0005](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0005-pydantic-ai-integration.md)

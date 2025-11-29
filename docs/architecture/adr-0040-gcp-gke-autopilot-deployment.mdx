@@ -1,11 +1,6 @@
 ---
-title: 'ADR-0040: GCP GKE Autopilot Deployment Strategy'
-description: 'Architecture decision record for deploying on GCP using GKE Autopilot with comprehensive Terraform infrastructure'
-icon: 'file-lines'
-seoTitle: "ADR-0040: ADR-0040: GCP GKE Autopilot Deployment Strategy"
-seoDescription: "Architecture Decision Record 0040: Architecture decision record for deploying on GCP using GKE Autopilot with comprehensive Terraform infrastructure"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0040"]
-contentType: "explanation"
+title: "40. GCP GKE Autopilot Deployment Strategy"
+description: "Architecture Decision Record: 40. GCP GKE Autopilot Deployment Strategy"
 ---
 
 # 40. GCP GKE Autopilot Deployment Strategy
@@ -15,6 +10,10 @@ Date: 2025-11-01
 ## Status
 
 Accepted
+
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 
@@ -36,7 +35,7 @@ Deploy to **GKE Autopilot** for production workloads with comprehensive Terrafor
 
 ### Architecture
 
-```text
+```
 GCP Production Stack:
 ├── GKE Autopilot (regional, multi-zone)
 ├── Cloud SQL PostgreSQL 15 (regional HA, read replicas)
@@ -49,7 +48,7 @@ GCP Production Stack:
 
 ### Terraform Module Structure
 
-```python
+```
 terraform/
 ├── backend-setup-gcp/           # GCS state backend
 ├── modules/
@@ -127,6 +126,7 @@ volumes:
   secret:
     secretName: gcp-service-account-key
 ```
+
 **Problems**:
 - Keys can be exfiltrated
 - Must rotate manually
@@ -284,15 +284,15 @@ metadata:
 
 ## Related Decisions
 
-- [ADR-0013: Multi-Deployment Target Strategy](/architecture/adr-0013-multi-deployment-target-strategy) - Multi-cloud strategy
-- [ADR-0021: CI/CD Pipeline Strategy](/architecture/adr-0021-cicd-pipeline-strategy) - GitHub Actions integration
-- [ADR-0001: Multi-Provider LLM Support](/architecture/adr-0001-llm-multi-provider) - Vertex AI integration
+- [ADR-0013: Multi-Deployment Target Strategy](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0013-multi-deployment-target-strategy.md) - Multi-cloud strategy
+- [ADR-0021: CI/CD Pipeline Strategy](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0021-cicd-pipeline-strategy.md) - GitHub Actions integration
+- [ADR-0001: Multi-Provider LLM Support](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0001-llm-multi-provider.md) - Vertex AI integration
 
 ## References
 
-- [GKE Autopilot Overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
-- [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-- [Binary Authorization](https://cloud.google.com/binary-authorization/docs)
+- GKE Autopilot: [cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+- Workload Identity: [cloud.google.com/kubernetes-engine/docs/how-to/workload-identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+- Binary Authorization: [cloud.google.com/binary-authorization/docs](https://cloud.google.com/binary-authorization/docs)
 - Terraform Modules: `terraform/modules/` (6 production-ready modules)
-- Deployment Guide: [GKE Deployment Guide](/deployment/kubernetes/gke-production)
-- Infrastructure Documentation: [Terraform GCP](/deployment/infrastructure/terraform-gcp)
+- Deployment Guide: `deployments/GKE_DEPLOYMENT_GUIDE.md`
+- Implementation Progress: `GCP_GKE_IMPLEMENTATION_PROGRESS.md`

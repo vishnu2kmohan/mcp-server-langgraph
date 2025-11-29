@@ -1,9 +1,14 @@
-# ADR-0050: Dependency Singleton Pattern Justification
+# 50. Dependency Singleton Pattern Justification
 
-**Status**: Accepted
-**Date**: 2025-11-10
-**Deciders**: Engineering Team
-**Context**: OpenAI Codex validation of dependency injection patterns
+Date: 2025-11-10
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context and Problem Statement
 

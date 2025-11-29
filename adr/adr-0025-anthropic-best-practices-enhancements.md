@@ -1,9 +1,14 @@
-# ADR-0025: Anthropic Best Practices - Advanced Enhancements
+# 25. Anthropic Best Practices - Advanced Enhancements
 
-**Status**: ✅ Accepted
-**Date**: 2025-10-17
-**Deciders**: Development Team
-**Related ADRs**: [ADR-0023](adr-0023-anthropic-tool-design-best-practices.md), [ADR-0024](adr-0024-agentic-loop-implementation.md)
+Date: 2025-10-17
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 

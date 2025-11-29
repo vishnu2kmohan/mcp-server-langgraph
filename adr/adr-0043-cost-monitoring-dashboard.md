@@ -1,8 +1,14 @@
-# ADR-0043: Cost Monitoring Dashboard
+# 43. Cost Monitoring Dashboard
+
+Date: 2025-11-02
 
 ## Status
 
-**Accepted** - 2025-11-02
+Proposed
+
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 

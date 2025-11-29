@@ -1,21 +1,21 @@
 ---
-title: 39. OpenFGA Permission Inheritance for Service Principals
-description: 'Service principals (ADR-0033) need to act on behalf of users for scenarios like: - Scheduled reports generated for specific users'
-icon: 'file-lines'
-seoTitle: "ADR-0039: 39. OpenFGA Permission Inheritance for Service Pri"
-seoDescription: "Architecture Decision Record 0039: Service principals (ADR-0033) need to act on behalf of users for scenarios like: - Scheduled reports generated for specific users"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "39."]
-contentType: "explanation"
+title: "39. OpenFGA Permission Inheritance for Service Principals"
+description: "Architecture Decision Record: 39. OpenFGA Permission Inheritance for Service Principals"
 ---
 
+# 39. OpenFGA Permission Inheritance for Service Principals
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 Service principals (ADR-0033) need to act on behalf of users for scenarios like:
 - Scheduled reports generated for specific users
@@ -27,13 +27,13 @@ Challenge: Service principals have their own identity (`service:batch-job`) but 
 
 Current OpenFGA model supports direct user→object permissions but not delegation/inheritance.
 
-### Decision
+## Decision
 
 Extend OpenFGA authorization model with **`acts_as` relation** enabling service principals to inherit permissions from associated user principals while maintaining distinct identities.
 
-#### Architecture
+### Architecture
 
-```text
+```
 OpenFGA Authorization Model:
   service_principal (new type)
     - acts_as: [user]  ← Permission inheritance relation
@@ -47,89 +47,7 @@ Permission Check Flow:
   5. If yes: Permission granted (inherited)
 ```
 
-#### Permission Inheritance Model
-
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-flowchart TB
-    subgraph "Identity Layer"
-        User[User: alice<br/>user:alice]
-        SP[Service Principal<br/>service:batch-etl-job]
-        Owner[Owner: bob<br/>user:bob]
-    end
-
-    subgraph "OpenFGA Tuples"
-        Tuple1[acts_as Tuple<br/>service:batch-etl-job<br/>→ user:alice]
-        Tuple2[owner Tuple<br/>user:bob<br/>→ service_principal:batch-etl-job]
-        Tuple3[viewer Tuple<br/>user:alice<br/>→ conversation:thread1]
-    end
-
-    subgraph "Resources"
-        Conv[Conversation<br/>conversation:thread1]
-        Tool[Tool<br/>tool:chat]
-        Org[Organization<br/>organization:acme]
-    end
-
-    %% Relationships
-    SP -.->|inherits via| Tuple1
-    Tuple1 -.->|acts_as| User
-    Owner -->|owns| Tuple2
-    Tuple2 -->|ownership| SP
-
-    User -->|direct permission| Tuple3
-    Tuple3 -->|viewer| Conv
-
-    SP -.->|inherited permission| Conv
-    User -->|can execute| Tool
-    SP -.->|inherited| Tool
-
-    User -->|member of| Org
-    SP -.->|inherited| Org
-
-    %% ColorBrewer2 + semantic color palette styling
-    classDef style1 fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
-    classDef style2 fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
-    classDef style3 fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
-
-    class User,SP,Owner style1
-    class Tuple1,Tuple2,Tuple3 style2
-    class Conv,Tool,Org style3
-
-```
-**Permission Check Flow with Inheritance**:
-```mermaid
-%% ColorBrewer2 Set3 palette - each component type uniquely colored
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant App as MCP Server
-    participant FGA as OpenFGA
-    participant Tuples as Tuple Store
-
-    Note over App,FGA: Request: Can service:batch-etl-job view conversation:thread1?
-
-    App->>FGA: Check(service:batch-etl-job, viewer, conversation:thread1)
-
-    Note over FGA: Step 1: Direct Permission Check
-    FGA->>Tuples: Find direct tuple<br/>user=service:batch-etl-job<br/>relation=viewer<br/>object=conversation:thread1
-    Tuples-->>FGA: Not found
-
-    Note over FGA: Step 2: Check acts_as Relationship
-    FGA->>Tuples: Find acts_as tuple<br/>user=service:batch-etl-job<br/>relation=acts_as
-    Tuples-->>FGA: Found: service:batch-etl-job acts_as user:alice
-
-    Note over FGA: Step 3: Check Inherited Permission
-    FGA->>FGA: Recursive check<br/>Check(user:alice, viewer, conversation:thread1)
-    FGA->>Tuples: Find tuple<br/>user=user:alice<br/>relation=viewer<br/>object=conversation:thread1
-    Tuples-->>FGA: Found: user:alice → viewer → conversation:thread1
-
-    Note over FGA: Step 4: Grant Permission via Inheritance
-    FGA-->>App: Allowed (inherited from user:alice)
-
-    App->>App: Log action<br/>Actor: service:batch-etl-job<br/>Effective User: user:alice<br/>Action: view conversation:thread1
-
-```
-
-#### Core Principles
+### Core Principles
 
 1. **Explicit Association**: `acts_as` tuples created deliberately (not automatic)
 2. **Transitive Permissions**: Service inherits all user permissions
@@ -138,7 +56,7 @@ sequenceDiagram
 5. **Revocable**: Disabling user revokes service permissions
 6. **Ownership Tracking**: Services have owners for management
 
-#### OpenFGA Model Extension
+### OpenFGA Model Extension
 
 **New Type**:
 ```typescript
@@ -149,6 +67,7 @@ type service_principal
     define viewer: owner
     define editor: owner
 ```
+
 **Relationship Tuples**:
 ```python
 [
@@ -173,7 +92,7 @@ type service_principal
 ]
 ```
 
-#### Permission Check Implementation
+### Permission Check Implementation
 
 **Enhanced Authorization** (`src/mcp_server_langgraph/auth/openfga.py`):
 ```python
@@ -210,44 +129,45 @@ async def check_permission(
 
     return False
 ```
-#### Configuration
 
-```
-## OpenFGA Permission Inheritance
+### Configuration
+
+```bash
+# OpenFGA Permission Inheritance
 OPENFGA_PERMISSION_INHERITANCE_ENABLED=true
 OPENFGA_LOG_INHERITED_ACCESS=true  # Log when service uses inherited permissions
 OPENFGA_CACHE_ACTS_AS_RELATIONS=true  # Cache acts_as lookups (5 min TTL)
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 - Service principals can act on behalf of users (no password sharing)
 - Clear audit trail (service identity + associated user)
 - Flexible permissions (service can act as multiple users)
 - Revocation propagates (disable user → service loses permissions)
 - Standard ReBAC model (no custom authorization logic)
 
-#### Negative Consequences
+### Negative Consequences
 - Additional authorization complexity (extra tuple lookups)
 - Performance impact (two permission checks instead of one)
 - Potential permission confusion (non-obvious inheritance)
 - Authorization model more complex (additional relation types)
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - Cache `acts_as` relationships (5-min TTL, high hit rate)
 - Clear logging of inherited access
 - UI showing effective permissions for service principals
 - Documentation with clear examples
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Token Impersonation**: Rejected - complex OAuth2 token exchange, admin credentials required
 2. **Shared Credentials**: Rejected - security risk, poor audit trail
 3. **Copy Permissions**: Rejected - sync overhead, permission drift
 4. **Service-Specific Permissions**: Rejected - doesn't support user context
 
-### Implementation
+## Implementation
 
 **OpenFGA Model Update** (`src/mcp_server_langgraph/auth/openfga.py:287-377`):
 ```python
@@ -268,6 +188,7 @@ def get_model_definition() -> dict:
         ]
     }
 ```
+
 **Tuple Creation** (in ServicePrincipalManager):
 ```python
 async def associate_with_user(
@@ -282,20 +203,20 @@ async def associate_with_user(
 ```
 
 **Authorization Check Enhancement**:
-```
-## In middleware or route handlers
+```python
+# In middleware or route handlers
 allowed = await check_permission(
     user_id="service:batch-job",
     relation="viewer",
     object="conversation:thread1",
     openfga_client=openfga_client
 )
-## Returns True if service:batch-job acts_as user who has viewer permission
+# Returns True if service:batch-job acts_as user who has viewer permission
 ```
 
-### References
+## References
 
 - OpenFGA Integration: `src/mcp_server_langgraph/auth/openfga.py`
 - Service Principal Manager: `src/mcp_server_langgraph/auth/service_principal.py` (to be created)
-- Related ADRs: [ADR-0002](/architecture/adr-0002-openfga-authorization), [ADR-0033](/architecture/adr-0033-service-principal-design)
+- Related ADRs: [ADR-0002](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0002-openfga-authorization.md), [ADR-0033](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0033-service-principal-design.md)
 - External: [OpenFGA Docs](https://openfga.dev/docs), [ReBAC](https://openfga.dev/docs/modeling/building-blocks/usersets#the-basics)

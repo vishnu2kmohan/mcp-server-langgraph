@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Enterprise users exist in multiple identity systems (Active Directory, Azure AD, Google Workspace, Okta, GitHub) and forcing migration to Keycloak-only creates adoption barriers. Need to support:

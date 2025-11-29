@@ -47,7 +47,8 @@ class RealKeycloakAuth:
         # CODEX FINDING FIX (2025-11-20): Add client_secret for token introspection
         # Keycloak requires client authentication for introspection endpoint
         self.client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET", "test-client-secret-for-e2e-tests")
-        self.client = httpx.AsyncClient(timeout=30.0)
+        # S501: verify=False is intentional for e2e tests against local dev servers
+        self.client = httpx.AsyncClient(timeout=30.0, verify=False)  # noqa: S501 # nosec B501
 
     async def login(self, username: str, password: str) -> dict[str, str]:
         """
@@ -204,7 +205,8 @@ class RealMCPClient:
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
 
-        self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0)
+        # S501: verify=False is intentional for e2e tests against local dev servers
+        self.client = httpx.AsyncClient(base_url=self.base_url, headers=headers, timeout=30.0, verify=False)  # noqa: S501 # nosec B501
 
     async def initialize(self) -> dict[str, Any]:
         """

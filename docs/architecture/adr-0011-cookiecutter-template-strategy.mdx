@@ -1,20 +1,21 @@
 ---
-title: 11. Cookiecutter Template for Project Generation
-description: 'Architecture Decision Record: 11. Cookiecutter Template for Project Generation'
-icon: 'file-lines'
-seoTitle: "ADR-0011: 11. Cookiecutter Template for Project Generation"
-seoDescription: "Architecture Decision Record 0011: Architecture Decision Record: 11. Cookiecutter Template for Project Generation"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "11."]
-contentType: "explanation"
+title: "11. Cookiecutter Template for Project Generation"
+description: "Architecture Decision Record: 11. Cookiecutter Template for Project Generation"
 ---
+
+# 11. Cookiecutter Template for Project Generation
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Development & Tooling
+
+## Context
 
 Developers building MCP servers face repeated setup tasks:
 - Project structure creation
@@ -28,32 +29,32 @@ Manual setup creates:
 - Missing best practices
 - Outdated boilerplate
 
-### Decision
+## Decision
 
 Provide **Cookiecutter template** for project generation with customization options.
 
-#### Template Features
+### Template Features
 
 - 20+ customization options (auth, LLM, deployment, testing)
 - Optional features (Kubernetes, Keycloak, OpenFGA)
 - Pre-configured best practices
 - Environment-specific configs
 
-### Consequences
+## Consequences
 
-#### Positive
+### Positive
 
 - **Fast Project Setup**: Minutes vs hours
 - **Consistency**: All projects follow best practices
 - **Customization**: Choose only needed features
 - **Maintenance**: Update template, all new projects benefit
 
-#### Negative
+### Negative
 
 - **Template Maintenance**: Keep template updated
 - **Learning Curve**: Developers must learn Cookiecutter
 
-### References
+## References
 
 - Template: `template/cookiecutter.json`
 - Documentation: `docs/template/usage.md`

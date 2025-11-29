@@ -1,9 +1,14 @@
-# ADR-0030: Resilience Patterns for Production Systems
+# 30. Resilience Patterns for Production Systems
 
-**Status**: Accepted
-**Date**: 2025-10-20
-**Deciders**: Engineering Team
-**Related**: [ADR-0017: Error Handling Strategy](adr-0017-error-handling-strategy.md), [ADR-0023: Anthropic Tool Design Best Practices](adr-0023-anthropic-tool-design-best-practices.md)
+Date: 2025-10-20
+
+## Status
+
+Accepted
+
+## Category
+
+Performance & Resilience
 
 ## Context
 
@@ -173,6 +178,28 @@ async def check_permission(user: str, resource: str) -> bool:
     async with httpx.AsyncClient() as client:
         response = await client.post(...)
         return response.json()["allowed"]
+```
+
+### Circuit Breaker Decorator Closure Isolation
+
+**Important**: When implementing circuit breaker decorators, the decorator creates a closure over the circuit breaker instance at decoration time. This has implications for test isolation:
+
+```python
+# The @circuit_breaker decorator captures the instance at decoration time
+def decorator(func: Callable[P, T]) -> Callable[P, T]:
+    breaker = get_circuit_breaker(name)  # Closure captures this instance
+```
+
+**Reset Behavior**:
+- `reset_all_circuit_breakers()` must reset the STATE of existing instances, not clear the registry
+- Clearing the registry breaks decorator closures (decorators hold stale references)
+- See [ADR-0057](adr-0057-circuit-breaker-decorator-closure-isolation.md) for the full analysis
+
+```python
+def reset_all_circuit_breakers() -> None:
+    """Reset state of existing circuit breakers (preserves decorator closures)."""
+    for name, breaker in list(_circuit_breakers.items()):
+        breaker.close()  # Reset to CLOSED state, don't clear registry
 ```
 
 ### Metrics & Observability
