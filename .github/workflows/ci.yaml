@@ -78,7 +78,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install actionlint
         run: |
@@ -136,7 +136,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -176,7 +176,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Python and dependencies
         uses: ./.github/actions/setup-python-deps
@@ -226,7 +226,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -330,7 +330,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -402,7 +402,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -464,7 +464,7 @@ jobs:
       contents: read
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Python and dependencies
       uses: ./.github/actions/setup-python-deps
@@ -500,7 +500,7 @@ jobs:
         trivy --version
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20'
 
@@ -557,7 +557,7 @@ jobs:
         variant: [base, full, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Free disk space
       run: |
@@ -688,7 +688,7 @@ jobs:
         stack: [main, dev, test]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Run smoke test (config validation only)
       run: |
@@ -716,7 +716,7 @@ jobs:
         variant: [base, full]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up Docker Buildx (multiplatform)
       uses: ./.github/actions/setup-docker-buildx
@@ -808,7 +808,7 @@ jobs:
     environment: development
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     # Authenticate to Google Cloud
     - id: auth
@@ -846,7 +846,7 @@ jobs:
     if: github.ref == 'refs/heads/develop' && vars.ENABLE_DEV_AUTODEPLOY == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4.0.1
