@@ -176,7 +176,7 @@ jobs:
           type=gha,mode=max,scope=build-base
 
     - name: Generate SBOM
-      uses: anchore/sbom-action@v0.20.9
+      uses: anchore/sbom-action@v0.20.10
       with:
         format: spdx-json
         output-file: sbom-${{ matrix.platform }}.spdx.json
