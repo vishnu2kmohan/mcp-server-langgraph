@@ -62,6 +62,8 @@ def _validate_output_path(output_path: str) -> Path:
     Raises:
         ValueError: If path fails validation
     """
+    # nosemgrep: python.lang.security.audit.path-traversal.path-traversal-open
+    # Security: Path is validated against allowlist below (temp dir, custom allowed dir)
     path = Path(output_path).resolve()
     path_str = str(path)
 
@@ -561,8 +563,12 @@ if __name__ == "__main__":
         code = self.generate(workflow)
 
         # Ensure parent directory exists
+        # nosemgrep: python.lang.security.audit.path-traversal.path-traversal-open
+        # Security: validated_path was verified by _validate_output_path() above
         validated_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # nosemgrep: python.lang.security.audit.path-traversal.path-traversal-open
+        # Security: validated_path was verified by _validate_output_path() above
         with open(str(validated_path), "w") as f:
             f.write(code)
 

@@ -267,6 +267,10 @@ class APIKeyManager:
             ).hexdigest()
 
         # Create HMAC with the secret key
+        # nosemgrep: python.cryptography.security.insecure-hash-function.insecure-hash-function-sha256
+        # Security: SHA256 is used for CACHE KEY derivation (not password storage).
+        # This is a keyed HMAC for lookup optimization, not cryptographic password hashing.
+        # Actual API key verification uses bcrypt via verify_api_key().
         return hmac.new(
             cache_secret.encode(),
             api_key.encode(),

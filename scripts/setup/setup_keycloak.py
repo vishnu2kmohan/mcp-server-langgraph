@@ -69,6 +69,8 @@ async def wait_for_keycloak(server_url: str, max_retries: int = 30, delay: int =
 
     for attempt in range(max_retries):
         try:
+            # nosemgrep: python.requests.security.disabled-cert-validation.disabled-cert-validation
+            # Security: VERIFY_SSL is controlled by --insecure flag for local dev with self-signed certs
             async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=5) as client:
                 response = await client.get(f"{server_url}/health/ready")
                 if response.status_code == 200:
@@ -100,6 +102,8 @@ async def setup_realm(server_url: str, admin_username: str, admin_password: str,
     print(f"\nCreating realm: {realm_name}")
 
     try:
+        # nosemgrep: python.requests.security.disabled-cert-validation.disabled-cert-validation
+        # Security: VERIFY_SSL is controlled by --insecure flag for local dev with self-signed certs
         async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
@@ -173,6 +177,8 @@ async def setup_client(
     print(f"\nCreating client: {client_id}")
 
     try:
+        # nosemgrep: python.requests.security.disabled-cert-validation.disabled-cert-validation
+        # Security: VERIFY_SSL is controlled by --insecure flag for local dev with self-signed certs
         async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
@@ -264,6 +270,8 @@ async def create_user(
     print(f"\nCreating user: {username}")
 
     try:
+        # nosemgrep: python.requests.security.disabled-cert-validation.disabled-cert-validation
+        # Security: VERIFY_SSL is controlled by --insecure flag for local dev with self-signed certs
         async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
@@ -368,6 +376,8 @@ async def create_group(
     print(f"\nCreating group: {group_name}")
 
     try:
+        # nosemgrep: python.requests.security.disabled-cert-validation.disabled-cert-validation
+        # Security: VERIFY_SSL is controlled by --insecure flag for local dev with self-signed certs
         async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
