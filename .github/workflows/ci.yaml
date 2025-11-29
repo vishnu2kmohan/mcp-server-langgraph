@@ -232,10 +232,11 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: ${{ matrix.python-version }}
-        # Install all extras needed for comprehensive test coverage:
-        # - dev: testing framework, code quality, CLI, Docker/Kubernetes (all test deps)
-        # - secrets: Infisical integration (separate due to Rust build requirements)
-        extras: 'dev secrets'
+        # Install dev extras for comprehensive test coverage
+        # NOTE: 'secrets' extra excluded - infisical-python uses PyO3 v0.20.3 which
+        # doesn't support Python 3.13 (max 3.12). Tests skip gracefully when not installed.
+        # See: https://github.com/Infisical/infisical-python/issues - PyO3 upgrade needed
+        extras: 'dev'
         cache-key-prefix: 'ci-test-py${{ matrix.python-version }}'
 
     - name: Validate lockfile is up-to-date
