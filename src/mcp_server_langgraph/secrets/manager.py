@@ -2,6 +2,7 @@
 Infisical integration for secure secrets management
 """
 
+import hashlib
 import logging
 import os
 from typing import TYPE_CHECKING, Any, Optional
@@ -159,7 +160,10 @@ class SecretsManager:
 
         # Fallback if client not initialized
         if not self.client:
-            _get_logger().warning(f"Infisical client not available, using fallback for {key}")
+            _get_logger().warning(
+                "Infisical client not available, using fallback",
+                extra={"key_hash": hashlib.sha256(key.encode()).hexdigest()[:8]},
+            )
             # Try environment variable first
             env_value = os.getenv(key)
             if env_value:
@@ -184,7 +188,11 @@ class SecretsManager:
             return value  # type: ignore[no-any-return]
 
         except Exception as e:
-            _get_logger().error(f"Failed to retrieve secret '{key}': {e}", extra={"key": key, "path": path}, exc_info=True)
+            _get_logger().error(
+                "Failed to retrieve secret",
+                extra={"key_hash": hashlib.sha256(key.encode()).hexdigest()[:8], "path": path, "error_type": type(e).__name__},
+                exc_info=True,
+            )
             if span:
                 span.record_exception(e)
                 span.set_attribute("secret.found", False)
@@ -192,7 +200,9 @@ class SecretsManager:
             # Try environment variable fallback
             env_value = os.getenv(key)
             if env_value:
-                _get_logger().info(f"Using environment variable fallback for {key}")
+                _get_logger().info(
+                    "Using environment variable fallback", extra={"key_hash": hashlib.sha256(key.encode()).hexdigest()[:8]}
+                )
                 return env_value
 
             return fallback

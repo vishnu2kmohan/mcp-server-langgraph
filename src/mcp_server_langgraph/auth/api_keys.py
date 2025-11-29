@@ -8,6 +8,9 @@ JWTs on each request.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
+import hashlib
+import hmac
+import os
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -234,20 +237,41 @@ class APIKeyManager:
 
     def _hash_api_key_for_cache(self, api_key: str) -> str:
         """
-        Create a deterministic hash of API key for cache lookup
+        Create a deterministic keyed hash of API key for cache lookup.
 
-        Uses SHA256 for fast, deterministic hashing (not for security).
+        Security: Uses HMAC-SHA256 with a secret key to prevent offline brute-force
+        attacks if the cache is leaked. Without the secret key, attackers cannot
+        reverse the hash to recover API keys.
+
+        The secret key is loaded from API_KEY_CACHE_SECRET environment variable.
+        Falls back to a derived key from JWT_SECRET_KEY if not set.
+
         bcrypt is still used for secure storage verification.
 
         Args:
             api_key: Plain API key
 
         Returns:
-            SHA256 hex digest
+            HMAC-SHA256 hex digest
         """
-        import hashlib
+        # Get or derive the HMAC secret key
+        cache_secret = os.getenv("API_KEY_CACHE_SECRET")
+        if not cache_secret:
+            # Fall back to deriving from JWT secret (better than no secret)
+            jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+            # Use HKDF-like derivation: HMAC(jwt_secret, "api-key-cache")
+            cache_secret = hmac.new(
+                jwt_secret.encode() if jwt_secret else b"default-insecure-key",
+                b"api-key-cache-derivation",
+                hashlib.sha256,
+            ).hexdigest()
 
-        return hashlib.sha256(api_key.encode()).hexdigest()
+        # Create HMAC with the secret key
+        return hmac.new(
+            cache_secret.encode(),
+            api_key.encode(),
+            hashlib.sha256,
+        ).hexdigest()
 
     async def validate_and_get_user(self, api_key: str) -> dict[str, Any] | None:
         """

@@ -32,9 +32,80 @@ Example:
     print(python_code)
 """
 
+import os
+import tempfile
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+def _validate_output_path(output_path: str) -> Path:
+    """
+    Validate output path for security (defense-in-depth).
+
+    Security: Prevents path injection attacks (CWE-73) by:
+    1. Resolving to absolute path (prevents path traversal via ..)
+    2. Validating against allowed directories (temp dir or BUILDER_OUTPUT_DIR)
+    3. Blocking system directories
+    4. Requiring .py extension
+
+    This validation runs even when called programmatically (not just via API),
+    providing defense-in-depth against path injection.
+
+    Args:
+        output_path: The output file path to validate
+
+    Returns:
+        Validated and resolved Path object
+
+    Raises:
+        ValueError: If path fails validation
+    """
+    path = Path(output_path).resolve()
+    path_str = str(path)
+
+    # System directories are NEVER allowed (check first for fail-fast)
+    forbidden_prefixes = ("/etc/", "/sys/", "/proc/", "/dev/", "/var/log/", "/root/")
+    if any(path_str.startswith(prefix) for prefix in forbidden_prefixes):
+        raise ValueError("Output path cannot target system directories")
+
+    # Ensure .py extension
+    if path.suffix != ".py":
+        raise ValueError("Output path must have .py extension")
+
+    # Get allowed directories
+    temp_dir = Path(tempfile.gettempdir()).resolve()
+    custom_dir = os.getenv("BUILDER_OUTPUT_DIR")
+
+    # Build list of allowed base directories
+    allowed_dirs = [temp_dir]
+    if custom_dir:
+        allowed_dirs.append(Path(custom_dir).resolve())
+
+    # Check if path is within any allowed directory
+    is_allowed = False
+    for allowed_base in allowed_dirs:
+        try:
+            path.relative_to(allowed_base)
+            is_allowed = True
+            break
+        except ValueError:
+            continue
+
+    if not is_allowed:
+        allowed_str = ", ".join(str(d) for d in allowed_dirs)
+        raise ValueError(
+            f"Invalid output path: must be within allowed directories ({allowed_str}). "
+            f"Set BUILDER_OUTPUT_DIR environment variable to add custom directory."
+        )
+
+    # Additional check for path traversal (defense-in-depth after resolution)
+    # Note: resolve() already handles .., but this catches edge cases
+    if ".." in output_path:
+        raise ValueError("Path traversal detected: '..' not allowed in output path")
+
+    return path
 
 
 def _format_with_ruff(code: str) -> str:
@@ -471,16 +542,28 @@ if __name__ == "__main__":
         """
         Generate code and save to file.
 
+        Security: Path is validated to prevent path injection attacks.
+        Only paths within BUILDER_OUTPUT_DIR (default: temp directory) are allowed.
+
         Args:
             workflow: Workflow definition
-            output_path: Output file path
+            output_path: Output file path (must be within allowed directory)
+
+        Raises:
+            ValueError: If output_path fails security validation
 
         Example:
-            >>> generator.generate_to_file(workflow, "src/agents/my_agent.py")
+            >>> generator.generate_to_file(workflow, "/tmp/mcp-server-workflows/my_agent.py")
         """
+        # Security: Validate path before writing (defense-in-depth)
+        validated_path = _validate_output_path(output_path)
+
         code = self.generate(workflow)
 
-        with open(output_path, "w") as f:
+        # Ensure parent directory exists
+        validated_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(str(validated_path), "w") as f:
             f.write(code)
 
 

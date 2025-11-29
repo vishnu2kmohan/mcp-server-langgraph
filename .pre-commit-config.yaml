@@ -720,15 +720,20 @@ repos:
     name: Semgrep Security Scan (CodeQL Parity)
     entry: >
       bash -c 'if ! command -v semgrep &> /dev/null; then
-      if [ "${ENFORCE_SECURITY_TOOLS:-0}" = "1" ]; then
-        echo "ERROR: semgrep required for security scanning (ENFORCE_SECURITY_TOOLS=1).";
-        echo "Install: pip install semgrep or brew install semgrep";
+        echo "ERROR: semgrep not installed. This is REQUIRED for security scanning.";
+        echo "";
+        echo "Install semgrep:";
+        echo "  uv sync --group dev   # installs via pyproject.toml";
+        echo "  pip install semgrep   # or install directly";
+        echo "  brew install semgrep  # or via Homebrew";
+        echo "";
+        echo "To skip (not recommended): SKIP_SEMGREP=1 git push";
+        if [ "${SKIP_SEMGREP:-0}" = "1" ]; then
+          echo "WARNING: SKIP_SEMGREP=1 set - skipping security scan (NOT RECOMMENDED)";
+          exit 0;
+        fi;
         exit 1;
-      else
-        echo "INFO: semgrep not installed. Skipping Python security scan.";
-        echo "Install: pip install semgrep";
-        exit 0;
-      fi; fi;
+      fi;
       semgrep scan --config auto --error --severity ERROR --quiet src/ scripts/ ||
       (echo "Semgrep found security issues. Run: semgrep scan --config auto src/ scripts/"; exit 1)'
     language: system
@@ -739,19 +744,18 @@ repos:
     - pre-push
     description: 'Static analysis for Python security issues (CodeQL equivalent).
 
+      REQUIRED: Semgrep must be installed. Install via: uv sync --group dev
+
       Provides local coverage for security patterns that CodeQL catches in CI:
       - Empty except blocks (py/empty-except equivalent)
       - SQL injection, command injection
       - Hardcoded credentials
       - Unsafe deserialization
 
-      Install Semgrep:
-      - pip install semgrep
-      - brew install semgrep
-
-      Set ENFORCE_SECURITY_TOOLS=1 to make this mandatory (for security team).
+      To skip (emergency only): SKIP_SEMGREP=1 git push
 
       Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      Updated: 2025-11-29 (fail by default, added to pyproject.toml dev deps)
       '
   - id: security-tools-check
     name: Security Tools Check (if ENFORCE_SECURITY_TOOLS=1)

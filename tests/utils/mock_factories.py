@@ -216,7 +216,6 @@ def validate_ollama_model_name(model_name: str) -> None:
 @contextmanager
 def create_isolated_circuit_breaker(
     name: str,
-    failure_threshold: int = 5,
 ) -> Generator[Any, None, None]:
     """
     Create an isolated circuit breaker context for testing circuit breaker behavior.
@@ -226,10 +225,14 @@ def create_isolated_circuit_breaker(
 
     Args:
         name: Circuit breaker name (e.g., "openfga", "llm")
-        failure_threshold: Number of failures before circuit opens
 
     Yields:
         Circuit breaker instance with clean state
+
+    Note:
+        The circuit breaker failure threshold is configured via ResilienceConfig,
+        not passed as a parameter here. To customize, set up the config before
+        calling this function.
 
     Example:
         >>> with create_isolated_circuit_breaker("openfga") as cb:
@@ -256,8 +259,8 @@ def create_isolated_circuit_breaker(
     # Reset circuit breaker before test
     reset_circuit_breaker(name)
 
-    # Get circuit breaker instance
-    cb = get_circuit_breaker(name, failure_threshold=failure_threshold)
+    # Get circuit breaker instance (configuration comes from ResilienceConfig)
+    cb = get_circuit_breaker(name)
 
     try:
         yield cb

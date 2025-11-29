@@ -272,10 +272,13 @@ jobs:
       uses: github/codeql-action/init@v4
       with:
         languages: python
-        queries: security-and-quality
+        # Use custom config for path filtering and query selection
+        config-file: .github/codeql/codeql-config.yml
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
+      with:
+        category: "/language:python"
 
   secrets-scan:
     name: Secrets Scan

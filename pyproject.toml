@@ -118,6 +118,8 @@ dev = [
     # types-redis was causing conflicts with redis 6.x inline types
     "types-requests",
     "bandit>=1.7.6",
+    # Security scanning (CodeQL parity - PR #121)
+    "semgrep>=1.51.0",  # Static security analysis for Python (matches CodeQL detection capabilities)
     # Configuration parsing
     "toml>=0.10.2",  # For reading pyproject.toml in validation scripts
     # Documentation validation

@@ -8,14 +8,49 @@ Initializes Keycloak with:
 - Default users (alice, bob, admin)
 - Role mappings
 - OpenFGA tuple synchronization (optional)
+
+Security Note:
+    TLS certificate validation is enabled by default. Use --insecure flag
+    only for local development with self-signed certificates.
 """
 
 import asyncio
+import os
 import sys
 
 import httpx
 
 from mcp_server_langgraph.core.config import settings
+
+
+def should_verify_ssl() -> bool:
+    """
+    Determine if SSL verification should be enabled.
+
+    Security: TLS verification is enabled by default. It can be disabled via:
+    - --insecure CLI flag
+    - DEV_MODE=1 environment variable
+
+    Returns:
+        True if SSL verification should be enabled, False otherwise
+    """
+    # Check for --insecure CLI flag
+    if "--insecure" in sys.argv:
+        print("⚠️  WARNING: SSL verification disabled via --insecure flag")
+        print("   This should ONLY be used for local development with self-signed certs")
+        return False
+
+    # Check for DEV_MODE environment variable
+    if os.environ.get("DEV_MODE", "").lower() in ("1", "true", "yes"):
+        print("⚠️  WARNING: SSL verification disabled via DEV_MODE environment variable")
+        print("   This should ONLY be used for local development with self-signed certs")
+        return False
+
+    return True
+
+
+# Global SSL verification setting (set once at startup)
+VERIFY_SSL = should_verify_ssl()
 
 
 async def wait_for_keycloak(server_url: str, max_retries: int = 30, delay: int = 2) -> bool:
@@ -34,8 +69,7 @@ async def wait_for_keycloak(server_url: str, max_retries: int = 30, delay: int =
 
     for attempt in range(max_retries):
         try:
-            # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
-            async with httpx.AsyncClient(verify=False, timeout=5) as client:  # nosec
+            async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=5) as client:
                 response = await client.get(f"{server_url}/health/ready")
                 if response.status_code == 200:
                     print("✓ Keycloak is ready!")
@@ -66,8 +100,7 @@ async def setup_realm(server_url: str, admin_username: str, admin_password: str,
     print(f"\nCreating realm: {realm_name}")
 
     try:
-        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
+        async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -140,8 +173,7 @@ async def setup_client(
     print(f"\nCreating client: {client_id}")
 
     try:
-        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
+        async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -232,8 +264,7 @@ async def create_user(
     print(f"\nCreating user: {username}")
 
     try:
-        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
+        async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {
@@ -337,8 +368,7 @@ async def create_group(
     print(f"\nCreating group: {group_name}")
 
     try:
-        # nosec B501 - verify=False acceptable for local dev setup with self-signed certs
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:  # nosec
+        async with httpx.AsyncClient(verify=VERIFY_SSL, timeout=30) as client:
             # Get admin token
             token_url = f"{server_url}/realms/master/protocol/openid-connect/token"
             token_data = {

@@ -1,0 +1,64 @@
+# CodeQL Configuration for MCP Server LangGraph
+#
+# This configuration file customizes CodeQL analysis to reduce false positives
+# while maintaining security coverage for production code.
+#
+# Documentation:
+#   - https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+#   - https://codeql.github.com/docs/codeql-overview/codeql-glossary/
+#
+# Created: 2025-11-28 (PR #121 - CodeQL gap analysis)
+# Purpose: Suppress test-specific false positives while maintaining security coverage
+
+name: "MCP Server LangGraph CodeQL Config"
+
+# Paths to analyze (default is repository root)
+paths:
+  - src/
+  - scripts/
+
+# Paths to exclude from analysis
+paths-ignore:
+  # Client SDKs (auto-generated, different linting rules)
+  - clients/python/
+  - clients/go/
+  - clients/typescript/
+
+  # Archived scripts (intentionally deprecated)
+  - scripts/archive/
+
+  # Build artifacts and caches
+  - "**/node_modules/"
+  - "**/__pycache__/"
+  - "**/dist/"
+  - "**/build/"
+  - "**/.venv/"
+  - "**/venv/"
+  - "**/.pytest_cache/"
+  - "**/.hypothesis/"
+
+# Query filters to reduce false positives
+# Note: CodeQL uses query suites, not individual rule IDs like Ruff/Bandit
+query-filters:
+  # Exclude informational/style queries that overlap with Ruff
+  # These are already enforced by pre-commit hooks
+  - exclude:
+      tags contain: style
+
+  # Exclude low-severity metrics queries
+  - exclude:
+      tags contain: metrics
+
+# Queries to run (use default security-and-quality suite)
+queries:
+  - uses: security-and-quality
+
+# Additional packs for enhanced detection (optional)
+# packs:
+#   - codeql/python-queries
+
+# Trap caching configuration for faster incremental analysis
+# (handled automatically by GitHub Actions)
+
+# Threat models: Consider all data sources as potentially tainted
+# This is the default for security-and-quality queries
