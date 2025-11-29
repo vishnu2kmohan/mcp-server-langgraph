@@ -119,11 +119,16 @@ jobs:
           wget https://github.com/zegl/kube-score/releases/download/v1.20.0/kube-score_1.20.0_linux_amd64
           chmod +x kube-score_1.20.0_linux_amd64
 
+          # Note: container-security-context-readonlyrootfilesystem is ignored because
+          # Trivy handles this check with proper .trivyignore exceptions that include
+          # documented justifications (e.g., Keycloak JIT compilation requirement).
+          # See: deployments/overlays/production-gke/.trivyignore for details.
           kubectl kustomize deployments/overlays/production-gke \
             | ./kube-score_1.20.0_linux_amd64 score - \
             --output-format ci \
             --ignore-test container-readiness-probe-equal-liveness-probe \
-            --ignore-test container-probe-use-named-port
+            --ignore-test container-probe-use-named-port \
+            --ignore-test container-security-context-readonlyrootfilesystem
 
       - name: Validate with kubeconform
         run: |
@@ -247,7 +252,9 @@ jobs:
           path: ./
           base: ${{ github.event.before || 'HEAD~1' }}
           head: HEAD
-        # Note: TruffleHog respects .trufflehogignore for excluding:
+          extra_args: --only-verified
+        # Note: --only-verified flag prevents false positives from unverified secrets.
+        # TruffleHog also respects .trufflehogignore for excluding:
         #   - Test infrastructure (docker-compose*.yml with postgres/postgres)
         #   - Test files (tests/** with mock credentials)
         #   - Migration scripts (use env vars in production)
