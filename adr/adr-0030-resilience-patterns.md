@@ -193,7 +193,7 @@ def decorator(func: Callable[P, T]) -> Callable[P, T]:
 **Reset Behavior**:
 - `reset_all_circuit_breakers()` must reset the STATE of existing instances, not clear the registry
 - Clearing the registry breaks decorator closures (decorators hold stale references)
-- See [ADR-0057](adr-0057-circuit-breaker-decorator-closure-isolation.md) for the full analysis
+- The full analysis of closure isolation is documented in the "Decorator Closure Considerations" section above
 
 ```python
 def reset_all_circuit_breakers() -> None:

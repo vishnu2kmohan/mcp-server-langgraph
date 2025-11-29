@@ -568,6 +568,41 @@ repos:
       Regression prevention for REC-001 from documentation audit (2025-11-12).
 
       '
+  - id: check-internal-links
+    name: Check Internal Documentation Links (GitHub, ADR, docs-internal)
+    entry: uv run --frozen python -u scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
+    language: system
+    files: ^(\.github/.*\.md|adr/.*\.md|docs-internal/.*\.md|README\.md|CONTRIBUTING\.md|CHANGELOG\.md)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Validates internal documentation links in non-Mintlify markdown files.
+
+      Checks .github/, adr/, docs-internal/, and root markdown files for broken links.
+
+      Excludes docs/ (covered by mintlify-broken-links-check), archive/, and reports/.
+
+
+      High-priority files checked:
+
+      - .github/*.md (CONTRIBUTING.md, SECURITY.md, etc.)
+
+      - adr/*.md (Architecture Decision Records)
+
+      - docs-internal/*.md (Internal documentation)
+
+      - Root files (README.md, CONTRIBUTING.md, CHANGELOG.md)
+
+
+      Complements mintlify-broken-links-check which only validates docs/ directory.
+
+      Prevents broken cross-references between ADRs and internal documentation.
+
+
+      Added: 2025-11-29 (CI gap analysis - broken links in .github/ and adr/ not caught locally)
+
+      '
   # NOTE: validate-deployment-secrets, validate-cors-security, check-hardcoded-credentials,
   # validate-redis-password-required hooks REMOVED (2025-11-25)
   # Reason: Consolidated into run-pre-push-tests hook via (unit or validation) marker
