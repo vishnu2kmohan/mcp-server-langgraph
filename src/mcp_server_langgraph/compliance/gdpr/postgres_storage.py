@@ -175,6 +175,9 @@ class PostgresUserProfileStore(UserProfileStore):
         """  # nosec B608 - See security comment above
 
         async with self.pool.acquire() as conn:
+            # SECURITY: Query is safe - field names validated above (set_clauses uses ALLOWED_FIELDS),
+            # values are parameterized. See nosec B608 comment on query string.
+            # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             result = await conn.execute(query, *values)
             # Check if any rows were updated (result is "UPDATE N")
             row_count: str = result.split()[-1]
@@ -618,6 +621,9 @@ class PostgresConversationStore(ConversationStore):
         """  # nosec B608 - Safe: field names validated (lines 587-595), values parameterized
 
         async with self.pool.acquire() as conn:
+            # SECURITY: Query is safe - field names validated above (set_clauses uses ALLOWED_FIELDS),
+            # values are parameterized. See nosec B608 comment on query string.
+            # nosemgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query
             result = await conn.execute(query, *values)
             row_count: str = result.split()[-1]
             return row_count == "1"

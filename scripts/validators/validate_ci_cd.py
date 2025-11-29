@@ -346,6 +346,7 @@ class CICDValidator:
                         # 1. fix_command values are hardcoded in this script, not user input
                         # 2. This is a local development tool, not production code
                         # 3. Complex commands like "uv lock && git add uv.lock" require shell
+                        # nosemgrep: python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
                         subprocess.run(result.fix_command, shell=True, cwd=self.project_root, check=True)  # nosec B602
                         print_success("  Auto-fix completed")
                     except subprocess.CalledProcessError:
