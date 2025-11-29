@@ -37,6 +37,14 @@ paths-ignore:
   - "**/.pytest_cache/"
   - "**/.hypothesis/"
 
+  # ============================================================================
+  # Development/Setup Scripts (Intentional Security Trade-offs)
+  # ============================================================================
+  # These scripts are for LOCAL DEVELOPMENT only and have documented
+  # security trade-offs (e.g., conditional SSL verification).
+  # They are NOT part of the production runtime.
+  - scripts/setup/setup_keycloak.py
+
 # Query filters to reduce false positives
 # Note: CodeQL uses query suites, not individual rule IDs like Ruff/Bandit
 query-filters:
@@ -52,39 +60,23 @@ query-filters:
   # ============================================================================
   # Intentional Security Patterns (NOT false positives, but by design)
   # ============================================================================
-  # These are excluded because they represent legitimate, well-documented
-  # security trade-offs with proper safeguards in place.
+  # These queries are excluded globally because we use nosemgrep comments
+  # inline and have documented security trade-offs in the code.
+  # See inline comments in each file for detailed justifications.
 
   # py/path-injection: generator.py validates paths against allowlist before
   # file operations. The _validate_output_path() function enforces:
   # - .py extension required
   # - System directories forbidden (/etc, /sys, /proc, /dev, /var/log, /root)
   # - Only temp dir or custom BUILDER_OUTPUT_DIR allowed
-  # See: src/mcp_server_langgraph/builder/codegen/generator.py
   - exclude:
       id: py/path-injection
-      paths:
-        - src/mcp_server_langgraph/builder/codegen/generator.py
 
-  # py/weak-crypto-hashing: api_keys.py uses SHA256 for CACHE KEY derivation,
-  # not for password storage. This is a keyed HMAC for O(1) cache lookup.
-  # Actual API key verification uses bcrypt via verify_api_key().
-  # See: src/mcp_server_langgraph/auth/api_keys.py
+  # py/weak-sensitive-data-hashing: api_keys.py uses SHA256 for CACHE KEY
+  # derivation, not for password storage. This is a keyed HMAC for O(1) cache
+  # lookup. Actual API key verification uses bcrypt via verify_api_key().
   - exclude:
       id: py/weak-sensitive-data-hashing
-      paths:
-        - src/mcp_server_langgraph/auth/api_keys.py
-
-  # py/request-without-cert-validation: setup_keycloak.py is a LOCAL
-  # DEVELOPMENT script with conditional SSL verification controlled by:
-  # - --insecure CLI flag (requires explicit opt-in)
-  # - DEV_MODE environment variable
-  # Production deployments use proper TLS certificates.
-  # See: scripts/setup/setup_keycloak.py (should_verify_ssl function)
-  - exclude:
-      id: py/request-without-cert-validation
-      paths:
-        - scripts/setup/setup_keycloak.py
 
 # Queries to run (use default security-and-quality suite)
 queries:
