@@ -168,12 +168,12 @@ jobs:
           make -n validate-pre-push
           echo "✅ Makefile validate-pre-push target is valid"
 
-  xdist-enforcement:
-    name: Validate Pytest-xdist Isolation
+  meta-tests:
+    name: Meta Tests (Test Suite Quality)
     runs-on: ubuntu-latest
-    # Increased from 5 to 10 minutes (2x safety margin)
-    # Profile results: Local ~10s for xdist tests, but CI has 4 steps with 2-3x I/O overhead
-    timeout-minutes: 10
+    # Timeout: 15 minutes to accommodate comprehensive meta test suite
+    # Components: xdist isolation, xfail strict, marker enforcement, infrastructure validation
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -183,7 +183,7 @@ jobs:
         with:
           python-version: '3.12'
           extras: 'dev'
-          cache-key-prefix: 'xdist-enforcement'
+          cache-key-prefix: 'meta-tests'
 
       - name: Run xdist enforcement meta-tests
         run: |
