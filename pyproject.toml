@@ -48,6 +48,7 @@ dependencies = [
     "pydantic-settings>=2.12.0",  # Updated 2025-11-28: New features
     "pydantic-ai>=1.25.0",  # Updated 2025-11-28: Anthropic enhancements, native JSON output
     "httpx>=0.28.1",
+    "certifi>=2024.0.0",  # Cross-platform CA bundle for SSL verification in CI environments
     # NOTE: urllib3 capped at <2.4.0 by kubernetes client (34.1.0)
     # CVE-2025-50181, CVE-2025-50182 fixes in 2.5.0 pending kubernetes-client/python#2439
     # https://github.com/kubernetes-client/python/issues/2458 tracks the blocker
