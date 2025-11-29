@@ -12,6 +12,8 @@ This test suite validates:
 import gc
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -66,9 +68,6 @@ class TestADRSynchronization:
         The validation is performed by calling scripts/validators/adr_sync_validator.py,
         which is the authoritative implementation (single source of truth).
         """
-        import subprocess
-        import sys
-
         script_path = PROJECT_ROOT / "scripts" / "validators" / "adr_sync_validator.py"
 
         assert script_path.exists(), (

@@ -12,6 +12,7 @@ TDD Approach:
 
 import gc
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -56,8 +57,6 @@ class TestTimeoutTestPerformance:
 
         # Run the timeout tests and measure execution time
         # Use venv pytest to ensure dependencies are available
-        import sys
-
         pytest_path = Path(sys.executable).parent / "pytest"
 
         start = time.time()
