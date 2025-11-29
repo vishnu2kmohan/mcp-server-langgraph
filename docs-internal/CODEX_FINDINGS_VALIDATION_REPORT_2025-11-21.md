@@ -17,7 +17,7 @@ Conducted comprehensive validation of OpenAI Codex findings on `make test-unit`.
 - 📊 **Coverage: 73.48%** (exceeds 66% requirement)
 
 ### Validation Methodology
-1. Installed all test dependencies (`uv sync --frozen --extra dev --extra builder`)
+1. Installed all test dependencies (`uv sync --frozen --extra dev`)
 2. Ran full test suite in parallel mode (`make test-unit` with `-n auto`)
 3. Validated each Codex finding by running specific tests in isolation
 4. Analyzed failures to determine if code bugs or test infrastructure issues
@@ -373,7 +373,7 @@ OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto -m unit --cov=src/mcp_serv
 
 **CI Command** (`.github/workflows/ci.yaml:247`):
 \`\`\`yaml
-- run: uv sync --python ${{ matrix.python-version }} --frozen --extra dev --extra builder
+- run: uv sync --python ${{ matrix.python-version }} --frozen --extra dev
 - run: make test-unit
 \`\`\`
 
@@ -439,7 +439,7 @@ The codebase is in **EXCELLENT CONDITION**. The minimal test flakiness (3.3% fai
 
 \`\`\`bash
 # Install dependencies
-uv sync --frozen --extra dev --extra builder
+uv sync --frozen --extra dev
 
 # Full test suite (parallel - may have flaky failures)
 make test-unit

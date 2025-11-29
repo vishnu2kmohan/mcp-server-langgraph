@@ -193,9 +193,9 @@ install:
 	@echo "  Note: Uses uv.lock for reproducible builds"
 
 install-dev:
-	uv sync --frozen --extra dev --extra builder
+	uv sync --frozen --extra dev
 	@echo "✓ Development dependencies installed from lockfile"
-	@echo "  Note: Uses uv.lock with dev and builder extras for CI parity"
+	@echo "  Note: Uses uv.lock with dev extra for CI parity"
 
 setup-infra:
 	$(DOCKER_COMPOSE) up -d

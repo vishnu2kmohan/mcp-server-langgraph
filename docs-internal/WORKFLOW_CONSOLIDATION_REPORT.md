@@ -481,7 +481,7 @@ Focused on patterns with:
   with:
     enable-cache: true
     cache-dependency-glob: "uv.lock"
-- run: uv sync --frozen --extra dev --extra builder
+- run: uv sync --frozen --extra dev
 ```
 
 *...4 more variations documented in Phase 5.4 audit*

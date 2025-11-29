@@ -25,7 +25,7 @@ git clone https://github.com/vishnu2kmohan/mcp-server-langgraph.git
 cd mcp-server-langgraph
 
 # Install dependencies
-uv sync --extra dev --extra builder
+uv sync --extra dev
 
 # Setup git hooks (REQUIRED)
 make git-hooks
@@ -548,7 +548,7 @@ Closes #123
 ```text
 fix(ci): add missing optional dependencies to workflows
 
-- Add --extra dev --extra builder to uv sync commands
+- Add --extra dev to uv sync commands
 - Fixes ModuleNotFoundError in E2E and unit tests
 - Tested locally with act before committing
 
@@ -575,7 +575,7 @@ git commit -S -m "feat: add feature"
 **MUST**:
 - ✅ Use `uv` for all Python operations (not `pip`)
 - ✅ Use `uv run --frozen python` for scripts (not bare `python`)
-- ✅ Use `uv sync --extra dev --extra builder` for tests
+- ✅ Use `uv sync --extra dev` for tests
 - ✅ Test with `act` before committing
 - ✅ Add timeouts to all jobs
 - ✅ Use path filters to skip unnecessary runs

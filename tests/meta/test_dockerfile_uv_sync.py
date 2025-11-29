@@ -63,7 +63,7 @@ class TestDockerfileUvSyncConsistency:
         Verify main Dockerfile uses 'uv sync' instead of 'uv export' + 'uv pip install'.
 
         This ensures consistency with local development and CI/CD which use:
-            uv sync --frozen --extra dev --extra builder
+            uv sync --frozen --extra dev
         """
         # Should NOT use uv export (old approach)
         assert "uv export" not in main_dockerfile, (
@@ -130,7 +130,7 @@ class TestDockerfileUvSyncConsistency:
         """
         # Should NOT use uv export
         assert "uv export" not in test_dockerfile, (
-            "Dockerfile.test should NOT use 'uv export'. Use 'uv sync --frozen --extra dev --extra builder' for consistency."
+            "Dockerfile.test should NOT use 'uv export'. Use 'uv sync --frozen --extra dev' for consistency."
         )
 
         # Should use uv sync

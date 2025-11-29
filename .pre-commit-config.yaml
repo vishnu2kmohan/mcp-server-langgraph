@@ -212,21 +212,42 @@ repos:
     always_run: true
     stages:
     - pre-push
-    description: 'Run smoke tests on all available Python versions (3.11, 3.12, 3.13).
+    description: 'Run quick smoke tests on available Python versions (3.11, 3.12, 3.13).
 
       Added 2025-11-28 in response to PR #121 CI failures where Python 3.11/3.13
       failed but 3.12 passed due to bleeding-edge dependency issues.
 
-      This hook catches version-specific dependency problems before they reach CI:
+      Uses --quick mode for speed (~30s total). Tests current venv only.
+      Docker build smoke test (separate hook) catches extra reference issues.
+
+      This hook catches version-specific import problems before they reach CI:
       - Tests Click CLI functionality (catches _textwrap issues)
       - Tests Hypothesis property tests (catches internal module changes)
 
-      Runs in --quick mode for speed (~30s per available version).
-      Skips gracefully if a Python version is not installed locally.
-
-      To run manually: ./scripts/test_python_versions.sh
-      To run full suite: ./scripts/test_python_versions.sh (without --quick)
+      To run full mode: ./scripts/test_python_versions.sh (without --quick)
       For CI mode (fail on missing versions): ./scripts/test_python_versions.sh --ci
+
+      '
+  - id: docker-build-smoke-test
+    name: Docker Build Smoke Test
+    entry: >
+      bash -c 'docker build -f docker/Dockerfile --target build-test . -q >/dev/null 2>&1 ||
+      (echo "ERROR - Docker build failed. Check docker/Dockerfile and pyproject.toml extras." && exit 1)'
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-push
+    description: 'Validates Docker build succeeds before pushing to CI.
+
+      Added 2025-11-28 to catch configuration mismatches between pyproject.toml
+      and Docker files (e.g., removed extras still referenced in Dockerfiles).
+
+      Builds the test stage only (fast, ~30s) to validate all --extra references
+      exist in pyproject.toml and uv sync succeeds with the specified extras.
+
+      Skips silently if Docker is not available.
+      Duration: ~30s when Docker is available.
 
       '
   - id: run-integration-tests

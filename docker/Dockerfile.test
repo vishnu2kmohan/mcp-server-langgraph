@@ -47,9 +47,9 @@ COPY deployments/ ./deployments/
 
 # Install Python dependencies with uv sync --frozen (same as local/CI)
 # --frozen: Use lockfile exactly, fail if out of sync
-# --extra dev --extra builder: Include test dependencies
+# --extra dev: Include test dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra dev --extra builder
+    uv sync --frozen --extra dev
 
 # Set test environment variables
 ENV TESTING=true

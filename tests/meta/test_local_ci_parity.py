@@ -1576,8 +1576,10 @@ class TestMakefileDependencyExtras:
     """Validate that Makefile install-dev includes all required dependency extras.
 
     CRITICAL: Codex finding #4 - install-dev runs 'uv sync' without --extra flags,
-    while CI uses --extra dev --extra builder. This causes missing import errors
+    while CI uses --extra dev. This causes missing import errors
     when running pre-push validation locally.
+
+    Note: builder extra was removed 2025-11-28 (dependencies merged into dev).
     """
 
     def teardown_method(self) -> None:
@@ -1621,8 +1623,8 @@ class TestMakefileDependencyExtras:
     def test_install_dev_includes_dev_extra(self, makefile_content: str):
         """Test that install-dev target includes --extra dev.
 
-        CRITICAL: User chose "Add --extra dev --extra builder to install-dev".
-        Without dev extra, pytest and testing tools are missing.
+        CRITICAL: Without dev extra, pytest and testing tools are missing.
+        Updated 2025-11-28: builder extra was removed (redundant dependencies).
         """
         # Find install-dev target
         install_dev_match = re.search(
@@ -1639,54 +1641,16 @@ class TestMakefileDependencyExtras:
         assert "--extra dev" in install_dev_content, (
             "Makefile install-dev MUST include '--extra dev' to match CI\n"
             "\n"
-            "Current issue (Codex finding #4):\n"
-            "  - Makefile:182 runs: uv sync\n"
-            "  - CI runs: uv sync --extra dev --extra builder\n"
-            "  - Missing dev extra means no pytest, mypy, black, etc.\n"
-            "\n"
-            "Impact:\n"
+            "Without dev extra:\n"
+            "  - Missing pytest, mypy, black, etc.\n"
             "  - Developers hit ImportError when running pre-push validation\n"
             "  - 'make validate-pre-push' fails with missing packages\n"
-            "  - Documentation says to use install-dev, but it's incomplete\n"
             "\n"
-            "CI behavior (ci.yaml:200-214):\n"
-            "  uv sync --python $VERSION --frozen --extra dev --extra builder\n"
+            "CI behavior (ci.yaml):\n"
+            "  uv sync --python $VERSION --frozen --extra dev\n"
             "  ^ Includes dev extras ✅\n"
             "\n"
-            "Fix: Update Makefile:182\n"
-            "  From: uv sync\n"
-            "  To:   uv sync --extra dev --extra builder\n"
-        )
-
-    def test_install_dev_includes_builder_extra(self, makefile_content: str):
-        """Test that install-dev target includes --extra builder.
-
-        Required because unit tests import builder modules (per CI comments).
-        """
-        install_dev_match = re.search(
-            r"^install-dev:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-
-        assert install_dev_match, "Could not find install-dev target in Makefile"
-
-        install_dev_content = install_dev_match.group(0)
-
-        # Should have uv sync with --extra builder
-        assert "--extra builder" in install_dev_content, (
-            "Makefile install-dev MUST include '--extra builder' to match CI\n"
-            "\n"
-            "Why builder extra is required (from ci.yaml:210-213):\n"
-            "  'dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)'\n"
-            "  'builder: Visual workflow builder (black, jinja2, ast-comments)'\n"
-            "  'Both required because unit tests import builder modules'\n"
-            "\n"
-            "Without builder extra:\n"
-            "  - Unit tests fail with ImportError\n"
-            "  - Builder tool development impossible locally\n"
-            "\n"
-            "Fix: Update Makefile:182 to include both extras"
+            "Fix: Update Makefile install-dev target to include --extra dev\n"
         )
 
     def test_ci_uses_dev_extra(self, ci_workflow_content: str):

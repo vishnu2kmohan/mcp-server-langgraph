@@ -110,7 +110,7 @@ COPY tests/ ./tests/
 
 # Install test dependencies (dev extras)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --extra dev --extra builder \
+    uv sync --frozen --extra dev \
     --no-extra embeddings-local \
     --no-extra embeddings \
     --no-extra all

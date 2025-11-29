@@ -142,6 +142,7 @@ def get_stdlib_modules() -> set[str]:
     # Comprehensive list of Python 3.12 standard library modules
     # This list covers common stdlib modules imported in tests
     stdlib = {
+        "__future__",  # Future statement definitions (pseudo-module)
         "abc",
         "aifc",
         "argparse",
