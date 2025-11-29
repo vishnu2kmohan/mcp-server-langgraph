@@ -52,7 +52,7 @@ jobs:
 
       - name: Run path calculation validation
         run: |
-          uv run python scripts/validate_repo_root_calculations.py --verbose
+          uv run --frozen python scripts/validators/validate_repo_root_calculations.py --verbose
 
       - name: Validation passed
         if: success()

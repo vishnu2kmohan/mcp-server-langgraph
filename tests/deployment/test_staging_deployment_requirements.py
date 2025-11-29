@@ -18,7 +18,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 @pytest.mark.deployment
@@ -128,9 +128,7 @@ class TestStagingDeploymentRequirements:
 
         # Validate format
         parts = instance_arg.split(":")
-        assert len(parts) == 3, (
-            f"Invalid instance connection string format: {instance_arg}\n" f"Expected: PROJECT:REGION:INSTANCE"
-        )
+        assert len(parts) == 3, f"Invalid instance connection string format: {instance_arg}\nExpected: PROJECT:REGION:INSTANCE"
 
     def test_cloud_sql_proxy_has_health_checks(self):
         """
@@ -325,9 +323,9 @@ class TestStagingDeploymentRequirements:
         assert len(zone_constraints) == 1, f"Expected exactly 1 zone topology constraint, found {len(zone_constraints)}"
 
         zone_constraint = zone_constraints[0]
-        assert (
-            zone_constraint["maxSkew"] == 1
-        ), f"Zone constraint maxSkew should be 1 (strict), got {zone_constraint['maxSkew']}"
+        assert zone_constraint["maxSkew"] == 1, (
+            f"Zone constraint maxSkew should be 1 (strict), got {zone_constraint['maxSkew']}"
+        )
         assert zone_constraint["whenUnsatisfiable"] == "ScheduleAnyway", (
             f"Zone constraint should use ScheduleAnyway to support single-zone GKE Autopilot clusters, "
             f"got {zone_constraint['whenUnsatisfiable']}"
@@ -336,13 +334,13 @@ class TestStagingDeploymentRequirements:
         # Validate hostname (node) constraint
         hostname_constraints = [c for c in constraints if c["topologyKey"] == "kubernetes.io/hostname"]
 
-        assert (
-            len(hostname_constraints) == 1
-        ), f"Expected exactly 1 hostname topology constraint, found {len(hostname_constraints)}"
+        assert len(hostname_constraints) == 1, (
+            f"Expected exactly 1 hostname topology constraint, found {len(hostname_constraints)}"
+        )
 
         hostname_constraint = hostname_constraints[0]
         assert hostname_constraint["maxSkew"] == 2, (
-            f"Hostname constraint maxSkew should be 2 (allow some flexibility), " f"got {hostname_constraint['maxSkew']}"
+            f"Hostname constraint maxSkew should be 2 (allow some flexibility), got {hostname_constraint['maxSkew']}"
         )
 
     def test_mcp_server_has_required_pod_anti_affinity(self):

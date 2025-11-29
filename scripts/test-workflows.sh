@@ -114,7 +114,7 @@ main() {
     # Test 3: Comprehensive workflow validation (new test suite)
     if [[ -f "$project_root/tests/workflows/test_workflow_validation.py" ]]; then
         run_test "Comprehensive workflow validation" \
-            "cd '$project_root' && uv run pytest tests/workflows/test_workflow_validation.py -v --tb=short"
+            "cd '$project_root' && uv run --frozen pytest tests/workflows/test_workflow_validation.py -v --tb=short"
     else
         log_warning "Skipping comprehensive validation (test file not found)"
     fi

@@ -1,8 +1,14 @@
-# ADR-0053: CI/CD Failure Prevention Framework
+# 53. CI/CD Failure Prevention Framework
 
-**Status**: Accepted
-**Date**: 2025-11-12
-**Tags**: ci-cd, testing, quality, automation, prevention
+Date: 2025-11-12
+
+## Status
+
+Accepted
+
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 

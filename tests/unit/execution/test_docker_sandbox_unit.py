@@ -7,6 +7,12 @@ Following TDD - targets low-coverage methods from Codex audit.
 Coverage targets:
 - _get_network_mode() - Network isolation security logic (~2% coverage)
 - Security configurations and error handling
+
+Note on mocking:
+These tests use `patch.object(docker_sandbox, "docker")` to patch the docker module
+at the point where it's used in the docker_sandbox module. This is more reliable
+than patching the import path directly, especially with pytest-xdist where module
+imports may be cached across workers.
 """
 
 import gc
@@ -24,6 +30,7 @@ except ImportError:
     ImageNotFound = Exception  # type: ignore[misc, assignment]
     NotFound = Exception  # type: ignore[misc, assignment]
 
+from mcp_server_langgraph.execution import docker_sandbox
 from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import SandboxError
@@ -48,8 +55,11 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="none")
 
-        with patch("docker.DockerClient") as mock_docker_client:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker_client:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker_client.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
             result = sandbox._get_network_mode()
@@ -64,8 +74,11 @@ class TestDockerSandboxNetworkMode:
         """
         limits = ResourceLimits(network_mode="unrestricted")
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
             result = sandbox._get_network_mode()
@@ -83,19 +96,26 @@ class TestDockerSandboxNetworkMode:
             allowed_domains=("httpbin.org", "example.com"),
         )
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on both docker module and logger for xdist compatibility
+        # patch.object() patches at the module namespace level, which works even when
+        # other workers have already cached the module imports.
+        with (
+            patch.object(docker_sandbox.docker, "DockerClient") as mock_docker,
+            patch.object(docker_sandbox, "logger") as mock_logger,
+        ):
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits)
 
-            # Should log warning about unimplemented feature
-            with patch("mcp_server_langgraph.execution.docker_sandbox.logger") as mock_logger:
-                result = sandbox._get_network_mode()
+            # Call the method that should log warning
+            result = sandbox._get_network_mode()
 
-                # Verify warning was logged
-                assert mock_logger.warning.called
-                warning_msg = str(mock_logger.warning.call_args)
-                assert "not implemented" in warning_msg.lower()
+            # Verify warning was logged about unimplemented feature
+            assert mock_logger.warning.called, "Warning should be logged for unimplemented allowlist"
+            warning_msg = str(mock_logger.warning.call_args)
+            assert "not implemented" in warning_msg.lower()
 
         assert result == "none", (
             "SECURITY: Unimplemented allowlist mode MUST fail closed to 'none'. "
@@ -116,14 +136,18 @@ class TestDockerSandboxInitialization:
         """Test that initialization connects to Docker daemon"""
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()  # Ensure ping() doesn't fail
+            mock_client.images.get = MagicMock()  # _ensure_image() check
             mock_docker.return_value = mock_client
 
             sandbox = DockerSandbox(limits=limits)
 
-        assert mock_docker.called
-        assert sandbox.client is not None
+            # Assert inside context manager to ensure mock is valid in xdist workers
+            assert mock_docker.called, "DockerClient should be instantiated"
+            assert sandbox.client is not None, "sandbox.client should be set"
 
     def test_init_handles_docker_unavailable_gracefully(self):
         """
@@ -133,7 +157,8 @@ class TestDockerSandboxInitialization:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_docker.side_effect = Exception("Cannot connect to Docker daemon")
 
             with pytest.raises(SandboxError) as exc_info:
@@ -147,8 +172,11 @@ class TestDockerSandboxInitialization:
         limits = ResourceLimits.testing()
         custom_image = "python:3.11-alpine"
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             sandbox = DockerSandbox(limits=limits, image=custom_image)
 
@@ -172,8 +200,10 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
             # Mock the images.get to raise ImageNotFound during _ensure_image
             mock_client.images.get.side_effect = ImageNotFound("Image not found")
             mock_client.images.pull.side_effect = ImageNotFound("Pull failed")
@@ -193,8 +223,11 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             mock_container = MagicMock()
             mock_container.stop.side_effect = NotFound("Container not found")
@@ -212,8 +245,11 @@ class TestDockerSandboxErrorHandling:
         """
         limits = ResourceLimits.testing()
 
-        with patch("docker.DockerClient") as mock_docker:
+        # Use patch.object on the docker module in docker_sandbox namespace for xdist compatibility
+        with patch.object(docker_sandbox.docker, "DockerClient") as mock_docker:
             mock_client = MagicMock()
+            mock_client.ping = MagicMock()
+            mock_client.images.get = MagicMock()
             mock_docker.return_value = mock_client
             mock_container = MagicMock()
             mock_container.stop.side_effect = Exception("Stop failed")

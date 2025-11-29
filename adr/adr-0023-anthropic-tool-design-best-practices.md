@@ -6,6 +6,10 @@ Date: 2025-10-17
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Our MCP server exposes tools for AI agents to interact with the LangGraph agent system. To ensure optimal agent performance and user experience, we need to align our tool design with industry best practices for writing tools for AI agents, specifically those published by Anthropic.

@@ -6,6 +6,10 @@ Date: 2025-11-18
 
 Proposed
 
+## Category
+
+Data & Storage
+
 ## Context
 
 The project currently uses PostgreSQL for multiple purposes across different environments:

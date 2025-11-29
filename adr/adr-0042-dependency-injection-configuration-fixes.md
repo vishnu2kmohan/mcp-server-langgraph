@@ -1,9 +1,14 @@
-# ADR-0042: Dependency Injection Configuration Fixes
+# 42. Dependency Injection Configuration Fixes
 
-**Status**: Accepted
-**Date**: 2025-01-28
-**Deciders**: Engineering Team
-**Related**: OpenAI Codex Security Review
+Date: 2025-01-28
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 

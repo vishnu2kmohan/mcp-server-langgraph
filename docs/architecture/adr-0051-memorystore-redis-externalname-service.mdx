@@ -1,32 +1,21 @@
 ---
-title: 'ADR-0051: Memorystore Redis ExternalName Service with Cloud DNS'
-description: Architecture Decision Record documenting the decision to use Kubernetes
-  ExternalName Service + Google Cloud DNS to reference Memorystore Redis instances
-icon: cloud
-contentType: explanation
-seoTitle: 'ADR-0051: Memorystore Redis... - MCP Server LangGraph'
-seoDescription: Architecture Decision Record documenting the decision to use Kubernetes
-  ExternalName Service + Google Cloud DNS to reference Memorystore Redis instances
-keywords:
-- adr-0051
-- memorystore
-- redis
-- externalname
-- service
-- cloud
-- dns
-- architecture
-- decision
-- record
+title: "51. Memorystore Redis ExternalName Service with Cloud DNS"
+description: "Architecture Decision Record: 51. Memorystore Redis ExternalName Service with Cloud DNS"
 ---
-# ADR-0051: Memorystore Redis ExternalName Service with Cloud DNS
 
-**Status**: Accepted
-**Date**: 2025-11-11
-**Deciders**: Engineering Team
-**Context**: GKE staging and production Redis connectivity architecture
+# 51. Memorystore Redis ExternalName Service with Cloud DNS
 
-## Context and Problem Statement
+Date: 2025-11-11
+
+## Status
+
+Accepted
+
+## Category
+
+Infrastructure & Deployment
+
+## Context
 
 In GKE staging and production environments, we use Google Cloud Memorystore for Redis instead of self-hosted Redis deployments. This architectural decision creates a challenge: **how do we reference external managed services from within Kubernetes in a way that supports operational requirements like failover and environment portability?**
 
@@ -94,7 +83,7 @@ We use **Kubernetes ExternalName Service + Google Cloud DNS** to reference Memor
 
 **File:** `deployments/overlays/staging-gke/redis-session-service-patch.yaml`
 
-```yaml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -103,7 +92,6 @@ spec:
   type: ExternalName
   externalName: redis-session-staging.staging.internal
 ```
-
 **Cloud DNS Configuration:**
 - Private DNS zone: `staging.internal`
 - A record: `redis-session-staging.staging.internal` → Memorystore Redis IP
@@ -204,7 +192,7 @@ We accept the **security scanner warning** and **DNS complexity** in exchange fo
 
 ### Alternative 1: Headless Service + Manual Endpoints
 
-```yaml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -229,7 +217,7 @@ subsets:
 
 ### Alternative 2: Direct Connection String in ConfigMap
 
-```yaml
+```
 apiVersion: v1
 kind: ConfigMap
 data:
@@ -305,7 +293,7 @@ Deploy a controller that automatically creates/updates Endpoints for external se
 
 Add to `.trivyignore`:
 
-```text
+```
 # AVD-KSV-0108: ExternalName service for Memorystore Redis
 # Justification: See ADR-0051
 # - Private Cloud DNS zone (staging.internal) with VPC-only visibility

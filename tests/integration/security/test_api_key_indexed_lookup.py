@@ -70,9 +70,9 @@ class TestAPIKeyIndexedLookup:
         mock_cache.setex.return_value = True
         manager = APIKeyManager(keycloak_client=mock_keycloak, redis_client=mock_cache, cache_ttl=3600)
         _ = await manager.create_api_key(user_id="testuser", name="Test key", expires_days=90)
-        assert (
-            mock_keycloak.update_user_attributes.called
-        ), "create_api_key must call update_user_attributes to store API key hash in Keycloak"
+        assert mock_keycloak.update_user_attributes.called, (
+            "create_api_key must call update_user_attributes to store API key hash in Keycloak"
+        )
         call_args = mock_keycloak.update_user_attributes.call_args
         assert call_args is not None, "update_user_attributes should have been called"
 
@@ -214,9 +214,9 @@ class TestAPIKeyIndexedLookup:
             result = await manager.validate_and_get_user("test-key")
             duration = time.time() - start_time
             assert result is not None, "Should find matching API key"
-            assert (
-                duration < 1.0
-            ), f"PERFORMANCE: API key validation took {duration:.3f}s, expected <1.0s. Current pagination approach acceptable with Redis cache mitigation."
+            assert duration < 1.0, (
+                f"PERFORMANCE: API key validation took {duration:.3f}s, expected <1.0s. Current pagination approach acceptable with Redis cache mitigation."
+            )
 
 
 @pytest.mark.security
@@ -257,9 +257,9 @@ class TestKeycloakAttributeIndexing:
                 with patch("bcrypt.hashpw", return_value=b"$2b$12$hashed"):
                     _ = await manager.create_api_key(user_id="testuser", name="Test", expires_days=90)
         if mock_keycloak.update_user_attributes.called:
-            assert (
-                mock_keycloak.update_user_attributes.call_args is not None
-            ), "update_user_attributes should be called with user attributes to store API key hash"
+            assert mock_keycloak.update_user_attributes.call_args is not None, (
+                "update_user_attributes should be called with user attributes to store API key hash"
+            )
 
 
 @pytest.mark.security

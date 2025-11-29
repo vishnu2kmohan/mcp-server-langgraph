@@ -42,7 +42,7 @@ class TestDockerImageContents:
         """
         adr_dir = Path("adr")
         assert adr_dir.exists(), (
-            "adr/ directory must be copied to Docker image. " "Update docker/Dockerfile to include: COPY adr/ ./adr/"
+            "adr/ directory must be copied to Docker image. Update docker/Dockerfile to include: COPY adr/ ./adr/"
         )
         assert adr_dir.is_dir(), "adr/ must be a directory"
 
@@ -55,7 +55,7 @@ class TestDockerImageContents:
         """
         adr_file = Path("adr/adr-0042-dependency-injection-configuration-fixes.md")
         assert adr_file.exists(), (
-            f"ADR file {adr_file} must exist in Docker image. " "Ensure adr/ directory is copied in Dockerfile."
+            f"ADR file {adr_file} must exist in Docker image. Ensure adr/ directory is copied in Dockerfile."
         )
         assert adr_file.is_file(), f"{adr_file} must be a regular file"
 
@@ -66,7 +66,7 @@ class TestDockerImageContents:
         Scripts are used for OpenFGA setup, validation, and other test infrastructure.
         """
         scripts_dir = Path("scripts")
-        assert scripts_dir.exists(), "scripts/ directory must be copied to Docker image. " "Check docker/Dockerfile:263"
+        assert scripts_dir.exists(), "scripts/ directory must be copied to Docker image. Check docker/Dockerfile:263"
         assert scripts_dir.is_dir(), "scripts/ must be a directory"
 
     def test_deployments_directory_exists(self):
@@ -76,9 +76,7 @@ class TestDockerImageContents:
         Deployment tests validate Kubernetes manifests, Helm charts, etc.
         """
         deployments_dir = Path("deployments")
-        assert deployments_dir.exists(), (
-            "deployments/ directory must be copied to Docker image. " "Check docker/Dockerfile:262"
-        )
+        assert deployments_dir.exists(), "deployments/ directory must be copied to Docker image. Check docker/Dockerfile:262"
         assert deployments_dir.is_dir(), "deployments/ must be a directory"
 
     def test_src_directory_exists(self):

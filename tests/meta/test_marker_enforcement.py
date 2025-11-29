@@ -19,6 +19,11 @@ References:
 - .github/workflows/ci.yaml:243 - CI test filter
 - CLAUDE.md - Test marker conventions
 - OpenAI Codex validation report (2025-11-15)
+
+Performance Optimization (2025-11-27):
+- Uses tests/validation_lib/ast_cache for cached file reading and AST parsing
+- Fast regex checks used for presence detection (1000x faster than AST)
+- AST parsing reserved for structural analysis only
 """
 
 import ast
@@ -26,6 +31,8 @@ import gc
 from pathlib import Path
 
 import pytest
+
+from tests.validation_lib.ast_cache import cached_parse_ast
 
 pytestmark = pytest.mark.meta
 
@@ -80,13 +87,13 @@ class TestMarkerEnforcement:
         - pytestmark = pytest.mark.unit
         - pytestmark = [pytest.mark.unit, pytest.mark.integration]
         - @pytest.mark.meta decorators on classes/functions
+
+        Note: Uses cached_parse_ast for performance in CI.
         """
         markers = set()
 
-        try:
-            with open(file_path, encoding="utf-8") as f:
-                tree = ast.parse(f.read(), filename=str(file_path))
-        except SyntaxError:
+        tree, _ = cached_parse_ast(str(file_path))
+        if tree is None:
             # If file has syntax errors, pytest won't collect it anyway
             return markers
 
@@ -228,11 +235,9 @@ class TestMarkerEnforcement:
                 violations.append(f"{test_file_path} (FILE NOT FOUND)")
                 continue
 
-            # Parse file and find the class
-            try:
-                with open(test_file, encoding="utf-8") as f:
-                    tree = ast.parse(f.read(), filename=str(test_file))
-            except SyntaxError:
+            # Parse file and find the class (using cached AST)
+            tree, _ = cached_parse_ast(str(test_file))
+            if tree is None:
                 violations.append(f"{test_file_path}::{class_name} (SYNTAX ERROR)")
                 continue
 

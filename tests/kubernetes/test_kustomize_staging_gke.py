@@ -370,7 +370,7 @@ class TestKustomizeStagingGKE:
         missing_kinds = required_kinds - kinds
 
         if missing_kinds:
-            pytest.fail(f"Missing required resource kinds: {missing_kinds}\n" f"Found kinds: {sorted(kinds)}")
+            pytest.fail(f"Missing required resource kinds: {missing_kinds}\nFound kinds: {sorted(kinds)}")
 
 
 if __name__ == "__main__":

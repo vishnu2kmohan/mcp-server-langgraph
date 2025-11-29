@@ -24,7 +24,6 @@ References:
 
 import gc
 import os
-from datetime import datetime, timezone
 
 import pytest
 

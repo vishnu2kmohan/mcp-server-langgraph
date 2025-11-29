@@ -22,10 +22,7 @@ VERSION = "2.8.0"
 PYTHON_REQUIRES = ">= 3.9"
 # Dependencies are defined in pyproject.toml (UV-native)
 # This setup.py reads from pyproject.toml instead of hardcoding dependencies
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+import tomllib
 
 # Read dependencies from pyproject.toml (single source of truth)
 with open("pyproject.toml", "rb") as f:

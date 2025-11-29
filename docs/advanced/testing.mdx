@@ -1052,18 +1052,16 @@ Three layers of protection prevent this issue:
     The regression test handles these automatically via `get_import_name_mapping()`.
   </Accordion>
 
-  <Accordion title="Rule 3: Stdlib Backports" icon="3">
-    Python 3.11+ includes `tomllib` in stdlib. For older versions, tests may import `tomli`:
+  <Accordion title="Rule 3: Stdlib Modules" icon="3">
+    Python 3.11+ includes `tomllib` in stdlib. Since the project minimum is Python 3.11,
+    use `tomllib` directly:
 
     ```python
-    # Backwards compatible import
-    if sys.version_info >= (3, 11):
-        import tomllib
-    else:
-        import tomli as tomllib
+    # Python 3.11+ (project minimum)
+    import tomllib
     ```
 
-    The regression test allows `tomli` imports if `tomllib` is in stdlib (Python 3.12+).
+    The `tomli` backport is no longer needed or allowed.
   </Accordion>
 
   <Accordion title="Rule 4: Exclude Third-Party Helpers" icon="4">

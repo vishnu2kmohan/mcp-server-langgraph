@@ -12,13 +12,9 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.meta
+import tomllib
 
-# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+pytestmark = pytest.mark.meta
 
 
 @pytest.mark.meta
@@ -84,7 +80,7 @@ class TestCodexConfigurationRecommendations:
         fail_under = coverage_config.get("fail_under")
 
         assert fail_under is not None, (
-            "Coverage threshold not set. " "Fix: Add 'fail_under = 64' to [tool.coverage.report] in pyproject.toml"
+            "Coverage threshold not set. Fix: Add 'fail_under = 64' to [tool.coverage.report] in pyproject.toml"
         )
 
         # Accept current baseline of 64%, with plan to reach 80%+
@@ -114,7 +110,7 @@ class TestCodexConfigurationRecommendations:
         required_markers = ["unit", "regression", "meta"]
         for marker in required_markers:
             assert marker in marker_names, (
-                f"Required marker '{marker}' not found in pytest markers. " f"Available markers: {marker_names}"
+                f"Required marker '{marker}' not found in pytest markers. Available markers: {marker_names}"
             )
 
     def test_coverage_omits_test_directories(self, pyproject_config):
@@ -129,7 +125,7 @@ class TestCodexConfigurationRecommendations:
         # Check that tests are omitted
         test_patterns = [pattern for pattern in omit_patterns if "test" in pattern.lower()]
         assert len(test_patterns) > 0, (
-            "Coverage should exclude test directories. " "Expected patterns like '*/tests/*' in tool.coverage.run.omit"
+            "Coverage should exclude test directories. Expected patterns like '*/tests/*' in tool.coverage.run.omit"
         )
 
     def test_coverage_parallel_enabled_for_xdist(self, pyproject_config):
@@ -142,23 +138,27 @@ class TestCodexConfigurationRecommendations:
         parallel = coverage_config.get("parallel")
 
         assert parallel is True, (
-            "Coverage parallel mode should be enabled for pytest-xdist. " "Fix: Set 'parallel = true' in [tool.coverage.run]"
+            "Coverage parallel mode should be enabled for pytest-xdist. Fix: Set 'parallel = true' in [tool.coverage.run]"
         )
 
     def test_benchmark_config_allows_marker_filtering(self, pyproject_config):
         """
-        Verify that pytest-benchmark config allows marker-based filtering.
+        Verify that pytest-benchmark is controlled via addopts.
+
+        NOTE: pytest 9.x (2025-01+) no longer allows [tool.pytest.benchmark] alongside
+        [tool.pytest.ini_options]. Benchmark configuration must be done via addopts.
 
         Codex notes that benchmarks should use marker-based filtering
         rather than complete disablement.
         """
-        benchmark_config = pyproject_config.get("tool", {}).get("pytest", {}).get("benchmark", {})
-        disable = benchmark_config.get("disable")
+        pytest_config = pyproject_config.get("tool", {}).get("pytest", {}).get("ini_options", {})
+        addopts = pytest_config.get("addopts", "")
 
-        # disable should be False to allow marker-based filtering
-        assert disable is False, (
-            "pytest-benchmark disable should be False for marker-based filtering. "
-            "Actual disable setting: {disable}\n"
-            "Fix: Set 'disable = false' in [tool.pytest.benchmark] "
-            "(we use --benchmark-disable in addopts for default behavior)"
+        # pytest 9.x: benchmark config must be in addopts, not [tool.pytest.benchmark]
+        # --benchmark-disable in addopts disables by default, --benchmark-enable enables on demand
+        assert "--benchmark-disable" in addopts, (
+            "pytest addopts should include --benchmark-disable to control benchmarks. "
+            f"Current addopts: {addopts!r}\n"
+            "Fix: Add '--benchmark-disable' to tool.pytest.ini_options.addopts in pyproject.toml\n"
+            "NOTE: pytest 9.x does not support [tool.pytest.benchmark] section"
         )

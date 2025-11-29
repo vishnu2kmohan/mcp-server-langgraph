@@ -79,7 +79,7 @@ class TestHookFixtureResilience:
 
         for keyword in expected_message_keywords:
             assert keyword.lower() in skip_message.lower(), (
-                f"Skip message should mention '{keyword}' for developer guidance.\n" f"Message: {skip_message}"
+                f"Skip message should mention '{keyword}' for developer guidance.\nMessage: {skip_message}"
             )
 
     def test_skip_message_includes_documentation_links(self):
@@ -122,9 +122,9 @@ class TestHookFixtureResilience:
             "  make git-hooks"
         )
 
-        assert (
-            "CI/local parity" in skip_message or "CI configuration" in skip_message
-        ), "Skip message should explain purpose of hooks"
+        assert "CI/local parity" in skip_message or "CI configuration" in skip_message, (
+            "Skip message should explain purpose of hooks"
+        )
 
     def test_fixture_behavior_on_missing_hook(self, tmp_path):
         """

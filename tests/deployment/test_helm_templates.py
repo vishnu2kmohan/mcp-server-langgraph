@@ -16,6 +16,7 @@ Regression Prevention:
 """
 
 import gc
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -25,9 +26,37 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = Path(__file__).parent.parent.parent
 CHART_PATH = REPO_ROOT / "deployments" / "helm" / "mcp-server-langgraph"
+
+
+@pytest.fixture(scope="module")
+def helm_dependencies_built():
+    """Build Helm chart dependencies before running template tests.
+
+    This fixture runs once per module and builds the Helm dependencies
+    (redis, kube-prometheus-stack) required for helm template to work.
+    """
+    if not shutil.which("helm"):
+        pytest.skip("helm CLI not installed")
+
+    if not CHART_PATH.exists():
+        pytest.skip("Helm chart directory does not exist")
+
+    # Build dependencies (downloads redis, kube-prometheus-stack charts)
+    result = subprocess.run(
+        ["helm", "dependency", "build", str(CHART_PATH)],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=120,
+    )
+
+    if result.returncode != 0:
+        pytest.skip(f"Failed to build Helm dependencies (may need network access):\n{result.stderr}")
+
+    return True
 
 
 @pytest.mark.requires_helm
@@ -40,7 +69,7 @@ class TestHelmTemplateRendering:
         gc.collect()
 
     @requires_tool("helm")
-    def test_helm_template_renders_without_errors(self):
+    def test_helm_template_renders_without_errors(self, helm_dependencies_built):
         """Test that helm template command succeeds."""
         result = subprocess.run(
             ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
@@ -50,7 +79,7 @@ class TestHelmTemplateRendering:
         assert len(result.stdout) > 0, "Helm template produced no output"
 
     @requires_tool("helm")
-    def test_helm_template_produces_valid_yaml(self):
+    def test_helm_template_produces_valid_yaml(self, helm_dependencies_built):
         """Test that rendered templates are valid YAML."""
         result = subprocess.run(
             ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
@@ -71,7 +100,7 @@ class TestHelmTemplateRendering:
             assert "metadata" in doc, f"Document {i} missing 'metadata' field"
 
     @requires_tool("helm")
-    def test_helm_template_checksum_annotations_present(self):
+    def test_helm_template_checksum_annotations_present(self, helm_dependencies_built):
         """Test that deployment has checksum annotations for config/secret changes."""
         result = subprocess.run(
             ["helm", "template", "test-release", str(CHART_PATH)], capture_output=True, text=True, cwd=REPO_ROOT, timeout=60
@@ -133,9 +162,9 @@ class TestHelmLint:
 
         # Helm lint success messages
         output = result.stdout + result.stderr
-        assert (
-            "linted" in output.lower() or "no failures" in output.lower()
-        ), f"Helm lint output doesn't indicate success:\n{output}"
+        assert "linted" in output.lower() or "no failures" in output.lower(), (
+            f"Helm lint output doesn't indicate success:\n{output}"
+        )
 
 
 @pytest.mark.xdist_group(name="testhelmdependencies")
@@ -186,7 +215,7 @@ class TestHelmTemplateWithValues:
         gc.collect()
 
     @requires_tool("helm")
-    def test_helm_template_with_custom_values(self):
+    def test_helm_template_with_custom_values(self, helm_dependencies_built):
         """Test rendering with custom values doesn't fail."""
         # Create temporary values with some overrides
         custom_values = """
@@ -225,7 +254,7 @@ replicaCount: 2
                 temp_values.unlink()
 
     @requires_tool("helm")
-    def test_helm_template_with_staging_values(self):
+    def test_helm_template_with_staging_values(self, helm_dependencies_built):
         """Test rendering with staging values if available."""
         staging_values = CHART_PATH.parent / "values-staging.yaml"
 
@@ -251,7 +280,7 @@ replicaCount: 2
         assert len(result.stdout) > 0, "Helm template produced no output"
 
     @requires_tool("helm")
-    def test_helm_template_with_production_values(self):
+    def test_helm_template_with_production_values(self, helm_dependencies_built):
         """Test rendering with production values if available."""
         production_values = CHART_PATH.parent / "values-production.yaml"
 

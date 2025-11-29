@@ -248,9 +248,7 @@ class TestADRConsistency:
 
         # Check for duplicates
         duplicates = [num for num in adr_numbers if adr_numbers.count(num) > 1]
-        assert not duplicates, (
-            f"Duplicate ADR numbers found: {sorted(set(duplicates))}\n" "Each ADR must have a unique number."
-        )
+        assert not duplicates, f"Duplicate ADR numbers found: {sorted(set(duplicates))}\nEach ADR must have a unique number."
 
         # Check for gaps (allowing some intentional gaps)
         adr_numbers.sort()
@@ -399,7 +397,7 @@ class TestLinkIntegrity:
                     )
 
                     if not file_exists:
-                        potential_issues.append(f"{doc_file.relative_to(REPO_ROOT)}: " f"Link to '{clean_path}' may be broken")
+                        potential_issues.append(f"{doc_file.relative_to(REPO_ROOT)}: Link to '{clean_path}' may be broken")
 
         # This is a warning, not a failure - some links may be valid but not detected
         if potential_issues:

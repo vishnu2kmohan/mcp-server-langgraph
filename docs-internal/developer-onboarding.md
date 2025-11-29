@@ -6,7 +6,7 @@ Welcome to the MCP Server LangGraph project! This guide will get you up and runn
 
 Before you start, ensure you have:
 
-- ✅ **Python 3.10-3.12** installed (`python --version`)
+- ✅ **Python 3.11-3.13** installed (`python --version`)
 - ✅ **Docker Desktop** or **Docker Engine** running (`docker --version`)
 - ✅ **Docker Compose v2** installed (`docker compose version`)
 - ✅ **Git** installed (`git --version`)

@@ -1,9 +1,14 @@
-# ADR-0044: Test Infrastructure Quick Wins
+# 44. Test Infrastructure Quick Wins
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 1 of comprehensive test infrastructure remediation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -246,8 +251,8 @@ pytest tests/core/test_container.py -v
 - Add database migrations for persistent storage
 
 ### Phase 4: Infrastructure Optimizations
-- Optimize docker-compose.test.yml startup (target: <2min)
-- Optimize CI/CD E2E test execution (target: <15min)
+- Optimize docker-compose.test.yml startup (target: \<2min)
+- Optimize CI/CD E2E test execution (target: \<15min)
 - Update performance baselines with real infrastructure
 
 ## References

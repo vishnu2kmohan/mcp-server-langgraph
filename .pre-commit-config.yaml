@@ -14,6 +14,8 @@ repos:
     exclude: ^uv\.lock$
   - id: check-merge-conflict
   - id: detect-private-key
+    # Exclude secrets obfuscation test file which intentionally contains fake/truncated test keys
+    exclude: ^tests/unit/secrets_obfuscation/test_secrets_obfuscation\.py$
   - id: check-json
   - id: check-toml
   - id: mixed-line-ending
@@ -26,7 +28,7 @@ repos:
       Regression prevention for commit a57fcc95 (pytestmark inside imports).
       '
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.8.4
+  rev: v0.14.6  # Latest stable (2025-11-21) - synced with pyproject.toml dev dependency
   hooks:
   - id: ruff
     name: Ruff Linter (replaces isort + flake8)
@@ -46,12 +48,15 @@ repos:
     - -lll
     - --skip
     - B608
+    stages:
+      - pre-push
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v1.13.0
   hooks:
   - id: mypy
     name: MyPy Type Checking (Blocking)
-    entry: uv run mypy src/mcp_server_langgraph
+    # CRITICAL: Use --frozen to ensure lockfile-pinned versions (prevents version drift in CI)
+    entry: uv run --frozen mypy src/mcp_server_langgraph
     language: system
     types: [python]
     args:
@@ -59,10 +64,10 @@ repos:
     - --show-error-codes
     - --pretty
     pass_filenames: false
-    # MyPy Configuration Status (2025-11-23)
+    # MyPy Configuration Status (2025-11-27)
     #
-    # ✅ FIXED: All 46 type errors resolved!
-    # ✅ ENVIRONMENT: Uses system Python with full project dependencies via uv
+    # ✅ FIXED: All type errors resolved!
+    # ✅ ENVIRONMENT: Uses uv-managed environment with --frozen flag
     # Stage: pre-push (BLOCKING - maintains local/CI parity)
     #
     # Modern best practice: Per-module overrides in pyproject.toml
@@ -71,7 +76,7 @@ repos:
     #
     # Environment approach:
     #   - language: system (uses uv-managed environment)
-    #   - Full project dependencies available
+    #   - --frozen ensures lockfile-pinned versions (prevents types-redis drift)
     #   - Matches local development and CI/CD exactly
     #
     # Test: tests/meta/test_mypy_enforcement.py::test_mypy_passes_on_current_codebase ✅
@@ -97,12 +102,11 @@ repos:
       Fix: Add timeout=60 parameter to subprocess.run() calls.
 
       '
-    entry: python .pre-commit-hooks/check_subprocess_timeout.py
+    entry: uv run --frozen python -u .pre-commit-hooks/check_subprocess_timeout.py
     language: system
     types: [python]
     files: ^tests/.*\.py$
     stages:
-    - pre-commit
     - pre-push
   - id: check-banned-imports
     name: Validate no banned/deprecated imports
@@ -114,11 +118,10 @@ repos:
       - import imp (removed in Python 3.12+)
 
       '
-    entry: python .pre-commit-hooks/check_banned_imports.py
+    entry: uv run --frozen python -u .pre-commit-hooks/check_banned_imports.py
     language: system
     types: [python]
     stages:
-    - pre-commit
     - pre-push
   - id: uv-lock-check
     name: Validate uv.lock synchronized with pyproject.toml
@@ -127,6 +130,7 @@ repos:
     files: ^(pyproject\.toml|uv\.lock)$
     pass_filenames: false
     stages:
+    - pre-commit
     - pre-push
   - id: uv-pip-check
     name: Validate no dependency conflicts
@@ -134,6 +138,7 @@ repos:
     language: system
     pass_filenames: false
     stages:
+    - pre-commit
     - pre-push
     description: 'Validates that installed dependencies have no conflicts.
 
@@ -155,26 +160,26 @@ repos:
       '
   - id: run-pre-push-tests
     name: Run Pre-Push Tests (consolidated - dev profile)
-    entry: scripts/run_pre_push_tests.py
+    entry: uv run --frozen python -u scripts/run_pre_push_tests.py
     language: system
     pass_filenames: false
-    files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
+    files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml|deployments/.*\.(yaml|yml)|docker/.*\.(yaml|yml)|\.github/.*\.ya?ml)$
     always_run: false
     stages:
     - pre-push
     description: 'Consolidated pre-push test suite (OpenAI Codex Finding 2a fix).
 
 
-      Combines 5 separate pytest sessions into 1 for efficiency:
+      Consolidates 21 separate pytest invocations into 1 for efficiency:
 
-      - Combined marker: -m "(unit or api or property) and not llm"
+      - Combined marker: -m "(unit or api or property or validation) and not llm"
 
-      - This covers: unit tests, smoke tests, API tests, MCP server tests, property tests
+      - This covers: unit tests, smoke tests, API tests, property tests, deployment validation
 
-      - Property tests use dev profile (25 examples) locally, ci profile (100 examples) in CI
+      - Meta tests included conditionally when workflow files change
 
 
-      Time savings: 10-25 seconds vs separate sessions (no duplicate test discovery)
+      Time savings: ~4 minutes (reduced test discovery from 21 sessions to 1)
 
 
       CI_PARITY mode: Set CI_PARITY=1 to include integration tests (requires Docker)
@@ -184,7 +189,7 @@ repos:
 
       Benefits:
 
-      - Single test discovery (2-5s instead of 10-25s for 5 sessions)
+      - Single test discovery (~13s instead of ~4.5 min for 21 sessions)
 
       - No pytest cache/coverage lock contention
 
@@ -201,9 +206,55 @@ repos:
       Full CI-equivalent validation: make validate-pre-push or CI_PARITY=1 git push
 
       '
+  - id: python-version-smoke-test
+    name: Multi-Python Version Smoke Test (quick)
+    entry: scripts/test_python_versions.sh --quick
+    language: script
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-push
+    description: 'Run quick smoke tests on available Python versions (3.11, 3.12, 3.13).
+
+      Added 2025-11-28 in response to PR #121 CI failures where Python 3.11/3.13
+      failed but 3.12 passed due to bleeding-edge dependency issues.
+
+      Uses --quick mode for speed (~30s total). Tests current venv only.
+      Docker build smoke test (separate hook) catches extra reference issues.
+
+      This hook catches version-specific import problems before they reach CI:
+      - Tests Click CLI functionality (catches _textwrap issues)
+      - Tests Hypothesis property tests (catches internal module changes)
+
+      To run full mode: ./scripts/test_python_versions.sh (without --quick)
+      For CI mode (fail on missing versions): ./scripts/test_python_versions.sh --ci
+
+      '
+  - id: docker-build-smoke-test
+    name: Docker Build Smoke Test
+    entry: >
+      bash -c 'docker build -f docker/Dockerfile --target build-test . -q >/dev/null 2>&1 ||
+      (echo "ERROR - Docker build failed. Check docker/Dockerfile and pyproject.toml extras." && exit 1)'
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages:
+    - pre-push
+    description: 'Validates Docker build succeeds before pushing to CI.
+
+      Added 2025-11-28 to catch configuration mismatches between pyproject.toml
+      and Docker files (e.g., removed extras still referenced in Dockerfiles).
+
+      Builds the test stage only (fast, ~30s) to validate all --extra references
+      exist in pyproject.toml and uv sync succeeds with the specified extras.
+
+      Skips silently if Docker is not available.
+      Duration: ~30s when Docker is available.
+
+      '
   - id: run-integration-tests
     name: Run Integration Tests (manual - requires Docker)
-    entry: bash -c 'OTEL_SDK_DISABLED=true uv run pytest -n auto tests/integration/ -v --tb=short'
+    entry: bash -c 'PYTHONUNBUFFERED=1 OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/integration/ -v --tb=short'
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/integration/.*\.py)$
@@ -242,8 +293,10 @@ repos:
     entry: >
       bash -c 'if command -v actionlint >/dev/null 2>&1; then
       actionlint -no-color -shellcheck= .github/workflows/*.yml .github/workflows/*.yaml 2>&1;
-      else echo "Skipping: actionlint not installed (install from https://github.com/rhysd/actionlint)";
-      exit 0; fi'
+      else echo "ERROR: actionlint not installed. Install from https://github.com/rhysd/actionlint";
+      echo "  macOS: brew install actionlint";
+      echo "  Linux: go install github.com/rhysd/actionlint/cmd/actionlint@latest";
+      exit 1; fi'
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -253,7 +306,10 @@ repos:
     description: 'Advanced GitHub Actions workflow validation using actionlint.
 
 
-      CLI Availability Guard: Gracefully skips if actionlint is not installed.
+      REQUIRED: actionlint must be installed. The hook will FAIL if not available.
+
+
+      Install: brew install actionlint (macOS) or go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
 
       Catches issues like:
@@ -272,7 +328,7 @@ repos:
       '
   - id: check-test-sleep-duration
     name: Check Test Sleep Durations
-    entry: uv run python scripts/validation/check_test_sleep_duration.py
+    entry: uv run --frozen python -u scripts/validators/check_test_sleep_duration.py
     language: system
     files: ^tests/.*\.py$
     exclude: ^tests/meta/test_sleep_duration_linter\.py$
@@ -292,7 +348,7 @@ repos:
       '
   - id: validate-fast
     name: Run Fast Validators (Consolidated)
-    entry: uv run python scripts/validation/validate_fast.py
+    entry: uv run --frozen python -u scripts/validators/validate_fast.py
     language: system
     pass_filenames: false
     always_run: true
@@ -300,66 +356,48 @@ repos:
     - pre-push
     description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
 
-  - id: validate-mdx-extensions
-    name: Validate MDX File Extensions in docs/
-    entry: uv run python scripts/validation/mdx_extension_validator.py
+  - id: validate-docs
+    name: Validate Documentation (Consolidated - MDX, Naming, ADR, Tests)
+    entry: uv run --frozen python -u scripts/validators/validate_docs.py --all
     language: system
-    files: ^docs/.*\.(md|mdx)$
+    files: ^(docs/.*\.(md|mdx|json)|adr/.*\.md)$
     pass_filenames: false
     always_run: false
-    description: 'Validates all files in docs/ use .mdx extension (TDD):
-
-      - Detects .md files in docs/ directory
-
-      - Ensures Mintlify compatibility
-
-      - Excludes template and node_modules directories
-
-
-      Prevents regression of issues fixed in 2025-11-12 audit:
-
-      - TRY_EXCEPT_PASS_ANALYSIS.md (converted to .mdx)
-
-      - SECRETS.md (converted to .mdx)
-
-      - gke-autopilot-resource-constraints.md (converted to .mdx)
-
-
-      Solution: Convert .md to .mdx or move outside docs/
-
-      See: tests/unit/documentation/test_mdx_extension_validator.py
-
-      '
-  - id: check-frontmatter-quotes
-    name: Check Frontmatter Quote Style
-    entry: uv run python scripts/docs/standardize_frontmatter.py docs --dry-run
-    language: system
-    files: \.mdx$
-    pass_filenames: false
-    always_run: false
-  - id: validate-file-naming-conventions
-    name: Validate Documentation File Naming Conventions
-    entry: uv run python scripts/validation/file_naming_validator.py --path docs
-    language: system
-    files: ^docs/.*\.(md|mdx)$
-    pass_filenames: false
-    always_run: false
+    stages:
+    - pre-push
     description: |
-      Validates that documentation files follow kebab-case naming conventions.
+      Consolidated documentation validator (CI parity fix - 2025-11-29).
 
-      Enforces:
-      - All .mdx files must be lowercase
-      - Use hyphens (-) not underscores (_)
-      - No spaces in filenames
-      - No .md files in docs/ directory (must use .mdx)
+      Replaces 6 separate hooks with 1 unified validator:
+      - validate-mdx-extensions → --mdx flag
+      - check-frontmatter-quotes → --mdx flag
+      - validate-file-naming-conventions → --mdx flag
+      - validate-adr-sync → --adr flag
+      - validate-documentation-integrity → --tests flag
+      - validate-documentation-structure → --tests flag
 
-      Prevents regression of uppercase file naming issues.
+      Validates:
+      ✅ All docs/ files use .mdx extension (not .md)
+      ✅ Filenames follow kebab-case convention
+      ✅ Frontmatter uses consistent quote style
+      ✅ ADRs synchronized between adr/ and docs/architecture/
+      ✅ No uppercase ADR-* filenames
+      ✅ Runs documentation validation pytest tests
 
-      See: docs/references/documentation-authoring-guide
-      Tests: tests/unit/documentation/test_file_naming_validator.py
+      Benefits:
+      - 40% faster pre-push (single file scan instead of 6)
+      - Full CI parity (runs same validations as CI)
+      - Single Python process instead of 7+
+
+      Manual run:
+      $ python scripts/validators/validate_docs.py --all
+      $ python scripts/validators/validate_docs.py --mdx --docs-dir docs/
+      $ python scripts/validators/validate_docs.py --adr --repo-root .
+
+      Tests: tests/unit/validators/test_validate_docs.py
   - id: audit-todo-fixme-markers
     name: Audit TODO/FIXME/XXX Markers in Documentation
-    entry: uv run python scripts/validation/todo_audit.py --quiet
+    entry: uv run --frozen python -u scripts/validators/todo_audit.py --quiet
     language: system
     files: ^docs/.*\.(md|mdx)$
     pass_filenames: false
@@ -368,42 +406,20 @@ repos:
     - manual
     description: "Audits documentation for TODO/FIXME/XXX markers (TDD):\n- Finds all TODO and FIXME comments\n- Detects XXX\
       \ placeholders in examples\n- Reports location and content\n- Tracks outstanding work items\n\nNote: This is informational\
-      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validation/todo_audit.py --docs-dir docs\nTests:\
+      \ only (exit code 0). Use for audits.\nRun manually: python scripts/validators/todo_audit.py --docs-dir docs\nTests:\
       \ tests/unit/documentation/test_todo_audit.py (14 tests \u2705)\n"
-  - id: validate-adr-sync
-    name: "Validate ADR Synchronization (/adr \u2194 /docs/architecture)"
-    entry: uv run python scripts/validation/adr_sync_validator.py
-    language: system
-    files: ^(adr/.*\.md|docs/architecture/.*\.mdx)$
-    pass_filenames: false
-    always_run: false
-    description: 'Validates ADR synchronization between source and docs (TDD):
-
-      - All ADRs in /adr exist in /docs/architecture
-
-      - All ADRs in /docs/architecture exist in /adr
-
-      - Reports missing or orphaned ADRs
-
-      - Prevents documentation drift
-
-
-      Ensures Architecture Decision Records stay synchronized.
-
-      Run: python scripts/validation/adr_sync_validator.py
-
-      Exit code 1 if out of sync, 0 if synchronized
-
-      '
   - id: mintlify-broken-links-check
     name: Mintlify Broken Links Validation (PRIMARY Validator)
     entry: >
-      bash -c 'if command -v npm >/dev/null 2>&1; then
-      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links;
-      else echo "Skipping: npm/Node.js not installed (install from https://nodejs.org/)";
-      exit 0; fi'
+      bash -c 'if ! command -v npm >/dev/null 2>&1; then
+      echo "ERROR: npm/Node.js required for Mintlify validation.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or install Node.js from https://nodejs.org/";
+      exit 1; fi;
+      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links'
     language: system
-    files: ^docs/.*\.mdx$
+    # Pattern expanded (P1-1 - 2025-11-27): Now triggers on MDX, JSON (navigation), and images
+    files: ^docs/.*\.(mdx|json|png|jpg|jpeg|gif|svg|webp)$
     pass_filenames: false
     always_run: false
     stages:
@@ -420,69 +436,9 @@ repos:
       \ --all-files\nOR\n$ make docs-validate-mintlify\nOR\n$ cd docs && npx mintlify broken-links\n\nMigration (2025-11-15):\n\
       - Mintlify CLI is now PRIMARY validator (pre-push + CI)\n- Removed redundant Python validators from pre-push\n- Moved\
       \ from manual to pre-push to catch errors before remote push\n- See: docs-internal/DOCS_VALIDATION_SIMPLIFICATION.md\n"
-  - id: validate-documentation-integrity
-    name: Validate Documentation Integrity (ADRs, Monitoring, Mermaid)
-    entry: uv run pytest tests/meta/validation/test_documentation_integrity.py -v --tb=short
-    language: system
-    files: \.(md|mdx|json)$|^monitoring/.*README\.md$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - manual
-    description: 'Documentation integrity and completeness tests (TDD):
-
-      - ADR synchronization between adr/ and docs/architecture/
-
-      - Architecture overview ADR count accuracy
-
-      - Mermaid diagram structure validation
-
-      - Monitoring subdirectories have comprehensive READMEs (>50 lines)
-
-      - No HTML comments in MDX (use JSX comments)
-
-      - JSX comments properly closed
-
-      Ensures documentation standards maintained (2025-11-07 audit).
-
-      '
-  - id: validate-documentation-structure
-    name: Validate Documentation Structure (Orphaned Files, ADR Numbering, TODOs, Badges, Links)
-    entry: uv run pytest tests/regression/test_documentation_structure.py -v --tb=short
-    language: system
-    files: \.(md|mdx|json)$|^adr/.*\.md$|^README\.md$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - manual
-    description: 'Comprehensive documentation structure validation (TDD):
-
-      - Prevents orphaned MDX files not in docs.json navigation
-
-      - Detects duplicate ADR numbering
-
-      - Validates ADR synchronization between adr/ and docs/architecture/
-
-      - Validates README.md ADR badge count matches actual ADR count
-
-      - Ensures public docs don''t have TODO/FIXME comments (excludes templates/archives)
-
-      - Detects broken internal links between documentation pages
-
-      - Validates frontmatter presence in MDX files
-
-      - Checks version consistency across deployment files
-
-      - Confirms essential root documentation files exist
-
-      Regression prevention for issues fixed in documentation audit (2025-11-12).
-
-      Enhanced 2025-11-12: Added badge validation, comprehensive TODO detection, link checking.
-
-      '
   - id: validate-adr-index
     name: Validate ADR Index is Up-to-Date
-    entry: python scripts/docs/generate_adr_index.py --check
+    entry: python -u scripts/docs/generate_adr_index.py --check
     language: system
     files: ^adr/.*\.md$
     pass_filenames: false
@@ -509,44 +465,58 @@ repos:
       Regression prevention for REC-001 from documentation audit (2025-11-12).
 
       '
-  - id: validate-deployment-secrets
-    name: Validate deployment secret keys alignment
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_deployment_secret_keys_exist_in_template -v --tb=short
+  - id: check-internal-links
+    name: Check Internal Documentation Links (GitHub, ADR, docs-internal)
+    entry: uv run --frozen python -u scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
     language: system
-    files: ^deployments/helm/.*\.(yaml|yml)$
+    files: ^(\.github/.*\.md|adr/.*\.md|docs-internal/.*\.md|README\.md|CONTRIBUTING\.md|CHANGELOG\.md)$
     pass_filenames: false
+    always_run: false
     stages:
     - pre-push
-  - id: validate-cors-security
-    name: Validate CORS security configuration
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_kong_cors_not_wildcard_with_credentials -v --tb=short
-    language: system
-    files: ^deployments/(kong|base)/.*\.(yaml|yml)$
-    pass_filenames: false
-    stages:
-    - pre-push
-  - id: check-hardcoded-credentials
-    name: Check for hard-coded credentials
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_no_hardcoded_credentials_in_configmap -v --tb=short
-    language: system
-    files: ^deployments/base/configmap\.yaml$
-    pass_filenames: false
-    stages:
-    - pre-push
-  - id: validate-redis-password-required
-    name: Ensure Redis password is mandatory
-    entry: uv run pytest tests/deployment/test_helm_configuration.py::test_redis_password_not_optional -v --tb=short
-    language: system
-    files: ^deployments/base/redis-session-deployment\.yaml$
-    pass_filenames: false
-    stages:
-    - pre-push
+    description: 'Validates internal documentation links in non-Mintlify markdown files.
+
+      Checks .github/, adr/, docs-internal/, and root markdown files for broken links.
+
+      Excludes docs/ (covered by mintlify-broken-links-check), archive/, and reports/.
+
+
+      High-priority files checked:
+
+      - .github/*.md (CONTRIBUTING.md, SECURITY.md, etc.)
+
+      - adr/*.md (Architecture Decision Records)
+
+      - docs-internal/*.md (Internal documentation)
+
+      - Root files (README.md, CONTRIBUTING.md, CHANGELOG.md)
+
+
+      Complements mintlify-broken-links-check which only validates docs/ directory.
+
+      Prevents broken cross-references between ADRs and internal documentation.
+
+
+      Added: 2025-11-29 (CI gap analysis - broken links in .github/ and adr/ not caught locally)
+
+      '
+  # NOTE: validate-deployment-secrets, validate-cors-security, check-hardcoded-credentials,
+  # validate-redis-password-required hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via (unit or validation) marker
+  # Tests in tests/deployment/test_helm_configuration.py are marked as unit tests
+  # and run automatically when deployment files change.
+  # This reduces pytest invocations from 21 to 1, saving ~4 minutes per pre-push.
   - id: trivy-scan-k8s-manifests
     name: Trivy Security Scan for Kubernetes Manifests
-    entry: "bash -c 'if ! command -v trivy &> /dev/null; then\n  echo \"\u26A0\uFE0F  Trivy not installed - skipping security\
-      \ scan. Install: brew install trivy\";\n  exit 0;\nfi;\ntrivy config deployments --severity CRITICAL,HIGH --skip-dirs\
-      \ \"**/charts\" --exit-code\ 1 --quiet ||\n(echo \"\u274C Security vulnerabilities found. Run: trivy config deployments\
-      \ --severity CRITICAL,HIGH --skip-dirs charts\"; exit 1)'\n"
+    entry: >
+      bash -c 'if ! command -v trivy &> /dev/null; then
+      echo "ERROR: trivy required for security scanning.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or: brew install trivy";
+      exit 1;
+      fi;
+      trivy config deployments --severity CRITICAL,HIGH --skip-dirs "**/charts" --exit-code 1 --quiet ||
+      (echo "Security vulnerabilities found. Run: trivy config deployments --severity CRITICAL,HIGH --skip-dirs charts"; exit 1)'
     language: system
     files: ^deployments/.*\.(yaml|yml)$
     pass_filenames: false
@@ -582,9 +552,189 @@ repos:
       Regression prevention for: Deploy to GKE Staging failure (Run #19309378657)
 
       '
+  - id: checkov-terraform
+    name: Checkov Terraform Security Scan
+    entry: >
+      bash -c 'if ! command -v checkov &> /dev/null; then
+      echo "WARNING: checkov not installed. Skipping Terraform security scan.";
+      echo "Install via: pip install checkov or brew install checkov";
+      exit 0;
+      fi;
+      checkov -d terraform/ --framework terraform --quiet --compact \
+        --skip-check CKV_TF_1,CKV_TF_2 \
+        --output cli || (echo "Checkov found security issues in Terraform. Run: checkov -d terraform/ --framework terraform"; exit 1)'
+    language: system
+    files: ^terraform/.*\.tf$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Scans Terraform configurations for security misconfigurations using Checkov.
+
+      Detects issues like:
+      - IAM policy with wildcard resources (CKV_AWS_355)
+      - IAM policy without constraints (CKV_AWS_290)
+      - Missing encryption configurations
+      - Overly permissive security groups
+
+      Install Checkov:
+      - pip install checkov
+      - brew install checkov (macOS)
+
+      Skipped checks:
+      - CKV_TF_1: Module source not pinned (we use version constraints)
+      - CKV_TF_2: Provider version not pinned (managed in required_providers)
+
+      If Checkov is not installed, the hook will skip scanning (not fail).
+      CI/CD environments have Checkov installed for mandatory scans.
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
+  - id: trivy-helm-scan
+    name: Trivy Helm Chart Security Scan
+    entry: >
+      bash -c 'if ! command -v trivy &> /dev/null; then
+      echo "WARNING: trivy not installed. Skipping Helm chart security scan.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or: brew install trivy";
+      exit 0;
+      fi;
+      cd deployments/helm/mcp-server-langgraph &&
+      trivy config . --severity CRITICAL,HIGH --exit-code 1 --quiet --skip-dirs charts ||
+      (echo "Security vulnerabilities found in Helm charts. Run: trivy config deployments/helm/mcp-server-langgraph --severity CRITICAL,HIGH"; exit 1)'
+    language: system
+    files: ^deployments/helm/.*\.(yaml|yml|tpl)$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Scans Helm charts (including subcharts) for security misconfigurations.
+
+      Extends trivy-scan-k8s-manifests to cover the helm/ directory and subcharts.
+      Uses .trivyignore in deployments/helm/mcp-server-langgraph/ for suppressions.
+
+      Detects issues like:
+      - Missing security contexts (KSV118)
+      - ConfigMaps with secrets (AVD-KSV-0109)
+      - :latest image tags (KSV013)
+      - Privileged containers
+
+      Install Trivy:
+      - macOS: brew install trivy
+      - Linux: See https://aquasecurity.github.io/trivy/latest/getting-started/installation/
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
+  - id: trivy-helm-full-scan
+    name: Trivy Helm Full Scan (with subcharts)
+    entry: bash scripts/security/scan_helm_templates.sh
+    language: system
+    files: ^deployments/helm/.*
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Comprehensive Helm chart security scan including all subcharts.
+
+      IMPORTANT: This hook templates the entire Helm chart (including subcharts stored
+      as .tgz archives) and scans the rendered YAML files. This catches security issues
+      in upstream dependency charts that trivy-helm-scan misses.
+
+      Addresses the CodeQL/Trivy gap where subcharts are stored as compressed .tgz
+      files locally but extracted during CI scanning.
+
+      Requires: helm and trivy installed
+      Install: brew install helm trivy
+
+      The scan respects suppressions in deployments/helm/mcp-server-langgraph/.trivyignore
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
+  - id: semgrep-security-scan
+    name: Semgrep Security Scan (CodeQL Parity)
+    entry: >
+      bash -c '
+        # Find semgrep: prefer venv, fallback to system
+        if [ -x ".venv/bin/semgrep" ]; then
+          SEMGREP=".venv/bin/semgrep";
+        elif command -v semgrep &> /dev/null; then
+          SEMGREP="semgrep";
+        else
+          echo "ERROR: semgrep not installed. This is REQUIRED for security scanning.";
+          echo "";
+          echo "Install semgrep:";
+          echo "  uv sync --group dev   # installs via pyproject.toml";
+          echo "  pip install semgrep   # or install directly";
+          echo "  brew install semgrep  # or via Homebrew";
+          echo "";
+          echo "To skip (not recommended): SKIP_SEMGREP=1 git push";
+          if [ "${SKIP_SEMGREP:-0}" = "1" ]; then
+            echo "WARNING: SKIP_SEMGREP=1 set - skipping security scan (NOT RECOMMENDED)";
+            exit 0;
+          fi;
+          exit 1;
+        fi;
+        $SEMGREP scan --config auto --error --severity ERROR --quiet src/ scripts/ ||
+        (echo "Semgrep found security issues. Run: $SEMGREP scan --config auto src/ scripts/"; exit 1)'
+    language: system
+    files: ^(src|scripts)/.*\.py$
+    pass_filenames: false
+    always_run: false
+    stages:
+    - pre-push
+    description: 'Static analysis for Python security issues (CodeQL equivalent).
+
+      REQUIRED: Semgrep must be installed. Install via: uv sync --group dev
+
+      Provides local coverage for security patterns that CodeQL catches in CI:
+      - Empty except blocks (py/empty-except equivalent)
+      - SQL injection, command injection
+      - Hardcoded credentials
+      - Unsafe deserialization
+
+      To skip (emergency only): SKIP_SEMGREP=1 git push
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      Updated: 2025-11-29 (fail by default, added to pyproject.toml dev deps)
+      '
+  - id: security-tools-check
+    name: Security Tools Check (if ENFORCE_SECURITY_TOOLS=1)
+    entry: >
+      bash -c 'if [ "${ENFORCE_SECURITY_TOOLS:-0}" = "1" ]; then
+        echo "Checking security tools (ENFORCE_SECURITY_TOOLS=1)...";
+        missing="";
+        command -v trivy >/dev/null || missing="${missing} trivy";
+        command -v helm >/dev/null || missing="${missing} helm";
+        command -v semgrep >/dev/null || missing="${missing} semgrep";
+        if [ -n "${missing}" ]; then
+          echo "ERROR: Missing security tools:${missing}";
+          echo "Install: brew install trivy helm && pip install semgrep";
+          exit 1;
+        fi;
+        echo "All security tools installed.";
+      fi'
+    language: system
+    always_run: true
+    pass_filenames: false
+    stages:
+    - pre-push
+    description: 'Verifies security tools are installed (opt-in for security team).
+
+      Set ENFORCE_SECURITY_TOOLS=1 in your shell profile to enable mandatory checks:
+        export ENFORCE_SECURITY_TOOLS=1
+
+      Required tools when enabled:
+      - trivy: Kubernetes/Helm security scanning
+      - helm: Helm chart templating for full subchart scanning
+      - semgrep: Python static security analysis
+
+      CI always runs these checks regardless of this setting.
+
+      Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+      '
   - id: check-mermaid-styling
     name: Check Mermaid Diagrams for ColorBrewer2 Set3 Styling
-    entry: uv run python scripts/validation/check_mermaid_styling.py
+    entry: uv run --frozen python -u scripts/validators/check_mermaid_styling.py
     language: system
     files: ^docs/.*\.mdx$
     pass_filenames: true
@@ -598,26 +748,12 @@ repos:
       Moved to manual stage 2025-11-16 (CI/CD optimization - Phase 1)
 
       '
-  - id: prevent-local-config-commits
-    name: Prevent Local Config Files from Being Committed
-    entry: uv run pytest tests/meta/validation/test_gitignore_validation.py -v
-    language: system
-    pass_filenames: false
-    always_run: true
-    description: 'Prevents accidental commits of local configuration files like:
-
-      - .claude/settings.local.json
-
-      - *.local.json
-
-      - .env.local
-
-      Per TDD best practices, this ensures local configs never reach version control.
-
-      '
+  # NOTE: prevent-local-config-commits hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/validation/test_gitignore_validation.py runs with other meta tests
   - id: validate-github-workflows-comprehensive
     name: Validate GitHub Workflows (Comprehensive)
-    entry: uv run python scripts/validation/validate_github_workflows.py
+    entry: uv run --frozen python -u scripts/validators/validate_github_workflows_comprehensive.py
     language: system
     files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
     pass_filenames: false
@@ -639,7 +775,7 @@ repos:
       Test: tests/meta/test_consolidated_workflow_validator.py\n"
   - id: validate-workflow-file-references
     name: Validate Workflow File References
-    entry: uv run python scripts/validation/validate_workflow_file_references.py
+    entry: uv run --frozen python -u scripts/validators/validate_workflow_file_references.py
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -656,13 +792,13 @@ repos:
       - Test paths that reorganized but workflows still reference old locations\n\
       - Missing files that cause silent failures with || true patterns\n\n\
       Example prevented issues:\n\
-      - scripts/validate_gke_autopilot_compliance.py → scripts/validation/validate_gke_autopilot_compliance.py\n\
+      - scripts/validate_gke_autopilot_compliance.py → scripts/validators/validate_gke_autopilot_compliance.py\n\
       - tests/regression/test_pod_deployment_regression.py → tests/integration/regression/test_pod_deployment_regression.py\n\n\
       Created: 2025-11-24 (commit 6efbd73f configuration drift remediation)\n\
-      See: scripts/validation/validate_workflow_file_references.py\n"
+      See: scripts/validators/validate_workflow_file_references.py\n"
   - id: validate-pytest-fixtures
     name: Validate Pytest Fixture Dependencies
-    entry: uv run python scripts/validation/validate_pytest_fixtures.py
+    entry: uv run --frozen python -u scripts/validators/validate_pytest_fixtures.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: false
@@ -685,10 +821,10 @@ repos:
       - 17 E2E test failures from fixture 'test_infrastructure_check' not found\n\
       - pytest --collect-only doesn't catch these (fixtures resolved at execution)\n\n\
       Created: 2025-11-24 (improved pre-commit validation)\n\
-      See: scripts/validation/validate_pytest_fixtures.py\n"
+      See: scripts/validators/validate_pytest_fixtures.py\n"
   - id: validate-gke-autopilot-compliance
     name: Validate GKE Autopilot Resource Compliance
-    entry: uv run python scripts/validation/validate_gke_autopilot_compliance.py
+    entry: uv run --frozen python -u scripts/validators/validate_gke_autopilot_compliance.py
     language: system
     files: ^deployments/.*\.ya?ml$
     pass_filenames: false
@@ -701,7 +837,7 @@ repos:
       \ Staging failure\n"
   - id: validate-dependency-injection
     name: Validate Dependency Injection Configuration
-    entry: python3 .githooks/pre-commit-dependency-validation
+    entry: python3 -u .githooks/pre-commit-dependency-validation
     language: system
     pass_filenames: false
     files: ^(src/mcp_server_langgraph/(core/dependencies|core/cache|auth/service_principal)\.py|tests/integration/test_(dependencies_wiring|cache_redis_config)\.py)$
@@ -725,7 +861,7 @@ repos:
       '
   - id: validate-test-fixtures
     name: Validate Test Fixtures for Common Issues
-    entry: uv run python scripts/validation/validate_test_fixtures.py
+    entry: uv run --frozen python -u scripts/validators/validate_test_fixtures.py
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
@@ -763,7 +899,7 @@ repos:
       '
   - id: validate-pytest-markers
     name: Validate Pytest Markers & Placement
-    entry: uv run python scripts/validation/validate_pytest_markers.py
+    entry: uv run --frozen python -u scripts/validators/validate_pytest_markers.py
     language: system
     pass_filenames: false
     files: ^(tests/.*\.py|pyproject\.toml)$
@@ -790,10 +926,12 @@ repos:
       '
   - id: validate-test-collection
     name: Validate Pytest Can Collect All Tests
-    entry: bash -c 'uv run pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
+    entry: bash -c 'uv run --frozen pytest --collect-only tests/ -q --quiet 2>&1 | grep -q "tests collected" || exit 1'
     language: system
     files: ^tests/.*\.py$
     pass_filenames: false
+    stages:
+      - pre-push
     description: 'Validates that pytest can successfully collect all test files.
 
       Prevents test collection failures from:
@@ -820,71 +958,12 @@ repos:
       Regression prevention for commit a57fcc95.
 
       '
-  - id: validate-fixture-organization
-    name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/meta/test_fixture_organization.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^tests/.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Prevents duplicate autouse fixtures across test files.
-
-
-      Issue fixed: 25 duplicate init_test_observability fixtures were found
-
-      across test modules, causing duplicate initialization overhead.
-
-
-      Best practice: Module/session-scoped autouse fixtures should be defined
-
-      in tests/conftest.py to avoid initialization conflicts and improve test
-
-      performance. This hook ensures fixtures remain consolidated.
-
-
-      See: docs-internal/CODEX_FINDINGS_VALIDATION_REPORT.md
-
-      '
-
-
-
-  - id: regression-prevention-tests
-    name: CI/CD Regression Prevention Tests
-    entry: uv run pytest tests/meta/test_regression_prevention.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^(tests/.*\.py|\.github/workflows/.*\.ya?ml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Prevents regression of critical CI/CD and testing infrastructure issues.
-
-
-      Issues prevented:
-
-      1. Missing pytest fixture decorators (Issue #6 - Quality Tests)
-
-      2. Invalid class-scoped fixtures (Issue #6)
-
-      3. Settings singleton not reloaded after monkeypatch (Issue #7 - Smoke Tests)
-
-      4. Use of archived tools like kubeval (Issue #8 - Deployment Workflows)
-
-      5. Outdated GitHub Action versions
-
-      6. Invalid workflow YAML syntax
-
-
-      Following TDD principles, these tests FAIL if regressions are introduced.
-
-      See: docs/CRITICAL_FIXES_SUMMARY.md for full details.
-
-      '
+  # NOTE: validate-fixture-organization, regression-prevention-tests hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_fixture_organization.py and test_regression_prevention.py run automatically
   - id: detect-dead-test-code
     name: Detect Dead Code in Test Fixtures (Codex P0)
-    entry: uv run python scripts/detect_dead_test_code.py tests/
+    entry: uv run --frozen python -u scripts/archive/unused/detect_dead_test_code.py tests/
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: false
@@ -901,7 +980,7 @@ repos:
 
   - id: check-e2e-completion
     name: Check E2E Test Implementation Progress
-    entry: uv run python scripts/validation/check_e2e_completion.py --min-percent 25
+    entry: uv run --frozen python -u scripts/validators/check_e2e_completion.py --min-percent 25
     language: system
     pass_filenames: false
     files: ^tests/e2e/test_full_user_journey\.py$
@@ -914,7 +993,7 @@ repos:
       \ | Target: 80%\n"
   - id: check-test-sleep-budget
     name: Monitor Test Wall-Clock Sleep Time Budget
-    entry: uv run python scripts/validation/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
+    entry: uv run --frozen python -u scripts/validators/check_test_sleep_budget.py --max-seconds 60 --warn-seconds 45
     language: system
     pass_filenames: false
     files: ^tests/.*test_.*\.py$
@@ -935,118 +1014,17 @@ repos:
       Note: Many sleep calls are in skipped tests or testing actual sleep functionality.
 
       '
-  - id: validate-meta-test-quality
-    name: Run Meta-Tests for Test Quality Validation
-    entry: uv run pytest tests/meta/test_property_test_quality.py tests/meta/test_context_manager_quality.py tests/meta/test_kubectl_safety.py
-      -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^tests/.*test_.*\.py$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Runs meta-tests that validate test suite quality (Codex Findings Prevention):
-
-
-      1. Property Test Quality: Ensures @given tests have assertions
-
-      2. Context Manager Quality: Validates __exit__ assertions
-
-      3. Kubectl Safety: Enforces --dry-run or safety guards
-
-
-      Prevents regression of Codex Findings #3, #4, #9
-
-      '
+  # NOTE: validate-meta-test-quality hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_property_test_quality.py, test_context_manager_quality.py,
+  # test_kubectl_safety.py run automatically with other meta tests
   # NOTE: validate-github-action-versions hook REMOVED (2025-11-17)
   # Consolidated into validate-github-workflows-comprehensive (above)
   # See: docs-internal/DUPLICATE_VALIDATOR_ANALYSIS_2025-11-16.md
-  - id: validate-kustomize-builds
-    name: Validate Kustomize Overlays Build Successfully
-    entry: uv run pytest tests/deployment/test_kustomize_builds.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates that all Kustomize overlays build successfully without errors.
-
-
-      Prevents critical deployment blockers identified in Codex audit:
-
-      1. NetworkPolicy port mismatches (3307 vs 5432 for PostgreSQL)
-
-      2. Redis StatefulSet deletion using wrong kind (Deployment vs StatefulSet)
-
-      3. Service Account namespace mismatches
-
-      4. Cloud SQL Proxy missing health check flags
-
-      5. PodDisruptionBudget namespace mismatches
-
-      6. Istio config inline comments in host strings
-
-      7. Orphaned ResourceQuotas for undefined namespaces
-
-
-      TDD-based validation suite ensures these issues never recur.
-
-      See: docs-internal/CLOUD_SQL_CONNECTION_STRATEGY.md
-
-      '
-  - id: validate-network-policies
-    name: Validate NetworkPolicy Port Configurations
-    entry: uv run pytest tests/deployment/test_network_policies.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*network-policy\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates NetworkPolicy configurations use correct database ports.
-
-
-      Critical validations:
-
-      - PostgreSQL uses port 5432 (NOT 3307 for MySQL)
-
-      - Redis uses port 6379
-
-      - Cloud SQL connections properly configured
-
-      - No overly permissive egress rules
-
-
-      Prevents production connectivity failures from port misconfigurations.
-
-      '
-  - id: validate-service-accounts
-    name: Validate Service Account Separation and RBAC
-    entry: uv run pytest tests/deployment/test_service_accounts.py -v --tb=short
-    language: system
-    pass_filenames: false
-    files: ^deployments/.*serviceaccount.*\.(yaml|yml)$
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates Service Account configuration follows least-privilege principles.
-
-
-      Checks:
-
-      - Components use separate ServiceAccounts (postgres, redis, keycloak, etc.)
-
-      - Workload Identity annotations are correctly formatted
-
-      - RoleBindings reference existing ServiceAccounts
-
-      - No overly permissive RBAC rules (wildcards)
-
-
-      Ensures security best practices and prevents privilege escalation.
-
-      '
+  # NOTE: validate-kustomize-builds, validate-network-policies, validate-service-accounts
+  # hooks REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/deployment/*.py run automatically when deployment files change
 
   - id: check-helm-placeholders
     name: Check Helm values for unresolved placeholders
@@ -1093,41 +1071,12 @@ repos:
       Regression prevention for Codex findings: values-staging.yaml:108, values-production.yaml:139
 
       '
-  - id: validate-docker-compose-health-checks
-    name: Validate Docker Compose health check configurations
-    entry: uv run pytest tests/security/test_deployment_security_regression.py::TestQdrantHealthCheckSecurity::test_qdrant_uses_tcp_health_check
-      -v --tb=short
-    language: system
-    files: ^.*docker-compose.*\.(yaml|yml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: 'Validates Docker Compose health check configurations (TDD).
-
-
-      Critical checks:
-
-      - Qdrant services MUST use grpc_health_probe (not wget/curl)
-
-      - Prevents using commands not available in container images
-
-      - Validates health check syntax and structure
-
-
-      Background:
-
-      Qdrant v1.15+ removed wget/curl for security (GitHub issue #3491).
-
-      This hook prevents health checks from failing due to missing commands.
-
-
-      Regression prevention for Codex finding: docker-compose.test.yml:227-232
-
-      '
+  # NOTE: validate-docker-compose-health-checks hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/security/test_deployment_security_regression.py runs automatically
   - id: validate-keycloak-config
     name: Validate Keycloak service configuration in docker-compose.test.yml
-    entry: uv run python scripts/validation/validate_keycloak_config.py docker/docker-compose.test.yml
+    entry: uv run --frozen python -u scripts/validators/validate_keycloak_config.py docker/docker-compose.test.yml
     language: system
     files: ^docker/docker-compose\.test\.yml$
     pass_filenames: false
@@ -1159,7 +1108,7 @@ repos:
       '
   - id: validate-docker-image-contents
     name: Validate Docker image contents in Dockerfile (final-test stage)
-    entry: uv run python scripts/validation/validate_docker_image_contents.py docker/Dockerfile
+    entry: uv run --frozen python -u scripts/validators/validate_docker_image_contents.py docker/Dockerfile
     language: system
     files: ^docker/Dockerfile$
     pass_filenames: false
@@ -1204,10 +1153,12 @@ repos:
   - id: helm-lint
     name: Helm Lint Validation
     entry: >
-      bash -c 'if command -v helm >/dev/null 2>&1; then
-      helm lint deployments/helm/mcp-server-langgraph;
-      else echo "Skipping: helm not installed (install from https://helm.sh/docs/intro/install/)";
-      exit 0; fi'
+      bash -c 'if ! command -v helm >/dev/null 2>&1; then
+      echo "ERROR: helm required for Helm chart validation.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or: https://helm.sh/docs/intro/install/";
+      exit 1; fi;
+      helm lint deployments/helm/mcp-server-langgraph'
     language: system
     files: ^deployments/helm/.*\.(yaml|yml)$
     pass_filenames: false
@@ -1239,12 +1190,14 @@ repos:
   - id: validate-cloud-overlays
     name: Validate Cloud Overlays Build Successfully
     entry: >
-      bash -c 'if command -v kubectl >/dev/null 2>&1; then
+      bash -c 'if ! command -v kubectl >/dev/null 2>&1; then
+      echo "ERROR: kubectl required for Kustomize validation.";
+      echo "Install via mise: curl https://mise.run | sh && mise install";
+      echo "Or: https://kubernetes.io/docs/tasks/tools/";
+      exit 1; fi;
       kubectl kustomize deployments/kubernetes/overlays/aws &&
       kubectl kustomize deployments/kubernetes/overlays/gcp &&
-      kubectl kustomize deployments/kubernetes/overlays/azure;
-      else echo "Skipping: kubectl not installed (install from https://kubernetes.io/docs/tasks/tools/)";
-      exit 0; fi'
+      kubectl kustomize deployments/kubernetes/overlays/azure'
     language: system
     files: ^deployments/kubernetes/overlays/(aws|gcp|azure)/.*\.(yaml|yml)$
     pass_filenames: false
@@ -1302,7 +1255,7 @@ repos:
 
   - id: check-async-mock-configuration
     name: Check AsyncMock Configuration (prevent authorization bypass)
-    entry: uv run python scripts/validation/check_async_mock_configuration.py
+    entry: uv run --frozen python -u scripts/validators/check_async_mock_configuration.py
     language: system
     files: ^tests/.*test_.*\.py$
     pass_filenames: true
@@ -1351,7 +1304,7 @@ repos:
       '
   - id: check-asyncmock-instantiation
     name: Check AsyncMock Instantiation (prevent class assignment)
-    entry: uv run python scripts/validation/check_asyncmock_usage.py
+    entry: uv run --frozen python -u scripts/validators/check_asyncmock_usage.py
     language: system
     files: ^tests/.*test_.*\.py$
     exclude: ^tests/meta/test_asyncmock_validation\.py$
@@ -1389,9 +1342,10 @@ repos:
       '
   - id: validate-test-isolation
     name: Validate Test Isolation for Pytest-xdist
-    entry: python scripts/validation/validate_test_isolation.py tests/
+    entry: uv run --frozen python -u scripts/validators/validate_test_isolation.py tests/
     language: system
-    files: ^tests/.*test_.*\.py$
+    # Pattern expanded (P1-2 - 2025-11-27): Now includes conftest.py (fixture definitions affect isolation)
+    files: ^tests/(.*test_.*\.py|.*conftest\.py)$
     pass_filenames: false
     always_run: false
     stages:
@@ -1429,27 +1383,12 @@ repos:
       Regression tests: tests/regression/test_pytest_xdist_isolation.py
 
       '
-  - id: validate-test-dependencies
-    name: Validate Test Import Dependencies
-    entry: uv run pytest tests/regression/test_dev_dependencies.py::test_test_imports_have_dev_dependencies -v --tb=short
-    language: system
-    files: ^(tests/.*\.py|pyproject\.toml)$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Prevents CI failures from missing test dependencies by validating that\nevery package imported in tests/\
-      \ is available in project dependencies.\n\nThis hook catches the issue that caused 10 CI job failures on 2025-11-12:\n\
-      - ModuleNotFoundError: docker.errors in 7 quality test jobs\n- Same error in E2E tests\n- Root cause: docker/kubernetes\
-      \ in code-execution extras, not dev extras\n\nValidations:\n- All test imports have corresponding dependencies (main\
-      \ or optional)\n- Package vs import name mismatches (PyJWT\u2192jwt, pyyaml\u2192yaml)\n- Stdlib backports handled (tomli\u2192\
-      tomllib)\n- Third-party helpers excluded (bats-core)\n\nQuick fix: Add missing package to appropriate extras in pyproject.toml\n\
-      - Test dependencies \u2192 [project.optional-dependencies.dev]\n- Code execution \u2192 [project.optional-dependencies.code-execution]\n\
-      - CLI tools \u2192 [project.optional-dependencies.cli]\n\nRegression prevention for commit 7b51437 (2025-11-12)\nSee:\
-      \ tests/regression/test_dev_dependencies.py for implementation\n"
+  # NOTE: validate-test-dependencies hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via unit marker
+  # tests/regression/test_dev_dependencies.py runs automatically
   - id: validate-workflow-test-deps
     name: Validate Workflow Test Dependencies
-    entry: uv run python scripts/validation/validate_workflow_test_deps.py
+    entry: uv run --frozen python -u scripts/validators/validate_workflow_test_deps.py
     language: system
     files: ^\.github/workflows/.*\.ya?ml$
     pass_filenames: false
@@ -1462,32 +1401,14 @@ repos:
       \ 'dev' in extras parameter\n\nChecks:\n- Workflows using setup-python-deps + pytest must install 'dev' extras\n- Skips\
       \ workflows using uv run (auto-installs) or other methods\n- Only validates workflows that explicitly use setup-python-deps\
       \ action\n\nQuick fix: Add or update 'extras' parameter in setup-python-deps step:\n  - uses: ./.github/actions/setup-python-deps\n\
-      \    with:\n      extras: 'dev'  # or 'dev builder' for multiple\n\nRegression prevention for commit 7b51437 (2025-11-12)\n\
-      See: scripts/validation/validate_workflow_test_deps.py for implementation\n"
-  - id: validate-fixture-scopes
-    name: Validate Pytest Fixture Scopes
-    entry: uv run pytest tests/meta/test_fixture_validation.py::TestFixtureDecorators::test_fixture_scope_dependencies_are_compatible -v --tb=short
-    language: system
-    files: ^tests/conftest\.py$
-    pass_filenames: false
-    always_run: false
-    stages:
-    - pre-push
-    description: "Prevents pytest ScopeMismatch errors by validating fixture scope compatibility.\n\nValidates that fixtures\
-      \ with wider scopes don't depend on fixtures with narrower scopes.\n\nScope hierarchy (widest to narrowest):\n- session:\
-      \ Fixture runs once per test session\n- module: Fixture runs once per module\n- class: Fixture runs once per class\n\
-      - function: Fixture runs once per test function (default)\n\nRULE: A fixture can only depend on fixtures with equal\
-      \ or wider scope.\n\nCommon violations:\n- session-scoped fixture depending on function-scoped fixture \u274C\n- module-scoped\
-      \ fixture depending on function-scoped fixture \u274C\n- function-scoped fixture depending on session-scoped fixture\
-      \ \u2705 (OK)\n\nThis hook catches the issue that caused integration test failures with pytest-xdist:\n- ScopeMismatch:\
-      \ session-scoped fixtures (postgres_connection_real, redis_client_real,\n  openfga_client_real) depended on function-scoped\
-      \ fixture (integration_test_env)\n- Tests passed individually but failed in parallel execution\n- Root cause: integration_test_env\
-      \ missing scope=\"session\" parameter\n\nQuick fix: Add or update scope parameter in fixture decorator:\n  @pytest.fixture(scope=\"\
-      session\")\n  def my_fixture(dependency_fixture):\n      ...\n\nPrevention: This hook runs automatically on conftest.py\
-      \ changes\nSee: tests/meta/test_fixture_validation.py for implementation\nRegression test added: 2025-11-13\n"
+      \    with:\n      extras: 'dev'\n\nRegression prevention for commit 7b51437 (2025-11-12)\n\
+      See: scripts/validators/validate_workflow_test_deps.py for implementation\n"
+  # NOTE: validate-fixture-scopes hook REMOVED (2025-11-25)
+  # Reason: Consolidated into run-pre-push-tests hook via meta marker
+  # tests/meta/test_fixture_validation.py runs automatically with other meta tests
   - id: validate-minimum-coverage
     name: "Validate Minimum Test Coverage Threshold (\u2265 64%)"
-    entry: uv run pytest tests/meta/test_coverage_enforcement.py -v --tb=short
+    entry: uv run --frozen pytest tests/meta/test_coverage_enforcement.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^(src/.*\.py|tests/.*\.py|pyproject\.toml)$
@@ -1504,7 +1425,7 @@ repos:
       \ for implementation\n"
   - id: validate-test-suite-performance
     name: Validate Test Suite Performance (< 120s)
-    entry: uv run pytest tests/meta/test_performance_regression_suite.py -v --tb=short
+    entry: uv run --frozen pytest tests/meta/test_performance_regression_suite.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^tests/.*\.py$
@@ -1559,7 +1480,7 @@ repos:
       '
   - id: detect-slow-unit-tests
     name: Detect Individual Slow Tests (> 10s)
-    entry: uv run pytest tests/meta/test_slow_test_detection.py -v --tb=short
+    entry: uv run --frozen pytest tests/meta/test_slow_test_detection.py -v --tb=short
     language: system
     pass_filenames: false
     files: ^tests/.*\.py$
@@ -1614,7 +1535,7 @@ repos:
       '
   - id: validate-pytest-config
     name: Validate Pytest Configuration
-    entry: uv run python scripts/validation/validate_pytest_config.py
+    entry: uv run --frozen python -u scripts/validators/validate_pytest_config.py
     language: system
     files: ^pyproject\.toml$
     pass_filenames: false
@@ -1625,7 +1546,7 @@ repos:
 
   - id: check-test-memory-safety
     name: Check Test Memory Safety
-    entry: uv run python scripts/validation/check_test_memory_safety.py
+    entry: uv run --frozen python -u scripts/validators/check_test_memory_safety.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true
@@ -1634,20 +1555,9 @@ repos:
     - pre-push
     description: "Validates memory safety in tests (gc.collect in teardown)."
 
-  - id: check-async-mock-usage
-    name: Check Async Mock Usage
-    entry: uv run python scripts/validation/check_async_mock_usage.py
-    language: system
-    files: ^tests/.*\.py$
-    pass_filenames: true
-    always_run: false
-    stages:
-    - pre-push
-    description: "Validates that AsyncMock is used correctly."
-
   - id: check-test-naming
     name: Check Test Naming Conventions
-    entry: uv run python scripts/validation/check_test_naming.py
+    entry: uv run --frozen python -u scripts/validators/check_test_naming.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true
@@ -1668,7 +1578,7 @@ repos:
 
   - id: validate-test-ids
     name: Validate Test IDs (xdist isolation)
-    entry: uv run python scripts/validation/validate_test_ids.py
+    entry: uv run --frozen python -u scripts/validators/validate_test_ids.py
     language: system
     files: ^tests/.*\.py$
     pass_filenames: true

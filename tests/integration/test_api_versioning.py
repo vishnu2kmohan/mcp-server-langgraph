@@ -90,7 +90,7 @@ class TestAPIVersionMetadata:
 
         # Should return 200 (authentication properly overridden in fixture)
         assert response.status_code == 200, (
-            f"Version endpoint should return 200, got {response.status_code}. " f"Response: {response.text}"
+            f"Version endpoint should return 200, got {response.status_code}. Response: {response.text}"
         )
 
     def test_version_metadata_structure(self, test_client):

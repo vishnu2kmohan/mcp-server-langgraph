@@ -35,6 +35,7 @@ Related:
 
 import gc
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -61,13 +62,13 @@ class TestIDPollutionPreventionHook:
     @pytest.fixture
     def validation_script(self, project_root: Path) -> Path:
         """Path to ID validation script."""
-        return project_root / "scripts" / "validation" / "validate_test_ids.py"
+        return project_root / "scripts" / "validators" / "validate_test_ids.py"
 
     def test_validation_script_exists(self, validation_script: Path) -> None:
         """Test that validation script exists."""
         assert validation_script.exists(), (
             f"Validation script not found: {validation_script}\n"
-            f"Create scripts/validation/validate_test_ids.py to enforce ID pollution prevention"
+            f"Create scripts/validators/validate_test_ids.py to enforce ID pollution prevention"
         )
 
     def test_validation_script_is_executable(self, validation_script: Path) -> None:
@@ -80,7 +81,7 @@ class TestIDPollutionPreventionHook:
         st = os.stat(validation_script)
         is_executable = bool(st.st_mode & stat.S_IXUSR)
         assert is_executable or validation_script.suffix == ".py", (
-            f"Validation script should be executable: {validation_script}\n" f"Run: chmod +x {validation_script}"
+            f"Validation script should be executable: {validation_script}\nRun: chmod +x {validation_script}"
         )
 
     def test_validation_script_detects_hardcoded_user_ids(self, validation_script: Path, tmp_path: Path) -> None:
@@ -95,8 +96,10 @@ def test_something():
 """
         )
 
-        # Run validation script
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        # Run validation script using current interpreter (venv-aware)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should fail (exit code 1) and report the violation
         assert result.returncode == 1, f"Expected validation to fail, but got exit code {result.returncode}"
@@ -113,7 +116,9 @@ def test_api_key():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         assert result.returncode == 1
         assert "apikey_" in result.stdout or "apikey_" in result.stderr
@@ -132,7 +137,9 @@ def test_something():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0)
         assert result.returncode == 0, f"Expected validation to pass, but got: {result.stdout}\n{result.stderr}"
@@ -149,12 +156,14 @@ def test_openfga_format():
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - assertion validations are allowed
-        assert (
-            result.returncode == 0
-        ), f"Expected validation to pass for assertion validation, but got: {result.stdout}\n{result.stderr}"
+        assert result.returncode == 0, (
+            f"Expected validation to pass for assertion validation, but got: {result.stdout}\n{result.stderr}"
+        )
 
     def test_validation_script_allows_unit_tests_with_inmemory(self, validation_script: Path, tmp_path: Path) -> None:
         """Test script allows unit tests with InMemory backends (no pollution risk)."""
@@ -179,13 +188,15 @@ class TestUserProfile:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - unit tests with InMemory can't pollute
         # IDs with safety comments (# ✅ Safe:) are allowed by legitimate pattern matching
-        assert (
-            result.returncode == 0
-        ), f"Expected validation to pass for InMemory unit test, but got: {result.stdout}\n{result.stderr}"
+        assert result.returncode == 0, (
+            f"Expected validation to pass for InMemory unit test, but got: {result.stdout}\n{result.stderr}"
+        )
         # File passes validation due to safety comment pattern, reported as "No hardcoded IDs found"
         assert "No hardcoded IDs found" in result.stdout or "InMemory" in result.stdout or "Unit test" in result.stdout
 
@@ -217,12 +228,14 @@ class TestWithMocks:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should succeed (exit code 0) - mock configurations are allowed
-        assert (
-            result.returncode == 0
-        ), f"Expected validation to pass for mock configurations, but got: {result.stdout}\n{result.stderr}"
+        assert result.returncode == 0, (
+            f"Expected validation to pass for mock configurations, but got: {result.stdout}\n{result.stderr}"
+        )
 
     def test_validation_script_still_detects_integration_test_violations(
         self, validation_script: Path, tmp_path: Path
@@ -247,10 +260,12 @@ class TestUserAPI:
 """
         )
 
-        result = subprocess.run(["python", str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [sys.executable, str(validation_script), str(test_file)], capture_output=True, text=True, timeout=30
+        )
 
         # Should fail (exit code 1) - integration tests with hardcoded IDs are violations
-        assert (
-            result.returncode == 1
-        ), f"Expected validation to fail for integration test with hardcoded ID, but got exit code {result.returncode}"
+        assert result.returncode == 1, (
+            f"Expected validation to fail for integration test with hardcoded ID, but got exit code {result.returncode}"
+        )
         assert "user:alice" in result.stdout or "user:alice" in result.stderr

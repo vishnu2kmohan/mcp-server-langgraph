@@ -97,7 +97,7 @@ def shared_pre_push_hook_path(shared_repo_root: Path) -> Path:
             "  pre-commit install --hook-type pre-commit --hook-type pre-push\n"
             "\n"
             "📖 Documentation: CONTRIBUTING.md (line 30-32)\n"
-            "🔍 Validation: scripts/validate_pre_push_hook.py\n"
+            "🔍 Validation: scripts/validators/validate_pre_push_hook.py\n"
             "\n"
             "After installation, re-run tests to validate hook configuration.\n"
         )
@@ -157,8 +157,7 @@ def shared_run_pre_push_tests_script(shared_repo_root: Path) -> Path:
     script_path = shared_repo_root / "scripts" / "run_pre_push_tests.py"
     if not script_path.exists():
         pytest.skip(
-            f"run_pre_push_tests.py script not found at {script_path}\n"
-            "This script is required for pre-push test validation."
+            f"run_pre_push_tests.py script not found at {script_path}\nThis script is required for pre-push test validation."
         )
     return script_path
 
@@ -191,8 +190,9 @@ def shared_validate_pre_push_sub_targets_content(shared_makefile_content: str) -
     The validate-pre-push target is a router that calls:
     - validate-pre-push-full (with integration tests)
     - validate-pre-push-quick (without integration tests)
+    - _validate-pre-push-phases-1-2 (shared phases called by both full and quick)
 
-    This fixture returns the combined content of both sub-targets.
+    This fixture returns the combined content of all sub-targets.
     """
     # Extract validate-pre-push-full target
     full_match = re.search(
@@ -208,11 +208,20 @@ def shared_validate_pre_push_sub_targets_content(shared_makefile_content: str) -
         re.MULTILINE | re.DOTALL,
     )
 
+    # Extract _validate-pre-push-phases-1-2 target (contains actual lockfile validation)
+    phases_match = re.search(
+        r"^_validate-pre-push-phases-1-2:.*?(?=^[a-zA-Z]|\Z)",
+        shared_makefile_content,
+        re.MULTILINE | re.DOTALL,
+    )
+
     combined = ""
     if full_match:
         combined += full_match.group(0) + "\n"
     if quick_match:
         combined += quick_match.group(0) + "\n"
+    if phases_match:
+        combined += phases_match.group(0) + "\n"
 
     return combined
 
@@ -283,7 +292,7 @@ class TestPrePushHookConfiguration:
     def test_pre_push_hook_is_executable(self, pre_push_hook_path: Path):
         """Test that pre-push hook has execute permissions."""
         assert os.access(pre_push_hook_path, os.X_OK), (
-            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\n" f"Fix: chmod +x {pre_push_hook_path}"
+            f"Pre-push hook exists but is not executable: {pre_push_hook_path}\nFix: chmod +x {pre_push_hook_path}"
         )
 
     def test_pre_push_hook_is_bash_script(self, pre_push_hook_path: Path):
@@ -396,7 +405,7 @@ class TestPrePushHookConfiguration:
             # Legacy bash script: must explicitly call pre-commit run --all-files
             content = hook_content
             assert "pre-commit run --all-files" in content, (
-                "Pre-push hook must run 'pre-commit run --all-files'\n" "Running on changed files only causes CI surprises"
+                "Pre-push hook must run 'pre-commit run --all-files'\nRunning on changed files only causes CI surprises"
             )
 
     def test_pre_push_hook_runs_property_tests_with_ci_profile(self, repo_root: Path, pre_push_hook_path: Path):
@@ -414,7 +423,7 @@ class TestPrePushHookConfiguration:
             # Note: Default dev profile (25 examples), CI_PARITY=1 enables CI profile (100 examples)
             # Updated 2025-11-18: Consolidated test hook approach
             assert "run-pre-push-tests" in config_content or "property" in config_content, (
-                "Pre-push hook must run property tests\n" "Expected: run-pre-push-tests hook or explicit property test marker"
+                "Pre-push hook must run property tests\nExpected: run-pre-push-tests hook or explicit property test marker"
             )
         else:
             # Legacy bash script: check for explicit CI profile
@@ -433,8 +442,7 @@ class TestPrePushHookConfiguration:
         # Pre-commit framework: phases are organized via .pre-commit-config.yaml structure
         if is_pre_commit_wrapper(hook_content):
             pytest.skip(
-                "Pre-commit framework hook - phases organized via .pre-commit-config.yaml structure, "
-                "not inline PHASE markers"
+                "Pre-commit framework hook - phases organized via .pre-commit-config.yaml structure, not inline PHASE markers"
             )
 
         # Legacy bash script: check for phase markers
@@ -489,7 +497,7 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_target_exists(self, makefile_content: str):
         """Test that validate-pre-push target exists in Makefile."""
         assert re.search(r"^validate-pre-push:", makefile_content, re.MULTILINE), (
-            "Makefile must have 'validate-pre-push' target\n" "This provides manual validation matching pre-push hook"
+            "Makefile must have 'validate-pre-push' target\nThis provides manual validation matching pre-push hook"
         )
 
     def test_validate_pre_push_in_phony_targets(self, makefile_content: str):
@@ -504,9 +512,9 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_runs_lockfile_check(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets validate lockfile."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "uv lock --check" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push must run 'uv lock --check' in one of its sub-targets"
+        assert "uv lock --check" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push must run 'uv lock --check' in one of its sub-targets"
+        )
 
     def test_validate_pre_push_runs_workflow_tests(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run workflow validation tests."""
@@ -525,16 +533,16 @@ class TestMakefileValidationTarget:
     def test_validate_pre_push_runs_mypy(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run MyPy."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "mypy src/mcp_server_langgraph" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push sub-targets must run MyPy type checking"
+        assert "mypy src/mcp_server_langgraph" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push sub-targets must run MyPy type checking"
+        )
 
     def test_validate_pre_push_runs_precommit_all_files(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run pre-commit on all files."""
         assert validate_pre_push_sub_targets_content, "Could not find validate-pre-push sub-targets"
-        assert (
-            "pre-commit run --all-files" in validate_pre_push_sub_targets_content
-        ), "validate-pre-push sub-targets must run 'pre-commit run --all-files'"
+        assert "pre-commit run --all-files" in validate_pre_push_sub_targets_content, (
+            "validate-pre-push sub-targets must run 'pre-commit run --all-files'"
+        )
 
     def test_validate_pre_push_runs_property_tests_with_ci_profile(self, validate_pre_push_sub_targets_content: str):
         """Test that validate-pre-push sub-targets run property tests with CI profile."""
@@ -546,9 +554,9 @@ class TestMakefileValidationTarget:
         has_ci_profile = "HYPOTHESIS_PROFILE=ci" in target_content
         uses_consolidated_script = "scripts/run_pre_push_tests.py" in target_content
 
-        assert (
-            has_ci_profile or uses_consolidated_script
-        ), "validate-pre-push must set HYPOTHESIS_PROFILE=ci (or use run_pre_push_tests.py)"
+        assert has_ci_profile or uses_consolidated_script, (
+            "validate-pre-push must set HYPOTHESIS_PROFILE=ci (or use run_pre_push_tests.py)"
+        )
 
         # Same for property tests check
         has_property = "property" in target_content
@@ -598,31 +606,9 @@ class TestLocalCIParity:
             return yaml.safe_load(f)
 
     @pytest.fixture
-    def pre_push_hook_path(self) -> Path:
-        """Get path to pre-push hook (handles git worktrees)."""
-        # Get repository root
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-        )
-        repo_root = Path(result.stdout.strip())
-        # Use git rev-parse to get common git directory (handles worktrees)
-        result = subprocess.run(
-            ["git", "rev-parse", "--git-common-dir"],
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=60,
-            cwd=repo_root,
-        )
-        git_common_dir = Path(result.stdout.strip())
-        # If path is relative, make it relative to repo_root
-        if not git_common_dir.is_absolute():
-            git_common_dir = repo_root / git_common_dir
-        return git_common_dir / "hooks" / "pre-push"
+    def pre_push_hook_path(self, shared_pre_push_hook_path: Path) -> Path:
+        """Get path to pre-push hook (delegates to shared fixture with skip logic)."""
+        return shared_pre_push_hook_path
 
     @pytest.fixture
     def pre_push_content(self, pre_push_hook_path: Path) -> str:
@@ -905,7 +891,7 @@ class TestPytestXdistParity:
         """Verify that CI uses -n auto (this is the baseline we're matching)."""
         # CI should use -n auto for unit tests
         assert "pytest -n auto" in ci_workflow_content, (
-            "CI workflow must use 'pytest -n auto' for parallel execution\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must use 'pytest -n auto' for parallel execution\nIf CI doesn't use it, this test needs updating"
         )
 
 
@@ -1009,7 +995,7 @@ class TestOtelSdkDisabledParity:
     def test_ci_sets_otel_sdk_disabled(self, ci_workflow_content: str):
         """Verify that CI sets OTEL_SDK_DISABLED=true (this is the baseline)."""
         assert "OTEL_SDK_DISABLED=true" in ci_workflow_content, (
-            "CI workflow must set OTEL_SDK_DISABLED=true for tests\n" "If CI doesn't use it, this test needs updating"
+            "CI workflow must set OTEL_SDK_DISABLED=true for tests\nIf CI doesn't use it, this test needs updating"
         )
 
 
@@ -1304,9 +1290,10 @@ class TestActionlintHookStrictness:
         CRITICAL: Without this test, developers can push invalid workflows that
         only fail in CI, wasting time and breaking builds.
         """
-        # Find the actionlint hook entry
+        # Find the actionlint hook entry - it's under local repo hooks
+        # Look for the specific hook id or name containing actionlint
         actionlint_section_match = re.search(
-            r"- repo:.*actionlint.*?(?=- repo:|\Z)",
+            r"- id: actionlint.*?(?=\n  - id:|\n- repo:|\Z)",
             pre_commit_config_content,
             re.DOTALL,
         )
@@ -1350,9 +1337,9 @@ class TestActionlintHookStrictness:
         actionlint_section = actionlint_section_match.group(0)
 
         # Should be configured for pre-push stage
-        assert (
-            "stages:" in actionlint_section and "push" in actionlint_section
-        ), "Actionlint hook should be configured to run during pre-push stage"
+        assert "stages:" in actionlint_section and "push" in actionlint_section, (
+            "Actionlint hook should be configured to run during pre-push stage"
+        )
 
 
 @pytest.mark.xdist_group(name="testmypyblockingparity")
@@ -1463,14 +1450,15 @@ class TestMyPyBlockingParity:
 
     def test_ci_mypy_is_blocking(self, ci_workflow_content: str):
         """Test that CI MyPy step is blocking (no continue-on-error)."""
-        # Find the mypy step - match only until the next step starts
+        # Find the dedicated mypy step - look for "Run mypy" in the step name
+        # to avoid matching meta test step that just mentions "mypy" in output
         mypy_step_match = re.search(
-            r"(- name:.*mypy.*?\n\s+run:.*?)(?=\n\s+- name:|\Z)",
+            r"(- name:\s*Run mypy.*?\n.*?)(?=\n\s+- name:|\n\s+[a-z-]+:|\Z)",
             ci_workflow_content,
             re.DOTALL | re.IGNORECASE,
         )
 
-        assert mypy_step_match, "Could not find mypy step in CI workflow"
+        assert mypy_step_match, "Could not find dedicated 'Run mypy' step in CI workflow"
 
         mypy_step = mypy_step_match.group(1)
 
@@ -1510,7 +1498,7 @@ class TestIsolationValidationStrictness:
     @pytest.fixture
     def validation_script_path(self, repo_root: Path) -> Path:
         """Get path to validation script."""
-        return repo_root / "scripts" / "validation" / "validate_test_isolation.py"
+        return repo_root / "scripts" / "validators" / "validate_test_isolation.py"
 
     @pytest.fixture
     def validation_script_content(self, validation_script_path: Path) -> str:
@@ -1588,8 +1576,10 @@ class TestMakefileDependencyExtras:
     """Validate that Makefile install-dev includes all required dependency extras.
 
     CRITICAL: Codex finding #4 - install-dev runs 'uv sync' without --extra flags,
-    while CI uses --extra dev --extra builder. This causes missing import errors
+    while CI uses --extra dev. This causes missing import errors
     when running pre-push validation locally.
+
+    Note: builder extra was removed 2025-11-28 (dependencies merged into dev).
     """
 
     def teardown_method(self) -> None:
@@ -1633,8 +1623,8 @@ class TestMakefileDependencyExtras:
     def test_install_dev_includes_dev_extra(self, makefile_content: str):
         """Test that install-dev target includes --extra dev.
 
-        CRITICAL: User chose "Add --extra dev --extra builder to install-dev".
-        Without dev extra, pytest and testing tools are missing.
+        CRITICAL: Without dev extra, pytest and testing tools are missing.
+        Updated 2025-11-28: builder extra was removed (redundant dependencies).
         """
         # Find install-dev target
         install_dev_match = re.search(
@@ -1651,63 +1641,36 @@ class TestMakefileDependencyExtras:
         assert "--extra dev" in install_dev_content, (
             "Makefile install-dev MUST include '--extra dev' to match CI\n"
             "\n"
-            "Current issue (Codex finding #4):\n"
-            "  - Makefile:182 runs: uv sync\n"
-            "  - CI runs: uv sync --extra dev --extra builder\n"
-            "  - Missing dev extra means no pytest, mypy, black, etc.\n"
-            "\n"
-            "Impact:\n"
+            "Without dev extra:\n"
+            "  - Missing pytest, mypy, black, etc.\n"
             "  - Developers hit ImportError when running pre-push validation\n"
             "  - 'make validate-pre-push' fails with missing packages\n"
-            "  - Documentation says to use install-dev, but it's incomplete\n"
             "\n"
-            "CI behavior (ci.yaml:200-214):\n"
-            "  uv sync --python $VERSION --frozen --extra dev --extra builder\n"
+            "CI behavior (ci.yaml):\n"
+            "  uv sync --python $VERSION --frozen --extra dev\n"
             "  ^ Includes dev extras ✅\n"
             "\n"
-            "Fix: Update Makefile:182\n"
-            "  From: uv sync\n"
-            "  To:   uv sync --extra dev --extra builder\n"
+            "Fix: Update Makefile install-dev target to include --extra dev\n"
         )
 
-    def test_install_dev_includes_builder_extra(self, makefile_content: str):
-        """Test that install-dev target includes --extra builder.
+    def test_ci_uses_dev_extra(self, ci_workflow_content: str):
+        """Verify that CI uses dev extra (baseline check).
 
-        Required because unit tests import builder modules (per CI comments).
+        Updated 2025-11-28: CI workflow now only uses 'dev' extra.
+        The 'builder' extra was removed as builder dependencies are included in dev.
         """
-        install_dev_match = re.search(
-            r"^install-dev:.*?(?=^[a-zA-Z]|\Z)",
-            makefile_content,
-            re.MULTILINE | re.DOTALL,
-        )
-
-        assert install_dev_match, "Could not find install-dev target in Makefile"
-
-        install_dev_content = install_dev_match.group(0)
-
-        # Should have uv sync with --extra builder
-        assert "--extra builder" in install_dev_content, (
-            "Makefile install-dev MUST include '--extra builder' to match CI\n"
-            "\n"
-            "Why builder extra is required (from ci.yaml:210-213):\n"
-            "  'dev: Testing framework (pytest, pytest-cov, black, mypy, etc.)'\n"
-            "  'builder: Visual workflow builder (black, jinja2, ast-comments)'\n"
-            "  'Both required because unit tests import builder modules'\n"
-            "\n"
-            "Without builder extra:\n"
-            "  - Unit tests fail with ImportError\n"
-            "  - Builder tool development impossible locally\n"
-            "\n"
-            "Fix: Update Makefile:182 to include both extras"
-        )
-
-    def test_ci_uses_dev_and_builder_extras(self, ci_workflow_content: str):
-        """Verify that CI uses both dev and builder extras (baseline check)."""
-        # CI should have both extras
-        assert "--extra dev" in ci_workflow_content and "--extra builder" in ci_workflow_content, (
-            "CI workflow must use both --extra dev and --extra builder\n"
+        # CI should have dev extra - check both formats:
+        # 1. Command-line format: --extra dev
+        # 2. Action input format: extras: 'dev'
+        has_cli_format = "--extra dev" in ci_workflow_content
+        has_action_format = "extras:" in ci_workflow_content and "dev" in ci_workflow_content
+        assert has_cli_format or has_action_format, (
+            "CI workflow must use dev extra\n"
+            "Accepted formats:\n"
+            "  - Command-line: --extra dev\n"
+            "  - Action input: extras: 'dev'\n"
             "This is the baseline that local install-dev should match\n"
-            "If CI doesn't use these extras, update this test"
+            "If CI doesn't use this extra, update this test"
         )
 
 
@@ -2279,10 +2242,16 @@ class TestCIPushStageValidatorsJob:
         jobs = ci_workflow.get("jobs", {})
 
         # Look for a job that runs push-stage validators
+        # Accept both '--hook-stage push' and '--hook-stage pre-push' (pre-push is canonical)
         push_stage_jobs = []
         for job_name, job_config in jobs.items():
             job_str = str(job_config).lower()
-            if "--hook-stage push" in job_str or "push-stage" in job_name.lower() or "push stage" in job_str:
+            if (
+                "--hook-stage push" in job_str
+                or "--hook-stage pre-push" in job_str
+                or "push-stage" in job_name.lower()
+                or "push stage" in job_str
+            ):
                 push_stage_jobs.append(job_name)
 
         assert push_stage_jobs, (
@@ -2339,13 +2308,14 @@ class TestCIPushStageValidatorsJob:
         if not push_stage_job:
             pytest.skip("Push-stage validators job not found (will be caught by previous test)")
 
-        # Check that it runs pre-commit with --hook-stage push
+        # Check that it runs pre-commit with --hook-stage push or --hook-stage pre-push
+        # Both 'push' and 'pre-push' are valid stage names (pre-push is the canonical name)
         job_str = str(push_stage_job)
 
-        assert "--hook-stage push" in job_str, (
-            "Push-stage validators job MUST run 'pre-commit run --all-files --hook-stage push'\n"
+        assert "--hook-stage push" in job_str or "--hook-stage pre-push" in job_str, (
+            "Push-stage validators job MUST run 'pre-commit run --all-files --hook-stage pre-push'\n"
             "\n"
-            "Without --hook-stage push, the job won't execute push-stage hooks\n"
+            "Without --hook-stage pre-push, the job won't execute push-stage hooks\n"
         )
 
         assert "--all-files" in job_str, (

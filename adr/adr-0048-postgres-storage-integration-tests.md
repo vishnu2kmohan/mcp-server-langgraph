@@ -1,9 +1,14 @@
-# ADR-0048: PostgreSQL Storage Integration Tests
+# 48. PostgreSQL Storage Integration Tests
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 3 - Comprehensive PostgreSQL storage backend validation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -197,7 +202,7 @@ class TestPostgresAuditLogStore:
 - Comprehensive coverage (23+ tests)
 - Edge cases tested
 - Concurrent access validated
-- Performance validated (<100ms overhead)
+- Performance validated (\<100ms overhead)
 
 ### Negative
 
@@ -361,7 +366,7 @@ psql -h localhost -p 9432 -U postgres -d testdb -c "\di"
 **postgres_connection_clean** (per-test):
 - TRUNCATE operation: ~5-15ms (5 tables)
 - Fallback DROP: ~10-50ms (if schema not created)
-- Impact: Acceptable (<100ms per test)
+- Impact: Acceptable (\<100ms per test)
 
 ### Test Execution
 
@@ -373,8 +378,8 @@ psql -h localhost -p 9432 -U postgres -d testdb -c "\di"
 ## Future Work
 
 ### Phase 4: Infrastructure Optimizations
-- Optimize docker-compose.test.yml startup (<2min target)
-- Optimize CI/CD E2E test execution (<15min target)
+- Optimize docker-compose.test.yml startup (\<2min target)
+- Optimize CI/CD E2E test execution (\<15min target)
 - Update performance baselines with real infrastructure
 
 ### Additional Storage Tests

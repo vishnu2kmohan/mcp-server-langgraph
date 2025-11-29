@@ -111,7 +111,7 @@ class TestFixtureScopeValidation:
         for fixture_name in required_fixtures:
             assert fixture_name in fixture_scopes, f"Required fixture '{fixture_name}' not found in database_fixtures.py"
             assert fixture_scopes[fixture_name] == "session", (
-                f"Fixture '{fixture_name}' must be session-scoped, " f"found scope='{fixture_scopes[fixture_name]}'"
+                f"Fixture '{fixture_name}' must be session-scoped, found scope='{fixture_scopes[fixture_name]}'"
             )
 
     def test_openfga_scim_test_fixtures_compatible_with_session_scope(self):
@@ -172,13 +172,13 @@ class TestFixtureScopeValidation:
         - tests/conftest.py:1483 - openfga_client_real (session-scoped)
         - pytest-asyncio docs: https://pytest-asyncio.readthedocs.io/en/latest/concepts.html#event-loop-scope
         """
-        import tomli
+        import tomllib
 
         pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
         assert pyproject_path.exists(), "pyproject.toml not found"
 
         with open(pyproject_path, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
 
         # Navigate to pytest configuration
         assert "tool" in config, "No [tool] section in pyproject.toml"
@@ -229,7 +229,7 @@ class TestKeycloakServiceConfiguration:
         # Validate Keycloak service exists and is not commented out
         assert "services" in compose_config, "No services defined in docker-compose.test.yml"
         assert "keycloak-test" in compose_config["services"], (
-            "keycloak-test service not found in docker-compose.test.yml. " "Service must be uncommented for E2E auth testing."
+            "keycloak-test service not found in docker-compose.test.yml. Service must be uncommented for E2E auth testing."
         )
 
     def test_keycloak_service_has_health_check(self):
@@ -283,10 +283,10 @@ class TestKeycloakServiceConfiguration:
         has_admin_password = "KEYCLOAK_ADMIN_PASSWORD" in env_keys or "KC_BOOTSTRAP_ADMIN_PASSWORD" in env_keys
 
         assert has_admin_username, (
-            "keycloak-test service missing admin username: " "must have KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME"
+            "keycloak-test service missing admin username: must have KEYCLOAK_ADMIN or KC_BOOTSTRAP_ADMIN_USERNAME"
         )
         assert has_admin_password, (
-            "keycloak-test service missing admin password: " "must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
+            "keycloak-test service missing admin password: must have KEYCLOAK_ADMIN_PASSWORD or KC_BOOTSTRAP_ADMIN_PASSWORD"
         )
 
         # Database and health configuration (required regardless of Keycloak version)
@@ -361,9 +361,9 @@ class TestPlaceholderTestMarkers:
         content = test_file.read_text()
 
         # Find the test method
-        assert (
-            "test_full_service_principal_lifecycle" in content
-        ), "test_full_service_principal_lifecycle not found in test file"
+        assert "test_full_service_principal_lifecycle" in content, (
+            "test_full_service_principal_lifecycle not found in test file"
+        )
 
         # Extract the test method section
         lines = content.split("\n")

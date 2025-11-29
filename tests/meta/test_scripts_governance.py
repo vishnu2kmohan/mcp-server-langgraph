@@ -66,7 +66,7 @@ class TestScriptsGovernance:
         root = Path(__file__).parent.parent.parent
         readme = root / "scripts" / "README.md"
 
-        assert readme.exists(), "scripts/README.md should exist to document scripts.\n" "Create with: touch scripts/README.md"
+        assert readme.exists(), "scripts/README.md should exist to document scripts.\nCreate with: touch scripts/README.md"
 
     def test_validator_scripts_exist(self):
         """
@@ -78,9 +78,9 @@ class TestScriptsGovernance:
 
         # Key validator scripts
         expected_validators = [
-            "scripts/validation/validate_ci_cd.py",
-            "scripts/validation/validate_pre_push_hook.py",
-            "scripts/validation/check_test_memory_safety.py",
+            "scripts/validators/validate_ci_cd.py",
+            "scripts/validators/validate_pre_push_hook.py",
+            "scripts/validators/check_test_memory_safety.py",
         ]
 
         for validator_path in expected_validators:
@@ -129,8 +129,8 @@ class TestScriptsGovernance:
 
         # Key validator scripts that should be executable
         expected_executables = [
-            "scripts/validation/validate_ci_cd.py",
-            "scripts/validation/check_test_memory_safety.py",
+            "scripts/validators/validate_ci_cd.py",
+            "scripts/validators/check_test_memory_safety.py",
         ]
 
         non_executable = []
@@ -170,9 +170,9 @@ class TestScriptsGovernance:
 
         # Key validator scripts
         validator_scripts = [
-            root / "scripts" / "validation" / "validate_ci_cd.py",
-            root / "scripts" / "validation" / "validate_pre_push_hook.py",
-            root / "scripts" / "validation" / "check_test_memory_safety.py",
+            root / "scripts" / "validators" / "validate_ci_cd.py",
+            root / "scripts" / "validators" / "validate_pre_push_hook.py",
+            root / "scripts" / "validators" / "check_test_memory_safety.py",
         ]
 
         missing_docstring = []
@@ -229,7 +229,7 @@ class TestScriptsRegistry:
         registry = root / "scripts" / "REGISTRY.md"
 
         assert registry.exists(), (
-            "scripts/REGISTRY.md should exist to catalog all scripts.\n" "Create in Phase 6 of implementation plan."
+            "scripts/REGISTRY.md should exist to catalog all scripts.\nCreate in Phase 6 of implementation plan."
         )
 
     def test_registry_documents_validators(self):
@@ -247,9 +247,9 @@ class TestScriptsRegistry:
         content = registry.read_text()
 
         # Should have validators section
-        assert (
-            "validator" in content.lower() or "validation" in content.lower()
-        ), "REGISTRY.md should document validator scripts"
+        assert "validator" in content.lower() or "validation" in content.lower(), (
+            "REGISTRY.md should document validator scripts"
+        )
 
     def test_registry_documents_deployment_scripts(self):
         """

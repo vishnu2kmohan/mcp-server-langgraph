@@ -7,7 +7,7 @@ dependencies:
   version: 18.1.11
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 23.2.12
+  version: 24.0.0
 - name: keycloak
   repository: https://charts.bitnami.com/bitnami
   version: 25.2.0
@@ -19,6 +19,6 @@ dependencies:
   version: 3.4.1
 - name: kube-prometheus-stack
   repository: https://prometheus-community.github.io/helm-charts
-  version: 79.6.1
-digest: sha256:d028550e7e71124f15e2517c0aef2b6218efb07ab5e2270e5eb790771665d3f2
-generated: "2025-11-20T19:27:12.658913339-05:00"
+  version: 79.9.0
+digest: sha256:3cedac2bb2972d407e6212f4a2ddddfee0b5ca2a8b47278e7872d44264821728
+generated: "2025-11-29T13:59:16.737911995-05:00"

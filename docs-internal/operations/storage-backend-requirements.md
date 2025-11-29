@@ -622,10 +622,7 @@ async def test_end_to_end_retention():
 
 ## Related Documents
 
-- [TODO Catalog](TODO_CATALOG.md) - Original TODO analysis
-- [Technical Debt Sprint Progress](TECHNICAL_DEBT_SPRINT_PROGRESS.md)
-- [ADR-0012: Compliance Framework](../adr/0012-compliance-framework-integration.md)
-- [Retention Policy Spec](../docs/compliance/retention-policy.md)
+- [ADR-0012: Compliance Framework](../../adr/adr-0012-compliance-framework-integration.md)
 
 ---
 

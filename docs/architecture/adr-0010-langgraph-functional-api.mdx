@@ -1,20 +1,21 @@
 ---
-title: 10. LangGraph Functional API over Object-Oriented Approach
-description: 'Architecture Decision Record: 10. LangGraph Functional API over Object-Oriented Approach'
-icon: 'file-lines'
-seoTitle: "ADR-0010: 10. LangGraph Functional API over Object-Oriented "
-seoDescription: "Architecture Decision Record 0010: Architecture Decision Record: 10. LangGraph Functional API over Object-Oriented Approach"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "10."]
-contentType: "explanation"
+title: "10. LangGraph Functional API over Object-Oriented Approach"
+description: "Architecture Decision Record: 10. LangGraph Functional API over Object-Oriented Approach"
 ---
+
+# 10. LangGraph Functional API over Object-Oriented Approach
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Core Architecture
+
+## Context
 
 LangGraph offers two approaches for defining agent workflows:
 1. **Functional API**: Define nodes as pure functions, compose with StateGraph
@@ -26,11 +27,11 @@ Agent systems require:
 - Graph visualization for debugging
 - Testability (unit test individual nodes)
 
-### Decision
+## Decision
 
 Use **LangGraph's Functional API** with StateGraph for agent implementation.
 
-#### Architecture
+### Architecture
 
 ```python
 class AgentState(TypedDict):
@@ -51,27 +52,27 @@ graph.add_edge(START, "route")
 graph.add_conditional_edges("route", should_use_tools)
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 
 - **Declarative**: Graph structure visible, easy to visualize
 - **Testable**: Pure functions, easy unit tests
 - **Composable**: Nodes reusable across graphs
 - **Debuggable**: Clear state transitions
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Verbose**: More boilerplate than class-based
 - **Learning Curve**: Requires understanding StateGraph concepts
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Class-Based Agents**: Less transparent, harder to visualize
 2. **Direct LangChain**: No graph structure, harder to debug
 3. **Custom State Machine**: Reinventing the wheel
 
-### References
+## References
 
 - Implementation: `src/mcp_server_langgraph/core/agent.py:50-200`
-- Related ADRs: [ADR-0015](/architecture/adr-0015-memory-checkpointing), [ADR-0005](/architecture/adr-0005-pydantic-ai-integration)
+- Related ADRs: [ADR-0015](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0015-memory-checkpointing.md), [ADR-0005](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0005-pydantic-ai-integration.md)

@@ -1,18 +1,19 @@
 ---
-title: 'ADR-0043: Cost Monitoring Dashboard'
-description: 'Architecture for real-time LLM cost tracking and budget monitoring'
-icon: 'dollar-sign'
-seoTitle: "ADR-0043: Cost Monitoring Dashboard"
-seoDescription: "Architecture Decision Record 0043: Architecture for real-time LLM cost tracking and budget monitoring"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0043"]
-contentType: "explanation"
+title: "43. Cost Monitoring Dashboard"
+description: "Architecture Decision Record: 43. Cost Monitoring Dashboard"
 ---
 
-# ADR-0043: Cost Monitoring Dashboard
+# 43. Cost Monitoring Dashboard
+
+Date: 2025-11-02
 
 ## Status
 
-**Accepted** - 2025-11-02
+Proposed
+
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 
@@ -74,7 +75,7 @@ class CostSummary(BaseModel):
 ```
 
 **API Endpoints**:
-```text
+```
 GET  /api/cost/summary?period={period}&group_by={dimension}
 GET  /api/cost/usage?start={start}&end={end}&user_id={user_id}
 GET  /api/cost/budget?budget_id={id}
@@ -82,6 +83,7 @@ POST /api/cost/budget
 GET  /api/cost/trends?metric={metric}&period={period}
 GET  /api/cost/export?format={csv|json}
 ```
+
 ### **Storage: Time-Series Database**
 
 **Options Evaluated**:
@@ -238,6 +240,7 @@ class LLMFactory:
 
         return response
 ```
+
 **2. Prometheus Metrics**
 
 ```python

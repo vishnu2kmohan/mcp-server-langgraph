@@ -26,7 +26,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 BASE_SA_PATH = REPO_ROOT / "deployments" / "base" / "serviceaccounts.yaml"
@@ -162,9 +162,9 @@ class TestOverlayServiceAccountNaming:
                             continue
 
                         # Must match base naming
-                        assert (
-                            clean_name in base_names
-                        ), f"ServiceAccount '{sa_name}' (clean: '{clean_name}') in {sa_file.name} doesn't match base. Available: {base_names}"
+                        assert clean_name in base_names, (
+                            f"ServiceAccount '{sa_name}' (clean: '{clean_name}') in {sa_file.name} doesn't match base. Available: {base_names}"
+                        )
 
 
 @pytest.mark.xdist_group(name="testworkloadidentityannotations")
@@ -217,7 +217,7 @@ class TestValidationScript:
     def test_validation_script_passes_on_correct_naming(self):
         """Validation script should pass when all ServiceAccounts are correctly named."""
         result = subprocess.run(
-            ["python", "scripts/validation/validate_serviceaccount_names.py"],
+            ["python", "scripts/validators/validate_serviceaccount_names.py"],
             capture_output=True,
             text=True,
             cwd=REPO_ROOT,
@@ -229,7 +229,7 @@ class TestValidationScript:
 
     def test_validation_script_is_executable(self):
         """Validation script should be executable."""
-        script_path = REPO_ROOT / "scripts" / "validation" / "validate_serviceaccount_names.py"
+        script_path = REPO_ROOT / "scripts" / "validators" / "validate_serviceaccount_names.py"
         assert script_path.exists(), "Validation script not found"
 
         # Check if file is executable (Unix permissions)

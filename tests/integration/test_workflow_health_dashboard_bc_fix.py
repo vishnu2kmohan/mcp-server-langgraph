@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 # Mark as integration test with xdist_group for worker isolation
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.xdist_group(name="workflow_health_dashboard_bc")]
 
 
 def teardown_module():
@@ -54,7 +54,7 @@ def test_awk_percentage_calculation():
         success_rate = result.stdout.strip()
 
         assert success_rate == expected, (
-            f"Expected {expected}%, got {success_rate}% " f"for {successful_runs}/{total_runs} using awk"
+            f"Expected {expected}%, got {success_rate}% for {successful_runs}/{total_runs} using awk"
         )
 
 
@@ -83,7 +83,7 @@ def test_awk_comparison_calculations():
         comparison_result = result.stdout.strip()
 
         assert comparison_result == expected, (
-            f"Expected {expected} for {success_rate} >= {threshold}, " f"got {comparison_result} using awk"
+            f"Expected {expected} for {success_rate} >= {threshold}, got {comparison_result} using awk"
         )
 
 
@@ -111,7 +111,7 @@ def test_awk_duration_formatting():
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
+            f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
         )
 
 
@@ -139,7 +139,7 @@ def test_awk_integer_formatting():
         formatted_duration = result.stdout.strip()
 
         assert formatted_duration == expected, (
-            f"Expected {expected} for {duration} / {divisor}, " f"got {formatted_duration} using awk"
+            f"Expected {expected} for {duration} / {divisor}, got {formatted_duration} using awk"
         )
 
 
@@ -151,7 +151,8 @@ def test_workflow_uses_awk_not_bc():
     This ensures we don't depend on bc which is not available
     in Ubuntu 24.04 GitHub Actions runners.
     """
-    workflow_file = Path(__file__).parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
+    # Use correct path: tests/integration/ -> tests/ -> repo_root/
+    workflow_file = Path(__file__).parent.parent.parent / ".github" / "workflows" / "workflow-health-dashboard.yaml"
 
     if not workflow_file.exists():
         pytest.skip("Workflow file not found")

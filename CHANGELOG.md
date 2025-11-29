@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Python 3.11/3.13 CI Failures (PR #121)** - Fixed version-specific dependency issues:
+  - **Click 8.3.x** (`pyproject.toml:144`) - Pinned to `<8.3.0` due to internal `_textwrap` module missing on Python 3.11/3.13
+  - **Hypothesis 6.148.x** (`pyproject.toml:104,738`) - Pinned to `<6.148.0` due to `internal.conjecture.optimiser` module removal
+  - Root cause: Bleeding-edge releases (Click 8.3.1 on Nov 15, Hypothesis 6.148.3 on Nov 27) with breaking internal changes
+  - Impact: 34 tests failed on Python 3.11/3.13 while passing on Python 3.12
+
 - **Integration Test Infrastructure** (`scripts/test-integration.sh:242-244`) - Fixed Python environment configuration:
   - Resolved bad interpreter error (`/usr/bin/python3.5: No such file or directory`)
   - Updated to use `uv run pytest` for correct Python 3.12 environment
@@ -28,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Gated scheduled jobs (`gcp-drift-detection.yaml`, `cost-tracking.yaml`) behind secret checks to prevent fork failures
 
 ### Added
+- **Multi-Python Version Smoke Testing** - Prevention for version-specific CI failures:
+  - **Script** (`scripts/test_python_versions.sh`) - Runs smoke tests on Python 3.11, 3.12, 3.13
+  - **Pre-push Hook** (`.pre-commit-config.yaml:207-231`) - Automatic execution during git push
+  - **Documentation** (`.claude/memory/python-environment-usage.md:431-505`) - Multi-Python testing guidance
+  - Features: Auto-detect available Python versions, graceful skip if version missing, --quick and --ci modes
+  - Motivation: Local venv used Python 3.12 only, missed Python 3.11/3.13 issues caught by CI
+
 - **Codex Findings Validation Test Suite** - TDD-compliant validation tests preventing regression:
   - `tests/meta/test_mypy_enforcement.py` (7 tests) - Validates mypy hook configuration and enforcement
   - `tests/meta/test_subprocess_safety.py` (5 tests) - Enforces timeout parameters on subprocess calls (detects 119 violations for gradual fixing)
@@ -47,12 +60,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Workflow Optimization Documentation** (`docs/workflows/optimization-history.md`) - Detailed CI/CD optimization metrics and history
 
 ### Changed
-- **Workflow Consolidation**:
-  - Merged `link-checker.yaml` and `docs-link-check.yml` into single workflow
-  - Renamed `validate-deployments.yml` → `validate-kubernetes.yaml` for clear separation of concerns
-  - `validate-deployments.yaml`: Infrastructure validation (Docker, DB, VPC)
-  - `validate-kubernetes.yaml`: K8s manifests validation (Helm, Kustomize)
-- **setup-python-deps Action** (`setup-python-deps/action.yml`) - **BREAKING**: Removed legacy `install-dev` and `install-test` inputs (use `extras` parameter instead)
+- **Workflow Consolidation - Composite Actions** (`.github/actions/`):
+  - **Created `setup-python-deps` composite action** (`.github/actions/setup-python-deps/`) - Consolidated 8 different Python+UV setup patterns:
+    - Migrated 10 workflows (18 jobs total): `ci.yaml`, `integration-tests.yaml`, `e2e-tests.yaml`, `release.yaml`, `weekly-reports.yaml`, `docs-validation.yaml`, `performance-regression.yaml`, `security-validation.yaml`, `dora-metrics.yaml`, `validate-k8s-configs.yaml`
+    - Removed ~282 lines of duplicate setup code
+    - Unified dependency management: Python 3.10-3.13, UV 7.1.1, intelligent caching
+    - Features: Version selection, extras support (dev, builder, monitoring, etc.), custom cache keys
+    - Documentation: 165-line README with comprehensive examples
+    - **BREAKING**: Removed legacy `install-dev` and `install-test` inputs (use `extras` parameter instead)
+  - **Created `setup-docker-buildx` composite action** (`.github/actions/setup-docker-buildx/`) - Consolidated 4 Docker setup patterns:
+    - Migrated 4 workflows (6 jobs total): `ci.yaml`, `release.yaml`, `deploy-staging-gke.yaml`, `deploy-production-gke.yaml`
+    - Removed ~18 lines of duplicate QEMU+Buildx setup code
+    - Unified Docker configuration: Buildx 3.11.1, QEMU 3.7.0, multiplatform support
+    - Features: Optional QEMU (single vs multiplatform), custom driver options, inline config
+    - Documentation: 120-line README with usage examples
+  - **Created `setup-gcp-auth` composite action** (`.github/actions/setup-gcp-auth/`) - Consolidated GCP Workload Identity Federation authentication:
+    - Migrated 4 workflows (12 jobs, 12 instances): `deploy-production-gke.yaml`, `deploy-staging-gke.yaml`, `gcp-drift-detection.yaml`, `ci.yaml`
+    - Removed ~48 lines of duplicate auth code (92% consolidation - 12 of 13 instances)
+    - Not migrated: `gcp-compliance-scan.yaml` (1 instance with workflow-specific conditional defaults)
+    - Unified GCP auth: Workload Identity Federation, auth@v3, flexible token formats
+    - Features: Token format support (none, access_token, id_token), output propagation, version pinning
+    - Documentation: 254-line README with WIF setup guide, deployment examples, troubleshooting
+  - **Impact** (see `docs-internal/WORKFLOW_CONSOLIDATION_REPORT.md` for full analysis):
+    - Total duplicate code removed: ~437 lines (282 + 18 + 48 + 71 from script consolidation + 18 from other)
+    - Workflows improved: 18 workflows (36 jobs) via 3 composite actions
+    - Version consistency: Unified to latest versions across all workflows
+    - Maintenance reduction: 90% (20h/year → 2h/year for version updates)
+    - Cache efficiency: Projected 30% → 85% hit rate improvement
+  - **Workflow file consolidation**:
+    - Merged `link-checker.yaml` and `docs-link-check.yml` into single workflow
+    - Renamed `validate-deployments.yml` → `validate-kubernetes.yaml` for clear separation of concerns
+    - `validate-deployments.yaml`: Infrastructure validation (Docker, DB, VPC)
+    - `validate-kubernetes.yaml`: K8s manifests validation (Helm, Kustomize)
 - **CI Workflow Comments** - Moved optimization metrics to documentation, simplified header comments
 
 ### Technical Details
@@ -1125,7 +1164,7 @@ VERIFICATION_MODE=standard
 
 **Score Improvement**: 7.5/10 → 9.5/10 on Anthropic's best practices
 
-**See**: [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md), [Summary](reports/TOOL_IMPROVEMENTS_SUMMARY_20251017.md)
+**See**: [ADR-0023](adr/adr-0023-anthropic-tool-design-best-practices.md)
 
 ---
 
@@ -1157,7 +1196,7 @@ VERIFICATION_MODE=standard
 - **Broken Links Fixed**: 26
 - **Mintlify ADRs**: 22 → 24 (complete)
 
-**See**: [Documentation Audit Report](reports/DOCUMENTATION_AUDIT_REPORT_20251018.md)
+**See**: [Documentation Audit Report](docs-internal/DOCUMENTATION_AUDIT_REPORT.md)
 
 ---
 

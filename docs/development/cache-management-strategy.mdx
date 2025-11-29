@@ -177,7 +177,7 @@ cache-key-prefix: 'quality-tests'
 - name: Install dependencies
   run: |
     uv venv --python ${{ inputs.python-version }}
-    uv sync --frozen --extra dev --extra builder
+    uv sync --frozen --extra dev
 ```
 
 **Why `--frozen`**:
@@ -507,7 +507,7 @@ grep "package_name" uv.lock
 
 # 2. Check if extras are correct
 # CI workflow should match local extras:
-uv sync --frozen --extra dev --extra builder
+uv sync --frozen --extra dev
 ```
 
 **Solution Path**:

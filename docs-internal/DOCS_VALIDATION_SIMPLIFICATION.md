@@ -505,8 +505,8 @@ git push
 
 ### Documentation
 - [Archive README](../scripts/validators/archive/README.md) - Deprecated validators
-- [CLAUDE.md](../CLAUDE.md) - Updated developer workflow
-- [TESTING.md](../TESTING.md) - Updated testing and validation approach
+- [CLAUDE.md](../.github/CLAUDE.md) - Updated developer workflow
+- [TESTING.md](testing/TESTING.md) - Updated testing and validation approach
 - [Makefile](../Makefile) - Updated documentation targets
 
 ### Code
@@ -517,7 +517,7 @@ git push
 ### Tests
 - [Unit Tests](../tests/unit/documentation/) - Preserved validator tests
 - [Meta Tests](../tests/meta/test_documentation_validation.py) - Documentation quality tests
-- [Integration Tests](../tests/test_documentation_integrity.py) - ADR sync, Mermaid
+- [Integration Tests](../tests/meta/validation/test_documentation_integrity.py) - ADR sync, Mermaid
 - [Structure Tests](../tests/regression/test_documentation_structure.py) - Orphans, numbering
 
 ---

@@ -1,20 +1,21 @@
 ---
-title: 4. MCP StreamableHTTP Transport Protocol
-description: 'Architecture Decision Record: 4. MCP StreamableHTTP Transport Protocol'
-icon: 'file-lines'
-seoTitle: "ADR-0004: 4. MCP StreamableHTTP Transport Protocol"
-seoDescription: "Architecture Decision Record 0004: Architecture Decision Record: 4. MCP StreamableHTTP Transport Protocol"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "4."]
-contentType: "explanation"
+title: "4. MCP StreamableHTTP Transport Protocol"
+description: "Architecture Decision Record: 4. MCP StreamableHTTP Transport Protocol"
 ---
 
-Date: 2025-10-11 (Updated: 2025-10-11 - SSE Removed)
+# 4. MCP StreamableHTTP Transport Protocol
 
-### Status
+Date: 2025-10-11
 
-Accepted (SSE transport removed as of 2025-10-11)
+## Status
 
-### Context
+Accepted
+
+## Category
+
+Core Architecture
+
+## Context
 
 The Model Context Protocol (MCP) needs a transport layer to communicate between clients and servers. The original MCP specification supported two transports:
 
@@ -34,7 +35,7 @@ Use cases for different transports:
 
 We need to choose which transport(s) to support as our primary production interface.
 
-### Decision
+## Decision
 
 We will support **two MCP server implementations**:
 
@@ -53,9 +54,9 @@ We will support **two MCP server implementations**:
 
 **Note**: The SSE transport (mcp_server_http.py) was removed on 2025-10-11 as it was deprecated and no longer needed.
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 
 - **Future-Proof**: Aligned with latest MCP specification
 - **Better Streaming**: More efficient than SSE
@@ -66,20 +67,20 @@ We will support **two MCP server implementations**:
 - **API Docs**: FastAPI auto-generates OpenAPI docs
 - **Flexibility**: Multiple transports for different use cases
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Multiple Servers**: Two separate server files to maintain
 - **Confusion**: Users must choose correct server (stdio vs StreamableHTTP)
 - **Documentation**: Must explain when to use each transport
 
-#### Neutral Consequences
+### Neutral Consequences
 
 - **Code Duplication**: Some shared logic across servers (mitigated with imports)
 - **Testing**: Must test both transports
 
-### Alternatives Considered
+## Alternatives Considered
 
-#### 1. stdio Only
+### 1. stdio Only
 
 **Description**: Only support stdio transport
 
@@ -97,7 +98,7 @@ We will support **two MCP server implementations**:
 
 **Why Rejected**: Insufficient for production deployments
 
-#### 2. SSE Only
+### 2. SSE Only
 
 **Description**: Only support SSE transport
 
@@ -114,7 +115,7 @@ We will support **two MCP server implementations**:
 
 **Why Rejected**: MCP spec moved away from SSE
 
-#### 3. WebSocket
+### 3. WebSocket
 
 **Description**: Use WebSocket instead of StreamableHTTP
 
@@ -131,7 +132,7 @@ We will support **two MCP server implementations**:
 
 **Why Rejected**: Not part of MCP standard
 
-#### 4. gRPC
+### 4. gRPC
 
 **Description**: Use gRPC for transport
 
@@ -148,7 +149,7 @@ We will support **two MCP server implementations**:
 
 **Why Rejected**: Incompatible with MCP spec
 
-#### 5. Single Unified Server
+### 5. Single Unified Server
 
 **Description**: One server supporting multiple transports
 
@@ -165,12 +166,12 @@ We will support **two MCP server implementations**:
 
 **Why Rejected**: Cleaner to separate by transport
 
-### Implementation Details
+## Implementation Details
 
-#### StreamableHTTP Server (Primary)
+### StreamableHTTP Server (Primary)
 
-```
-## src/mcp_server_langgraph/mcp/server_streamable.py
+```python
+# src/mcp_server_langgraph/mcp/server_streamable.py
 app = FastAPI(title="MCP Server with LangGraph")
 
 @app.post("/mcp")
@@ -182,10 +183,11 @@ async def handle_mcp_request(request: Request):
 async def health_check():
     return {"status": "healthy"}
 ```
-#### stdio Server
 
-```
-## src/mcp_server_langgraph/mcp/server_stdio.py
+### stdio Server
+
+```python
+# src/mcp_server_langgraph/mcp/server_stdio.py
 async def main():
     server = Server("mcp-server-langgraph")
     # stdio transport
@@ -193,24 +195,26 @@ async def main():
         await server.run(streams[0], streams[1])
 ```
 
-#### Docker Configuration
+### Docker Configuration
 
 ```dockerfile
-## Dockerfile
+# Dockerfile
 CMD ["python", "src/mcp_server_langgraph/mcp/server_streamable.py"]  # Default to StreamableHTTP
 ```
-#### Usage Examples
 
-```
-## Production: StreamableHTTP
+### Usage Examples
+
+```bash
+# Production: StreamableHTTP
 python -m mcp_server_langgraph.mcp.server_streamable
-## → http://localhost:8000
+# → http://localhost:8000
 
-## Claude Desktop: stdio
+# Claude Desktop: stdio
 python -m mcp_server_langgraph.mcp.server_stdio
-## → stdio communication
+# → stdio communication
 ```
-#### Client Configuration
+
+### Client Configuration
 
 ```json
 // Claude Desktop config (.claude_desktop_config.json)
@@ -224,24 +228,24 @@ python -m mcp_server_langgraph.mcp.server_stdio
 }
 ```
 
-### Migration Path
+## Migration Path
 
-#### ~~Phase 1~~
+### ~~Phase 1~~
 - ~~All three transports supported~~
 - ~~StreamableHTTP recommended~~
 - ~~SSE marked as deprecated~~
 
-#### ~~Phase 2 (6 months)~~
+### ~~Phase 2 (6 months)~~
 - ~~SSE warnings in logs~~
 - ~~Documentation updated~~
 - ~~Migration guide published~~
 
-#### Phase 3 (COMPLETED 2025-10-11)
+### Phase 3 (COMPLETED 2025-10-11)
 - ✅ Removed SSE server (mcp_server_http.py)
 - ✅ Only StreamableHTTP + stdio remain
 - ✅ Removed sse-starlette dependency
 
-### References
+## References
 
 - [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [MCP Transport Documentation](https://spec.modelcontextprotocol.io/specification/architecture/#transports)
@@ -249,6 +253,6 @@ python -m mcp_server_langgraph.mcp.server_stdio
 - Related Files: `src/mcp_server_langgraph/mcp/server_streamable.py`, `src/mcp_server_langgraph/mcp/server_stdio.py`
 - Related ADRs: OpenAPI validation (planned for future ADR)
 
-### Changelog
+## Changelog
 
 - **2025-10-11**: Removed SSE transport (mcp_server_http.py) and sse-starlette dependency. Updated decision to reflect two transports only (StreamableHTTP + stdio).

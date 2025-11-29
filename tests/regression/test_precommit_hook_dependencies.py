@@ -398,7 +398,7 @@ class TestPreCommitHookDependencies:
 
         This ensures our regression test is testing the right thing.
         """
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "validation" / "validate_workflow_test_deps.py"
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "validators" / "validate_workflow_test_deps.py"
 
         if not script_path.exists():
             pytest.skip("Script not found")
@@ -470,8 +470,7 @@ def test_precommit_config_exists():
     """Test: .pre-commit-config.yaml file exists in repository root."""
     config_path = Path(__file__).parent.parent.parent / ".pre-commit-config.yaml"
     assert config_path.exists(), (
-        ".pre-commit-config.yaml not found in repository root.\n"
-        "Pre-commit hooks are essential for catching issues before CI."
+        ".pre-commit-config.yaml not found in repository root.\nPre-commit hooks are essential for catching issues before CI."
     )
 
 

@@ -1,31 +1,19 @@
 ---
-title: 'ADR-0050: Dependency Singleton Pattern Justification'
-description: Architecture Decision Record documenting the decision to maintain module-level
-  singleton pattern for dependency injection
-icon: gear
-contentType: explanation
-seoTitle: 'ADR-0050: Dependency Singleton... - MCP Server LangGraph'
-seoDescription: Architecture Decision Record documenting the decision to maintain
-  module-level singleton pattern for dependency injection Learn more about MCP Server
-  LangGraph.
-keywords:
-- adr-0050
-- dependency
-- singleton
-- pattern
-- justification
-- architecture
-- decision
-- record
-- documenting
-- maintain
+title: "50. Dependency Singleton Pattern Justification"
+description: "Architecture Decision Record: 50. Dependency Singleton Pattern Justification"
 ---
-# ADR-0050: Dependency Singleton Pattern Justification
 
-**Status**: Accepted
-**Date**: 2025-11-10
-**Deciders**: Engineering Team
-**Context**: OpenAI Codex validation of dependency injection patterns
+# 50. Dependency Singleton Pattern Justification
+
+Date: 2025-11-10
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context and Problem Statement
 
@@ -45,6 +33,7 @@ def get_keycloak_client() -> KeycloakClient:
         _keycloak_client = KeycloakClient(config=keycloak_config)
     return _keycloak_client
 ```
+
 **Concern raised**: Could leak state between requests/tests and make TDD brittle.
 
 ## Decision Drivers
@@ -121,6 +110,7 @@ async def lifespan(app: FastAPI):
     yield
     # Cleanup clients
 ```
+
 **Pros**:
 * Explicit lifecycle management
 * Clear initialization and cleanup points
@@ -208,6 +198,7 @@ async def get_resource(keycloak: KeycloakClient = Depends(get_keycloak_client)):
     user = await keycloak.get_user(user_id)
     return user
 ```
+
 ### For Tests
 
 ```python
@@ -257,8 +248,8 @@ def test_client(mock_keycloak_client):
 
 ## Related Decisions
 
-* [ADR-0042: Dependency Injection Configuration Fixes](/architecture/adr-0042-dependency-injection-configuration-fixes) - Fixed critical bugs in dependency initialization
-* [ADR-0049: Pytest Fixture Consolidation](/architecture/adr-0049-pytest-fixture-consolidation) - Consolidated duplicate fixtures for better test organization
+* [ADR-0042: Dependency Injection Configuration Fixes](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0042-dependency-injection-configuration-fixes.md) - Fixed critical bugs in dependency initialization
+* [ADR-0049: Pytest Fixture Consolidation](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0049-pytest-fixture-consolidation.md) - Consolidated duplicate fixtures for better test organization
 
 ## References
 

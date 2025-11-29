@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 Machine-to-machine authentication, batch jobs, streaming tasks, and background processes require persistent identity and long-lived credentials that differ from human user patterns. Challenges include:

@@ -389,8 +389,8 @@ print(f"Refinement attempts: {state['refinement_attempts']}")
 
 ## References
 
-- **ADR**: [ADR-0024: Agentic Loop Implementation](../adr/0024-agentic-loop-implementation.md)
-- **Implementation Summary**: [IMPLEMENTATION_SUMMARY.md](../archive/IMPLEMENTATION_SUMMARY.md)
+- **ADR**: [ADR-0024: Agentic Loop Implementation](../../adr/adr-0024-agentic-loop-implementation.md)
+- **Implementation Summary**: [IMPLEMENTATION_SUMMARY.md](../../archive/IMPLEMENTATION_SUMMARY.md)
 - **Anthropic Guides**:
   - [Building Agents with the Claude Agent SDK](https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk)
   - [Effective Context Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
@@ -717,8 +717,8 @@ COMPACTION_THRESHOLD=8000
 
 For questions or issues with the agentic loop implementation:
 
-1. Check the [ADR-0024](../adr/0024-agentic-loop-implementation.md) for design rationale
-2. Review [IMPLEMENTATION_SUMMARY.md](../archive/IMPLEMENTATION_SUMMARY.md) for technical details
+1. Check the [ADR-0024](../../adr/adr-0024-agentic-loop-implementation.md) for design rationale
+2. Review [IMPLEMENTATION_SUMMARY.md](../../archive/IMPLEMENTATION_SUMMARY.md) for technical details
 3. Run tests: `./scripts/test_agentic_loop.sh`
 4. Check logs for compaction/verification events
 5. Review this guide's [Advanced Topics](#advanced-topics) section

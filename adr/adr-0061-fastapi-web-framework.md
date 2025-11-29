@@ -1,0 +1,107 @@
+# 61. FastAPI as Web Framework
+
+Date: 2025-11-29
+
+## Status
+
+Accepted
+
+## Category
+
+Core Architecture
+
+## Context
+
+The MCP Server requires a web framework to expose HTTP APIs, handle WebSocket connections for real-time communication, and integrate with the Model Context Protocol. Key requirements include:
+
+- **Async-first architecture**: LLM calls, database operations, and external API calls are I/O-bound
+- **High performance**: Low latency for real-time agent interactions
+- **Type safety**: Runtime validation of request/response payloads
+- **OpenAPI generation**: Automatic API documentation for clients
+- **WebSocket support**: Real-time streaming for agent responses
+- **Dependency injection**: Clean separation of concerns for testing
+
+### Frameworks Considered
+
+1. **Flask**: Synchronous by default, WSGI-based, mature ecosystem
+2. **Django**: Full-featured, ORM-included, admin interface
+3. **FastAPI**: Async-native, Pydantic integration, automatic OpenAPI
+4. **Starlette**: Lightweight async framework (FastAPI is built on it)
+5. **Quart**: Flask-compatible async framework
+
+## Decision
+
+Use **FastAPI** as the web framework for all HTTP and WebSocket endpoints.
+
+### Key Reasons
+
+1. **Native Async Support**: Built on Starlette with first-class async/await support
+2. **Pydantic Integration**: Request/response validation using the same models as the rest of the codebase (ADR-0014)
+3. **Automatic OpenAPI**: Self-documenting APIs with Swagger UI and ReDoc
+4. **Dependency Injection**: Clean DI system for authentication, database connections, etc.
+5. **WebSocket Support**: Native WebSocket handling for streaming responses
+6. **Performance**: One of the fastest Python frameworks (comparable to Node.js/Go)
+7. **Type Hints**: Full IDE support with autocomplete and type checking
+
+### Implementation Pattern
+
+```python
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI(title="MCP Server LangGraph")
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: str
+
+class ChatResponse(BaseModel):
+    response: str
+    session_id: str
+
+@app.post("/api/v1/chat", response_model=ChatResponse)
+async def chat(
+    request: ChatRequest,
+    current_user: dict = Depends(get_current_user),
+    agent: Agent = Depends(get_agent),
+) -> ChatResponse:
+    result = await agent.process(request.message)
+    return ChatResponse(response=result, session_id=request.session_id)
+```
+
+## Consequences
+
+### Positive
+
+- **Developer Productivity**: Type hints + autocomplete reduce errors
+- **Performance**: Async I/O handles concurrent requests efficiently
+- **Documentation**: OpenAPI spec generated automatically
+- **Testing**: Dependency injection makes mocking straightforward
+- **Ecosystem**: Large community, extensive middleware available
+
+### Negative
+
+- **Learning Curve**: Async patterns require understanding of asyncio
+- **Debugging**: Async stack traces can be harder to follow
+- **Dependency**: Tied to Starlette's release cycle
+
+## Alternatives Considered
+
+### Flask
+- **Rejected**: Synchronous by default; async support via extensions is bolted-on
+- Would require Flask-SocketIO for WebSocket, Flask-Pydantic for validation
+
+### Django
+- **Rejected**: Heavy for an API-only service; ORM not needed (using raw asyncpg)
+- Django REST Framework adds complexity without benefit for our use case
+
+### Starlette
+- **Considered**: FastAPI is built on Starlette, provides same performance
+- **Rejected**: FastAPI adds valuable abstractions (Pydantic, OpenAPI, DI)
+
+## References
+
+- Implementation: `src/mcp_server_langgraph/api/` (all API endpoints)
+- Configuration: `src/mcp_server_langgraph/core/server.py`
+- Related ADRs: [ADR-0014](adr-0014-pydantic-type-safety.md), [ADR-0019](adr-0019-async-first-architecture.md)
+- External: [FastAPI Documentation](https://fastapi.tiangolo.com/)

@@ -290,7 +290,7 @@ class TestWorkflowToolMaintenance:
             if "kubeconform" in content:
                 if "-ignore-missing-schemas" not in content:
                     issues.append(
-                        f"{workflow_file} - Uses kubeconform but missing -ignore-missing-schemas flag " "(needed for CRDs)"
+                        f"{workflow_file} - Uses kubeconform but missing -ignore-missing-schemas flag (needed for CRDs)"
                     )
 
         assert not issues, (
@@ -339,7 +339,7 @@ class TestWorkflowActionVersions:
 
                 if major < 7:
                     issues.append(
-                        f"{workflow_file}:{line_num} - Uses astral-sh/setup-uv@{version} " f"(should be @v7.1.1 or later)"
+                        f"{workflow_file}:{line_num} - Uses astral-sh/setup-uv@{version} (should be @v7.1.1 or later)"
                     )
 
         assert not issues, (

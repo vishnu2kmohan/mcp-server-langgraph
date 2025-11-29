@@ -6,6 +6,10 @@ Date: 2025-11-01
 
 Accepted
 
+## Category
+
+Infrastructure & Deployment
+
 ## Context
 
 This decision impacts deployment across Google Cloud Platform, specifically the choice of GKE Autopilot vs. GKE Standard for production workloads.

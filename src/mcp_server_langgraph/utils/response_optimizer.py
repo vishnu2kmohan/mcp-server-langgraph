@@ -169,7 +169,7 @@ class ResponseOptimizer:
             content,
             max_tokens=max_tokens,
             truncation_message=(
-                f"\n\n[Response truncated to {format_type} format. " f"Request 'detailed' format for more information.]"
+                f"\n\n[Response truncated to {format_type} format. Request 'detailed' format for more information.]"
                 if format_type == "concise"
                 else None
             ),

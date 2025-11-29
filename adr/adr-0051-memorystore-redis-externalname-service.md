@@ -6,6 +6,10 @@ Date: 2025-11-11
 
 Accepted
 
+## Category
+
+Infrastructure & Deployment
+
 ## Context
 
 In GKE staging and production environments, we use Google Cloud Memorystore for Redis instead of self-hosted Redis deployments. This architectural decision creates a challenge: **how do we reference external managed services from within Kubernetes in a way that supports operational requirements like failover and environment portability?**

@@ -1,21 +1,21 @@
 ---
-title: 32. JWT Standardization Across All Authentication Flows
-description: 'Authentication systems often support multiple token formats (sessions, cookies, opaque tokens, JWTs, API keys) leading to complexity in validation,...'
-icon: 'file-lines'
-seoTitle: "ADR-0032: 32. JWT Standardization Across All Authentication "
-seoDescription: "Architecture Decision Record 0032: Authentication systems often support multiple token formats (sessions, cookies, opaque tokens, JWTs, API keys) leading to complexity in vali"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "32."]
-contentType: "explanation"
+title: "32. JWT Standardization Across All Authentication Flows"
+description: "Architecture Decision Record: 32. JWT Standardization Across All Authentication Flows"
 ---
 
+# 32. JWT Standardization Across All Authentication Flows
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 Authentication systems often support multiple token formats (sessions, cookies, opaque tokens, JWTs, API keys) leading to complexity in validation, authorization, and client integration. This creates challenges:
 
@@ -28,11 +28,11 @@ Authentication systems often support multiple token formats (sessions, cookies, 
 
 The system currently supports multiple authentication methods with different token formats, creating maintenance burden and security inconsistencies.
 
-### Decision
+## Decision
 
 We will **standardize on JSON Web Tokens (JWT) as the sole authentication token format** across all authentication flows. All authentication methods will produce a JWT, and all validation will use JWT verification.
 
-#### Core Principles
+### Core Principles
 
 1. **Universal JWT Output**: Every authentication method produces a JWT
 2. **Stateless Validation**: JWTs validated without database lookups
@@ -41,7 +41,7 @@ We will **standardize on JSON Web Tokens (JWT) as the sole authentication token 
 5. **Standard Claims**: Consistent JWT structure across all flows
 6. **Refresh Token Pattern**: Short-lived JWTs with refresh tokens
 
-#### JWT Structure
+### JWT Structure
 
 ```json
 {
@@ -58,7 +58,8 @@ We will **standardize on JSON Web Tokens (JWT) as the sole authentication token 
   }
 }
 ```
-#### Authentication Flows → JWT
+
+### Authentication Flows → JWT
 
 1. **User Login (Password)**: `User → Keycloak (ROPC) → JWT + Refresh Token`
 2. **Federated Identity**: `User → External IdP → Keycloak → JWT + Refresh Token`
@@ -66,7 +67,7 @@ We will **standardize on JSON Web Tokens (JWT) as the sole authentication token 
 4. **Service Principal**: `Service → Keycloak (client_credentials) → JWT + Refresh Token`
 5. **Token Refresh**: `Client → Keycloak (refresh_token) → New JWT`
 
-#### Token Lifetimes
+### Token Lifetimes
 
 ```bash
 ACCESS_TOKEN_LIFESPAN=900  # 15 minutes
@@ -74,36 +75,36 @@ REFRESH_TOKEN_LIFESPAN=1800  # 30 minutes (interactive)
 SERVICE_ACCOUNT_REFRESH_TOKEN_LIFESPAN=2592000  # 30 days (batch jobs)
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 - Unified validation (single code path)
 - Stateless architecture, scalability via public key cryptography
 - Standard protocol (RFC 7519) with ecosystem support
 - Client simplicity, federation compatible
 - Authorization ready (user context embedded)
 
-#### Negative Consequences
+### Negative Consequences
 - Token size larger than opaque tokens (200-2000 bytes)
 - Revocation challenge (cannot revoke before expiration without blacklist)
 - Refresh complexity (clients must implement refresh logic)
 - Short lifetime issues for long-running tasks
 - Clock synchronization required
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - **Revocation**: Hybrid mode with server-side sessions (optional), Redis blacklist for emergencies
 - **Long-Running**: Service principals get 30-day refresh tokens, server-side storage, auto-refresh
 - **Token Size**: Minimize custom claims, gzip compression
 - **Key Rotation**: Automated JWKS fetching (1-hour cache), gradual rotation
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **Opaque Tokens**: Rejected - requires DB lookup, stateful, poor scalability
 2. **Mixed Tokens**: Rejected - multiple code paths, inconsistent authorization
 3. **Macaroons**: Rejected - non-standard, complex, over-engineered
 4. **OAuth2 Introspection**: Rejected - latency, stateful, network dependency
 
-### Implementation Details
+## Implementation Details
 
 **JWT Issuance** (`src/mcp_server_langgraph/auth/keycloak.py:245-294`):
 ```python
@@ -117,6 +118,7 @@ async def authenticate(self, username: str, password: str) -> AuthResponse:
     response = await self.client.post(self.config.token_endpoint, data=data)
     return AuthResponse(access_token=response.json()["access_token"], ...)
 ```
+
 **JWT Validation** (`src/mcp_server_langgraph/auth/keycloak.py:89-219`):
 ```python
 async def verify_token(self, token: str) -> Dict[str, Any]:
@@ -126,9 +128,9 @@ async def verify_token(self, token: str) -> Dict[str, Any]:
     return payload
 ```
 
-### References
+## References
 
 - JWT Verification: `src/mcp_server_langgraph/auth/keycloak.py:89-219`
 - Authentication: `src/mcp_server_langgraph/auth/keycloak.py:245-294`
-- Related ADRs: [ADR-0007](/architecture/adr-0007-authentication-provider-pattern), [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity), [ADR-0034](/architecture/adr-0034-api-key-jwt-exchange), [ADR-0035](/architecture/adr-0035-kong-jwt-validation), [ADR-0036](/architecture/adr-0036-hybrid-session-model)
+- Related ADRs: [ADR-0007](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0007-authentication-provider-pattern.md), [ADR-0031](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0031-keycloak-authoritative-identity.md), [ADR-0034](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0034-api-key-jwt-exchange.md), [ADR-0035](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0035-kong-jwt-validation.md), [ADR-0036](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0036-hybrid-session-model.md)
 - External: [RFC 7519 (JWT)](https://datatracker.ietf.org/doc/html/rfc7519), [RFC 7515 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515), [OIDC Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)

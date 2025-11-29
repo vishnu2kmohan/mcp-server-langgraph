@@ -90,10 +90,10 @@ Total:                       8-12 min     Matches CI exactly
 ```bash
 # Phase 3: Test Suite Validation (NEW)
 run_validation "Unit Tests" \
-    "uv run pytest tests/ -m unit -x --tb=short"
+    "uv run --frozen pytest tests/ -m unit -x --tb=short"
 
 run_validation "Smoke Tests" \
-    "uv run pytest tests/smoke/ -v --tb=short"
+    "uv run --frozen pytest tests/smoke/ -v --tb=short"
 
 run_validation "Property Tests (100 examples)" \
     "HYPOTHESIS_PROFILE=ci pytest -m property -x --tb=short"

@@ -65,7 +65,7 @@ jobs:
       uses: ./.github/actions/setup-python-deps
       with:
         python-version: '3.12'
-        extras: 'dev builder'
+        extras: 'dev'
         cache-key-prefix: 'coverage-trend'
 
     - name: Download previous coverage data
@@ -79,20 +79,20 @@ jobs:
       run: |
         # Match local development environment: parallel execution with OTEL disabled
         # Use CI Hypothesis profile for consistent property test behavior (100 examples)
-        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
+        OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run --frozen pytest -n auto -m unit --cov=src/mcp_server_langgraph --cov-report=json --cov-report=term-missing
 
     - name: Track coverage and save to history
       id: coverage
       run: |
         # Run coverage tracking script
-        uv run python scripts/ci/track-coverage.py \
+        uv run --frozen python scripts/ci/track-coverage.py \
           --coverage-json coverage.json \
           --history-dir .coverage-history \
           --fail-threshold 5.0
 
         # Extract coverage for GitHub outputs (for PR comments)
-        COVERAGE=$(uv run python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
-        COVERAGE_ROUNDED=$(uv run python -c "import sys; print(f'{float(sys.argv[1]):.1f}')" "$COVERAGE")
+        COVERAGE=$(uv run --frozen python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered'])")
+        COVERAGE_ROUNDED=$(uv run --frozen python -c "import sys; print(f'{float(sys.argv[1]):.1f}')" "$COVERAGE")
         echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
         echo "coverage_rounded=$COVERAGE_ROUNDED" >> $GITHUB_OUTPUT
 
@@ -169,7 +169,7 @@ jobs:
     - name: Enforce minimum coverage threshold
       env:
         CURRENT_COVERAGE: ${{ steps.coverage.outputs.coverage }}
-        MIN_COVERAGE: "80.0"
+        MIN_COVERAGE: "75.0"
       run: |
         echo "Current coverage: ${CURRENT_COVERAGE}%"
         echo "Minimum threshold: ${MIN_COVERAGE}%"

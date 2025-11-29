@@ -27,7 +27,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -378,7 +378,7 @@ class TestSecretValidation:
             # Validate GCP secret keys have expected prefix
             for secret_key, remote_key in data_mappings.items():
                 assert remote_key.startswith(expected_prefix), (
-                    f"GCP secret key '{remote_key}' for {target_name}.{secret_key} " f"should start with '{expected_prefix}'"
+                    f"GCP secret key '{remote_key}' for {target_name}.{secret_key} should start with '{expected_prefix}'"
                 )
 
     @pytest.mark.parametrize(
@@ -423,7 +423,7 @@ class TestSecretValidation:
                 missing_keys[secret_name] = {"missing": missing, "available": external_secrets[secret_name]}
 
         assert not missing_keys, f"Secret keys referenced but not created in {overlay}:\n" + "\n".join(
-            f"  {secret}:\n" f"    Missing: {sorted(info['missing'])}\n" f"    Available: {sorted(info['available'])}"
+            f"  {secret}:\n    Missing: {sorted(info['missing'])}\n    Available: {sorted(info['available'])}"
             for secret, info in missing_keys.items()
         )
 

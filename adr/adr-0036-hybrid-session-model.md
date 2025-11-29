@@ -6,6 +6,10 @@ Date: 2025-01-28
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 JWT-based authentication (ADR-0032) uses short-lived access tokens (15 minutes) for security, but this conflicts with long-running tasks:
@@ -63,7 +67,7 @@ SERVICE_PRINCIPAL_SESSION_ENABLED=true
 SERVICE_PRINCIPAL_SESSION_TTL=2592000  # 30 days
 SERVICE_PRINCIPAL_AUTO_REFRESH=true
 SESSION_SLIDING_WINDOW=true
-SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in <5 min
+SESSION_REFRESH_THRESHOLD=300  # Refresh if expires in \<5 min
 
 # User Sessions (optional)
 USER_SESSION_TTL=86400  # 24 hours if enabled
@@ -126,7 +130,7 @@ class RedisSessionStore:
 
     async def refresh_if_needed(self, session_id):
         session = await self.get_session(session_id)
-        if session.expires_in < 300:  # <5 minutes
+        if session.expires_in < 300:  # \<5 minutes
             new_tokens = await keycloak.refresh_token(session.refresh_token)
             session.access_token = new_tokens["access_token"]
             session.refresh_token = new_tokens["refresh_token"]

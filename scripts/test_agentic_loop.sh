@@ -26,19 +26,19 @@ if [[ -z "${VIRTUAL_ENV}" ]]; then
 fi
 
 echo -e "${GREEN}Running Context Manager Tests...${NC}"
-uv run pytest tests/test_context_manager.py -v --tb=short -m unit
+uv run --frozen pytest tests/test_context_manager.py -v --tb=short -m unit
 echo ""
 
 echo -e "${GREEN}Running Verifier Tests...${NC}"
-uv run pytest tests/test_verifier.py -v --tb=short -m unit
+uv run --frozen pytest tests/test_verifier.py -v --tb=short -m unit
 echo ""
 
 echo -e "${GREEN}Running Agentic Loop Integration Tests...${NC}"
-uv run pytest tests/test_agentic_loop_integration.py -v --tb=short -m integration
+uv run --frozen pytest tests/test_agentic_loop_integration.py -v --tb=short -m integration
 echo ""
 
 echo -e "${GREEN}Running All New Tests with Coverage...${NC}"
-uv run pytest \
+uv run --frozen pytest \
     tests/test_context_manager.py \
     tests/test_verifier.py \
     tests/test_agentic_loop_integration.py \

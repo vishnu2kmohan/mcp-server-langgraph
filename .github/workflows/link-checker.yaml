@@ -93,7 +93,7 @@ jobs:
       - name: Check for broken internal links
         id: link-check
         run: |
-          uv run python scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
+          uv run --frozen python scripts/ci/check-links.py --root-dir . --exclude archive/ reports/ docs/
         continue-on-error: false
 
       - name: Comment on PR (if failed)
@@ -118,7 +118,7 @@ jobs:
 
               **To test locally:**
               \`\`\`bash
-              uv run python scripts/ci/check-links.py
+              uv run --frozen python scripts/ci/check-links.py
               \`\`\`
               `
             })
@@ -145,7 +145,7 @@ jobs:
 
               **To fix locally:**
               \`\`\`bash
-              uv run python scripts/ci/check-links.py --fix
+              uv run --frozen python scripts/ci/check-links.py --fix
               \`\`\`
               `,
               labels: ['documentation', 'automated']

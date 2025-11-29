@@ -805,7 +805,7 @@ aws dynamodb delete-item \
 - [Main Terraform README](./README.md)
 - [VPC Module README](./modules/vpc/README.md)
 - [EKS Module README](./modules/eks/README.md)
-- [Existing EKS Deployment Guide](../../docs/deployment/kubernetes/eks.mdx)
+For EKS deployment guide, see the Mintlify docs in the `docs/` directory.
 
 ### Tools
 - [Terraform Registry](https://registry.terraform.io/)

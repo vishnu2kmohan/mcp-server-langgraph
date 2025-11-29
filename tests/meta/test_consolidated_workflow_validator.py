@@ -209,7 +209,7 @@ class TestConsolidatedWorkflowValidator:
         has_context_validation = "github.event" in content or "context_pattern" in content or "workflow_run" in content
 
         assert has_context_validation, (
-            "Consolidated validator must include context validation logic\n" "(from scripts/validate_github_workflows.py)"
+            "Consolidated validator must include context validation logic\n(from scripts/validate_github_workflows.py)"
         )
 
         # Verify script includes version validation logic
@@ -257,7 +257,7 @@ class TestConsolidatedWorkflowValidator:
 
         # Verify performance is acceptable
         assert elapsed < 10, (
-            f"Validator took {elapsed:.2f}s (should be < 10s)\n" "Consider optimizing validation logic or adding caching"
+            f"Validator took {elapsed:.2f}s (should be < 10s)\nConsider optimizing validation logic or adding caching"
         )
 
 

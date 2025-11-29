@@ -336,7 +336,7 @@ SKIPPED (kubectl not found in PATH. Install with: brew install kubectl / apt-get
 sudo mv /usr/local/bin/kubectl /usr/local/bin/kubectl.bak
 
 # Run affected tests
-uv run pytest tests/deployment/test_dns_failover_verification.py -v
+uv run --frozen pytest tests/deployment/test_dns_failover_verification.py -v
 
 # Verify tests skip gracefully with clear message
 # Expected: "SKIPPED (kubectl not found in PATH...)"

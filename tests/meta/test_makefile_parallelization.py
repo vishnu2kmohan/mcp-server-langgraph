@@ -48,9 +48,7 @@ class TestMakefileParallelization:
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-ci should use '-n auto' for parallel execution\n"
-            f"Found: {pytest_args}\n"
-            f"Expected: Should contain '-n auto'"
+            f"test-ci should use '-n auto' for parallel execution\nFound: {pytest_args}\nExpected: Should contain '-n auto'"
         )
 
     @pytest.mark.meta
@@ -72,9 +70,7 @@ class TestMakefileParallelization:
         assert match, "test-mcp-server target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, (
-            f"test-mcp-server should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
-        )
+        assert "-n auto" in pytest_args, f"test-mcp-server should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.meta
     def test_test_new_uses_parallel_execution(self):
@@ -95,7 +91,7 @@ class TestMakefileParallelization:
         assert match, "test-new target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+        assert "-n auto" in pytest_args, f"test-new should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.meta
     def test_test_precommit_validation_uses_parallel_execution(self):
@@ -117,7 +113,7 @@ class TestMakefileParallelization:
 
         pytest_args = match.group(1)
         assert "-n auto" in pytest_args, (
-            f"test-precommit-validation should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+            f"test-precommit-validation should use '-n auto' for parallel execution\nFound: {pytest_args}"
         )
 
     @pytest.mark.meta
@@ -139,7 +135,7 @@ class TestMakefileParallelization:
         assert match, "test-e2e target not found in Makefile"
 
         pytest_args = match.group(1)
-        assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\n" f"Found: {pytest_args}"
+        assert "-n auto" in pytest_args, f"test-e2e should use '-n auto' for parallel execution\nFound: {pytest_args}"
 
     @pytest.mark.meta
     def test_parallelized_targets_mention_parallel_in_output(self):

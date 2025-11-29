@@ -1,20 +1,21 @@
 ---
-title: 5. Type-Safe Agent Responses with Pydantic AI
-description: 'Architecture Decision Record: 5. Type-Safe Agent Responses with Pydantic AI'
-icon: 'file-lines'
-seoTitle: "ADR-0005: 5. Type-Safe Agent Responses with Pydantic AI"
-seoDescription: "Architecture Decision Record 0005: Architecture Decision Record: 5. Type-Safe Agent Responses with Pydantic AI"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "5."]
-contentType: "explanation"
+title: "5. Type-Safe Agent Responses with Pydantic AI"
+description: "Architecture Decision Record: 5. Type-Safe Agent Responses with Pydantic AI"
 ---
+
+# 5. Type-Safe Agent Responses with Pydantic AI
 
 Date: 2025-10-11
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Core Architecture
+
+## Context
 
 LLM agents face a fundamental challenge: **unstructured outputs**. LLMs return free-form text, but applications need:
 - Structured data (not raw strings)
@@ -31,11 +32,13 @@ Traditional approaches have limitations:
    if "search" in response.lower():
        action = "use_tools"  # Fragile!
    ```
+
 2. **JSON Output Parsing**
    ```python
    response = llm.invoke("Return JSON: {action: ...}")
    data = json.loads(response)  # May fail!
    ```
+
 3. **Function Calling** (Provider-specific)
    ```python
    # Only works with some providers
@@ -57,7 +60,7 @@ For a production agent, we need:
 - **Graceful fallback**: Degrade to keyword matching if AI fails
 - **Structured responses**: Pydantic models, not strings
 
-### Decision
+## Decision
 
 We will use **Pydantic AI** for type-safe agent routing and response generation.
 
@@ -75,9 +78,9 @@ Implementation:
 - `llm_validators.py`: Generic validation framework
 - `mcp_streaming.py`: Type-safe streaming
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 
 - **Type Safety**: Compile-time checking of LLM outputs
 - **Confidence Tracking**: Know when AI is uncertain
@@ -87,7 +90,7 @@ Implementation:
 - **Structured Data**: Pydantic models instead of strings
 - **Testing**: Easier to mock and test structured outputs
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Latency**: +50-200ms for LLM-based routing vs keywords
 - **Complexity**: Additional abstraction layer
@@ -95,14 +98,14 @@ Implementation:
 - **Token Cost**: Extra tokens for structured outputs
 - **Learning Curve**: Team must understand Pydantic AI
 
-#### Neutral Consequences
+### Neutral Consequences
 
 - **Fallback Required**: Must implement keyword fallback
 - **Provider Compatibility**: Works with most providers, not all
 
-### Alternatives Considered
+## Alternatives Considered
 
-#### 1. Keyword-Based Routing Only
+### 1. Keyword-Based Routing Only
 
 **Description**: Simple string matching for routing
 
@@ -110,6 +113,7 @@ Implementation:
 if "search" in message.lower():
     action = "use_tools"
 ```
+
 **Pros**:
 - Instant (no LLM call)
 - Free (no tokens)
@@ -123,7 +127,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Too simplistic for production quality
 
-#### 2. LangChain Structured Output
+### 2. LangChain Structured Output
 
 **Description**: Use LangChain's with_structured_output
 
@@ -140,7 +144,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI more powerful and flexible
 
-#### 3. OpenAI Function Calling
+### 3. OpenAI Function Calling
 
 **Description**: Use native function calling APIs
 
@@ -157,7 +161,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Not compatible with multi-provider strategy
 
-#### 4. Instructor Library
+### 4. Instructor Library
 
 **Description**: Use Instructor for structured outputs
 
@@ -174,7 +178,7 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI has better features
 
-#### 5. Manual JSON + Pydantic Validation
+### 5. Manual JSON + Pydantic Validation
 
 **Description**: Ask LLM for JSON, validate with Pydantic
 
@@ -190,9 +194,9 @@ if "search" in message.lower():
 
 **Why Rejected**: Pydantic AI automates this better
 
-### Implementation Details
+## Implementation Details
 
-#### Routing Decision Model
+### Routing Decision Model
 
 ```python
 class RoutingDecision(BaseModel):
@@ -201,7 +205,7 @@ class RoutingDecision(BaseModel):
     reasoning: str
 ```
 
-#### Response Model
+### Response Model
 
 ```python
 class AgentResponse(BaseModel):
@@ -210,16 +214,18 @@ class AgentResponse(BaseModel):
     requires_clarification: bool
     sources: List[str]
 ```
-#### Usage in Agent
 
-```
-## src/mcp_server_langgraph/core/agent.py
+### Usage in Agent
+
+```python
+# src/mcp_server_langgraph/core/agent.py
 decision = await pydantic_agent.route_message(message)
-## decision.action: "use_tools" (typed!)
-## decision.confidence: 0.92
-## decision.reasoning: "User explicitly requested search"
+# decision.action: "use_tools" (typed!)
+# decision.confidence: 0.92
+# decision.reasoning: "User explicitly requested search"
 ```
-#### Fallback Logic
+
+### Fallback Logic
 
 ```python
 try:
@@ -229,26 +235,27 @@ except Exception:
     decision = keyword_based_routing(message)
     decision.confidence = 0.5
 ```
-#### Confidence Threshold
 
-```
-## feature_flags.py
+### Confidence Threshold
+
+```python
+# feature_flags.py
 pydantic_ai_confidence_threshold: float = 0.7
 
-## Only trust high-confidence decisions
+# Only trust high-confidence decisions
 if decision.confidence >= threshold:
     use_pydantic_ai_decision()
 else:
     use_fallback()
 ```
 
-### Performance Impact
+## Performance Impact
 
 Benchmarks on routing latency:
 
 | Method | Latency | Tokens | Accuracy |
 |--------|---------|--------|----------|
-| Keywords | &lt;1ms | 0 | 65% |
+| Keywords | `<1ms` | 0 | 65% |
 | Pydantic AI | 150ms | ~50 | 92% |
 | Function Calling | 120ms | ~40 | 90% |
 
@@ -259,9 +266,9 @@ Benchmarks on routing latency:
 - Use confidence threshold to skip uncertain routes
 - Async processing (doesn't block user)
 
-### References
+## References
 
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)
-- [Type Safety Guide](/architecture/adr-0014-pydantic-type-safety)
+- [reference/pydantic-ai.md](../reference/pydantic-ai.md)
 - Related Files: `src/mcp_server_langgraph/core/agent.py`, `llm_validators.py`
-- Related ADRs: [0001](/architecture/adr-0001-llm-multi-provider) (LiteLLM integration)
+- Related ADRs: [0001](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0001-llm-multi-provider.md) (LiteLLM integration)

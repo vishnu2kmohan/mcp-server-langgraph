@@ -192,9 +192,9 @@ class TestCodexFindingsRemediation:
         )
 
         # Check function calls
-        assert (
-            "mock_keycloak_auth" not in calls
-        ), "E2E tests should NOT call mock_keycloak_auth. Use real_keycloak_auth instead."
+        assert "mock_keycloak_auth" not in calls, (
+            "E2E tests should NOT call mock_keycloak_auth. Use real_keycloak_auth instead."
+        )
 
         assert "mock_mcp_client" not in calls, "E2E tests should NOT call mock_mcp_client. Use real_mcp_client instead."
 
@@ -422,6 +422,6 @@ class TestCodexValidationMetaTest:
         for test_func in test_methods:
             docstring = ast.get_docstring(test_func)
             assert docstring, f"Test {test_func.name} should have docstring"
-            assert (
-                "GIVEN" in docstring or "WHEN" in docstring or "THEN" in docstring
-            ), f"Test {test_func.name} should use GIVEN/WHEN/THEN format"
+            assert "GIVEN" in docstring or "WHEN" in docstring or "THEN" in docstring, (
+                f"Test {test_func.name} should use GIVEN/WHEN/THEN format"
+            )

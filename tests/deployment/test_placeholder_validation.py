@@ -18,7 +18,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = Path(__file__).parent.parent.parent
 PRODUCTION_OVERLAYS = [
     REPO_ROOT / "deployments" / "overlays" / "production-gke",
@@ -49,9 +49,7 @@ def build_overlay(overlay_path: Path) -> str:
     )
 
     if result.returncode != 0:
-        pytest.fail(
-            f"Kustomize build failed for {overlay_path.name}:\n" f"STDERR: {result.stderr}\n" f"STDOUT: {result.stdout}"
-        )
+        pytest.fail(f"Kustomize build failed for {overlay_path.name}:\nSTDERR: {result.stderr}\nSTDOUT: {result.stdout}")
 
     return result.stdout
 
@@ -203,7 +201,7 @@ def test_environment_variables_no_placeholders(overlay_path: Path):
                 for pattern in DANGEROUS_PLACEHOLDERS:
                     if re.search(pattern, str(env_value), re.IGNORECASE):
                         placeholder_envs.append(
-                            f"{doc.get('kind')}/{name} container={container_name} " f"env={env_name} value={env_value}"
+                            f"{doc.get('kind')}/{name} container={container_name} env={env_name} value={env_value}"
                         )
 
     assert not placeholder_envs, (

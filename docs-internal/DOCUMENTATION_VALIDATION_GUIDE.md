@@ -213,7 +213,7 @@ Content here...
 **Solution**:
 ```mdx
 <!-- Fix the link -->
-[Setup Guide](../getting-started/setup.mdx)
+[Setup Guide](../docs/development/setup.mdx)
 ```
 
 **Test Location**: `tests/unit/documentation/test_link_validator.py` (to be created)

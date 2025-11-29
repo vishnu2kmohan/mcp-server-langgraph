@@ -39,7 +39,7 @@ This document catalogues all deployment issues encountered and provides universa
 # WRONG - causes ModuleNotFoundError
 RUN uv pip install --no-deps -e .
 # Only copies site-packages to final stage, not full venv
-COPY --from=build /opt/venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=build /app/.venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 ```
 **Root Cause**: Editable install (`-e`) creates `.pth` pointer files in `site-packages` that reference `/app/src/`. When only `site-packages` is copied (not the full venv), the pointers break.
 

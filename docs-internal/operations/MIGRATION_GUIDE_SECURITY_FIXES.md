@@ -68,7 +68,7 @@ git log --oneline | grep "fix(security)"
 uv sync
 
 # Run tests to verify
-uv run pytest tests/api/test_service_principals_security.py \
+uv run --frozen pytest tests/api/test_service_principals_security.py \
                 tests/api/test_scim_security.py -v
 ```
 
@@ -134,7 +134,7 @@ KEYCLOAK_ADMIN_PASSWORD=your-admin-password
 **Validation**:
 ```bash
 # Test configuration loads without errors
-uv run python -c "from mcp_server_langgraph.core.config import Settings; s = Settings(); print('Config valid!')"
+uv run --frozen python -c "from mcp_server_langgraph.core.config import Settings; s = Settings(); print('Config valid!')"
 ```
 
 ---

@@ -343,18 +343,19 @@ class TestOTELCollectorConfiguration:
 
             # Check for bash-style env var syntax (should use ${env:VAR} instead)
             assert ":-" not in content, (
-                f"{config_file}: Contains bash-style env var syntax ':-'. " "Use static values or ${{env:VAR}} syntax instead."
+                f"{config_file}: Contains bash-style env var syntax ':-'. "
+                "Use static values or ${{env:VAR}} syntax instead."
             )
 
             # Check for deprecated googlecloud exporter keys
             if "googlecloud:" in content:
                 # These keys are deprecated/invalid in newer versions
-                assert (
-                    "use_insecure:" not in content
-                ), f"{config_file}: Contains deprecated 'use_insecure' key in googlecloud exporter"
-                assert (
-                    "retry_on_failure:" not in content
-                ), f"{config_file}: Contains deprecated 'retry_on_failure' key in googlecloud exporter"
+                assert "use_insecure:" not in content, (
+                    f"{config_file}: Contains deprecated 'use_insecure' key in googlecloud exporter"
+                )
+                assert "retry_on_failure:" not in content, (
+                    f"{config_file}: Contains deprecated 'retry_on_failure' key in googlecloud exporter"
+                )
 
 
 @pytest.mark.requires_kubectl
@@ -402,6 +403,13 @@ class TestKustomizeBuildValidity:
         # Allow errors for missing cluster resources (namespaces, CRDs, etc.)
         # but fail on validation errors
         if dry_run_result.returncode != 0:
+            error_output = dry_run_result.stderr.lower()
+
+            # Skip if Kubernetes cluster is unavailable (CI environment without cluster)
+            connection_errors = ["connection refused", "failed to download openapi", "unable to connect"]
+            if any(err in error_output for err in connection_errors):
+                pytest.skip("Kubernetes cluster not available for dry-run validation (CI environment)")
+
             error_lines = dry_run_result.stderr.split("\n")
             validation_errors = [line for line in error_lines if "invalid" in line.lower() or "error" in line.lower()]
 

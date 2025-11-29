@@ -103,12 +103,11 @@ def validate_jwt_secret() -> None:
         ValueError: If TEST_JWT_SECRET does not meet requirements
     """
     if len(TEST_JWT_SECRET) < 16:
-        raise ValueError(f"TEST_JWT_SECRET must be at least 16 characters. " f"Current length: {len(TEST_JWT_SECRET)}")
+        raise ValueError(f"TEST_JWT_SECRET must be at least 16 characters. Current length: {len(TEST_JWT_SECRET)}")
 
     if "test" not in TEST_JWT_SECRET.lower():
         raise ValueError(
-            f"TEST_JWT_SECRET should contain 'test' to clearly indicate it's for testing. "
-            f"Current value: '{TEST_JWT_SECRET}'"
+            f"TEST_JWT_SECRET should contain 'test' to clearly indicate it's for testing. Current value: '{TEST_JWT_SECRET}'"
         )
 
 

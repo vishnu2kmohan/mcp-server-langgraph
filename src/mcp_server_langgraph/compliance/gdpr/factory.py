@@ -11,8 +11,6 @@ Pattern: Factory pattern with dependency injection
 
 from typing import Any, Literal
 
-import asyncpg
-
 from mcp_server_langgraph.compliance.gdpr.postgres_storage import (
     PostgresAuditLogStore,
     PostgresConsentStore,

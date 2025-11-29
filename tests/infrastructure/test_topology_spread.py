@@ -98,9 +98,9 @@ class TestTopologySpreadConstraints:
             values = yaml.safe_load(f)
 
         # Should have topologySpreadConstraints configuration
-        assert "topologySpreadConstraints" in values or "topology" in values.get(
-            "affinity", {}
-        ), "Helm values missing topology spread configuration"
+        assert "topologySpreadConstraints" in values or "topology" in values.get("affinity", {}), (
+            "Helm values missing topology spread configuration"
+        )
 
 
 @pytest.mark.xdist_group(name="testpodantiaffinity")

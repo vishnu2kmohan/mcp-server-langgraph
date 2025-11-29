@@ -1,11 +1,14 @@
-# ADR-0054: Pod Failure Prevention Framework
+# 54. Pod Failure Prevention Framework
 
-**Status**: Accepted
-**Date**: 2025-11-12
-**Authors**: Platform Team
-**Related ADRs**: ADR-0053 (CI/CD Failure Prevention)
+Date: 2025-11-12
 
----
+## Status
+
+Accepted
+
+## Category
+
+Infrastructure & Deployment
 
 ## Context
 

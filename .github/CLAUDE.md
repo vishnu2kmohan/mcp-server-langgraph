@@ -621,9 +621,9 @@ Please update the tests to properly mock the Redis client."
 
 1. **Use `uv run`** (preferred):
    ```bash
-   uv run python script.py
-   uv run pytest tests/
-   uv run mypy src/
+   uv run --frozen python script.py
+   uv run --frozen pytest tests/
+   uv run --frozen mypy src/
    ```
 
 2. **Explicit venv path**:
@@ -698,7 +698,7 @@ git push
 make git-hooks
 
 # Verify hooks are configured
-python scripts/validate_pre_push_hook.py
+python scripts/validators/validate_pre_push_hook.py
 ```python
 #### When Claude Code Should Commit/Push
 
@@ -718,7 +718,7 @@ python scripts/validate_pre_push_hook.py
 
 Claude Code can measure hook performance:
 ```bash
-python scripts/measure_hook_performance.py --stage all
+python scripts/dev/measure_hook_performance.py --stage all
 ```python
 #### Documentation References
 

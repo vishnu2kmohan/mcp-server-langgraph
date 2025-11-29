@@ -77,9 +77,9 @@ class TestAccurateTokenCounting:
 
         # Should NOT be using the len(text)//4 fallback
         char_count_estimate = len(text) // 4
-        assert (
-            token_count != char_count_estimate
-        ), "SECURITY: Token counting appears to be using len(text)//4 fallback instead of tiktoken for GPT-4"
+        assert token_count != char_count_estimate, (
+            "SECURITY: Token counting appears to be using len(text)//4 fallback instead of tiktoken for GPT-4"
+        )
 
     def test_anthropic_token_counting_for_claude(self):
         """

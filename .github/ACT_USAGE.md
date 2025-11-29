@@ -143,7 +143,7 @@ act -s GITHUB_TOKEN="$(gh auth token)" push --workflows .github/workflows/build-
 ```bash
 act -s GITHUB_TOKEN="$(gh auth token)" push --workflows .github/workflows/ci.yaml --job test
 ```
-**What it does**: Runs pytest unit tests on Python 3.10, 3.11, 3.12
+**What it does**: Runs pytest unit tests on Python 3.11, 3.12, 3.13
 **Runtime**: ~5-10 minutes (matrix of 3 Python versions)
 **Dependencies**: Python, uv, pytest
 

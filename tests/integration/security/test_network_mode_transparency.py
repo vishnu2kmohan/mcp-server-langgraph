@@ -20,23 +20,18 @@ References:
 
 import gc
 import logging
-from unittest.mock import MagicMock
 
 import pytest
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 
+# Docker is an optional dependency - use the module's availability check
+from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
+from mcp_server_langgraph.execution import docker_sandbox
+
 pytestmark = pytest.mark.integration
 
-# Docker is an optional dependency - mock if not available
-try:
-    import docker  # noqa: F401
-    from mcp_server_langgraph.execution.docker_sandbox import DockerSandbox
-
-    DOCKER_AVAILABLE = True
-except ImportError:
-    DOCKER_AVAILABLE = False
-    DockerSandbox = MagicMock
+DOCKER_AVAILABLE = docker_sandbox.DOCKER_AVAILABLE
 
 
 @pytest.mark.security
@@ -185,9 +180,9 @@ class TestNetworkModeDocumentation:
         source = inspect.getsource(DockerSandbox._get_network_mode)
 
         assert "allowlist" in source.lower(), "_get_network_mode must reference allowlist mode"
-        assert (
-            "not implemented" in source.lower() or "fail closed" in source.lower()
-        ), "_get_network_mode must document that allowlist is not implemented"
+        assert "not implemented" in source.lower() or "fail closed" in source.lower(), (
+            "_get_network_mode must document that allowlist is not implemented"
+        )
 
 
 @pytest.mark.security
@@ -208,9 +203,9 @@ class TestNetworkModeSecurityDefaults:
         """
         limits = ResourceLimits(timeout_seconds=30, memory_limit_mb=512)
 
-        assert (
-            limits.network_mode == "none"
-        ), f"SECURITY: Default network_mode should be 'none' (fail-closed), got '{limits.network_mode}'"
+        assert limits.network_mode == "none", (
+            f"SECURITY: Default network_mode should be 'none' (fail-closed), got '{limits.network_mode}'"
+        )
 
     @pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker package not available")
     def test_allowed_domains_ignored_when_network_disabled(self):

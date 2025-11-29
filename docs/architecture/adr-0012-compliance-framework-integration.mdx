@@ -1,20 +1,21 @@
 ---
-title: 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)
-description: 'Architecture Decision Record: 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)'
-icon: 'file-lines'
-seoTitle: "ADR-0012: 12. Built-In Compliance Framework (GDPR, SOC 2, HI"
-seoDescription: "Architecture Decision Record 0012: Architecture Decision Record: 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "12."]
-contentType: "explanation"
+title: "12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)"
+description: "Architecture Decision Record: 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)"
 ---
+
+# 12. Built-In Compliance Framework (GDPR, SOC 2, HIPAA)
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Security & Compliance
+
+## Context
 
 Enterprise customers require regulatory compliance:
 - **GDPR**: Data subject rights (EU)
@@ -27,11 +28,11 @@ Implementing compliance from scratch requires:
 - Ongoing maintenance
 - Audit preparation
 
-### Decision
+## Decision
 
 Integrate **comprehensive compliance framework** with automated evidence collection and reporting.
 
-#### Features
+### Features
 
 **GDPR (5 REST APIs)**:
 - Article 15: Data access
@@ -52,22 +53,22 @@ Integrate **comprehensive compliance framework** with automated evidence collect
 - Data integrity controls
 - Automatic session timeout
 
-### Consequences
+## Consequences
 
-#### Positive
+### Positive
 
 - **Enterprise Ready**: Compliance out-of-the-box
 - **Audit Prepared**: Automated evidence collection
 - **Market Differentiation**: Competitive advantage
 - **Reduced Risk**: Built-in best practices
 
-#### Negative
+### Negative
 
 - **Complexity**: Large codebase addition
 - **Maintenance**: Keep updated with regulations
 - **Not Legal Advice**: Still requires legal review
 
-### References
+## References
 
 - Implementation: `src/mcp_server_langgraph/core/compliance/`
 - Documentation: `docs/COMPLIANCE.md`

@@ -13,14 +13,13 @@ The auth middleware should:
 """
 
 import gc
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, TokenVerification
-from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 
 pytestmark = pytest.mark.unit
 

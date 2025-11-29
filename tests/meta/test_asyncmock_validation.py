@@ -42,7 +42,7 @@ mock_conn.fetchval = AsyncMock  # noqa: async-mock-config(return_value=1)
             f.flush()
 
             result = subprocess.run(
-                ["python", "scripts/validation/check_asyncmock_usage.py", f.name],
+                ["python", "scripts/validators/check_asyncmock_usage.py", f.name],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -66,7 +66,7 @@ mock_conn.method = AsyncMock(side_effect=Exception("error"))
             f.flush()
 
             result = subprocess.run(
-                ["python", "scripts/validation/check_asyncmock_usage.py", f.name],
+                ["python", "scripts/validators/check_asyncmock_usage.py", f.name],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -88,7 +88,7 @@ mock_obj = AsyncMock()  # Create instance, not AsyncMock class
             f.flush()
 
             result = subprocess.run(
-                ["python", "scripts/validation/check_asyncmock_usage.py", f.name],
+                ["python", "scripts/validators/check_asyncmock_usage.py", f.name],
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -110,7 +110,7 @@ mock_obj = AsyncMock()
             f.flush()
 
             result = subprocess.run(
-                ["python", "scripts/validation/check_asyncmock_usage.py", f.name],
+                ["python", "scripts/validators/check_asyncmock_usage.py", f.name],
                 capture_output=True,
                 text=True,
                 timeout=60,

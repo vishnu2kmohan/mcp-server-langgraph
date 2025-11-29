@@ -23,14 +23,15 @@ run_step() {
 # Phase 1
 run_step "Lockfile Check" "uv lock --check"
 run_step "Dependency Check" "uv pip check"
-run_step "Workflow Syntax" "OTEL_SDK_DISABLED=true uv run pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short"
+run_step "Workflow Syntax" "OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py tests/meta/ci/test_workflow_dependencies.py tests/meta/infrastructure/test_docker_paths.py -v --tb=short"
 
 # Phase 2
-run_step "MyPy" "uv run mypy src/mcp_server_langgraph --no-error-summary"
+# Use --frozen to ensure lockfile-pinned versions (prevents version drift)
+run_step "MyPy" "uv run --frozen mypy src/mcp_server_langgraph --no-error-summary"
 
 # Phase 3
 # Replicating scripts/run_pre_push_tests.py but WITHOUT -x
-run_step "Pre-push Tests (No fail-fast)" "OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run pytest -n auto --testmon --tb=short -m '(unit or api or property) and not llm' tests/"
+run_step "Pre-push Tests (No fail-fast)" "OTEL_SDK_DISABLED=true HYPOTHESIS_PROFILE=ci uv run --frozen pytest -n auto --testmon --tb=short -m '(unit or api or property) and not llm' tests/"
 
 # Integration tests
 run_step "Integration Tests" "./scripts/test-integration.sh"

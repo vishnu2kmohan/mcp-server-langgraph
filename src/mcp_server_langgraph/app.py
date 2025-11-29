@@ -24,6 +24,7 @@ from mcp_server_langgraph.api import api_keys_router, gdpr_router, health_router
 from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
 from mcp_server_langgraph.api.error_handlers import register_exception_handlers
 from mcp_server_langgraph.api.health import run_startup_validation_async
+from mcp_server_langgraph.auth.factory import create_user_provider
 from mcp_server_langgraph.auth.middleware import AuthMiddleware, set_global_auth_middleware
 from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.middleware.rate_limiter import setup_rate_limiting
@@ -106,7 +107,9 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
 
     # Authentication middleware - intercepts requests and verifies JWT tokens
     # Sets request.state.user for authenticated requests
-    auth_middleware = AuthMiddleware(secret_key=config.jwt_secret_key, settings=config)
+    # Use factory to create the correct user provider based on AUTH_PROVIDER setting
+    user_provider = create_user_provider(config)
+    auth_middleware = AuthMiddleware(secret_key=config.jwt_secret_key, settings=config, user_provider=user_provider)
     set_global_auth_middleware(auth_middleware)  # Set global instance for dependency injection
     app.add_middleware(AuthRequestMiddleware, auth_middleware=auth_middleware)
     try:

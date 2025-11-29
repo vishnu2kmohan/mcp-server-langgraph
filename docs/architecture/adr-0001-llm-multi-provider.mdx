@@ -1,20 +1,21 @@
 ---
-title: 1. Multi-Provider LLM Support via LiteLLM
-description: 'Architecture Decision Record: 1. Multi-Provider LLM Support via LiteLLM'
-icon: 'file-lines'
-seoTitle: "ADR-0001: 1. Multi-Provider LLM Support via LiteLLM"
-seoDescription: "Architecture Decision Record 0001: Architecture Decision Record: 1. Multi-Provider LLM Support via LiteLLM"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "1."]
-contentType: "explanation"
+title: "1. Multi-Provider LLM Support via LiteLLM"
+description: "Architecture Decision Record: 1. Multi-Provider LLM Support via LiteLLM"
 ---
+
+# 1. Multi-Provider LLM Support via LiteLLM
 
 Date: 2025-10-11
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Core Architecture
+
+## Context
 
 The MCP server needs to support multiple LLM providers to offer flexibility, avoid vendor lock-in, and enable fallback mechanisms for high availability. Users may want to:
 
@@ -29,7 +30,7 @@ Direct integration with each provider (Anthropic SDK, OpenAI SDK, Google SDK, et
 - Complex fallback logic
 - Difficulty adding new providers
 
-### Decision
+## Decision
 
 We will use **LiteLLM** as the unified interface for all LLM providers.
 
@@ -46,9 +47,9 @@ Implementation in `llm_factory.py`:
 - Automatic fallback to alternative models
 - Consistent interface regardless of provider
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 
 - **Flexibility**: Easy to switch providers via configuration
 - **Reliability**: Automatic fallback increases uptime
@@ -57,21 +58,21 @@ Implementation in `llm_factory.py`:
 - **Local Development**: Can use Ollama for offline development
 - **Cost Optimization**: Easy to use cheaper models as fallbacks
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Abstraction Layer**: Additional dependency between code and LLM APIs
 - **Feature Limitations**: Provider-specific features may not be exposed
 - **Debugging Complexity**: Errors may be obscured by abstraction
 - **Dependency Risk**: Reliant on LiteLLM maintenance
 
-#### Neutral Consequences
+### Neutral Consequences
 
 - **Performance**: Minimal overhead from abstraction layer
 - **Learning Curve**: Developers must learn LiteLLM patterns
 
-### Alternatives Considered
+## Alternatives Considered
 
-#### 1. Direct SDK Integration
+### 1. Direct SDK Integration
 
 **Description**: Use native SDKs (anthropic, openai, google-generativeai) directly
 
@@ -88,7 +89,7 @@ Implementation in `llm_factory.py`:
 
 **Why Rejected**: Too much duplication and complexity
 
-#### 2. LangChain ChatModels
+### 2. LangChain ChatModels
 
 **Description**: Use LangChain's ChatModel abstraction
 
@@ -105,7 +106,7 @@ Implementation in `llm_factory.py`:
 
 **Why Rejected**: LiteLLM is more lightweight and flexible
 
-#### 3. Custom Abstraction Layer
+### 3. Custom Abstraction Layer
 
 **Description**: Build our own provider abstraction
 
@@ -122,20 +123,21 @@ Implementation in `llm_factory.py`:
 
 **Why Rejected**: Not worth reinventing when good solution exists
 
-### Implementation Details
+## Implementation Details
 
-#### Provider Configuration
+### Provider Configuration
 
-```
-## src/mcp_server_langgraph/core/config.py
+```python
+# src/mcp_server_langgraph/core/config.py
 llm_provider: str = "google"  # google, anthropic, openai, ollama
 model_name: str = "gemini-2.5-flash-002"
 fallback_models: list[str] = ["gemini-2.5-pro", "claude-3-5-sonnet"]
 ```
-#### Factory Pattern
 
-```
-## llm_factory.py
+### Factory Pattern
+
+```python
+# llm_factory.py
 def create_llm_from_config(config) -> LLMFactory:
     return LLMFactory(
         provider=config.llm_provider,
@@ -145,16 +147,16 @@ def create_llm_from_config(config) -> LLMFactory:
     )
 ```
 
-#### Usage
+### Usage
 
 ```python
 llm = create_llm_from_config(settings)
 response = await llm.ainvoke(messages)  # Works with any provider
 ```
 
-### References
+## References
 
 - [LiteLLM Documentation](https://docs.litellm.ai/)
 - [Supported Providers](https://docs.litellm.ai/docs/providers)
-- [Multi-LLM Setup Guide](/guides/multi-llm-setup)
-- Related ADRs: [0005](/architecture/adr-0005-pydantic-ai-integration) (Pydantic AI uses LiteLLM)
+- [integrations/litellm.md](../integrations/litellm.md)
+- Related ADRs: [0005](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0005-pydantic-ai-integration.md) (Pydantic AI uses LiteLLM)

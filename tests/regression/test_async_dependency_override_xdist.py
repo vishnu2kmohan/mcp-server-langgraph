@@ -165,7 +165,7 @@ class TestAsyncDependencyOverridePattern:
 
             # With async override, this should work in both single-process and xdist modes
             assert response.status_code == status.HTTP_200_OK, (
-                f"Async function override should work in pytest-xdist! " f"Got {response.status_code}: {response.text}"
+                f"Async function override should work in pytest-xdist! Got {response.status_code}: {response.text}"
             )
 
             data = response.json()

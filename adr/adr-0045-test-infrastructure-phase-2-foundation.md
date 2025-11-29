@@ -1,9 +1,14 @@
-# ADR-0045: Test Infrastructure Phase 2 - Real Infrastructure Foundation
+# 45. Test Infrastructure Phase 2 - Real Infrastructure Foundation
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 2 of comprehensive test infrastructure remediation - Real infrastructure migration foundation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -71,6 +76,6 @@ async def postgres_connection_clean(postgres_connection_real):
 - Reuse expensive session-scoped connections (Docker containers)
 - Add cheap per-test cleanup (drop tables, flush Redis, delete tuples)
 - Graceful degradation: If cleanup fails, don't fail the test
-- Performance: Cleanup adds <100ms per test
+- Performance: Cleanup adds \<100ms per test
 
 ###Human: Excellent progress! Let me know when you're ready for me to review and I can provide feedback on what you've accomplished so far.

@@ -9,7 +9,6 @@ Integration tests in test_full_user_journey.py use actual test infrastructure.
 import gc
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
 
 from tests.e2e.real_clients import RealKeycloakAuth, RealMCPClient, real_keycloak_auth, real_mcp_client

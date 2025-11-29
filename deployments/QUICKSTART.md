@@ -47,7 +47,7 @@ print(f'Databases: {list(result.databases.keys())}')
 "
 ```
 
-**See**: [ADR-0056: Database Architecture](../adr/adr-0056-database-architecture-and-naming-convention.md) for complete architecture documentation.
+**See**: [ADR-0060: Database Architecture](../adr/adr-0060-database-architecture-and-naming-convention.md) for complete architecture documentation.
 
 ## Quick Start Options
 

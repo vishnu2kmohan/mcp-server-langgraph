@@ -308,7 +308,7 @@ docker history docker-test-runner:latest --no-trunc
 
 - [PYTEST_XDIST_BEST_PRACTICES.md](./PYTEST_XDIST_BEST_PRACTICES.md) - pytest-xdist worker isolation
 - [test_bearer_scheme_override_diagnostic.py](./regression/test_bearer_scheme_override_diagnostic.py) - Diagnostic tests
-- [docker-compose.test.yml](../docker/docker-compose.test.yml) - Integration test configuration
+- [docker-compose.test.yml](../docker-compose.test.yml) - Integration test configuration
 - [test-integration.sh](../scripts/test-integration.sh) - Integration test script
 
 ---

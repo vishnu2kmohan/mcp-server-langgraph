@@ -1,8 +1,14 @@
-# ADR-0041: Pure PostgreSQL for GDPR/HIPAA/SOC2 Compliance Storage
+# 41. Pure PostgreSQL for GDPR/HIPAA/SOC2 Compliance Storage
+
+Date: 2025-11-02
 
 ## Status
 
-**Accepted** (2025-11-02)
+Accepted
+
+## Category
+
+Security & Compliance
 
 ## Context
 
@@ -57,7 +63,7 @@ The previous implementation used in-memory storage, which is:
 - Excellent backup/restore capabilities
 
 **Cons:**
-- Slower than Redis (5-10ms vs <1ms)
+- Slower than Redis (5-10ms vs \<1ms)
 - Requires schema migrations
 - New dependency (asyncpg)
 
@@ -205,7 +211,7 @@ await storage.audit_logs.log(audit_entry)
 ### Negative
 
 1. ⚠️ **Slightly slower than Redis**
-   - 5-10ms vs <1ms for Redis
+   - 5-10ms vs \<1ms for Redis
    - Acceptable for infrequent GDPR operations
    - Not a performance bottleneck
 

@@ -215,12 +215,6 @@ FIXME: Task 2
         assert len(result.markers) == 0
         assert result.stats["total_files"] == 0
 
-    @pytest.mark.xdist_group(name="validators")
-    def teardown_method(self):
-        """Force GC to prevent mock accumulation in xdist workers."""
-
-        gc.collect()
-
 
 @pytest.mark.xdist_group(name="testtodomarker")
 class TestTodoMarker:

@@ -409,32 +409,32 @@ make dev-down
 
 ### **Run All Tests**
 ```bash
-uv run pytest tests/ -v
+uv run --frozen pytest tests/ -v
 ```
 
 ### **Run Specific Test Suites**
 ```bash
 # Code validator + security
-uv run pytest tests/unit/execution/ tests/security/ -v
+uv run --frozen pytest tests/unit/execution/ tests/security/ -v
 
 # Execute python tool
-uv run pytest tests/unit/tools/test_code_execution_tools.py -v
+uv run --frozen pytest tests/unit/tools/test_code_execution_tools.py -v
 
 # Docker sandbox (requires Docker)
-uv run pytest tests/integration/execution/test_docker_sandbox.py -v
+uv run --frozen pytest tests/integration/execution/test_docker_sandbox.py -v
 
 # Configuration
-uv run pytest tests/test_code_execution_config.py -v
+uv run --frozen pytest tests/test_code_execution_config.py -v
 ```
 
 ### **Run with Coverage**
 ```bash
-uv run pytest tests/ --cov=src/mcp_server_langgraph/execution --cov-report=html
+uv run --frozen pytest tests/ --cov=src/mcp_server_langgraph/execution --cov-report=html
 ```
 
 ### **Run Property-Based Tests**
 ```bash
-uv run pytest tests/ -m property -v
+uv run --frozen pytest tests/ -m property -v
 ```
 
 ---

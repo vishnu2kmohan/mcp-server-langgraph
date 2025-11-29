@@ -553,9 +553,9 @@ class TestOpenFGACircuitBreakerCriticality:
         cb.open()  # Directly transition to open state
 
         # Verify circuit breaker is open
-        assert (
-            hasattr(cb.state, "name") and cb.state.name == "open"
-        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+        assert hasattr(cb.state, "name") and cb.state.name == "open", (
+            f"Expected circuit breaker to be open, got state: {cb.state}"
+        )
 
         # Now check permission for critical resource - should return False (fail-closed)
         result = await client.check_permission(
@@ -599,9 +599,9 @@ class TestOpenFGACircuitBreakerCriticality:
         cb.open()  # Directly transition to open state
 
         # Verify circuit breaker is open
-        assert (
-            hasattr(cb.state, "name") and cb.state.name == "open"
-        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+        assert hasattr(cb.state, "name") and cb.state.name == "open", (
+            f"Expected circuit breaker to be open, got state: {cb.state}"
+        )
 
         # Now check permission for non-critical resource - should return True (fail-open)
         result = await client.check_permission(
@@ -645,9 +645,9 @@ class TestOpenFGACircuitBreakerCriticality:
         cb.open()  # Directly transition to open state
 
         # Verify circuit breaker is open
-        assert (
-            hasattr(cb.state, "name") and cb.state.name == "open"
-        ), f"Expected circuit breaker to be open, got state: {cb.state}"
+        assert hasattr(cb.state, "name") and cb.state.name == "open", (
+            f"Expected circuit breaker to be open, got state: {cb.state}"
+        )
 
         # Check permission without specifying critical parameter
         result = await client.check_permission(user=get_user_id("alice"), relation="executor", object="tool:sensitive")

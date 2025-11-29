@@ -37,7 +37,7 @@ def docker_available():
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandbox")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandbox:
     """Test Docker sandbox basic functionality"""
 
@@ -125,7 +125,7 @@ print(data)
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxresourcelimits")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxResourceLimits:
     """Test resource limit enforcement"""
 
@@ -193,7 +193,7 @@ print(f'Duration: {duration:.2f}s')
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxnetworkisolation")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxNetworkIsolation:
     """Test network isolation"""
 
@@ -292,7 +292,7 @@ except Exception as e:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxsecurity")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxSecurity:
     """Test security isolation"""
 
@@ -358,7 +358,7 @@ except PermissionError:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxcleanup")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxCleanup:
     """Test resource cleanup"""
 
@@ -370,6 +370,8 @@ class TestDockerSandboxCleanup:
         """Test that containers are cleaned up after successful execution"""
         import docker
 
+        from tests.helpers.polling import poll_until
+
         client = docker.from_env()
 
         initial_containers = len(client.containers.list(all=True))
@@ -380,18 +382,19 @@ class TestDockerSandboxCleanup:
 
         assert result.success is True
 
-        # Wait a moment for cleanup
-        import time
+        # Poll for container cleanup (Docker's async cleanup can take 0.3-2s)
+        # Using poll_until instead of fixed sleep prevents flakiness on slow systems
+        poll_until(lambda: len(client.containers.list(all=True)) <= initial_containers, interval=0.2, timeout=3.0)
 
-        time.sleep(1)
-
-        # Container should be removed
+        # Verify cleanup completed
         final_containers = len(client.containers.list(all=True))
         assert final_containers <= initial_containers
 
     def test_container_cleanup_on_error(self, docker_available):
         """Test that containers are cleaned up even on error"""
         import docker
+
+        from tests.helpers.polling import poll_until
 
         client = docker.from_env()
 
@@ -403,17 +406,11 @@ class TestDockerSandboxCleanup:
 
         assert result.success is False
 
-        # Wait for cleanup with polling (Docker's async cleanup can take time)
-        import time
+        # Poll for container cleanup (Docker's async cleanup can take 0.3-2s)
+        # Using poll_until with shorter intervals is faster than manual 1s polling
+        poll_until(lambda: len(client.containers.list(all=True)) <= initial_containers, interval=0.2, timeout=3.0)
 
-        max_wait = 5  # seconds
-        for i in range(max_wait):
-            final_containers = len(client.containers.list(all=True))
-            if final_containers <= initial_containers:
-                break
-            time.sleep(1)
-
-        # Container should be removed
+        # Verify cleanup completed
         final_containers = len(client.containers.list(all=True))
         assert final_containers <= initial_containers, f"Container cleanup failed: {final_containers} > {initial_containers}"
 
@@ -444,7 +441,7 @@ class TestDockerSandboxCleanup:
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxconfiguration")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxConfiguration:
     """Test sandbox configuration options"""
 
@@ -487,7 +484,7 @@ print(f'Working dir: {os.getcwd()}')
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxerrorhandling")
+@pytest.mark.xdist_group(name="docker_sandbox")
 class TestDockerSandboxErrorHandling:
     """Test error handling"""
 
@@ -524,13 +521,13 @@ class TestDockerSandboxErrorHandling:
 
 
 # ============================================================================
-# TDD RED Phase: OpenAI Codex Finding #4 - Docker Sandbox Security
+# TDD RED Phase: OpenAI Codex Finding #4 - Docker Sandbox Security Hardening
 # ============================================================================
 
 
 @pytest.mark.integration
-@pytest.mark.xdist_group(name="testdockersandboxsecurity")
-class TestDockerSandboxSecurity:
+@pytest.mark.xdist_group(name="docker_sandbox")
+class TestDockerSandboxSecurityHardening:
     """
     TDD RED phase tests for Docker sandbox security hardening (OpenAI Codex Finding #4).
 
@@ -574,9 +571,7 @@ except (IOError, OSError, PermissionError) as e:
 
         # Root FS should be read-only, preventing writes outside /tmp
         assert "WRITE_BLOCKED" in result.stdout, (
-            "Root filesystem should be read-only! "
-            "Container can write to /, which is a security risk. "
-            f"Output: {result.stdout}"
+            f"Root filesystem should be read-only! Container can write to /, which is a security risk. Output: {result.stdout}"
         )
         assert "WRITE_SUCCEEDED" not in result.stdout
 
@@ -647,9 +642,7 @@ except Exception as e:
         result = sandbox.execute(code)
 
         # Unlisted domain should be blocked
-        assert "BLOCKED_DOMAIN_DENIED" in result.stdout, (
-            "Network allowlist should block google.com. " f"Output: {result.stdout}"
-        )
+        assert "BLOCKED_DOMAIN_DENIED" in result.stdout, f"Network allowlist should block google.com. Output: {result.stdout}"
         assert "BLOCKED_DOMAIN_ACCESSIBLE" not in result.stdout
 
         # Allowed domain should work

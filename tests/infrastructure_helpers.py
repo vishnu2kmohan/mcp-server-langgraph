@@ -29,7 +29,7 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent

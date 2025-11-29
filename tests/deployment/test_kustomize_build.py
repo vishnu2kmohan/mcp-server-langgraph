@@ -16,7 +16,7 @@ import yaml
 from tests.fixtures.tool_fixtures import requires_tool
 
 # Mark as unit test to ensure it runs in CI (deployment validation)
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 REPO_ROOT = Path(__file__).parent.parent.parent
 OVERLAYS_DIR = REPO_ROOT / "deployments" / "overlays"
 CLOUD_OVERLAYS_DIR = REPO_ROOT / "deployments" / "kubernetes" / "overlays"
@@ -57,7 +57,7 @@ def test_overlay_builds_successfully(overlay_dir: Path):
     """Test that overlay builds without errors."""
     stdout, stderr, returncode = build_kustomize(overlay_dir)
 
-    assert returncode == 0, f"Kustomize build failed for {overlay_dir.name}:\n" f"stderr: {stderr}\n" f"stdout: {stdout}"
+    assert returncode == 0, f"Kustomize build failed for {overlay_dir.name}:\nstderr: {stderr}\nstdout: {stdout}"
 
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for kustomize build")
@@ -148,7 +148,7 @@ def test_namespace_consistency_across_all_resources_matches_overlay(overlay_dir:
                 name = manifest.get("metadata", {}).get("name")
 
                 assert namespace == expected_namespace, (
-                    f"Resource {kind}/{name} has namespace '{namespace}' " f"but expected '{expected_namespace}'"
+                    f"Resource {kind}/{name} has namespace '{namespace}' but expected '{expected_namespace}'"
                 )
 
 
@@ -209,9 +209,9 @@ def test_deployments_have_valid_selectors(overlay_dir: Path):
 
         for key, value in match_labels.items():
             assert key in template_labels, f"Deployment {name}: matchLabel '{key}' not in template labels"
-            assert (
-                template_labels[key] == value
-            ), f"Deployment {name}: matchLabel '{key}={value}' != template '{template_labels[key]}'"
+            assert template_labels[key] == value, (
+                f"Deployment {name}: matchLabel '{key}={value}' != template '{template_labels[key]}'"
+            )
 
 
 @requires_tool("kubectl", skip_reason="kubectl CLI not installed - required for service validation")

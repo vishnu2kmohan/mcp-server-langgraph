@@ -5,7 +5,7 @@ Provides a registry of tools that the agent can execute.
 Tools are defined using LangChain's @tool decorator for automatic schema generation.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.tools import BaseTool
 

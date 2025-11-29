@@ -83,8 +83,8 @@ Check these in act output:
 ```
 | Install dependencies
 | # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
-| uv sync --frozen --extra dev --extra builder
-| ✓ Dependencies installed from lockfile with dev+builder extras
+| uv sync --frozen --extra dev
+| ✓ Dependencies installed from lockfile with dev extras
 - ✅ GOOD (--frozen flag prevents dependency drift)
 ```
 
@@ -99,7 +99,7 @@ Check these in act output:
 #### Script Execution
 ```
 | Run skipped test tracker
-| uv run python scripts/ci/track-skipped-tests.py
+| uv run --frozen python scripts/ci/track-skipped-tests.py
 - ✅ GOOD
 ```
 
@@ -144,7 +144,7 @@ Example:
 ```
 fix: add missing optional dependencies to E2E tests workflow
 
-- Add --extra dev --extra builder to uv sync command
+- Add --extra dev to uv sync command
 - Fixes ModuleNotFoundError: No module named 'black'
 - Tested locally with act before committing
 
@@ -204,7 +204,7 @@ gh run list --limit=5
 # ✅ GOOD (--frozen prevents drift, extras for test dependencies)
 - run: |
     # --frozen: Fail if lockfile is out of sync (prevents dependency drift)
-    uv sync --frozen --extra dev --extra builder
+    uv sync --frozen --extra dev
 ```
 
 **Test with act**: Should show dependency installation success
@@ -234,7 +234,7 @@ gh run list --limit=5
 - run: python scripts/ci/check-links.py
 
 # ✅ GOOD
-- run: uv run python scripts/ci/check-links.py
+- run: uv run --frozen python scripts/ci/check-links.py
 ```
 
 **Test with act**: Shows if python is in PATH correctly

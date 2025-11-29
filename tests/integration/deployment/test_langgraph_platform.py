@@ -42,7 +42,6 @@ class TestLangGraphPlatformDeployment:
     def test_can_import_agent_module(self):
         """Verify the agent module can be imported without errors"""
         import sys
-        from pathlib import Path
 
         # Add deployments to path
         deployments_dir = get_repo_root() / "deployments"
@@ -61,7 +60,6 @@ class TestLangGraphPlatformDeployment:
     def test_can_import_create_graph_function(self):
         """Verify the create_graph function can be imported"""
         import sys
-        from pathlib import Path
 
         deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
@@ -79,7 +77,6 @@ class TestLangGraphPlatformDeployment:
     def test_can_import_graph_instance(self):
         """Verify the graph instance can be imported"""
         import sys
-        from pathlib import Path
 
         deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
@@ -97,7 +94,6 @@ class TestLangGraphPlatformDeployment:
     def test_graph_has_required_attributes(self):
         """Verify the graph instance has expected LangGraph attributes"""
         import sys
-        from pathlib import Path
 
         deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
@@ -115,7 +111,6 @@ class TestLangGraphPlatformDeployment:
     def test_agent_state_type_defined(self):
         """Verify AgentState TypedDict is properly defined"""
         import sys
-        from pathlib import Path
 
         deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))
@@ -131,7 +126,7 @@ class TestLangGraphPlatformDeployment:
             actual_fields = set(annotations.keys())
 
             assert expected_fields == actual_fields, (
-                f"AgentState should have fields {expected_fields}, " f"but has {actual_fields}"
+                f"AgentState should have fields {expected_fields}, but has {actual_fields}"
             )
         finally:
             if str(deployments_dir) in sys.path:
@@ -140,7 +135,6 @@ class TestLangGraphPlatformDeployment:
     def test_create_graph_returns_compiled_graph(self):
         """Verify create_graph returns a properly compiled LangGraph"""
         import sys
-        from pathlib import Path
 
         deployments_dir = get_repo_root() / "deployments"
         sys.path.insert(0, str(deployments_dir))

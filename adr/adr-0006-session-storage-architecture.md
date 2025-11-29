@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 Production authentication systems require stateful session management to track user sessions, enable session revocation, and provide sliding expiration windows. However, different deployment environments have different requirements:

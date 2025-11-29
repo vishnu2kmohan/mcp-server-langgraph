@@ -45,7 +45,8 @@ class TestMarkerConsistency:
         """
         # Expected marker expression (should be consistent everywhere)
         # Based on audit analysis, we should use the more comprehensive one
-        EXPECTED_MARKER = "(unit or api or property) and not llm"
+        # Updated 2025-11-26: Added 'validation' marker for deployment/config validation tests
+        EXPECTED_MARKER = "(unit or api or property or validation) and not llm"
 
         # 1. Check pre-push hook marker
         pre_push_hook = Path(".githooks/pre-push")

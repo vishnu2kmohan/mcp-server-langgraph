@@ -1,19 +1,19 @@
 ---
-title: 'ADR-0048: PostgreSQL Storage Integration Tests'
-description: 'Following completion of Phases 1 & 2, Phase 3 addresses the critical OpenAI Codex finding: Compliance storage tests stop at Pydantic instantiation; add CRUD coverage for the in-memory stores and integration tests against the actual persistence layer.'
-icon: 'file-lines'
-seoTitle: "ADR-0048: PostgreSQL Storage Integration Tests"
-seoDescription: "Architecture Decision Record 0048: Comprehensive PostgreSQL storage backend validation and integration testing"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "ADR-0048", "PostgreSQL", "storage", "integration testing", "GDPR", "HIPAA", "compliance"]
-contentType: "explanation"
+title: "48. PostgreSQL Storage Integration Tests"
+description: "Architecture Decision Record: 48. PostgreSQL Storage Integration Tests"
 ---
 
-# ADR-0048: PostgreSQL Storage Integration Tests
+# 48. PostgreSQL Storage Integration Tests
 
-**Status**: Accepted
-**Date**: 2025-11-06
-**Deciders**: Development Team
-**Technical Story**: Phase 3 - Comprehensive PostgreSQL storage backend validation
+Date: 2025-11-06
+
+## Status
+
+Accepted
+
+## Category
+
+Testing & Quality
 
 ## Context
 
@@ -150,6 +150,7 @@ class TestPostgresAuditLogStore:
         retrieved = await audit_store.get(log_id)
         assert retrieved.user_id == entry.user_id
 ```
+
 **Fixtures Created**:
 
 1. **postgres_with_schema** (session-scoped):
@@ -283,6 +284,7 @@ async def postgres_with_schema(postgres_connection_real):
     await postgres_connection_real.execute(schema_sql)
     yield postgres_connection_real
 ```
+
 **REFACTOR Phase** ✅:
 - Optimized cleanup (TRUNCATE vs DROP)
 - Added graceful error handling

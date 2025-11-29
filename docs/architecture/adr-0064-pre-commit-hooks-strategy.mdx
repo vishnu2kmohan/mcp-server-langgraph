@@ -1,0 +1,197 @@
+---
+title: "64. Pre-commit Hooks Strategy"
+description: "Architecture Decision Record: 64. Pre-commit Hooks Strategy"
+---
+
+# 64. Pre-commit Hooks Strategy
+
+Date: 2025-11-29
+
+## Status
+
+Accepted
+
+## Category
+
+Development & Tooling
+
+## Context
+
+Code quality enforcement can happen at multiple stages:
+
+1. **IDE/Editor**: Real-time linting (variable, depends on developer setup)
+2. **Pre-commit**: Before code is committed (local, fast)
+3. **CI/CD**: After code is pushed (remote, comprehensive)
+
+Without pre-commit hooks:
+- Bad code reaches the repository
+- CI fails after push (slow feedback)
+- Code review wastes time on style issues
+- Inconsistent formatting across developers
+
+The project requires a pre-commit strategy that:
+- Catches issues before they reach CI
+- Runs fast enough to not disrupt workflow
+- Covers linting, formatting, type checking, and security
+- Is consistent across all developer machines
+
+## Decision
+
+Use **pre-commit** framework with a curated set of hooks covering code quality, security, and documentation validation.
+
+### Hook Categories
+
+#### 1. Fast Checks (< 1 second)
+```yaml
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-json
+    - id: check-toml
+    - id: check-added-large-files
+    - id: detect-private-key
+```
+
+#### 2. Code Formatting (< 5 seconds)
+```yaml
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  hooks:
+    - id: ruff
+      args: [--fix]
+    - id: ruff-format
+```
+
+#### 3. Type Checking (< 30 seconds)
+```yaml
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy type checking
+      entry: uv run mypy src/
+      language: system
+      types: [python]
+      pass_filenames: false
+```
+
+#### 4. Security Scanning (< 10 seconds)
+```yaml
+- repo: https://github.com/gitleaks/gitleaks
+  hooks:
+    - id: gitleaks
+
+- repo: https://github.com/PyCQA/bandit
+  hooks:
+    - id: bandit
+      args: [-c, pyproject.toml]
+```
+
+#### 5. Documentation Validation (< 5 seconds)
+```yaml
+- repo: local
+  hooks:
+    - id: validate-frontmatter
+      name: Validate MDX frontmatter
+      entry: python scripts/docs/validate-frontmatter.py
+      language: python
+      files: \.mdx$
+```
+
+#### 6. Test Infrastructure (custom)
+```yaml
+- repo: local
+  hooks:
+    - id: check-test-memory-safety
+      name: Check Test Memory Safety
+      entry: python scripts/check_test_memory_safety.py
+      language: python
+      files: ^tests/.*\.py$
+```
+
+### Execution Strategy
+
+```yaml
+# .pre-commit-config.yaml
+default_stages: [commit]
+fail_fast: true  # Stop on first failure for faster feedback
+
+# Some hooks only run on push (slower checks)
+- id: mypy
+  stages: [push]  # Type checking on push only
+```
+
+### Developer Workflow
+
+```bash
+# Initial setup (once)
+pre-commit install
+pre-commit install --hook-type pre-push
+
+# Manual run (all files)
+pre-commit run --all-files
+
+# Skip hooks (emergency only)
+git commit --no-verify -m "WIP: emergency fix"
+```
+
+## Consequences
+
+### Positive
+
+- **Early Feedback**: Issues caught before commit, not in CI
+- **Consistent Code**: All developers use same formatting/linting
+- **Security**: Secrets and vulnerabilities caught locally
+- **Faster CI**: Pre-validated code reduces CI failures
+- **Documentation**: Validates frontmatter and links locally
+
+### Negative
+
+- **Commit Delay**: Hooks add ~10-30 seconds per commit
+- **Setup Required**: Developers must run `pre-commit install`
+- **False Positives**: Occasional issues with hook detection
+
+### Mitigation
+
+- `fail_fast: true` stops on first error (faster feedback)
+- Slow checks (mypy) run only on push, not commit
+- `--no-verify` available for emergencies (logged in CI)
+- CI runs same checks to catch bypassed hooks
+
+## Hook Selection Criteria
+
+| Hook | Purpose | Time | Stage |
+|------|---------|------|-------|
+| trailing-whitespace | Clean files | `<1s` | commit |
+| ruff | Linting + fixing | 2-5s | commit |
+| ruff-format | Formatting | 1-3s | commit |
+| mypy | Type checking | 10-30s | push |
+| bandit | Security scan | 3-5s | commit |
+| gitleaks | Secret detection | 2-3s | commit |
+| validate-frontmatter | Docs validation | 1-2s | commit |
+| check-test-memory-safety | Test quality | 2-3s | commit |
+
+## Alternatives Considered
+
+### Husky (JavaScript)
+- **Rejected**: Requires Node.js, not Python-native
+- Additional dependency for Python project
+
+### Git hooks directly
+- **Rejected**: Not portable, hard to version control
+- No hook management or updates
+
+### CI-only validation
+- **Rejected**: Slow feedback loop
+- Wastes CI resources on obvious issues
+
+### Lefthook
+- **Considered**: Fast, parallel execution
+- **Rejected**: Smaller ecosystem, less Python integration
+
+## References
+
+- Configuration: `.pre-commit-config.yaml`
+- Validation scripts: `scripts/check_test_memory_safety.py`, `scripts/docs/validate-frontmatter.py`
+- Related ADRs: [ADR-0065](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0065-ruff-code-quality.md)
+- External: [pre-commit Documentation](https://pre-commit.com/)

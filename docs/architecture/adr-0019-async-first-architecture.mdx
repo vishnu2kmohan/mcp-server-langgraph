@@ -1,20 +1,21 @@
 ---
-title: 19. Async-First Architecture
-description: 'Architecture Decision Record: 19. Async-First Architecture'
-icon: 'file-lines'
-seoTitle: "ADR-0019: 19. Async-First Architecture"
-seoDescription: "Architecture Decision Record 0019: Architecture Decision Record: 19. Async-First Architecture"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "19."]
-contentType: "explanation"
+title: "19. Async-First Architecture"
+description: "Architecture Decision Record: 19. Async-First Architecture"
 ---
+
+# 19. Async-First Architecture
 
 Date: 2025-10-13
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Core Architecture
+
+## Context
 
 Modern AI agents require numerous I/O-bound operations:
 - **LLM API calls**: 1-30 seconds per request (network latency)
@@ -23,31 +24,32 @@ Modern AI agents require numerous I/O-bound operations:
 - **Concurrent requests**: Multiple users, parallel tool executions
 
 Traditional synchronous Python blocks the event loop on I/O:
-```
-## Synchronous (BLOCKS entire thread)
+```python
+# Synchronous (BLOCKS entire thread)
 response = requests.get("https://api.llm.com/chat")  # 5 seconds
 session = redis_client.get("session:123")            # 20ms
 auth_check = openfga.check(user, resource)           # 50ms
 
-## Total: 5.07 seconds to handle 1 request
-## Throughput: ~0.2 requests/second per worker
+# Total: 5.07 seconds to handle 1 request
+# Throughput: ~0.2 requests/second per worker
 ```
+
 This creates severe bottlenecks:
 - **Low throughput**: Each worker handles only 1 request at a time
 - **Poor scalability**: Need 100 workers to handle 20 concurrent users
 - **Resource waste**: Workers idle during I/O waits
 - **Timeout risk**: Long chains of I/O operations easily exceed timeouts
 
-### Decision
+## Decision
 
 We will adopt an **async-first architecture** using Python's `asyncio` throughout the codebase.
 
-#### Core Principle
+### Core Principle
 
 **All I/O operations MUST be async**. Pure CPU work MAY be sync.
 
-```
-## ✅ Async I/O operations
+```python
+# ✅ Async I/O operations
 async def call_llm(prompt: str) -> str:
     async with httpx.AsyncClient() as client:
         response = await client.post("https://api.llm.com/chat", json={"prompt": prompt})
@@ -59,17 +61,17 @@ async def get_session(session_id: str) -> SessionData:
 async def authorize(user_id: str, resource: str) -> bool:
     return await openfga_client.check(user_id, "read", resource)
 
-## ✅ CPU-bound work can be sync (no I/O)
+# ✅ CPU-bound work can be sync (no I/O)
 def calculate_similarity(text1: str, text2: str) -> float:
     # Pure computation, no I/O
     return difflib.SequenceMatcher(None, text1, text2).ratio()
 ```
 
-#### Async Everywhere
+### Async Everywhere
 
 All layers of the application use async:
 
-```javascript
+```
 ┌─────────────────────────────────────┐
 │ API Layer (FastAPI)                 │ async endpoints
 ├─────────────────────────────────────┤
@@ -80,7 +82,8 @@ All layers of the application use async:
 │ Data Access (Redis, OpenFGA, etc.)  │ async clients
 └─────────────────────────────────────┘
 ```
-#### Async Libraries
+
+### Async Libraries
 
 We use async-compatible libraries:
 
@@ -93,11 +96,11 @@ We use async-compatible libraries:
 | OpenFGA | `openfga_sdk` (async) | N/A |
 | Keycloak | `python-keycloak` (async methods) | N/A |
 
-#### Async/Await Patterns
+### Async/Await Patterns
 
-##### Pattern 1: Concurrent Execution
-```
-## Execute multiple I/O operations concurrently
+#### Pattern 1: Concurrent Execution
+```python
+# Execute multiple I/O operations concurrently
 async def enrich_user_data(user_id: str) -> UserData:
     # Run 3 API calls in parallel (total time = max(t1, t2, t3), not sum)
     session, roles, preferences = await asyncio.gather(
@@ -108,18 +111,19 @@ async def enrich_user_data(user_id: str) -> UserData:
     # Total: ~50ms (not 100ms)
     return UserData(session=session, roles=roles, preferences=preferences)
 ```
-##### Pattern 2: Async Iteration
-```
-## Stream results instead of blocking
+
+#### Pattern 2: Async Iteration
+```python
+# Stream results instead of blocking
 async def process_batch(user_ids: List[str]):
     async for user_id in async_iterator(user_ids):
         result = await process_user(user_id)
         yield result  # Stream results as they complete
 ```
 
-##### Pattern 3: Timeout Management
-```
-## Prevent operations from hanging
+#### Pattern 3: Timeout Management
+```python
+# Prevent operations from hanging
 async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
     try:
         return await asyncio.wait_for(
@@ -129,9 +133,10 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
     except asyncio.TimeoutError:
         raise LLMTimeoutError(f"LLM call exceeded {timeout}s timeout")
 ```
-### Consequences
 
-#### Positive Consequences
+## Consequences
+
+### Positive Consequences
 
 - **High Throughput**: Single worker handles 100+ concurrent requests
   - Example: 100 LLM calls in progress, not blocking each other
@@ -148,7 +153,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
 
 - **Cost Savings**: Fewer servers/pods required for same load
 
-#### Negative Consequences
+### Negative Consequences
 
 - **Complexity**: Async code is harder to write and debug
   - Must understand event loops, coroutines, async context
@@ -165,6 +170,7 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
       result = await async_function()
       assert result == expected
   ```
+
 - **Blocking Pitfalls**: Accidentally using sync I/O blocks event loop
   ```python
   # ❌ BAD: Blocks event loop
@@ -178,18 +184,19 @@ async def call_llm_with_timeout(prompt: str, timeout: int = 30) -> str:
           result = await client.get("https://api.com")
           return result.json()
   ```
-#### Neutral Consequences
+
+### Neutral Consequences
 
 - **Learning Curve**: Team must learn async patterns
 - **Migration Effort**: Existing sync code requires refactoring
 - **Debugging Tools**: Need async-aware profilers (e.g., `aiomonitor`)
 
-### Implementation Details
+## Implementation Details
 
-#### Async Codebase Statistics
+### Async Codebase Statistics
 
-```
-## 451 async functions across codebase
+```bash
+# 451 async functions across codebase
 $ grep -r "async def" src/ --include="*.py" | wc -l
 451
 ```
@@ -202,10 +209,10 @@ $ grep -r "async def" src/ --include="*.py" | wc -l
 - **MCP Server** (`mcp/server_streamable.py`, `mcp/server_stdio.py`): Async handlers
 - **Agent Graph** (`core/agent.py`): `async def ainvoke()`
 
-#### FastAPI Integration
+### FastAPI Integration
 
-```
-## src/mcp_server_langgraph/api/gdpr.py
+```python
+# src/mcp_server_langgraph/api/gdpr.py
 from fastapi import FastAPI, Depends
 
 app = FastAPI()
@@ -221,16 +228,17 @@ async def export_user_data(
     data = await export_service.export(user_id)
     return data
 ```
-#### Async Context Managers
 
-```
-## Async resource management
+### Async Context Managers
+
+```python
+# Async resource management
 async with redis.asyncio.from_url(redis_url) as client:
     await client.set("key", "value")
     # Connection auto-closed on exit
 ```
 
-#### Running Sync Code in Async Context
+### Running Sync Code in Async Context
 
 When unavoidable sync code must run:
 
@@ -245,13 +253,14 @@ async def run_sync_in_async(sync_func, *args):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(executor, sync_func, *args)
 
-## Usage
+# Usage
 result = await run_sync_in_async(blocking_cpu_work, data)
 ```
-#### Async Testing
 
-```
-## tests/test_session.py
+### Async Testing
+
+```python
+# tests/test_session.py
 import pytest
 
 @pytest.mark.asyncio
@@ -268,14 +277,14 @@ async def test_session_creation():
     session = await session_store.get(session_id)
     assert session.user_id == "user:alice"
 
-## pytest.ini configuration
+# pytest.ini configuration
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 ```
 
-### Alternatives Considered
+## Alternatives Considered
 
-#### 1. Synchronous Architecture (Traditional)
+### 1. Synchronous Architecture (Traditional)
 
 **Description**: Use synchronous Python with threaded workers (e.g., Gunicorn with threads)
 
@@ -292,7 +301,7 @@ asyncio_mode = "strict"
 
 **Why Rejected**: Cannot achieve production-grade performance for I/O-heavy workloads
 
-#### 2. Sync with Celery (Task Queue)
+### 2. Sync with Celery (Task Queue)
 
 **Description**: Sync API offloads long tasks to Celery workers
 
@@ -309,7 +318,7 @@ asyncio_mode = "strict"
 
 **Why Rejected**: Adds complexity without solving core I/O concurrency issue
 
-#### 3. Threading (threading.Thread)
+### 3. Threading (threading.Thread)
 
 **Description**: Use Python threads for concurrency
 
@@ -325,7 +334,7 @@ asyncio_mode = "strict"
 
 **Why Rejected**: Python's GIL makes threading ineffective for concurrency
 
-#### 4. Multiprocessing
+### 4. Multiprocessing
 
 **Description**: Use `multiprocessing` to fork worker processes
 
@@ -341,7 +350,7 @@ asyncio_mode = "strict"
 
 **Why Rejected**: Async is more efficient for I/O-heavy workloads
 
-#### 5. Hybrid (Sync API + Async I/O)
+### 5. Hybrid (Sync API + Async I/O)
 
 **Description**: Expose sync API but use async I/O internally
 
@@ -356,9 +365,9 @@ asyncio_mode = "strict"
 
 **Why Rejected**: Complexity outweighs benefits; modern Python embraces async APIs
 
-### Performance Benchmarks
+## Performance Benchmarks
 
-#### Throughput Comparison
+### Throughput Comparison
 
 **Scenario**: 100 concurrent LLM API calls (each takes 2 seconds)
 
@@ -369,7 +378,7 @@ asyncio_mode = "strict"
 
 **Result**: 100x throughput improvement
 
-#### Memory Usage
+### Memory Usage
 
 | Architecture | Memory per Worker | 100 Concurrent Requests |
 |--------------|-------------------|------------------------|
@@ -378,11 +387,11 @@ asyncio_mode = "strict"
 
 **Result**: 16x memory efficiency
 
-#### Real-World Metrics
+### Real-World Metrics
 
 From production deployments:
 
-```yaml
+```
 Sync Architecture:
 - Workers: 32 (Gunicorn)
 - Memory: 4 GB
@@ -396,39 +405,40 @@ Async Architecture:
 - CPU: 25% (efficient I/O wait)
 ```
 
-### Integration Points
+## Integration Points
 
-#### Uvicorn ASGI Server
+### Uvicorn ASGI Server
 
-```
-## Start async server with 4 workers
+```bash
+# Start async server with 4 workers
 uvicorn mcp_server_langgraph.mcp.server_streamable:app \
     --workers 4 \
     --host 0.0.0.0 \
     --port 8000
 ```
+
 **Why Uvicorn**: Native async support, ASGI protocol, high performance
 
-#### LangGraph Async Support
+### LangGraph Async Support
 
-```
-## core/agent.py
+```python
+# core/agent.py
 from langgraph.graph import StateGraph
 
-## Build graph with async nodes
+# Build graph with async nodes
 graph = StateGraph(AgentState)
 graph.add_node("route", route_input)  # Async node
 graph.add_node("llm", call_llm)       # Async node
 
-## Async invocation
+# Async invocation
 compiled = graph.compile()
 result = await compiled.ainvoke({"messages": [user_message]})
 ```
 
-#### Redis Async Client
+### Redis Async Client
 
-```
-## auth/session.py
+```python
+# auth/session.py
 import redis.asyncio as redis
 
 class RedisSessionStore(SessionStore):
@@ -439,10 +449,11 @@ class RedisSessionStore(SessionStore):
         await self.redis.setex(session_key, ttl, session_data)
         return session_id
 ```
-#### OpenFGA Async Client
 
-```
-## auth/openfga.py
+### OpenFGA Async Client
+
+```python
+# auth/openfga.py
 from openfga_sdk import OpenFgaClient
 
 class OpenFGAClient:
@@ -451,24 +462,25 @@ class OpenFGAClient:
         return response.allowed
 ```
 
-### Best Practices
+## Best Practices
 
-#### 1. Always Await Async Functions
-```
-## ❌ BAD: Forgot await (returns coroutine, not result)
+### 1. Always Await Async Functions
+```python
+# ❌ BAD: Forgot await (returns coroutine, not result)
 result = async_function()
 
-## ✅ GOOD: Properly awaited
+# ✅ GOOD: Properly awaited
 result = await async_function()
 ```
-#### 2. Use `asyncio.gather()` for Concurrent I/O
-```
-## ❌ BAD: Sequential (slow)
+
+### 2. Use `asyncio.gather()` for Concurrent I/O
+```python
+# ❌ BAD: Sequential (slow)
 result1 = await call1()
 result2 = await call2()
 result3 = await call3()
 
-## ✅ GOOD: Concurrent (fast)
+# ✅ GOOD: Concurrent (fast)
 result1, result2, result3 = await asyncio.gather(
     call1(),
     call2(),
@@ -476,26 +488,27 @@ result1, result2, result3 = await asyncio.gather(
 )
 ```
 
-#### 3. Set Timeouts for I/O Operations
-```
-## Always use timeouts to prevent hanging
+### 3. Set Timeouts for I/O Operations
+```python
+# Always use timeouts to prevent hanging
 result = await asyncio.wait_for(external_api_call(), timeout=30)
 ```
-#### 4. Use Async Context Managers
+
+### 4. Use Async Context Managers
 ```python
 async with httpx.AsyncClient() as client:
     await client.get("https://api.com")
     # Client auto-closed
 ```
 
-### Future Enhancements
+## Future Enhancements
 
 - **Async Streaming**: Stream LLM responses token-by-token
 - **Async Background Tasks**: Scheduled jobs with `apscheduler` async support
 - **Async Batch Processing**: Process large datasets with async workers
 - **Structured Concurrency**: Explore `anyio` for cleaner async patterns
 
-### References
+## References
 
 - **Python asyncio Documentation**: https://docs.python.org/3/library/asyncio.html
 - **FastAPI Async Support**: https://fastapi.tiangolo.com/async/

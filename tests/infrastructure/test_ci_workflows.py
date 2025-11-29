@@ -70,7 +70,7 @@ class TestCIWorkflowTerraformSetup:
         terraform_hooks = [repo for repo in repos if "terraform" in repo.get("repo", "").lower()]
 
         assert len(terraform_hooks) > 0, (
-            "No Terraform pre-commit hooks found. " "If Terraform hooks exist, CI must install Terraform."
+            "No Terraform pre-commit hooks found. If Terraform hooks exist, CI must install Terraform."
         )
 
     def test_ci_precommit_job_exists(self, ci_workflow: dict):
@@ -82,7 +82,7 @@ class TestCIWorkflowTerraformSetup:
             job_name for job_name in jobs.keys() if "pre-commit" in job_name.lower() or "precommit" in job_name.lower()
         ]
 
-        assert len(precommit_jobs) > 0, "No pre-commit job found in CI workflow. " f"Available jobs: {', '.join(jobs.keys())}"
+        assert len(precommit_jobs) > 0, f"No pre-commit job found in CI workflow. Available jobs: {', '.join(jobs.keys())}"
 
     def test_ci_precommit_job_installs_terraform(self, ci_workflow: dict):
         """
@@ -143,8 +143,7 @@ class TestCIWorkflowTerraformSetup:
 
         if terraform_setup_index is not None and precommit_run_index is not None:
             assert terraform_setup_index < precommit_run_index, (
-                f"Terraform setup (step {terraform_setup_index}) must occur before "
-                f"pre-commit run (step {precommit_run_index})"
+                f"Terraform setup (step {terraform_setup_index}) must occur before pre-commit run (step {precommit_run_index})"
             )
 
     def test_terraform_version_consistency(self, ci_workflow: dict):

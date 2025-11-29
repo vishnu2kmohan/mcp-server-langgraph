@@ -313,6 +313,6 @@ If issue persists after 30 minutes:
 ## References
 
 - [Redis Documentation](https://redis.io/documentation)
-- [Deployment Configuration](../deployments/kubernetes/base/redis-session-deployment.yaml)
+- [Deployment Configuration](../deployments/base/redis-session-deployment.yaml)
 - [Session Management Code](../src/mcp_server_langgraph/auth/session.py)
 - [Redis High Availability](https://redis.io/topics/sentinel)

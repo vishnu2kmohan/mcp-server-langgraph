@@ -598,17 +598,15 @@ class TestFixtureDecorators:
 
             # Check each dependency
             for dep_name in dep_names:
-                # Find the dependency fixture
-                dep_scope = None
-                dep_found = False
-                for dep_file, dep_fixture_name, dep_fixture_scope, _, _ in fixtures_info:
-                    if dep_fixture_name == dep_name:
-                        dep_scope = dep_fixture_scope
-                        dep_found = True
-                        break
+                # Find the dependency fixture with proper resolution order:
+                # 1. Same file as the fixture
+                # 2. conftest.py in same directory
+                # 3. conftest.py in parent directories (up to tests/)
+                # 4. Any other file (fallback)
+                dep_scope = self._resolve_fixture_scope(dep_name, fixture_file, fixtures_info, tests_dir)
 
                 # Only check fixtures (skip built-in params like 'request', 'monkeypatch', etc.)
-                if dep_found:
+                if dep_scope is not None:
                     dep_scope_value = scope_hierarchy.get(dep_scope, scope_hierarchy["function"])
 
                     # Violation: Fixture has wider scope than its dependency
@@ -626,6 +624,66 @@ class TestFixtureDecorators:
                         )
 
         return violations
+
+    def _resolve_fixture_scope(
+        self,
+        dep_name: str,
+        fixture_file: Path,
+        fixtures_info: list[tuple[Path, str, str, list[str], int]],
+        tests_dir: Path,
+    ) -> str | None:
+        """
+        Resolve a fixture's scope following pytest's fixture resolution order.
+
+        Pytest resolves fixtures in this order:
+        1. Same file as the test/fixture using it
+        2. conftest.py in the same directory
+        3. conftest.py in parent directories (up to tests root)
+        4. Plugin fixtures (not checked here)
+
+        Args:
+            dep_name: Name of the fixture dependency to find
+            fixture_file: Path to the file containing the fixture that depends on dep_name
+            fixtures_info: List of all fixtures with their info
+            tests_dir: Path to the tests directory
+
+        Returns:
+            The scope of the resolved fixture, or None if not found (built-in fixture)
+        """
+        # Build a map of fixture name -> list of (file, scope) for quick lookup
+        fixture_locations: dict[str, list[tuple[Path, str]]] = {}
+        for dep_file, dep_fixture_name, dep_fixture_scope, _, _ in fixtures_info:
+            if dep_fixture_name not in fixture_locations:
+                fixture_locations[dep_fixture_name] = []
+            fixture_locations[dep_fixture_name].append((dep_file, dep_fixture_scope))
+
+        if dep_name not in fixture_locations:
+            return None  # Built-in fixture like 'request', 'monkeypatch', etc.
+
+        locations = fixture_locations[dep_name]
+
+        # 1. Check same file first
+        for dep_file, dep_scope in locations:
+            if dep_file == fixture_file:
+                return dep_scope or "function"
+
+        # 2. Check conftest.py in same directory
+        fixture_dir = fixture_file.parent
+        for dep_file, dep_scope in locations:
+            if dep_file.name == "conftest.py" and dep_file.parent == fixture_dir:
+                return dep_scope or "function"
+
+        # 3. Check conftest.py in parent directories (up to tests/)
+        current_dir = fixture_dir.parent
+        while current_dir >= tests_dir:
+            for dep_file, dep_scope in locations:
+                if dep_file.name == "conftest.py" and dep_file.parent == current_dir:
+                    return dep_scope or "function"
+            current_dir = current_dir.parent
+
+        # 4. Fallback: return the first match (shouldn't normally reach here)
+        # This handles fixtures defined in separate fixture files loaded via pytest_plugins
+        return locations[0][1] or "function"
 
     def _get_all_fixtures_with_dependencies(self) -> list[tuple[Path, str, str, list[str], int]]:
         """

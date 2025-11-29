@@ -56,9 +56,9 @@ class TestBearerSchemeOverrideDiagnostic:
         content = test_file.read_text()
 
         # Check 1: bearer_scheme is imported
-        assert (
-            "from mcp_server_langgraph.auth.middleware import bearer_scheme" in content or "bearer_scheme" in content
-        ), "bearer_scheme not imported in test file"
+        assert "from mcp_server_langgraph.auth.middleware import bearer_scheme" in content or "bearer_scheme" in content, (
+            "bearer_scheme not imported in test file"
+        )
 
         # Check 2: bearer_scheme override is set (handles both direct import and re-import patterns)
         # Old pattern: app.dependency_overrides[bearer_scheme]
@@ -86,9 +86,9 @@ class TestBearerSchemeOverrideDiagnostic:
         override_pos = max(override_pos_old, override_pos_new)  # Use whichever pattern is found
         router_pos = fixture_code.find("app.include_router(router)")
 
-        assert (
-            override_pos > 0
-        ), "bearer_scheme override not found in fixture (checked both [bearer_scheme] and [middleware.bearer_scheme] patterns)"
+        assert override_pos > 0, (
+            "bearer_scheme override not found in fixture (checked both [bearer_scheme] and [middleware.bearer_scheme] patterns)"
+        )
         assert router_pos > 0, "app.include_router() not found in fixture"
         assert override_pos < router_pos, "bearer_scheme override MUST come BEFORE app.include_router() - incorrect order!"
 
@@ -326,10 +326,10 @@ def test_bearer_scheme_override_documentation():
     content = test_file.read_text()
 
     # Check for documentation comment
-    assert (
-        "CRITICAL" in content and "bearer_scheme" in content
-    ), "bearer_scheme override should be documented with CRITICAL comment"
+    assert "CRITICAL" in content and "bearer_scheme" in content, (
+        "bearer_scheme override should be documented with CRITICAL comment"
+    )
 
-    assert (
-        "pytest-xdist" in content or "state pollution" in content or "singleton" in content
-    ), "Comment should explain the reason (pytest-xdist state pollution or singleton)"
+    assert "pytest-xdist" in content or "state pollution" in content or "singleton" in content, (
+        "Comment should explain the reason (pytest-xdist state pollution or singleton)"
+    )

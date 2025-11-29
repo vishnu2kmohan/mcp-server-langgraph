@@ -110,9 +110,10 @@ All expected failures occurred, proving tests correctly identify issues.
 
 #### HIGH 1: Missing --frozen Flag
 **File:** `.github/workflows/ci.yaml:105`
-**Issue:** `uv sync --extra dev --extra builder` without `--frozen` flag
+**Issue:** `uv sync --extra dev` without `--frozen` flag
 **Impact:** CI could drift from committed lockfile on network issues
-**Fix:** Added `--frozen` flag: `uv sync --frozen --extra dev --extra builder`
+**Fix:** Added `--frozen` flag: `uv sync --frozen --extra dev`
+**Note (2025-11-28):** `--extra builder` removed as builder dependencies merged into dev extra
 **Test:** ✅ PASSING
 
 #### HIGH 2: Error Suppression in Test Harness

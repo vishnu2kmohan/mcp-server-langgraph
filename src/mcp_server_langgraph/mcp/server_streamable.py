@@ -12,6 +12,7 @@ Implements Anthropic's best practices for writing tools for agents:
 
 import json
 import logging
+import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any, Literal
@@ -25,11 +26,13 @@ from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 from pydantic import AnyUrl, BaseModel, Field
 
-from mcp_server_langgraph.auth.factory import create_auth_middleware
+from mcp_server_langgraph.api.auth_request_middleware import AuthRequestMiddleware
+from mcp_server_langgraph.auth.factory import create_auth_middleware, create_user_provider
+from mcp_server_langgraph.auth.middleware import AuthMiddleware
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
 from mcp_server_langgraph.auth.user_provider import KeycloakUserProvider
 from mcp_server_langgraph.core.agent import AgentState, get_agent_graph
-from mcp_server_langgraph.core.config import settings
+from mcp_server_langgraph.core.config import Settings, settings
 from mcp_server_langgraph.core.security import sanitize_for_logging
 from mcp_server_langgraph.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
@@ -195,6 +198,23 @@ try:
 except Exception as e:
     _module_logger.warning(f"Failed to initialize rate limiting: {e}. Requests will proceed without rate limits.")
 
+# Authentication middleware for REST API endpoints (GDPR, API Keys, Service Principals, SCIM)
+# This must be added AFTER rate limiting but BEFORE routes are defined
+# Uses module-level auth middleware creation (lazy init for observability compatibility)
+try:
+    # Create user provider and auth middleware for REST API authentication
+    # This enables request.state.user for all protected endpoints
+    _module_user_provider = create_user_provider(settings)
+    _module_auth_middleware = AuthMiddleware(
+        secret_key=settings.jwt_secret_key,
+        settings=settings,
+        user_provider=_module_user_provider,
+    )
+    app.add_middleware(AuthRequestMiddleware, auth_middleware=_module_auth_middleware)
+    _module_logger.info("AuthRequestMiddleware enabled for REST API authentication")
+except Exception as e:
+    _module_logger.warning(f"Failed to initialize AuthRequestMiddleware: {e}. REST API endpoints will require manual auth.")
+
 
 class ChatInput(BaseModel):
     """
@@ -266,14 +286,44 @@ class SearchConversationsInput(BaseModel):
 class MCPAgentStreamableServer:
     """MCP Server with StreamableHTTP transport"""
 
-    def __init__(self, openfga_client: OpenFGAClient | None = None) -> None:
+    def __init__(
+        self,
+        openfga_client: OpenFGAClient | None = None,
+        settings: Settings | None = None,
+    ) -> None:
+        """
+        Initialize MCP Agent Streamable Server with optional dependency injection.
+
+        Args:
+            openfga_client: Optional OpenFGA client for authorization.
+                           If None, creates one from settings.
+            settings: Optional Settings instance for runtime configuration.
+                     If provided, enables dynamic feature toggling (e.g., code execution).
+                     If None, uses global settings. This allows tests to inject custom
+                     configuration without module reloading.
+
+        Example:
+            # Default creation (production):
+            server = MCPAgentStreamableServer()
+
+            # Custom settings injection (testing):
+            test_settings = Settings(enable_code_execution=True)
+            server = MCPAgentStreamableServer(settings=test_settings)
+        """
+        # Store settings for runtime configuration
+        # NOTE: When settings=None, we must reference the module-level 'settings'
+        # imported at the top of this file. This allows tests to mock settings via
+        # @patch("mcp_server_langgraph.mcp.server_streamable.settings", ...)
+        # Using sys.modules[__name__] to avoid self-import (CodeQL py/import-own-module)
+        self.settings = settings if settings is not None else sys.modules[__name__].settings
+
         self.server = Server("langgraph-agent")
 
         # Initialize OpenFGA client
         self.openfga = openfga_client or self._create_openfga_client()
 
         # Validate JWT secret is configured (fail-closed security pattern)
-        if not settings.jwt_secret_key:
+        if not self.settings.jwt_secret_key:
             raise ValueError(
                 "CRITICAL: JWT secret key not configured. "
                 "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
@@ -281,7 +331,7 @@ class MCPAgentStreamableServer:
             )
 
         # SECURITY: Fail-closed pattern - require OpenFGA in production
-        if settings.environment == "production" and self.openfga is None:
+        if self.settings.environment == "production" and self.openfga is None:
             raise ValueError(
                 "CRITICAL: OpenFGA authorization is required in production mode. "
                 "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
@@ -290,19 +340,21 @@ class MCPAgentStreamableServer:
             )
 
         # Initialize auth using factory (respects settings.auth_provider)
-        self.auth = create_auth_middleware(settings, openfga_client=self.openfga)
+        self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
         self._setup_handlers()
 
     def _create_openfga_client(self) -> OpenFGAClient | None:
         """Create OpenFGA client from settings"""
-        if settings.openfga_store_id and settings.openfga_model_id:
+        if self.settings.openfga_store_id and self.settings.openfga_model_id:
             logger.info(
                 "Initializing OpenFGA client",
-                extra={"store_id": settings.openfga_store_id, "model_id": settings.openfga_model_id},
+                extra={"store_id": self.settings.openfga_store_id, "model_id": self.settings.openfga_model_id},
             )
             return OpenFGAClient(
-                api_url=settings.openfga_api_url, store_id=settings.openfga_store_id, model_id=settings.openfga_model_id
+                api_url=self.settings.openfga_api_url,
+                store_id=self.settings.openfga_store_id,
+                model_id=self.settings.openfga_model_id,
             )
         else:
             logger.warning("OpenFGA not configured, authorization will use fallback mode")
@@ -337,7 +389,7 @@ class MCPAgentStreamableServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers and store references for public API"""
 
-        @self.server.list_tools()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_tools()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -432,7 +484,7 @@ class MCPAgentStreamableServer:
             )
 
             # Add execute_python if code execution is enabled
-            if settings.enable_code_execution:
+            if self.settings.enable_code_execution:
                 from mcp_server_langgraph.tools.code_execution_tools import ExecutePythonInput
 
                 tools.append(
@@ -455,7 +507,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._list_tools_handler = list_tools
 
-        @self.server.call_tool()  # type: ignore[misc]  # MCP library decorator lacks type stubs
+        @self.server.call_tool()  # type: ignore[untyped-decorator]  # MCP library decorator lacks type stubs
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
 
@@ -486,19 +538,37 @@ class MCPAgentStreamableServer:
                     )
 
                 # Extract user_id from validated token payload
-                if not token_verification.payload or "sub" not in token_verification.payload:
-                    logger.error("Token payload missing 'sub' claim")
+                if not token_verification.payload:
+                    logger.error("Token payload is empty")
                     metrics.auth_failures.add(1)
                     raise PermissionError("Invalid token: missing user identifier")
 
-                # Extract username: prefer preferred_username (Keycloak) over sub
+                # Extract username with defensive fallback
+                # Priority: preferred_username > username claim > sub parsing
                 # Keycloak uses UUID in 'sub', but OpenFGA needs 'user:username' format
+                # NOTE: Some Keycloak configurations may not include 'sub' in access tokens
                 username = token_verification.payload.get("preferred_username")
                 if not username:
-                    # Fallback to sub (for non-Keycloak IdPs)
-                    sub = token_verification.payload["sub"]
-                    # If sub is in "user:username" format, extract username
-                    username = sub.replace("user:", "") if sub.startswith("user:") else sub
+                    # Try 'username' claim (alternative standard claim)
+                    username = token_verification.payload.get("username")
+                if not username:
+                    # Fallback: extract from sub if available
+                    sub = token_verification.payload.get("sub", "")
+                    if sub.startswith("user:"):
+                        username = sub.split(":", 1)[1]
+                    elif sub and ":" not in sub:
+                        # Log warning for UUID-style subs (may cause issues)
+                        logger.warning(
+                            f"Using sub as username fallback (may be UUID): {sub[:8]}...",
+                            extra={"sub_prefix": sub[:8]},
+                        )
+                        username = sub
+
+                # Final check: ensure we have a username
+                if not username:
+                    logger.error("Token missing user identifier (no sub, preferred_username, or username claim)")
+                    metrics.auth_failures.add(1)
+                    raise PermissionError("Invalid token: cannot extract username from claims")
 
                 # Normalize user_id to "user:username" format for OpenFGA compatibility
                 user_id = f"user:{username}" if not username.startswith("user:") else username
@@ -538,7 +608,7 @@ class MCPAgentStreamableServer:
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
 
-        @self.server.list_resources()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_resources()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):
@@ -1120,9 +1190,9 @@ async def login(request: LoginRequest) -> LoginResponse:
             # InMemoryUserProvider needs to create token
             try:
                 access_token = mcp_server_instance.auth.create_token(
-                    username=request.username, expires_in=settings.jwt_expiration_seconds
+                    username=request.username, expires_in=mcp_server_instance.settings.jwt_expiration_seconds
                 )
-                expires_in = settings.jwt_expiration_seconds
+                expires_in = mcp_server_instance.settings.jwt_expiration_seconds
             except Exception as e:
                 logger.error(f"Failed to create token: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail="Failed to create authentication token")
@@ -1231,7 +1301,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
 
                 # Issue new token
                 new_token = mcp_server_instance.auth.create_token(
-                    username=username, expires_in=settings.jwt_expiration_seconds
+                    username=username, expires_in=mcp_server_instance.settings.jwt_expiration_seconds
                 )
 
                 logger.info("Token refreshed for user", extra={"username": username})
@@ -1239,7 +1309,7 @@ async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
                 return RefreshTokenResponse(
                     access_token=new_token,
                     token_type="bearer",
-                    expires_in=settings.jwt_expiration_seconds,
+                    expires_in=mcp_server_instance.settings.jwt_expiration_seconds,
                 )
 
             except HTTPException:
@@ -1288,12 +1358,13 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
 
             # Handle different MCP methods
             if method == "initialize":
+                mcp_server = get_mcp_server()
                 response = {
                     "jsonrpc": "2.0",
                     "id": message_id,
                     "result": {
                         "protocolVersion": "2024-11-05",
-                        "serverInfo": {"name": "langgraph-agent", "version": settings.service_version},
+                        "serverInfo": {"name": "langgraph-agent", "version": mcp_server.settings.service_version},
                         "capabilities": {
                             "tools": {"listChanged": False},
                             "resources": {"listChanged": False},

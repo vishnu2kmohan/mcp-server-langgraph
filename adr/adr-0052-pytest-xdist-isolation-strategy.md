@@ -1,14 +1,22 @@
 # ADR-0052: Pytest-xdist Isolation Strategy
 
-**Status:** Accepted
+Date: 2025-01-11
 
-**Date:** 2025-01-11
+## Status
 
-**Decision Makers:** Engineering Team
+Accepted
 
-**Tags:** #testing #pytest #xdist #isolation #tdd
+## Category
 
----
+Testing & Quality
+
+## Decision Makers
+
+Engineering Team
+
+## Tags
+
+#testing #pytest #xdist #isolation #tdd
 
 ## Context
 

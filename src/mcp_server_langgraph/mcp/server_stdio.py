@@ -10,6 +10,7 @@ Implements Anthropic's best practices for writing tools for agents:
 """
 
 import asyncio
+import sys
 import time
 from typing import Any, Literal
 
@@ -151,7 +152,11 @@ class MCPAgentServer:
         var changes didn't take effect due to module-level settings caching.
         """
         # Store settings for runtime configuration
-        self.settings = settings if settings is not None else globals()["settings"]
+        # NOTE: When settings=None, we must reference the module-level 'settings'
+        # imported at the top of this file. This allows tests to mock settings via
+        # @patch("mcp_server_langgraph.mcp.server_stdio.settings", ...)
+        # Using sys.modules[__name__] to avoid self-import (CodeQL py/import-own-module)
+        self.settings = settings if settings is not None else sys.modules[__name__].settings
 
         self.server = Server("langgraph-agent")
 
@@ -380,7 +385,29 @@ class MCPAgentServer:
                 metrics.auth_failures.add(1)
                 raise PermissionError("Invalid token: missing user identifier")
 
-            user_id = token_verification.payload["sub"]
+            # Extract username with defensive fallback
+            # Priority: preferred_username > username claim > sub parsing
+            username = token_verification.payload.get("preferred_username")
+            if not username:
+                # Try 'username' claim (alternative standard claim)
+                username = token_verification.payload.get("username")
+            if not username:
+                # Fallback: extract from sub if it's in "user:username" format
+                sub = token_verification.payload.get("sub", "")
+                if sub.startswith("user:"):
+                    username = sub.split(":", 1)[1]
+                elif sub and ":" not in sub:
+                    # Log warning for UUID-style subs (may cause issues)
+                    logger.warning(
+                        f"Using sub as username fallback (may be UUID): {sub[:8]}...",
+                        extra={"sub_prefix": sub[:8]},
+                    )
+                    username = sub
+                else:
+                    raise PermissionError("Invalid token: cannot extract username from claims")
+
+            # Normalize user_id to "user:username" format for OpenFGA compatibility
+            user_id = f"user:{username}" if not username.startswith("user:") else username
             span.set_attribute("user.id", user_id)
 
             logger.info("User authenticated via token", extra={"user_id": user_id, "tool": name})
@@ -417,7 +444,7 @@ class MCPAgentServer:
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
 
-        @self.server.list_tools()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_tools()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_tools() -> list[Tool]:
             """
             List available tools.
@@ -432,12 +459,12 @@ class MCPAgentServer:
                 logger.info("Listing available tools")
                 return await self.list_tools_public()
 
-        @self.server.call_tool()  # type: ignore[misc]
+        @self.server.call_tool()  # type: ignore[untyped-decorator]
         async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             """Handle tool calls with OpenFGA authorization and tracing"""
             return await self.call_tool_public(name, arguments)
 
-        @self.server.list_resources()  # type: ignore[misc, no-untyped-call]
+        @self.server.list_resources()  # type: ignore[no-untyped-call, untyped-decorator]
         async def list_resources() -> list[Resource]:
             """List available resources"""
             with tracer.start_as_current_span("mcp.list_resources"):

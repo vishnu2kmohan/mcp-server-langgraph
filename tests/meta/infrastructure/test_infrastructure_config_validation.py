@@ -167,7 +167,7 @@ class TestDockerComposePortConfiguration:
                 break
 
         assert qdrant_http_port == 9333, (
-            f"Qdrant HTTP port should be 9333 (got {qdrant_http_port}). " "This must match test_infrastructure_ports fixture."
+            f"Qdrant HTTP port should be 9333 (got {qdrant_http_port}). This must match test_infrastructure_ports fixture."
         )
 
 
@@ -306,13 +306,12 @@ class TestHardcodedPortDetection:
 
             if postgres_matches:
                 violations.append(
-                    f"{test_file.relative_to(actual_repo_root)}: "
-                    f"Uses os.getenv('POSTGRES_PORT', '5432') - should be '9432'"
+                    f"{test_file.relative_to(actual_repo_root)}: Uses os.getenv('POSTGRES_PORT', '5432') - should be '9432'"
                 )
 
             if redis_matches:
                 violations.append(
-                    f"{test_file.relative_to(actual_repo_root)}: " f"Uses os.getenv('REDIS_PORT', '6379') - should be '9379'"
+                    f"{test_file.relative_to(actual_repo_root)}: Uses os.getenv('REDIS_PORT', '6379') - should be '9379'"
                 )
 
         if violations:

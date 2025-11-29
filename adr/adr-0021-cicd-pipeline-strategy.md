@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Infrastructure & Deployment
+
 ## Context
 
 Modern software projects require automated CI/CD to:

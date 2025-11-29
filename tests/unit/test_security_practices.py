@@ -50,13 +50,13 @@ class TestCryptographicSecurity:
 
         source = inspect.getsource(KubernetesSandbox._create_job)
         if "md5" in source.lower():
-            assert (
-                "usedforsecurity=False" in source
-            ), "MD5 usage detected without usedforsecurity=False flag. Either use SHA-256 or add usedforsecurity=False for non-security uses."
+            assert "usedforsecurity=False" in source, (
+                "MD5 usage detected without usedforsecurity=False flag. Either use SHA-256 or add usedforsecurity=False for non-security uses."
+            )
         else:
-            assert (
-                "sha256" in source.lower() or "sha3" in source.lower()
-            ), "Expected secure hash algorithm (SHA-256 or SHA-3) for job name generation"
+            assert "sha256" in source.lower() or "sha3" in source.lower(), (
+                "Expected secure hash algorithm (SHA-256 or SHA-3) for job name generation"
+            )
 
     def test_job_name_hash_produces_valid_kubernetes_names(self):
         """
@@ -92,9 +92,9 @@ class TestTemporaryDirectorySecurity:
 
         source = inspect.getsource(server)
         if '"/tmp' in source or "'/tmp" in source:
-            assert (
-                "os.getenv" in source or "tempfile" in source
-            ), "Hardcoded /tmp directory detected without proper security controls. Use tempfile.gettempdir() or ensure strict validation."
+            assert "os.getenv" in source or "tempfile" in source, (
+                "Hardcoded /tmp directory detected without proper security controls. Use tempfile.gettempdir() or ensure strict validation."
+            )
 
     def test_builder_output_directory_has_safe_default(self, monkeypatch):
         """
@@ -110,13 +110,12 @@ class TestTemporaryDirectorySecurity:
         app_temp.mkdir(mode=448, parents=True, exist_ok=True)
         stat_info = app_temp.stat()
         permissions = oct(stat_info.st_mode)[-3:]
-        assert (
-            permissions
-            in [
-                "700",
-                "755",
-            ]
-        ), f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
+        assert permissions in [
+            "700",
+            "755",
+        ], (
+            f"Temp directory has insecure permissions: {permissions}. Expected 700 (owner-only) or 755 (owner write, others read)."
+        )
         app_temp.rmdir()
 
     def test_path_validation_prevents_directory_traversal(self):
@@ -131,9 +130,9 @@ class TestTemporaryDirectorySecurity:
         valid_path = Path("/tmp/workflows/my_workflow.py").resolve()
         assert str(valid_path).startswith(str(allowed_base))
         evil_path = Path("/tmp/workflows/../../../etc/passwd").resolve()
-        assert not str(evil_path).startswith(
-            str(allowed_base)
-        ), "Path traversal attack not prevented! Validation should reject paths outside allowed base."
+        assert not str(evil_path).startswith(str(allowed_base)), (
+            "Path traversal attack not prevented! Validation should reject paths outside allowed base."
+        )
 
 
 @pytest.mark.xdist_group(name="unit_security_practices_tests")
@@ -155,9 +154,9 @@ class TestSQLInjectionPrevention:
         from mcp_server_langgraph.compliance.gdpr import postgres_storage
 
         source = inspect.getsource(postgres_storage.PostgresUserProfileStore.update)
-        assert (
-            "$1" in source or "$2" in source or "${param_num}" in source
-        ), "SQL queries should use parameterized queries ($1, $2, etc.) to prevent SQL injection."
+        assert "$1" in source or "$2" in source or "${param_num}" in source, (
+            "SQL queries should use parameterized queries ($1, $2, etc.) to prevent SQL injection."
+        )
         assert "VALUES" in source.upper()
 
     @pytest.mark.asyncio
@@ -171,9 +170,9 @@ class TestSQLInjectionPrevention:
         from mcp_server_langgraph.compliance.gdpr import postgres_storage
 
         source = inspect.getsource(postgres_storage.PostgresUserProfileStore.update)
-        assert "if " in source and (
-            'in ["' in source or "in ['" in source or "not in" in source
-        ), "Dynamic SQL field names should be validated against an allowlist to prevent SQL injection."
+        assert "if " in source and ('in ["' in source or "in ['" in source or "not in" in source), (
+            "Dynamic SQL field names should be validated against an allowlist to prevent SQL injection."
+        )
 
     @pytest.mark.asyncio
     async def test_sql_injection_attempt_is_rejected(self):
@@ -194,9 +193,9 @@ class TestSQLInjectionPrevention:
         store = PostgresUserProfileStore(mock_pool)
         malicious_updates = {"email; DROP TABLE users; --": "hacker@evil.com"}
         result = await store.update("user123", malicious_updates)
-        assert (
-            result is False
-        ), "SQL injection attempt via field name should be rejected. Field names must be validated against an allowlist."
+        assert result is False, (
+            "SQL injection attempt via field name should be rejected. Field names must be validated against an allowlist."
+        )
 
     @pytest.mark.asyncio
     async def test_malicious_sql_values_are_safely_escaped(self):
@@ -275,6 +274,6 @@ class TestSecurityDocumentation:
             or "allowlist" in source.lower()
             or ("safe" in source.lower())
         )
-        assert (
-            has_documentation
-        ), "nosec suppressions should be documented with comments explaining why the code is safe despite the bandit warning."
+        assert has_documentation, (
+            "nosec suppressions should be documented with comments explaining why the code is safe despite the bandit warning."
+        )

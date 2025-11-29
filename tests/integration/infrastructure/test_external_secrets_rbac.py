@@ -257,7 +257,7 @@ class TestGCPServiceAccountIAM:
         result = run_kubectl(["get", "namespace", "external-secrets-system", "-o", "json"], check=False)
 
         assert result["success"], (
-            "Namespace external-secrets-system not found. " "Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
+            "Namespace external-secrets-system not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
         )
 
         namespace = json.loads(result["output"])
@@ -271,7 +271,7 @@ class TestGCPServiceAccountIAM:
         )
 
         assert result["success"], (
-            "ESO controller deployment not found. " "Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
+            "ESO controller deployment not found. Please run: ./scripts/gcp/setup-staging-infrastructure.sh"
         )
 
         deployment = json.loads(result["output"])
@@ -282,9 +282,9 @@ class TestGCPServiceAccountIAM:
         available_replicas = status.get("availableReplicas", 0)
         desired_replicas = status.get("replicas", 0)
 
-        assert (
-            available_replicas == desired_replicas
-        ), f"ESO controller not fully available: {available_replicas}/{desired_replicas} replicas"
+        assert available_replicas == desired_replicas, (
+            f"ESO controller not fully available: {available_replicas}/{desired_replicas} replicas"
+        )
 
     @pytest.mark.integration
     def test_eso_webhook_deployment_exists(self, skip_if_not_gke):
@@ -294,7 +294,7 @@ class TestGCPServiceAccountIAM:
         )
 
         assert result["success"], (
-            "ESO webhook deployment not found. " "Webhook is required for validating ExternalSecret resources."
+            "ESO webhook deployment not found. Webhook is required for validating ExternalSecret resources."
         )
 
         deployment = json.loads(result["output"])
@@ -305,9 +305,9 @@ class TestGCPServiceAccountIAM:
         available_replicas = status.get("availableReplicas", 0)
         desired_replicas = status.get("replicas", 0)
 
-        assert (
-            available_replicas == desired_replicas
-        ), f"ESO webhook not fully available: {available_replicas}/{desired_replicas} replicas"
+        assert available_replicas == desired_replicas, (
+            f"ESO webhook not fully available: {available_replicas}/{desired_replicas} replicas"
+        )
 
     @pytest.mark.integration
     def test_eso_cert_controller_deployment_exists(self, skip_if_not_gke):
@@ -319,7 +319,7 @@ class TestGCPServiceAccountIAM:
         )
 
         assert result["success"], (
-            "ESO cert-controller deployment not found. " "Cert-controller is required for managing webhook TLS certificates."
+            "ESO cert-controller deployment not found. Cert-controller is required for managing webhook TLS certificates."
         )
 
         deployment = json.loads(result["output"])
@@ -330,9 +330,9 @@ class TestGCPServiceAccountIAM:
         available_replicas = status.get("availableReplicas", 0)
         desired_replicas = status.get("replicas", 0)
 
-        assert (
-            available_replicas == desired_replicas
-        ), f"ESO cert-controller not fully available: {available_replicas}/{desired_replicas} replicas"
+        assert available_replicas == desired_replicas, (
+            f"ESO cert-controller not fully available: {available_replicas}/{desired_replicas} replicas"
+        )
 
 
 @pytest.mark.requires_kubectl
@@ -457,7 +457,7 @@ class TestESORBACResources:
         result = run_kubectl(["get", "clusterrolebinding", "external-secrets-controller", "-o", "json"], check=False)
 
         assert result["success"], (
-            "ESO controller ClusterRoleBinding not found. " "This indicates RBAC creation failed during installation."
+            "ESO controller ClusterRoleBinding not found. This indicates RBAC creation failed during installation."
         )
 
         binding = json.loads(result["output"])
@@ -500,7 +500,7 @@ class TestESORBACResources:
         result = run_kubectl(["get", "clusterrolebinding", "external-secrets-cert-controller", "-o", "json"], check=False)
 
         assert result["success"], (
-            "ESO cert-controller ClusterRoleBinding not found. " "This indicates RBAC creation failed during installation."
+            "ESO cert-controller ClusterRoleBinding not found. This indicates RBAC creation failed during installation."
         )
 
         binding = json.loads(result["output"])
@@ -548,9 +548,9 @@ class TestClusterSecretStoreConnectivity:
         ready_condition = next((c for c in conditions if c["type"] == "Ready"), None)
 
         if ready_condition:
-            assert (
-                ready_condition["status"] == "True"
-            ), f"ClusterSecretStore not ready: {ready_condition.get('message', 'Unknown error')}"
+            assert ready_condition["status"] == "True", (
+                f"ClusterSecretStore not ready: {ready_condition.get('message', 'Unknown error')}"
+            )
 
 
 @pytest.mark.requires_kubectl

@@ -15,7 +15,7 @@ You are tasked with generating a visual coverage gaps dashboard for the mcp-serv
 
 1. **Run pytest with coverage**:
    ```bash
-   uv run pytest tests/ --cov=src/mcp_server_langgraph --cov-report=term --cov-report=html --quiet
+   uv run --frozen pytest tests/ --cov=src/mcp_server_langgraph --cov-report=term --cov-report=html --quiet
    ```
 
 2. **Parse coverage output** to extract:
@@ -348,7 +348,7 @@ Provide specific commands for next steps:
 /create-test auth/rbac.py
 
 # 2. Run tests and check coverage improvement
-uv run pytest tests/unit/test_auth_rbac.py --cov=src/mcp_server_langgraph/auth/rbac.py --cov-report=term
+uv run --frozen pytest tests/unit/test_auth_rbac.py --cov=src/mcp_server_langgraph/auth/rbac.py --cov-report=term
 
 # 3. Check overall coverage improvement
 make test-coverage-combined

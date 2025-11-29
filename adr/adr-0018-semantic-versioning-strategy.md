@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Development & Tooling
+
 ## Context
 
 Software projects need a clear, predictable versioning strategy that:

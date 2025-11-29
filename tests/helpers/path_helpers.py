@@ -100,7 +100,7 @@ def get_integration_test_file(relative_path: str | Path) -> Path:
 
     # Validate: Must be a file, not a directory
     if not full_path.is_file():
-        raise ValueError(f"Path exists but is not a file: {full_path}\n" f"This helper expects file paths, not directories.")
+        raise ValueError(f"Path exists but is not a file: {full_path}\nThis helper expects file paths, not directories.")
 
     # Security: Double-check the resolved path is still within integration/
     # (prevents symlink attacks that escape the sandbox)

@@ -37,7 +37,7 @@ You are tasked with tracking the mypy strict type checking rollout progress for 
 
 1. **Run mypy on all code**:
    ```bash
-   uv run mypy src/mcp_server_langgraph --show-error-codes --pretty
+   uv run --frozen mypy src/mcp_server_langgraph --show-error-codes --pretty
    ```
 
 2. **Parse mypy output**:
@@ -48,7 +48,7 @@ You are tasked with tracking the mypy strict type checking rollout progress for 
 
 3. **Run mypy with strict on non-strict modules**:
    ```bash
-   uv run mypy src/mcp_server_langgraph/<module>.py --strict --show-error-codes
+   uv run --frozen mypy src/mcp_server_langgraph/<module>.py --strict --show-error-codes
    ```
 
 ### Step 3: Generate Type Safety Dashboard
@@ -167,12 +167,12 @@ You are tasked with tracking the mypy strict type checking rollout progress for 
   1. ✓ tools/calculator.py (2 errors, 30 min)
      - Add return types to functions
      - Add parameter types
-     Command: uv run mypy tools/calculator.py --strict
+     Command: uv run --frozen mypy tools/calculator.py --strict
 
   2. ✓ observability/logging.py (4 errors, 45 min)
      - Annotate logger initialization
      - Type log message handling
-     Command: uv run mypy observability/logging.py --strict
+     Command: uv run --frozen mypy observability/logging.py --strict
 
   Expected: 5/11 strict (45%)
   Time: ~1.5 hours
@@ -240,7 +240,7 @@ For the next module to migrate, provide a detailed checklist:
 
 Pre-Migration:
   ☐ Run mypy to get baseline errors
-    Command: uv run mypy src/mcp_server_langgraph/core/llm_factory.py --strict --show-error-codes
+    Command: uv run --frozen mypy src/mcp_server_langgraph/core/llm_factory.py --strict --show-error-codes
 
   ☐ Backup current file (git commit)
     Command: git commit -am "Pre-mypy strict: llm_factory.py"
@@ -286,14 +286,14 @@ Step 5: Enable Strict Mode
     strict = true
 
   ☐ Run mypy to verify:
-    uv run mypy src/mcp_server_langgraph/core/llm_factory.py --strict
+    uv run --frozen mypy src/mcp_server_langgraph/core/llm_factory.py --strict
 
 Step 6: Test & Verify
   ☐ Run existing tests:
-    uv run pytest tests/ -k llm_factory -v
+    uv run --frozen pytest tests/ -k llm_factory -v
 
   ☐ Verify no regressions:
-    uv run pytest tests/ --cov=src/mcp_server_langgraph/core/llm_factory.py
+    uv run --frozen pytest tests/ --cov=src/mcp_server_langgraph/core/llm_factory.py
 
   ☐ Check overall mypy status:
     /type-safety-status
@@ -351,16 +351,16 @@ def apply(func: Callable[[int], str], value: int) -> str: ...
 grep -A 2 "tool.mypy.overrides" pyproject.toml | grep "strict = true" | wc -l
 
 # Run mypy on all code
-uv run mypy src/mcp_server_langgraph --show-error-codes --pretty
+uv run --frozen mypy src/mcp_server_langgraph --show-error-codes --pretty
 
 # Test strict mode on specific module
-uv run mypy src/mcp_server_langgraph/<module>.py --strict --show-error-codes
+uv run --frozen mypy src/mcp_server_langgraph/<module>.py --strict --show-error-codes
 
 # Check which errors are most common
-uv run mypy src/ --show-error-codes 2>&1 | grep -oP '\[.*?\]' | sort | uniq -c | sort -rn
+uv run --frozen mypy src/ --show-error-codes 2>&1 | grep -oP '\[.*?\]' | sort | uniq -c | sort -rn
 
 # Verify migration successful
-uv run pytest tests/ -v && uv run mypy src/mcp_server_langgraph --strict
+uv run --frozen pytest tests/ -v && uv run --frozen mypy src/mcp_server_langgraph --strict
 ```
 
 ## Error Handling

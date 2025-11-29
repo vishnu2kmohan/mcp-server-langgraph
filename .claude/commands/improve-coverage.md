@@ -44,7 +44,7 @@ Ask the user using the AskUserQuestion tool:
 
 1. **Run pytest with coverage** (if coverage report doesn't exist):
    ```bash
-   uv run pytest tests/ --cov=src/mcp_server_langgraph --cov-report=html --cov-report=xml --cov-report=term -v
+   uv run --frozen pytest tests/ --cov=src/mcp_server_langgraph --cov-report=html --cov-report=xml --cov-report=term -v
    ```
 
 2. **Parse coverage report**:
@@ -353,7 +353,7 @@ After analysis, provide:
    /create-test <priority-file>
 
    # Run tests and check coverage
-   uv run pytest tests/unit/test_<module>.py --cov=src/mcp_server_langgraph/<module> --cov-report=term
+   uv run --frozen pytest tests/unit/test_<module>.py --cov=src/mcp_server_langgraph/<module> --cov-report=term
 
    # Run full coverage to see improvement
    make test-coverage-combined

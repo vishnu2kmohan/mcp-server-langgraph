@@ -307,7 +307,7 @@ async def _validate_user_association_permission(
 
 **Test Results:**
 ```bash
-$ uv run pytest tests/security/test_scim_service_principal_openfga.py -v
+$ uv run --frozen pytest tests/security/test_scim_service_principal_openfga.py -v
 ============================= test session starts ==============================
 ...
 tests/security/test_scim_service_principal_openfga.py::TestSCIMOpenFGAIntegration::test_scim_endpoint_uses_openfga_relation_check PASSED
@@ -393,7 +393,7 @@ def postgres_connection_real():
    - `scripts/add_xdist_group_markers.py`
    - `scripts/check_test_memory_safety.py`
 3. **Test Execution:**
-   - `uv run pytest tests/security/test_scim_service_principal_openfga.py -v`
+   - `uv run --frozen pytest tests/security/test_scim_service_principal_openfga.py -v`
    - Full pre-commit hook suite
    - Pre-push validation (4-phase)
 4. **Documentation Review:**

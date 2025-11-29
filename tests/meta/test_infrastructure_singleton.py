@@ -115,14 +115,14 @@ class TestInfrastructureSingleton:
         ports = test_infrastructure_ports
 
         # Validate postgres port
-        assert (
-            f'"{ports["postgres"]}:5432"' in content or f"'{ports['postgres']}:5432'" in content
-        ), f"docker-compose.test.yml should map host port {ports['postgres']} to postgres container port 5432"
+        assert f'"{ports["postgres"]}:5432"' in content or f"'{ports['postgres']}:5432'" in content, (
+            f"docker-compose.test.yml should map host port {ports['postgres']} to postgres container port 5432"
+        )
 
         # Validate consolidated redis port (used for both checkpoints and sessions)
-        assert (
-            f'"{ports["redis_checkpoints"]}:6379"' in content or f"'{ports['redis_checkpoints']}:6379'" in content
-        ), f"docker-compose.test.yml should map host port {ports['redis_checkpoints']} to redis container port 6379"
+        assert f'"{ports["redis_checkpoints"]}:6379"' in content or f"'{ports['redis_checkpoints']}:6379'" in content, (
+            f"docker-compose.test.yml should map host port {ports['redis_checkpoints']} to redis container port 6379"
+        )
 
         # Verify sessions use same port as checkpoints (consolidated)
         assert ports["redis_sessions"] == ports["redis_checkpoints"], (
@@ -132,9 +132,9 @@ class TestInfrastructureSingleton:
         )
 
         # Validate OpenFGA HTTP port
-        assert (
-            f'"{ports["openfga_http"]}:8080"' in content or f"'{ports['openfga_http']}:8080'" in content
-        ), f"docker-compose.test.yml should map host port {ports['openfga_http']} to openfga container port 8080"
+        assert f'"{ports["openfga_http"]}:8080"' in content or f"'{ports['openfga_http']}:8080'" in content, (
+            f"docker-compose.test.yml should map host port {ports['openfga_http']} to openfga container port 8080"
+        )
 
     def test_logical_isolation_mechanisms_documented(self, test_infrastructure_ports):
         """
@@ -195,9 +195,9 @@ class TestWorkerIsolationMechanisms:
 
         # The worker_utils module should provide worker ID for schema naming
         worker_id = get_worker_id()
-        assert (
-            worker_id.startswith("gw") or worker_id == "master"
-        ), f"Worker ID should be gw0, gw1, etc. or 'master', got: {worker_id}"
+        assert worker_id.startswith("gw") or worker_id == "master", (
+            f"Worker ID should be gw0, gw1, etc. or 'master', got: {worker_id}"
+        )
 
     def test_worker_utils_available(self):
         """

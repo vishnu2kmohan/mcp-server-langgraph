@@ -20,7 +20,7 @@ import functools
 import hashlib
 import pickle
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar, cast
+from typing import Any, ParamSpec, TypeVar
 from urllib.parse import urlparse, urlunparse
 
 import redis
@@ -326,7 +326,7 @@ class CacheService:
                 keys = self.redis.keys(search_pattern)
                 if keys:
                     self.redis.delete(*keys)  # type: ignore[misc]
-                    logger.info(f"Cleared L2 cache by pattern: {search_pattern} ({len(cast(list[Any], keys))} keys)")
+                    logger.info(f"Cleared L2 cache by pattern: {search_pattern} ({len(keys)} keys)")  # type: ignore[arg-type]
                 else:
                     logger.info(f"No L2 cache keys matched pattern: {search_pattern}")
             except Exception as e:

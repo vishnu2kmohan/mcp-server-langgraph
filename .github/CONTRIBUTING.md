@@ -34,7 +34,7 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 
 ### Prerequisites
 
-- Python 3.10+ (3.11+ recommended)
+- Python 3.11+ (3.12 recommended)
 - Docker and Docker Compose
 - Git
 - kubectl (optional, for Kubernetes development)
@@ -288,13 +288,13 @@ make validate-full
 **Performance Monitoring**:
 ```bash
 # Measure hook performance
-python scripts/measure_hook_performance.py --stage all
+python scripts/dev/measure_hook_performance.py --stage all
 ```
 
 **See Also**:
 - [Git Hooks Guide](../docs-internal/testing/TESTING.md#git-hooks-and-validation) - Complete guide
 - [Hook Categorization](../docs-internal/HOOK_CATEGORIZATION.md) - Detailed hook breakdown
-- [Remediation Report](../docs-internal/CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md) - Optimization rationale
+- [Remediation Report](../docs-internal/archive/codex/CODEX_FINDINGS_REMEDIATION_REPORT_2025-11-16.md) - Optimization rationale
 
 ## Submitting Changes
 

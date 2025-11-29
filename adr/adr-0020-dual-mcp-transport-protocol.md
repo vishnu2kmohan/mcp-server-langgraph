@@ -6,6 +6,10 @@ Date: 2025-10-13
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 The Model Context Protocol (MCP) is Anthropic's standard for exposing AI agents and tools. MCP enables:

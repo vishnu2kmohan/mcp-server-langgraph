@@ -9,13 +9,25 @@ Following TDD principles:
 """
 
 import gc
+import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
+
+
+def is_gitleaks_available() -> bool:
+    """Check if gitleaks binary is available on the system."""
+    return shutil.which("gitleaks") is not None
+
+
+# Skip all gitleaks execution tests if binary not available
+requires_gitleaks = pytest.mark.skipif(
+    not is_gitleaks_available(), reason="gitleaks binary not found. Install from https://github.com/gitleaks/gitleaks"
+)
 
 
 def get_repo_root() -> Path:
@@ -57,10 +69,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)
@@ -68,6 +77,7 @@ class TestGitleaksConfig:
         assert config is not None, "Gitleaks config should parse as valid TOML"
         assert isinstance(config, dict), "Gitleaks config should be a dictionary"
 
+    @requires_gitleaks
     def test_gitleaks_ignores_documentation_examples(self):
         """
         Test that gitleaks doesn't flag documentation examples as secrets.
@@ -92,9 +102,9 @@ class TestGitleaksConfig:
         # Should either succeed (0) or fail but NOT due to documentation examples
         if result.returncode != 0:
             # Check if failures are from documentation
-            assert (
-                ".openai/codex-instructions.md" not in result.stdout
-            ), "Documentation examples should be allowlisted in .gitleaks.toml"
+            assert ".openai/codex-instructions.md" not in result.stdout, (
+                "Documentation examples should be allowlisted in .gitleaks.toml"
+            )
 
     def test_gitleaks_ignores_venv_directories(self):
         """Test that gitleaks config excludes .venv and similar directories."""
@@ -104,10 +114,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)
@@ -133,10 +140,7 @@ class TestGitleaksConfig:
         if not config_file.exists():
             pytest.skip(".gitleaks.toml not yet created")
 
-        try:
-            import tomllib
-        except ImportError:
-            import tomli as tomllib
+        import tomllib
 
         with open(config_file, "rb") as f:
             config = tomllib.load(f)
@@ -147,6 +151,7 @@ class TestGitleaksConfig:
         # Should exclude generated code
         assert any("clients" in path for path in paths), "Gitleaks config should exclude generated client directories"
 
+    @requires_gitleaks
     def test_gitleaks_detects_real_secrets(self):
         """
         Test that gitleaks still detects real secrets (not a false negative factory).
@@ -177,9 +182,9 @@ DATABASE_PASSWORD=SuperSecretPassword123!
             )
 
             # Should detect secrets in the test file
-            assert (
-                result.returncode != 0 or "gitleaks-validation-file.txt" in result.stdout
-            ), f"Gitleaks should detect real secrets in {test_file.name}"
+            assert result.returncode != 0 or "gitleaks-validation-file.txt" in result.stdout, (
+                f"Gitleaks should detect real secrets in {test_file.name}"
+            )
 
         finally:
             # Clean up test file

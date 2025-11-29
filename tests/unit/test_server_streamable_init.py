@@ -30,9 +30,9 @@ def test_module_level_logger_uses_standard_logging():
     source_code = source_file.read_text()
 
     # Verify module-level logger is defined with standard logging
-    assert (
-        "_module_logger = logging.getLogger(__name__)" in source_code
-    ), "Module should define _module_logger using standard logging.getLogger()"
+    assert "_module_logger = logging.getLogger(__name__)" in source_code, (
+        "Module should define _module_logger using standard logging.getLogger()"
+    )
 
     # Verify module-level code uses _module_logger, not observability logger
     # Look for the rate limiting try/except block
@@ -75,9 +75,9 @@ def test_rate_limiting_logs_use_standard_logger():
     # Should use _module_logger, NOT observability logger
     if "logger.info" in rate_limit_section or "logger.warning" in rate_limit_section:
         # Make sure it's _module_logger, not the observability logger
-        assert (
-            "_module_logger" in rate_limit_section
-        ), "Rate limiting section uses 'logger' directly - should use '_module_logger' instead"
+        assert "_module_logger" in rate_limit_section, (
+            "Rate limiting section uses 'logger' directly - should use '_module_logger' instead"
+        )
 
 
 @pytest.mark.unit
@@ -108,6 +108,6 @@ def test_observability_logger_not_used_at_module_level():
     # Find instances of logger. calls (not _module_logger.)
     bad_logger_usage = re.findall(r"^[^#]*\blogger\.(info|warning|error|debug)", module_level_code, re.MULTILINE)
 
-    assert (
-        len(bad_logger_usage) == 0
-    ), f"Found {len(bad_logger_usage)} instances of observability logger usage at module level: {bad_logger_usage}"
+    assert len(bad_logger_usage) == 0, (
+        f"Found {len(bad_logger_usage)} instances of observability logger usage at module level: {bad_logger_usage}"
+    )

@@ -60,9 +60,10 @@ def test_keycloak_realm_import_file_exists(repo_root: Path):
     # Verify it's valid JSON
     with open(realm_file) as f:
         try:
-            realm_config = json.load(f)
+            realm_config: dict = json.load(f)
         except json.JSONDecodeError as e:
             pytest.fail(f"Realm file is not valid JSON: {e}")
+            return  # Unreachable but satisfies static analysis
 
     assert isinstance(realm_config, dict), f"Realm file must contain a JSON object, got: {type(realm_config)}"
 
@@ -109,11 +110,18 @@ def test_realm_json_has_mcp_server_client(repo_root: Path):
     # Validate client configuration
     assert mcp_client.get("enabled") is True, "Client 'mcp-server' must be enabled"
 
-    assert mcp_client.get("publicClient") is True, "Client 'mcp-server' must be a public client (no secret required)"
+    # Client can be either public (no secret) or confidential (with secret)
+    # E2E tests support both configurations
+    is_public = mcp_client.get("publicClient") is True
+    has_secret = mcp_client.get("secret") is not None
+    assert is_public or has_secret, (
+        "Client 'mcp-server' must be either a public client (publicClient: true) "
+        "or a confidential client with a secret configured"
+    )
 
-    assert (
-        mcp_client.get("directAccessGrantsEnabled") is True
-    ), "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    assert mcp_client.get("directAccessGrantsEnabled") is True, (
+        "Client 'mcp-server' must have directAccessGrantsEnabled for password grant flow"
+    )
 
 
 def test_realm_json_has_test_users(repo_root: Path):
@@ -190,16 +198,17 @@ def test_docker_compose_imports_realm(repo_root: Path):
 
     with open(docker_compose_file) as f:
         try:
-            compose_config = yaml.safe_load(f)
+            compose_config: dict = yaml.safe_load(f)
         except yaml.YAMLError as e:
             pytest.fail(f"docker-compose.test.yml is not valid YAML: {e}")
+            return  # Unreachable but satisfies static analysis
 
     # Find keycloak-test service
     services = compose_config.get("services", {})
     keycloak_service = services.get("keycloak-test")
 
     assert keycloak_service is not None, (
-        "Service 'keycloak-test' not found in docker-compose.test.yml\n" f"Available services: {list(services.keys())}"
+        f"Service 'keycloak-test' not found in docker-compose.test.yml\nAvailable services: {list(services.keys())}"
     )
 
     # Check for volume mount

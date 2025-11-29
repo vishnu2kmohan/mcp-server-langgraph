@@ -6,6 +6,10 @@ Date: 2025-10-11
 
 Accepted
 
+## Category
+
+Authentication & Authorization
+
 ## Context
 
 The MCP server needs enterprise-grade authorization to control who can:

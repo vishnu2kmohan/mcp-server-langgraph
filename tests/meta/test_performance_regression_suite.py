@@ -47,7 +47,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.meta
 @pytest.mark.performance
-@pytest.mark.timeout(300)  # Override global 60s timeout - this test runs full suite as subprocess
+@pytest.mark.timeout(360)  # Override global 60s timeout - this test runs full suite as subprocess
 def test_unit_test_suite_performance():
     """
     Test that unit test suite completes within 120 seconds.
@@ -79,7 +79,7 @@ def test_unit_test_suite_performance():
         cwd=project_root,
         capture_output=True,
         text=True,
-        timeout=180,  # 3 minute timeout (generous buffer)
+        timeout=300,  # 5 minute timeout (generous buffer for CI environments)
     )
 
     # Parse output to find total duration

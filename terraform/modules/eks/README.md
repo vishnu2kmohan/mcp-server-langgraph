@@ -479,9 +479,7 @@ See [outputs.tf](./outputs.tf) for complete list.
 
 ## Examples
 
-- [Production cluster](../../examples/eks-production)
-- [Development cluster](../../examples/eks-dev)
-- [Multi-node-group](../../examples/eks-multi-nodegroup)
+See the usage examples in this README for production, development, and multi-node-group configurations.
 
 ## References
 

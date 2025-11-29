@@ -1,21 +1,21 @@
 ---
-title: 33. Service Principal Design and Authentication Modes
-description: 'Machine-to-machine authentication, batch jobs, streaming tasks, and background processes require persistent identity and long-lived credentials tha...'
-icon: 'file-lines'
-seoTitle: "ADR-0033: 33. Service Principal Design and Authentication Mo"
-seoDescription: "Architecture Decision Record 0033: Machine-to-machine authentication, batch jobs, streaming tasks, and background processes require persistent identity and long-lived credenti"
-keywords: ["ADR", "architecture decision", "design pattern", "MCP Server architecture", "33."]
-contentType: "explanation"
+title: "33. Service Principal Design and Authentication Modes"
+description: "Architecture Decision Record: 33. Service Principal Design and Authentication Modes"
 ---
 
+# 33. Service Principal Design and Authentication Modes
 
 Date: 2025-01-28
 
-### Status
+## Status
 
 Accepted
 
-### Context
+## Category
+
+Authentication & Authorization
+
+## Context
 
 Machine-to-machine authentication, batch jobs, streaming tasks, and background processes require persistent identity and long-lived credentials that differ from human user patterns. Challenges include:
 
@@ -27,11 +27,11 @@ Machine-to-machine authentication, batch jobs, streaming tasks, and background p
 
 Current system only supports human user authentication with 15-minute token lifetimes.
 
-### Decision
+## Decision
 
 We will implement **Service Principals as first-class identities** with two authentication modes and optional user association for permission inheritance.
 
-#### Core Principles
+### Core Principles
 
 1. **First-Class Identity**: Service principals distinct from users in authorization model
 2. **Dual Authentication**: Support OAuth2 client credentials AND service account users
@@ -40,49 +40,15 @@ We will implement **Service Principals as first-class identities** with two auth
 5. **Long-Lived Credentials**: Support 30-day refresh tokens for persistent tasks
 6. **Keycloak-Issued**: All service principal tokens issued by Keycloak (JWT standard)
 
-#### Architecture
+### Architecture
 
 **Service Principal Identity Format**:
 - Subject (sub) claim: `service:<client-id>` (e.g., `service:batch-etl-job`)
 - OpenFGA Object: `service_principal:batch-etl-job`
 
-#### Service Principal Authentication Flow
+### Authentication Modes
 
-```mermaid
-sequenceDiagram
-    %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
-    participant SP as Service Principal<br/>(batch-etl-job)
-    participant KC as Keycloak<br/>Identity Provider
-    participant App as MCP Server
-    participant FGA as OpenFGA<br/>Authorization
-    participant User as Associated User<br/>(alice)
-
-    Note over SP,KC: Mode 1: Client Credentials Flow (Preferred)
-    SP->>KC: POST /token<br/>grant_type=client_credentials<br/>client_id + client_secret
-    KC->>KC: Validate credentials<br/>Check service account enabled
-    KC-->>SP: JWT Token<br/>sub: service:batch-etl-job<br/>TTL: 30 days
-
-    Note over SP,App: Service Principal makes API request
-    SP->>App: API Request + JWT
-    App->>App: Validate JWT signature
-    App->>KC: Verify token (optional)
-    KC-->>App: Token valid
-
-    Note over App,FGA: Permission Check with Inheritance
-    App->>FGA: Check(service:batch-etl-job, execute, tool:chat)
-    FGA->>FGA: Find acts_as relationship<br/>service:batch-etl-job → user:alice
-    FGA->>FGA: Check inherited permissions<br/>user:alice → tool:chat
-    FGA-->>App: Allowed (via inheritance)
-
-    App-->>SP: Response with data
-
-    Note over SP,User: Audit Trail
-    App->>App: Log action<br/>Principal: service:batch-etl-job<br/>Effective User: alice
-
-```
-#### Authentication Modes
-
-##### Mode 1: Client Credentials Flow (Preferred)
+#### Mode 1: Client Credentials Flow (Preferred)
 **Use Case**: Dedicated services, microservices, batch jobs
 
 **Keycloak Configuration**:
@@ -106,7 +72,8 @@ response = await httpx.post(token_endpoint, data={
     "client_secret": "service-secret"
 })
 ```
-##### Mode 2: Service Account User (Alternative)
+
+#### Mode 2: Service Account User (Alternative)
 **Use Case**: Legacy systems migration, mixed authentication needs
 
 **Keycloak Configuration**:
@@ -121,7 +88,7 @@ response = await httpx.post(token_endpoint, data={
 }
 ```
 
-#### User Association and Permission Inheritance
+### User Association and Permission Inheritance
 
 **OpenFGA Tuples**:
 ```python
@@ -132,9 +99,10 @@ response = await httpx.post(token_endpoint, data={
     {"user": "user:bob", "relation": "owner", "object": "service_principal:batch-etl-job"}
 ]
 ```
+
 **Permission Check**: Service inherits user permissions via `acts_as` relationship.
 
-#### Configuration
+### Configuration
 
 ```bash
 ENABLE_SERVICE_PRINCIPALS=true
@@ -144,33 +112,33 @@ SERVICE_PRINCIPAL_INHERIT_PERMISSIONS=true
 SERVICE_PRINCIPAL_ROTATE_SECRET_DAYS=90
 ```
 
-### Consequences
+## Consequences
 
-#### Positive Consequences
+### Positive Consequences
 - Long-running support (30-day tokens), clear attribution
 - Permission delegation without password sharing
 - Audit trail, flexible authentication (two modes)
 - Security isolation, ownership tracking
 
-#### Negative Consequences
+### Negative Consequences
 - Implementation complexity (two modes)
 - Keycloak configuration expertise required
 - OpenFGA model changes, additional secrets to manage
 - Permission inheritance may be non-obvious
 
-#### Mitigation Strategies
+### Mitigation Strategies
 - High-level SDK abstracting modes, clear documentation
 - Automated secret rotation (90 days), IP whitelisting
 - Audit reports showing effective permissions
 
-### Alternatives Considered
+## Alternatives Considered
 
 1. **User Accounts Only**: Rejected - conflates humans with machines, poor audit trail
 2. **API Keys Only**: Rejected - violates JWT standardization
 3. **Client Credentials Only**: Rejected - lacks flexibility for legacy systems
 4. **Impersonation Flow**: Rejected - security risk of admin credentials in services
 
-### Implementation
+## Implementation
 
 **ServicePrincipalManager** (`src/mcp_server_langgraph/auth/service_principal.py`):
 ```python
@@ -189,9 +157,9 @@ class ServicePrincipalManager:
 - POST `/api/v1/service-principals/{id}/rotate-secret` - Rotate
 - DELETE `/api/v1/service-principals/{id}` - Delete
 
-### References
+## References
 
 - Implementation: `src/mcp_server_langgraph/auth/service_principal.py` (to be created)
 - API: `src/mcp_server_langgraph/api/service_principals.py` (to be created)
-- Related ADRs: [ADR-0031](/architecture/adr-0031-keycloak-authoritative-identity), [ADR-0032](/architecture/adr-0032-jwt-standardization), [ADR-0036](/architecture/adr-0036-hybrid-session-model), [ADR-0039](/architecture/adr-0039-openfga-permission-inheritance)
+- Related ADRs: [ADR-0031](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0031-keycloak-authoritative-identity.md), [ADR-0032](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0032-jwt-standardization.md), [ADR-0036](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0036-hybrid-session-model.md), [ADR-0039](https://github.com/vishnu2kmohan/mcp-server-langgraph/blob/main/adr/adr-0039-openfga-permission-inheritance.md)
 - External: [OAuth 2.0 Client Credentials](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4), [Keycloak Service Accounts](https://www.keycloak.org/docs/latest/server_admin/#_service_accounts)

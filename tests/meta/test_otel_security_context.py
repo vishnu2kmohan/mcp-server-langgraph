@@ -99,9 +99,9 @@ def test_otel_deployment_has_pod_security_context(repo_root: Path):
     )
 
     # Validate fsGroup
-    assert (
-        security_context.get("fsGroup") == 10001
-    ), f"Pod securityContext must set fsGroup: 10001, got: {security_context.get('fsGroup')}"
+    assert security_context.get("fsGroup") == 10001, (
+        f"Pod securityContext must set fsGroup: 10001, got: {security_context.get('fsGroup')}"
+    )
 
     # Validate seccomp profile
     seccomp = security_context.get("seccompProfile")
@@ -138,7 +138,7 @@ def test_otel_deployment_has_container_security_context(repo_root: Path):
             break
 
     assert otel_container is not None, (
-        "otel-collector container not found in deployment.\n" f"Available containers: {[c.get('name') for c in containers]}"
+        f"otel-collector container not found in deployment.\nAvailable containers: {[c.get('name') for c in containers]}"
     )
 
     # Check for container-level securityContext
@@ -162,19 +162,19 @@ def test_otel_deployment_has_container_security_context(repo_root: Path):
     )
 
     # Validate each security setting
-    assert (
-        security_context.get("allowPrivilegeEscalation") is False
-    ), "Container securityContext must set allowPrivilegeEscalation: false"
+    assert security_context.get("allowPrivilegeEscalation") is False, (
+        "Container securityContext must set allowPrivilegeEscalation: false"
+    )
 
-    assert (
-        security_context.get("readOnlyRootFilesystem") is True
-    ), "Container securityContext must set readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    assert security_context.get("readOnlyRootFilesystem") is True, (
+        "Container securityContext must set readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    )
 
     assert security_context.get("runAsNonRoot") is True, "Container securityContext must set runAsNonRoot: true"
 
-    assert (
-        security_context.get("runAsUser") == 10001
-    ), f"Container securityContext must set runAsUser: 10001, got: {security_context.get('runAsUser')}"
+    assert security_context.get("runAsUser") == 10001, (
+        f"Container securityContext must set runAsUser: 10001, got: {security_context.get('runAsUser')}"
+    )
 
     # Validate capabilities
     capabilities = security_context.get("capabilities")
@@ -303,7 +303,7 @@ def test_otel_has_tmpfs_volumes(repo_root: Path):
     assert "/tmp" in mount_paths, f"Missing volumeMount for /tmp directory.\nCurrent mounts: {mount_paths}"  # nosec B108
 
     assert "/home/otelcol" in mount_paths or "/home" in mount_paths, (
-        "Missing volumeMount for /home/otelcol or /home directory.\n" f"Current mounts: {mount_paths}"
+        f"Missing volumeMount for /home/otelcol or /home directory.\nCurrent mounts: {mount_paths}"
     )
 
 
@@ -394,13 +394,13 @@ def test_rendered_staging_manifest_has_otel_security_context(repo_root: Path):
 
     container_security_context = otel_container.get("securityContext", {})
 
-    assert (
-        container_security_context.get("readOnlyRootFilesystem") is True
-    ), "Rendered manifest missing container-level readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    assert container_security_context.get("readOnlyRootFilesystem") is True, (
+        "Rendered manifest missing container-level readOnlyRootFilesystem: true (Trivy AVD-KSV-0014)"
+    )
 
-    assert (
-        container_security_context.get("runAsNonRoot") is True
-    ), "Rendered manifest missing container-level runAsNonRoot: true"
+    assert container_security_context.get("runAsNonRoot") is True, (
+        "Rendered manifest missing container-level runAsNonRoot: true"
+    )
 
     capabilities = container_security_context.get("capabilities", {})
     assert "ALL" in capabilities.get("drop", []), "Rendered manifest missing capabilities.drop: [ALL]"

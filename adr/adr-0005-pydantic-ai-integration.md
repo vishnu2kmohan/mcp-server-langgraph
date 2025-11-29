@@ -6,6 +6,10 @@ Date: 2025-10-11
 
 Accepted
 
+## Category
+
+Core Architecture
+
 ## Context
 
 LLM agents face a fundamental challenge: **unstructured outputs**. LLMs return free-form text, but applications need:
@@ -246,7 +250,7 @@ Benchmarks on routing latency:
 
 | Method | Latency | Tokens | Accuracy |
 |--------|---------|--------|----------|
-| Keywords | <1ms | 0 | 65% |
+| Keywords | \<1ms | 0 | 65% |
 | Pydantic AI | 150ms | ~50 | 92% |
 | Function Calling | 120ms | ~40 | 90% |
 

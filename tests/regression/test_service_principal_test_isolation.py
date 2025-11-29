@@ -133,7 +133,7 @@ class TestServicePrincipalTestIsolation:
         response_auth = client_with_override.get("/protected")
 
         assert response_auth.status_code == 200, (
-            f"Bearer override should allow request through. " f"Got {response_auth.status_code}: {response_auth.text}"
+            f"Bearer override should allow request through. Got {response_auth.status_code}: {response_auth.text}"
         )
         assert response_auth.json()["user"]["user_id"] == "mocked-user"
 

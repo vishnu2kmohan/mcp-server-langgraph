@@ -123,14 +123,14 @@ Restructured `make validate-pre-push` to mirror pre-push hook exactly:
 ```python
 # Simple substring matching
 if "pytest tests/ -m" in content:
-    # Doesn't handle "uv run pytest"
+    # Doesn't handle "uv run --frozen pytest"
 ```
 
 **After:**
 ```python
 # Regex pattern matching
 if re.search(r"(uv run )?pytest.*tests/.*-m.*unit", content):
-    # Handles both "pytest" and "uv run pytest"
+    # Handles both "pytest" and "uv run --frozen pytest"
 ```
 
 Added validation for:
@@ -227,7 +227,7 @@ Created comprehensive test suite that validates:
 ```bash
 # 3a. Unit tests
 run_validation "Unit Tests" \
-    "uv run pytest tests/ -m 'unit and not contract' -x --tb=short"
+    "uv run --frozen pytest tests/ -m 'unit and not contract' -x --tb=short"
 ```
 
 **Pre-Push Hook - Phase 3 (After):**
@@ -236,7 +236,7 @@ run_validation "Unit Tests" \
 # Uses -n auto for parallel execution (matches CI) to catch pytest-xdist isolation bugs
 # Sets OTEL_SDK_DISABLED=true (matches CI) to disable OpenTelemetry SDK initialization
 run_validation "Unit Tests" \
-    "OTEL_SDK_DISABLED=true uv run pytest -n auto tests/ -m 'unit and not contract' -x --tb=short"
+    "OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/ -m 'unit and not contract' -x --tb=short"
 ```
 
 **Changes:**
@@ -271,7 +271,7 @@ python scripts/validate_pre_push_hook.py
 Result: ✅ Pre-push hook configuration is valid
 
 # Integration test with -n auto
-OTEL_SDK_DISABLED=true uv run pytest -n auto tests/meta/ -v
+OTEL_SDK_DISABLED=true uv run --frozen pytest -n auto tests/meta/ -v
 Result: All tests PASSED with no isolation issues ✅
 ```
 

@@ -106,9 +106,9 @@ class TestConversationStatePersistence:
             assert result_messages[2].content == "What about 3+3?", "Third message lost!"
 
             # Verify new message was appended
-            assert any(
-                "3+3" in msg.content or "6" in msg.content for msg in result_messages[3:]
-            ), "New response not appended correctly"
+            assert any("3+3" in msg.content or "6" in msg.content for msg in result_messages[3:]), (
+                "New response not appended correctly"
+            )
 
     @pytest.mark.asyncio
     async def test_multiple_sequential_invocations_accumulate_history(self, test_settings, mock_llm):

@@ -597,7 +597,7 @@ def init_test_observability():
 .pre-commit-config.yaml:
   - id: check-test-memory-safety
     name: Check Test Memory Safety
-    entry: uv run python scripts/validation/check_test_memory_safety.py
+    entry: uv run --frozen python scripts/validation/check_test_memory_safety.py
 ```
 
 **Checks for**:
@@ -618,7 +618,7 @@ python scripts/validation/check_test_memory_safety.py tests/
 ```bash
   - id: validate-fixture-organization
     name: Validate Pytest Fixture Organization (No Duplicates)
-    entry: uv run pytest tests/meta/test_fixture_organization.py
+    entry: uv run --frozen pytest tests/meta/test_fixture_organization.py
 ```
 
 **Checks for**:

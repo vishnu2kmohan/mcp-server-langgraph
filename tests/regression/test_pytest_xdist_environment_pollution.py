@@ -113,9 +113,9 @@ class TestEnvironmentPollution:
         """
         # GDPR_STORAGE_BACKEND should not be set (unless it was set before tests)
         # This proves monkeypatch cleaned up properly
-        assert (
-            os.environ.get("GDPR_STORAGE_BACKEND") is None or os.environ.get("GDPR_STORAGE_BACKEND") != "memory"
-        ), "Environment should be cleaned up by monkeypatch"
+        assert os.environ.get("GDPR_STORAGE_BACKEND") is None or os.environ.get("GDPR_STORAGE_BACKEND") != "memory", (
+            "Environment should be cleaned up by monkeypatch"
+        )
 
 
 @pytest.mark.unit

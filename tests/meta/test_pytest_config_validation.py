@@ -14,12 +14,7 @@ Reference: Codex finding - pytest addopts compatibility validation
 
 import subprocess
 import sys
-
-# Python 3.10 compatibility: tomllib added in 3.11, use tomli backport for <3.11
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -47,10 +42,10 @@ def test_pytest_addopts_flags_have_required_plugins():
     instead of duplicating the validation logic. The script is the source of truth.
     """
     repo_root = Path(__file__).parent.parent.parent
-    script_path = repo_root / "scripts/validation/validate_pytest_config.py"
+    script_path = repo_root / "scripts/validators/validate_pytest_config.py"
 
     assert script_path.exists(), (
-        f"Validation script not found: {script_path}\n" "Expected: scripts/validation/validate_pytest_config.py"
+        f"Validation script not found: {script_path}\nExpected: scripts/validators/validate_pytest_config.py"
     )
 
     # Run the validation script - it will exit with code 1 if validation fails
@@ -79,11 +74,11 @@ def test_validation_script_exists_and_is_executable():
     It should be executable and return exit code 0 when validation passes.
     """
     repo_root = Path(__file__).parent.parent.parent
-    script_path = repo_root / "scripts/validation/validate_pytest_config.py"
+    script_path = repo_root / "scripts/validators/validate_pytest_config.py"
 
     assert script_path.exists(), (
         f"Validation script not found: {script_path}\n"
-        "Expected: scripts/validation/validate_pytest_config.py\n"
+        "Expected: scripts/validators/validate_pytest_config.py\n"
         "This script should validate pytest addopts against installed plugins."
     )
 
@@ -96,9 +91,7 @@ def test_validation_script_exists_and_is_executable():
     )
 
     assert result.returncode == 0, (
-        f"Validation script failed with exit code {result.returncode}\n"
-        f"stdout: {result.stdout}\n"
-        f"stderr: {result.stderr}"
+        f"Validation script failed with exit code {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
 
 
@@ -180,7 +173,7 @@ def test_pre_commit_hook_validates_pytest_config():
 
     # Verify it targets pyproject.toml
     assert "pyproject.toml" in config_content or "pyproject\\.toml" in config_content, (
-        "Pre-commit hook should target pyproject.toml\n" "Add: files: ^pyproject\\.toml$ to the hook configuration"
+        "Pre-commit hook should target pyproject.toml\nAdd: files: ^pyproject\\.toml$ to the hook configuration"
     )
 
 

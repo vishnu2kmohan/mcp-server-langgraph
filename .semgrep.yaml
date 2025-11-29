@@ -1,0 +1,188 @@
+# Semgrep Configuration for MCP Server LangGraph
+#
+# This configuration provides CodeQL-equivalent local security scanning.
+# The pre-commit hook uses `--config auto` which includes these rules plus
+# community-maintained security patterns.
+#
+# Added: 2025-11-28 (CodeQL gap analysis - PR #121)
+# Documentation: https://semgrep.dev/docs/writing-rules/rule-syntax/
+#
+# Run manually:
+#   semgrep scan --config auto src/ scripts/
+#   semgrep scan --config .semgrep.yaml src/ scripts/
+#
+
+rules:
+  # ============================================================================
+  # EMPTY EXCEPTION HANDLERS (CodeQL py/empty-except equivalent)
+  # ============================================================================
+  - id: python.empty-except-block
+    pattern: |
+      try:
+        ...
+      except:
+        pass
+    message: |
+      Empty except block catches all exceptions silently. This can hide bugs
+      and security issues. Either handle the exception appropriately or catch
+      a specific exception type.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-396
+      owasp: A10:2021
+      references:
+        - https://cwe.mitre.org/data/definitions/396.html
+        - https://codeql.github.com/codeql-query-help/python/py-empty-except/
+
+  # ============================================================================
+  # BARE EXCEPTION CATCH (more general than empty-except)
+  # ============================================================================
+  - id: python.bare-except
+    pattern: |
+      try:
+        ...
+      except:
+        $HANDLER
+    message: |
+      Bare except catches all exceptions including SystemExit and KeyboardInterrupt.
+      Use 'except Exception:' to catch only regular exceptions, or catch specific
+      exception types.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-396
+      owasp: A10:2021
+
+  # ============================================================================
+  # TYPED EXCEPTION WITH JUST PASS (CodeQL py/empty-except equivalent)
+  # ============================================================================
+  # This catches patterns like: except SomeException: pass
+  # which are missed by the bare-except rule above.
+  # Added: 2025-11-29 (CodeQL parity - PR #121 remediation)
+  - id: python.typed-except-pass
+    patterns:
+      - pattern: |
+          try:
+            ...
+          except $EXCEPTION:
+            pass
+      - pattern-not: |
+          try:
+            ...
+          except:
+            pass
+    message: |
+      Exception '$EXCEPTION' caught but silently ignored with just 'pass'.
+      This can hide bugs and security issues. Either:
+      1. Handle the exception appropriately (log, return, raise)
+      2. Use `# nosemgrep: python.typed-except-pass` with justification
+      3. Catch a more specific exception type
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-390
+      owasp: A10:2021
+      codeql-equivalent: py/empty-except
+      references:
+        - https://cwe.mitre.org/data/definitions/390.html
+        - https://codeql.github.com/codeql-query-help/python/py-empty-except/
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS
+  # ============================================================================
+  - id: python.hardcoded-password-assignment
+    patterns:
+      - pattern-either:
+          - pattern: $VAR = "..."
+          - pattern: $VAR = '...'
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: (?i).*(password|passwd|secret|api_key|apikey|token|auth).*
+      - pattern-not: $VAR = ""
+      - pattern-not: $VAR = ''
+      - pattern-not: $VAR = os.environ[...]
+      - pattern-not: $VAR = os.getenv(...)
+    message: |
+      Possible hardcoded credential in variable '$VAR'. Use environment
+      variables or a secrets manager instead.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-798
+      owasp: A02:2021
+
+  # ============================================================================
+  # SQL INJECTION
+  # ============================================================================
+  - id: python.sql-injection-format-string
+    patterns:
+      - pattern-either:
+          - pattern: cursor.execute($QUERY % ...)
+          - pattern: cursor.execute($QUERY.format(...))
+          - pattern: cursor.execute(f"...")
+          - pattern: $DB.execute($QUERY % ...)
+          - pattern: $DB.execute($QUERY.format(...))
+          - pattern: $DB.execute(f"...")
+    message: |
+      SQL query constructed using string formatting. Use parameterized queries
+      instead to prevent SQL injection.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-89
+      owasp: A03:2021
+
+  # ============================================================================
+  # COMMAND INJECTION
+  # ============================================================================
+  - id: python.subprocess-shell-true
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(..., shell=True, ...)
+          - pattern: subprocess.call(..., shell=True, ...)
+          - pattern: subprocess.Popen(..., shell=True, ...)
+          - pattern: os.system(...)
+    message: |
+      Using shell=True with subprocess or os.system() can lead to command
+      injection. Use a list of arguments instead.
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-78
+      owasp: A03:2021
+
+  # ============================================================================
+  # UNSAFE DESERIALIZATION
+  # ============================================================================
+  - id: python.unsafe-pickle-load
+    patterns:
+      - pattern-either:
+          - pattern: pickle.load(...)
+          - pattern: pickle.loads(...)
+          - pattern: cPickle.load(...)
+          - pattern: cPickle.loads(...)
+    message: |
+      Unsafe deserialization with pickle. Never unpickle untrusted data.
+      Use JSON or other safe serialization formats for untrusted input.
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-502
+      owasp: A08:2021
+
+  # ============================================================================
+  # INSECURE RANDOM
+  # ============================================================================
+  - id: python.insecure-random-for-crypto
+    patterns:
+      - pattern: random.$FUNC(...)
+      - pattern-not: random.SystemRandom().$FUNC(...)
+    message: |
+      Using 'random' module for potentially security-sensitive operation.
+      Use 'secrets' module for cryptographic operations.
+    severity: INFO
+    languages: [python]
+    metadata:
+      cwe: CWE-330
+      owasp: A02:2021

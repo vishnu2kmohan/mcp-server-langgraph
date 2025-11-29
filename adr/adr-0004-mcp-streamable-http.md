@@ -1,10 +1,14 @@
 # 4. MCP StreamableHTTP Transport Protocol
 
-Date: 2025-10-11 (Updated: 2025-10-11 - SSE Removed)
+Date: 2025-10-11
 
 ## Status
 
-Accepted (SSE transport removed as of 2025-10-11)
+Accepted
+
+## Category
+
+Core Architecture
 
 ## Context
 

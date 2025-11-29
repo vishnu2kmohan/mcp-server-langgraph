@@ -135,7 +135,7 @@ The new test checks **ALL workflows** (not just scheduled) for `issues: write` p
 ```yaml
 - id: validate-github-action-versions
   name: Validate GitHub Actions Action Versions
-  entry: uv run pytest tests/meta/test_github_actions_validation.py -v --tb=short
+  entry: uv run --frozen pytest tests/meta/test_github_actions_validation.py -v --tb=short
   language: system
   pass_filenames: false
   files: ^(\.github/workflows/.*\.ya?ml|\.github/actions/.*/action\.yml)$
@@ -390,7 +390,7 @@ Validate GitHub Actions Action Versions..................................Passed
 
 ### Final Test Run
 ```bash
-$ uv run pytest tests/meta/test_github_actions_validation.py -v
+$ uv run --frozen pytest tests/meta/test_github_actions_validation.py -v
 
 collected 8 items
 

@@ -57,7 +57,7 @@ class TestDockerEnvironmentSetup:
         """
         scripts_dir = project_root / "scripts"
         assert scripts_dir.exists(), (
-            f"scripts/ directory not found at {scripts_dir}. " "Ensure Dockerfile.test includes 'COPY scripts/ ./scripts/'"
+            f"scripts/ directory not found at {scripts_dir}. Ensure Dockerfile.test includes 'COPY scripts/ ./scripts/'"
         )
         assert scripts_dir.is_dir(), f"{scripts_dir} exists but is not a directory"
 
@@ -68,14 +68,14 @@ class TestDockerEnvironmentSetup:
         # scripts/__init__.py should exist
         init_file = scripts_dir / "__init__.py"
         assert init_file.exists(), (
-            f"scripts/__init__.py not found. " f"scripts/ directory exists at {scripts_dir} but is not a Python package."
+            f"scripts/__init__.py not found. scripts/ directory exists at {scripts_dir} but is not a Python package."
         )
 
     def test_scripts_validators_exists(self, project_root):
         """Test that scripts/validators/ subdirectory exists."""
         validators_dir = project_root / "scripts" / "validators"
         assert validators_dir.exists(), (
-            f"scripts/validators/ not found at {validators_dir}. " "Required for documentation test imports."
+            f"scripts/validators/ not found at {validators_dir}. Required for documentation test imports."
         )
 
     def test_deployments_directory_exists(self, project_root):
@@ -96,7 +96,7 @@ class TestDockerEnvironmentSetup:
         """Test that deployments/overlays/ subdirectory exists."""
         overlays_dir = project_root / "deployments" / "overlays"
         assert overlays_dir.exists(), (
-            f"deployments/overlays/ not found at {overlays_dir}. " "Required for Kubernetes deployment regression tests."
+            f"deployments/overlays/ not found at {overlays_dir}. Required for Kubernetes deployment regression tests."
         )
 
     @pytest.mark.skipif(os.getenv("TESTING") != "true", reason="Only in Docker test environment")

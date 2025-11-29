@@ -6,28 +6,17 @@ featuring multi-LLM support, fine-grained authorization, and comprehensive obser
 """
 
 import sys
+import tomllib
 from pathlib import Path
 
 # Read version from pyproject.toml (single source of truth)
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        # Fallback if tomli not available (shouldn't happen with uv)
-        tomllib = None
-
-if tomllib:
-    try:
-        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
-        with open(pyproject_path, "rb") as f:
-            pyproject_data = tomllib.load(f)
-        __version__ = pyproject_data["project"]["version"]
-    except Exception:
-        # Fallback if reading fails
-        __version__ = "2.8.0"
-else:
+try:
+    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    with open(pyproject_path, "rb") as f:
+        pyproject_data = tomllib.load(f)
+    __version__ = pyproject_data["project"]["version"]
+except Exception:
+    # Fallback if reading fails
     __version__ = "2.8.0"
 
 # Core exports (lightweight - eagerly imported)
@@ -216,6 +205,33 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         import mcp_server_langgraph.schedulers as schedulers_module
 
         return schedulers_module
+    elif name == "resilience":
+        # Allow access to resilience submodule for resilience pattern tests
+        module_name = f"{__name__}.resilience"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.resilience as resilience_module
+
+        return resilience_module
+    elif name == "mcp":
+        # Allow access to mcp submodule for MCP server tests
+        module_name = f"{__name__}.mcp"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.mcp as mcp_module
+
+        return mcp_module
+    elif name == "observability":
+        # Allow access to observability submodule for telemetry tests
+        module_name = f"{__name__}.observability"
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+
+        import mcp_server_langgraph.observability as observability_module
+
+        return observability_module
 
     # Not found
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

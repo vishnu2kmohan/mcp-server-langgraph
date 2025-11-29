@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 # Mark as unit test to ensure it runs in CI
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.validation]
 
 
 def get_repo_root() -> Path:

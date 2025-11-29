@@ -49,12 +49,9 @@ class TestCircuitBreakerDecoratorIsolation:
     """Test circuit breaker decorator closure isolation."""
 
     def teardown_method(self) -> None:
-        """Force GC to prevent mock accumulation in xdist workers"""
-        gc.collect()
-
-    def teardown_method(self):
-        """Clean up circuit breakers after each test."""
+        """Clean up circuit breakers and force GC to prevent mock accumulation in xdist workers."""
         reset_all_circuit_breakers()
+        gc.collect()
 
     @pytest.mark.asyncio
     @pytest.mark.unit

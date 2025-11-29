@@ -8,10 +8,11 @@ to OpenFGA for fine-grained authorization.
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 import jwt
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
 
@@ -54,6 +55,38 @@ class KeycloakConfig(BaseModel):
     admin_password: str | None = Field(default=None, description="Admin password for admin API access")
     verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     timeout: int = Field(default=30, description="HTTP request timeout in seconds")
+
+    @field_validator("server_url")
+    @classmethod
+    def validate_server_url(cls, v: str) -> str:
+        """
+        Validate server_url to prevent SSRF attacks.
+
+        Ensures:
+        - URL uses http or https scheme only
+        - URL has a valid hostname
+        - URL is normalized (no trailing slash)
+
+        Security: This prevents SSRF by rejecting file://, gopher://, dict://,
+        and other dangerous URL schemes that could be used to access internal
+        network resources or local files.
+        """
+        parsed = urlparse(v)
+
+        # Validate scheme (SSRF mitigation - only allow http/https)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError(
+                f"Invalid URL scheme '{parsed.scheme}'. Only 'http' and 'https' are allowed. "
+                "This restriction prevents SSRF attacks via dangerous URL schemes."
+            )
+
+        # Validate hostname exists
+        if not parsed.netloc:
+            raise ValueError(f"Invalid URL '{v}': missing hostname. Expected format: http(s)://hostname[:port]")
+
+        # Normalize URL (remove trailing slash for consistency)
+        normalized = v.rstrip("/")
+        return normalized
 
     @property
     def realm_url(self) -> str:
