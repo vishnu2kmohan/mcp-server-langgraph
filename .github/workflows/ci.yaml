@@ -664,14 +664,8 @@ jobs:
 
     - name: Test ${{ matrix.variant }} image
       run: |
-        # Use correct Python path based on variant
-        # - Distroless (base, full): /usr/bin/python3 (system Python)
-        # - Slim (test): /app/.venv/bin/python (uv-managed venv)
-        if [[ "${{ matrix.variant }}" == "test" ]]; then
-          PYTHON_PATH="/app/.venv/bin/python"
-        else
-          PYTHON_PATH="/usr/bin/python3"
-        fi
+        # All variants use uv-managed virtual environment at /app/.venv
+        PYTHON_PATH="/app/.venv/bin/python"
 
         echo "Testing with Python at: $PYTHON_PATH"
         docker run --rm \
