@@ -14,7 +14,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -651,3 +651,275 @@ def test_pricing_table_has_all_supported_models():
     assert "claude-3-5-sonnet-20241022" in PRICING_TABLE["anthropic"]
     assert "gpt-4-turbo" in PRICING_TABLE["openai"]
     assert "gemini-2.5-flash-preview-001" in PRICING_TABLE["google"]
+
+
+# ==============================================================================
+# Additional Coverage Tests for TokenUsage
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="cost_tracker_token_usage")
+class TestTokenUsageModel:
+    """Tests for TokenUsage pydantic model to improve coverage."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    def test_token_usage_auto_calculates_total_tokens(self):
+        """Test TokenUsage auto-calculates total_tokens if not provided."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user123",
+            session_id="session456",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+        )
+
+        assert usage.total_tokens == 1500
+
+    @pytest.mark.unit
+    def test_token_usage_serialize_decimal(self):
+        """Test TokenUsage serializes Decimal to string."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        usage = TokenUsage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user123",
+            session_id="session456",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.012345"),
+        )
+
+        # model_dump with mode='json' triggers serializers
+        data = usage.model_dump(mode="json")
+        assert data["estimated_cost_usd"] == "0.012345"
+        assert isinstance(data["estimated_cost_usd"], str)
+
+    @pytest.mark.unit
+    def test_token_usage_serialize_timestamp(self):
+        """Test TokenUsage serializes datetime to ISO format."""
+        from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
+
+        ts = datetime(2025, 1, 15, 12, 30, 45, tzinfo=timezone.utc)
+        usage = TokenUsage(
+            timestamp=ts,
+            user_id="user123",
+            session_id="session456",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+        )
+
+        data = usage.model_dump(mode="json")
+        assert "2025-01-15" in data["timestamp"]
+        assert isinstance(data["timestamp"], str)
+
+
+# ==============================================================================
+# Additional Coverage Tests for CostMetricsCollector
+# ==============================================================================
+
+
+@pytest.mark.xdist_group(name="cost_tracker_collector_extended")
+class TestCostMetricsCollectorExtended:
+    """Extended tests for CostMetricsCollector to improve coverage."""
+
+    def teardown_method(self):
+        """Force GC to prevent mock accumulation in xdist workers."""
+        gc.collect()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_get_records_filters_by_user(self):
+        """Test get_records filters by user_id."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        # Record usage for two different users
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user1",
+            session_id="session1",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user2",
+            session_id="session2",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+        # Filter by user1
+        records = await collector.get_records(user_id="user1")
+        assert len(records) == 1
+        assert records[0].user_id == "user1"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_get_records_filters_by_model(self):
+        """Test get_records filters by model."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user1",
+            session_id="session1",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user1",
+            session_id="session2",
+            model="gpt-4-turbo",
+            provider="openai",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+        records = await collector.get_records(model="gpt-4-turbo")
+        assert len(records) == 1
+        assert records[0].model == "gpt-4-turbo"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_get_total_cost_with_user_filter(self):
+        """Test get_total_cost filters by user."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user1",
+            session_id="session1",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.01"),
+        )
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user2",
+            session_id="session2",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            estimated_cost_usd=Decimal("0.02"),
+        )
+
+        total = await collector.get_total_cost(user_id="user1")
+        assert total == Decimal("0.01")
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_get_latest_record_returns_none_when_empty(self):
+        """Test get_latest_record returns None for empty collector."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+        result = await collector.get_latest_record()
+        assert result is None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_cleanup_old_records_in_memory(self):
+        """Test cleanup_old_records removes old in-memory records."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector(retention_days=1)
+
+        # Record old and new usage
+        old_timestamp = datetime.now(timezone.utc) - timedelta(days=5)
+        new_timestamp = datetime.now(timezone.utc)
+
+        await collector.record_usage(
+            timestamp=old_timestamp,
+            user_id="user1",
+            session_id="session1",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+        await collector.record_usage(
+            timestamp=new_timestamp,
+            user_id="user2",
+            session_id="session2",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+        )
+
+        assert collector.total_records == 2
+
+        deleted = await collector.cleanup_old_records()
+
+        assert deleted == 1
+        assert collector.total_records == 1
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collector_record_usage_with_feature_and_metadata(self):
+        """Test record_usage stores feature and metadata correctly."""
+        from mcp_server_langgraph.monitoring.cost_tracker import CostMetricsCollector
+
+        collector = CostMetricsCollector()
+
+        await collector.record_usage(
+            timestamp=datetime.now(timezone.utc),
+            user_id="user1",
+            session_id="session1",
+            model="claude-3-5-sonnet-20241022",
+            provider="anthropic",
+            prompt_tokens=1000,
+            completion_tokens=500,
+            feature="chat",
+            metadata={"request_id": "req123"},
+        )
+
+        record = await collector.get_latest_record()
+        assert record.feature == "chat"
+        assert record.metadata == {"request_id": "req123"}
+
+
+# ==============================================================================
+# Test Singleton Pattern
+# ==============================================================================
+
+
+@pytest.mark.unit
+def test_get_cost_collector_returns_singleton():
+    """Test get_cost_collector returns the same instance."""
+    from mcp_server_langgraph.monitoring.cost_tracker import get_cost_collector
+
+    collector1 = get_cost_collector()
+    collector2 = get_cost_collector()
+
+    assert collector1 is collector2
