@@ -116,6 +116,153 @@ All API errors return a consistent JSON structure:
 
 ### 5. Fallback Mechanisms
 
+#### Error Handling & Recovery Flow
+
+```mermaid
+flowchart TB
+    subgraph Request["Incoming Request"]
+        Req[API Request]
+    end
+
+    subgraph Validation["Layer 1: Validation"]
+        Validate{Valid Input?}
+        ValErr[400 Bad Request]
+    end
+
+    subgraph Auth["Layer 2: Authentication"]
+        AuthCheck{Token Valid?}
+        AuthErr[401 Unauthorized]
+    end
+
+    subgraph Authz["Layer 3: Authorization"]
+        OpenFGA{OpenFGA Check}
+        Fallback{Fallback Mode?}
+        FallbackCheck[Role-Based Check]
+        AuthzErr[403 Forbidden]
+    end
+
+    subgraph Service["Layer 4: Service Execution"]
+        Primary[Primary Service Call]
+        Retry{Retry Available?}
+        Fallback2[Fallback Service]
+        SvcErr[503 Service Unavailable]
+    end
+
+    subgraph Response["Response"]
+        Success[200 Success]
+        ErrorResp[Error Response + trace_id]
+    end
+
+    Req --> Validate
+    Validate -->|No| ValErr
+    Validate -->|Yes| AuthCheck
+    AuthCheck -->|No| AuthErr
+    AuthCheck -->|Yes| OpenFGA
+    OpenFGA -->|Unavailable| Fallback
+    Fallback -->|Yes| FallbackCheck
+    Fallback -->|No| AuthzErr
+    FallbackCheck -->|Denied| AuthzErr
+    FallbackCheck -->|Allowed| Primary
+    OpenFGA -->|Denied| AuthzErr
+    OpenFGA -->|Allowed| Primary
+    Primary -->|Error| Retry
+    Retry -->|Yes| Fallback2
+    Retry -->|No| SvcErr
+    Fallback2 -->|Error| SvcErr
+    Fallback2 -->|Success| Success
+    Primary -->|Success| Success
+    ValErr --> ErrorResp
+    AuthErr --> ErrorResp
+    AuthzErr --> ErrorResp
+    SvcErr --> ErrorResp
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef reqStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef valStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef authzStyle fill:#bc80bd,stroke:#8e44ad,stroke-width:2px,color:#333
+    classDef svcStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef errStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef successStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Req reqStyle
+    class Validate,ValErr valStyle
+    class AuthCheck,AuthErr authStyle
+    class OpenFGA,Fallback,FallbackCheck,AuthzErr authzStyle
+    class Primary,Retry,Fallback2,SvcErr svcStyle
+    class Success,ErrorResp successStyle
+```
+
+#### Multi-Provider LLM Fallback Decision Tree
+
+```mermaid
+flowchart TB
+    subgraph Request["LLM Request"]
+        Input[User Query]
+    end
+
+    subgraph Primary["Primary Provider"]
+        P1[Claude Sonnet 4.5]
+        P1Err{Error?}
+        P1Rate{Rate Limited?}
+    end
+
+    subgraph Fallback1["Fallback #1"]
+        F1[Gemini 2.5 Pro]
+        F1Err{Error?}
+    end
+
+    subgraph Fallback2["Fallback #2"]
+        F2[GPT-4o]
+        F2Err{Error?}
+    end
+
+    subgraph Circuit["Circuit Breaker"]
+        CB{Circuit Open?}
+        CBOpen[Skip to Fallback]
+        CBIncr[Increment Failures]
+    end
+
+    subgraph Result["Response"]
+        Success[LLM Response]
+        Error[All Providers Failed]
+    end
+
+    Input --> CB
+    CB -->|Yes| CBOpen
+    CB -->|No| P1
+    CBOpen --> F1
+    P1 --> P1Err
+    P1Err -->|No| Success
+    P1Err -->|Yes| P1Rate
+    P1Rate -->|No| CBIncr
+    P1Rate -->|Yes| F1
+    CBIncr --> F1
+    F1 --> F1Err
+    F1Err -->|No| Success
+    F1Err -->|Yes| F2
+    F2 --> F2Err
+    F2Err -->|No| Success
+    F2Err -->|Yes| Error
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef reqStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef primaryStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef fallback1Style fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef fallback2Style fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef circuitStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef errorStyle fill:#d9d9d9,stroke:#95a5a6,stroke-width:2px,color:#333
+
+    class Input reqStyle
+    class P1,P1Err,P1Rate primaryStyle
+    class F1,F1Err fallback1Style
+    class F2,F2Err fallback2Style
+    class CB,CBOpen,CBIncr circuitStyle
+    class Success successStyle
+    class Error errorStyle
+```
+
 #### LLM Fallback
 When primary model fails:
 ```

@@ -51,6 +51,109 @@ flowchart TD
 
 See [ADR-0037](/architecture/adr-0037-identity-federation) for architecture details.
 
+### Identity Federation Protocol Flow
+
+The following diagram shows the detailed protocol flow for federating external identity providers (Azure AD, Okta, Google) through Keycloak, including SAML/OIDC exchanges, token handling, and JWT issuance:
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    subgraph External["External Identity Providers"]
+        AzureAD["Azure AD<br/>(OIDC)"]
+        Okta["Okta<br/>(SAML/OIDC)"]
+        Google["Google Workspace<br/>(OIDC)"]
+    end
+
+    subgraph Protocol["Protocol Layer"]
+        SAML["SAML 2.0<br/>Assertion"]
+        OIDC["OIDC<br/>Authorization Code"]
+    end
+
+    subgraph Keycloak["Keycloak Identity Broker"]
+        Broker["Identity Broker<br/>(Protocol Handler)"]
+        Validator["Token/Assertion<br/>Validator"]
+        Mapper["Attribute Mapper<br/>(Claims → Keycloak)"]
+        TokenExchange["Token Exchange<br/>(External → Internal)"]
+    end
+
+    subgraph Session["Session Management"]
+        UserSession["User Session<br/>Creation"]
+        SessionStore["Session Store<br/>(Redis/Database)"]
+    end
+
+    subgraph JWT["JWT Issuance"]
+        JWTGen["JWT Generator<br/>(Keycloak Signing)"]
+        JWTToken["Keycloak JWT<br/>(Access + Refresh)"]
+    end
+
+    subgraph Client["Client Application"]
+        App["MCP Server<br/>(API Consumer)"]
+    end
+
+    %% Protocol flows
+    AzureAD -->|"1. OAuth2 redirect"| OIDC
+    Okta -->|"1. SAML/OIDC redirect"| SAML
+    Okta -->|"1. SAML/OIDC redirect"| OIDC
+    Google -->|"1. OAuth2 redirect"| OIDC
+
+    %% Broker handling
+    SAML -->|"2. SAML Response<br/>(XML Assertion)"| Broker
+    OIDC -->|"2. Authorization Code<br/>(+ ID Token)"| Broker
+
+    %% Validation
+    Broker -->|"3. Validate signature<br/>& assertions"| Validator
+    Validator -->|"4. Extract claims<br/>(email, name, roles)"| Mapper
+
+    %% Token exchange
+    Mapper -->|"5. Map external claims<br/>to Keycloak attributes"| TokenExchange
+    TokenExchange -->|"6. Create internal<br/>user representation"| UserSession
+
+    %% Session creation
+    UserSession -->|"7. Store session data"| SessionStore
+    SessionStore -->|"8. Session ID"| JWTGen
+
+    %% JWT generation
+    JWTGen -->|"9. Sign JWT<br/>(RS256/ES256)"| JWTToken
+    JWTToken -->|"10. Return tokens<br/>(access + refresh)"| App
+
+    %% Styling
+    classDef idpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef protocolStyle fill:#fb8072,stroke:#e76f51,stroke-width:2px,color:#333
+    classDef keycloakStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef tokenStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef clientStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef sessionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class AzureAD,Okta,Google idpStyle
+    class SAML,OIDC protocolStyle
+    class Broker,Validator,Mapper,TokenExchange keycloakStyle
+    class UserSession,SessionStore sessionStyle
+    class JWTGen,JWTToken tokenStyle
+    class App clientStyle
+```
+
+**Key Steps in the Federation Flow:**
+
+1. **External IdP Redirect**: User authenticates with their existing identity provider (Azure AD, Okta, Google) using SAML or OIDC
+2. **Protocol Response**: IdP returns SAML assertion (XML) or OIDC authorization code with ID token
+3. **Signature Validation**: Keycloak broker validates signatures and assertions against IdP public keys
+4. **Claim Extraction**: Broker extracts user claims (email, name, roles, groups) from the assertion/token
+5. **Attribute Mapping**: External claims are mapped to Keycloak user attributes using configured mappers
+6. **Token Exchange**: External tokens are exchanged for internal Keycloak user representation
+7. **Session Creation**: Keycloak creates a new user session with federated identity information
+8. **Session Storage**: Session data is persisted to Redis or database for scalability
+9. **JWT Signing**: Keycloak generates and signs a new JWT (access + refresh tokens) using its own keys
+10. **Client Response**: Signed Keycloak JWT is returned to the MCP server for API authentication
+
+**Security Considerations:**
+
+- **Signature Verification**: All external tokens/assertions are cryptographically verified
+- **Token Exchange**: External tokens are never passed directly to clients - always exchanged for Keycloak JWTs
+- **Session Isolation**: Federated sessions are isolated from local Keycloak sessions
+- **Attribute Validation**: Mapped attributes are validated against Keycloak schema
+- **Replay Protection**: SAML assertions include timestamp and ID validation to prevent replay attacks
+
 ### Quick Setup
 
 #### LDAP/Active Directory

@@ -37,6 +37,70 @@ flowchart TB
     class GCPSA gcpStyle
     class VertexAI apiStyle
 ```
+
+### Workload Identity Integration Flow
+
+This diagram shows the complete authentication flow from a GKE pod to GCP services using Workload Identity Federation, eliminating the need for credential files:
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    subgraph GKE["GKE Cluster (staging-mcp-server-langgraph-gke)"]
+        Pod[GKE Pod<br/>mcp-server-langgraph<br/>• No credential files<br/>• Uses SA token projection]
+        K8sSA[Kubernetes Service Account<br/>mcp-staging/mcp-server-langgraph<br/>• Annotated with GCP SA<br/>• Token mounted as volume]
+
+        Pod -->|Uses| K8sSA
+    end
+
+    subgraph WI["Workload Identity Federation"]
+        Binding[Workload Identity Binding<br/>• K8s SA → GCP SA mapping<br/>• Role: iam.workloadIdentityUser<br/>• Automatic token exchange]
+    end
+
+    subgraph IAM["GCP IAM"]
+        GCPSA[GCP Service Account<br/>vertex-ai-staging@project.iam<br/>• roles/aiplatform.user<br/>• roles/aiplatform.developer<br/>• roles/logging.logWriter<br/>• roles/monitoring.metricWriter]
+    end
+
+    subgraph GCP["GCP Services"]
+        VertexAI[Vertex AI API<br/>• gemini-2.5-flash<br/>• gemini-2.5-pro<br/>• Automatic auth]
+        SecretMgr[Secret Manager<br/>• Application secrets<br/>• No API keys needed]
+        CloudSQL[Cloud SQL<br/>• Database access<br/>• Passwordless auth]
+        CloudLog[Cloud Logging<br/>• Centralized logs<br/>• Audit trail]
+    end
+
+    K8sSA -->|1. Request access| Binding
+    Binding -->|2. Exchange token| GCPSA
+    GCPSA -->|3. Assume role| VertexAI
+    GCPSA -->|3. Assume role| SecretMgr
+    GCPSA -->|3. Assume role| CloudSQL
+    GCPSA -->|3. Assume role| CloudLog
+
+    Note1[No credential files needed!<br/>Automatic credential rotation<br/>Enhanced security posture]
+
+    GCPSA -.->|Security benefits| Note1
+
+    %% ColorBrewer2 Set3 palette styling
+    classDef gkeStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef iamStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef gcpStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef noteStyle fill:#ffffb3,stroke:#f39c12,stroke-width:2px,color:#333,stroke-dasharray: 5 5
+
+    class Pod,K8sSA gkeStyle
+    class Binding,GCPSA iamStyle
+    class WI,IAM gcpStyle
+    class VertexAI,SecretMgr,CloudSQL,CloudLog serviceStyle
+    class Note1 noteStyle
+```
+
+<Info>
+**Key Benefits of Workload Identity:**
+- **No credential files**: Kubernetes tokens are automatically exchanged for GCP credentials
+- **Automatic rotation**: GCP handles credential rotation without manual intervention
+- **Fine-grained access**: Each Kubernetes service account maps to a specific GCP service account with minimal permissions
+- **Audit trail**: All GCP API calls are attributed to the specific service account identity
+</Info>
+
 ### Prerequisites
 
 Before starting, ensure you have:
@@ -392,7 +456,7 @@ The `vertex-ai-staging` service account has been granted these roles:
 - Monitor API usage and costs
 - Set up quota alerts
 
-❌ **Don't**:
+- ❌ **Don't**:
 - Create service account keys
 - Grant overly broad permissions
 - Share service accounts across environments

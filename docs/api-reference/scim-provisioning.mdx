@@ -24,6 +24,7 @@ keywords:
 The SCIM (System for Cross-domain Identity Management) 2.0 API provides standardized endpoints for automated user and group provisioning. SCIM enables identity providers and HR systems to synchronize user accounts, manage lifecycle events, and maintain group memberships automatically.
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': {
   'primaryColor':'#8dd3c7',
   'primaryTextColor':'#333',
@@ -55,6 +56,15 @@ sequenceDiagram
     SCIM->>FGA: 10. Remove authorization tuples
     FGA-->>SCIM: 11. Tuples removed
     SCIM-->>IdP: 12. 204 No Content
+
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+
+    class IdP clientStyle
+    class SCIM validationStyle
+    class KC,FGA serviceStyle
 ```
 
 <Info>
@@ -73,21 +83,21 @@ sequenceDiagram
 
 <Tabs>
   <Tab title="Supported Features">
-    ✅ **Core User Schema** ([RFC 7643 §4.1](https://datatracker.ietf.org/doc/html/rfc7643#section-4.1))
-    - userName, name, emails, active, password
+    - ✅ **Core User Schema** ([RFC 7643 §4.1](https://datatracker.ietf.org/doc/html/rfc7643#section-4.1))
+      - userName, name, emails, active, password
 
-    ✅ **Core Group Schema** ([RFC 7643 §4.2](https://datatracker.ietf.org/doc/html/rfc7643#section-4.2))
-    - displayName, members
+    - ✅ **Core Group Schema** ([RFC 7643 §4.2](https://datatracker.ietf.org/doc/html/rfc7643#section-4.2))
+      - displayName, members
 
-    ✅ **CRUD Operations** ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644))
-    - Create (POST), Read (GET), Update (PUT/PATCH), Delete
+    - ✅ **CRUD Operations** ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644))
+      - Create (POST), Read (GET), Update (PUT/PATCH), Delete
 
-    ✅ **Filtering & Pagination**
-    - Basic filters (userName eq, email eq)
-    - Pagination (startIndex, count)
+    - ✅ **Filtering & Pagination**
+      - Basic filters (userName eq, email eq)
+      - Pagination (startIndex, count)
 
-    ✅ **PATCH Operations** ([RFC 7644 §3.5.2](https://datatracker.ietf.org/doc/html/rfc7644#section-3.5.2))
-    - replace, add (partial support)
+    - ✅ **PATCH Operations** ([RFC 7644 §3.5.2](https://datatracker.ietf.org/doc/html/rfc7644#section-3.5.2))
+      - replace, add (partial support)
   </Tab>
 
   <Tab title="Backend Integration">

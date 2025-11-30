@@ -32,6 +32,7 @@ Complete security hardening framework for AWS EKS deployments with 50+ security 
 ### Security Maturity: 94/100
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'primaryColor':'#8dd3c7','primaryTextColor':'#000','primaryBorderColor':'#555','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#bebada'}}}%%
 flowchart LR
     subgraph "Identity"
@@ -58,12 +59,14 @@ flowchart LR
         RBAC[RBAC<br/&gt;95%]
     end
 
-    classDef excellent fill:#8dd3c7,stroke:#555,color:#000
-    classDef good fill:#fdb462,stroke:#555,color:#000
+    classDef excellentStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef goodStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
 
-    class IRSA,MFA,VPC,KMS,TLS,PSS excellent
-    class IAM,SG,SM,RBAC good
-    class NP,Scan good
+    class IRSA,MFA,VPC,KMS,TLS,PSS excellentStyle
+    class IAM,SG,SM,RBAC goodStyle
+    class NP,Scan serviceStyle
 ```
 ---
 

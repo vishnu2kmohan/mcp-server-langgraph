@@ -22,10 +22,13 @@ Exit codes:
 """
 
 import argparse
+import json
 import re
 import subprocess
 import sys
+import urllib.request
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -43,6 +46,8 @@ class MDXValidationResult:
     invalid_names: list[tuple[Path, str]] = field(default_factory=list)
     frontmatter_issues: list[tuple[Path, str]] = field(default_factory=list)
     icon_errors: list[tuple[Path, str]] = field(default_factory=list)
+    mermaid_errors: list[tuple[Path, int, str]] = field(default_factory=list)  # (file, line, error)
+    list_errors: list[tuple[Path, int, str]] = field(default_factory=list)  # (file, line, error)
     stats: dict[str, int] = field(default_factory=dict)
 
 
@@ -72,159 +77,99 @@ EXCLUDE_PATTERNS = [
 ]
 
 # =============================================================================
-# Icon Registry for Mintlify (Font Awesome 6.x subset)
+# Font Awesome Icon Validation
+# =============================================================================
+#
+# We validate icons against the official Font Awesome 6.x metadata.
+# Source: https://github.com/FortAwesome/Font-Awesome/blob/6.x/metadata/icons.json
+#
+# The ADR_ICON_MAPPING below MUST only contain valid Font Awesome icon names.
+# Run `python scripts/validators/validate_docs.py --validate-icons` to verify.
+#
 # =============================================================================
 
-# Valid Mintlify icons - comprehensive set from Font Awesome 6.x
-# Reference: docs/references/icon-selection-guide.mdx
-VALID_ICONS: set[str] = {
-    # Deployment & Infrastructure
-    "rocket",
-    "dharmachakra",
-    "docker",
-    "cubes",
-    "server",
-    "cloud",
-    "network-wired",
-    # Cloud Providers
-    "google",
-    "aws",
-    "microsoft",
-    # Security & Authentication
-    "shield",
-    "shield-halved",
-    "shield-check",
-    "lock",
-    "key",
-    "key-skeleton",
-    "user-shield",
-    "user-gear",
-    "users-gear",
-    "users",
-    "vault",
-    # Observability & Monitoring
-    "chart-line",
-    "chart-bar",
-    "database",
-    "arrow-up-right-dots",
-    "magnifying-glass-chart",
-    "gauge",
-    "heart-pulse",
-    # Resilience & Operations
-    "life-ring",
-    "clipboard-check",
-    "list-check",
-    "arrows-rotate",
-    "rotate",
-    # Development & Code
-    "code",
-    "terminal",
-    "file-code",
-    "bug",
-    "flask",
-    "vial",
-    "wrench",
-    "screwdriver-wrench",
-    "gear",
-    "toolbox",
-    # Documentation & Reference
-    "book",
-    "book-open",
-    "file-lines",
-    "file-contract",
-    "scroll",
-    "icons",
-    "newspaper",
-    # Version & Releases
-    "tag",
-    "code-branch",
-    # Architecture & Design
-    "diagram-project",
-    "sitemap",
-    "layer-group",
-    "cubes-stacked",
-    "scale-balanced",
-    # AI & Machine Learning
-    "brain",
-    "robot",
-    "microchip",
-    "wand-magic-sparkles",
-    # Communication & Integration
-    "plug",
-    "link",
-    # Time & Scheduling
-    "clock",
-    "calendar",
-    "stopwatch",
-    # Actions & Status
-    "bolt",  # Font Awesome equivalent of Lucide 'zap'
-    "infinity",
-    "play",
-    "stop",
-    "refresh",
-    "download",
-    "upload",
-    "check",
-    "circle-check",
-    "xmark",
-    "exclamation",
-    "triangle-exclamation",
-    "info",
-    "question",
-    "trophy",
-    # Navigation
-    "arrow-right",
-    "arrow-left",
-    "arrow-up",
-    "arrow-down",
-    "map",
-    # Misc
-    "cookie",
-    "floppy-disk",
-    "memory",
-    "broom",
-    "package",
-    "dollar-sign",
-    "eye",
-    "flag",
-    # Additional valid Font Awesome 6.x icons
-    "circle-exclamation",
-    "ship",
-    "code-pull-request",
-    "shield-keyhole",
-    "folder-tree",
-    "gauge-high",
-    "calculator",
-    "file-signature",
-    "money-bill-trend-up",
-    "paper-plane",
-    "sliders",
-    "computer",
-    "shuffle",
-    "sparkles",
-    "file",
-    "plug-circle-bolt",
-    "lightbulb",
-    "message",
-    "drafting-compass",
-    "hospital",
-    "user-lock",
-    "file-medical",
-    "pen-to-square",
-    "trash",
-    "file-export",
-    "folder-open",
-    "certificate",
-    "cube",
-    "bell",
-    "route",
-    "book-medical",
-    "github",
-    # Template placeholders - allowed for documentation examples only
-    "icon-name",
-    "font-awesome-icon-name",
-    "semantic-font-awesome-icon",
-}
+FONT_AWESOME_ICONS_URL = "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/metadata/icons.json"
+
+# Cache file for offline validation (updated periodically)
+FA_ICONS_CACHE_FILE = Path(__file__).parent / ".fa-icons-cache.json"
+
+
+@lru_cache(maxsize=1)
+def get_valid_fontawesome_icons() -> set[str]:
+    """
+    Fetch valid Font Awesome 6.x icon names from official metadata.
+
+    Returns a cached set of valid icon names. Falls back to cached file
+    if network is unavailable.
+    """
+    # Try cached file first (for offline/CI use)
+    if FA_ICONS_CACHE_FILE.exists():
+        try:
+            with open(FA_ICONS_CACHE_FILE) as f:
+                data = json.load(f)
+                if isinstance(data, list) and len(data) > 1000:  # Sanity check
+                    return set(data)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Fetch from official source (HTTPS only - safe URL)
+    try:
+        with urllib.request.urlopen(FONT_AWESOME_ICONS_URL, timeout=10) as response:  # noqa: S310
+            icons_data = json.loads(response.read().decode())
+            icon_names = set(icons_data.keys())
+
+            # Cache for future use
+            try:
+                with open(FA_ICONS_CACHE_FILE, "w") as f:
+                    json.dump(sorted(icon_names), f)
+            except OSError:
+                pass  # Ignore cache write failures
+
+            return icon_names
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        print(f"Warning: Could not fetch Font Awesome icons: {e}")
+        # Return a minimal known-good set as fallback
+        return {
+            "file-lines",
+            "rocket",
+            "shield",
+            "key",
+            "database",
+            "chart-line",
+            "code",
+            "bug",
+            "flask",
+            "cube",
+            "cubes",
+            "book",
+            "gear",
+            "bolt",
+            "microchip",
+            "brain",
+            "robot",
+            "plug",
+            "lock",
+            "tag",
+            "flag",
+        }
+
+
+def validate_adr_icon_mapping() -> list[tuple[str, str]]:
+    """
+    Validate that all icons in ADR_ICON_MAPPING are valid Font Awesome 6.x icons.
+
+    Returns:
+        List of (keyword, invalid_icon) tuples for any invalid icons found.
+    """
+    valid_icons = get_valid_fontawesome_icons()
+    invalid = []
+
+    for keyword, icon in ADR_ICON_MAPPING.items():
+        if icon not in valid_icons:
+            invalid.append((keyword, icon))
+
+    return invalid
+
 
 # ADR topic-to-icon mapping for auto-assignment
 # Maps keywords in ADR titles/filenames to appropriate icons
@@ -300,8 +245,8 @@ ADR_ICON_MAPPING: dict[str, str] = {
     "mintlify": "book",
     "pre-commit": "code-branch",
     "fastapi": "bolt",
-    "uv": "package",
-    "dependency": "package",
+    "uv": "cube",
+    "dependency": "cube",
     "singleton": "cubes",
     "helm": "cubes",
     # Transport & Protocol
@@ -362,13 +307,222 @@ def parse_frontmatter(content: str) -> tuple[dict | None, str, str]:
 
 
 # =============================================================================
+# Mermaid Diagram Validation Functions
+# =============================================================================
+
+# ColorBrewer Set3 palette colors that must appear in styled diagrams
+COLORBREWER_SET3_COLORS = {
+    "#8dd3c7",  # teal - client/request
+    "#fdb462",  # orange - validation/processing
+    "#bebada",  # purple - service/auth
+    "#fb8072",  # coral - errors/failures
+    "#b3de69",  # green - success/response
+    "#80b1d3",  # blue - storage/database
+    "#ffffb3",  # yellow - secondary
+    "#bc80bd",  # pink - additional
+    "#d9d9d9",  # gray - neutral
+}
+
+
+def extract_mermaid_blocks(content: str) -> list[tuple[int, str]]:
+    """
+    Extract all mermaid code blocks from MDX content.
+
+    Returns:
+        List of (line_number, mermaid_content) tuples
+    """
+    blocks = []
+    pattern = r"```mermaid\n(.*?)```"
+    matches = re.finditer(pattern, content, re.DOTALL)
+
+    for match in matches:
+        # Calculate line number
+        line_num = content[: match.start()].count("\n") + 1
+        blocks.append((line_num, match.group(1)))
+
+    return blocks
+
+
+def validate_mermaid_colorbrewer_styling(mermaid_content: str) -> tuple[bool, str | None]:
+    """
+    Validate that a mermaid diagram uses ColorBrewer Set3 styling.
+
+    A diagram is considered properly styled if it has:
+    1. Uses 'flowchart' syntax (not deprecated 'graph')
+    2. A ColorBrewer comment OR
+    3. At least 2 classDef statements with ColorBrewer Set3 colors
+
+    Args:
+        mermaid_content: The content of a mermaid code block
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    content_lower = mermaid_content.lower()
+    lines = mermaid_content.strip().split("\n")
+
+    # Check for deprecated 'graph' syntax (should use 'flowchart')
+    for line in lines:
+        stripped = line.strip()
+        # Skip comments
+        if stripped.startswith("%%"):
+            continue
+        # First non-comment line should be the diagram type
+        if stripped.lower().startswith("graph "):
+            return False, "Uses deprecated 'graph' syntax - use 'flowchart TD/TB/LR/BT' instead"
+        # Found the diagram type declaration, stop checking
+        if stripped:
+            break
+
+    # Check for ColorBrewer comment (case-insensitive)
+    if "colorbrewer" in content_lower:
+        return True, None
+
+    # Check for classDef with ColorBrewer Set3 colors
+    classdef_pattern = r"classDef\s+\w+\s+fill:(#[a-fA-F0-9]{6})"
+    colors_found = re.findall(classdef_pattern, mermaid_content, re.IGNORECASE)
+
+    # Check if at least 2 ColorBrewer Set3 colors are used
+    cb_colors_used = [c.lower() for c in colors_found if c.lower() in COLORBREWER_SET3_COLORS]
+
+    if len(cb_colors_used) >= 2:
+        return True, None
+
+    # Check if diagram is simple (no subgraphs, less than 5 nodes)
+    # Simple diagrams don't require styling
+    has_subgraph = "subgraph" in content_lower
+    node_count = len(re.findall(r"^\s*\w+[\[\(\{]", mermaid_content, re.MULTILINE))
+
+    if not has_subgraph and node_count < 5:
+        return True, None  # Simple diagrams exempt
+
+    return False, "Missing ColorBrewer Set3 styling (add classDef with Set3 colors or ColorBrewer comment)"
+
+
+def validate_file_mermaid_diagrams(file_path: Path) -> list[tuple[int, str]]:
+    """
+    Validate all mermaid diagrams in a file for ColorBrewer Set3 styling.
+
+    Args:
+        file_path: Path to the MDX file
+
+    Returns:
+        List of (line_number, error_message) tuples for invalid diagrams
+    """
+    errors = []
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except Exception:
+        return errors
+
+    blocks = extract_mermaid_blocks(content)
+
+    for line_num, mermaid_content in blocks:
+        is_valid, error_msg = validate_mermaid_colorbrewer_styling(mermaid_content)
+        if not is_valid:
+            errors.append((line_num, error_msg))
+
+    return errors
+
+
+# =============================================================================
+# List Formatting Validation Functions
+# =============================================================================
+
+# Emojis that typically start list items and need proper `- ` prefix
+LIST_INDICATOR_EMOJIS = {"✅", "❌", "⚠️", "📚", "💡", "🔒", "🚀", "⭐", "🔥", "📝", "🎯"}
+
+# Files excluded from list validation (contain intentional formatting examples)
+LIST_VALIDATION_EXCLUDE_FILES = {
+    "mdx-syntax-guide.mdx",  # Contains intentional wrong/correct formatting examples
+}
+
+
+def validate_list_formatting(file_path: Path) -> list[tuple[int, str]]:
+    """
+    Validate that lines starting with list-indicator emojis are properly formatted.
+
+    Detects lines like:
+        ✅ **Feature**: Description  <- WRONG (not a list item)
+        - ✅ **Feature**: Description  <- CORRECT (proper list item)
+
+    Args:
+        file_path: Path to the MDX file
+
+    Returns:
+        List of (line_number, error_message) tuples for formatting issues
+    """
+    errors = []
+
+    # Skip excluded files (contain intentional formatting examples)
+    if file_path.name in LIST_VALIDATION_EXCLUDE_FILES:
+        return errors
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except Exception:
+        return errors
+
+    lines = content.split("\n")
+    in_code_block = False
+    in_frontmatter = False
+
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+
+        # Track frontmatter
+        if stripped == "---":
+            in_frontmatter = not in_frontmatter
+            continue
+
+        if in_frontmatter:
+            continue
+
+        # Track code blocks (```mermaid, ```python, etc.)
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+
+        if in_code_block:
+            continue
+
+        # Skip lines inside JSX components (Mintlify callouts like <Note>, <Warning>)
+        if stripped.startswith("<") and not stripped.startswith("</"):
+            continue
+
+        # Check if line starts with a list-indicator emoji but not as a list item
+        for emoji in LIST_INDICATOR_EMOJIS:
+            if stripped.startswith(emoji):
+                # Check if it's NOT already a proper list item
+                # Proper list items: "- ✅", "* ✅", "  - ✅", etc.
+                leading_whitespace = len(line) - len(line.lstrip())
+                after_whitespace = line[leading_whitespace:] if leading_whitespace < len(line) else ""
+
+                # Check for list prefix patterns
+                is_list_item = (
+                    after_whitespace.startswith("- ")
+                    or after_whitespace.startswith("* ")
+                    or after_whitespace.startswith("+ ")
+                    # Also check numbered lists: "1. ✅"
+                    or (len(after_whitespace) > 2 and after_whitespace[0].isdigit() and after_whitespace[1:3] == ". ")
+                )
+
+                if not is_list_item:
+                    errors.append((i, f"Line starts with '{emoji}' but is not a list item. Add '- ' prefix: - {stripped}"))
+                break  # Only check first matching emoji per line
+
+    return errors
+
+
+# =============================================================================
 # Icon Validation Functions
 # =============================================================================
 
 
 def validate_icon_format(icon_value: str) -> tuple[bool, str | None, str | None]:
     """
-    Validate icon format and value.
+    Validate icon format and value against official Font Awesome 6.x icons.
 
     Args:
         icon_value: The raw icon value from frontmatter (e.g., "'rocket'", '"rocket"', "rocket")
@@ -388,13 +542,16 @@ def validate_icon_format(icon_value: str) -> tuple[bool, str | None, str | None]
     if icon_value in ("''", '""'):
         return False, None, "Icon value is empty (just quotes)"
 
+    # Get valid Font Awesome icons for validation
+    valid_icons = get_valid_fontawesome_icons()
+
     # Check for single quotes (preferred format)
     if icon_value.startswith("'") and icon_value.endswith("'"):
         icon_name = icon_value[1:-1]
         if not icon_name:
             return False, None, "Icon value is empty inside quotes"
-        if icon_name not in VALID_ICONS:
-            return False, icon_name, f"Icon '{icon_name}' not in valid icon registry"
+        if icon_name not in valid_icons:
+            return False, icon_name, f"Icon '{icon_name}' is not a valid Font Awesome 6.x icon"
         return True, icon_name, None
 
     # Check for double quotes (should be single quotes)
@@ -403,11 +560,11 @@ def validate_icon_format(icon_value: str) -> tuple[bool, str | None, str | None]
         return False, icon_name, f"Icon uses double quotes (should use single quotes): {icon_value}"
 
     # Unquoted value
-    if icon_value not in VALID_ICONS:
+    if icon_value not in valid_icons:
         return (
             False,
             icon_value,
-            f"Icon '{icon_value}' is unquoted and not in valid icon registry. Use single quotes: icon: '{icon_value}'",
+            f"Icon '{icon_value}' is unquoted and not a valid Font Awesome 6.x icon. Use single quotes: icon: '{icon_value}'",
         )
     return False, icon_value, f"Icon is unquoted (should use single quotes): icon: '{icon_value}'"
 
@@ -467,7 +624,13 @@ def get_suggested_adr_icon(file_path: Path) -> str:
     return ADR_ICON_MAPPING.get("default", "file-lines")
 
 
-def validate_mdx_files(docs_dir: Path, quiet: bool = False, validate_icons: bool = False) -> MDXValidationResult:
+def validate_mdx_files(
+    docs_dir: Path,
+    quiet: bool = False,
+    validate_icons: bool = False,
+    validate_mermaid: bool = False,
+    validate_lists: bool = False,
+) -> MDXValidationResult:
     """
     Validate MDX files in docs directory.
 
@@ -479,6 +642,10 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False, validate_icons: bool
        - Icons use single quotes
        - Icons are in valid registry
        - ADR files have icons
+    5. Mermaid validation (when validate_mermaid=True):
+       - Diagrams use ColorBrewer Set3 styling
+    6. List validation (when validate_lists=True):
+       - Lines starting with emojis use proper list formatting
     """
     result = MDXValidationResult()
     result.stats = {
@@ -487,6 +654,8 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False, validate_icons: bool
         "invalid_names": 0,
         "frontmatter_issues": 0,
         "icon_errors": 0,
+        "mermaid_errors": 0,
+        "list_errors": 0,
     }
 
     if not docs_dir.exists():
@@ -561,6 +730,22 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False, validate_icons: bool
                             result.stats["icon_errors"] += 1
                             result.is_valid = False
 
+            # Mermaid diagram validation (when validate_mermaid=True)
+            if validate_mermaid:
+                mermaid_errors = validate_file_mermaid_diagrams(mdx_file)
+                for line_num, error_msg in mermaid_errors:
+                    result.mermaid_errors.append((mdx_file, line_num, error_msg))
+                    result.stats["mermaid_errors"] += 1
+                    result.is_valid = False
+
+            # List formatting validation (when validate_lists=True)
+            if validate_lists:
+                list_errors = validate_list_formatting(mdx_file)
+                for line_num, error_msg in list_errors:
+                    result.list_errors.append((mdx_file, line_num, error_msg))
+                    result.stats["list_errors"] += 1
+                    result.is_valid = False
+
         except Exception:
             pass
 
@@ -579,6 +764,8 @@ def print_mdx_report(result: MDXValidationResult, docs_dir: Path) -> None:
     print(f"  Invalid filenames: {result.stats.get('invalid_names', 0)}")
     print(f"  Frontmatter issues: {result.stats.get('frontmatter_issues', 0)}")
     print(f"  Icon errors: {result.stats.get('icon_errors', 0)}")
+    print(f"  Mermaid errors: {result.stats.get('mermaid_errors', 0)}")
+    print(f"  List format errors: {result.stats.get('list_errors', 0)}")
 
     if result.md_files:
         print("\n❌ .md files found in docs/ (should be .mdx):")
@@ -605,6 +792,23 @@ def print_mdx_report(result: MDXValidationResult, docs_dir: Path) -> None:
         if len(result.icon_errors) > 20:
             print(f"    ... and {len(result.icon_errors) - 20} more")
         print("  💡 Solution: Run 'python scripts/docs/standardize_frontmatter.py --fix' to auto-fix")
+
+    if result.mermaid_errors:
+        print("\n❌ Mermaid diagram styling errors (blocking):")
+        for file_path, line_num, error in result.mermaid_errors[:20]:
+            print(f"    ❌ {file_path.relative_to(docs_dir)}:{line_num}: {error}")
+        if len(result.mermaid_errors) > 20:
+            print(f"    ... and {len(result.mermaid_errors) - 20} more")
+        print("  💡 Solution: Add ColorBrewer Set3 classDef styling to mermaid diagrams")
+        print("  📖 Reference: docs/reference/mermaid-guide.mdx")
+
+    if result.list_errors:
+        print("\n❌ List formatting errors (blocking):")
+        for file_path, line_num, error in result.list_errors[:20]:
+            print(f"    ❌ {file_path.relative_to(docs_dir)}:{line_num}: {error}")
+        if len(result.list_errors) > 20:
+            print(f"    ... and {len(result.list_errors) - 20} more")
+        print("  💡 Solution: Add '- ' prefix before lines starting with status emojis")
 
     print("\n" + "=" * 80)
     if result.is_valid:
@@ -782,6 +986,8 @@ def main() -> int:
 Validation Types:
   --mdx       Validate MDX extension, file naming, frontmatter
   --icons     Validate icon consistency (single quotes, valid registry, ADRs have icons)
+  --mermaid   Validate mermaid diagrams use ColorBrewer Set3 styling
+  --lists     Validate list formatting (emoji lines should have - prefix)
   --adr       Validate ADR synchronization (adr/ <-> docs/architecture/)
   --tests     Run documentation validation pytest tests
   --all       Run all validations
@@ -789,7 +995,7 @@ Validation Types:
 Examples:
   %(prog)s --all                           # Run all validations
   %(prog)s --mdx --docs-dir docs/          # Validate MDX files only
-  %(prog)s --mdx --icons                   # Validate MDX with icon checking
+  %(prog)s --mdx --icons --mermaid --lists # Validate MDX with all checks
   %(prog)s --adr --repo-root .             # Validate ADR sync only
   %(prog)s --tests --dry-run               # Show what tests would run
 """,
@@ -797,6 +1003,11 @@ Examples:
 
     parser.add_argument("--mdx", action="store_true", help="Validate MDX files (extension, naming, frontmatter)")
     parser.add_argument("--icons", action="store_true", help="Validate icon consistency (requires --mdx or --all)")
+    parser.add_argument("--mermaid", action="store_true", help="Validate mermaid diagrams use ColorBrewer Set3 styling")
+    parser.add_argument("--lists", action="store_true", help="Validate list formatting (emojis should have - prefix)")
+    parser.add_argument(
+        "--validate-icon-mapping", action="store_true", help="Validate ADR_ICON_MAPPING against Font Awesome 6.x"
+    )
     parser.add_argument("--adr", action="store_true", help="Validate ADR synchronization")
     parser.add_argument("--tests", action="store_true", help="Run documentation validation tests")
     parser.add_argument("--all", action="store_true", help="Run all validations")
@@ -808,14 +1019,30 @@ Examples:
     args = parser.parse_args()
 
     # Default to --all if no specific validation type specified
-    if not any([args.mdx, args.adr, args.tests, args.all]):
+    if not any([args.mdx, args.adr, args.tests, args.all, args.validate_icon_mapping, args.mermaid, args.lists]):
         args.all = True
 
-    # --icons implies --mdx
-    if args.icons and not args.mdx and not args.all:
+    # --icons, --mermaid, and --lists imply --mdx
+    if (args.icons or args.mermaid or args.lists) and not args.mdx and not args.all:
         args.mdx = True
 
     exit_code = 0
+
+    # Validate ADR_ICON_MAPPING against Font Awesome 6.x
+    if args.validate_icon_mapping or args.all:
+        if args.dry_run:
+            print("[DRY RUN] Would validate ADR_ICON_MAPPING against Font Awesome 6.x")
+        else:
+            invalid_icons = validate_adr_icon_mapping()
+            if invalid_icons:
+                if not args.quiet:
+                    print("\n❌ Invalid icons in ADR_ICON_MAPPING:")
+                    for keyword, icon in invalid_icons:
+                        print(f"  - '{keyword}' → '{icon}' (not a valid Font Awesome 6.x icon)")
+                    print("\nFix: Update ADR_ICON_MAPPING in scripts/validators/validate_docs.py")
+                exit_code = 1
+            elif not args.quiet:
+                print("✅ All icons in ADR_ICON_MAPPING are valid Font Awesome 6.x icons")
 
     # MDX validation
     if args.mdx or args.all:
@@ -823,10 +1050,22 @@ Examples:
             print(f"[DRY RUN] Would validate MDX files in {args.docs_dir}")
             if args.icons or args.all:
                 print("[DRY RUN] Icon validation enabled")
+            if args.mermaid or args.all:
+                print("[DRY RUN] Mermaid diagram validation enabled")
+            if args.lists or args.all:
+                print("[DRY RUN] List formatting validation enabled")
         else:
-            # Enable icon validation when --icons or --all is specified
+            # Enable icon, mermaid, and list validation when corresponding flags or --all is specified
             validate_icons = args.icons or args.all
-            result = validate_mdx_files(args.docs_dir, args.quiet, validate_icons=validate_icons)
+            validate_mermaid = args.mermaid or args.all
+            validate_lists = args.lists or args.all
+            result = validate_mdx_files(
+                args.docs_dir,
+                args.quiet,
+                validate_icons=validate_icons,
+                validate_mermaid=validate_mermaid,
+                validate_lists=validate_lists,
+            )
             if not args.quiet:
                 print_mdx_report(result, args.docs_dir)
             if not result.is_valid:

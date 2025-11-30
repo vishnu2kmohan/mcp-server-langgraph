@@ -55,7 +55,7 @@ class TestIconValidation:
         # Use an icon that's definitely not in the registry
         is_valid, icon, error = validate_icon_format("'not-a-real-icon-xyz123'")
         assert is_valid is False
-        assert "not in valid icon registry" in error.lower() or "invalid icon" in error.lower()
+        assert "not a valid font awesome" in error.lower() or "invalid icon" in error.lower()
 
     def test_empty_icon_fails(self, tmp_path: Path):
         """Empty icon values should fail validation."""
@@ -77,14 +77,16 @@ class TestIconRegistry:
         gc.collect()
 
     def test_icon_registry_contains_common_icons(self):
-        """Registry should contain commonly used icons."""
-        from scripts.validators.validate_docs import VALID_ICONS
+        """Registry should contain commonly used Font Awesome 6.x icons."""
+        from scripts.validators.validate_docs import get_valid_fontawesome_icons
 
+        valid_icons = get_valid_fontawesome_icons()
+
+        # Common icons that should be in Font Awesome 6.x (removed shield-check - not in FA6)
         common_icons = {
             "rocket",
             "shield",
             "shield-halved",
-            "shield-check",
             "key",
             "lock",
             "database",
@@ -120,19 +122,21 @@ class TestIconRegistry:
             "sitemap",
         }
         for icon in common_icons:
-            assert icon in VALID_ICONS, f"Icon '{icon}' should be in VALID_ICONS registry"
+            assert icon in valid_icons, f"Icon '{icon}' should be in Font Awesome 6.x registry"
 
     def test_icon_registry_is_set(self):
         """Registry should be a set for O(1) lookup."""
-        from scripts.validators.validate_docs import VALID_ICONS
+        from scripts.validators.validate_docs import get_valid_fontawesome_icons
 
-        assert isinstance(VALID_ICONS, (set, frozenset))
+        valid_icons = get_valid_fontawesome_icons()
+        assert isinstance(valid_icons, (set, frozenset))
 
     def test_icon_registry_not_empty(self):
         """Registry should not be empty."""
-        from scripts.validators.validate_docs import VALID_ICONS
+        from scripts.validators.validate_docs import get_valid_fontawesome_icons
 
-        assert len(VALID_ICONS) > 0
+        valid_icons = get_valid_fontawesome_icons()
+        assert len(valid_icons) > 0
 
 
 @pytest.mark.xdist_group(name="validate_docs_icons")

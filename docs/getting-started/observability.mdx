@@ -48,6 +48,90 @@ flowchart TB
     class Jaeger,Prometheus,LSCloud backendStyle
     class Grafana,Dashboard1,Dashboard2 dashStyle
 ```
+
+### OpenTelemetry Instrumentation Flow
+
+The following diagram illustrates how OpenTelemetry auto-instrumentation captures telemetry data from your application and routes it through the collector to various backend systems:
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    subgraph Application["Application Layer"]
+        App[Application Code<br/>FastAPI + LangGraph]
+        Auto[Auto-Instrumentation<br/>HTTP, AsyncIO, LLM]
+    end
+
+    subgraph Collection["Telemetry Collection"]
+        Traces[Traces<br/>Distributed Tracing]
+        Metrics[Metrics<br/>Counters, Histograms]
+        Logs[Logs<br/>Structured JSON]
+    end
+
+    subgraph Export["OTLP Export"]
+        OTLP[OTLP Exporter<br/>gRPC:4317]
+    end
+
+    subgraph Processing["Collector Processing"]
+        Collector[OpenTelemetry Collector]
+        Batch[Batching<br/>Memory-efficient]
+        Sample[Sampling<br/>10% default]
+        Filter[Filtering<br/>Attribute-based]
+    end
+
+    subgraph Backends["Backend Systems"]
+        Jaeger[Jaeger<br/>Trace Storage]
+        Prometheus[Prometheus<br/>Metrics DB]
+        Loki[Loki<br/>Log Aggregation]
+    end
+
+    subgraph Visualization["Visualization"]
+        JaegerUI[Jaeger UI<br/>:16686]
+        Grafana[Grafana<br/>:3000]
+        PromUI[Prometheus UI<br/>:9090]
+    end
+
+    App --> Auto
+    Auto --> Traces
+    Auto --> Metrics
+    Auto --> Logs
+
+    Traces --> OTLP
+    Metrics --> OTLP
+    Logs --> OTLP
+
+    OTLP --> Collector
+    Collector --> Batch
+    Batch --> Sample
+    Sample --> Filter
+
+    Filter --> Jaeger
+    Filter --> Prometheus
+    Filter --> Loki
+
+    Jaeger --> JaegerUI
+    Prometheus --> Grafana
+    Prometheus --> PromUI
+    Loki --> Grafana
+
+    %% ColorBrewer2 Set3 palette styling
+    classDef appStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef otelStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef collectorStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef backendStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef vizStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class App,Auto appStyle
+    class Traces,Metrics,Logs,OTLP otelStyle
+    class Collector,Batch,Sample,Filter collectorStyle
+    class Jaeger,Prometheus,Loki backendStyle
+    class JaegerUI,Grafana,PromUI vizStyle
+```
+
+<Info>
+**Auto-instrumentation** captures telemetry without code changes. The collector batches, samples, and filters data before exporting to multiple backends for analysis and visualization.
+</Info>
+
 ### Quick Start
 
 <Steps>

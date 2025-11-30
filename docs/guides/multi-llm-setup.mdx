@@ -489,6 +489,79 @@ response = completion(
     cache=cache
 )
 ```
+
+---
+
+### LLM Streaming Response Flow
+
+The following diagram shows how streaming responses flow from the LLM through the server to the client:
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    subgraph Client["Client"]
+        C1[Send Request]
+        C5[Receive Streaming Response]
+    end
+
+    subgraph API["API Gateway"]
+        A1[Route Request]
+        A2[Establish SSE Connection]
+    end
+
+    subgraph LangGraph["LangGraph Agent"]
+        L1[Process Request]
+        L2[Stream Tokens Back]
+    end
+
+    subgraph LLM["LLM Provider"]
+        LLM1[Generate Response]
+        LLM2[Stream Token by Token]
+    end
+
+    subgraph SSE["Server-Sent Events"]
+        S1[Event Stream]
+        S2[Push Tokens to Client]
+    end
+
+    C1 --> A1
+    A1 --> L1
+    L1 --> LLM1
+    LLM1 --> LLM2
+    LLM2 --> L2
+    L2 --> A2
+    A2 --> S1
+    S1 --> S2
+    S2 --> C5
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef apiStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef agentStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef streamStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class C1,C5 clientStyle
+    class A1,A2 apiStyle
+    class L1,L2 agentStyle
+    class LLM1,LLM2 llmStyle
+    class S1,S2 streamStyle
+```
+
+**Flow Description**:
+
+1. **Client Request**: Client sends request to API endpoint
+2. **API Routing**: API Gateway routes request to LangGraph agent
+3. **Agent Processing**: LangGraph agent processes request and invokes LLM
+4. **LLM Generation**: LLM provider generates response token by token
+5. **Token Streaming**: Tokens stream back through agent to API
+6. **SSE Delivery**: Server-Sent Events push tokens to client in real-time
+7. **Client Reception**: Client receives and displays streaming response
+
+<Info>
+**Streaming Benefits**: Real-time responses, lower perceived latency, better user experience, and efficient token-by-token delivery.
+</Info>
+
 ---
 
 ### Configuration Reference

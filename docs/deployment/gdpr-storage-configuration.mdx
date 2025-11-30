@@ -22,6 +22,7 @@ PostgreSQL storage backend is **fully implemented** as of ADR-0041 (2025-11-02).
 ### GDPR Data Subject Rights Flow
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 sequenceDiagram
     %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#8dd3c7','primaryTextColor':'#1a202c','primaryBorderColor':'#2a9d8f','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#b3de69','actorBkg':'#8dd3c7','actorBorder':'#2a9d8f','actorTextColor':'#1a202c','actorLineColor':'#2a9d8f','signalColor':'#7cb342','signalTextColor':'#1a202c','labelBoxBkgColor':'#fdb462','labelBoxBorderColor':'#e67e22','labelTextColor':'#1a202c','noteBorderColor':'#e67e22','noteBkgColor':'#fdb462','noteTextColor':'#1a202c','activationBorderColor':'#7cb342','activationBkgColor':'#b3de69','sequenceNumberColor':'#4a5568'}}}%%
     participant User as Data Subject
@@ -93,6 +94,17 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
+
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+
+    class User clientStyle
+    class API,Auth validationStyle
+    class FGA serviceStyle
+    class Storage,DB,Logs,Audit storageStyle
 ```
 ### Environment Variables
 
