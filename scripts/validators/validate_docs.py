@@ -110,7 +110,7 @@ def get_valid_fontawesome_icons() -> set[str]:
                 if isinstance(data, list) and len(data) > 1000:  # Sanity check
                     return set(data)
         except (json.JSONDecodeError, OSError):
-            pass
+            pass  # Cache corrupted or inaccessible - will fetch from network
 
     # Fetch from official source (HTTPS only - safe URL)
     try:
