@@ -3,7 +3,7 @@
 import asyncio
 import gc
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from unittest.mock import Mock
 
 import jwt
@@ -61,9 +61,8 @@ class TestJWTBenchmarks:
     @pytest.fixture
     def sample_payload(self):
         """Sample JWT payload."""
-        from datetime import timezone
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return {
             "sub": "test-user",
             "exp": now + timedelta(hours=1),
@@ -117,7 +116,6 @@ class TestJWTBenchmarks:
 
         Requirement: Token validation p95 < 2.5ms, p99 < 3ms (more stable than mean < 2ms).
         """
-        from datetime import timezone
 
         # Create tokens with various expiration times
         token = jwt.encode(sample_payload, jwt_config["secret_key"], algorithm=jwt_config["algorithm"])
@@ -126,8 +124,8 @@ class TestJWTBenchmarks:
             try:
                 decoded = jwt.decode(token, jwt_config["secret_key"], algorithms=[jwt_config["algorithm"]])
                 # Verify expiration
-                exp = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
-                now = datetime.now(timezone.utc)
+                exp = datetime.fromtimestamp(decoded["exp"], tz=UTC)
+                now = datetime.now(UTC)
                 return exp > now
             except jwt.ExpiredSignatureError:
                 return False

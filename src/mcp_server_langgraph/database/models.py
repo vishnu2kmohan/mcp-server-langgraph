@@ -5,7 +5,7 @@ This module defines database models for storing LLM token usage and cost metrics
 with PostgreSQL persistence and automatic retention policies.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal
 from typing import Any
 
@@ -49,7 +49,7 @@ class TokenUsageRecord(Base):  # type: ignore[misc,valid-type]
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         doc="When the record was created (UTC)",
     )
 

@@ -13,6 +13,7 @@ from kubernetes.client.rest import ApiException
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,8 @@ class KubernetesSandbox(Sandbox):
             self._verify_namespace()
 
         except Exception as e:
-            raise SandboxError(f"Kubernetes not available: {e}")
+            msg = f"Kubernetes not available: {e}"
+            raise SandboxError(msg)
 
     def _verify_namespace(self) -> None:
         """Verify that the namespace exists"""
@@ -85,8 +87,10 @@ class KubernetesSandbox(Sandbox):
             self.core_v1.read_namespace(name=self.namespace)
         except ApiException as e:
             if e.status == 404:
-                raise SandboxError(f"Namespace '{self.namespace}' does not exist")
-            raise SandboxError(f"Failed to verify namespace: {e}")
+                msg = f"Namespace '{self.namespace}' does not exist"
+                raise SandboxError(msg)
+            msg = f"Failed to verify namespace: {e}"
+            raise SandboxError(msg)
 
     def execute(self, code: str) -> ExecutionResult:
         """
@@ -161,7 +165,8 @@ class KubernetesSandbox(Sandbox):
                 self._cleanup_job(job_name)
 
             logger.error(f"Kubernetes execution failed: {e}", exc_info=True)
-            raise SandboxError(f"Kubernetes execution failed: {e}")
+            msg = f"Kubernetes execution failed: {e}"
+            raise SandboxError(msg)
 
     def _create_job(self, code: str) -> str:
         """
@@ -251,7 +256,8 @@ class KubernetesSandbox(Sandbox):
 
         except Exception as e:
             logger.error(f"Failed to create Kubernetes job: {e}", exc_info=True)
-            raise SandboxError(f"Failed to create Kubernetes job: {e}")
+            msg = f"Failed to create Kubernetes job: {e}"
+            raise SandboxError(msg)
 
     def _wait_for_job(self, job_name: str, start_time: float) -> tuple[bool, int]:
         """
@@ -271,14 +277,12 @@ class KubernetesSandbox(Sandbox):
             elapsed = time.time() - start_time
             if elapsed >= timeout:
                 # Timeout - delete job
-                try:
+                with contextlib.suppress(Exception):
                     self.batch_v1.delete_namespaced_job(
                         name=job_name,
                         namespace=self.namespace,
                         propagation_policy="Background",
                     )
-                except Exception:
-                    pass
                 return True, 124  # Timeout exit code
 
             try:

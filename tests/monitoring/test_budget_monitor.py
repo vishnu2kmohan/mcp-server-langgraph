@@ -16,7 +16,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -46,7 +46,7 @@ def sample_budget_data():
         "name": "Test Monthly Budget",
         "limit_usd": Decimal("1000.00"),
         "period": BudgetPeriod.MONTHLY,
-        "start_date": datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+        "start_date": datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
         "alert_thresholds": [Decimal("0.75"), Decimal("0.90")],
     }
 
@@ -107,7 +107,7 @@ class TestBudgetCreation:
     async def test_create_budget_uses_default_start_date_if_not_provided(self, budget_monitor):
         """Test create_budget() uses current time as default start_date."""
         # Arrange
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
 
         # Act
         budget = await budget_monitor.create_budget(
@@ -119,7 +119,7 @@ class TestBudgetCreation:
         )
 
         # Assert
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         assert before <= budget.start_date <= after
 
     @pytest.mark.unit
@@ -180,14 +180,14 @@ class TestBudgetPeriodCalculations:
         sample_budget_data["period"] = BudgetPeriod.DAILY
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
-        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=timezone.utc)
+        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=UTC)
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
 
         # Assert
-        assert period_start == datetime(2025, 11, 15, 0, 0, 0, tzinfo=timezone.utc)
-        assert period_end == datetime(2025, 11, 16, 0, 0, 0, tzinfo=timezone.utc)
+        assert period_start == datetime(2025, 11, 15, 0, 0, 0, tzinfo=UTC)
+        assert period_end == datetime(2025, 11, 16, 0, 0, 0, tzinfo=UTC)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -198,7 +198,7 @@ class TestBudgetPeriodCalculations:
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
         # Friday, November 15, 2025
-        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=timezone.utc)  # Friday
+        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=UTC)  # Friday
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
@@ -216,14 +216,14 @@ class TestBudgetPeriodCalculations:
         sample_budget_data["period"] = BudgetPeriod.MONTHLY
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
-        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=timezone.utc)
+        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=UTC)
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
 
         # Assert
-        assert period_start == datetime(2025, 11, 1, 0, 0, 0, tzinfo=timezone.utc)
-        assert period_end == datetime(2025, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
+        assert period_start == datetime(2025, 11, 1, 0, 0, 0, tzinfo=UTC)
+        assert period_end == datetime(2025, 12, 1, 0, 0, 0, tzinfo=UTC)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -233,14 +233,14 @@ class TestBudgetPeriodCalculations:
         sample_budget_data["period"] = BudgetPeriod.MONTHLY
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
-        current_time = datetime(2025, 12, 15, 14, 30, 0, tzinfo=timezone.utc)
+        current_time = datetime(2025, 12, 15, 14, 30, 0, tzinfo=UTC)
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
 
         # Assert
-        assert period_start == datetime(2025, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
-        assert period_end == datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        assert period_start == datetime(2025, 12, 1, 0, 0, 0, tzinfo=UTC)
+        assert period_end == datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -251,13 +251,13 @@ class TestBudgetPeriodCalculations:
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
         # Q4: October, November, December
-        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=timezone.utc)
+        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=UTC)
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
 
         # Assert
-        assert period_start == datetime(2025, 10, 1, 0, 0, 0, tzinfo=timezone.utc)
+        assert period_start == datetime(2025, 10, 1, 0, 0, 0, tzinfo=UTC)
         assert period_end == period_start + timedelta(days=90)
 
     @pytest.mark.unit
@@ -268,14 +268,14 @@ class TestBudgetPeriodCalculations:
         sample_budget_data["period"] = BudgetPeriod.YEARLY
         budget = await budget_monitor.create_budget(**sample_budget_data)
 
-        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=timezone.utc)
+        current_time = datetime(2025, 11, 15, 14, 30, 0, tzinfo=UTC)
 
         # Act
         period_start, period_end = budget_monitor._calculate_period_boundaries(budget, current_time)
 
         # Assert
-        assert period_start == datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        assert period_end == datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        assert period_start == datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
+        assert period_end == datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
 
 
 # ==============================================================================
@@ -530,7 +530,7 @@ class TestWebhookAlerts:
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
 
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
 
         # Create a mock client that supports async context manager
         mock_client = AsyncMock()
@@ -545,7 +545,7 @@ class TestWebhookAlerts:
             )
 
             # Assert
-            after = datetime.now(timezone.utc)
+            after = datetime.now(UTC)
             payload = mock_client.post.call_args[1]["json"]
             timestamp_str = payload["timestamp"]
             timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))

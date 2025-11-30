@@ -13,7 +13,7 @@ See ADR-0033 for architectural decisions.
 
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.openfga import OpenFGAClient
@@ -77,7 +77,7 @@ class ServicePrincipalManager:
         Raises:
             ValueError: If authentication_mode is invalid
         """
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(UTC).isoformat()
 
         if authentication_mode == "client_credentials":
             client_secret = await self._create_client_credentials_service(
@@ -100,7 +100,8 @@ class ServicePrincipalManager:
             )
 
         else:
-            raise ValueError(f"Invalid authentication mode: {authentication_mode}")
+            msg = f"Invalid authentication mode: {authentication_mode}"
+            raise ValueError(msg)
 
         # Sync to OpenFGA
         await self._sync_to_openfga(
@@ -153,7 +154,7 @@ class ServicePrincipalManager:
                 "inheritPermissions": str(inherit_permissions).lower(),
                 "owner": owner_user_id or "",
                 "purpose": description,
-                "createdAt": datetime.now(timezone.utc).isoformat(),
+                "createdAt": datetime.now(UTC).isoformat(),
             },
         }
 
@@ -184,7 +185,7 @@ class ServicePrincipalManager:
                 "inheritPermissions": str(inherit_permissions).lower(),
                 "owner": owner_user_id or "",
                 "purpose": description,
-                "createdAt": datetime.now(timezone.utc).isoformat(),
+                "createdAt": datetime.now(UTC).isoformat(),
             },
             "credentials": [{"type": "password", "value": password, "temporary": False}],
             "realmRoles": ["service-principal"],

@@ -17,7 +17,7 @@ Example:
 
 import csv
 import io
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from typing import Any
 
@@ -138,7 +138,7 @@ def root() -> dict[str, Any]:
     }
 
 
-@app.get("/api/cost/summary", response_model=CostSummaryResponse)
+@app.get("/api/cost/summary")
 async def get_cost_summary(
     period: str = Query("month", description="Time period (day, week, month)"),
     group_by: str | None = Query(None, description="Group by dimension (model, user, feature)"),
@@ -183,7 +183,7 @@ async def get_cost_summary(
     by_feature = await aggregator.aggregate_by_feature(record_dicts)
 
     # Calculate period dates
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if period == "day":
         period_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     elif period == "week":
@@ -203,7 +203,7 @@ async def get_cost_summary(
     )
 
 
-@app.get("/api/cost/usage", response_model=list[UsageRecordResponse])
+@app.get("/api/cost/usage")
 async def get_usage_records(
     user_id: str | None = Query(None, description="Filter by user ID"),
     model: str | None = Query(None, description="Filter by model"),
@@ -258,7 +258,7 @@ async def get_usage_records(
     ]
 
 
-@app.get("/api/cost/budget/{budget_id}", response_model=BudgetStatus)
+@app.get("/api/cost/budget/{budget_id}")
 async def get_budget_status(budget_id: str) -> BudgetStatus:
     """
     Get budget status.
@@ -284,7 +284,7 @@ async def get_budget_status(budget_id: str) -> BudgetStatus:
     return budget_status
 
 
-@app.post("/api/cost/budget", response_model=Budget, status_code=status.HTTP_201_CREATED)
+@app.post("/api/cost/budget", status_code=status.HTTP_201_CREATED)
 async def create_budget(request: CreateBudgetRequest) -> Budget:
     """
     Create a new budget.
@@ -322,7 +322,7 @@ async def create_budget(request: CreateBudgetRequest) -> Budget:
     return budget
 
 
-@app.get("/api/cost/trends", response_model=TrendsResponse)
+@app.get("/api/cost/trends")
 async def get_cost_trends(
     metric: str = Query("total_cost", description="Metric to track (total_cost, token_usage)"),
     period: str = Query("7d", description="Time period (7d, 30d, 90d)"),
@@ -344,7 +344,7 @@ async def get_cost_trends(
         GET /api/cost/trends?metric=total_cost&period=30d
     """
     collector = get_cost_collector()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     days = int(period.replace("d", ""))
 
     # Get all records from the period
@@ -387,7 +387,7 @@ async def get_cost_trends(
 
         data_points.append(
             TrendDataPoint(
-                timestamp=datetime.combine(day_date, datetime.min.time(), tzinfo=timezone.utc),
+                timestamp=datetime.combine(day_date, datetime.min.time(), tzinfo=UTC),
                 value=str(value),
             )
         )

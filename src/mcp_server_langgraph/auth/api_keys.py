@@ -13,7 +13,7 @@ import hmac
 import os
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import TYPE_CHECKING, Any, Optional
 
 import bcrypt
@@ -133,10 +133,11 @@ class APIKeyManager:
 
         # Check quota
         if len(existing_keys) >= self.MAX_KEYS_PER_USER:
-            raise ValueError(
+            msg = (
                 f"Maximum API keys reached ({self.MAX_KEYS_PER_USER}). "
                 "Please revoke an existing key before creating a new one."
             )
+            raise ValueError(msg)
 
         # Generate new API key
         api_key = self.generate_api_key()
@@ -151,7 +152,7 @@ class APIKeyManager:
         key_id = secrets.token_hex(8)
 
         # Calculate expiration
-        created_at = datetime.now(timezone.utc)
+        created_at = datetime.now(UTC)
         expires_at = created_at + timedelta(days=expires_days)
 
         # Store in Keycloak attributes
@@ -302,8 +303,8 @@ class APIKeyManager:
                 expires_at = datetime.fromisoformat(expires_at_str)
                 # Ensure timezone-aware comparison (handle both naive and aware datetimes)
                 if expires_at.tzinfo is None:
-                    expires_at = expires_at.replace(tzinfo=timezone.utc)
-                if datetime.now(timezone.utc) > expires_at:
+                    expires_at = expires_at.replace(tzinfo=UTC)
+                if datetime.now(UTC) > expires_at:
                     # Expired, invalidate cache and continue to full search
                     await self._invalidate_cache(api_key_hash)
                 else:
@@ -369,12 +370,12 @@ class APIKeyManager:
                             expires_at = datetime.fromisoformat(expires_at_str)
                             # Ensure timezone-aware comparison (handle both naive and aware datetimes)
                             if expires_at.tzinfo is None:
-                                expires_at = expires_at.replace(tzinfo=timezone.utc)
-                            if datetime.now(timezone.utc) > expires_at:
+                                expires_at = expires_at.replace(tzinfo=UTC)
+                            if datetime.now(UTC) > expires_at:
                                 continue  # Expired
 
                         # Update last used timestamp
-                        attributes[f"apiKey_{key_id}_lastUsed"] = datetime.now(timezone.utc).isoformat()
+                        attributes[f"apiKey_{key_id}_lastUsed"] = datetime.now(UTC).isoformat()
                         await self.keycloak.update_user_attributes(user["id"], attributes)
 
                         user_info = {
@@ -508,13 +509,14 @@ class APIKeyManager:
                 # Keep existing metadata (name, created), update expiration if needed
                 if grace_period_days > 0:
                     # Extend expiration for grace period
-                    new_expires = datetime.now(timezone.utc) + timedelta(days=grace_period_days)
+                    new_expires = datetime.now(UTC) + timedelta(days=grace_period_days)
                     attributes[f"apiKey_{key_id}_expiresAt"] = new_expires.isoformat()
 
                 break
 
         if not key_found:
-            raise ValueError(f"API key with ID '{key_id}' not found for user '{user_id}'")
+            msg = f"API key with ID '{key_id}' not found for user '{user_id}'"
+            raise ValueError(msg)
 
         # Update attributes
         attributes["apiKeys"] = api_keys

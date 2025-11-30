@@ -16,8 +16,8 @@ from mcp_server_langgraph.core.prompts.router_prompt import ROUTER_SYSTEM_PROMPT
 from mcp_server_langgraph.core.prompts.verification_prompt import VERIFICATION_SYSTEM_PROMPT
 
 __all__ = [
-    "ROUTER_SYSTEM_PROMPT",
     "RESPONSE_SYSTEM_PROMPT",
+    "ROUTER_SYSTEM_PROMPT",
     "VERIFICATION_SYSTEM_PROMPT",
     "get_prompt",
     "get_prompt_version",
@@ -70,14 +70,16 @@ def get_prompt(prompt_name: str, version: str | None = None) -> str:
     """
     if prompt_name not in _PROMPT_VERSIONS:
         available = list(_PROMPT_VERSIONS.keys())
-        raise ValueError(f"Unknown prompt: {prompt_name}. Available: {available}")
+        msg = f"Unknown prompt: {prompt_name}. Available: {available}"
+        raise ValueError(msg)
 
     version = version or "latest"
     prompt_versions = _PROMPT_VERSIONS[prompt_name]
 
     if version not in prompt_versions:
         available_versions = list(prompt_versions.keys())
-        raise ValueError(f"Unknown version '{version}' for prompt '{prompt_name}'. Available: {available_versions}")
+        msg = f"Unknown version '{version}' for prompt '{prompt_name}'. Available: {available_versions}"
+        raise ValueError(msg)
 
     return prompt_versions[version]
 
@@ -96,7 +98,8 @@ def get_prompt_version(prompt_name: str) -> str:
         ValueError: If prompt name is unknown
     """
     if prompt_name not in _PROMPT_METADATA:
-        raise ValueError(f"Unknown prompt: {prompt_name}")
+        msg = f"Unknown prompt: {prompt_name}"
+        raise ValueError(msg)
 
     return _PROMPT_METADATA[prompt_name]["current_version"]
 
@@ -115,6 +118,7 @@ def list_prompt_versions(prompt_name: str) -> list[str]:
         ValueError: If prompt name is unknown
     """
     if prompt_name not in _PROMPT_VERSIONS:
-        raise ValueError(f"Unknown prompt: {prompt_name}")
+        msg = f"Unknown prompt: {prompt_name}"
+        raise ValueError(msg)
 
     return list(_PROMPT_VERSIONS[prompt_name].keys())

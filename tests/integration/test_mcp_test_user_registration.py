@@ -14,6 +14,7 @@ import pytest
 
 from mcp_server_langgraph.auth.user_provider import InMemoryUserProvider
 from tests.constants import TEST_JWT_SECRET
+from datetime import UTC
 
 pytestmark = pytest.mark.integration
 
@@ -171,14 +172,14 @@ class TestMCPTestUserFixtureIntegration:
         assert auth.user_provider is provider
 
         # AND: Token verification should work for alice
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         import jwt
 
         payload = {
             "sub": "alice",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
         token = jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 

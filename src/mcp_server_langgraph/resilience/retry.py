@@ -129,7 +129,6 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
 
     logger.warning(
         f"Retrying after failure (attempt {retry_state.attempt_number})",
-        exc_info=True,
         extra={
             "attempt_number": retry_state.attempt_number,
             "exception_type": type(exception).__name__ if exception else None,
@@ -253,7 +252,8 @@ def retry_with_backoff(  # noqa: C901
                         },
                     ) from e.last_attempt.exception()
                 # This should never be reached, but mypy needs an explicit return path
-                raise RuntimeError("Unreachable code")  # pragma: no cover
+                msg = "Unreachable code"
+                raise RuntimeError(msg)  # pragma: no cover
 
         @functools.wraps(func)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -286,7 +286,8 @@ def retry_with_backoff(  # noqa: C901
                     metadata={"max_attempts": max_attempts},
                 ) from e.last_attempt.exception()
             # This should never be reached, but mypy needs an explicit return path
-            raise RuntimeError("Unreachable code")  # pragma: no cover
+            msg = "Unreachable code"
+            raise RuntimeError(msg)  # pragma: no cover
 
         # Return appropriate wrapper
         import asyncio

@@ -76,14 +76,16 @@ async def retry_with_backoff(
             # Check if we've exhausted retries
             if attempt >= max_retries:
                 logger.error(f"Failed after {attempt + 1} attempts (including initial): {e}")
-                raise Exception(f"Failed after {attempt + 1} attempts: {e}") from e
+                msg = f"Failed after {attempt + 1} attempts: {e}"
+                raise Exception(msg) from e
 
             # Check if we've exceeded max timeout
             if max_timeout:
                 elapsed = time.time() - start_time
                 if elapsed >= max_timeout:
                     logger.error(f"Retry timeout exceeded ({elapsed:.1f}s >= {max_timeout}s)")
-                    raise Exception(f"Retry timeout exceeded after {elapsed:.1f}s (max: {max_timeout}s)") from e
+                    msg = f"Retry timeout exceeded after {elapsed:.1f}s (max: {max_timeout}s)"
+                    raise Exception(msg) from e
 
             # Calculate delay with exponential backoff
             delay = min(initial_delay * (exponential_base**attempt), max_delay)
@@ -100,7 +102,8 @@ async def retry_with_backoff(
     # Should never reach here, but just in case
     if last_exception:
         raise last_exception
-    raise RuntimeError("Retry logic error: no exception recorded")
+    msg = "Retry logic error: no exception recorded"
+    raise RuntimeError(msg)
 
 
 def async_retry(

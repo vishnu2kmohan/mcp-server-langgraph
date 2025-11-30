@@ -5,7 +5,7 @@ Covers user data deletion and audit logging.
 """
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -101,8 +101,8 @@ class TestDataDeletionAuditLogging:
             user_id=user_id,
             username=username,
             email="test@example.com",
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_updated=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_updated=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage.user_profiles.create(profile)
 
@@ -166,8 +166,8 @@ class TestDataDeletionAuditLogging:
             user_id=user_id,
             username=username,
             email="test2@example.com",
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_updated=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_updated=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage_no_audit.user_profiles.create(profile)
 
@@ -208,8 +208,8 @@ class TestDataDeletionAuditLogging:
             user_id=user_id,
             username=username,
             email="test3@example.com",
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_updated=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_updated=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage.user_profiles.create(profile)
 
@@ -217,8 +217,8 @@ class TestDataDeletionAuditLogging:
         conversation = Conversation(
             conversation_id="conv_123",
             user_id=user_id,
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_message_at=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_message_at=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage.conversations.create(conversation)
 
@@ -267,8 +267,8 @@ class TestDataDeletionAuditLogging:
             user_id=user_id,
             username=username,
             email="sensitive@example.com",
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_updated=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_updated=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage.user_profiles.create(profile)
 
@@ -311,8 +311,8 @@ class TestDataDeletionAuditLogging:
             user_id=user_id,
             username=username,
             email="partial@example.com",
-            created_at=datetime.now(timezone.utc).isoformat() + "Z",
-            last_updated=datetime.now(timezone.utc).isoformat() + "Z",
+            created_at=datetime.now(UTC).isoformat() + "Z",
+            last_updated=datetime.now(UTC).isoformat() + "Z",
         )
         await gdpr_storage.user_profiles.create(profile)
 

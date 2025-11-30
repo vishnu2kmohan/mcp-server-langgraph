@@ -60,7 +60,7 @@ Reference:
 import asyncio
 import gc
 import os
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 
@@ -110,8 +110,8 @@ class TestGDPRSingletonParallelIsolation:
             user_id=user_id,
             username=f"{worker_id}_testuser",
             email=f"{worker_id}@test.com",
-            created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            last_updated=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             metadata={"worker": worker_id},
         )
 
@@ -160,8 +160,8 @@ class TestGDPRSingletonParallelIsolation:
             user_id=user_id,
             username=f"{worker_id}_resettest",
             email=f"{worker_id}_reset@test.com",
-            created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            last_updated=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         )
 
         await storage.user_profiles.create(profile)
@@ -214,9 +214,9 @@ class TestGDPRSingletonParallelIsolation:
             user_id=user_id,
             username=f"marker_{worker_id}",
             email=f"marker_{worker_id}@test.com",
-            created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            metadata={"marker": f"worker_{worker_id}", "timestamp": datetime.now(timezone.utc).isoformat()},
+            created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            last_updated=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            metadata={"marker": f"worker_{worker_id}", "timestamp": datetime.now(UTC).isoformat()},
         )
 
         await storage1.user_profiles.create(profile)
@@ -246,8 +246,8 @@ class TestGDPRSingletonParallelIsolation:
                 user_id=user_id,
                 username=f"concurrent_{index}",
                 email=f"concurrent_{index}@test.com",
-                created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                last_updated=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 metadata={"index": index, "worker": worker_id},
             )
             return await storage.user_profiles.create(profile)
@@ -305,8 +305,8 @@ class TestGDPRSingletonStressTest:
                 user_id=user_id,
                 username=f"cycle_{cycle}",
                 email=f"cycle_{cycle}@test.com",
-                created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                last_updated=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                last_updated=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 metadata={"cycle": cycle, "worker": worker_id},
             )
 

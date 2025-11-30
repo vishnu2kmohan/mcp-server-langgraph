@@ -67,26 +67,31 @@ def _safe_eval(expression: str) -> float:
             if isinstance(node.value, (int, float)):
                 return float(node.value)
             else:
-                raise ValueError(f"Invalid constant type: {type(node.value).__name__}")
+                msg = f"Invalid constant type: {type(node.value).__name__}"
+                raise ValueError(msg)
         elif isinstance(node, ast.BinOp):  # Binary operation
             op_func = SAFE_OPERATORS.get(type(node.op))
             if op_func is None:
-                raise ValueError(f"Unsafe operator: {type(node.op).__name__}")
+                msg = f"Unsafe operator: {type(node.op).__name__}"
+                raise ValueError(msg)
             return float(op_func(_eval(node.left), _eval(node.right)))  # type: ignore[operator]
         elif isinstance(node, ast.UnaryOp):  # Unary operation
             op_func = SAFE_OPERATORS.get(type(node.op))
             if op_func is None:
-                raise ValueError(f"Unsafe operator: {type(node.op).__name__}")
+                msg = f"Unsafe operator: {type(node.op).__name__}"
+                raise ValueError(msg)
             return float(op_func(_eval(node.operand)))  # type: ignore[operator]
         else:
-            raise ValueError(f"Unsafe node type: {type(node).__name__}")
+            msg = f"Unsafe node type: {type(node).__name__}"
+            raise ValueError(msg)
 
     try:
         tree = ast.parse(expression, mode="eval")
         result = _eval(tree.body)
         return result
     except (ValueError, SyntaxError, ZeroDivisionError) as e:
-        raise ValueError(f"Invalid expression: {e}") from e
+        msg = f"Invalid expression: {e}"
+        raise ValueError(msg) from e
 
 
 @tool

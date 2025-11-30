@@ -14,7 +14,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -33,7 +33,7 @@ pytestmark = pytest.mark.unit
 def sample_token_usage():
     """Sample token usage data for testing."""
     return {
-        "timestamp": datetime.now(timezone.utc),
+        "timestamp": datetime.now(UTC),
         "user_id": "user123",
         "session_id": "session456",
         "model": "claude-3-5-sonnet-20241022",
@@ -54,7 +54,7 @@ def sample_budget():
         "name": "Development Team Monthly Budget",
         "limit_usd": Decimal("1000.00"),
         "period": "monthly",
-        "start_date": datetime.now(timezone.utc).replace(day=1),
+        "start_date": datetime.now(UTC).replace(day=1),
         "alert_thresholds": [Decimal("0.75"), Decimal("0.90")],
     }
 
@@ -200,7 +200,7 @@ async def test_cost_metrics_collector_calculates_cost_automatically():
 
     # Act - record without explicit cost
     await collector.record_usage(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         user_id="user123",
         session_id="session456",
         model="claude-3-5-sonnet-20241022",
@@ -225,7 +225,7 @@ async def test_cost_metrics_collector_increments_prometheus_counters():
 
     with patch("mcp_server_langgraph.monitoring.cost_tracker.llm_token_usage") as mock_counter:
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
             model="claude-3-5-sonnet-20241022",
@@ -422,7 +422,7 @@ class TestBudgetMonitor:
     @pytest.mark.asyncio
     async def test_budget_monitor_handles_budget_exceeded(self):
         """Test BudgetMonitor handles budget being exceeded."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from mcp_server_langgraph.monitoring.budget_monitor import BudgetMonitor, BudgetPeriod
 
@@ -434,7 +434,7 @@ class TestBudgetMonitor:
             name="Test Budget",
             limit_usd=Decimal("1000.00"),
             period=BudgetPeriod.MONTHLY,
-            start_date=datetime.now(timezone.utc).replace(day=1),
+            start_date=datetime.now(UTC).replace(day=1),
             alert_thresholds=[Decimal("0.75"), Decimal("0.90")],
         )
 
@@ -469,8 +469,8 @@ def test_get_cost_summary_returns_aggregated_data(cost_api_client):
     # Mock data
     with patch("mcp_server_langgraph.monitoring.cost_api.get_cost_summary") as mock_summary:
         mock_summary.return_value = {
-            "period_start": datetime.now(timezone.utc),
-            "period_end": datetime.now(timezone.utc),
+            "period_start": datetime.now(UTC),
+            "period_end": datetime.now(UTC),
             "total_cost_usd": Decimal("123.45"),
             "total_tokens": 100000,
             "request_count": 500,
@@ -574,7 +574,7 @@ async def test_end_to_end_cost_tracking_flow():
     # Step 1: Record usage
     collector = CostMetricsCollector()
     await collector.record_usage(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         user_id="user123",
         session_id="session456",
         model="claude-3-5-sonnet-20241022",
@@ -620,7 +620,7 @@ async def test_cost_tracker_handles_concurrent_writes():
     # Record multiple usages concurrently
     tasks = [
         collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id=f"user{i}",
             session_id=f"session{i}",
             model="claude-3-5-sonnet-20241022",
@@ -672,7 +672,7 @@ class TestTokenUsageModel:
         from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
 
         usage = TokenUsage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
             model="claude-3-5-sonnet-20241022",
@@ -690,7 +690,7 @@ class TestTokenUsageModel:
         from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
 
         usage = TokenUsage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user123",
             session_id="session456",
             model="claude-3-5-sonnet-20241022",
@@ -710,7 +710,7 @@ class TestTokenUsageModel:
         """Test TokenUsage serializes datetime to ISO format."""
         from mcp_server_langgraph.monitoring.cost_tracker import TokenUsage
 
-        ts = datetime(2025, 1, 15, 12, 30, 45, tzinfo=timezone.utc)
+        ts = datetime(2025, 1, 15, 12, 30, 45, tzinfo=UTC)
         usage = TokenUsage(
             timestamp=ts,
             user_id="user123",
@@ -750,7 +750,7 @@ class TestCostMetricsCollectorExtended:
 
         # Record usage for two different users
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
             model="claude-3-5-sonnet-20241022",
@@ -759,7 +759,7 @@ class TestCostMetricsCollectorExtended:
             completion_tokens=500,
         )
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
             model="claude-3-5-sonnet-20241022",
@@ -782,7 +782,7 @@ class TestCostMetricsCollectorExtended:
         collector = CostMetricsCollector()
 
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
             model="claude-3-5-sonnet-20241022",
@@ -791,7 +791,7 @@ class TestCostMetricsCollectorExtended:
             completion_tokens=500,
         )
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session2",
             model="gpt-4-turbo",
@@ -813,7 +813,7 @@ class TestCostMetricsCollectorExtended:
         collector = CostMetricsCollector()
 
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
             model="claude-3-5-sonnet-20241022",
@@ -823,7 +823,7 @@ class TestCostMetricsCollectorExtended:
             estimated_cost_usd=Decimal("0.01"),
         )
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
             model="claude-3-5-sonnet-20241022",
@@ -855,8 +855,8 @@ class TestCostMetricsCollectorExtended:
         collector = CostMetricsCollector(retention_days=1)
 
         # Record old and new usage
-        old_timestamp = datetime.now(timezone.utc) - timedelta(days=5)
-        new_timestamp = datetime.now(timezone.utc)
+        old_timestamp = datetime.now(UTC) - timedelta(days=5)
+        new_timestamp = datetime.now(UTC)
 
         await collector.record_usage(
             timestamp=old_timestamp,
@@ -893,7 +893,7 @@ class TestCostMetricsCollectorExtended:
         collector = CostMetricsCollector()
 
         await collector.record_usage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
             model="claude-3-5-sonnet-20241022",

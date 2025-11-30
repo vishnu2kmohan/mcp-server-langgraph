@@ -44,7 +44,6 @@ class APIVersionInfo(BaseModel):
 
 @router.get(
     "/version",
-    response_model=APIVersionInfo,
     summary="Get API version information",
     description="""
     Returns API version metadata for client compatibility checking.

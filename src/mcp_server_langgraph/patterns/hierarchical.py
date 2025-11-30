@@ -103,7 +103,7 @@ class HierarchicalCoordinator:
                 state.manager_assignments[manager_name] = f"Handle aspect of '{state.project}' - assigned by CEO"
         else:
             # Specialized delegation (in production, use LLM)
-            for manager_name in self.managers.keys():
+            for manager_name in self.managers:
                 state.manager_assignments[manager_name] = f"Specialized task for {manager_name} regarding '{state.project}'"
 
         return state
@@ -175,7 +175,7 @@ class HierarchicalCoordinator:
         report_parts.append("## Execution Summary\n")
 
         # Add all manager reports
-        for manager_name, report in state.manager_reports.items():
+        for report in state.manager_reports.values():
             report_parts.append(f"\n### {report}\n")
 
         # Add execution path
@@ -212,11 +212,11 @@ class HierarchicalCoordinator:
         graph.set_entry_point("ceo")
 
         # CEO delegates to all managers
-        for manager_name in self.managers.keys():
+        for manager_name in self.managers:
             graph.add_edge("ceo", f"manager_{manager_name}")
 
         # All managers report to consolidation
-        for manager_name in self.managers.keys():
+        for manager_name in self.managers:
             graph.add_edge(f"manager_{manager_name}", "consolidate")
 
         # Consolidation is the end

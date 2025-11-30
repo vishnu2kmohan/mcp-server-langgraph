@@ -47,7 +47,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.meta
 @pytest.mark.performance
-@pytest.mark.timeout(360)  # Override global 60s timeout - this test runs full suite as subprocess
+@pytest.mark.timeout(660)  # Override global timeout - this test runs full suite as subprocess (600s subprocess + buffer)
 def test_unit_test_suite_performance():
     """
     Test that unit test suite completes within 120 seconds.
@@ -74,12 +74,18 @@ def test_unit_test_suite_performance():
     # Use -m unit to run only unit tests (fast)
     # Use --durations=0 to get all test durations
     # Use -q for quiet output (less noise)
+    # Disable OTEL to prevent background threads from slowing down tests
+    # The stack trace shows OtelPeriodicExportingMetricReader threads hanging
+    env = os.environ.copy()
+    env["OTEL_SDK_DISABLED"] = "true"
+
     result = subprocess.run(
         ["pytest", "-m", "unit", "--durations=0", "-q", "--tb=no", "--no-header"],
         cwd=project_root,
         capture_output=True,
         text=True,
-        timeout=300,  # 5 minute timeout (generous buffer for CI environments)
+        timeout=600,  # 10 minute timeout (CI environments are slower than local dev)
+        env=env,
     )
 
     # Parse output to find total duration

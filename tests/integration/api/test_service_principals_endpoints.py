@@ -9,7 +9,7 @@ See ADR-0033 for service principal design decisions.
 
 import gc
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from unittest.mock import AsyncMock
 
 import pytest
@@ -51,7 +51,7 @@ def mock_sp_manager():
         owner_user_id=get_user_id("alice"),
         inherit_permissions=True,
         enabled=True,
-        created_at=datetime.now(timezone.utc).isoformat(),
+        created_at=datetime.now(UTC).isoformat(),
         client_secret="sp_secret_abc123xyz789",  # gitleaks:allow
     )
     manager.list_service_principals.return_value = [
@@ -64,7 +64,7 @@ def mock_sp_manager():
             owner_user_id=get_user_id("alice"),
             inherit_permissions=True,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         ),
         MockServicePrincipal(
             service_id="monitoring-service",
@@ -75,7 +75,7 @@ def mock_sp_manager():
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         ),
     ]
     manager.get_service_principal.return_value = None
@@ -328,7 +328,7 @@ class TestCreateServicePrincipal:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.post(
             "/api/v1/service-principals/", json={"name": "Batch ETL Job", "description": "Duplicate"}
@@ -347,7 +347,7 @@ class TestCreateServicePrincipal:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
             client_secret=None,
         )
         response = sp_test_client.post("/api/v1/service-principals/", json={"name": "Bad Service", "description": "Test"})
@@ -410,7 +410,7 @@ class TestGetServicePrincipal:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.get("/api/v1/service-principals/batch-etl-job")
         assert response.status_code == status.HTTP_200_OK
@@ -439,7 +439,7 @@ class TestGetServicePrincipal:
             owner_user_id="other_user",
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.get("/api/v1/service-principals/other-service")
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -467,7 +467,7 @@ class TestRotateServicePrincipalSecret:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.post("/api/v1/service-principals/batch-etl-job/rotate-secret")
         assert response.status_code == status.HTTP_200_OK
@@ -496,7 +496,7 @@ class TestRotateServicePrincipalSecret:
             owner_user_id="other_user",
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.post("/api/v1/service-principals/other-service/rotate-secret")
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -524,7 +524,7 @@ class TestDeleteServicePrincipal:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.delete("/api/v1/service-principals/batch-etl-job")
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -548,7 +548,7 @@ class TestDeleteServicePrincipal:
             owner_user_id="other_user",
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.delete("/api/v1/service-principals/other-service")
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -575,7 +575,7 @@ class TestAssociateServicePrincipalWithUser:
             owner_user_id=get_user_id("alice"),
             inherit_permissions=True,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = admin_test_client.post(
             "/api/v1/service-principals/batch-etl-job/associate-user",
@@ -608,7 +608,7 @@ class TestAssociateServicePrincipalWithUser:
             owner_user_id="other_user",
             inherit_permissions=False,
             enabled=True,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         response = sp_test_client.post(
             "/api/v1/service-principals/other-service/associate-user", params={"user_id": get_user_id("bob")}
@@ -627,7 +627,7 @@ class TestAssociateServicePrincipalWithUser:
                 owner_user_id=get_user_id("alice"),
                 inherit_permissions=False,
                 enabled=True,
-                created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc).isoformat(),
+                created_at=datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC).isoformat(),
             ),
             None,
         ]

@@ -543,7 +543,8 @@ class AuthMiddleware:
             return self.user_provider.create_token(username, expires_in)
 
         # For other providers, we can't create tokens
-        raise ValueError(f"Token creation not supported for provider type: {type(self.user_provider).__name__}")
+        msg = f"Token creation not supported for provider type: {type(self.user_provider).__name__}"
+        raise ValueError(msg)
 
     async def verify_token(self, token: str) -> TokenVerification:
         """
@@ -750,19 +751,22 @@ def require_auth(  # type: ignore[no-untyped-def]
             user_id = kwargs.get("user_id")
 
             if not username and not user_id:
-                raise PermissionError("Authentication required")
+                msg = "Authentication required"
+                raise PermissionError(msg)
 
             # Authenticate
             if username:
                 auth_result = await auth.authenticate(username, password)
                 if not auth_result.authorized:
-                    raise PermissionError("Authentication failed")
+                    msg = "Authentication failed"
+                    raise PermissionError(msg)
                 user_id = auth_result.user_id
 
             # Authorize if relation and resource specified
             if relation and resource:
                 if not await auth.authorize(user_id, relation, resource):  # type: ignore[arg-type]
-                    raise PermissionError(f"Not authorized: {user_id} cannot {relation} {resource}")
+                    msg = f"Not authorized: {user_id} cannot {relation} {resource}"
+                    raise PermissionError(msg)
 
             # Add user_id to kwargs if authenticated
             kwargs["user_id"] = user_id
@@ -819,7 +823,8 @@ if FASTAPI_AVAILABLE:  # noqa: C901
             RuntimeError: If auth middleware not initialized
         """
         if _global_auth_middleware is None:
-            raise RuntimeError("Auth middleware not initialized. Call set_global_auth_middleware() during app startup.")
+            msg = "Auth middleware not initialized. Call set_global_auth_middleware() during app startup."
+            raise RuntimeError(msg)
         return _global_auth_middleware
 
     # HTTP Bearer security scheme for JWT tokens

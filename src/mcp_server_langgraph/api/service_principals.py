@@ -162,7 +162,7 @@ async def _validate_user_association_permission(
 # API Endpoints
 
 
-@router.post("/", response_model=CreateServicePrincipalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_service_principal(
     request: CreateServicePrincipalRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -249,7 +249,7 @@ async def create_service_principal(
     )
 
 
-@router.get("/", response_model=list[ServicePrincipalResponse])
+@router.get("/")
 async def list_service_principals(
     current_user: dict[str, Any] = Depends(get_current_user),
     sp_manager: ServicePrincipalManager = Depends(get_service_principal_manager),
@@ -278,7 +278,7 @@ async def list_service_principals(
     ]
 
 
-@router.get("/{service_id}", response_model=ServicePrincipalResponse)
+@router.get("/{service_id}")
 async def get_service_principal(
     service_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -317,7 +317,7 @@ async def get_service_principal(
     )
 
 
-@router.post("/{service_id}/rotate-secret", response_model=RotateSecretResponse)
+@router.post("/{service_id}/rotate-secret")
 async def rotate_service_principal_secret(
     service_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -391,7 +391,7 @@ async def delete_service_principal(
     return None
 
 
-@router.post("/{service_id}/associate-user", response_model=ServicePrincipalResponse)
+@router.post("/{service_id}/associate-user")
 async def associate_service_principal_with_user(
     service_id: str,
     user_id: str,

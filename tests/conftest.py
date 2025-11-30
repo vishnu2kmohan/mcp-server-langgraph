@@ -26,7 +26,7 @@ import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
 import warnings  # noqa: E402
-from datetime import datetime, timedelta, timezone  # noqa: E402
+from datetime import datetime, timedelta, UTC  # noqa: E402
 from pathlib import Path  # noqa: E402
 from unittest.mock import AsyncMock, MagicMock, patch  # noqa: E402
 
@@ -866,7 +866,7 @@ def test_container():
     from mcp_server_langgraph.core.container import create_test_container
 
     container = create_test_container()
-    yield container
+    return container
     # No cleanup needed - container has no global state
 
 
@@ -1051,7 +1051,7 @@ def mock_jwt_token():
 
     from tests.constants import TEST_JWT_EXPIRATION_HOURS
 
-    NOW = datetime.now(timezone.utc)
+    NOW = datetime.now(UTC)
 
     payload = {
         "sub": "alice",
@@ -1318,7 +1318,7 @@ def test_circuit_breaker_config():
     if "llm" in _circuit_breakers:
         del _circuit_breakers["llm"]
 
-    yield
+    return
 
     # Cleanup handled by reset_resilience_state autouse fixture
 
@@ -1363,7 +1363,7 @@ def fast_resilience_config():
         if service in _circuit_breakers:
             del _circuit_breakers[service]
 
-    yield
+    return
 
     # Cleanup handled by reset_resilience_state autouse fixture
 
@@ -1434,7 +1434,7 @@ def fast_retry_config():
     )
 
     set_resilience_config(test_config)
-    yield
+    return
 
     # Cleanup handled by reset_resilience_state autouse fixture
 
@@ -1542,7 +1542,7 @@ def pytest_sessionfinish(session, exitstatus):
         try:
             loop.run_until_complete(asyncio.wait_for(litellm.close_litellm_async_clients(), timeout=30.0))
             logging.debug("Successfully closed all litellm async clients")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logging.warning("litellm async client cleanup timed out after 30s (non-critical)")
         finally:
             loop.close()

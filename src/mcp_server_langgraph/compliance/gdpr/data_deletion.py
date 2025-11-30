@@ -2,7 +2,7 @@
 GDPR Data Deletion Service - Article 17 (Right to Erasure)
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -78,7 +78,7 @@ class DataDeletionService:
             deleted_items[operation_name] = count
             logger.info(f"Deleted {count} {operation_name}", extra={"user_id": user_id})
         except Exception as e:
-            error_msg = f"Failed to delete {operation_name}: {str(e)}"
+            error_msg = f"Failed to delete {operation_name}: {e!s}"
             errors.append(error_msg)
             logger.error(error_msg, exc_info=True)
 
@@ -105,7 +105,7 @@ class DataDeletionService:
             anonymized_items[operation_name] = count
             logger.info(f"Anonymized {count} {operation_name}", extra={"user_id": user_id})
         except Exception as e:
-            error_msg = f"Failed to anonymize {operation_name}: {str(e)}"
+            error_msg = f"Failed to anonymize {operation_name}: {e!s}"
             errors.append(error_msg)
             logger.error(error_msg, exc_info=True)
 
@@ -165,7 +165,7 @@ class DataDeletionService:
                 deleted_items["user_profile"] = count
                 logger.info("User profile deleted", extra={"user_id": user_id})
             except Exception as e:
-                error_msg = f"Failed to delete user profile: {str(e)}"
+                error_msg = f"Failed to delete user profile: {e!s}"
                 errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
@@ -175,7 +175,7 @@ class DataDeletionService:
             )
 
             success = len(errors) == 0
-            deletion_timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            deletion_timestamp = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
             result = DeletionResult(
                 success=success,
@@ -311,8 +311,8 @@ class DataDeletionService:
         """
         from mcp_server_langgraph.compliance.gdpr.storage import AuditLogEntry
 
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        audit_record_id = f"deletion_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+        timestamp = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        audit_record_id = f"deletion_{datetime.now(UTC).strftime('%Y%m%d%H%M%S%f')}"
 
         # Create anonymized audit log entry
         audit_entry = AuditLogEntry(

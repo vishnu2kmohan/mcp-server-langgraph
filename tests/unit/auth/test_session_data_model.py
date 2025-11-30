@@ -6,7 +6,7 @@ Follows TDD principles and memory safety patterns for pytest-xdist.
 """
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 from pydantic import ValidationError
@@ -27,8 +27,8 @@ class TestSessionDataValidation:
         """Test creating valid SessionData."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
-        expires = (datetime.now(timezone.utc)).isoformat()
+        now = datetime.now(UTC).isoformat()
+        expires = (datetime.now(UTC)).isoformat()
 
         session = SessionData(
             session_id="a" * 32,  # 32 char minimum
@@ -51,7 +51,7 @@ class TestSessionDataValidation:
         """Test that short session ID raises validation error."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         with pytest.raises(ValidationError) as exc_info:
             SessionData(
@@ -72,7 +72,7 @@ class TestSessionDataValidation:
         """Test that empty user_id raises validation error."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         with pytest.raises(ValidationError):
             SessionData(
@@ -91,7 +91,7 @@ class TestSessionDataValidation:
         """Test that invalid timestamp format raises validation error."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         with pytest.raises(ValidationError):
             SessionData(
@@ -141,7 +141,7 @@ class TestSessionDataSerialization:
         """Test that to_dict returns a proper dictionary."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         session = SessionData(
             session_id="a" * 32,
@@ -168,7 +168,7 @@ class TestSessionDataSerialization:
         """Test that from_dict creates SessionData from dictionary."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         data = {
             "session_id": "b" * 32,
@@ -193,7 +193,7 @@ class TestSessionDataSerialization:
         """Test that to_dict and from_dict are inverse operations."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         original = SessionData(
             session_id="c" * 32,
@@ -230,7 +230,7 @@ class TestSessionDataDefaults:
         """Test that roles defaults to empty list."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         session = SessionData(
             session_id="d" * 32,
@@ -250,7 +250,7 @@ class TestSessionDataDefaults:
         """Test that metadata defaults to empty dict."""
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         session = SessionData(
             session_id="e" * 32,

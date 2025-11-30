@@ -21,7 +21,7 @@ Design: Pure PostgreSQL (not hybrid) for:
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 import asyncpg
@@ -262,7 +262,7 @@ class PostgresPreferencesStore(PreferencesStore):
         Returns:
             True if successful
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         async with self.pool.acquire() as conn:
             await conn.execute(

@@ -15,7 +15,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -183,9 +183,9 @@ def test_query_result_get_latest_value_returns_last_value():
     """Test QueryResult.get_latest_value() returns most recent value."""
     # Arrange
     values = [
-        MetricValue(timestamp=datetime.now(timezone.utc), value=10.0),
-        MetricValue(timestamp=datetime.now(timezone.utc) + timedelta(minutes=1), value=20.0),
-        MetricValue(timestamp=datetime.now(timezone.utc) + timedelta(minutes=2), value=30.0),
+        MetricValue(timestamp=datetime.now(UTC), value=10.0),
+        MetricValue(timestamp=datetime.now(UTC) + timedelta(minutes=1), value=20.0),
+        MetricValue(timestamp=datetime.now(UTC) + timedelta(minutes=2), value=30.0),
     ]
     result = QueryResult(metric={"job": "test"}, values=values)
 
@@ -201,9 +201,9 @@ def test_query_result_get_average_calculates_mean():
     """Test QueryResult.get_average() calculates average of all values."""
     # Arrange
     values = [
-        MetricValue(timestamp=datetime.now(timezone.utc), value=10.0),
-        MetricValue(timestamp=datetime.now(timezone.utc), value=20.0),
-        MetricValue(timestamp=datetime.now(timezone.utc), value=30.0),
+        MetricValue(timestamp=datetime.now(UTC), value=10.0),
+        MetricValue(timestamp=datetime.now(UTC), value=20.0),
+        MetricValue(timestamp=datetime.now(UTC), value=30.0),
     ]
     result = QueryResult(metric={"job": "test"}, values=values)
 
@@ -292,8 +292,8 @@ class TestPrometheusQueries:
             await client.initialize()
 
             # Act
-            start = datetime.now(timezone.utc) - timedelta(hours=1)
-            end = datetime.now(timezone.utc)
+            start = datetime.now(UTC) - timedelta(hours=1)
+            end = datetime.now(UTC)
             results = await client.query_range('up{job="mcp-server-langgraph"}', start=start, end=end, step="1m")
 
             # Assert
@@ -362,8 +362,8 @@ class TestPrometheusQueries:
 
         # Act & Assert
         with pytest.raises(ValueError, match="Prometheus client not initialized"):
-            start = datetime.now(timezone.utc) - timedelta(hours=1)
-            end = datetime.now(timezone.utc)
+            start = datetime.now(UTC) - timedelta(hours=1)
+            end = datetime.now(UTC)
             await client.query_range("up", start=start, end=end)
 
 

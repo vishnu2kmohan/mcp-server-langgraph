@@ -2,7 +2,7 @@
 Health check endpoints for Kubernetes probes
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from fastapi import FastAPI, status
@@ -26,7 +26,7 @@ class HealthResponse(BaseModel):
     checks: dict[str, Any]
 
 
-@app.get("/", response_model=HealthResponse)
+@app.get("/")
 async def health_check() -> HealthResponse:
     """
     Liveness probe - returns 200 if application is running
@@ -37,13 +37,13 @@ async def health_check() -> HealthResponse:
     """
     return HealthResponse(
         status="healthy",
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         version=settings.service_version,
         checks={"application": "running"},
     )
 
 
-@app.get("/live", response_model=HealthResponse)
+@app.get("/live")
 async def liveness_check() -> HealthResponse:
     """
     Liveness probe - same as root health check
@@ -112,7 +112,7 @@ async def readiness_check() -> JSONResponse:
         status_code=http_status,
         content=HealthResponse(
             status=response_status,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             version=settings.service_version,
             checks=checks,
         ).model_dump(),
@@ -143,7 +143,7 @@ async def startup_check() -> JSONResponse | dict[str, Any]:
 
         return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"status": "starting", "checks": checks})
 
-    return {"status": "started", "timestamp": datetime.now(timezone.utc).isoformat(), "checks": checks}
+    return {"status": "started", "timestamp": datetime.now(UTC).isoformat(), "checks": checks}
 
 
 @app.get("/metrics/prometheus")

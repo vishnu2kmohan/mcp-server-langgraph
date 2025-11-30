@@ -168,7 +168,7 @@ cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True if cors_origins else False,  # Only allow credentials if origins specified
+    allow_credentials=bool(cors_origins),  # Only allow credentials if origins specified
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
@@ -324,20 +324,22 @@ class MCPAgentStreamableServer:
 
         # Validate JWT secret is configured (fail-closed security pattern)
         if not self.settings.jwt_secret_key:
-            raise ValueError(
+            msg = (
                 "CRITICAL: JWT secret key not configured. "
                 "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
                 "The service cannot start without a secure secret key."
             )
+            raise ValueError(msg)
 
         # SECURITY: Fail-closed pattern - require OpenFGA in production
         if self.settings.environment == "production" and self.openfga is None:
-            raise ValueError(
+            msg = (
                 "CRITICAL: OpenFGA authorization is required in production mode. "
                 "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
                 "or set ENVIRONMENT=development for local testing. "
                 "Fallback authorization is not secure enough for production use."
             )
+            raise ValueError(msg)
 
         # Initialize auth using factory (respects settings.auth_provider)
         self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
@@ -522,10 +524,11 @@ class MCPAgentStreamableServer:
                 if not token:
                     logger.warning("No authentication token provided")
                     metrics.auth_failures.add(1)
-                    raise PermissionError(
+                    msg = (
                         "Authentication token required. Provide 'token' parameter with a valid JWT. "
                         "Obtain token via /auth/login endpoint or external authentication service."
                     )
+                    raise PermissionError(msg)
 
                 # Verify JWT token
                 token_verification = await self.auth.verify_token(token)
@@ -533,15 +536,15 @@ class MCPAgentStreamableServer:
                 if not token_verification.valid:
                     logger.warning("Token verification failed", extra={"error": token_verification.error})
                     metrics.auth_failures.add(1)
-                    raise PermissionError(
-                        f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
-                    )
+                    msg = f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
+                    raise PermissionError(msg)
 
                 # Extract user_id from validated token payload
                 if not token_verification.payload:
                     logger.error("Token payload is empty")
                     metrics.auth_failures.add(1)
-                    raise PermissionError("Invalid token: missing user identifier")
+                    msg = "Invalid token: missing user identifier"
+                    raise PermissionError(msg)
 
                 # Extract username with defensive fallback
                 # Priority: preferred_username > username claim > sub parsing
@@ -568,7 +571,8 @@ class MCPAgentStreamableServer:
                 if not username:
                     logger.error("Token missing user identifier (no sub, preferred_username, or username claim)")
                     metrics.auth_failures.add(1)
-                    raise PermissionError("Invalid token: cannot extract username from claims")
+                    msg = "Invalid token: cannot extract username from claims"
+                    raise PermissionError(msg)
 
                 # Normalize user_id to "user:username" format for OpenFGA compatibility
                 user_id = f"user:{username}" if not username.startswith("user:") else username
@@ -587,7 +591,8 @@ class MCPAgentStreamableServer:
                         extra={"user_id": user_id, "resource": resource, "relation": "executor"},
                     )
                     metrics.authz_failures.add(1, {"resource": resource})
-                    raise PermissionError(f"Not authorized to execute {resource}")
+                    msg = f"Not authorized to execute {resource}"
+                    raise PermissionError(msg)
 
                 logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
 
@@ -603,7 +608,8 @@ class MCPAgentStreamableServer:
                 elif name == "execute_python":
                     return await self._handle_execute_python(arguments, span, user_id)
                 else:
-                    raise ValueError(f"Unknown tool: {name}")
+                    msg = f"Unknown tool: {name}"
+                    raise ValueError(msg)
 
         # Store reference to handler for public API
         self._call_tool_handler = call_tool
@@ -634,7 +640,8 @@ class MCPAgentStreamableServer:
             except Exception as e:
                 # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
                 logger.error(f"Invalid chat input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
-                raise ValueError(f"Invalid chat input: {e}")
+                msg = f"Invalid chat input: {e}"
+                raise ValueError(msg)
 
             message = chat_input.message
             thread_id = chat_input.thread_id or "default"
@@ -667,10 +674,11 @@ class MCPAgentStreamableServer:
                 can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
                 if not can_edit:
                     logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                    raise PermissionError(
+                    msg = (
                         f"Not authorized to edit conversation '{thread_id}'. "
                         f"Request access from conversation owner or use a different thread_id."
                     )
+                    raise PermissionError(msg)
             else:
                 # New conversation - user becomes implicit owner (OpenFGA tuples should be seeded after creation)
                 logger.info(
@@ -784,7 +792,8 @@ class MCPAgentStreamableServer:
 
             if not can_view:
                 logger.warning("User cannot view conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                raise PermissionError(f"Not authorized to view conversation {thread_id}")
+                msg = f"Not authorized to view conversation {thread_id}"
+                raise PermissionError(msg)
 
             # Retrieve conversation from checkpointer
             graph = get_agent_graph()  # type: ignore[func-returns-value]
@@ -848,7 +857,7 @@ class MCPAgentStreamableServer:
                 return [
                     TextContent(
                         type="text",
-                        text=f"Error retrieving conversation history: {str(e)}",
+                        text=f"Error retrieving conversation history: {e!s}",
                     )
                 ]
 
@@ -873,7 +882,8 @@ class MCPAgentStreamableServer:
             except Exception as e:
                 # SECURITY: Sanitize arguments before logging to prevent token exposure in error logs
                 logger.error(f"Invalid search input: {e}", extra={"arguments": sanitize_for_logging(arguments)})
-                raise ValueError(f"Invalid search input: {e}")
+                msg = f"Invalid search input: {e}"
+                raise ValueError(msg)
 
             query = search_input.query
             limit = search_input.limit
@@ -1047,11 +1057,12 @@ def get_mcp_server() -> MCPAgentStreamableServer:
 
     # Guard: Ensure observability is initialized before creating server
     if not is_initialized():
-        raise RuntimeError(
+        msg = (
             "Observability must be initialized before creating MCP server. "
             "This should be done automatically via the startup event handler. "
             "If you see this error, observability initialization failed or was skipped."
         )
+        raise RuntimeError(msg)
 
     global _mcp_server_instance
     if _mcp_server_instance is None:
@@ -1130,7 +1141,7 @@ async def root() -> dict[str, Any]:
     }
 
 
-@app.post("/auth/login", response_model=LoginResponse, tags=["auth"])
+@app.post("/auth/login", tags=["auth"])
 async def login(request: LoginRequest) -> LoginResponse:
     """
     Authenticate user and return JWT token
@@ -1216,7 +1227,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         )
 
 
-@app.post("/auth/refresh", response_model=RefreshTokenResponse, tags=["auth"])
+@app.post("/auth/refresh", tags=["auth"])
 async def refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
     """
     Refresh authentication token
@@ -1464,7 +1475,7 @@ async def handle_message(request: Request) -> JSONResponse | StreamingResponse:
             content={
                 "jsonrpc": "2.0",
                 "id": message.get("id") if "message" in locals() else None,
-                "error": {"code": -32602, "message": f"Invalid params: {str(e)}"},
+                "error": {"code": -32602, "message": f"Invalid params: {e!s}"},
             },
         )
     except HTTPException as e:

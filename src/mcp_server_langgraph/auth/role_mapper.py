@@ -93,7 +93,8 @@ class ConditionConfig(BaseModel):
         """Validate operator is supported"""
         supported = {"==", "!=", "in", ">=", "<="}
         if v not in supported:
-            raise ValueError(f"Operator must be one of {supported}, got: {v}")
+            msg = f"Operator must be one of {supported}, got: {v}"
+            raise ValueError(msg)
         return v
 
     model_config = ConfigDict(frozen=False, validate_assignment=True, str_strip_whitespace=True)
@@ -143,10 +144,7 @@ class SimpleRoleMapping(MappingRule):
             return self.keycloak_role in user.realm_roles
         else:
             # Check client roles
-            for client_roles in user.client_roles.values():
-                if self.keycloak_role in client_roles:
-                    return True
-            return False
+            return any(self.keycloak_role in client_roles for client_roles in user.client_roles.values())
 
     def generate_tuples(self, user: KeycloakUser) -> list[dict[str, str]]:
         """Generate tuple if role matches"""

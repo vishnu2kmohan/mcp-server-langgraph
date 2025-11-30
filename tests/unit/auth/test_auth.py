@@ -1,7 +1,7 @@
 """Unit tests for auth.py - Authentication and Authorization"""
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import MagicMock
 
 import jwt
@@ -286,8 +286,8 @@ class TestAuthMiddleware:
         auth = auth_middleware_with_users
         token = auth.create_token("alice", expires_in=7200)
         payload = jwt.decode(token, "test-key", algorithms=["HS256"])
-        exp = datetime.fromtimestamp(payload["exp"], timezone.utc)
-        iat = datetime.fromtimestamp(payload["iat"], timezone.utc)
+        exp = datetime.fromtimestamp(payload["exp"], UTC)
+        iat = datetime.fromtimestamp(payload["iat"], UTC)
         time_diff = (exp - iat).total_seconds()
         assert 7190 <= time_diff <= 7210
 
@@ -314,8 +314,8 @@ class TestAuthMiddleware:
         payload = {
             "sub": get_user_id("alice"),
             "username": "alice",
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
         }
         expired_token = jwt.encode(payload, "test-key", algorithm="HS256")
         result = await auth.verify_token(expired_token)
@@ -614,8 +614,8 @@ class TestGetCurrentUser:
             "username": "alice",
             "email": "alice@acme.com",
             "roles": ["premium"],
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
         }
         expired_token = jwt.encode(payload, "test-secret", algorithm="HS256")
         request = MagicMock(spec=Request)
@@ -671,8 +671,8 @@ class TestGetCurrentUser:
             "preferred_username": "alice",
             "email": "alice@acme.com",
             "roles": ["premium"],
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
         keycloak_token = jwt.encode(keycloak_payload, "test-secret", algorithm="HS256")
         request = MagicMock(spec=Request)
@@ -700,8 +700,8 @@ class TestGetCurrentUser:
             "sub": get_user_id("charlie"),
             "email": "charlie@acme.com",
             "roles": ["standard"],
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
         legacy_token = jwt.encode(legacy_payload, "test-secret", algorithm="HS256")
         request = MagicMock(spec=Request)
@@ -730,8 +730,8 @@ class TestGetCurrentUser:
             "preferred_username": "dave",
             "email": "dave@acme.com",
             "roles": ["admin"],
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
         token = jwt.encode(payload, "test-secret", algorithm="HS256")
         request = MagicMock(spec=Request)

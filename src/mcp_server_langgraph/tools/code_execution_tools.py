@@ -77,7 +77,8 @@ def _get_sandbox() -> Sandbox:
             job_ttl=settings.code_execution_k8s_job_ttl,
         )
     else:
-        raise SandboxError(f"Unsupported backend: {backend}")
+        msg = f"Unsupported backend: {backend}"
+        raise SandboxError(msg)
 
 
 def _truncate_output(text: str, max_size: int = MAX_OUTPUT_SIZE) -> str:

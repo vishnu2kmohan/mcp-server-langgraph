@@ -200,7 +200,7 @@ class TestDockerComposeHealthChecksIntegration:
     @pytest.fixture
     def cleanup_containers(self):
         """Cleanup containers after test."""
-        yield
+        return
         # Cleanup happens after test
 
     def test_keycloak_health_check_no_curl_dependency(self, docker_available, docker_compose_available):

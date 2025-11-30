@@ -121,10 +121,7 @@ def add_self_parameter(func_def: str) -> str:
 
     # Add self as first parameter
     params = params.strip()
-    if params:
-        new_params = f"self, {params}"
-    else:
-        new_params = "self"
+    new_params = f"self, {params}" if params else "self"
 
     return_type = return_type or ""
     return f"{indent_str}{async_part}def {func_name}({new_params}){return_type}:{rest}"

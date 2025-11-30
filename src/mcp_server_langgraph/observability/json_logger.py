@@ -7,7 +7,7 @@ compatible with centralized log aggregation platforms (ELK, Datadog, Splunk, Clo
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import TYPE_CHECKING, Any
 
 from opentelemetry import trace
@@ -84,7 +84,7 @@ class CustomJSONFormatter(JsonFormatterBase):  # type: ignore[valid-type, misc]
 
         # Add timestamp in ISO 8601 format with milliseconds
         if "timestamp" not in log_record:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             log_record["timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         # Add log level

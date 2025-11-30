@@ -7,7 +7,7 @@ and compliance reporting.
 
 import gc
 import json
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -445,7 +445,7 @@ class TestAccessReview:
             username="alice",
             roles=["admin", "user"],
             active_sessions=2,
-            last_login=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            last_login=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             account_status="active",
             review_status="approved",
         )

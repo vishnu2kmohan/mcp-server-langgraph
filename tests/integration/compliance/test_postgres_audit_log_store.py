@@ -7,7 +7,7 @@ Tests HIPAA §164.312(b) and SOC2 CC6.6 - 7-year audit log retention
 import gc
 import os
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 import asyncpg
 import pytest
@@ -88,7 +88,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresAuditLogStore:
 @pytest.mark.gdpr
 async def test_log_audit_entry(store: PostgresAuditLogStore):
     """Test logging an audit entry"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("alice")
     entry = AuditLogEntry(
         log_id="test_log_123",
@@ -111,7 +111,7 @@ async def test_log_audit_entry(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_log_system_event_without_user(store: PostgresAuditLogStore):
     """Test logging system event (no user_id)"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     entry = AuditLogEntry(
         log_id="test_system_log",
         user_id="",  # System event, no user
@@ -135,7 +135,7 @@ async def test_log_system_event_without_user(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_get_audit_log_entry(store: PostgresAuditLogStore):
     """Test retrieving audit log entry by ID"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("bob")
     entry = AuditLogEntry(
         log_id="test_get_log",
@@ -174,7 +174,7 @@ async def test_get_nonexistent_audit_log(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_list_user_logs_basic(store: PostgresAuditLogStore):
     """Test listing all logs for a user"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("charlie")
 
     # Create multiple logs
@@ -201,7 +201,7 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
     user_id = get_user_id("david")
 
     # Create logs at different times
-    base_time = datetime.now(timezone.utc)
+    base_time = datetime.now(UTC)
 
     # Old log (30 days ago)
     old_time = (base_time - timedelta(days=30)).isoformat().replace("+00:00", "Z")
@@ -240,7 +240,7 @@ async def test_list_user_logs_with_date_range(store: PostgresAuditLogStore):
 async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
     """Test listing user logs with limit"""
     user_id = get_user_id("eve")
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create many logs
     for i in range(150):
@@ -264,7 +264,7 @@ async def test_list_user_logs_with_limit(store: PostgresAuditLogStore):
 async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore):
     """Test that logs are returned in descending timestamp order"""
     user_id = get_user_id("frank")
-    base_time = datetime.now(timezone.utc)
+    base_time = datetime.now(UTC)
 
     # Create logs in reverse chronological order
     for i in range(3):
@@ -298,7 +298,7 @@ async def test_list_user_logs_ordered_by_timestamp(store: PostgresAuditLogStore)
 async def test_anonymize_user_logs(store: PostgresAuditLogStore):
     """Test anonymizing audit logs for deleted user (GDPR Article 17)"""
     user_id = get_user_id("grace")
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create logs
     for i in range(3):
@@ -330,7 +330,7 @@ async def test_anonymize_user_logs(store: PostgresAuditLogStore):
 async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
     """Test that anonymization preserves audit trail (compliance requirement)"""
     user_id = get_user_id("henry")
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create log with detailed information
     entry = AuditLogEntry(
@@ -372,7 +372,7 @@ async def test_anonymize_preserves_audit_trail(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_audit_log_immutability(store: PostgresAuditLogStore):
     """Test that audit logs are immutable (cannot be updated)"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("ivan")
     entry = AuditLogEntry(
         log_id="test_immutable",
@@ -393,7 +393,7 @@ async def test_audit_log_immutability(store: PostgresAuditLogStore):
 @pytest.mark.gdpr
 async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
     """Test storing complex metadata in audit logs"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     user_id = get_user_id("jane")
     admin1 = get_user_id("admin1")
     admin2 = get_user_id("admin2")
@@ -439,7 +439,7 @@ async def test_audit_log_metadata_json(store: PostgresAuditLogStore):
 @pytest.mark.slow
 async def test_list_logs_performance_with_many_users(store: PostgresAuditLogStore):
     """Test query performance with many users (index verification)"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     target_user = get_user_id("perf_test")
 
     # Create logs for many different users

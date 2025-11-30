@@ -14,7 +14,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -44,7 +44,7 @@ def sample_token_usage_records():
     """Sample token usage records for testing."""
     return [
         TokenUsage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user1",
             session_id="session1",
             model="claude-3-5-sonnet-20241022",
@@ -56,7 +56,7 @@ def sample_token_usage_records():
             feature="chat",
         ),
         TokenUsage(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_id="user2",
             session_id="session2",
             model="gpt-4-turbo",
@@ -296,7 +296,7 @@ class TestBudgetEndpoints:
             mock_budget.name = "Test Budget"
             mock_budget.limit_usd = Decimal("1000.00")
             mock_budget.period = BudgetPeriod.MONTHLY
-            mock_budget.start_date = datetime.now(timezone.utc)
+            mock_budget.start_date = datetime.now(UTC)
             mock_budget.end_date = None
             mock_budget.alert_thresholds = [Decimal("0.75"), Decimal("0.90")]
             mock_budget.enabled = True
@@ -325,8 +325,8 @@ class TestBudgetEndpoints:
             spent_usd=Decimal("750.00"),
             remaining_usd=Decimal("250.00"),
             utilization=Decimal("0.75"),
-            period_start=datetime.now(timezone.utc),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC),
+            period_end=datetime.now(UTC),
             is_exceeded=False,
             days_remaining=15,
             projected_end_of_period_spend=Decimal("900.00"),

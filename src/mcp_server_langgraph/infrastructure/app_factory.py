@@ -139,7 +139,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
         try:
             validate_checkpoint_config(container.settings)
         except Exception as e:
-            logger.error(f"Checkpoint configuration validation failed: {e}")
+            logger.exception(f"Checkpoint configuration validation failed: {e}")
             # Re-raise to prevent application from starting with invalid config
             raise
 
@@ -154,7 +154,7 @@ async def create_lifespan(container: ApplicationContainer | None = None) -> Asyn
             )
             logger.info("GDPR storage initialized successfully")
         except Exception as e:
-            logger.error(f"GDPR storage initialization failed: {e}")
+            logger.exception(f"GDPR storage initialization failed: {e}")
             # Re-raise to prevent application from starting without GDPR storage
             raise
 

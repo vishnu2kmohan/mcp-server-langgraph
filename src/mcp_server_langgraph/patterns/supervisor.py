@@ -139,7 +139,7 @@ Choose the best agent for each sub-task."""
                 state.agent_results[agent_name] = result
             except Exception as e:
                 # Handle agent errors gracefully
-                state.agent_results[agent_name] = f"Error: {str(e)}"
+                state.agent_results[agent_name] = f"Error: {e!s}"
 
             # Track agent execution
             state.agent_history.append(agent_name)
@@ -209,7 +209,7 @@ Choose the best agent for each sub-task."""
         graph.add_conditional_edges("supervisor", self._routing_function)
 
         # Workers route based on strategy
-        for agent_name in self.agents.keys():
+        for agent_name in self.agents:
             graph.add_conditional_edges(agent_name, self._routing_function)
 
         # Aggregator is the end

@@ -144,7 +144,7 @@ async def _require_admin_or_scim_role(
 # User Endpoints
 
 
-@router.post("/Users", response_model=SCIMUser, status_code=status.HTTP_201_CREATED)
+@router.post("/Users", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: dict[str, Any],
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -209,10 +209,10 @@ async def create_user(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create user: {e!s}")
 
 
-@router.get("/Users/{user_id}", response_model=SCIMUser)
+@router.get("/Users/{user_id}")
 async def get_user(
     user_id: str,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -237,7 +237,7 @@ async def get_user(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get user: {e!s}")
 
 
 @router.put("/Users/{user_id}", response_model=SCIMUser)
@@ -277,7 +277,7 @@ async def replace_user(
     except ValueError as e:
         return scim_error(400, str(e), "invalidValue")
     except Exception as e:
-        return scim_error(500, f"Failed to update user: {str(e)}", "internalError")
+        return scim_error(500, f"Failed to update user: {e!s}", "internalError")
 
 
 @router.patch("/Users/{user_id}", response_model=SCIMUser)
@@ -321,9 +321,8 @@ async def update_user(
         for operation in patch_request.Operations:
             if operation.path == "active":
                 keycloak_user["enabled"] = operation.value
-            elif operation.path == "emails":
-                if operation.op == "replace" and operation.value:
-                    keycloak_user["email"] = operation.value[0]["value"]
+            elif operation.path == "emails" and operation.op == "replace" and operation.value:
+                keycloak_user["email"] = operation.value[0]["value"]
             # Add more PATCH operation handlers as needed
 
         # Update in Keycloak
@@ -338,7 +337,7 @@ async def update_user(
         return response_user
 
     except Exception as e:
-        return scim_error(500, f"Failed to patch user: {str(e)}", "internalError")
+        return scim_error(500, f"Failed to patch user: {e!s}", "internalError")
 
 
 @router.delete("/Users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -365,7 +364,7 @@ async def delete_user(
 
     except Exception as e:
         # For 204 responses, we must raise HTTPException not return error body
-        raise HTTPException(status_code=500, detail=f"Failed to delete user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete user: {e!s}")
 
 
 @router.get("/Users", response_model=SCIMListResponse)
@@ -443,7 +442,7 @@ async def list_users(
         )
 
     except Exception as e:
-        return scim_error(500, f"Failed to list users: {str(e)}", "internalError")
+        return scim_error(500, f"Failed to list users: {e!s}", "internalError")
 
 
 # Group Endpoints
@@ -506,7 +505,7 @@ async def create_group(
     except ValueError as e:
         return scim_error(400, str(e), "invalidValue")
     except Exception as e:
-        return scim_error(500, f"Failed to create group: {str(e)}", "internalError")
+        return scim_error(500, f"Failed to create group: {e!s}", "internalError")
 
 
 @router.get("/Groups/{group_id}", response_model=SCIMGroup)
@@ -535,4 +534,4 @@ async def get_group(
         )
 
     except Exception as e:
-        return scim_error(500, f"Failed to get group: {str(e)}", "internalError")
+        return scim_error(500, f"Failed to get group: {e!s}", "internalError")

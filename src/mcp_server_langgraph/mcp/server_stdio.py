@@ -179,20 +179,22 @@ class MCPAgentServer:
             # Validate JWT secret is configured for in-memory auth provider
             # Keycloak uses RS256 with JWKS (public key crypto) and doesn't need JWT_SECRET_KEY
             if self.settings.auth_provider == "inmemory" and not self.settings.jwt_secret_key:
-                raise ValueError(
+                msg = (
                     "CRITICAL: JWT secret key not configured for in-memory auth provider. "
                     "Set JWT_SECRET_KEY environment variable or configure via Infisical. "
                     "The in-memory auth provider requires a secure secret key for HS256 token signing."
                 )
+                raise ValueError(msg)
 
             # SECURITY: Fail-closed pattern - require OpenFGA in production
             if self.settings.environment == "production" and self.openfga is None:
-                raise ValueError(
+                msg = (
                     "CRITICAL: OpenFGA authorization is required in production mode. "
                     "Configure OPENFGA_STORE_ID and OPENFGA_MODEL_ID environment variables, "
                     "or set ENVIRONMENT=development for local testing. "
                     "Fallback authorization is not secure enough for production use."
                 )
+                raise ValueError(msg)
 
             self.auth = create_auth_middleware(self.settings, openfga_client=self.openfga)
 
@@ -364,10 +366,11 @@ class MCPAgentServer:
             if not token:
                 logger.warning("No authentication token provided")
                 metrics.auth_failures.add(1)
-                raise PermissionError(
+                msg = (
                     "Authentication token required. Provide 'token' parameter with a valid JWT. "
                     "Obtain token via /auth/login endpoint or external authentication service."
                 )
+                raise PermissionError(msg)
 
             # Verify JWT token
             token_verification = await self.auth.verify_token(token)
@@ -375,15 +378,15 @@ class MCPAgentServer:
             if not token_verification.valid:
                 logger.warning("Token verification failed", extra={"error": token_verification.error})
                 metrics.auth_failures.add(1)
-                raise PermissionError(
-                    f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
-                )
+                msg = f"Invalid authentication token: {token_verification.error or 'token verification failed'}"
+                raise PermissionError(msg)
 
             # Extract user_id from validated token payload
             if not token_verification.payload or "sub" not in token_verification.payload:
                 logger.error("Token payload missing 'sub' claim")
                 metrics.auth_failures.add(1)
-                raise PermissionError("Invalid token: missing user identifier")
+                msg = "Invalid token: missing user identifier"
+                raise PermissionError(msg)
 
             # Extract username with defensive fallback
             # Priority: preferred_username > username claim > sub parsing
@@ -404,7 +407,8 @@ class MCPAgentServer:
                     )
                     username = sub
                 else:
-                    raise PermissionError("Invalid token: cannot extract username from claims")
+                    msg = "Invalid token: cannot extract username from claims"
+                    raise PermissionError(msg)
 
             # Normalize user_id to "user:username" format for OpenFGA compatibility
             user_id = f"user:{username}" if not username.startswith("user:") else username
@@ -423,7 +427,8 @@ class MCPAgentServer:
                     extra={"user_id": user_id, "resource": resource, "relation": "executor"},
                 )
                 metrics.authz_failures.add(1, {"resource": resource})
-                raise PermissionError(f"Not authorized to execute {resource}")
+                msg = f"Not authorized to execute {resource}"
+                raise PermissionError(msg)
 
             logger.info("Authorization granted", extra={"user_id": user_id, "resource": resource})
 
@@ -439,7 +444,8 @@ class MCPAgentServer:
             elif name == "execute_python":
                 return await self._handle_execute_python(arguments, span, user_id)
             else:
-                raise ValueError(f"Unknown tool: {name}")
+                msg = f"Unknown tool: {name}"
+                raise ValueError(msg)
 
     def _setup_handlers(self) -> None:
         """Setup MCP protocol handlers"""
@@ -486,7 +492,8 @@ class MCPAgentServer:
                 chat_input = ChatInput.model_validate(arguments)
             except Exception as e:
                 logger.error(f"Invalid chat input: {e}", extra={"arguments": arguments})
-                raise ValueError(f"Invalid chat input: {e}")
+                msg = f"Invalid chat input: {e}"
+                raise ValueError(msg)
 
             message = chat_input.message
             thread_id = chat_input.thread_id or "default"
@@ -519,10 +526,11 @@ class MCPAgentServer:
                 can_edit = await self.auth.authorize(user_id=user_id, relation="editor", resource=conversation_resource)
                 if not can_edit:
                     logger.warning("User cannot edit conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                    raise PermissionError(
+                    msg = (
                         f"Not authorized to edit conversation '{thread_id}'. "
                         f"Request access from conversation owner or use a different thread_id."
                     )
+                    raise PermissionError(msg)
             else:
                 # New conversation - user becomes implicit owner (OpenFGA tuples should be seeded after creation)
                 logger.info(
@@ -624,7 +632,8 @@ class MCPAgentServer:
 
             if not can_view:
                 logger.warning("User cannot view conversation", extra={"user_id": user_id, "thread_id": thread_id})
-                raise PermissionError(f"Not authorized to view conversation {thread_id}")
+                msg = f"Not authorized to view conversation {thread_id}"
+                raise PermissionError(msg)
 
             # Retrieve conversation state from checkpointer
             try:
@@ -701,7 +710,7 @@ class MCPAgentServer:
                 return [
                     TextContent(
                         type="text",
-                        text=f"Error retrieving conversation {thread_id}: {str(e)}. "
+                        text=f"Error retrieving conversation {thread_id}: {e!s}. "
                         "This may indicate a checkpointer issue or the conversation may not exist.",
                     )
                 ]
@@ -726,7 +735,8 @@ class MCPAgentServer:
                 search_input = SearchConversationsInput.model_validate(arguments)
             except Exception as e:
                 logger.error(f"Invalid search input: {e}", extra={"arguments": arguments})
-                raise ValueError(f"Invalid search input: {e}")
+                msg = f"Invalid search input: {e}"
+                raise ValueError(msg)
 
             query = search_input.query
             limit = search_input.limit

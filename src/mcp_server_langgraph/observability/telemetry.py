@@ -504,10 +504,11 @@ def get_config() -> ObservabilityConfig:
     Raises RuntimeError if not initialized.
     """
     if _observability_config is None:
-        raise RuntimeError(
+        msg = (
             "Observability not initialized. Call init_observability(settings) "
             "in your entry point before using observability features."
         )
+        raise RuntimeError(msg)
     return _observability_config
 
 
@@ -659,14 +660,16 @@ metrics = config  # metrics is an alias for config
 def inject_context(carrier: dict[str, str]) -> None:
     """Inject trace context into carrier (e.g., HTTP headers)"""
     if _propagator is None:
-        raise RuntimeError("Observability not initialized. Call init_observability() first.")
+        msg = "Observability not initialized. Call init_observability() first."
+        raise RuntimeError(msg)
     _propagator.inject(carrier)
 
 
 def extract_context(carrier: dict[str, str]) -> Any:
     """Extract trace context from carrier"""
     if _propagator is None:
-        raise RuntimeError("Observability not initialized. Call init_observability() first.")
+        msg = "Observability not initialized. Call init_observability() first."
+        raise RuntimeError(msg)
     return _propagator.extract(carrier)
 
 

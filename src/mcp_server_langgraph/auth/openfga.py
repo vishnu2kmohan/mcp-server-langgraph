@@ -119,11 +119,12 @@ class OpenFGAClient:
         after calling _ensure_initialized().
         """
         if self._client is None:
-            raise RuntimeError(
+            msg = (
                 "OpenFgaClient not initialized. "
                 "Call await _ensure_initialized() before accessing client. "
                 "This is a bug - all async methods should call _ensure_initialized()."
             )
+            raise RuntimeError(msg)
         return self._client
 
     def _circuit_breaker_fallback(
@@ -359,7 +360,7 @@ class OpenFGAClient:
         # Collect all tuples to delete across all relations
         tuples_to_delete: list[dict[str, str]] = []
 
-        for relation_name in relations.keys():
+        for relation_name in relations:
             try:
                 # Expand relation to find all users with this permission
                 expansion = await self.expand_relation(relation=relation_name, object=object_id)

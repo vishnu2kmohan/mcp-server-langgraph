@@ -26,12 +26,14 @@ def init_project(name: str, template: ProjectTemplate = "production") -> None:
         ValueError: If template is invalid
     """
     if template not in ["quickstart", "production", "enterprise"]:
-        raise ValueError(f"Invalid template: {template}. Must be one of: quickstart, production, enterprise")
+        msg = f"Invalid template: {template}. Must be one of: quickstart, production, enterprise"
+        raise ValueError(msg)
 
     project_dir = Path(name)
 
     if project_dir.exists():
-        raise FileExistsError(f"Directory '{name}' already exists")
+        msg = f"Directory '{name}' already exists"
+        raise FileExistsError(msg)
 
     # Create project directory
     project_dir.mkdir(parents=True)

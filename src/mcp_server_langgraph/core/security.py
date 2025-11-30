@@ -104,9 +104,8 @@ def sanitize_for_logging(arguments: dict[str, Any], max_length: int = 500) -> di
 
     # Truncate long text fields
     for field in TRUNCATABLE_FIELDS:
-        if field in sanitized and isinstance(sanitized[field], str):
-            if len(sanitized[field]) > max_length:
-                sanitized[field] = sanitized[field][:max_length] + "..."
+        if field in sanitized and isinstance(sanitized[field], str) and len(sanitized[field]) > max_length:
+            sanitized[field] = sanitized[field][:max_length] + "..."
 
     return sanitized
 

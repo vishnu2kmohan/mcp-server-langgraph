@@ -11,11 +11,11 @@ from .compliance import (
 )
 
 __all__ = [
-    "CleanupScheduler",
-    "ComplianceScheduler",
     "AccessReviewItem",
     "AccessReviewReport",
+    "CleanupScheduler",
+    "ComplianceScheduler",
+    "get_compliance_scheduler",
     "start_compliance_scheduler",
     "stop_compliance_scheduler",
-    "get_compliance_scheduler",
 ]

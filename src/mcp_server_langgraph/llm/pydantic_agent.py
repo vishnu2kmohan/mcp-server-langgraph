@@ -285,10 +285,11 @@ def create_pydantic_agent(model_name: str | None = None, provider: str | None = 
         ImportError: If pydantic-ai is not installed
     """
     if not PYDANTIC_AI_AVAILABLE:
-        raise ImportError(
+        msg = (
             "pydantic-ai is not installed. "
             "Add 'pydantic-ai' to pyproject.toml dependencies, then run: uv sync\n"
             "The agent will fall back to standard routing without Pydantic AI."
         )
+        raise ImportError(msg)
 
     return PydanticAIAgentWrapper(model_name=model_name, provider=provider)

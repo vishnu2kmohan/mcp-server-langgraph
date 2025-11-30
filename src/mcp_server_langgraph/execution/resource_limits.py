@@ -58,51 +58,63 @@ class ResourceLimits:
     def _validate_timeout(self) -> None:
         """Validate timeout constraints"""
         if self.timeout_seconds <= 0:
-            raise ResourceLimitError(f"Timeout must be positive, got {self.timeout_seconds}")
+            msg = f"Timeout must be positive, got {self.timeout_seconds}"
+            raise ResourceLimitError(msg)
 
         if self.timeout_seconds > 600:  # 10 minutes max
-            raise ResourceLimitError(f"Timeout cannot exceed 600 seconds, got {self.timeout_seconds}")
+            msg = f"Timeout cannot exceed 600 seconds, got {self.timeout_seconds}"
+            raise ResourceLimitError(msg)
 
     def _validate_memory(self) -> None:
         """Validate memory constraints"""
         if self.memory_limit_mb <= 0:
-            raise ResourceLimitError(f"Memory limit must be positive, got {self.memory_limit_mb}")
+            msg = f"Memory limit must be positive, got {self.memory_limit_mb}"
+            raise ResourceLimitError(msg)
 
         if self.memory_limit_mb < 64:
-            raise ResourceLimitError(f"Memory limit cannot be less than 64MB, got {self.memory_limit_mb}")
+            msg = f"Memory limit cannot be less than 64MB, got {self.memory_limit_mb}"
+            raise ResourceLimitError(msg)
 
         if self.memory_limit_mb > 16384:  # 16GB max
-            raise ResourceLimitError(f"Memory limit cannot exceed 16GB (16384MB), got {self.memory_limit_mb}")
+            msg = f"Memory limit cannot exceed 16GB (16384MB), got {self.memory_limit_mb}"
+            raise ResourceLimitError(msg)
 
     def _validate_cpu(self) -> None:
         """Validate CPU quota constraints"""
         if self.cpu_quota <= 0:
-            raise ResourceLimitError(f"CPU quota must be positive, got {self.cpu_quota}")
+            msg = f"CPU quota must be positive, got {self.cpu_quota}"
+            raise ResourceLimitError(msg)
 
         if self.cpu_quota > 8.0:
-            raise ResourceLimitError(f"CPU quota cannot exceed 8.0 cores, got {self.cpu_quota}")
+            msg = f"CPU quota cannot exceed 8.0 cores, got {self.cpu_quota}"
+            raise ResourceLimitError(msg)
 
     def _validate_disk(self) -> None:
         """Validate disk quota constraints"""
         if self.disk_quota_mb <= 0:
-            raise ResourceLimitError(f"Disk quota must be positive, got {self.disk_quota_mb}")
+            msg = f"Disk quota must be positive, got {self.disk_quota_mb}"
+            raise ResourceLimitError(msg)
 
         if self.disk_quota_mb > 10240:  # 10GB max
-            raise ResourceLimitError(f"Disk quota cannot exceed 10GB (10240MB), got {self.disk_quota_mb}")
+            msg = f"Disk quota cannot exceed 10GB (10240MB), got {self.disk_quota_mb}"
+            raise ResourceLimitError(msg)
 
     def _validate_processes(self) -> None:
         """Validate max processes constraints"""
         if self.max_processes <= 0:
-            raise ResourceLimitError(f"Max processes must be positive, got {self.max_processes}")
+            msg = f"Max processes must be positive, got {self.max_processes}"
+            raise ResourceLimitError(msg)
 
         if self.max_processes > 100:
-            raise ResourceLimitError(f"Max processes cannot exceed 100, got {self.max_processes}")
+            msg = f"Max processes cannot exceed 100, got {self.max_processes}"
+            raise ResourceLimitError(msg)
 
     def _validate_network(self) -> None:
         """Validate network configuration"""
         valid_modes: tuple[NetworkMode, ...] = ("none", "allowlist", "unrestricted")
         if self.network_mode not in valid_modes:
-            raise ResourceLimitError(f"Network mode must be one of {valid_modes}, got '{self.network_mode}'")
+            msg = f"Network mode must be one of {valid_modes}, got '{self.network_mode}'"
+            raise ResourceLimitError(msg)
 
         # Note: allowlist with empty domains is allowed (effectively blocks all network)
         # This allows configuring the profile first, then adding domains later
@@ -161,7 +173,7 @@ class ResourceLimits:
             disk_quota_mb=1024,  # 1GB
             max_processes=10,
             network_mode="unrestricted",  # Full network for development
-            allowed_domains=tuple(),
+            allowed_domains=(),
         )
 
     @classmethod
@@ -187,7 +199,7 @@ class ResourceLimits:
             disk_quota_mb=100,  # 100MB
             max_processes=1,
             network_mode="none",  # SECURITY: Network disabled (allowlist not implemented)
-            allowed_domains=tuple(),  # Reserved for future allowlist implementation
+            allowed_domains=(),  # Reserved for future allowlist implementation
         )
 
     @classmethod
@@ -205,7 +217,7 @@ class ResourceLimits:
             disk_quota_mb=50,  # 50MB
             max_processes=1,
             network_mode="none",  # No network for tests
-            allowed_domains=tuple(),
+            allowed_domains=(),
         )
 
     @classmethod
@@ -223,5 +235,5 @@ class ResourceLimits:
             disk_quota_mb=512,  # 512MB
             max_processes=4,
             network_mode="allowlist",
-            allowed_domains=tuple(),  # Configure per use case
+            allowed_domains=(),  # Configure per use case
         )

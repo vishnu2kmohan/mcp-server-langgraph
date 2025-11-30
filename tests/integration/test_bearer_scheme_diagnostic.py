@@ -12,6 +12,7 @@ import gc
 import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
+from datetime import UTC
 
 pytestmark = pytest.mark.api
 
@@ -261,7 +262,7 @@ class TestBearerSchemeOverrideDiagnostic:
 
         # Mock the manager's create method
         from dataclasses import dataclass
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         @dataclass
         class MockSP:
@@ -273,7 +274,7 @@ class TestBearerSchemeOverrideDiagnostic:
             owner_user_id: str = get_user_id("alice")
             inherit_permissions: bool = True
             enabled: bool = True
-            created_at: str = datetime.now(timezone.utc).isoformat()
+            created_at: str = datetime.now(UTC).isoformat()
             client_secret: str = "sp_secret_test123"
 
         mock_sp_manager.create_service_principal.return_value = MockSP()

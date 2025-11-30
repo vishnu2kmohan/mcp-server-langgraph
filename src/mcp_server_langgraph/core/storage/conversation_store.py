@@ -65,16 +65,16 @@ class ConversationStore:
 
         if self.backend == "redis":
             if not REDIS_AVAILABLE:
-                raise ImportError(
-                    "Redis backend requires redis-py. Add 'redis' to pyproject.toml dependencies, then run: uv sync"
-                )
+                msg = "Redis backend requires redis-py. Add 'redis' to pyproject.toml dependencies, then run: uv sync"
+                raise ImportError(msg)
 
             try:
                 self._redis_client = redis.from_url(redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
                 # Test connection
                 self._redis_client.ping()
             except Exception as e:
-                raise ConnectionError(f"Failed to connect to Redis at {redis_url}: {e}") from e
+                msg = f"Failed to connect to Redis at {redis_url}: {e}"
+                raise ConnectionError(msg) from e
 
     def _redis_key(self, thread_id: str) -> str:
         """Generate Redis key for conversation"""
@@ -215,10 +215,8 @@ class ConversationStore:
             # Search in thread_id and title
             if (
                 query_lower in conv.thread_id.lower()
-                or conv.title
-                and query_lower in conv.title.lower()
-                or conv.tags
-                and any(query_lower in tag.lower() for tag in conv.tags)
+                or (conv.title and query_lower in conv.title.lower())
+                or (conv.tags and any(query_lower in tag.lower() for tag in conv.tags))
             ):
                 matches.append(conv)
 

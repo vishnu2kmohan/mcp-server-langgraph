@@ -26,18 +26,29 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    # Modern best practice (2025): Use astral-sh/setup-uv's built-in caching
-    # The cache is keyed by uv.lock, ensuring reproducibility while maintaining speed
+    # CACHING DISABLED (2025-11-30): Reliability > Speed
+    #
+    # We disabled uv caching because it was causing repeated issues:
+    # - Stale packages not respecting lockfile changes
+    # - Required manual cache-busting (v1 → v2 → v3) for hypothesis, etc.
+    # - Python version-specific cache staleness (3.13 vs 3.12)
+    #
+    # Trade-off: ~30-60 seconds slower per job, but:
+    # - Reproducible builds every time
+    # - Lockfile changes take effect immediately
+    # - No more cache-related debugging
+    #
+    # If you need to re-enable caching, use:
+    #   enable-cache: true
+    #   cache-dependency-glob: "uv.lock"
+    #   cache-suffix: ${{ inputs.python-version }}-vN  # Increment N to bust cache
+    #
     # See: https://docs.astral.sh/uv/guides/integration/github/
-    # NOTE: Updated from 0.7.12 to 0.9.13 to fix cache mismatch with different Python versions
-    # See: https://github.com/astral-sh/uv/issues/12273
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
         version: "0.9.13"  # Pin version for reproducibility (best practice per uv docs)
-        enable-cache: true
-        cache-dependency-glob: "uv.lock"
-        cache-suffix: ${{ inputs.python-version }}-v2  # Bust cache for Hypothesis 6.147.0 fix
+        enable-cache: false  # Disabled for reliability - always install fresh from lockfile
 
     - name: Install base dependencies
       run: |
@@ -111,12 +122,4 @@ runs:
         fi
       shell: bash
 
-    - name: Prune cache for CI optimization
-      run: |
-        set -euo pipefail  # Exit on error, undefined vars, pipe failures
-        # Prune cache to reduce size and remove stale entries
-        # This helps prevent cache mismatch issues when Python versions change
-        # See: https://docs.astral.sh/uv/guides/integration/github/
-        uv cache prune --ci
-        echo "✓ Cache pruned for CI optimization"
-      shell: bash
+    # NOTE: Cache pruning step removed (2025-11-30) - caching is disabled

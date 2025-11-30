@@ -49,12 +49,13 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
 
         # Block in production and staging (allow in development/test)
         if environment in ("production", "staging", "prod", "stg"):
-            raise RuntimeError(
+            msg = (
                 f"SECURITY: InMemoryUserProvider is not allowed in production environments. "
                 f"Current environment: '{environment}'. "
                 f"InMemoryUserProvider is only suitable for development/testing (stores credentials in memory). "
                 f"For production, use AUTH_PROVIDER=keycloak with proper SSO integration."
             )
+            raise RuntimeError(msg)
 
         logger.info("Creating InMemoryUserProvider for authentication")
         logger.warning(
@@ -64,9 +65,8 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
 
         # Validate JWT secret is configured
         if not settings.jwt_secret_key:
-            raise ValueError(
-                "CRITICAL: JWT secret key required for InMemoryUserProvider. Set JWT_SECRET_KEY environment variable."
-            )
+            msg = "CRITICAL: JWT secret key required for InMemoryUserProvider. Set JWT_SECRET_KEY environment variable."
+            raise ValueError(msg)
 
         return InMemoryUserProvider(secret_key=settings.jwt_secret_key, use_password_hashing=settings.use_password_hashing)
 
@@ -75,14 +75,16 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
 
         # Validate Keycloak configuration
         if not settings.keycloak_client_secret:
-            raise ValueError("CRITICAL: Keycloak client secret required. Set KEYCLOAK_CLIENT_SECRET environment variable.")
+            msg = "CRITICAL: Keycloak client secret required. Set KEYCLOAK_CLIENT_SECRET environment variable."
+            raise ValueError(msg)
 
         if not settings.keycloak_admin_password:
-            raise ValueError(
+            msg = (
                 "CRITICAL: Keycloak admin password required for admin API operations. "
                 "Set KEYCLOAK_ADMIN_PASSWORD environment variable. "
                 "This is needed for user management, API key operations, and attribute updates."
             )
+            raise ValueError(msg)
 
         # Build Keycloak configuration from settings
         keycloak_config = KeycloakConfig(
@@ -103,11 +105,12 @@ def create_user_provider(settings: Settings, openfga_client: OpenFGAClient | Non
         )
 
     else:
-        raise ValueError(
+        msg = (
             f"Unknown auth provider: '{provider_type}'. "
             f"Supported providers: 'inmemory', 'keycloak'. "
             f"To add custom providers, extend UserProvider and update this factory."
         )
+        raise ValueError(msg)
 
 
 def create_session_store(settings: Settings) -> SessionStore | None:
@@ -145,7 +148,8 @@ def create_session_store(settings: Settings) -> SessionStore | None:
 
         # Validate Redis configuration
         if not settings.redis_url:
-            raise ValueError("CRITICAL: Redis URL required for Redis session store. Set REDIS_URL environment variable.")
+            msg = "CRITICAL: Redis URL required for Redis session store. Set REDIS_URL environment variable."
+            raise ValueError(msg)
 
         return RedisSessionStore(
             redis_url=settings.redis_url,
@@ -157,7 +161,8 @@ def create_session_store(settings: Settings) -> SessionStore | None:
         )
 
     else:
-        raise ValueError(f"Unknown session backend: '{backend}'. Supported backends: 'memory', 'redis'.")
+        msg = f"Unknown session backend: '{backend}'. Supported backends: 'memory', 'redis'."
+        raise ValueError(msg)
 
 
 def create_auth_middleware(settings: Settings, openfga_client: OpenFGAClient | None = None) -> AuthMiddleware:
@@ -200,11 +205,12 @@ def create_auth_middleware(settings: Settings, openfga_client: OpenFGAClient | N
         # Validation: Ensure registration succeeded (prevent regression)
         registered_store = get_session_store()
         if registered_store is not session_store:
-            raise RuntimeError(
+            msg = (
                 "Session store registration failed! "
                 f"Expected {type(session_store).__name__} but got {type(registered_store).__name__}. "
                 "This is a critical bug - GDPR/session APIs will use wrong store."
             )
+            raise RuntimeError(msg)
 
     # Build AuthMiddleware with all components
     auth = AuthMiddleware(

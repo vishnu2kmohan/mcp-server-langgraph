@@ -495,11 +495,12 @@ class Settings(BaseSettings):
 
         # Check for wildcard CORS in production
         if self.environment == "production" and "*" in origins:
-            raise ValueError(
+            msg = (
                 "CRITICAL: Wildcard CORS (allow_origins=['*']) is not allowed in production. "
                 "This is a security risk and browsers will reject it when allow_credentials=True. "
                 "Set CORS_ALLOWED_ORIGINS to specific domains or set ENVIRONMENT=development for local testing."
             )
+            raise ValueError(msg)
 
         # Warn about wildcard in non-production environments
         if self.environment != "production" and "*" in origins:
@@ -655,11 +656,10 @@ class Settings(BaseSettings):
         elif self.audit_log_cold_storage_backend == "azure":
             if not self.azure_storage_connection_string:
                 self.azure_storage_connection_string = secrets_mgr.get_secret("AZURE_STORAGE_CONNECTION_STRING", fallback=None)
-        elif self.audit_log_cold_storage_backend == "gcs":
-            if not self.gcp_credentials_path:
-                # GCP credentials are typically loaded from a file path
-                # or via GOOGLE_APPLICATION_CREDENTIALS environment variable
-                pass
+        elif self.audit_log_cold_storage_backend == "gcs" and not self.gcp_credentials_path:
+            # GCP credentials are typically loaded from a file path
+            # or via GOOGLE_APPLICATION_CREDENTIALS environment variable
+            pass
 
     # ========================================================================
     # REDIS URL ALIASES (for test compatibility)

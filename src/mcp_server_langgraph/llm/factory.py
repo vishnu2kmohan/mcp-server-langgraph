@@ -224,10 +224,7 @@ class LLMFactory:
 
             for env_var, config_attr in credential_pairs:
                 # Get value from config
-                if config and hasattr(config, config_attr):
-                    value = getattr(config, config_attr)
-                else:
-                    value = None
+                value = getattr(config, config_attr) if config and hasattr(config, config_attr) else None
 
                 # For primary provider, use self.api_key as fallback for API key fields
                 if value is None and provider == self.provider and "api_key" in config_attr.lower():
@@ -476,7 +473,8 @@ class LLMFactory:
                 logger.error(f"Fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
-        raise RuntimeError("All models failed including fallbacks")
+        msg = "All models failed including fallbacks"
+        raise RuntimeError(msg)
 
     async def _try_fallback_async(self, messages: list[BaseMessage | dict[str, Any]], **kwargs) -> AIMessage:  # type: ignore[no-untyped-def]
         """Try fallback models asynchronously"""
@@ -511,7 +509,8 @@ class LLMFactory:
                 logger.error(f"Async fallback model {fallback_model} failed: {e}", exc_info=True)
                 continue
 
-        raise RuntimeError("All async models failed including fallbacks")
+        msg = "All async models failed including fallbacks"
+        raise RuntimeError(msg)
 
 
 def create_llm_from_config(config) -> LLMFactory:  # type: ignore[no-untyped-def]

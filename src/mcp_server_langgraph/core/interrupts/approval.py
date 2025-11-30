@@ -28,7 +28,7 @@ Example:
     app = graph.compile(checkpointer=checkpointer, interrupt_before=["action"])
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 
@@ -66,7 +66,7 @@ class ApprovalRequired(BaseModel):
     def set_requested_at_timestamp(self) -> Self:
         """Set requested_at timestamp if not provided. Ensures freezegun compatibility."""
         if self.requested_at is None:
-            self.requested_at = datetime.now(timezone.utc).isoformat()
+            self.requested_at = datetime.now(UTC).isoformat()
         return self
 
 
@@ -86,7 +86,7 @@ class ApprovalResponse(BaseModel):
     def set_approved_at_timestamp(self) -> Self:
         """Set approved_at timestamp if not provided. Ensures freezegun compatibility."""
         if self.approved_at is None:
-            self.approved_at = datetime.now(timezone.utc).isoformat()
+            self.approved_at = datetime.now(UTC).isoformat()
         return self
 
 
@@ -135,7 +135,7 @@ class ApprovalNode:
             Updated state with approval request
         """
         # Generate approval ID
-        approval_id = f"{self.approval_name}_{datetime.now(timezone.utc).timestamp()}"
+        approval_id = f"{self.approval_name}_{datetime.now(UTC).timestamp()}"
 
         # Create approval request
         approval_request = ApprovalRequired(

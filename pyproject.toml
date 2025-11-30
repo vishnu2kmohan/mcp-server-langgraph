@@ -288,7 +288,7 @@ exclude = ["tests*", "*.tests*", "*.tests"]
 
 [tool.ruff]
 line-length = 127
-target-version = "py310"
+target-version = "py311"  # Updated: matches requires-python >= 3.11
 
 # Exclude directories (same as black/isort/flake8)
 exclude = [
@@ -314,7 +314,15 @@ exclude = [
 # B: flake8-bugbear (common bugs)
 # RUF: Ruff-specific rules (unreachable code, etc.)
 # S: flake8-bandit security rules (CodeQL parity - PR #121)
-select = ["E", "F", "I", "UP", "B", "RUF", "S"]
+# ASYNC: async/await best practices (cloud-native)
+# C4: comprehension simplifications (KISS)
+# FAST: FastAPI best practices
+# PERF: performance anti-patterns
+# LOG/G: logging best practices
+# PT: pytest best practices
+# SIM: code simplification
+# TRY/EM: exception handling patterns
+select = ["E", "F", "I", "UP", "B", "RUF", "S", "ASYNC", "C4", "FAST", "PERF", "LOG", "G", "PT", "SIM", "TRY", "EM"]
 
 # Ignore specific rules to align with black formatting and reduce noise during migration
 ignore = [
@@ -358,10 +366,41 @@ ignore = [
     "S104",  # hardcoded-bind-all-interfaces - 0.0.0.0 intentional for container networking
     "S110",  # try-except-pass - TODO: Fix incrementally (16 in src/, 38 in tests/)
     "S311",  # suspicious-non-cryptographic-random-usage - random used for non-security purposes
+    # ASYNC rules - strategic ignores:
+    "ASYNC109",  # async-function-with-timeout - timeout param is valid pattern for async APIs
+    # SIM rules - strategic ignores:
+    "SIM105",  # suppressible-exception - try/except/pass used for graceful degradation (e.g., logging)
+    "SIM114",  # if-with-same-arms - often intentional for readability
+    "SIM102",  # collapsible-if - often intentional for readability
+    "SIM117",  # multiple-with-statements - prefer explicit context managers
+    # LOG/G rules - style preference for lazy logging:
+    "G004",    # logging-f-string - f-strings are readable, perf impact minimal
+    "G201",    # logging-exc-info - intentional exc_info usage
+    # TRY rules - exception handling style preferences:
+    "TRY002",  # raise-vanilla-class - Custom exception classes not always needed
+    "TRY003",  # raise-vanilla-args - Long exception messages are often clearer inline
+    "TRY004",  # prefer-type-error - Sometimes ValueError is more appropriate
+    "TRY300",  # try-consider-else - not always applicable
+    "TRY301",  # raise-within-try - sometimes intentional for retry patterns
+    "TRY401",  # redundant-exception-verbosity - explicit logging sometimes clearer
+    # EM rules - exception message style preferences:
+    "EM101",   # raw-string-in-exception - inline strings are often clearer
+    "EM102",   # f-string-in-exception - inline f-strings are often clearer
+    # PERF rules - defer to performance PR:
+    "PERF401", # manual-list-comprehension - often more readable as loop
+    # FAST rules - requires Annotated pattern refactoring:
+    "FAST002",  # fast-api-non-annotated-dependency - requires Annotated[T, Depends()]
+    # PT rules - pytest style preferences (tests work correctly without):
+    "PT011",  # pytest-raises-too-broad - match param not always needed for simple cases
+    "PT012",  # pytest-raises-with-multiple-statements - sometimes clearer inline
+    "PT013",  # pytest-incorrect-pytest-import - import style preference
+    "PT015",  # pytest-assert-always-false - intentional for unreachable code tests
+    "PT017",  # pytest-assert-in-except - logging in except is valid pattern
+    "PT018",  # pytest-composite-assertion - single assert often clearer
+    # LOG rules - root logger acceptable in test fixtures:
+    "LOG015",  # root-logger-call - test fixtures use module-level logging
     # Temporarily disabled during Ruff migration (can re-enable incrementally):
     # N-series (naming): 404 violations - will fix in separate PR
-    # C4 (comprehensions): Low priority - readability improvements
-    # SIM (simplify): Low priority - code simplification suggestions
 ]
 
 [tool.ruff.lint.isort]
@@ -378,6 +417,27 @@ split-on-trailing-comma = true
     "S107",  # hardcoded-password-default - test fixtures
     "S108",  # hardcoded-temp-file - test temp directories
     "S112",  # try-except-continue - test error handling patterns
+    # PT rules - test style preferences
+    "PT003",  # pytest-fixture-scope-implied - explicit scope is clearer
+    "PT004",  # pytest-missing-fixture-name-underscore - naming preference
+    "PT005",  # pytest-incorrect-fixture-name-underscore - naming preference
+    "PT006",  # pytest-parametrize-names-wrong-type - string format is valid and often clearer
+    # SIM rules - test code readability over conciseness
+    "SIM101",  # duplicate-isinstance-call - explicit checks often clearer in tests
+    "SIM103",  # return-bool-condition-directly - explicit if/else often clearer in tests
+    "SIM108",  # if-else-block-instead-of-if-exp - explicit blocks often clearer in tests
+    "SIM110",  # use-any - explicit loops often clearer for complex AST traversal
+    "SIM111",  # use-all - explicit loops often clearer for complex AST traversal
+    "SIM118",  # in-dict-keys - .keys() is often more explicit in tests
+    "SIM222",  # expr-or-true - explicit boolean checks in assertions
+    # PERF rules - test readability over micro-optimization
+    "PERF102",  # incorrect-dict-iterator - .items() often more readable in tests
+    # C4 rules - comprehension style preferences
+    "C401",   # unnecessary-generator-set - explicit generators in tests
+    "C409",   # unnecessary-literal-within-tuple-call - explicit tuples in tests
+    "C416",   # unnecessary-comprehension - explicit comprehensions in tests
+    # ASYNC rules - test fixtures may use sync sleep for simplicity
+    "ASYNC251",  # blocking-sleep-in-async-function - test fixtures use sync sleep
     "S301",  # suspicious-pickle-usage - testing serialization
     "S602",  # subprocess-popen-with-shell-equals-true - test process management
     "S603",  # subprocess-without-shell-equals-true - test process management
@@ -396,11 +456,22 @@ split-on-trailing-comma = true
     "S603",  # subprocess-without-shell-equals-true
     "S605",  # start-process-with-a-shell
     "S607",  # start-process-with-partial-path
+    # SIM rules - scripts prioritize readability over conciseness
+    "SIM103",  # return-bool-condition-directly - explicit returns often clearer in scripts
+    "SIM108",  # if-else-block-instead-of-if-exp - explicit blocks often clearer in scripts
+    "SIM110",  # use-any - explicit loops often clearer for complex checks
+    "SIM118",  # in-dict-keys - .keys() often more explicit in scripts
+    "SIM201",  # use-not-equal - explicit comparison style preference
+    # PERF rules - scripts prioritize readability over micro-optimization
+    "PERF102",  # incorrect-dict-iterator - .items() often more readable
+    # C4 rules - comprehension style preferences
+    "C420",  # unnecessary-dict-comprehension - explicit comprehensions often clearer
 ]
 # Examples and hooks use dev patterns
 "examples/**/*.py" = [
     "S106",  # hardcoded-password-func-arg - examples use dev credentials
     "S501",  # request-with-no-cert-validation - examples show local dev usage
+    "UP017",  # datetime-utc-alias - examples use explicit timezone.utc for clarity
 ]
 "hooks/**/*.py" = [
     "S108",  # hardcoded-temp-file - hooks use temp directories
@@ -438,6 +509,14 @@ split-on-trailing-comma = true
 "src/mcp_server_langgraph/monitoring/cost_tracker.py" = [
     "S106",  # False positive: "input"/"output" are LLM token types, not auth tokens
 ]
+# __all__ intentionally grouped by category for documentation purposes
+"src/mcp_server_langgraph/compliance/__init__.py" = ["RUF022"]
+"src/mcp_server_langgraph/resilience/__init__.py" = ["RUF022"]
+"tests/utils/__init__.py" = ["RUF022"]
+# ASYNC230: Quick JSON file writes in async context - blocking is acceptable for small I/O
+"src/mcp_server_langgraph/compliance/soc2/evidence.py" = ["ASYNC230"]
+"src/mcp_server_langgraph/schedulers/compliance.py" = ["ASYNC230"]
+"tests/integration/test_soc2_evidence.py" = ["ASYNC230"]
 
 [tool.ruff.format]
 # Use black-compatible formatting

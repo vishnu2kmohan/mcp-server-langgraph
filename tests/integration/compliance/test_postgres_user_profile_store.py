@@ -15,7 +15,7 @@ Following TDD principles:
 import gc
 import os
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import asyncpg
 import pytest
@@ -81,7 +81,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresUserProfileStore:
 def sample_profile() -> UserProfile:
     """Create sample user profile for testing (worker-safe for pytest-xdist)"""
     user_id = get_user_id("profile_user")  # Worker-safe ID for parallel execution
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     return UserProfile(
         user_id=user_id,
         username="testuser",
@@ -140,7 +140,7 @@ async def test_create_duplicate_user_profile_fails(store: PostgresUserProfileSto
 async def test_create_user_profile_with_minimal_data(store: PostgresUserProfileStore):
     """Test creating user profile with only required fields"""
     # Arrange
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     minimal_profile = UserProfile(
         user_id="test_minimal",
         username="minimal",
@@ -346,7 +346,7 @@ async def test_delete_user_profile_is_permanent(store: PostgresUserProfileStore,
 async def test_create_profile_with_special_characters(store: PostgresUserProfileStore):
     """Test creating profile with special characters in fields"""
     # Arrange
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     special_profile = UserProfile(
         user_id="test_special_123",
         username="test'user\"<>",
@@ -376,7 +376,7 @@ async def test_create_profile_with_special_characters(store: PostgresUserProfile
 async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
     """Test creating profile with Unicode characters"""
     # Arrange
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     unicode_profile = UserProfile(
         user_id="test_unicode_123",
         username="用户123",
@@ -407,7 +407,7 @@ async def test_create_profile_with_unicode(store: PostgresUserProfileStore):
 async def test_metadata_nested_json(store: PostgresUserProfileStore):
     """Test storing complex nested JSON in metadata"""
     # Arrange
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     complex_metadata = {
         "preferences": {
             "theme": "dark",
