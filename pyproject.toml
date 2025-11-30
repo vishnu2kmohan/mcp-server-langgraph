@@ -456,11 +456,22 @@ split-on-trailing-comma = true
     "S603",  # subprocess-without-shell-equals-true
     "S605",  # start-process-with-a-shell
     "S607",  # start-process-with-partial-path
+    # SIM rules - scripts prioritize readability over conciseness
+    "SIM103",  # return-bool-condition-directly - explicit returns often clearer in scripts
+    "SIM108",  # if-else-block-instead-of-if-exp - explicit blocks often clearer in scripts
+    "SIM110",  # use-any - explicit loops often clearer for complex checks
+    "SIM118",  # in-dict-keys - .keys() often more explicit in scripts
+    "SIM201",  # use-not-equal - explicit comparison style preference
+    # PERF rules - scripts prioritize readability over micro-optimization
+    "PERF102",  # incorrect-dict-iterator - .items() often more readable
+    # C4 rules - comprehension style preferences
+    "C420",  # unnecessary-dict-comprehension - explicit comprehensions often clearer
 ]
 # Examples and hooks use dev patterns
 "examples/**/*.py" = [
     "S106",  # hardcoded-password-func-arg - examples use dev credentials
     "S501",  # request-with-no-cert-validation - examples show local dev usage
+    "UP017",  # datetime-utc-alias - examples use explicit timezone.utc for clarity
 ]
 "hooks/**/*.py" = [
     "S108",  # hardcoded-temp-file - hooks use temp directories

@@ -40,7 +40,7 @@ class WorkflowAuditor:
 
     def analyze_action_usage(self) -> None:
         """Analyze which GitHub Actions are used across workflows."""
-        for workflow_name, workflow in self.workflows.items():
+        for workflow in self.workflows.values():
             jobs = workflow.get("jobs", {})
             for job_name, job_config in jobs.items():
                 steps = job_config.get("steps", [])
