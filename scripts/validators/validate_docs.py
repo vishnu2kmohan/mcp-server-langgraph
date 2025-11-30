@@ -98,6 +98,7 @@ VALID_ICONS: set[str] = {
     "key",
     "key-skeleton",
     "user-shield",
+    "user-gear",
     "users-gear",
     "users",
     "vault",
@@ -131,6 +132,7 @@ VALID_ICONS: set[str] = {
     "book-open",
     "file-lines",
     "file-contract",
+    "scroll",
     "icons",
     "newspaper",
     # Version & Releases
@@ -166,6 +168,7 @@ VALID_ICONS: set[str] = {
     "download",
     "upload",
     "check",
+    "circle-check",
     "xmark",
     "exclamation",
     "info",
