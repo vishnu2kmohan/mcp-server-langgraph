@@ -89,6 +89,10 @@ run_quick_test() {
 
     local test_result=0
 
+    # Force development environment to avoid .env production settings triggering validation
+    # This smoke test validates imports work, not production config
+    export ENVIRONMENT=development
+
     # Activate existing venv
     if [[ -f "$PROJECT_ROOT/.venv/bin/activate" ]]; then
         source "$PROJECT_ROOT/.venv/bin/activate"
@@ -132,6 +136,9 @@ run_quick_test() {
 # Full mode: Test with temporary venv for each Python version
 run_full_test() {
     local python_cmd="$1"
+
+    # Force development environment to avoid .env production settings triggering validation
+    export ENVIRONMENT=development
     local version="$2"
     local temp_venv
     temp_venv=$(mktemp -d)
