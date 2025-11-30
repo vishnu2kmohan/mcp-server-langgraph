@@ -94,18 +94,8 @@ sequenceDiagram
     Storage-->>API: Recorded
     API->>Audit: Log consent change<br/>analytics: true→false, marketing: true→false
     API-->>User: 200 OK<br/>{consent_status}
-
-    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
-    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
-    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
-    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
-    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
-
-    class User clientStyle
-    class API,Auth validationStyle
-    class FGA serviceStyle
-    class Storage,DB,Logs,Audit storageStyle
 ```
+
 ### Environment Variables
 
 #### Required Configuration
@@ -361,7 +351,7 @@ Future schema changes will be added as numbered migrations. Always apply migrati
 
 Configure retention policies based on your legal requirements:
 
-```markdown
+```md
 
 ## Example: 90-day retention for consent records
 CONSENT_RETENTION_DAYS=90

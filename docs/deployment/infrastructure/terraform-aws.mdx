@@ -703,15 +703,6 @@ sequenceDiagram
     OIDC-->>Pod: Inject AWS credentials as environment variables
     Pod->>SM: Access secrets using temporary credentials
     SM-->>Pod: Return secret value
-
-    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
-    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
-    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
-    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
-
-    class Pod clientStyle
-    class OIDC,STS validationStyle
-    class SM storageStyle
 ```
 
 ### Setup IRSA for Application
