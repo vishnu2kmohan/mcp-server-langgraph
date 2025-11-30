@@ -152,8 +152,6 @@ VALID_ICONS: set[str] = {
     # Communication & Integration
     "plug",
     "link",
-    # For API gateways (no Font Awesome 'gateway' icon exists)
-    "message-bot",
     # Time & Scheduling
     "clock",
     "calendar",
@@ -170,6 +168,7 @@ VALID_ICONS: set[str] = {
     "circle-check",
     "xmark",
     "exclamation",
+    "triangle-exclamation",
     "info",
     "question",
     "trophy",
@@ -188,23 +187,17 @@ VALID_ICONS: set[str] = {
     "dollar-sign",
     "eye",
     "flag",
-    # Additional icons found in existing docs
+    # Additional valid Font Awesome 6.x icons
     "circle-exclamation",
     "ship",
     "code-pull-request",
-    "icon-name",  # Placeholder in some templates
-    "settings",
-    # More icons from docs
     "shield-keyhole",
     "folder-tree",
-    "badge-check",
     "gauge-high",
     "calculator",
     "file-signature",
     "money-bill-trend-up",
-    "checklist",
     "paper-plane",
-    "chart-mixed",
     "sliders",
     "computer",
     "shuffle",
@@ -214,7 +207,6 @@ VALID_ICONS: set[str] = {
     "lightbulb",
     "message",
     "drafting-compass",
-    "bell-exclamation",
     "hospital",
     "user-lock",
     "file-medical",
@@ -228,6 +220,10 @@ VALID_ICONS: set[str] = {
     "route",
     "book-medical",
     "github",
+    # Template placeholders - allowed for documentation examples only
+    "icon-name",
+    "font-awesome-icon-name",
+    "semantic-font-awesome-icon",
 }
 
 # ADR topic-to-icon mapping for auto-assignment
