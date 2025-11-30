@@ -16,6 +16,28 @@ import re
 from pathlib import Path
 
 
+def strip_code_blocks(content: str) -> str:
+    """
+    Remove code blocks from content to avoid false positive link detection.
+
+    Code blocks (```...```) often contain example links that shouldn't be validated.
+
+    Args:
+        content: The file content
+
+    Returns:
+        Content with code blocks removed
+    """
+    # Remove fenced code blocks (```...```)
+    # Use non-greedy match to handle multiple code blocks
+    content = re.sub(r"```[^`]*```", "", content, flags=re.DOTALL)
+
+    # Remove inline code (`...`)
+    content = re.sub(r"`[^`]+`", "", content)
+
+    return content
+
+
 def extract_internal_links(content: str) -> list[str]:
     """
     Extract internal link targets from markdown/MDX content.
@@ -26,6 +48,9 @@ def extract_internal_links(content: str) -> list[str]:
     Returns:
         List of internal link targets (relative or absolute paths)
     """
+    # Strip code blocks first to avoid false positives from example links
+    content = strip_code_blocks(content)
+
     links = []
 
     # Pattern 1: [text](path) markdown links
