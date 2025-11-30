@@ -44,8 +44,12 @@ module "github_actions_wif" {
       project_roles = [
         "roles/container.developer",
         "roles/artifactregistry.writer",
+        # Logging: write app logs + read for post-deployment verification
         "roles/logging.logWriter",
+        "roles/logging.viewer",
+        # Monitoring: write metrics + read for future observability checks
         "roles/monitoring.metricWriter",
+        "roles/monitoring.viewer",
       ]
 
       artifact_registry_repositories = [
