@@ -10,6 +10,7 @@ Following TDD principles - written to prevent regression of fixes.
 
 import ast
 import gc
+import os
 import subprocess
 from functools import lru_cache
 from pathlib import Path
@@ -584,8 +585,20 @@ class TestCodexFindingCompliance:
 
         Note: Searches origin/main explicitly because worktrees may not have
         full history visible via --all. Codex commits exist on main branch.
+
+        In CI environments with shallow clones (fetch-depth: 1), we need to
+        unshallow first to access the full history.
         """
-        # First try to fetch latest refs to ensure we have up-to-date history
+        # In CI with shallow clones, unshallow to get full history
+        if os.getenv("CI"):
+            subprocess.run(
+                ["git", "fetch", "--unshallow", "origin", "main"],
+                capture_output=True,
+                cwd=REPO_ROOT,
+                timeout=120,  # Unshallowing can take longer
+            )
+
+        # Fetch latest refs to ensure we have up-to-date history
         subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, cwd=REPO_ROOT, timeout=30)
 
         # Search origin/main for Codex commits (works in worktrees)

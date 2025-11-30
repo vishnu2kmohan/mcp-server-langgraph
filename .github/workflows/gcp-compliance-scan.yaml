@@ -25,6 +25,9 @@ permissions:
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'vishnu-sandbox-20250310' }}
   PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER || '1024691643349' }}
+  # Standardized cluster naming - matches deploy-production-gke.yaml
+  GKE_CLUSTER: ${{ vars.GKE_PROD_CLUSTER || 'production-mcp-server-langgraph-gke' }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'us-central1' }}
 
 jobs:
   # ============================================================================
@@ -155,7 +158,9 @@ jobs:
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider', env.PROJECT_NUMBER) }}
+          # WIF provider: Uses secret if set, otherwise falls back to default pool/provider naming
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider', env.PROJECT_NUMBER) }}
+          # Service account created by: terraform/environments/gcp-staging-wif-only/main.tf
           service_account: ${{ secrets.GCP_COMPLIANCE_SA_EMAIL || format('compliance-scanner@{0}.iam.gserviceaccount.com', env.PROJECT_ID) }}
 
       - name: Set up Cloud SDK
@@ -163,8 +168,8 @@ jobs:
 
       - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials mcp-prod-gke \
-            --region=us-central1 \
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region=${{ env.GCP_REGION }} \
             --project=$PROJECT_ID
 
       - name: Run kube-bench for CIS

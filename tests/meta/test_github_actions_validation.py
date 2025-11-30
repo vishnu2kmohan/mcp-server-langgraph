@@ -122,8 +122,11 @@ class TestGitHubActionsVersions:
         action_pattern = re.compile(r"uses:\s+([a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+)@(v?\d+(?:\.\d+)*)")
 
         # Known actions with their maximum reasonable major version
+        # NOTE: Update when GitHub releases new major versions of core actions.
+        # Check release pages: https://github.com/actions/checkout/releases
+        # Last updated: 2025-11-30 (checkout v5→v6 per Dependabot PR #118)
         max_major_versions = {
-            "actions/checkout": 5,
+            "actions/checkout": 6,  # Updated 2025-11-30
             "actions/setup-python": 6,
             "actions/upload-artifact": 5,
             "actions/download-artifact": 6,

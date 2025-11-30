@@ -130,6 +130,57 @@ jobs:
           uv run --frozen python scripts/validators/validate_pytest_config.py
           echo "✅ Pytest configuration valid - all addopts flags have required plugins"
 
+  # ============================================================================
+  # DEPENDABOT UPDATE VALIDATION (Blocks Dependabot PRs until meta tests pass)
+  # ============================================================================
+
+  validate-dependabot-updates:
+    name: Validate Dependabot Updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only run on Dependabot PRs - ensures version updates don't break meta-tests
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: '3.12'
+          extras: 'dev'
+          cache-key-prefix: 'dependabot-validation'
+
+      - name: Run GitHub Actions version validation tests (blocking)
+        run: |
+          echo "🔍 Validating GitHub Actions versions..."
+          echo "This test ensures Dependabot version updates don't violate max_major_versions constraints"
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/test_github_actions_validation.py -v --tb=short --strict-markers
+          echo "✅ GitHub Actions versions are valid"
+
+      - name: Run workflow structure validation tests
+        run: |
+          echo "🔍 Validating workflow structure..."
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ci/test_workflow_syntax.py tests/meta/ci/test_workflow_security.py -v --tb=short --strict-markers
+          echo "✅ Workflow structure is valid"
+
+      - name: Install actionlint
+        run: |
+          gh release download --repo rhysd/actionlint \
+            --pattern "actionlint_*_linux_amd64.tar.gz" \
+            --output actionlint.tar.gz
+          tar -xzf actionlint.tar.gz
+          chmod +x actionlint
+          sudo mv actionlint /usr/local/bin/
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Validate workflow syntax
+        run: |
+          echo "🔍 Validating workflow syntax with actionlint..."
+          actionlint -color -shellcheck= .github/workflows/*.{yml,yaml}
+          echo "✅ All workflows have valid syntax"
+
   validate-local-ci-parity:
     name: Validate Local/CI Parity
     runs-on: ubuntu-latest
@@ -207,9 +258,9 @@ jobs:
         run: |
           echo "🧪 Running all meta tests (infrastructure validation)..."
           echo "  This includes workflow validation, fixture organization, config validation, etc."
-          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ -v --tb=short -m "meta and not llm" || true
+          # Meta tests validate test suite quality and CI infrastructure - failures block merges
+          OTEL_SDK_DISABLED=true uv run --frozen pytest tests/meta/ -v --tb=short -m "meta and not llm"
           echo "✅ Comprehensive meta test suite executed"
-        continue-on-error: true  # Don't block CI on meta test failures initially
 
   # ============================================================================
   # TESTING (Parallelized by Python version)
@@ -516,6 +567,13 @@ jobs:
       run: |
         uv tool install pre-commit
         echo "✓ pre-commit installed via uv tool"
+
+    - name: Install git hooks
+      run: |
+        # Install hooks to match local development environment
+        # This ensures validate_pre_push_hook.py finds the expected .git/hooks/pre-push
+        make git-hooks
+        echo "✓ Git hooks installed"
 
     - name: Run push-stage pre-commit hooks
       run: |

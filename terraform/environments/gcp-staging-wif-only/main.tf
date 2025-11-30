@@ -85,5 +85,26 @@ module "github_actions_wif" {
         "roles/cloudtrace.agent",
       ]
     }
+
+    # Compliance scanner - read-only access for security/compliance scanning workflows
+    # Used by: .github/workflows/gcp-compliance-scan.yaml
+    # Permissions: Minimal read-only roles for CIS benchmarks, security review
+    compliance_scanner = {
+      account_id        = "compliance-scanner"
+      display_name      = "GitHub Actions - Compliance Scanner"
+      description       = "Service account for GCP compliance scanning workflows (CIS benchmarks, kube-bench)"
+      repository_filter = "mcp-server-langgraph"
+
+      project_roles = [
+        # GKE read-only access for cluster inspection and CIS benchmarks
+        "roles/container.clusterViewer",
+        # IAM read-only for security audits
+        "roles/iam.securityReviewer",
+        # Storage read-only for audit log access (if needed)
+        "roles/storage.objectViewer",
+        # Logging read for security log review
+        "roles/logging.viewer",
+      ]
+    }
   }
 }

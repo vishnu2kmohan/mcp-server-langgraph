@@ -5,6 +5,7 @@ output "github_secrets" {
     GCP_STAGING_SA_EMAIL    = module.github_actions_wif.service_account_emails["staging"]
     GCP_TERRAFORM_SA_EMAIL  = module.github_actions_wif.service_account_emails["terraform"]
     GCP_PRODUCTION_SA_EMAIL = module.github_actions_wif.service_account_emails["production"]
+    GCP_COMPLIANCE_SA_EMAIL = module.github_actions_wif.service_account_emails["compliance_scanner"]
   }
   sensitive = false
 }
