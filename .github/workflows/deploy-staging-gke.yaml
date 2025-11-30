@@ -489,6 +489,9 @@ jobs:
     if: failure() && github.repository == 'vishnu2kmohan/mcp-server-langgraph'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
       - id: auth
         name: Authenticate to Google Cloud
         uses: ./.github/actions/setup-gcp-auth

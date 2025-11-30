@@ -101,7 +101,8 @@ trap cleanup EXIT
 test_health_endpoint() {
     test_start "Health endpoint responds"
 
-    RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8080/health || true)
+    # Use -L to follow redirects (e.g., 307 from trailing slash normalization)
+    RESPONSE=$(curl -s -L -w "\n%{http_code}" http://localhost:8080/health || true)
     HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
     BODY=$(echo "$RESPONSE" | head -n-1)
 
