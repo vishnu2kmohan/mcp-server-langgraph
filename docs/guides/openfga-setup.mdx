@@ -599,7 +599,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Check logs
     docker compose logs openfga
     kubectl logs -l app=openfga
-    ```markdown
+    ```md
   </Accordion>
 
   <Accordion title="Store not found">
@@ -629,7 +629,7 @@ psql -U openfga openfga < openfga-backup.sql
 
     # Or create model via API
     # See: https://openfga.dev/docs/modeling
-    ```markdown
+    ```md
   </Accordion>
 
   <Accordion title="Slow authorization checks">
@@ -644,7 +644,7 @@ psql -U openfga openfga < openfga-backup.sql
     # Enable caching
     OPENFGA_CHECK_QUERY_CACHE_ENABLED=true
     OPENFGA_CHECK_QUERY_CACHE_TTL=10s
-    ```markdown
+    ```md
   </Accordion>
 
   <Accordion title="Permission check returns false unexpectedly">

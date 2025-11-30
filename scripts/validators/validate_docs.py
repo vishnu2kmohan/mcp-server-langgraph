@@ -343,6 +343,41 @@ def extract_mermaid_blocks(content: str) -> list[tuple[int, str]]:
     return blocks
 
 
+def is_sequence_diagram(block: str) -> bool:
+    """Check if diagram is a sequence diagram."""
+    return "sequenceDiagram" in block
+
+
+def has_invalid_sequence_directives(block: str) -> tuple[bool, str | None]:
+    """
+    Check if sequence diagram contains invalid flowchart-only directives.
+
+    Mermaid sequence diagrams do not support 'classDef' and 'class' directives -
+    these are flowchart-only features. When included, they are either silently
+    ignored or cause parsing errors in some mermaid versions.
+
+    Args:
+        block: The mermaid diagram content
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is None.
+    """
+    # Only check sequence diagrams
+    if not is_sequence_diagram(block):
+        return True, None  # Not a sequence diagram, skip check
+
+    # Check for classDef directive (flowchart-only)
+    if "classDef" in block:
+        return False, "Sequence diagrams do not support 'classDef' - use %%{init:...}%% theme variables instead"
+
+    # Check for class assignments (e.g., "class User clientStyle")
+    # Pattern: "class <name> <styleName>" at start of line (with optional whitespace)
+    if re.search(r"^\s*class\s+\w+\s+\w+", block, re.MULTILINE):
+        return False, "Sequence diagrams do not support 'class' assignments - use %%{init:...}%% theme variables instead"
+
+    return True, None
+
+
 def validate_mermaid_colorbrewer_styling(mermaid_content: str) -> tuple[bool, str | None]:
     """
     Validate that a mermaid diagram uses ColorBrewer Set3 styling.
@@ -419,7 +454,13 @@ def validate_file_mermaid_diagrams(file_path: Path) -> list[tuple[int, str]]:
     blocks = extract_mermaid_blocks(content)
 
     for line_num, mermaid_content in blocks:
+        # Check for ColorBrewer styling
         is_valid, error_msg = validate_mermaid_colorbrewer_styling(mermaid_content)
+        if not is_valid:
+            errors.append((line_num, error_msg))
+
+        # Check for invalid directives in sequence diagrams
+        is_valid, error_msg = has_invalid_sequence_directives(mermaid_content)
         if not is_valid:
             errors.append((line_num, error_msg))
 

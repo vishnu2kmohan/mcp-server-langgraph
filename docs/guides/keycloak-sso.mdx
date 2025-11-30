@@ -42,16 +42,8 @@ sequenceDiagram
     App->>FGA: Sync roles/groups
     FGA-->>App: Permissions stored
     App-->>User: Authenticated response
-
-    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
-    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
-    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
-    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
-
-    class User clientStyle
-    class App validationStyle
-    class KC,FGA serviceStyle
 ```
+
 ### Quick Start
 
 <Steps>
@@ -579,14 +571,13 @@ extraEnv:
     import jwt
     decoded = jwt.decode(token, options={"verify_signature": False})
     print(decoded)
-    ```markdown
+    ```
   </Accordion>
 
   <Accordion title="SSL verification errors">
     **Development only**:
-    ```
+    ```bash
     KEYCLOAK_VERIFY_SSL=false
-    ```
     ```
 
     **Production**: Fix SSL certificate or add CA cert

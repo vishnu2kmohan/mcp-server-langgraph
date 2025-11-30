@@ -368,6 +368,7 @@ def get_project_modules() -> set[str]:
         "hcl2",  # Optional import for Terraform parsing (try/except in tests)
         # Local scripts imported by tests (in scripts/ directory)
         "check_internal_links",  # Script for checking documentation links
+        "check_mermaid_styling",  # Script for mermaid diagram validation
         "validate_gke_autopilot_compliance",  # Script for GKE Autopilot validation
         "validate_pytest_markers",  # Script for pytest marker validation
         "fix_missing_pytestmarks",  # Script for fixing missing pytestmark declarations

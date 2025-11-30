@@ -12,6 +12,7 @@ Exit codes:
 - 1: Issues found (with details)
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -78,7 +79,9 @@ def is_flowchart_diagram(block: str) -> bool:
 
 def is_sequence_diagram(block: str) -> bool:
     """Check if diagram is a sequence diagram."""
-    return "sequenceDiagram" in block or "%%{init:" in block
+    # Must contain sequenceDiagram keyword - %%{init: alone is not sufficient
+    # as flowcharts can also have theme initialization
+    return "sequenceDiagram" in block
 
 
 def uses_deprecated_graph_syntax(block: str) -> bool:
@@ -108,7 +111,68 @@ def has_sequence_theme(block: str) -> bool:
         return True  # Not applicable to non-sequence diagrams
 
     # Check for theme initialization with ColorBrewer2 colors
+    # For sequence diagrams, must have %%{init: and at least one ColorBrewer color
     return "%%{init:" in block and any(color.lower() in block.lower() for color in COLORBREWER2_SET3_COLORS)
+
+
+def has_invalid_sequence_directives(block: str) -> tuple[bool, str | None]:
+    """
+    Check if sequence diagram contains invalid flowchart-only directives.
+
+    Mermaid sequence diagrams do not support 'classDef' and 'class' directives -
+    these are flowchart-only features. When included, they are either silently
+    ignored or cause parsing errors in some mermaid versions.
+
+    Args:
+        block: The mermaid diagram content
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is None.
+    """
+    # Only check sequence diagrams
+    if not is_sequence_diagram(block):
+        return True, None  # Not a sequence diagram, skip check
+
+    # Check for classDef directive (flowchart-only)
+    if "classDef" in block:
+        return False, "Sequence diagrams do not support 'classDef' - use %%{init:...}%% theme variables instead"
+
+    # Check for class assignments (e.g., "class User clientStyle")
+    # Pattern: "class <name> <styleName>" at start of line (with optional whitespace)
+    if re.search(r"^\s*class\s+\w+\s+\w+", block, re.MULTILINE):
+        return False, "Sequence diagrams do not support 'class' assignments - use %%{init:...}%% theme variables instead"
+
+    return True, None
+
+
+def validate_mermaid_syntax(block: str) -> tuple[bool, str | None]:
+    """
+    Validate basic mermaid syntax for common errors.
+
+    Currently checks:
+    - Mismatched subgraph/end counts in flowcharts
+
+    Args:
+        block: The mermaid diagram content
+
+    Returns:
+        Tuple of (is_valid, error_message). If valid, error_message is None.
+    """
+    errors = []
+
+    # Only check flowchart diagrams for subgraph/end matching
+    if is_flowchart_diagram(block):
+        # Count subgraph declarations
+        subgraph_count = len(re.findall(r"\bsubgraph\s", block))
+        # Count end statements (standalone 'end' keywords)
+        end_count = len(re.findall(r"\bend\b", block))
+
+        if subgraph_count != end_count:
+            errors.append(f"Mismatched subgraph/end: {subgraph_count} subgraphs, {end_count} ends")
+
+    if errors:
+        return False, "; ".join(errors)
+    return True, None
 
 
 def check_file(file_path: Path) -> list[str]:
@@ -149,6 +213,16 @@ def check_file(file_path: Path) -> list[str]:
                 f"    Add %%{{init: ...}}%% block at the start\n"
                 f"    See: docs/.mintlify/MERMAID_OPTIMIZATION_GUIDE.md"
             )
+
+        # Check for invalid directives in sequence diagrams
+        is_valid, error_msg = has_invalid_sequence_directives(block)
+        if not is_valid:
+            issues.append(f"{file_path}:{line_num}: ❌ {error_msg}")
+
+        # Check for basic syntax errors
+        is_valid, error_msg = validate_mermaid_syntax(block)
+        if not is_valid:
+            issues.append(f"{file_path}:{line_num}: ❌ Syntax error: {error_msg}")
 
     return issues
 
