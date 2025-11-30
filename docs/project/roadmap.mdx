@@ -1,7 +1,7 @@
 ---
 title: Product Roadmap
 description: Strategic roadmap for building the most production-ready, enterprise-grade MCP server with LangGraph
-icon: map
+icon: 'map'
 contentType: explanation
 seoTitle: MCP Server LangGraph Product Roadmap - 2025-2027 Strategic Plan
 seoDescription: Comprehensive product roadmap for MCP Server LangGraph covering stability, performance, developer experience, multi-tenancy, and AI-powered features through 2027.
@@ -16,6 +16,46 @@ keywords:
 ---
 
 # MCP Server with LangGraph - Product Roadmap
+
+```mermaid
+flowchart LR
+    subgraph Current["v2.8.0 (Current)"]
+        Multi["Multi-LLM"]
+        Auth["Keycloak SSO"]
+        Comply["Compliance Suite"]
+    end
+
+    subgraph Q4_2025["Q4 2025"]
+        CICD["CI/CD Fixes"]
+        TODO["Complete TODOs"]
+        Security["Security Hardening"]
+    end
+
+    subgraph Q1_2026["Q1 2026"]
+        Perf["Performance"]
+        Cache["Caching"]
+        Pool["Connection Pooling"]
+    end
+
+    subgraph Q2_2026["Q2 2026"]
+        Multi_Tenant["Multi-Tenancy"]
+        DX["Developer Experience"]
+        AI["AI-Powered Features"]
+    end
+
+    Current --> Q4_2025 --> Q1_2026 --> Q2_2026
+
+    %% ColorBrewer2 Set3 palette - timeline colors
+    classDef currentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef q4Style fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef q1Style fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef q2Style fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Multi,Auth,Comply currentStyle
+    class CICD,TODO,Security q4Style
+    class Perf,Cache,Pool q1Style
+    class Multi_Tenant,DX,AI q2Style
+```
 
 ## Vision
 

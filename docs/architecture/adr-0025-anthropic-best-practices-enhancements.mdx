@@ -1,6 +1,21 @@
 ---
 title: "25. Anthropic Best Practices - Advanced Enhancements"
-description: "Architecture Decision Record: 25. Anthropic Best Practices - Advanced Enhancements"
+description: 'Architecture Decision Record: 25. Anthropic Best Practices - Advanced Enhancements'
+icon: 'brain'
+contentType: "reference"
+seoTitle: "25. Anthropic Best Practices - Advanced Enhancements - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for 25. Anthropic Best Practices - Advanced Enhancements. Category: Core Architecture. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "Anthropic"
+  - "Best"
+  - "Practices"
+  - "Advanced"
 ---
 
 # 25. Anthropic Best Practices - Advanced Enhancements
@@ -52,6 +67,65 @@ We implement all identified enhancements to achieve comprehensive adherence to A
 - Reduces token usage by loading only relevant information
 - Supports unlimited context corpus with intelligent retrieval
 
+#### Vector Database Integration Flow
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Request"]
+        Query[User Query]
+    end
+
+    subgraph Embeddings["Embedding Layer"]
+        Embed[Generate Query Embedding]
+        Model[/"text-embedding-004<br/>(768 dimensions)"/]
+    end
+
+    subgraph Qdrant["Qdrant Vector Store"]
+        Collection[(Context Collection)]
+        Search[Semantic Search]
+        Filter[Type/Metadata Filter]
+    end
+
+    subgraph Context["Context Processing"]
+        Refs[Context References]
+        Load[Load Full Content]
+        Cache[LRU Cache]
+        Decrypt[Decrypt if Encrypted]
+    end
+
+    subgraph Output["Output"]
+        Messages[System Messages]
+        Tokens[Token Count Check]
+    end
+
+    Query --> Embed
+    Embed --> Model
+    Model --> Search
+    Search --> Collection
+    Collection --> Filter
+    Filter --> Refs
+    Refs --> Cache
+    Cache -->|Hit| Messages
+    Cache -->|Miss| Load
+    Load --> Decrypt
+    Decrypt --> Tokens
+    Tokens -->|Under Limit| Messages
+    Tokens -->|Over Limit| Refs
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef embedStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef qdrantStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef contextStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef outputStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Query clientStyle
+    class Embed,Model embedStyle
+    class Collection,Search,Filter qdrantStyle
+    class Refs,Load,Cache,Decrypt contextStyle
+    class Messages,Tokens outputStyle
+```
+
 **How**:
 ```python
 # New module: src/mcp_server_langgraph/core/dynamic_context_loader.py
@@ -83,6 +157,67 @@ class DynamicContextLoader:
 - Increases throughput
 - Respects dependencies through topological sorting
 
+#### Tool Dependency Analysis Algorithm
+
+```mermaid
+flowchart TB
+    subgraph Input["Tool Calls Input"]
+        Tools[Tool Call List]
+    end
+
+    subgraph Analysis["Dependency Analysis"]
+        Parse[Parse Tool Schemas]
+        Deps[Build Dependency Graph]
+        Topo[Topological Sort]
+    end
+
+    subgraph Levels["Execution Levels"]
+        L0[Level 0: Independent]
+        L1[Level 1: Depends on L0]
+        L2[Level 2: Depends on L1]
+    end
+
+    subgraph Execution["Parallel Execution"]
+        Sem[asyncio.Semaphore]
+        Exec0[Execute L0 Parallel]
+        Exec1[Execute L1 Parallel]
+        Exec2[Execute L2 Parallel]
+    end
+
+    subgraph Output["Results"]
+        Agg[Aggregate Results]
+        Return[Return Combined]
+    end
+
+    Tools --> Parse
+    Parse --> Deps
+    Deps --> Topo
+    Topo --> L0
+    Topo --> L1
+    Topo --> L2
+    L0 --> Sem
+    Sem --> Exec0
+    Exec0 --> Exec1
+    L1 --> Exec1
+    Exec1 --> Exec2
+    L2 --> Exec2
+    Exec2 --> Agg
+    Agg --> Return
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef inputStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef analysisStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef levelStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef execStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef outputStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    class Tools inputStyle
+    class Parse,Deps,Topo analysisStyle
+    class L0,L1,L2 levelStyle
+    class Sem,Exec0,Exec1,Exec2 execStyle
+    class Agg,Return outputStyle
+```
+
 **How**:
 ```python
 # New module: src/mcp_server_langgraph/core/parallel_executor.py
@@ -109,6 +244,76 @@ class ParallelToolExecutor:
 - Better long-term context quality
 - Categorized information: decisions, requirements, facts, action_items, issues, preferences
 - Fallback to rule-based extraction
+
+#### Context Compaction Algorithm
+
+```mermaid
+flowchart TB
+    subgraph Input["Conversation Input"]
+        Msgs[Message History]
+        Check{Token Count<br/>&gt; Threshold?}
+    end
+
+    subgraph Separate["Message Separation"]
+        Sys[System Messages]
+        Recent[Recent N Messages]
+        Older[Older Messages]
+    end
+
+    subgraph Summarize["LLM Summarization"]
+        Prompt[XML Summarization Prompt]
+        LLM[/"Gemini Flash<br/>(Cost-Effective)"/]
+        Summary[Condensed Summary]
+    end
+
+    subgraph Extract["6-Category Extraction"]
+        Dec[Decisions]
+        Req[Requirements]
+        Facts[Facts]
+        Actions[Action Items]
+        Issues[Issues]
+        Prefs[Preferences]
+    end
+
+    subgraph Output["Compacted Output"]
+        Combine[Combine Messages]
+        Result[Compacted Conversation]
+        Ratio[Compression Ratio]
+    end
+
+    Msgs --> Check
+    Check -->|No| Result
+    Check -->|Yes| Sys
+    Check -->|Yes| Recent
+    Check -->|Yes| Older
+    Older --> Prompt
+    Prompt --> LLM
+    LLM --> Summary
+    LLM --> Dec
+    LLM --> Req
+    LLM --> Facts
+    LLM --> Actions
+    LLM --> Issues
+    LLM --> Prefs
+    Summary --> Combine
+    Sys --> Combine
+    Recent --> Combine
+    Combine --> Result
+    Result --> Ratio
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef inputStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef separateStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef extractStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef outputStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Msgs,Check inputStyle
+    class Sys,Recent,Older separateStyle
+    class Prompt,LLM,Summary llmStyle
+    class Dec,Req,Facts,Actions,Issues,Prefs extractStyle
+    class Combine,Result,Ratio outputStyle
+```
 
 **How**:
 ```python

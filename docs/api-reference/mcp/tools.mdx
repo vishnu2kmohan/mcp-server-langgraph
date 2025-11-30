@@ -404,6 +404,64 @@ results = await client.call_tool("query_database", {
 
 ### Tool Discovery
 
+#### Tool Registration & Discovery Flow
+
+```mermaid
+flowchart TB
+    subgraph Registration["Tool Registration"]
+        Def[@tool Decorator]
+        Schema[Generate JSON Schema]
+        Register[Register with Server]
+    end
+
+    subgraph Categories["Tool Categories"]
+        Calc[Calculator Tools]
+        Search[Search Tools]
+        FS[Filesystem Tools]
+        Code[Execution Tools]
+    end
+
+    subgraph Discovery["Progressive Discovery"]
+        Query[Search Query]
+        Filter{Category Filter?}
+        TextFilter[Text Search]
+        CatFilter[Category Filter]
+        Match[Match Tools]
+    end
+
+    subgraph Output["Response"]
+        Minimal[Minimal: name + desc]
+        Standard[Standard: + params]
+        Full[Full: + schema + examples]
+    end
+
+    Def --> Schema
+    Schema --> Register
+    Register --> Calc
+    Register --> Search
+    Register --> FS
+    Register --> Code
+    Query --> Filter
+    Filter -->|Yes| CatFilter
+    Filter -->|No| TextFilter
+    CatFilter --> Match
+    TextFilter --> Match
+    Match --> Minimal
+    Match --> Standard
+    Match --> Full
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef regStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef catStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef discStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef outStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Def,Schema,Register regStyle
+    class Calc,Search,FS,Code catStyle
+    class Query,Filter,TextFilter,CatFilter,Match discStyle
+    class Minimal,Standard,Full outStyle
+```
+
 List all available tools:
 
 ```

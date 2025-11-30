@@ -16,6 +16,75 @@ MCP messages define the communication format between clients and servers. This r
 MCP follows a request-response pattern similar to JSON-RPC 2.0 with extensions for streaming and bidirectional communication.
 </Info>
 
+## Protocol Transport Architecture
+
+The MCP protocol supports multiple transport layers for communication between clients and servers. The diagram below illustrates how messages flow through the system:
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    Client["Client MCP SDK<br/>(Application)"]
+    Transport["Transport Layer<br/>(stdio | SSE | WebSocket)"]
+    Framing["JSON-RPC Message Framing<br/>(Protocol v2.0)"]
+    Server["Server Message Handler<br/>(Request Processing)"]
+    Response["Response Router<br/>(Result/Error Distribution)"]
+
+    Client -->|"1. Send Request"| Transport
+    Transport -->|"2. Serialize"| Framing
+    Framing -->|"3. Deliver"| Server
+    Server -->|"4. Process & Generate"| Response
+    Response -->|"5. Frame Response"| Framing
+    Framing -->|"6. Transport"| Transport
+    Transport -->|"7. Deliver to Client"| Client
+
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef transportStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef serverStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef responseStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Client clientStyle
+    class Transport,Framing transportStyle
+    class Server serverStyle
+    class Response responseStyle
+```
+
+### Transport Options
+
+<AccordionGroup>
+  <Accordion title="Standard I/O (stdio)" icon="terminal">
+    Process-based communication using stdin/stdout. Best for local CLI integrations.
+
+    ```bash
+    # Server reads from stdin, writes to stdout
+    echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | mcp-server
+    ```
+  </Accordion>
+
+  <Accordion title="Server-Sent Events (SSE)" icon="broadcast-tower">
+    HTTP-based one-way streaming from server to client. Ideal for web applications.
+
+    ```javascript
+    const eventSource = new EventSource('/mcp/stream');
+    eventSource.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      // Handle message
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="WebSocket" icon="plug">
+    Full-duplex bidirectional communication. Best for real-time interactive applications.
+
+    ```python
+    import websockets
+    async with websockets.connect('ws://localhost:8000/mcp/ws') as ws:
+        await ws.send(json.dumps(request))
+        response = await ws.recv()
+    ```
+  </Accordion>
+</AccordionGroup>
+
 ## Message Structure
 
 All MCP messages follow this base structure:

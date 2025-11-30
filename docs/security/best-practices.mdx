@@ -1,7 +1,7 @@
 ---
 title: Security Best Practices
 description: 'Production security hardening and operational guidelines'
-icon: 'shield-check'
+icon: 'shield-halved'
 seoTitle: "Security Best Practices - Security Guide"
 seoDescription: "Security best practices: Production security hardening and operational guidelines"
 keywords: ["security", "enterprise security", "compliance", "best practices"]
@@ -9,6 +9,46 @@ contentType: "explanation"
 ---
 
 ### Overview
+
+```mermaid
+flowchart LR
+    subgraph Auth["Authentication"]
+        MFA["MFA Required"]
+        Strong["Strong Passwords"]
+        JWT["Secure JWTs"]
+    end
+
+    subgraph Network["Network Security"]
+        TLS["TLS 1.3"]
+        Firewall["Firewall Rules"]
+        CORS["CORS Policy"]
+    end
+
+    subgraph Data["Data Protection"]
+        Encrypt["Encryption"]
+        Secrets["Secret Mgmt"]
+        Backup["Secure Backups"]
+    end
+
+    subgraph Ops["Operations"]
+        Audit["Audit Logs"]
+        Monitor["Monitoring"]
+        Incident["Incident Response"]
+    end
+
+    Auth --> Network --> Data --> Ops
+
+    %% ColorBrewer2 Set3 palette - security layers
+    classDef authStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef networkStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef dataStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef opsStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class MFA,Strong,JWT authStyle
+    class TLS,Firewall,CORS networkStyle
+    class Encrypt,Secrets,Backup dataStyle
+    class Audit,Monitor,Incident opsStyle
+```
 
 Implement these security best practices to harden your MCP Server deployment for production. This guide covers configuration, deployment, and operational security.
 

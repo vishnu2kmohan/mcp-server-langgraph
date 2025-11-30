@@ -1,7 +1,7 @@
 ---
 title: Testing Guide
 description: Comprehensive testing strategy, conventions, and best practices for MCP Server LangGraph
-icon: flask
+icon: 'flask'
 contentType: explanation
 seoTitle: MCP Server LangGraph Testing Guide - Strategy & Best Practices
 seoDescription: Complete testing guide covering test organization, TDD workflows, fixtures, and best practices for unit, integration, and end-to-end tests in MCP Server LangGraph.
@@ -19,6 +19,52 @@ keywords:
 # Testing Guide
 
 This document describes the testing strategy, conventions, and best practices for the MCP Server LangGraph project.
+
+```mermaid
+flowchart TD
+    subgraph Unit["Unit Tests"]
+        UT["@pytest.mark.unit<br/>Fast, Isolated"]
+    end
+
+    subgraph API["API Tests"]
+        AT["@pytest.mark.api<br/>FastAPI TestClient"]
+    end
+
+    subgraph Integration["Integration Tests"]
+        IT["@pytest.mark.integration<br/>Multiple Components"]
+    end
+
+    subgraph E2E["E2E Tests"]
+        ET["@pytest.mark.e2e<br/>Full User Journeys"]
+    end
+
+    subgraph Deployment["Deployment Tests"]
+        DT["@pytest.mark.deployment<br/>Helm, Kustomize"]
+    end
+
+    subgraph Benchmark["Performance Tests"]
+        BT["@pytest.mark.benchmark<br/>Opt-in, 100 iterations"]
+    end
+
+    Unit --> API --> Integration --> E2E
+    Deployment -.-> E2E
+    Benchmark -.-> Integration
+
+    %% ColorBrewer2 Set3 palette - test pyramid colors
+    classDef unitStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef apiStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef integrationStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef e2eStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef deployStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef benchStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class UT unitStyle
+    class AT apiStyle
+    class IT integrationStyle
+    class ET e2eStyle
+    class DT deployStyle
+    class BT benchStyle
+```
 
 ## Table of Contents
 

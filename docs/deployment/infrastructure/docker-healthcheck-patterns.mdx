@@ -2,8 +2,8 @@
 title: Docker Health Check Patterns
 description: Portable health check patterns for Docker Compose services that work
   across minimal base images without relying on utilities like curl or wget
-icon: heart-pulse
-contentType: guide
+icon: 'heart-pulse'
+contentType: how-to
 seoTitle: Docker Health Check Patterns - MCP Server LangGraph
 seoDescription: Portable health check patterns for Docker Compose services that work
   across minimal base images without relying on utilities like curl or wget
@@ -540,48 +540,48 @@ docker-compose config
 
 ## Decision Tree: Choosing the Right Health Check
 
-```
-START: What type of service?
-│
-├─ Database (PostgreSQL, MySQL, MongoDB)
-│  └─> Use native client command
-│     ✅ PostgreSQL: pg_isready
-│     ✅ MySQL: mysqladmin ping
-│     ✅ MongoDB: mongosh --eval "db.adminCommand('ping')"
-│
-├─ Key-Value Store (Redis, Memcached)
-│  └─> Use CLI ping command
-│     ✅ Redis: redis-cli ping
-│     ✅ Memcached: echo stats | nc localhost 11211
-│
-├─ HTTP Service with health endpoint
-│  ├─ Does image include curl/wget?
-│  │  ├─ YES: Use HTTP health endpoint
-│  │  │   ✅ curl -f http://localhost/health
-│  │  └─ NO: Use TCP port check
-│  │      ✅ timeout 1 bash -c '</dev/tcp/localhost/8080'
-│  │
-│  └─ Is service critical path?
-│      ├─ YES: Consider installing health check utility
-│      └─ NO: TCP port check is sufficient
-│
-├─ gRPC Service
-│  ├─ Is grpc_health_probe bundled?
-│  │  ├─ YES: Use grpc_health_probe
-│  │  │   ✅ grpc_health_probe -addr=:8081
-│  │  └─ NO: Use TCP port check
-│  │      ✅ timeout 1 bash -c '</dev/tcp/localhost/8081'
-│  │
-│  └─ Verify gRPC health checking is enabled in service
-│
-├─ Message Queue (RabbitMQ, Kafka)
-│  └─> Use service-specific health command
-│     ✅ RabbitMQ: rabbitmqctl status
-│     ✅ Kafka: kafka-broker-api-versions --bootstrap-server localhost:9092
-│
-└─ Custom/Unknown Service
-   └─> Default to TCP port check
-      ✅ timeout 1 bash -c '</dev/tcp/localhost/<PORT>'
+```mermaid
+flowchart TD
+    Start{"What type<br/>of service?"}
+
+    Start --> DB["Database<br/>(PostgreSQL, MySQL, MongoDB)"]
+    Start --> KV["Key-Value Store<br/>(Redis, Memcached)"]
+    Start --> HTTP["HTTP Service"]
+    Start --> GRPC["gRPC Service"]
+    Start --> MQ["Message Queue<br/>(RabbitMQ, Kafka)"]
+    Start --> Custom["Custom/Unknown"]
+
+    DB --> DBCmd["Use native client command"]
+    DBCmd --> DBEx["✅ PostgreSQL: pg_isready<br/>✅ MySQL: mysqladmin ping<br/>✅ MongoDB: mongosh ping"]
+
+    KV --> KVCmd["Use CLI ping command"]
+    KVCmd --> KVEx["✅ Redis: redis-cli ping<br/>✅ Memcached: nc stats"]
+
+    HTTP --> HasCurl{"Image includes<br/>curl/wget?"}
+    HasCurl -->|Yes| UseCurl["✅ curl -f localhost/health"]
+    HasCurl -->|No| UseTCP["✅ TCP port check<br/>bash '/dev/tcp/...'"]
+
+    GRPC --> HasProbe{"grpc_health_probe<br/>bundled?"}
+    HasProbe -->|Yes| UseProbe["✅ grpc_health_probe"]
+    HasProbe -->|No| UseTCPGrpc["✅ TCP port check"]
+
+    MQ --> MQCmd["Use service command"]
+    MQCmd --> MQEx["✅ RabbitMQ: rabbitmqctl<br/>✅ Kafka: broker-api-versions"]
+
+    Custom --> TCPDefault["✅ Default: TCP port check"]
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef startStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef decisionStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef commandStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef resultStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Start startStyle
+    class DB,KV,HTTP,GRPC,MQ,Custom serviceStyle
+    class HasCurl,HasProbe decisionStyle
+    class DBCmd,KVCmd,MQCmd commandStyle
+    class DBEx,KVEx,UseCurl,UseTCP,UseProbe,UseTCPGrpc,MQEx,TCPDefault resultStyle
 ```
 
 ---

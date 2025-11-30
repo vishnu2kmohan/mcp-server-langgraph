@@ -1,7 +1,7 @@
 ---
 title: OpenFGA & Infisical Integration Guide
 description: Complete integration guide for fine-grained authorization with OpenFGA and secrets management with Infisical for MCP Server LangGraph
-icon: lock
+icon: 'lock'
 contentType: how-to
 seoTitle: OpenFGA Authorization & Infisical Secrets - MCP Server LangGraph
 seoDescription: Complete guide to integrating OpenFGA for authorization and Infisical for secrets management with MCP Server LangGraph. Learn setup, configuration, and best practices.
@@ -22,35 +22,50 @@ Complete integration guide for fine-grained authorization and secrets management
 
 ## 🔐 Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    MCP Client                             │
-│              (Claude Desktop / Other)                     │
-└────────────────────┬─────────────────────────────────────┘
-                     │
-                     ▼
-┌──────────────────────────────────────────────────────────┐
-│                  MCP Server                               │
-│  ┌────────────────────────────────────────────────┐      │
-│  │  Auth Middleware                               │      │
-│  │  - JWT Authentication                          │      │
-│  │  - OpenFGA Authorization ──────────┐           │      │
-│  └────────────────────────────────────┼───────────┘      │
-│                                        │                  │
-│  ┌────────────────────────────────────┼───────────┐      │
-│  │  LangGraph Agent                   │           │      │
-│  │  - State Management                │           │      │
-│  │  - Tool Execution                  │           │      │
-│  │  - Conversation Handling           │           │      │
-│  └────────────────────────────────────┼───────────┘      │
-└────────────────────┬───────────────────┼──────────────────┘
-                     │                   │
-        ┌────────────┴──────┐           │
-        ▼                   ▼           ▼
-┌──────────────┐    ┌──────────────┐   ┌──────────────┐
-│  Infisical   │    │ OpenTelemetry│   │   OpenFGA    │
-│  (Secrets)   │    │ (Observability)  │(Authorization)│
-└──────────────┘    └──────────────┘   └──────────────┘
+```mermaid
+flowchart TD
+    subgraph Client["MCP Client"]
+        Claude["Claude Desktop / Other"]
+    end
+
+    subgraph Server["MCP Server"]
+        subgraph AuthMW["Auth Middleware"]
+            JWT["JWT Authentication"]
+            AuthZ["OpenFGA Authorization"]
+        end
+
+        subgraph Agent["LangGraph Agent"]
+            State["State Management"]
+            Tools["Tool Execution"]
+            Conv["Conversation Handling"]
+        end
+    end
+
+    subgraph External["External Services"]
+        Infisical["Infisical<br/>(Secrets)"]
+        OTEL["OpenTelemetry<br/>(Observability)"]
+        OpenFGA["OpenFGA<br/>(Authorization)"]
+    end
+
+    Claude --> JWT
+    JWT --> AuthZ
+    AuthZ --> State
+    State --> Tools --> Conv
+
+    AuthZ -.-> OpenFGA
+    Server -.-> Infisical
+    Server -.-> OTEL
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef externalStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Claude clientStyle
+    class JWT,AuthZ authStyle
+    class State,Tools,Conv agentStyle
+    class Infisical,OTEL,OpenFGA externalStyle
 ```
 
 ## 🚀 Quick Start

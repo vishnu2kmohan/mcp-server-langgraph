@@ -10,6 +10,49 @@ contentType: "explanation"
 
 ### Overview
 
+```mermaid
+flowchart TD
+    subgraph Symptoms["Symptom Categories"]
+        Auth["401/403<br/>Auth Errors"]
+        Conn["Connection<br/>Failures"]
+        Perf["Performance<br/>Issues"]
+        Data["Data/State<br/>Problems"]
+    end
+
+    subgraph Diagnostics["Diagnostic Steps"]
+        Logs["Check Logs<br/>kubectl logs"]
+        Health["Health Endpoints<br/>/health, /ready"]
+        Metrics["Prometheus<br/>Metrics"]
+        Trace["Distributed<br/>Tracing"]
+    end
+
+    subgraph Solutions["Resolution"]
+        Config["Fix<br/>Configuration"]
+        Restart["Restart<br/>Services"]
+        Scale["Scale<br/>Resources"]
+        Escalate["Escalate to<br/>Support"]
+    end
+
+    Auth --> Logs
+    Conn --> Health
+    Perf --> Metrics
+    Data --> Trace
+
+    Logs --> Config
+    Health --> Restart
+    Metrics --> Scale
+    Trace --> Escalate
+
+    %% ColorBrewer2 Set3 palette
+    classDef symptomStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef diagStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef solutionStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Auth,Conn,Perf,Data symptomStyle
+    class Logs,Health,Metrics,Trace diagStyle
+    class Config,Restart,Scale,Escalate solutionStyle
+```
+
 Comprehensive troubleshooting guide for the MCP Server with LangGraph. This guide covers common issues, diagnostic techniques, and step-by-step solutions.
 
 <Tip>

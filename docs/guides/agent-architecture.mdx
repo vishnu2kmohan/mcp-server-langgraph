@@ -1,7 +1,7 @@
 ---
 title: Agent Architecture and Usage
 description: LangGraph agent architecture with Pydantic AI integration for production-ready intelligent agents
-icon: brain
+icon: 'brain'
 contentType: explanation
 seoTitle: LangGraph Agent Architecture - Production AI Agents Guide
 seoDescription: Comprehensive guide to LangGraph agent architecture with Pydantic AI integration. Learn stateful conversation management, tool integration, and production best practices.
@@ -39,60 +39,52 @@ MCP Server LangGraph implements a **functional agent architecture** using LangGr
 
 ### Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    MCP Server Layer                          │
-│  ┌──────────────┐              ┌──────────────┐            │
-│  │ stdio        │              │ StreamableHTTP│            │
-│  │ Transport    │              │  Transport    │            │
-│  └──────────────┘              └──────────────┘            │
-└────────────┬────────────────────────┬───────────────────────┘
-             │                        │
-             └────────┬───────────────┘
-                      │
-         ┌────────────▼────────────┐
-         │   Auth Middleware       │
-         │  (JWT + OpenFGA)        │
-         └────────────┬────────────┘
-                      │
-         ┌────────────▼────────────┐
-         │   LangGraph Agent       │
-         │                         │
-         │  ┌──────────────────┐   │
-         │  │  Agent Graph     │   │
-         │  │  (StateGraph)    │   │
-         │  └────────┬─────────┘   │
-         │           │              │
-         │  ┌────────▼─────────┐   │
-         │  │ Conditional      │   │
-         │  │ Routing          │   │
-         │  └────────┬─────────┘   │
-         │           │              │
-         │  ┌────────▼─────────┐   │
-         │  │ Tool Execution   │   │
-         │  └────────┬─────────┘   │
-         └───────────┼─────────────┘
-                     │
-        ┌────────────▼──────────────┐
-        │   Pydantic AI Integration │
-        │                           │
-        │  ┌────────────────────┐   │
-        │  │ Structured Output  │   │
-        │  └────────────────────┘   │
-        │                           │
-        │  ┌────────────────────┐   │
-        │  │ Tool Definition    │   │
-        │  └────────────────────┘   │
-        │                           │
-        │  ┌────────────────────┐   │
-        │  │ Model Abstraction  │   │
-        │  └────────┬───────────┘   │
-        └───────────┼───────────────┘
-                    │
-       ┌────────────▼────────────┐
-       │   LLM Factory           │
-       │  (LiteLLM + Fallback)   │
-       └─────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph MCP["MCP Server Layer"]
+        STDIO["stdio Transport"]
+        HTTP["StreamableHTTP Transport"]
+    end
+
+    subgraph Auth["Auth Middleware"]
+        JWT["JWT + OpenFGA"]
+    end
+
+    subgraph Agent["LangGraph Agent"]
+        Graph["Agent Graph<br/>(StateGraph)"]
+        Routing["Conditional Routing"]
+        Tools["Tool Execution"]
+        Graph --> Routing --> Tools
+    end
+
+    subgraph Pydantic["Pydantic AI Integration"]
+        Structured["Structured Output"]
+        ToolDef["Tool Definition"]
+        Model["Model Abstraction"]
+    end
+
+    LLM["LLM Factory<br/>(LiteLLM + Fallback)"]
+
+    STDIO --> JWT
+    HTTP --> JWT
+    JWT --> Graph
+    Tools --> Structured
+    Structured --> ToolDef
+    ToolDef --> Model
+    Model --> LLM
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef mcpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef agentStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef pydanticStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef llmStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class STDIO,HTTP mcpStyle
+    class JWT authStyle
+    class Graph,Routing,Tools agentStyle
+    class Structured,ToolDef,Model pydanticStyle
+    class LLM llmStyle
 ```
 
 [... rest of AGENTS.md content continues as in the original ...]

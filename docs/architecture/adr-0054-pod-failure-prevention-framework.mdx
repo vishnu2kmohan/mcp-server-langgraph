@@ -1,6 +1,21 @@
 ---
 title: "54. Pod Failure Prevention Framework"
-description: "Architecture Decision Record: 54. Pod Failure Prevention Framework"
+description: 'Architecture Decision Record: 54. Pod Failure Prevention Framework'
+icon: 'dharmachakra'
+contentType: "reference"
+seoTitle: "54. Pod Failure Prevention Framework - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for 54. Pod Failure Prevention Framework. Category: Infrastructure & Deployment. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "deployment"
+  - "infrastructure"
+  - "kubernetes"
+  - "Pod"
 ---
 
 # 54. Pod Failure Prevention Framework
@@ -116,24 +131,23 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
 
 ### Phase 1: Immediate Remediation (Completed 2025-11-12)
 
-✅ Fixed all pod crash issues:
-- Keycloak: Reverted readOnlyRootFilesystem temporarily
-- OTEL Collector: Fixed CPU ratio, config syntax, health checks, IAM permissions
-- Created GCP service account with proper roles
-- Cleaned up old ReplicaSets
+- ✅ Fixed all pod crash issues:
+  - Keycloak: Reverted readOnlyRootFilesystem temporarily
+  - OTEL Collector: Fixed CPU ratio, config syntax, health checks, IAM permissions
+  - Created GCP service account with proper roles
+  - Cleaned up old ReplicaSets
 
 ### Phase 2: Preventive Measures (Completed 2025-11-12)
 
-✅ Created validation infrastructure:
-- Validation script with comprehensive checks
-- Regression test suite (8+ test cases)
-- GitHub Actions workflow (3 jobs)
-- Pre-commit hook for local validation
-
-✅ Created documentation:
-- Troubleshooting runbook
-- Deployment checklist
-- Remediation report with lessons learned
+- ✅ Created validation infrastructure:
+  - Validation script with comprehensive checks
+  - Regression test suite (8+ test cases)
+  - GitHub Actions workflow (3 jobs)
+  - Pre-commit hook for local validation
+- ✅ Created documentation:
+  - Troubleshooting runbook
+  - Deployment checklist
+  - Remediation report with lessons learned
 
 ### Phase 3: Continuous Improvement (Ongoing)
 
@@ -340,7 +354,7 @@ We will implement a **comprehensive Pod Failure Prevention Framework** consistin
 - [OTEL Collector Configuration](https://opentelemetry.io/docs/collector/configuration/)
 
 ### Related ADRs:
-- [ADR-0053: CI/CD Failure Prevention Framework](./adr-0053-ci-cd-failure-prevention-framework.md)
+- [ADR-0053: CI/CD Failure Prevention Framework](./adr-0053-ci-cd-failure-prevention-framework.mdx)
 
 ---
 

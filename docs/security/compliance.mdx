@@ -15,6 +15,48 @@ contentType: "explanation"
 
 ### Overview
 
+```mermaid
+flowchart TD
+    subgraph Frameworks["Compliance Frameworks"]
+        GDPR["GDPR<br/>EU Data Protection"]
+        SOC2["SOC 2<br/>Trust Services"]
+        HIPAA["HIPAA<br/>Healthcare Data"]
+        ISO["ISO 27001<br/>InfoSec Mgmt"]
+    end
+
+    subgraph Controls["Technical Controls"]
+        Auth["Authentication<br/>& Authorization"]
+        Encrypt["Encryption<br/>at Rest/Transit"]
+        Audit["Audit Logging<br/>& Monitoring"]
+        Privacy["Data Privacy<br/>& Consent"]
+    end
+
+    subgraph Outcomes["Compliance Outcomes"]
+        Evidence["Evidence<br/>Collection"]
+        Reports["Compliance<br/>Reports"]
+        Alerts["Violation<br/>Alerts"]
+    end
+
+    GDPR --> Privacy
+    SOC2 --> Audit
+    HIPAA --> Encrypt
+    ISO --> Auth
+
+    Auth --> Evidence
+    Encrypt --> Evidence
+    Audit --> Reports
+    Privacy --> Alerts
+
+    %% ColorBrewer2 Set3 palette
+    classDef frameworkStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef controlStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef outcomeStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class GDPR,SOC2,HIPAA,ISO frameworkStyle
+    class Auth,Encrypt,Audit,Privacy controlStyle
+    class Evidence,Reports,Alerts outcomeStyle
+```
+
 MCP Server with LangGraph provides **technical controls and architecture** to support compliance with data protection regulations and industry standards. This guide covers implementing controls for [GDPR](https://gdpr-info.eu/), [SOC 2](https://www.aicpa.org/soc4so), [HIPAA](https://www.hhs.gov/hipaa/), and other compliance frameworks.
 
 <Warning>
@@ -27,7 +69,7 @@ This codebase provides **technical controls** that support compliance requiremen
 - **Legal Review Required**: Always consult with legal counsel and compliance experts for your specific regulatory requirements
 - **Shared Responsibility**: You are responsible for configuring, deploying, and operating the system in a compliant manner
 
-See [Sources & References](/references/sources) for links to official compliance documentation.
+See [Sources & References](/reference/sources) for links to official compliance documentation.
 </Warning>
 
 ### Compliance Frameworks
@@ -75,6 +117,134 @@ See [Sources & References](/references/sources) for links to official compliance
 </CardGroup>
 
 ### GDPR Compliance
+
+#### GDPR Compliance Data Flow
+
+The following diagram illustrates the complete GDPR compliance data flow, including data subject requests (DSR), data classification, consent management, retention policies, right to erasure, and audit logging.
+
+```mermaid
+flowchart TB
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+
+    subgraph DSR["Data Subject Requests (DSR)"]
+        AccessReq["Access Request<br/>(Art. 15)"]
+        RectifyReq["Rectification Request<br/>(Art. 16)"]
+        EraseReq["Erasure Request<br/>(Art. 17)"]
+        PortReq["Portability Request<br/>(Art. 20)"]
+    end
+
+    subgraph Classification["Data Classification & PII Identification"]
+        Scanner["PII Scanner"]
+        Classifier["Data Classifier"]
+        PIITypes["PII Types:<br/>• Email<br/>• Name<br/>• IP Address<br/>• User ID"]
+    end
+
+    subgraph Consent["Consent Management"]
+        ConsentUI["Consent UI"]
+        ConsentStore["Consent Records"]
+        ConsentLog["Consent Audit Log"]
+        ConsentMeta["Metadata:<br/>• Timestamp<br/>• IP Address<br/>• User Agent"]
+    end
+
+    subgraph Retention["Data Retention Policies"]
+        RetPolicy["Retention Policy<br/>(365 days)"]
+        RetScheduler["Cleanup Scheduler"]
+        RetAction["Auto-Delete<br/>Old Data"]
+    end
+
+    subgraph Erasure["Right to Erasure Flow"]
+        EraseValidate["Validate Request"]
+        EraseProcess["Delete User Data:<br/>• Conversations<br/>• Sessions<br/>• Preferences"]
+        EraseAuth["Delete AuthZ Tuples"]
+        EraseAnonymize["Anonymize Logs"]
+        EraseConfirm["Confirm Deletion"]
+    end
+
+    subgraph Audit["Audit Logging"]
+        AuditCapture["Capture Events:<br/>• Access<br/>• Export<br/>• Deletion<br/>• Consent Changes"]
+        AuditStore["Tamper-Proof Store"]
+        AuditReview["Regular Review"]
+        AuditAlert["Anomaly Alerts"]
+    end
+
+    subgraph Storage["Data Storage"]
+        EncryptedDB["Encrypted Database<br/>(AES-256)"]
+        BackupStore["Backup Storage"]
+    end
+
+    %% DSR Flow
+    AccessReq --> Scanner
+    AccessReq --> AuditCapture
+    RectifyReq --> EraseValidate
+    RectifyReq --> AuditCapture
+    EraseReq --> Erasure
+    PortReq --> Scanner
+    PortReq --> AuditCapture
+
+    %% Classification Flow
+    Scanner --> Classifier
+    Classifier --> PIITypes
+    PIITypes --> EncryptedDB
+
+    %% Consent Flow
+    ConsentUI --> ConsentStore
+    ConsentStore --> ConsentMeta
+    ConsentMeta --> ConsentLog
+    ConsentLog --> AuditCapture
+
+    %% Retention Flow
+    RetPolicy --> RetScheduler
+    RetScheduler --> RetAction
+    RetAction --> EncryptedDB
+    RetAction --> AuditCapture
+
+    %% Erasure Flow
+    EraseValidate --> EraseProcess
+    EraseProcess --> EraseAuth
+    EraseAuth --> EraseAnonymize
+    EraseAnonymize --> EraseConfirm
+    EraseConfirm --> AuditCapture
+
+    %% Audit Flow
+    AuditCapture --> AuditStore
+    AuditStore --> AuditReview
+    AuditReview --> AuditAlert
+
+    %% Storage connections
+    EncryptedDB --> BackupStore
+    ConsentStore --> EncryptedDB
+
+    %% Apply ColorBrewer Set3 palette
+    classDef requestStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef processStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef auditStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef consentStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef retentionStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef erasureStyle fill:#ffd92f,stroke:#f39c12,stroke-width:2px,color:#333
+    classDef classifyStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+
+    %% Apply styles to nodes
+    class AccessReq,RectifyReq,EraseReq,PortReq requestStyle
+    class Scanner,Classifier,PIITypes classifyStyle
+    class ConsentUI,ConsentStore,ConsentLog,ConsentMeta consentStyle
+    class RetPolicy,RetScheduler,RetAction retentionStyle
+    class EraseValidate,EraseProcess,EraseAuth,EraseAnonymize,EraseConfirm erasureStyle
+    class AuditCapture,AuditStore,AuditReview,AuditAlert auditStyle
+    class EncryptedDB,BackupStore storageStyle
+```
+
+**Key GDPR Data Flow Components:**
+
+1. **Data Subject Requests (DSR)** - Turquoise: Entry points for user rights (access, rectification, erasure, portability)
+2. **Data Classification** - Light Yellow: Automated PII identification and classification
+3. **Consent Management** - Coral Red: User consent capture, storage, and audit trail
+4. **Data Retention** - Purple: Automated cleanup based on retention policies (365 days default)
+5. **Right to Erasure** - Gold: Complete data deletion workflow with anonymization
+6. **Audit Logging** - Green: Comprehensive logging of all GDPR-related actions
+7. **Data Storage** - Blue: Encrypted storage with backup capabilities
+
+All flows integrate with the audit logging system to maintain compliance evidence and detect anomalies.
 
 #### Data Protection Principles
 

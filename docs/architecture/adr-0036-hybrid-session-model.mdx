@@ -1,6 +1,21 @@
 ---
 title: "36. Hybrid Session Model for Long-Running Tasks"
-description: "Architecture Decision Record: 36. Hybrid Session Model for Long-Running Tasks"
+description: 'Architecture Decision Record: 36. Hybrid Session Model for Long-Running Tasks'
+icon: 'database'
+contentType: "reference"
+seoTitle: "36. Hybrid Session Model for Long-Running Tasks - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for 36. Hybrid Session Model for Long-Running Tasks. Category: Authentication & Authorization. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "authentication"
+  - "authorization"
+  - "security"
+  - "Hybrid"
 ---
 
 # 36. Hybrid Session Model for Long-Running Tasks
@@ -37,6 +52,73 @@ Current system: Stateless JWTs only (no server-side sessions).
 Implement a **Hybrid Session Model** where standard users use stateless JWTs with client-side refresh, while service principals optionally use server-side sessions with automatic token refresh for long-running tasks.
 
 ### Architecture
+
+#### Distributed Session Consistency Flow
+
+```mermaid
+flowchart TB
+    subgraph Request["Incoming Request"]
+        Req[API Request with JWT]
+        Extract[Extract Session ID]
+    end
+
+    subgraph Validation["Token Validation"]
+        Verify{JWT Valid?}
+        Expired{Token Expired?}
+    end
+
+    subgraph Redis["Redis Cluster (HA)"]
+        Primary[(Primary Node)]
+        Replica1[(Replica 1)]
+        Replica2[(Replica 2)]
+        Session[Session Data]
+    end
+
+    subgraph Refresh["Auto-Refresh Logic"]
+        Check{Expires in &lt;5min?}
+        Keycloak[Refresh via Keycloak]
+        UpdateSession[Update Session]
+        SlidingTTL[Extend TTL 30 Days]
+    end
+
+    subgraph Response["Response"]
+        Success[Request Proceeds]
+        NewToken[Return New Token]
+        Denied[401 Unauthorized]
+    end
+
+    Req --> Extract
+    Extract --> Verify
+    Verify -->|No| Denied
+    Verify -->|Yes| Expired
+    Expired -->|Yes| Primary
+    Expired -->|No| Check
+    Primary --> Session
+    Session --> Check
+    Check -->|No| Success
+    Check -->|Yes| Keycloak
+    Keycloak --> UpdateSession
+    UpdateSession --> Primary
+    UpdateSession --> SlidingTTL
+    SlidingTTL --> NewToken
+    Primary -.->|Replicate| Replica1
+    Primary -.->|Replicate| Replica2
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef reqStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef valStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef redisStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef refreshStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class Req,Extract reqStyle
+    class Verify,Expired valStyle
+    class Primary,Replica1,Replica2,Session redisStyle
+    class Check,Keycloak,UpdateSession,SlidingTTL refreshStyle
+    class Success,NewToken successStyle
+    class Denied errorStyle
+```
 
 **Mode 1: Stateless JWT (Default for Users)**:
 - 15-minute access tokens

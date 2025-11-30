@@ -1,7 +1,7 @@
 ---
 title: Security Remediation Guide
 description: TDD-based security remediation with automated validation and CI/CD integration
-icon: lock
+icon: 'lock'
 contentType: explanation
 seoTitle: Security Remediation Guide - MCP Server LangGraph
 seoDescription: TDD-based security remediation with automated validation and CI/CD
@@ -20,6 +20,41 @@ keywords:
 # Security Remediation Summary
 
 This document summarizes the comprehensive security remediation performed based on OpenAI Codex security analysis findings.
+
+```mermaid
+flowchart LR
+    subgraph RED["🔴 RED Phase"]
+        Write["Write Security Tests"]
+        Fail["Tests Fail<br/>(9 failing)"]
+        Write --> Fail
+    end
+
+    subgraph GREEN["🟢 GREEN Phase"]
+        Fix["Implement Fixes"]
+        Pass["Tests Pass<br/>(15 passing)"]
+        Fix --> Pass
+    end
+
+    subgraph CICD["♻️ CI/CD Automation"]
+        GHA["GitHub Actions"]
+        PreCommit["Pre-commit Hooks"]
+        Validate["Continuous Validation"]
+        GHA --> Validate
+        PreCommit --> Validate
+    end
+
+    RED -->|"Identify Issues"| GREEN
+    GREEN -->|"Automate"| CICD
+
+    %% ColorBrewer2 Set3 palette - TDD colors
+    classDef redStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef greenStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef cicdStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+
+    class Write,Fail redStyle
+    class Fix,Pass greenStyle
+    class GHA,PreCommit,Validate cicdStyle
+```
 
 ## Overview
 

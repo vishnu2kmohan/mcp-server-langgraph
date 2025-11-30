@@ -21,7 +21,8 @@ This diagram shows the relationships between GitHub Actions workflows in this pr
 ## Main CI/CD Pipeline
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Main CI Pipeline
     Push[Push to main/develop] --> CI[ci.yaml<br/>Main CI Pipeline]
     PR[Pull Request] --> CI
@@ -45,16 +46,18 @@ graph TD
 
     Deploy --> DV[deployment-verification]
 
-    %% Styling
-    classDef mainFlow fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
-    classDef testFlow fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
-    classDef deployFlow fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
-    classDef validationFlow fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
 
-    class CI mainFlow
-    class Test,CM,DB,DCS,DM,DMAN testFlow
-    class Deploy,DV deployFlow
-    class VW,VP,XE,PC,PSV validationFlow
+    class Push,PR clientStyle
+    class CI,Test,CM successStyle
+    class VW,VP,XE,PC,PSV validationStyle
+    class DB,DCS,DM,DMAN storageStyle
+    class Deploy,DV serviceStyle
 ```
 
 ---
@@ -62,7 +65,8 @@ graph TD
 ## Quality Testing Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Quality Tests
     Trigger[Push/PR/Weekly] --> QT[quality-tests.yaml]
 
@@ -91,12 +95,18 @@ graph TD
     OD --> Minimal[Test with minimal deps]
     OD --> Full[Test with full deps]
 
-    %% Styling
-    classDef qualityFlow fill:#673AB7,stroke:#4527A0,stroke-width:2px,color:#fff
-    classDef e2eFlow fill:#00BCD4,stroke:#00838F,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
 
-    class QT,PCV,PT,CT,RT,MT,BT,QS qualityFlow
-    class E2E,Infra,E2ETests,Cleanup e2eFlow
+    class Trigger,Trigger2,Trigger3 clientStyle
+    class QT,E2E,OD validationStyle
+    class PCV,PT,CT,RT,MT,BT serviceStyle
+    class QS,E2ETests successStyle
+    class Infra,Cleanup,Minimal,Full storageStyle
 ```
 
 ---
@@ -104,7 +114,8 @@ graph TD
 ## Security & Compliance Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Security Scanning
     Daily[Daily 3 AM UTC] --> SS[security-scan.yaml]
     PushPR[Push/PR] --> SS
@@ -131,12 +142,16 @@ graph TD
     GDD --> Drift[Detect config drift]
     Drift --> Alert[Alert if drift found]
 
-    %% Styling
-    classDef securityFlow fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
-    classDef complianceFlow fill:#FF5722,stroke:#D84315,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e85a4f,stroke-width:2px,color:#333
 
-    class SS,Trivy,Semgrep,DepScan,Gitleaks,SV,CORS,Auth,AuthZ securityFlow
-    class GCS,BP,Compliance,GDD,Drift,Alert complianceFlow
+    class Daily,PushPR,PRSec,Weekly,PushGCP,Daily2 clientStyle
+    class SS,SV,GCS,GDD validationStyle
+    class Trivy,Semgrep,DepScan,Gitleaks,CORS,Auth,AuthZ,BP,Compliance,Drift serviceStyle
+    class Alert errorStyle
 ```
 
 ---
@@ -144,7 +159,8 @@ graph TD
 ## Deployment Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Deployment Validation
     PRDeploy[PR deployment files] --> DV[deployment-validation.yml]
     PushDeploy[Push main deployment files] --> DV
@@ -179,12 +195,18 @@ graph TD
     PRK8sC[PR K8s configs] --> VK8sC[validate-k8s-configs.yml]
     PRAll[PR deployments] --> VD[validate-deployments.yaml]
 
-    %% Styling
-    classDef deployFlow fill:#FF9800,stroke:#E65100,stroke-width:2px,color:#fff
-    classDef validationFlow fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e85a4f,stroke-width:2px,color:#333
 
-    class DSG,DPG,AuthS,HelmS,SmokeS,AuthP,HelmP,SmokeP,Approve,RB,Done deployFlow
-    class DV,VH,VK,VNP,VSA,VK8s,VK8sC,VD validationFlow
+    class PRDeploy,PushDeploy,PushDev,ManualS,Release,ManualP,PRK8s,PRK8sC,PRAll clientStyle
+    class DV,VH,VK,VNP,VSA,VK8s,VK8sC,VD validationStyle
+    class DSG,DPG,AuthS,AuthP,Approve serviceStyle
+    class HelmS,SmokeS,HelmP,SmokeP,Done successStyle
+    class RB errorStyle
 ```
 
 ---
@@ -192,7 +214,8 @@ graph TD
 ## Documentation Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Doc Validation
     PRDocs[PR docs/] --> DocsV[docs-validation.yaml]
     PushDocs[Push main docs/] --> DocsV
@@ -215,12 +238,18 @@ graph TD
     DocsV -.Consolidate.-> Combined[docs.yaml<br/>PROPOSED]
     LC -.Consolidate.-> Combined
 
-    %% Styling
-    classDef docsFlow fill:#3F51B5,stroke:#283593,stroke-width:2px,color:#fff
-    classDef proposedFlow fill:#9E9E9E,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef secondaryStyle fill:#ffffb3,stroke:#e6e68a,stroke-width:2px,color:#333
 
-    class DocsV,MDX,Front,Links,Nav,Images,LC,CheckMD,CheckMDX,Report docsFlow
-    class Combined proposedFlow
+    class PRDocs,PushDocs,WeeklyDocs,ManualDocs clientStyle
+    class DocsV,LC validationStyle
+    class MDX,Front,Links,Nav,Images,CheckMD,CheckMDX serviceStyle
+    class Report successStyle
+    class Combined secondaryStyle
 ```
 
 ---
@@ -228,7 +257,8 @@ graph TD
 ## Monitoring & Observability Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Observability Alerts
     Hourly[Hourly] --> OA[observability-alerts.yaml]
     OA --> Metrics[Check metrics]
@@ -252,12 +282,18 @@ graph TD
     WH --> Duration[Workflow durations]
     WH --> Dashboard[Update dashboard]
 
-    %% Styling
-    classDef monitoringFlow fill:#009688,stroke:#00695C,stroke-width:2px,color:#fff
-    classDef metricsFlow fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e85a4f,stroke-width:2px,color:#333
 
-    class OA,Metrics,Alert,Notify,OK monitoringFlow
-    class DM,DF,LT,MTTR,CFR,WH,Success,Duration,Dashboard metricsFlow
+    class Hourly,PushMain,PRMerge,DeployComplete,DailyWH clientStyle
+    class OA,Metrics,DM,WH validationStyle
+    class DF,LT,MTTR,CFR,Success,Duration serviceStyle
+    class Dashboard,OK successStyle
+    class Notify errorStyle
 ```
 
 ---
@@ -265,7 +301,8 @@ graph TD
 ## Maintenance & Automation Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Dependabot Auto-merge
     DepPR[Dependabot PR] --> DA[dependabot-automerge.yaml]
     DA --> CICheck{CI passed?}
@@ -333,12 +370,19 @@ graph TD
     GCPCost --> CostReport[Generate cost report]
     AWSCost --> CostReport
 
-    %% Styling
-    classDef autoFlow fill:#795548,stroke:#5D4037,stroke-width:2px,color:#fff
-    classDef reportFlow fill:#607D8B,stroke:#455A64,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e85a4f,stroke-width:2px,color:#333
 
-    class DA,CICheck,Merge,Manual,Stale,Find,Mark,Wait,Close,CloseDone,Remove autoFlow
-    class TST,FindSkip,ReportTS,CovT,Measure,Store,Analyze,WR,CovReport,DeployFreq,IssueVel,SecReport,SendReport reportFlow
+    class DepPR,DailyStale,PushMain2,WeeklyTS,PushCov,PRCov,PushPerf,PRPerf,Rel,ManualBV,WeeklyRep,Tag,ManualRel,DailyCost clientStyle
+    class DA,Stale,TST,CovT,PerfR,BV,WR,Release,Cost validationStyle
+    class Find,Mark,Wait,FindSkip,Measure,Store,Analyze,Bench,Compare,Update,Changelog,GHRelease,PublishImg,GCPCost,AWSCost serviceStyle
+    class Merge,CloseDone,Remove,ReportTS,Pass,Commit,CovReport,DeployFreq,IssueVel,SecReport,SendReport,Deploy,CostReport successStyle
+    class Manual,FailPR errorStyle
 ```
 
 ---
@@ -346,7 +390,8 @@ graph TD
 ## Infrastructure Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Terraform Validation
     PRTF[PR *.tf files] --> TFV[terraform-validate.yaml]
     PushTF[Push main *.tf] --> TFV
@@ -367,10 +412,15 @@ graph TD
     ShellT --> Bats[bats tests]
     ShellT --> ShellCheck[shellcheck linting]
 
-    %% Styling
-    classDef infraFlow fill:#8BC34A,stroke:#689F38,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
 
-    class TFV,TFmt,TVal,TFLint,K8sCV,Kubeconf,Resources,SecCtx,ShellT,Bats,ShellCheck infraFlow
+    class PRTF,PushTF,PRK8sConf,PRShell,PushShell clientStyle
+    class TFV,K8sCV,ShellT validationStyle
+    class TFmt,TVal,TFLint,Kubeconf,Resources,SecCtx,Bats,ShellCheck serviceStyle
 ```
 
 ---
@@ -378,7 +428,8 @@ graph TD
 ## Build & Hygiene Workflows
 
 ```mermaid
-graph TD
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart TD
     %% Build Hygiene
     PushBH[Push] --> BH[build-hygiene.yaml]
     PRBH[Pull request] --> BH
@@ -393,10 +444,15 @@ graph TD
     PushSmoke[Push] --> Smoke
     Smoke --> QuickTests[Quick smoke tests]
 
-    %% Styling
-    classDef hygieneFlow fill:#CDDC39,stroke:#9E9D24,stroke-width:2px,color:#fff
+    %% ColorBrewer Set3 Styling
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
 
-    class BH,TODO,Console,Commented,Format,Smoke,QuickTests hygieneFlow
+    class PushBH,PRBH,PRSmoke,PushSmoke clientStyle
+    class BH,Smoke validationStyle
+    class TODO,Console,Commented,Format,QuickTests serviceStyle
 ```
 
 ---
@@ -465,45 +521,54 @@ graph TD
 
 ### Phase 1: Documentation Workflows
 ```mermaid
-graph LR
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart LR
     DV[docs-validation.yaml] --> Combined[docs.yaml]
     LC[link-checker.yaml] --> Combined
     Combined --> Complete[✅ Consolidated]
 
-    classDef current fill:#3F51B5,stroke:#283593,stroke-width:2px,color:#fff
-    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef secondaryStyle fill:#ffffb3,stroke:#e6e68a,stroke-width:2px,color:#333
 
-    class DV,LC current
-    class Combined,Complete proposed
+    class DV,LC validationStyle
+    class Complete successStyle
+    class Combined secondaryStyle
 ```
 
 ### Phase 2: Security Workflows
 ```mermaid
-graph LR
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart LR
     SS[security-scan.yaml] --> Combined[security.yaml]
     SV[security-validation.yml] --> Combined
     Combined --> Complete[✅ Consolidated]
 
-    classDef current fill:#F44336,stroke:#C62828,stroke-width:2px,color:#fff
-    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef secondaryStyle fill:#ffffb3,stroke:#e6e68a,stroke-width:2px,color:#333
 
-    class SS,SV current
-    class Combined,Complete proposed
+    class SS,SV validationStyle
+    class Complete successStyle
+    class Combined secondaryStyle
 ```
 
 ### Phase 3: Deployment Validation Workflows
 ```mermaid
-graph LR
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
+flowchart LR
     VD[validate-deployments.yaml] --> Combined[deployment-validation.yaml]
     VK8s[validate-kubernetes.yaml] --> Combined
     VK8sC[validate-k8s-configs.yml] --> Combined
     Combined --> Complete[✅ Keep existing DV<br/>Remove 2 redundant]
 
-    classDef current fill:#9C27B0,stroke:#6A1B9A,stroke-width:2px,color:#fff
-    classDef proposed fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef successStyle fill:#b3de69,stroke:#97c24f,stroke-width:2px,color:#333
+    classDef secondaryStyle fill:#ffffb3,stroke:#e6e68a,stroke-width:2px,color:#333
 
-    class VD,VK8s,VK8sC current
-    class Combined,Complete proposed
+    class VD,VK8s,VK8sC validationStyle
+    class Complete successStyle
+    class Combined secondaryStyle
 ```
 
 ---

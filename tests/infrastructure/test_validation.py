@@ -333,7 +333,7 @@ class TestDocumentation:
 
     def test_implementation_guide_exists(self):
         """Test implementation guide exists."""
-        assert os.path.exists("docs/kubernetes-best-practices-implementation.md") or os.path.exists(
+        assert os.path.exists("docs/deployment/kubernetes/kubernetes-best-practices-implementation.mdx") or os.path.exists(
             "docs/kubernetes-best-practices-implementation.mdx"
         )
 

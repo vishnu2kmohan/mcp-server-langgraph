@@ -2,7 +2,7 @@
 title: Multi-Cloud Kubernetes Lessons
 description: Lessons learned from GKE applied to EKS and AKS deployments with kubectl
   validation patterns
-icon: cloud
+icon: 'cloud'
 contentType: how-to
 seoTitle: Multi-Cloud Kubernetes Lessons - MCP Server LangGraph
 seoDescription: Lessons learned from GKE applied to EKS and AKS deployments with kubectl
@@ -22,6 +22,60 @@ keywords:
 # EKS and AKS Deployment Guide - Lessons from GKE
 
 This document provides comprehensive guidance for deploying to AWS EKS and Azure AKS, incorporating all lessons learned from GKE deployment troubleshooting to prevent similar issues.
+
+```mermaid
+flowchart TD
+    subgraph GCP["Google Cloud (GKE)"]
+        GKE["GKE Autopilot"]
+        AR["Artifact Registry"]
+        WIF["Workload Identity"]
+    end
+
+    subgraph AWS["Amazon Web Services (EKS)"]
+        EKS["EKS Cluster"]
+        ECR["ECR"]
+        IRSA["IAM Roles for SA"]
+    end
+
+    subgraph Azure["Microsoft Azure (AKS)"]
+        AKS["AKS Cluster"]
+        ACR["ACR"]
+        ManagedID["Managed Identity"]
+    end
+
+    subgraph Common["Shared Patterns"]
+        ESO["External Secrets Operator"]
+        Kustomize["Kustomize Overlays"]
+        Helm["Helm Charts"]
+    end
+
+    GKE --> ESO
+    EKS --> ESO
+    AKS --> ESO
+
+    AR --> GKE
+    ECR --> EKS
+    ACR --> AKS
+
+    WIF --> GKE
+    IRSA --> EKS
+    ManagedID --> AKS
+
+    Kustomize --> GKE
+    Kustomize --> EKS
+    Kustomize --> AKS
+
+    %% ColorBrewer2 Set3 palette - each cloud uniquely colored
+    classDef gcpStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef awsStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef azureStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef commonStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class GKE,AR,WIF gcpStyle
+    class EKS,ECR,IRSA awsStyle
+    class AKS,ACR,ManagedID azureStyle
+    class ESO,Kustomize,Helm commonStyle
+```
 
 ## Table of Contents
 
@@ -58,13 +112,13 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
 
 ### 1. **kubectl Validation: Always Use Server-Side Dry-Run**
 
-❌ **WRONG** (Client-side - doesn't see CRDs):
+- ❌ **WRONG** (Client-side - doesn't see CRDs):
 ```
 - name: Validate manifests
   run: |
     kubectl apply --dry-run=client -f /tmp/manifests.yaml
 ```
-✅ **CORRECT** (Server-side - validates against actual cluster):
+- ✅ **CORRECT** (Server-side - validates against actual cluster):
 ```
 - name: Validate manifests
   run: |
@@ -82,12 +136,12 @@ This guide ensures that the 11 issues encountered during GKE deployment **do not
 
 ### 2. **External Secrets Operator: Check API Version**
 
-❌ **WRONG** (Assumes v1beta1):
+- ❌ **WRONG** (Assumes v1beta1):
 ```yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 ```
-✅ **CORRECT** (Verify installed version first):
+- ✅ **CORRECT** (Verify installed version first):
 ```bash
 # Check what version is installed
 kubectl api-resources | grep externalsecret
@@ -108,14 +162,14 @@ kind: ExternalSecret
 
 ### 3. **Environment Variables: Use ConfigMap Patches, Not Deployment Values**
 
-❌ **WRONG** (Creates value/valueFrom conflict):
+- ❌ **WRONG** (Creates value/valueFrom conflict):
 ```yaml
 # deployment-patch.yaml
 env:
 - name: LLM_PROVIDER
   value: "google"  # ❌ Conflicts if base uses valueFrom
 ```
-✅ **CORRECT** (Override ConfigMap data):
+- ✅ **CORRECT** (Override ConfigMap data):
 ```yaml
 # configmap-patch.yaml
 data:
@@ -130,7 +184,7 @@ data:
 
 ### 4. **RBAC Resources: Remove Unused Kubernetes RBAC**
 
-❌ **WRONG** (Include unused RBAC resources):
+- ❌ **WRONG** (Include unused RBAC resources):
 ```yaml
 # deployments/base/serviceaccount.yaml
 ---
@@ -152,7 +206,7 @@ kind: RoleBinding
 - Violate least privilege principle
 - Increase attack surface
 
-✅ **CORRECT** (Only include ServiceAccount):
+- ✅ **CORRECT** (Only include ServiceAccount):
 ```yaml
 # deployments/base/serviceaccount.yaml
 apiVersion: v1
@@ -187,14 +241,14 @@ metadata:
 
 ### 5. **Namespace Creation: Always Create Before Validation**
 
-❌ **WRONG** (Namespace created during deployment):
+- ❌ **WRONG** (Namespace created during deployment):
 ```
 - name: Deploy
   run: |
     kubectl create namespace staging-mcp-server-langgraph
     kubectl apply -k deployments/overlays/staging
 ```
-✅ **CORRECT** (Namespace created before validation):
+- ✅ **CORRECT** (Namespace created before validation):
 ```
 - name: Create namespace
   run: |
@@ -574,14 +628,14 @@ jobs:
 
 ### Issue 1: ConfigMap Generator Behavior
 
-❌ **WRONG** (Merge when no base ConfigMap):
+- ❌ **WRONG** (Merge when no base ConfigMap):
 ```yaml
 configMapGenerator:
   - name: otel-collector-config
     behavior: merge  # ❌ Fails if base doesn't have this ConfigMap
 ```
 
-✅ **CORRECT** (Create new ConfigMap):
+- ✅ **CORRECT** (Create new ConfigMap):
 ```yaml
 configMapGenerator:
   - name: otel-collector-config
@@ -635,7 +689,7 @@ configMapGenerator:
 
 ### Issue 4: Strategic Merge Patch for Namespaces
 
-❌ **WRONG** (Namespace in both base and overlay resources):
+- ❌ **WRONG** (Namespace in both base and overlay resources):
 ```yaml
 # kustomization.yaml
 resources:
@@ -643,7 +697,7 @@ resources:
   - namespace.yaml  # ❌ Creates conflict with base namespace
 ```
 
-✅ **CORRECT** (Namespace as patch):
+- ✅ **CORRECT** (Namespace as patch):
 ```yaml
 # kustomization.yaml
 resources:

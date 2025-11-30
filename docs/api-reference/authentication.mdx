@@ -12,6 +12,48 @@ contentType: "reference"
 
 The Authentication API provides endpoints for user authentication, token management, and session handling. Supports both JWT token-based and Redis session-based authentication modes.
 
+```mermaid
+flowchart LR
+    subgraph Client["Client Application"]
+        App["App / Browser"]
+    end
+
+    subgraph AuthAPI["Authentication API"]
+        Login["/auth/login"]
+        Refresh["/auth/refresh"]
+        Logout["/auth/logout"]
+        Verify["/auth/verify"]
+        Me["/auth/me"]
+    end
+
+    subgraph Backend["Backend Services"]
+        JWT["JWT Issuer"]
+        Session["Redis Session"]
+        KC["Keycloak SSO"]
+    end
+
+    App -->|"POST credentials"| Login
+    App -->|"POST refresh_token"| Refresh
+    App -->|"POST"| Logout
+    App -->|"POST token"| Verify
+    App -->|"GET"| Me
+
+    Login --> JWT
+    Login --> Session
+    Login --> KC
+    Refresh --> JWT
+    Logout --> Session
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef apiStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef backendStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class App clientStyle
+    class Login,Refresh,Logout,Verify,Me apiStyle
+    class JWT,Session,KC backendStyle
+```
+
 <Info>
 **v2.1.0** adds Keycloak SSO support and Redis session management for production deployments.
 </Info>

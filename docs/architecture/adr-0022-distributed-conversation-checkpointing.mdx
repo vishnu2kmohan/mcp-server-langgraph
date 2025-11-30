@@ -1,6 +1,21 @@
 ---
 title: "22. Distributed Conversation Checkpointing for Auto-Scaling"
-description: "Architecture Decision Record: 22. Distributed Conversation Checkpointing for Auto-Scaling"
+description: 'Architecture Decision Record: 22. Distributed Conversation Checkpointing for Auto-Scaling'
+icon: 'database'
+contentType: "reference"
+seoTitle: "22. Distributed Conversation Checkpointing for Auto-Scaling - Architecture Decision Record"
+seoDescription: "Architecture Decision Record for 22. Distributed Conversation Checkpointing for Auto-Scaling. Category: Data & Storage. Part of MCP Server with LangGraph documentation."
+keywords:
+  - "architecture"
+  - "decision"
+  - "record"
+  - "ADR"
+  - "MCP Server"
+  - "LangGraph"
+  - "Distributed"
+  - "Conversation"
+  - "Checkpointing"
+  - "Auto"
 ---
 
 # 22. Distributed Conversation Checkpointing for Auto-Scaling
@@ -168,9 +183,9 @@ redis:
 
 ### Negative Consequences
 
-⚠️ **Redis Dependency for Production**: Production deployments MUST enable Redis
-⚠️ **Slight Latency**: Redis network calls add ~5-10ms per checkpoint operation
-⚠️ **Memory Usage**: Conversations stored in Redis (mitigated by TTL)
+- ⚠️ **Redis Dependency for Production**: Production deployments MUST enable Redis
+- ⚠️ **Slight Latency**: Redis network calls add ~5-10ms per checkpoint operation
+- ⚠️ **Memory Usage**: Conversations stored in Redis (mitigated by TTL)
 
 ### Neutral Consequences
 

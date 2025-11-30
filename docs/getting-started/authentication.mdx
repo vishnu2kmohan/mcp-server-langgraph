@@ -12,6 +12,49 @@ contentType: "explanation"
 
 MCP Server with LangGraph supports **pluggable authentication** with two built-in providers:
 
+```mermaid
+flowchart LR
+    subgraph Client["Client Application"]
+        User["User/Service"]
+    end
+
+    subgraph Auth["Authentication Layer"]
+        direction TB
+        AuthMW["Auth Middleware"]
+        InMem["InMemory Provider<br/>(Development)"]
+        KC["Keycloak SSO<br/>(Production)"]
+    end
+
+    subgraph Modes["Auth Modes"]
+        Token["Token Mode<br/>(Stateless JWT)"]
+        Session["Session Mode<br/>(Redis-backed)"]
+    end
+
+    subgraph Backend["MCP Server"]
+        API["API Endpoints"]
+    end
+
+    User -->|"Credentials"| AuthMW
+    AuthMW --> InMem
+    AuthMW --> KC
+    InMem --> Token
+    KC --> Token
+    KC --> Session
+    Token -->|"JWT"| API
+    Session -->|"Session ID"| API
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef clientStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef authStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef modeStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef apiStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class User clientStyle
+    class AuthMW,InMem,KC authStyle
+    class Token,Session modeStyle
+    class API apiStyle
+```
+
 <CardGroup cols={2}>
   <Card title="InMemory Provider" icon="memory">
     **Development & Testing**
@@ -69,6 +112,37 @@ curl -X POST http://localhost:8000/message \
 ### Keycloak SSO (Production) 🆕
 
 **NEW in v2.1.0**: Enterprise-grade authentication with Keycloak.
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    participant U as User
+    participant C as Client App
+    participant M as MCP Server
+    participant K as Keycloak
+    participant R as Redis
+
+    U->>C: 1. Login request
+    C->>K: 2. Authenticate (username/password)
+    K-->>C: 3. Access Token + Refresh Token
+    C->>M: 4. API request + Bearer token
+    M->>K: 5. Validate token (JWKS)
+    K-->>M: 6. Token valid + user info
+    M->>R: 7. Create/update session
+    R-->>M: 8. Session stored
+    M-->>C: 9. API response
+
+    Note over C,K: Token expires after 1 hour
+    C->>K: 10. Refresh token
+    K-->>C: 11. New access token
+```
 
 #### Features
 

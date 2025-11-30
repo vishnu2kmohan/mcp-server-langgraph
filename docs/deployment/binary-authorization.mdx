@@ -585,25 +585,25 @@ gcloud kms keys add-iam-policy-binding attestor-key \
 
 <Tabs>
   <Tab title="Control Objectives Met">
-    ✅ **CC6.1**: Logical access controls
+    - ✅ **CC6.1**: Logical access controls
 
-    - Only signed images can deploy
-    - Attestations prove CI/CD approval
+      - Only signed images can deploy
+      - Attestations prove CI/CD approval
 
-    ✅ **CC6.6**: Logical access segregation
+    - ✅ **CC6.6**: Logical access segregation
 
-    - Production attestor separate from dev/staging
-    - KMS keys isolated per environment
+      - Production attestor separate from dev/staging
+      - KMS keys isolated per environment
 
-    ✅ **CC7.2**: System monitoring
+    - ✅ **CC7.2**: System monitoring
 
-    - All denials logged to Cloud Logging
-    - Attestation creation audited
+      - All denials logged to Cloud Logging
+      - Attestation creation audited
 
-    ✅ **CC8.1**: Change management
+    - ✅ **CC8.1**: Change management
 
-    - All deployments require signed images
-    - Git commit → CI/CD → Attestation chain
+      - All deployments require signed images
+      - Git commit → CI/CD → Attestation chain
   </Tab>
 
   <Tab title="Audit Evidence">

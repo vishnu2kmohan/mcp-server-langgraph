@@ -43,6 +43,7 @@ This Terraform implementation provides:
 ## Architecture
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'primaryColor':'#8dd3c7','primaryTextColor':'#000','primaryBorderColor':'#555','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#bebada'}}}%%
 flowchart TB
     subgraph "VPC (10.0.0.0/16)"
@@ -92,15 +93,18 @@ flowchart TB
     RDS -.Encryption.-> KMS
     Redis -.Encryption.-> KMS
 
-    classDef network fill:#8dd3c7,stroke:#555,color:#000
-    classDef compute fill:#fb8072,stroke:#555,color:#000
-    classDef storage fill:#fdb462,stroke:#555,color:#000
-    classDef security fill:#bebada,stroke:#555,color:#000
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef errorStyle fill:#fb8072,stroke:#e85a4f,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
+    classDef secondaryStyle fill:#ffffb3,stroke:#e6e68a,stroke-width:2px,color:#333
 
-    class ALB,NAT,VPCEndpoints network
-    class CP,NG1,NG2,NG3 compute
-    class RDS,Redis,S3,DDB storage
-    class KMS,SM security
+    class ALB,NAT clientStyle
+    class CP,NG1,NG2,NG3 validationStyle
+    class RDS,Redis,S3,DDB storageStyle
+    class KMS,SM serviceStyle
+    class VPCEndpoints,CW secondaryStyle
 ```
 ## Modules Overview
 
@@ -685,6 +689,7 @@ IRSA eliminates the need for long-lived IAM access keys by mapping Kubernetes se
 ### How IRSA Works
 
 ```mermaid
+%% ColorBrewer2 Set3 palette - each component type uniquely colored
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'primaryColor':'#8dd3c7','primaryTextColor':'#000','primaryBorderColor':'#555','lineColor':'#fb8072','secondaryColor':'#fdb462','tertiaryColor':'#bebada'}}}%%
 sequenceDiagram
     participant Pod
@@ -698,6 +703,15 @@ sequenceDiagram
     OIDC-->>Pod: Inject AWS credentials as environment variables
     Pod->>SM: Access secrets using temporary credentials
     SM-->>Pod: Return secret value
+
+    classDef clientStyle fill:#8dd3c7,stroke:#5fa99d,stroke-width:2px,color:#333
+    classDef validationStyle fill:#fdb462,stroke:#e8873f,stroke-width:2px,color:#333
+    classDef serviceStyle fill:#bebada,stroke:#9b8ec7,stroke-width:2px,color:#333
+    classDef storageStyle fill:#80b1d3,stroke:#5a91b8,stroke-width:2px,color:#333
+
+    class Pod clientStyle
+    class OIDC,STS validationStyle
+    class SM storageStyle
 ```
 
 ### Setup IRSA for Application

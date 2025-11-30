@@ -12,6 +12,40 @@ contentType: "explanation"
 
 MCP Server with LangGraph uses **OpenFGA** for fine-grained, relationship-based authorization (Google Zanzibar model). This enables you to define complex permissions like "who can access what" with precision.
 
+```mermaid
+flowchart TD
+    subgraph Users["Users"]
+        Alice["user:alice"]
+        Bob["user:bob"]
+    end
+
+    subgraph Org["Organization"]
+        Acme["organization:acme"]
+    end
+
+    subgraph Resources["Resources"]
+        Chat["tool:chat"]
+        Search["tool:search"]
+        Doc["document:report-q4"]
+    end
+
+    Alice -->|"admin"| Acme
+    Bob -->|"member"| Acme
+    Acme -->|"executor<br/>(all members)"| Chat
+    Alice -->|"executor"| Search
+    Alice -->|"owner"| Doc
+    Bob -->|"editor"| Doc
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef userStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef orgStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef resourceStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+
+    class Alice,Bob userStyle
+    class Acme orgStyle
+    class Chat,Search,Doc resourceStyle
+```
+
 <Info>
 **OpenFGA** provides the same authorization model used by Google, Airbnb, and GitHub for billions of authorization decisions per day.
 </Info>
@@ -314,6 +348,34 @@ conditional_mappings:
 See the [Keycloak SSO Guide](/guides/keycloak-sso) for details.
 
 ### API Operations
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    participant C as Client
+    participant M as MCP Server
+    participant O as OpenFGA
+    participant R as Resource
+
+    C->>M: 1. Request (tool:chat)
+    M->>O: 2. check(user:alice, executor, tool:chat)
+    O-->>M: 3. allowed: true
+
+    alt Permission Granted
+        M->>R: 4. Execute tool
+        R-->>M: 5. Result
+        M-->>C: 6. Response
+    else Permission Denied
+        M-->>C: 403 Forbidden
+    end
+```
 
 #### Check Permission
 

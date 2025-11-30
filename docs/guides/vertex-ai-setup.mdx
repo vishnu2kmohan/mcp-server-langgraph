@@ -2,7 +2,7 @@
 title: Google Vertex AI Setup
 description: Complete guide to using Anthropic Claude and Google Gemini models via
   Google Vertex AI
-icon: book-open
+icon: 'book-open'
 contentType: how-to
 seoTitle: Google Vertex AI Setup - Claude & Gemini Integration | MCP Server LangGraph
 seoDescription: Enterprise-grade guide for accessing Anthropic Claude and Google Gemini models via Vertex AI with unified billing, workload identity, and VPC-SC
@@ -155,7 +155,7 @@ gcloud iam service-accounts keys create ~/vertex-ai-key.json \
   --iam-account=vertex-ai-dev@PROJECT_ID.iam.gserviceaccount.com
 ```
 
-⚠️ **Security Warning**: Service account keys are long-lived credentials. Protect them like passwords!
+- ⚠️ **Security Warning**: Service account keys are long-lived credentials. Protect them like passwords!
 
 #### Step 3: Configure Environment Variables
 
@@ -332,9 +332,9 @@ kubectl run -it test --image=google/cloud-sdk:slim \
 
 ### 1. Use Workload Identity (GKE)
 
-✅ **Best**: Workload Identity (keyless authentication)
-⚠️ **Acceptable**: Service Account Key (local dev only)
-❌ **Avoid**: Committing keys to git
+- ✅ **Best**: Workload Identity (keyless authentication)
+- ⚠️ **Acceptable**: Service Account Key (local dev only)
+- ❌ **Avoid**: Committing keys to git
 
 ### 2. Principle of Least Privilege
 
