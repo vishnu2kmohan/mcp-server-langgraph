@@ -49,7 +49,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.mark.meta
 @pytest.mark.performance
-@pytest.mark.timeout(300)  # Override global 60s timeout - this test runs full suite as subprocess
+@pytest.mark.timeout(660)  # Override global timeout - this test runs full suite as subprocess (600s subprocess + buffer)
 def test_no_slow_unit_tests():
     """
     Test that no individual unit test takes > 10 seconds.
@@ -70,6 +70,11 @@ def test_no_slow_unit_tests():
     project_root = Path(__file__).parent.parent.parent
     assert (project_root / "pyproject.toml").exists()
 
+    # Disable OTEL to prevent background threads from slowing down tests
+    # The stack trace shows OtelPeriodicExportingMetricReader threads hanging
+    env = os.environ.copy()
+    env["OTEL_SDK_DISABLED"] = "true"
+
     # Run unit tests with detailed timing
     result = subprocess.run(
         [
@@ -85,7 +90,8 @@ def test_no_slow_unit_tests():
         cwd=project_root,
         capture_output=True,
         text=True,
-        timeout=300,  # 5 minute timeout
+        timeout=600,  # 10 minute timeout (CI environments are slower than local dev)
+        env=env,
     )
 
     output = result.stdout + result.stderr
