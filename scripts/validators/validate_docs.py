@@ -152,15 +152,14 @@ VALID_ICONS: set[str] = {
     # Communication & Integration
     "plug",
     "link",
-    "gateway",
+    # For API gateways (no Font Awesome 'gateway' icon exists)
     "message-bot",
     # Time & Scheduling
     "clock",
     "calendar",
     "stopwatch",
     # Actions & Status
-    "bolt",
-    "zap",
+    "bolt",  # Font Awesome equivalent of Lucide 'zap'
     "infinity",
     "play",
     "stop",
@@ -254,7 +253,7 @@ ADR_ICON_MAPPING: dict[str, str] = {
     "secrets": "lock",
     "security": "shield-halved",
     "permission": "shield",
-    "kong": "gateway",
+    "kong": "network-wired",
     # Observability
     "observability": "chart-line",
     "monitoring": "chart-line",
