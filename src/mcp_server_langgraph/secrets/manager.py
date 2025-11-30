@@ -442,7 +442,7 @@ class SecretsManager:
         """
         if key:
             # Remove all cache entries for this key
-            keys_to_remove = [k for k in self._cache.keys() if k.endswith(f":{key}")]
+            keys_to_remove = [k for k in self._cache if k.endswith(f":{key}")]
             for k in keys_to_remove:
                 self._cache.pop(k, None)
             _get_logger().info(f"Cache invalidated for secret: {key}")
