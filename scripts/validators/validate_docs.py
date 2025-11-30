@@ -42,6 +42,7 @@ class MDXValidationResult:
     md_files: list[Path] = field(default_factory=list)
     invalid_names: list[tuple[Path, str]] = field(default_factory=list)
     frontmatter_issues: list[tuple[Path, str]] = field(default_factory=list)
+    icon_errors: list[tuple[Path, str]] = field(default_factory=list)
     stats: dict[str, int] = field(default_factory=dict)
 
 
@@ -69,6 +70,248 @@ EXCLUDE_PATTERNS = [
     "venv/",
     ".venv/",
 ]
+
+# =============================================================================
+# Icon Registry for Mintlify (Font Awesome 6.x subset)
+# =============================================================================
+
+# Valid Mintlify icons - comprehensive set from Font Awesome 6.x
+# Reference: docs/references/icon-selection-guide.mdx
+VALID_ICONS: set[str] = {
+    # Deployment & Infrastructure
+    "rocket",
+    "dharmachakra",
+    "docker",
+    "cubes",
+    "server",
+    "cloud",
+    "network-wired",
+    # Cloud Providers
+    "google",
+    "aws",
+    "microsoft",
+    # Security & Authentication
+    "shield",
+    "shield-halved",
+    "shield-check",
+    "lock",
+    "key",
+    "key-skeleton",
+    "user-shield",
+    "users-gear",
+    "users",
+    "vault",
+    # Observability & Monitoring
+    "chart-line",
+    "chart-bar",
+    "database",
+    "arrow-up-right-dots",
+    "magnifying-glass-chart",
+    "gauge",
+    "heart-pulse",
+    # Resilience & Operations
+    "life-ring",
+    "clipboard-check",
+    "list-check",
+    "arrows-rotate",
+    "rotate",
+    # Development & Code
+    "code",
+    "terminal",
+    "file-code",
+    "bug",
+    "flask",
+    "vial",
+    "wrench",
+    "screwdriver-wrench",
+    "gear",
+    "toolbox",
+    # Documentation & Reference
+    "book",
+    "book-open",
+    "file-lines",
+    "file-contract",
+    "icons",
+    "newspaper",
+    # Version & Releases
+    "tag",
+    "code-branch",
+    # Architecture & Design
+    "diagram-project",
+    "sitemap",
+    "layer-group",
+    "cubes-stacked",
+    "scale-balanced",
+    # AI & Machine Learning
+    "brain",
+    "robot",
+    "microchip",
+    "wand-magic-sparkles",
+    # Communication & Integration
+    "plug",
+    "link",
+    "gateway",
+    "message-bot",
+    # Time & Scheduling
+    "clock",
+    "calendar",
+    "stopwatch",
+    # Actions & Status
+    "bolt",
+    "zap",
+    "infinity",
+    "play",
+    "stop",
+    "refresh",
+    "download",
+    "upload",
+    "check",
+    "xmark",
+    "exclamation",
+    "info",
+    "question",
+    "trophy",
+    # Navigation
+    "arrow-right",
+    "arrow-left",
+    "arrow-up",
+    "arrow-down",
+    "map",
+    # Misc
+    "cookie",
+    "floppy-disk",
+    "memory",
+    "broom",
+    "package",
+    "dollar-sign",
+    "eye",
+    "flag",
+    # Additional icons found in existing docs
+    "circle-exclamation",
+    "ship",
+    "code-pull-request",
+    "icon-name",  # Placeholder in some templates
+    "settings",
+    # More icons from docs
+    "shield-keyhole",
+    "folder-tree",
+    "badge-check",
+    "gauge-high",
+    "calculator",
+    "file-signature",
+    "money-bill-trend-up",
+    "checklist",
+    "paper-plane",
+    "chart-mixed",
+    "sliders",
+    "computer",
+    "shuffle",
+    "sparkles",
+    "file",
+    "plug-circle-bolt",
+    "lightbulb",
+    "message",
+    "drafting-compass",
+    "bell-exclamation",
+    "hospital",
+    "user-lock",
+    "file-medical",
+    "pen-to-square",
+    "trash",
+    "file-export",
+    "folder-open",
+    "certificate",
+    "cube",
+    "bell",
+    "route",
+    "book-medical",
+    "github",
+}
+
+# ADR topic-to-icon mapping for auto-assignment
+# Maps keywords in ADR titles/filenames to appropriate icons
+ADR_ICON_MAPPING: dict[str, str] = {
+    # Default for all ADRs per icon-selection-guide.mdx
+    "default": "file-lines",
+    # LLM & AI
+    "llm": "microchip",
+    "litellm": "microchip",
+    "anthropic": "brain",
+    "pydantic": "code",
+    "agentic": "robot",
+    # Authorization & Security
+    "openfga": "shield",
+    "authorization": "shield",
+    "authentication": "key",
+    "keycloak": "key",
+    "jwt": "key",
+    "identity": "user-shield",
+    "scim": "users-gear",
+    "infisical": "lock",
+    "secrets": "lock",
+    "security": "shield-halved",
+    "permission": "shield",
+    "kong": "gateway",
+    # Observability
+    "observability": "chart-line",
+    "monitoring": "chart-line",
+    "metrics": "chart-line",
+    # Infrastructure
+    "deployment": "rocket",
+    "gke": "google",
+    "autopilot": "google",
+    "postgresql": "database",
+    "redis": "database",
+    "memorystore": "database",
+    "session": "database",
+    "checkpointing": "database",
+    "storage": "database",
+    # Performance
+    "rate-limiting": "gauge",
+    "caching": "memory",
+    "resilience": "life-ring",
+    "async": "bolt",
+    # CI/CD & Testing
+    "cicd": "arrows-rotate",
+    "pipeline": "arrows-rotate",
+    "testing": "flask",
+    "pytest": "flask",
+    "fixture": "flask",
+    "xdist": "flask",
+    # Errors & Handling
+    "error": "bug",
+    "exception": "bug",
+    # Versioning & Standards
+    "semantic-versioning": "tag",
+    "versioning": "tag",
+    # Architecture
+    "langgraph": "diagram-project",
+    "functional": "diagram-project",
+    "diagram": "diagram-project",
+    "visual": "diagram-project",
+    "workflow": "diagram-project",
+    "builder": "diagram-project",
+    # Compliance
+    "compliance": "scale-balanced",
+    "gdpr": "scale-balanced",
+    # Configuration & Tools
+    "feature-flag": "flag",
+    "cookiecutter": "cookie",
+    "template": "cookie",
+    "ruff": "broom",
+    "mintlify": "book",
+    "pre-commit": "code-branch",
+    "fastapi": "bolt",
+    "uv": "package",
+    "dependency": "package",
+    "singleton": "cubes",
+    "helm": "cubes",
+    # Transport & Protocol
+    "mcp": "plug",
+    "http": "plug",
+    "transport": "plug",
+    "protocol": "plug",
+}
 
 
 def is_kebab_case(filename: str) -> bool:
@@ -120,7 +363,113 @@ def parse_frontmatter(content: str) -> tuple[dict | None, str, str]:
     return frontmatter, frontmatter_text, body_text
 
 
-def validate_mdx_files(docs_dir: Path, quiet: bool = False) -> MDXValidationResult:
+# =============================================================================
+# Icon Validation Functions
+# =============================================================================
+
+
+def validate_icon_format(icon_value: str) -> tuple[bool, str | None, str | None]:
+    """
+    Validate icon format and value.
+
+    Args:
+        icon_value: The raw icon value from frontmatter (e.g., "'rocket'", '"rocket"', "rocket")
+
+    Returns:
+        Tuple of (is_valid, icon_name, error_message)
+        - is_valid: True if icon format and value are valid
+        - icon_name: The extracted icon name (without quotes) if valid
+        - error_message: Error description if invalid, None otherwise
+    """
+    if not icon_value or icon_value.strip() == "":
+        return False, None, "Icon value is empty"
+
+    icon_value = icon_value.strip()
+
+    # Check for empty quotes
+    if icon_value in ("''", '""'):
+        return False, None, "Icon value is empty (just quotes)"
+
+    # Check for single quotes (preferred format)
+    if icon_value.startswith("'") and icon_value.endswith("'"):
+        icon_name = icon_value[1:-1]
+        if not icon_name:
+            return False, None, "Icon value is empty inside quotes"
+        if icon_name not in VALID_ICONS:
+            return False, icon_name, f"Icon '{icon_name}' not in valid icon registry"
+        return True, icon_name, None
+
+    # Check for double quotes (should be single quotes)
+    if icon_value.startswith('"') and icon_value.endswith('"'):
+        icon_name = icon_value[1:-1]
+        return False, icon_name, f"Icon uses double quotes (should use single quotes): {icon_value}"
+
+    # Unquoted value
+    if icon_value not in VALID_ICONS:
+        return (
+            False,
+            icon_value,
+            f"Icon '{icon_value}' is unquoted and not in valid icon registry. Use single quotes: icon: '{icon_value}'",
+        )
+    return False, icon_value, f"Icon is unquoted (should use single quotes): icon: '{icon_value}'"
+
+
+def validate_adr_has_icon(file_path: Path) -> tuple[bool, str | None]:
+    """
+    Validate that an ADR file has an icon in its frontmatter.
+
+    Args:
+        file_path: Path to the .mdx file
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Check if this is an ADR file (in docs/architecture/ with adr-* prefix)
+    is_adr = "architecture" in str(file_path) and file_path.name.startswith("adr-")
+
+    if not is_adr:
+        # Non-ADR files don't require icons (for now)
+        return True, None
+
+    try:
+        content = file_path.read_text()
+        frontmatter, fm_text, _ = parse_frontmatter(content)
+
+        if not frontmatter:
+            return False, f"ADR file has no frontmatter: {file_path.name}"
+
+        # Check for icon in frontmatter
+        icon_value = frontmatter.get("icon", "").strip()
+        if not icon_value:
+            return False, f"ADR file is missing icon in frontmatter: {file_path.name}"
+
+        return True, None
+    except Exception as e:
+        return False, f"Error reading file {file_path.name}: {e}"
+
+
+def get_suggested_adr_icon(file_path: Path) -> str:
+    """
+    Get suggested icon for an ADR based on its filename.
+
+    Args:
+        file_path: Path to the ADR file
+
+    Returns:
+        Suggested icon name from ADR_ICON_MAPPING
+    """
+    filename = file_path.stem.lower()  # e.g., "adr-0001-llm-multi-provider"
+
+    # Check each keyword in the mapping
+    for keyword, icon in ADR_ICON_MAPPING.items():
+        if keyword != "default" and keyword in filename:
+            return icon
+
+    # Return default ADR icon
+    return ADR_ICON_MAPPING.get("default", "file-lines")
+
+
+def validate_mdx_files(docs_dir: Path, quiet: bool = False, validate_icons: bool = False) -> MDXValidationResult:
     """
     Validate MDX files in docs directory.
 
@@ -128,9 +477,19 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False) -> MDXValidationResu
     1. All files use .mdx extension (not .md)
     2. Filenames follow kebab-case convention
     3. Frontmatter uses consistent quote style
+    4. Icon validation (when validate_icons=True):
+       - Icons use single quotes
+       - Icons are in valid registry
+       - ADR files have icons
     """
     result = MDXValidationResult()
-    result.stats = {"total_files": 0, "md_files": 0, "invalid_names": 0, "frontmatter_issues": 0}
+    result.stats = {
+        "total_files": 0,
+        "md_files": 0,
+        "invalid_names": 0,
+        "frontmatter_issues": 0,
+        "icon_errors": 0,
+    }
 
     if not docs_dir.exists():
         return result
@@ -166,13 +525,13 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False) -> MDXValidationResu
             result.stats["invalid_names"] += 1
             result.is_valid = False
 
-        # Check frontmatter (optional, just warnings in dry-run mode)
+        # Check frontmatter
         try:
             content = mdx_file.read_text()
             frontmatter, fm_text, _ = parse_frontmatter(content)
 
             if frontmatter:
-                # Check for inconsistent quoting
+                # Check for inconsistent quoting (legacy check)
                 for line in fm_text.split("\n"):
                     if ":" not in line:
                         continue
@@ -180,10 +539,30 @@ def validate_mdx_files(docs_dir: Path, quiet: bool = False) -> MDXValidationResu
                     key = key.strip()
                     value = value.strip()
 
-                    # description and icon should use single quotes
-                    if key in ("description", "icon") and value.startswith('"'):
+                    # description should use single quotes (warning only)
+                    if key == "description" and value.startswith('"'):
                         result.frontmatter_issues.append((mdx_file, f"{key} uses double quotes (should use single quotes)"))
                         result.stats["frontmatter_issues"] += 1
+
+                    # Icon validation (blocking when validate_icons=True)
+                    if validate_icons and key == "icon":
+                        is_valid_icon, icon_name, error = validate_icon_format(value)
+                        if not is_valid_icon:
+                            result.icon_errors.append((mdx_file, error or "Invalid icon"))
+                            result.stats["icon_errors"] += 1
+                            result.is_valid = False
+
+                # Check ADR files for missing icons (when validate_icons=True)
+                if validate_icons:
+                    is_adr = "architecture" in str(mdx_file) and mdx_file.name.startswith("adr-")
+                    if is_adr:
+                        icon_value = frontmatter.get("icon", "").strip()
+                        if not icon_value:
+                            suggested = get_suggested_adr_icon(mdx_file)
+                            result.icon_errors.append((mdx_file, f"ADR file is missing icon. Suggested: icon: '{suggested}'"))
+                            result.stats["icon_errors"] += 1
+                            result.is_valid = False
+
         except Exception:
             pass
 
@@ -201,6 +580,7 @@ def print_mdx_report(result: MDXValidationResult, docs_dir: Path) -> None:
     print(f"  Invalid .md files: {result.stats.get('md_files', 0)}")
     print(f"  Invalid filenames: {result.stats.get('invalid_names', 0)}")
     print(f"  Frontmatter issues: {result.stats.get('frontmatter_issues', 0)}")
+    print(f"  Icon errors: {result.stats.get('icon_errors', 0)}")
 
     if result.md_files:
         print("\n❌ .md files found in docs/ (should be .mdx):")
@@ -219,6 +599,14 @@ def print_mdx_report(result: MDXValidationResult, docs_dir: Path) -> None:
             print(f"    ⚠️  {file_path.relative_to(docs_dir)}: {issue}")
         if len(result.frontmatter_issues) > 10:
             print(f"    ... and {len(result.frontmatter_issues) - 10} more")
+
+    if result.icon_errors:
+        print("\n❌ Icon errors (blocking):")
+        for file_path, error in result.icon_errors[:20]:
+            print(f"    ❌ {file_path.relative_to(docs_dir)}: {error}")
+        if len(result.icon_errors) > 20:
+            print(f"    ... and {len(result.icon_errors) - 20} more")
+        print("  💡 Solution: Run 'python scripts/docs/standardize_frontmatter.py --fix' to auto-fix")
 
     print("\n" + "=" * 80)
     if result.is_valid:
@@ -395,6 +783,7 @@ def main() -> int:
         epilog="""
 Validation Types:
   --mdx       Validate MDX extension, file naming, frontmatter
+  --icons     Validate icon consistency (single quotes, valid registry, ADRs have icons)
   --adr       Validate ADR synchronization (adr/ <-> docs/architecture/)
   --tests     Run documentation validation pytest tests
   --all       Run all validations
@@ -402,12 +791,14 @@ Validation Types:
 Examples:
   %(prog)s --all                           # Run all validations
   %(prog)s --mdx --docs-dir docs/          # Validate MDX files only
+  %(prog)s --mdx --icons                   # Validate MDX with icon checking
   %(prog)s --adr --repo-root .             # Validate ADR sync only
   %(prog)s --tests --dry-run               # Show what tests would run
 """,
     )
 
     parser.add_argument("--mdx", action="store_true", help="Validate MDX files (extension, naming, frontmatter)")
+    parser.add_argument("--icons", action="store_true", help="Validate icon consistency (requires --mdx or --all)")
     parser.add_argument("--adr", action="store_true", help="Validate ADR synchronization")
     parser.add_argument("--tests", action="store_true", help="Run documentation validation tests")
     parser.add_argument("--all", action="store_true", help="Run all validations")
@@ -422,14 +813,22 @@ Examples:
     if not any([args.mdx, args.adr, args.tests, args.all]):
         args.all = True
 
+    # --icons implies --mdx
+    if args.icons and not args.mdx and not args.all:
+        args.mdx = True
+
     exit_code = 0
 
     # MDX validation
     if args.mdx or args.all:
         if args.dry_run:
             print(f"[DRY RUN] Would validate MDX files in {args.docs_dir}")
+            if args.icons or args.all:
+                print("[DRY RUN] Icon validation enabled")
         else:
-            result = validate_mdx_files(args.docs_dir, args.quiet)
+            # Enable icon validation when --icons or --all is specified
+            validate_icons = args.icons or args.all
+            result = validate_mdx_files(args.docs_dir, args.quiet, validate_icons=validate_icons)
             if not args.quiet:
                 print_mdx_report(result, args.docs_dir)
             if not result.is_valid:

@@ -357,7 +357,7 @@ repos:
     description: "Consolidated runner for fast validation scripts to reduce overhead.\nIncludes: pytest-config, pre-push-hook, repo-root, time-bombs, async-fixture-scope, migration-idempotency, api-schemas."
 
   - id: validate-docs
-    name: Validate Documentation (Consolidated - MDX, Naming, ADR, Tests)
+    name: Validate Documentation (Consolidated - MDX, Naming, Icons, ADR, Tests)
     entry: uv run --frozen python -u scripts/validators/validate_docs.py --all
     language: system
     files: ^(docs/.*\.(md|mdx|json)|adr/.*\.md)$
@@ -368,10 +368,11 @@ repos:
     description: |
       Consolidated documentation validator (CI parity fix - 2025-11-29).
 
-      Replaces 6 separate hooks with 1 unified validator:
+      Replaces 7 separate hooks with 1 unified validator:
       - validate-mdx-extensions → --mdx flag
       - check-frontmatter-quotes → --mdx flag
       - validate-file-naming-conventions → --mdx flag
+      - validate-frontmatter-icons → --icons flag (NEW)
       - validate-adr-sync → --adr flag
       - validate-documentation-integrity → --tests flag
       - validate-documentation-structure → --tests flag
@@ -380,12 +381,14 @@ repos:
       ✅ All docs/ files use .mdx extension (not .md)
       ✅ Filenames follow kebab-case convention
       ✅ Frontmatter uses consistent quote style
+      ✅ Icons use single quotes and are in valid registry
+      ✅ All ADR files have contextual icons
       ✅ ADRs synchronized between adr/ and docs/architecture/
       ✅ No uppercase ADR-* filenames
       ✅ Runs documentation validation pytest tests
 
       Benefits:
-      - 40% faster pre-push (single file scan instead of 6)
+      - 40% faster pre-push (single file scan instead of 7)
       - Full CI parity (runs same validations as CI)
       - Single Python process instead of 7+
 
@@ -416,7 +419,12 @@ repos:
       echo "Install via mise: curl https://mise.run | sh && mise install";
       echo "Or install Node.js from https://nodejs.org/";
       exit 1; fi;
-      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" && npm exec -- mintlify broken-links'
+      REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT/docs" &&
+      OUTPUT=$(npm exec -- mintlify broken-links 2>&1) && echo "$OUTPUT" &&
+      if echo "$OUTPUT" | grep -q "found.*broken"; then
+        echo ""; echo "ERROR: Broken links detected. Fix them before pushing.";
+        exit 1;
+      fi'
     language: system
     # Pattern expanded (P1-1 - 2025-11-27): Now triggers on MDX, JSON (navigation), and images
     files: ^docs/.*\.(mdx|json|png|jpg|jpeg|gif|svg|webp)$
@@ -740,12 +748,17 @@ repos:
     pass_filenames: true
     always_run: false
     stages:
-    - manual
-    description: 'Validates Mermaid diagram styling consistency (optional quality check).
+    - pre-push
+    description: 'Validates Mermaid diagram styling consistency (BLOCKING).
 
-      Run manually: SKIP= pre-commit run check-mermaid-styling --all-files
+      Enforces:
+      - Modern syntax (flowchart TD, not graph TB)
+      - ColorBrewer2 Set3 palette colors
+      - Required comment marker for styled diagrams
+      - Sequence diagram theme initialization
 
-      Moved to manual stage 2025-11-16 (CI/CD optimization - Phase 1)
+      See: docs/references/mermaid-guide.mdx for standards.
+      Moved to pre-push stage 2025-11-30 (enforce diagram standards).
 
       '
   # NOTE: prevent-local-config-commits hook REMOVED (2025-11-25)

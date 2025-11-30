@@ -1,0 +1,324 @@
+---
+title: 'Background Schedulers Guide'
+description: 'Configure automated data cleanup and SOC 2 compliance scheduling with APScheduler'
+icon: 'clock'
+contentType: 'guide'
+seoTitle: 'Background Schedulers Guide - MCP Server LangGraph'
+seoDescription: 'Configure automated data retention cleanup and SOC 2 compliance scheduling using APScheduler for production deployments'
+keywords:
+  - scheduler
+  - cleanup
+  - compliance
+  - soc2
+  - apscheduler
+  - data-retention
+  - background-jobs
+---
+
+# Background Schedulers
+
+MCP Server LangGraph includes two built-in schedulers for automated background tasks:
+
+1. **CleanupScheduler** - Data retention enforcement (daily)
+2. **ComplianceScheduler** - SOC 2 compliance automation (daily/weekly/monthly)
+
+Both schedulers use [APScheduler](https://apscheduler.readthedocs.io/) for cron-based job scheduling.
+
+## CleanupScheduler
+
+The `CleanupScheduler` enforces data retention policies by automatically cleaning up expired data.
+
+### Features
+
+- Daily execution at configurable time (default: 3 AM UTC)
+- Configurable via `config/retention_policies.yaml`
+- Dry-run mode for testing
+- Metrics and alerting integration
+- Graceful error handling
+
+### Configuration
+
+Create `config/retention_policies.yaml`:
+
+```yaml
+global:
+  cleanup_schedule: "0 3 * * *"  # Daily at 3 AM UTC (cron format)
+  dry_run: false
+
+policies:
+  sessions:
+    retention_days: 90
+    archive: true
+  audit_logs:
+    retention_days: 365
+    archive: true
+  temporary_data:
+    retention_days: 7
+    archive: false
+
+notifications:
+  enabled: true
+  channels:
+    - slack
+    - email
+```
+
+### Usage
+
+```python
+from mcp_server_langgraph.schedulers import (
+    start_cleanup_scheduler,
+    stop_cleanup_scheduler,
+    get_cleanup_scheduler,
+)
+from mcp_server_langgraph.auth.session import SessionStore
+
+# At application startup
+session_store = SessionStore()
+
+await start_cleanup_scheduler(
+    session_store=session_store,
+    config_path="config/retention_policies.yaml",
+    dry_run=False,  # Set True for testing
+)
+
+# Manual trigger (for testing/admin)
+scheduler = get_cleanup_scheduler()
+if scheduler:
+    await scheduler.run_now()
+
+# At application shutdown
+await stop_cleanup_scheduler()
+```
+
+### Cron Schedule Format
+
+The cleanup schedule uses standard cron format:
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of week (0 - 6) (Sunday = 0)
+│ │ │ │ │
+│ │ │ │ │
+* * * * *
+```
+
+Examples:
+- `0 3 * * *` - Daily at 3:00 AM
+- `0 */6 * * *` - Every 6 hours
+- `0 3 * * 0` - Weekly on Sunday at 3:00 AM
+
+---
+
+## ComplianceScheduler
+
+The `ComplianceScheduler` automates SOC 2 compliance tasks.
+
+### Scheduled Jobs
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| Daily Compliance Check | 6:00 AM UTC | Collects evidence for all SOC 2 controls |
+| Weekly Access Review | Monday 9:00 AM UTC | Reviews user access and identifies inactive accounts |
+| Monthly Compliance Report | 1st of month, 9:00 AM UTC | Generates comprehensive SOC 2 report |
+
+### Features
+
+- Automatic evidence collection
+- Access review with recommendations
+- Compliance scoring
+- Alerting when score falls below threshold
+- Report generation in JSON format
+
+### Usage
+
+```python
+from mcp_server_langgraph.schedulers import (
+    start_compliance_scheduler,
+    stop_compliance_scheduler,
+    get_compliance_scheduler,
+)
+from pathlib import Path
+
+# At application startup
+scheduler = await start_compliance_scheduler(
+    session_store=session_store,
+    evidence_dir=Path("evidence"),
+    enabled=True,  # Set False to disable
+)
+
+# Manual triggers (for testing/admin)
+if scheduler:
+    # Trigger daily compliance check
+    summary = await scheduler.trigger_daily_check()
+    print(f"Compliance score: {summary['compliance_score']}")
+
+    # Trigger weekly access review
+    report = await scheduler.trigger_weekly_review()
+    print(f"Total users reviewed: {report.total_users}")
+
+    # Trigger monthly report
+    monthly = await scheduler.trigger_monthly_report()
+    print(f"Report ID: {monthly['report_id']}")
+
+# At application shutdown
+await stop_compliance_scheduler()
+```
+
+### Access Review Report
+
+The weekly access review generates an `AccessReviewReport`:
+
+```python
+from mcp_server_langgraph.schedulers import AccessReviewReport, AccessReviewItem
+
+# Report structure
+report = AccessReviewReport(
+    review_id="access_review_20251130",
+    generated_at="2025-11-30T09:00:00Z",
+    period_start="2025-11-23T09:00:00Z",
+    period_end="2025-11-30T09:00:00Z",
+    total_users=150,
+    active_users=142,
+    inactive_users=8,
+    users_reviewed=[...],
+    recommendations=[
+        "Review 8 inactive user accounts (no login > 90 days)"
+    ],
+    actions_required=[
+        "Disable or delete inactive user accounts"
+    ],
+)
+```
+
+### Alerting Thresholds
+
+The compliance scheduler sends alerts based on:
+
+| Condition | Severity | Action |
+|-----------|----------|--------|
+| Compliance score < 80% | HIGH | Immediate review required |
+| Job execution failure | CRITICAL | On-call notification |
+| Access review findings | INFO | Security team notification |
+
+---
+
+## Environment Variables
+
+Configure schedulers via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COMPLIANCE_SCHEDULER_ENABLED` | `true` | Enable/disable compliance scheduler |
+| `CLEANUP_SCHEDULE` | `0 3 * * *` | Cron schedule for cleanup |
+| `EVIDENCE_DIR` | `evidence/` | Directory for evidence files |
+| `RETENTION_CONFIG_PATH` | `config/retention_policies.yaml` | Retention config path |
+
+---
+
+## Monitoring
+
+### Metrics
+
+Both schedulers emit OpenTelemetry metrics:
+
+```
+# Cleanup scheduler
+cleanup_scheduler_runs_total
+cleanup_scheduler_deleted_records_total
+cleanup_scheduler_archived_records_total
+cleanup_scheduler_errors_total
+
+# Compliance scheduler
+compliance_daily_check_runs_total
+compliance_weekly_review_runs_total
+compliance_monthly_report_runs_total
+compliance_score_gauge
+```
+
+### Logs
+
+Structured logs are emitted for all scheduler operations:
+
+```json
+{
+  "event": "Daily compliance check completed",
+  "compliance_score": "92.5%",
+  "evidence_collected": 45,
+  "passed_controls": 42,
+  "failed_controls": 3
+}
+```
+
+---
+
+## Integration with FastAPI
+
+Integrate schedulers with your FastAPI application lifecycle:
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from mcp_server_langgraph.schedulers import (
+    start_cleanup_scheduler,
+    stop_cleanup_scheduler,
+    start_compliance_scheduler,
+    stop_compliance_scheduler,
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await start_cleanup_scheduler()
+    await start_compliance_scheduler()
+
+    yield
+
+    # Shutdown
+    await stop_cleanup_scheduler()
+    await stop_compliance_scheduler()
+
+app = FastAPI(lifespan=lifespan)
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Scheduler not running:**
+```python
+scheduler = get_compliance_scheduler()
+if scheduler:
+    print(f"Scheduler running: {scheduler.scheduler.running}")
+```
+
+**Missed jobs:**
+- Check timezone configuration (default: UTC)
+- Verify APScheduler job store persistence
+- Review logs for execution errors
+
+**High memory usage:**
+- Ensure jobs complete before next scheduled run
+- Configure `max_instances=1` to prevent overlapping
+
+### Debug Mode
+
+Enable debug logging:
+
+```python
+import logging
+logging.getLogger("apscheduler").setLevel(logging.DEBUG)
+```
+
+---
+
+## Related Documentation
+
+- [Data Protection Principles](/compliance/gdpr/data-protection-principles)
+- [SOC 2 Compliance](/compliance/soc2/overview)
+- [Alerting Configuration](/deployment/monitoring/alerting)

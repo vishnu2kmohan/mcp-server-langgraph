@@ -1,7 +1,7 @@
 ---
 title: Deployment Environments - Version Matrix
 description: Comprehensive overview of deployment environments, service versions, and configuration differences across production, test, development, and minimal environments
-icon: server
+icon: 'server'
 contentType: how-to
 seoTitle: Deployment Environments & Version Matrix | MCP Server LangGraph
 seoDescription: Complete guide to deployment environments including production, test, development, and minimal configurations with service version matrices
@@ -11,6 +11,44 @@ keywords: [deployment environments, version matrix, docker compose, kubernetes, 
 # Deployment Environments - Version Matrix
 
 This document provides a comprehensive overview of all deployment environments, service versions, and configuration differences.
+
+```mermaid
+flowchart LR
+    subgraph Dev["Development"]
+        DevDC["docker-compose.dev.yml"]
+        DevNet["mcp-dev-network"]
+    end
+
+    subgraph Test["Test"]
+        TestDC["docker-compose.test.yml"]
+        TestNet["mcp-test-network"]
+    end
+
+    subgraph Staging["Staging"]
+        StageDC["docker-compose.yml"]
+        StageK8s["values-staging.yaml"]
+    end
+
+    subgraph Prod["Production"]
+        ProdK8s["values-production-gke.yaml"]
+        ProdNet["mcp-network"]
+    end
+
+    Dev -->|"CI Tests"| Test
+    Test -->|"Merge to main"| Staging
+    Staging -->|"Release tag"| Prod
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef devStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef testStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef stageStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef prodStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+
+    class DevDC,DevNet devStyle
+    class TestDC,TestNet testStyle
+    class StageDC,StageK8s stageStyle
+    class ProdK8s,ProdNet prodStyle
+```
 
 **Last Updated**: 2025-11-21
 **Synchronization Status**: ✅ All environments synchronized (Docker + Helm)

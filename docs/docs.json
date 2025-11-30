@@ -312,9 +312,15 @@
         "tab": "Guides",
         "groups": [
           {
+            "group": "Getting Started",
+            "pages": [
+              "guides/presets",
+              "guides/agent-architecture"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
-              "guides/agent-architecture",
               "guides/multi-llm-setup",
               "guides/versioning-strategy",
               "guides/google-gemini",
@@ -323,6 +329,13 @@
               "guides/openai-gpt",
               "guides/local-models",
               "guides/uv-migration"
+            ]
+          },
+          {
+            "group": "Production",
+            "pages": [
+              "guides/schedulers",
+              "guides/resilience-patterns"
             ]
           },
           {

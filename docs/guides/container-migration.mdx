@@ -2,7 +2,7 @@
 title: Container Pattern Migration
 description: Comprehensive guide for migrating to dependency injection container pattern
   with before/after examples
-icon: arrows-rotate
+icon: 'arrows-rotate'
 contentType: how-to
 seoTitle: Container Pattern Migration - MCP Server LangGraph
 seoDescription: Comprehensive guide for migrating to dependency injection container
@@ -22,6 +22,35 @@ keywords:
 # Migration Guide: Container Pattern & Dependency Injection
 
 This guide helps you migrate your code to use the new container pattern and dependency injection.
+
+```mermaid
+flowchart LR
+    subgraph Before["❌ Before: Singleton Pattern"]
+        GS["Global State"]
+        ENV["Environment Variables<br/>(20+ required)"]
+        SA["get_agent_graph()<br/>Singleton"]
+        GS --> SA
+        ENV --> GS
+    end
+
+    subgraph After["✅ After: DI Container"]
+        Container["Container"]
+        Settings["Settings Object"]
+        Factory["create_agent()<br/>Factory"]
+        Settings --> Container
+        Container --> Factory
+    end
+
+    Before -->|"Migration"| After
+
+    %% ColorBrewer2 Set3 palette
+    classDef beforeStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef afterStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef migrationStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+
+    class GS,ENV,SA beforeStyle
+    class Container,Settings,Factory afterStyle
+```
 
 ## Overview
 

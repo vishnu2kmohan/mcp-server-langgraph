@@ -3,7 +3,7 @@ title: CI/CD Pipeline Documentation
 sidebarTitle: Overview
 description: Comprehensive CI/CD documentation covering 24 production-grade GitHub
   Actions workflows with elite-level capabilities
-icon: infinity
+icon: 'infinity'
 contentType: explanation
 seoTitle: CI/CD Pipeline Documentation - MCP Server LangGraph
 seoDescription: Comprehensive CI/CD documentation covering 24 production-grade GitHub
@@ -27,6 +27,56 @@ keywords:
 ## Overview
 
 This repository contains 24 production-grade GitHub Actions workflows providing comprehensive CI/CD, security, compliance, and observability capabilities.
+
+```mermaid
+flowchart TD
+    subgraph Trigger["Triggers"]
+        PR["Pull Request"]
+        Push["Push to main"]
+        Tag["Release Tag"]
+        Schedule["Scheduled"]
+    end
+
+    subgraph CI["CI Pipeline"]
+        Test["Test Matrix<br/>(3.10, 3.11, 3.12)"]
+        Lint["Lint & Format"]
+        Docker["Docker Build<br/>(base, full, test)"]
+    end
+
+    subgraph Quality["Quality Gates"]
+        Coverage["Coverage ≥80%"]
+        Security["Security Scan"]
+        E2E["E2E Tests"]
+    end
+
+    subgraph CD["CD Pipeline"]
+        Staging["Deploy Staging"]
+        Approval["Manual Approval"]
+        Canary["Canary (10%)"]
+        Prod["Production (100%)"]
+    end
+
+    PR --> Test
+    Push --> Test
+    Test --> Lint --> Docker
+    Docker --> Coverage --> Security --> E2E
+
+    Tag --> Staging
+    Staging --> Approval --> Canary --> Prod
+
+    Schedule --> Security
+
+    %% ColorBrewer2 Set3 palette - each stage uniquely colored
+    classDef triggerStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef ciStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef qualityStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef cdStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class PR,Push,Tag,Schedule triggerStyle
+    class Test,Lint,Docker ciStyle
+    class Coverage,Security,E2E qualityStyle
+    class Staging,Approval,Canary,Prod cdStyle
+```
 
 ## Quick Links
 

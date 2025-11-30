@@ -1,0 +1,335 @@
+---
+title: 'QuickStart Presets Guide'
+description: 'Rapid agent prototyping with zero infrastructure using pre-configured presets'
+icon: 'rocket'
+contentType: 'tutorial'
+seoTitle: 'QuickStart Presets Guide - MCP Server LangGraph'
+seoDescription: 'Create AI agents in minutes with in-memory storage and free LLM defaults'
+keywords:
+  - quickstart
+  - preset
+  - prototyping
+  - in-memory
+  - langgraph
+  - agent
+---
+
+# QuickStart Presets
+
+MCP Server LangGraph provides pre-configured presets for different deployment scenarios:
+
+| Preset | Setup Time | Infrastructure | Use Case |
+|--------|------------|----------------|----------|
+| **QuickStart** | < 2 minutes | None | Learning, prototyping |
+| Development | ~15 minutes | Docker Compose | Local development |
+| Production | 1-2 hours | Kubernetes | Enterprise deployment |
+
+This guide covers the **QuickStart** preset for rapid agent development.
+
+---
+
+## QuickStart Preset
+
+The QuickStart preset provides:
+
+- **In-memory checkpointing** (LangGraph MemorySaver)
+- **Free LLM defaults** (Gemini Flash)
+- **No Docker required**
+- **No authentication needed**
+- **Simple agent creation**
+- **FastAPI server ready**
+
+### Quick Start
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+# Create an agent in one line
+agent = QuickStart.create("Research Assistant")
+
+# Chat with the agent
+result = agent.chat("What is LangGraph?")
+print(result)
+```
+
+---
+
+## Creating Agents
+
+### Basic Agent
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+# Create agent with default settings
+agent = QuickStart.create("My Agent")
+
+# Chat
+response = agent.chat("Hello, how can you help me?")
+print(response)
+```
+
+### Agent with Tools
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+# Create agent with tools
+agent = QuickStart.create(
+    name="Calculator Agent",
+    tools=["calculator", "search"],
+    llm="gemini-flash",
+)
+
+# Use the agent
+result = agent.chat("What is the square root of 144?")
+```
+
+### Agent with Custom Settings
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+agent = QuickStart.create(
+    name="Creative Writer",
+    llm="claude-haiku",
+    system_prompt="You are a creative writing assistant specialized in short stories.",
+    temperature=0.9,  # Higher creativity
+)
+
+result = agent.chat("Write a short story about a robot learning to paint.")
+```
+
+---
+
+## Available LLMs
+
+The QuickStart preset supports these free-tier friendly models:
+
+| Model | Provider | Best For |
+|-------|----------|----------|
+| `gemini-flash` | Google | Fast, general purpose (default) |
+| `gemini-pro` | Google | Complex reasoning |
+| `claude-haiku` | Anthropic | Concise responses |
+| `gpt-5-mini` | OpenAI | Balanced performance |
+
+```python
+# Use a specific LLM
+agent = QuickStart.create(
+    name="Assistant",
+    llm="gemini-pro",  # Use Gemini Pro for complex tasks
+)
+```
+
+---
+
+## Creating a FastAPI Application
+
+Generate a complete REST API for your agent:
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+# Create FastAPI app
+app = QuickStart.create_app(
+    name="Customer Support Bot",
+    tools=["search", "knowledge_base"],
+    llm="gemini-flash",
+    port=8000,
+)
+
+# Run with: uvicorn app:app --reload
+```
+
+### API Endpoints
+
+The generated app includes:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Health check with agent info |
+| `/chat` | POST | Chat with the agent |
+| `/health` | GET | Simple health check |
+
+### Example Request
+
+```bash
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What can you help me with?", "thread_id": "user123"}'
+```
+
+Response:
+```json
+{
+  "query": "What can you help me with?",
+  "response": "I'm Customer Support Bot, a helpful AI assistant...",
+  "thread_id": "user123"
+}
+```
+
+---
+
+## Conversation Threading
+
+QuickStart supports conversation history with thread IDs:
+
+```python
+agent = QuickStart.create("Assistant")
+
+# First message in thread
+response1 = agent.chat("My name is Alice", thread_id="user-123")
+
+# Continuing the conversation
+response2 = agent.chat("What's my name?", thread_id="user-123")
+# Response will remember the context
+```
+
+---
+
+## Streaming Responses
+
+For real-time output:
+
+```python
+agent = QuickStart.create("Streaming Agent")
+
+# Stream the response
+for chunk in agent.stream_chat("Tell me a long story"):
+    print(chunk, end="", flush=True)
+```
+
+---
+
+## Configuration Options
+
+The `QuickStartConfig` model defines all options:
+
+```python
+from mcp_server_langgraph.presets.quickstart import QuickStartConfig
+
+config = QuickStartConfig(
+    name="Custom Agent",
+    tools=["search", "calculator"],
+    llm="gemini-flash",
+    system_prompt="You are a helpful research assistant.",
+    temperature=0.7,
+)
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | str | required | Agent name |
+| `tools` | list[str] | [] | Tools to include |
+| `llm` | str | gemini-flash | LLM model |
+| `system_prompt` | str | None | Custom system prompt |
+| `temperature` | float | 0.7 | LLM temperature (0.0-1.0) |
+
+---
+
+## Migrating to Production
+
+When ready for production, migrate from QuickStart to the full deployment:
+
+### Step 1: Add Persistence
+
+```python
+# QuickStart uses in-memory (data lost on restart)
+# For production, use PostgreSQL checkpointing
+
+# See: deployment/postgresql-checkpointing.mdx
+```
+
+### Step 2: Add Authentication
+
+```python
+# QuickStart has no authentication
+# For production, enable Keycloak JWT auth
+
+# See: guides/authentication.mdx
+```
+
+### Step 3: Add Observability
+
+```python
+# QuickStart has basic logging
+# For production, add OpenTelemetry + LangSmith
+
+# See: getting-started/langsmith-tracing.mdx
+```
+
+### Step 4: Deploy to Kubernetes
+
+```bash
+# QuickStart runs locally
+# For production, use Helm charts
+
+helm install my-agent ./charts/mcp-server-langgraph
+```
+
+---
+
+## Limitations
+
+The QuickStart preset is designed for learning and prototyping. It has these limitations:
+
+| Feature | QuickStart | Production |
+|---------|------------|------------|
+| State persistence | In-memory (lost on restart) | PostgreSQL |
+| Authentication | None | Keycloak JWT |
+| Authorization | None | OpenFGA |
+| Observability | Basic logging | OpenTelemetry + LangSmith |
+| Scaling | Single instance | Kubernetes HPA |
+| Secrets management | Environment variables | Infisical |
+
+---
+
+## Examples
+
+### Research Assistant
+
+```python
+from mcp_server_langgraph.presets import QuickStart
+
+agent = QuickStart.create(
+    name="Research Assistant",
+    tools=["search", "summarize"],
+    llm="gemini-pro",
+    system_prompt="You are a research assistant. Provide detailed, accurate information with sources.",
+)
+
+result = agent.chat("What are the latest developments in quantum computing?")
+```
+
+### Code Helper
+
+```python
+agent = QuickStart.create(
+    name="Code Helper",
+    llm="claude-haiku",
+    system_prompt="You are a Python coding assistant. Provide concise, working code examples.",
+    temperature=0.3,  # Lower temperature for more deterministic code
+)
+
+result = agent.chat("Write a function to calculate Fibonacci numbers")
+```
+
+### Customer Support Bot
+
+```python
+app = QuickStart.create_app(
+    name="Support Bot",
+    tools=["knowledge_base", "ticket_system"],
+    llm="gemini-flash",
+)
+
+# Deploy with: uvicorn app:app --host 0.0.0.0 --port 8000
+```
+
+---
+
+## Related Documentation
+
+- [LangGraph Functional API](/architecture/adr-0010-langgraph-functional-api)
+- [Agent Architecture](/guides/agent-architecture)
+- [Deployment Overview](/deployment/overview)

@@ -11,6 +11,44 @@ contentType: "how-to"
 
 Integrate existing identity providers (LDAP, SAML, OIDC) with Keycloak for centralized authentication.
 
+```mermaid
+flowchart TD
+    subgraph Providers["Identity Providers"]
+        LDAP["LDAP / Active Directory"]
+        OIDC["OIDC Providers<br/>(Google, Microsoft, Okta)"]
+        SAML["SAML IdPs<br/>(ADFS, Ping)"]
+    end
+
+    subgraph Keycloak["Keycloak Federation"]
+        Broker["Identity Broker"]
+        Mapper["Attribute Mapper"]
+        Realm["langgraph-agent Realm"]
+    end
+
+    subgraph App["MCP Server"]
+        JWT["JWT Token"]
+        API["API Endpoints"]
+    end
+
+    LDAP -->|"Sync users/groups"| Broker
+    OIDC -->|"OAuth2 redirect"| Broker
+    SAML -->|"SAML assertion"| Broker
+
+    Broker --> Mapper
+    Mapper --> Realm
+    Realm -->|"Issue"| JWT
+    JWT --> API
+
+    %% ColorBrewer2 Set3 palette - each component type uniquely colored
+    classDef providerStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef keycloakStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef appStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class LDAP,OIDC,SAML providerStyle
+    class Broker,Mapper,Realm keycloakStyle
+    class JWT,API appStyle
+```
+
 See [ADR-0037](/architecture/adr-0037-identity-federation) for architecture details.
 
 ### Quick Setup
@@ -87,16 +125,31 @@ See [setup_saml_idp.py](/reference/setup-scripts#setup_saml_idp-py) for full doc
 
 #### Federated User Login
 
-```
-1. User visits: https://app.example.com
-2. Clicks "Sign in with Google" (or LDAP, ADFS, etc.)
-3. Redirects to Keycloak
-4. Keycloak redirects to external IdP (Google)
-5. User authenticates with external IdP
-6. External IdP returns to Keycloak with assertion/token
-7. Keycloak maps attributes and issues JWT
-8. Client receives Keycloak JWT
-9. Client uses JWT for API calls (standard flow)
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant K as Keycloak
+    participant IdP as External IdP<br/>(Google/LDAP/ADFS)
+
+    U->>A: 1. Visit app.example.com
+    U->>A: 2. Click "Sign in with Google"
+    A->>K: 3. Redirect to Keycloak
+    K->>IdP: 4. Redirect to external IdP
+    U->>IdP: 5. Authenticate with IdP
+    IdP-->>K: 6. Return assertion/token
+    K->>K: 7. Map attributes
+    K-->>A: 8. Issue Keycloak JWT
+    A->>A: 9. Store JWT
+    A->>A: 10. Use JWT for API calls
 ```
 
 #### What Users See

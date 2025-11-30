@@ -2,7 +2,7 @@
 title: SCIM 2.0 Provisioning API
 description: API endpoints for automated user and group provisioning via SCIM 2.0
   protocol
-icon: users-gear
+icon: 'users-gear'
 contentType: reference
 seoTitle: SCIM 2.0 Provisioning API - MCP Server LangGraph
 seoDescription: API endpoints for automated user and group provisioning via SCIM 2.0
@@ -22,6 +22,40 @@ keywords:
 ## Overview
 
 The SCIM (System for Cross-domain Identity Management) 2.0 API provides standardized endpoints for automated user and group provisioning. SCIM enables identity providers and HR systems to synchronize user accounts, manage lifecycle events, and maintain group memberships automatically.
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#8dd3c7',
+  'primaryTextColor':'#333',
+  'primaryBorderColor':'#2a9d8f',
+  'lineColor':'#fb8072',
+  'secondaryColor':'#fdb462',
+  'tertiaryColor':'#b3de69'
+}}}%%
+sequenceDiagram
+    participant IdP as Identity Provider<br/>(Okta/Azure AD)
+    participant SCIM as SCIM API<br/>/scim/v2
+    participant KC as Keycloak
+    participant FGA as OpenFGA
+
+    Note over IdP,FGA: User Provisioning Flow
+
+    IdP->>SCIM: 1. POST /Users (create user)
+    SCIM->>KC: 2. Create user in realm
+    KC-->>SCIM: 3. User ID returned
+    SCIM->>FGA: 4. Write authorization tuples
+    FGA-->>SCIM: 5. Tuples written
+    SCIM-->>IdP: 6. 201 Created + User
+
+    Note over IdP,FGA: User Deprovisioning Flow
+
+    IdP->>SCIM: 7. DELETE /Users/{id}
+    SCIM->>KC: 8. Disable user (soft delete)
+    KC-->>SCIM: 9. User disabled
+    SCIM->>FGA: 10. Remove authorization tuples
+    FGA-->>SCIM: 11. Tuples removed
+    SCIM-->>IdP: 12. 204 No Content
+```
 
 <Info>
 **v2.8.0** implements SCIM 2.0 protocol ([RFC 7643](https://datatracker.ietf.org/doc/html/rfc7643), [RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) with Keycloak backend integration.

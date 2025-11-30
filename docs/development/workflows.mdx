@@ -2,7 +2,7 @@
 title: GitHub Actions Workflows Reference
 description: Comprehensive reference for all 31 GitHub Actions workflows organized
   by category
-icon: infinity
+icon: 'infinity'
 contentType: reference
 seoTitle: GitHub Actions Workflows Reference - MCP Server LangGraph
 seoDescription: Comprehensive reference for all 31 GitHub Actions workflows organized
@@ -22,6 +22,83 @@ keywords:
 # GitHub Actions Workflows Reference
 
 > **TL;DR**: This project has **31 GitHub Actions workflows** organized into 9 categories. The main CI pipeline is `ci.yaml` which orchestrates testing, building, and deployment.
+
+```mermaid
+flowchart TD
+    subgraph CoreCI["Core CI/CD (1)"]
+        CI["ci.yaml<br/>Main Pipeline"]
+    end
+
+    subgraph Quality["Quality & Testing (3)"]
+        QT["quality-tests.yaml"]
+        E2E["e2e-tests.yaml"]
+        OD["optional-deps-test.yaml"]
+    end
+
+    subgraph Security["Security & Compliance (4)"]
+        SS["security-scan.yaml"]
+        SV["security-validation.yml"]
+        GCS["gcp-compliance-scan.yaml"]
+        GDD["gcp-drift-detection.yaml"]
+    end
+
+    subgraph Deploy["Deployment (5)"]
+        DV["deployment-validation.yml"]
+        DS["deploy-staging-gke.yaml"]
+        DP["deploy-production-gke.yaml"]
+        VD["validate-deployments.yaml"]
+        VK["validate-kubernetes.yaml"]
+    end
+
+    subgraph Docs["Documentation (2)"]
+        DVL["docs-validation.yaml"]
+        LC["link-checker.yaml"]
+    end
+
+    subgraph Monitor["Monitoring (3)"]
+        OA["observability-alerts.yaml"]
+        DM["dora-metrics.yaml"]
+        WH["workflow-health.yaml"]
+    end
+
+    subgraph Maint["Maintenance (9)"]
+        DA["dependabot-automerge"]
+        ST["stale.yaml"]
+        CT["coverage-trend.yaml"]
+        PR["performance-regression"]
+        REL["release.yaml"]
+    end
+
+    subgraph Infra["Infrastructure (3)"]
+        TV["terraform-validate.yaml"]
+        VKC["validate-k8s-configs.yml"]
+        SH["shell-tests.yml"]
+    end
+
+    CI --> Quality
+    CI --> Deploy
+    Quality --> Security
+    Deploy --> Monitor
+
+    %% ColorBrewer2 Set3 palette - each category uniquely colored
+    classDef coreStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef qualityStyle fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef securityStyle fill:#fb8072,stroke:#e74c3c,stroke-width:2px,color:#333
+    classDef deployStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef docsStyle fill:#80b1d3,stroke:#3498db,stroke-width:2px,color:#333
+    classDef monitorStyle fill:#fdb462,stroke:#e67e22,stroke-width:2px,color:#333
+    classDef maintStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+    classDef infraStyle fill:#fccde5,stroke:#e91e63,stroke-width:2px,color:#333
+
+    class CI coreStyle
+    class QT,E2E,OD qualityStyle
+    class SS,SV,GCS,GDD securityStyle
+    class DV,DS,DP,VD,VK deployStyle
+    class DVL,LC docsStyle
+    class OA,DM,WH monitorStyle
+    class DA,ST,CT,PR,REL maintStyle
+    class TV,VKC,SH infraStyle
+```
 
 ## Overview
 

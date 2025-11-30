@@ -1,7 +1,7 @@
 ---
 title: Infrastructure Deployment Checklist
 description: Reproducible and idempotent infrastructure deployment guide with standardized naming conventions
-icon: checklist
+icon: 'checklist'
 contentType: how-to
 seoTitle: Infrastructure Deployment Checklist - Production-Ready Guide
 seoDescription: Complete infrastructure deployment checklist for staging, production, and development environments. Ensure reproducible and idempotent deployments with validation steps.
@@ -16,6 +16,40 @@ keywords:
 ---
 
 # Infrastructure Deployment Checklist
+
+```mermaid
+flowchart TD
+    subgraph PreDeploy["Pre-Deployment"]
+        NC["Naming Convention Check"]
+        GHV["GitHub Variables Check"]
+        TF["Terraform Validate"]
+    end
+
+    subgraph Deploy["Deployment"]
+        APPLY["terraform apply"]
+        K8S["kubectl apply"]
+        HELM["helm upgrade"]
+    end
+
+    subgraph PostDeploy["Post-Deployment"]
+        HEALTH["Health Checks"]
+        SMOKE["Smoke Tests"]
+        MONITOR["Monitoring Verification"]
+    end
+
+    NC --> GHV --> TF
+    TF --> APPLY --> K8S --> HELM
+    HELM --> HEALTH --> SMOKE --> MONITOR
+
+    %% ColorBrewer2 Set3 palette
+    classDef preStyle fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef deployStyle fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef postStyle fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class NC,GHV,TF preStyle
+    class APPLY,K8S,HELM deployStyle
+    class HEALTH,SMOKE,MONITOR postStyle
+```
 
 ## Overview
 

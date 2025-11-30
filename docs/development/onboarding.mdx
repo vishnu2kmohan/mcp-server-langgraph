@@ -1,7 +1,7 @@
 ---
 title: Developer Onboarding Guide
 description: Get up and running with MCP Server LangGraph development in under 10 minutes
-icon: rocket
+icon: 'rocket'
 contentType: how-to
 seoTitle: MCP Server LangGraph Developer Onboarding - Quick Start Guide
 seoDescription: Complete developer onboarding guide for MCP Server LangGraph. Set up your development environment, run tests, and start contributing in under 10 minutes.
@@ -17,6 +17,44 @@ keywords:
 # Developer Onboarding Guide
 
 Welcome to the MCP Server LangGraph project! This guide will get you up and running in **under 10 minutes**.
+
+```mermaid
+flowchart LR
+    subgraph Step1["1. Clone & Setup"]
+        Clone["git clone"]
+        Setup["make dev-setup"]
+    end
+
+    subgraph Step2["2. Infrastructure"]
+        Docker["Docker Services"]
+        OpenFGA["OpenFGA Init"]
+        KC["Keycloak Setup"]
+    end
+
+    subgraph Step3["3. Verify"]
+        Health["make health-check"]
+        Test["make test-unit"]
+    end
+
+    subgraph Step4["4. Develop"]
+        Code["Write Code"]
+        Run["make run-streamable"]
+        Monitor["make monitoring-dashboard"]
+    end
+
+    Step1 --> Step2 --> Step3 --> Step4
+
+    %% ColorBrewer2 Set3 palette
+    classDef step1Style fill:#8dd3c7,stroke:#2a9d8f,stroke-width:2px,color:#333
+    classDef step2Style fill:#bebada,stroke:#7e5eb0,stroke-width:2px,color:#333
+    classDef step3Style fill:#ffffb3,stroke:#f1c40f,stroke-width:2px,color:#333
+    classDef step4Style fill:#b3de69,stroke:#7cb342,stroke-width:2px,color:#333
+
+    class Clone,Setup step1Style
+    class Docker,OpenFGA,KC step2Style
+    class Health,Test step3Style
+    class Code,Run,Monitor step4Style
+```
 
 ## Prerequisites
 
