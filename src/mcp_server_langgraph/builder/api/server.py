@@ -92,19 +92,22 @@ class SaveWorkflowRequest(BaseModel):
         try:
             path.relative_to(allowed_base_path)
         except ValueError:
-            raise ValueError(
+            msg = (
                 f"Invalid output path. Must be within allowed directory: {allowed_base}. "
                 f"Use BUILDER_OUTPUT_DIR environment variable to configure safe directory."
             )
+            raise ValueError(msg)
 
         # Additional checks for common attack patterns
         path_str = str(path)
         if ".." in path_str or path_str.startswith("/etc/") or path_str.startswith("/sys/"):
-            raise ValueError("Path traversal detected. Invalid output path.")
+            msg = "Path traversal detected. Invalid output path."
+            raise ValueError(msg)
 
         # Ensure .py extension
-        if not path.suffix == ".py":
-            raise ValueError("Output path must have .py extension")
+        if path.suffix != ".py":
+            msg = "Output path must have .py extension"
+            raise ValueError(msg)
 
         return str(path)
 
@@ -214,7 +217,7 @@ def root() -> dict[str, Any]:
     }
 
 
-@app.post("/api/builder/generate", response_model=GenerateCodeResponse)
+@app.post("/api/builder/generate")
 async def generate_code(
     request: GenerateCodeRequest,
     _auth: None = Depends(verify_builder_auth),
@@ -259,10 +262,10 @@ async def generate_code(
         return GenerateCodeResponse(code=code, formatted=True, warnings=warnings)
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Code generation failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Code generation failed: {e!s}")
 
 
-@app.post("/api/builder/validate", response_model=ValidateWorkflowResponse)
+@app.post("/api/builder/validate")
 async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflowResponse:
     """
     Validate workflow structure.
@@ -327,7 +330,7 @@ async def validate_workflow(request: ValidateWorkflowRequest) -> ValidateWorkflo
         return ValidateWorkflowResponse(valid=len(errors) == 0, errors=errors, warnings=warnings)
 
     except Exception as e:
-        return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {str(e)}"])
+        return ValidateWorkflowResponse(valid=False, errors=[f"Validation error: {e!s}"])
 
 
 @app.post("/api/builder/save")
@@ -369,7 +372,7 @@ async def save_workflow(
         # Path validation errors
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Save failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Save failed: {e!s}")
 
 
 @app.get("/api/builder/templates")
@@ -490,9 +493,9 @@ async def import_workflow(
         }
 
     except SyntaxError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid Python syntax: {e!s}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Import failed: {e!s}")
 
 
 @app.get("/api/builder/node-types")

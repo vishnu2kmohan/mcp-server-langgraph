@@ -5,7 +5,7 @@ Tests SQLAlchemy model definitions for cost tracking persistence.
 """
 
 import gc
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal
 
 import pytest
@@ -59,8 +59,8 @@ class TestTokenUsageRecord:
         """Test TokenUsageRecord __repr__ method."""
         record = TokenUsageRecord(
             id=1,
-            timestamp=datetime(2025, 1, 15, 12, 0, 0, tzinfo=timezone.utc),
-            created_at=datetime(2025, 1, 15, 12, 0, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC),
+            created_at=datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC),
             user_id="user123",
             session_id="session456",
             model="claude-3-5-sonnet-20241022",
@@ -80,7 +80,7 @@ class TestTokenUsageRecord:
 
     def test_token_usage_record_to_dict(self) -> None:
         """Test TokenUsageRecord to_dict method."""
-        timestamp = datetime(2025, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+        timestamp = datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC)
         record = TokenUsageRecord(
             id=1,
             timestamp=timestamp,

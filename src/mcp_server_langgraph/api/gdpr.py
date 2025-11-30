@@ -9,7 +9,7 @@ Implements data subject rights under GDPR:
 - Article 21: Right to Object (Consent Management)
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 
@@ -106,7 +106,7 @@ class ConsentResponse(BaseModel):
 # ==================== Endpoints ====================
 
 
-@router.get("/me/data", response_model=UserDataExport)
+@router.get("/me/data")
 async def get_user_data(
     request: Request,
     session_store: SessionStore = Depends(get_session_store),
@@ -224,7 +224,7 @@ async def export_user_data(
         # SECURITY: Sanitize username to prevent CWE-113 (HTTP Response Splitting)
         # Username from JWT could contain CR/LF if IdP allows special characters
         safe_username = sanitize_header_value(username)
-        filename = f"user_data_{safe_username}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.{format}"
+        filename = f"user_data_{safe_username}_{datetime.now(UTC).strftime('%Y%m%d')}.{format}"
         headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
 
         return Response(content=data_bytes, media_type=content_type, headers=headers)
@@ -286,7 +286,7 @@ async def update_user_profile(
             "user_id": user_id,
             "username": username,
             **update_data,
-            "updated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "updated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "storage_note": "Configure user profile storage backend for persistence",
         }
 
@@ -431,7 +431,7 @@ async def update_consent(
             )
 
         # Capture metadata
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        timestamp = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         ip_address = None  # Could capture from X-Forwarded-For if needed
         user_agent = None  # Could capture from headers if needed
 

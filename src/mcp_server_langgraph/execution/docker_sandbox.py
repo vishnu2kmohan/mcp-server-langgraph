@@ -27,6 +27,7 @@ except ImportError:
 
 from mcp_server_langgraph.execution.resource_limits import ResourceLimits
 from mcp_server_langgraph.execution.sandbox import ExecutionResult, Sandbox, SandboxError
+import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,8 @@ class DockerSandbox(Sandbox):
 
         # Check if docker package is available
         if not DOCKER_AVAILABLE:
-            raise SandboxError("Docker package not installed. Install it with: pip install docker or uv add docker")
+            msg = "Docker package not installed. Install it with: pip install docker or uv add docker"
+            raise SandboxError(msg)
 
         self.image = image
         self.socket_path = socket_path
@@ -82,7 +84,8 @@ class DockerSandbox(Sandbox):
             # Test connection
             self.client.ping()
         except Exception as e:
-            raise SandboxError(f"Docker not available: {e}")
+            msg = f"Docker not available: {e}"
+            raise SandboxError(msg)
 
         # Ensure image exists
         self._ensure_image()
@@ -98,7 +101,8 @@ class DockerSandbox(Sandbox):
                 self.client.images.pull(self.image)
                 logger.info(f"Successfully pulled {self.image}")
             except Exception as e:
-                raise SandboxError(f"Failed to pull Docker image {self.image}: {e}")
+                msg = f"Failed to pull Docker image {self.image}: {e}"
+                raise SandboxError(msg)
 
     def execute(self, code: str) -> ExecutionResult:
         """
@@ -220,7 +224,8 @@ class DockerSandbox(Sandbox):
                 self._cleanup_container(container)
 
             logger.error(f"Docker execution failed: {e}", exc_info=True)
-            raise SandboxError(f"Docker execution failed: {e}")
+            msg = f"Docker execution failed: {e}"
+            raise SandboxError(msg)
 
     def _create_container(self, code: str) -> Container:
         """
@@ -271,7 +276,8 @@ class DockerSandbox(Sandbox):
 
         except Exception as e:
             logger.error(f"Failed to create Docker container: {e}", exc_info=True)
-            raise SandboxError(f"Failed to create Docker container: {e}")
+            msg = f"Failed to create Docker container: {e}"
+            raise SandboxError(msg)
 
     def _get_network_mode(self) -> str:
         """
@@ -320,10 +326,8 @@ class DockerSandbox(Sandbox):
                 pass  # Already removed
             except Exception:
                 # Force kill if stop fails
-                try:
+                with contextlib.suppress(Exception):
                     container.kill()
-                except Exception:
-                    pass
 
             # Remove container
             try:

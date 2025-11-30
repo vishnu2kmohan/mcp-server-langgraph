@@ -8,7 +8,7 @@ Follows TDD principles and memory safety patterns for pytest-xdist.
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 import pytest
 
@@ -286,7 +286,7 @@ class TestInMemorySessionStoreRefresh:
 
         session = await store.get(session_id)
         expires_at = datetime.fromisoformat(session.expires_at)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Should have approximately 2 hours remaining
         remaining = (expires_at - now).total_seconds()
@@ -420,7 +420,7 @@ class TestInMemorySessionStoreInactivity:
         session_id = await store.create(user_id="user:mike", username="mike", roles=[])
 
         # Set cutoff to the future
-        cutoff = datetime.now(timezone.utc) + timedelta(hours=1)
+        cutoff = datetime.now(UTC) + timedelta(hours=1)
 
         inactive = await store.get_inactive_sessions(cutoff)
 
@@ -440,7 +440,7 @@ class TestInMemorySessionStoreInactivity:
         session_id = await store.create(user_id="user:nancy", username="nancy", roles=[])
 
         # Set cutoff to the future
-        cutoff = datetime.now(timezone.utc) + timedelta(hours=1)
+        cutoff = datetime.now(UTC) + timedelta(hours=1)
 
         count = await store.delete_inactive_sessions(cutoff)
 

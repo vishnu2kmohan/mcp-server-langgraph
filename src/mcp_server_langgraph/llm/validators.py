@@ -105,11 +105,8 @@ class LLMValidator:
         with tracer.start_as_current_span("llm.validate_response") as span:
             # Extract content
             if isinstance(response, AIMessage):
-                if isinstance(response.content, str):
-                    content = response.content
-                else:
-                    # Handle structured content (list) by converting to string
-                    content = str(response.content)
+                # Handle structured content (list) by converting to string
+                content = response.content if isinstance(response.content, str) else str(response.content)
             else:
                 content = str(response)
 
@@ -129,8 +126,8 @@ class LLMValidator:
                     validated = model_class(content=content) if hasattr(model_class, "content") else None  # type: ignore[assignment]
 
                     if validated is None:
-                        raise ValueError(
-                            f"Cannot parse non-JSON content for {model_class.__name__}. "
+                        raise ValueError(  # noqa: TRY003
+                            f"Cannot parse non-JSON content for {model_class.__name__}. "  # noqa: EM102
                             "Model must accept 'content' field or response must be valid JSON."
                         )
 

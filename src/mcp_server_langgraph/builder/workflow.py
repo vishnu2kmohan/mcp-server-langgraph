@@ -149,22 +149,27 @@ class WorkflowBuilder:
             ValueError: If workflow is invalid
         """
         if not self.nodes:
-            raise ValueError("Workflow must have at least one node")
+            msg = "Workflow must have at least one node"
+            raise ValueError(msg)
 
         if not self.entry_point:
-            raise ValueError("Workflow must have an entry point")
+            msg = "Workflow must have an entry point"
+            raise ValueError(msg)
 
         # Validate entry point exists
         node_ids = {n.id for n in self.nodes}
         if self.entry_point not in node_ids:
-            raise ValueError(f"Entry point '{self.entry_point}' not found in nodes")
+            msg = f"Entry point '{self.entry_point}' not found in nodes"
+            raise ValueError(msg)
 
         # Validate all edges reference existing nodes
         for edge in self.edges:
             if edge.from_node not in node_ids:
-                raise ValueError(f"Edge references non-existent node: {edge.from_node}")
+                msg = f"Edge references non-existent node: {edge.from_node}"
+                raise ValueError(msg)
             if edge.to_node not in node_ids:
-                raise ValueError(f"Edge references non-existent node: {edge.to_node}")
+                msg = f"Edge references non-existent node: {edge.to_node}"
+                raise ValueError(msg)
 
         return WorkflowDefinition(
             name=self.name,

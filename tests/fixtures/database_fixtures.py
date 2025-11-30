@@ -218,7 +218,7 @@ async def openfga_client_real(integration_test_env, test_infrastructure_ports):
                 )
                 pytest.skip(error_msg)
 
-    yield client
+    return client
 
     # Cleanup happens per-test
 

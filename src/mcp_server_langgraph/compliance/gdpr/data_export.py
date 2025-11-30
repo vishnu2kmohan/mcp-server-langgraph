@@ -4,7 +4,7 @@ GDPR Data Export Service - Article 15 (Right to Access) & Article 20 (Data Porta
 
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -90,7 +90,7 @@ class DataExportService:
         with tracer.start_as_current_span("data_export.export_user_data") as span:
             span.set_attribute("user_id", user_id)
 
-            export_id = f"exp_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
+            export_id = f"exp_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
 
             logger.info("Starting user data export", extra={"user_id": user_id, "export_id": export_id})
 
@@ -104,7 +104,7 @@ class DataExportService:
 
             export = UserDataExport(
                 export_id=export_id,
-                export_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                export_timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 user_id=user_id,
                 username=username,
                 email=email,
@@ -161,7 +161,8 @@ class DataExportService:
                 content_type = "text/csv"
 
             else:
-                raise ValueError(f"Unsupported export format: {format}")
+                msg = f"Unsupported export format: {format}"
+                raise ValueError(msg)
 
             logger.info(
                 "Portable data export completed",
@@ -245,8 +246,8 @@ class DataExportService:
             # Return minimal data if no storage configured
             return {
                 "user_id": user_id,
-                "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "created_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             }
 
         try:
@@ -257,8 +258,8 @@ class DataExportService:
                 # User exists but no profile data
                 return {
                     "user_id": user_id,
-                    "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                    "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "created_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                    "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 }
         except Exception as e:
             logger.error(f"Failed to retrieve user profile: {e}", exc_info=True)

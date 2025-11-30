@@ -7,7 +7,7 @@ Tests GDPR Article 7 (Consent) - 7-year retention requirement
 import gc
 import os
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import asyncpg
 import pytest
@@ -81,7 +81,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresConsentStore:
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
     """Create test user (worker-safe for pytest-xdist)"""
     user_id = get_user_id("consent_user")  # Worker-safe ID for parallel execution
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
         user_id=user_id,
         username="consentuser",
@@ -103,7 +103,7 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 @pytest.mark.gdpr
 async def test_create_consent_record(store: PostgresConsentStore, test_user: str):
     """Test creating consent record"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     record = ConsentRecord(
         consent_id="test_consent_123",
         user_id=test_user,
@@ -124,7 +124,7 @@ async def test_create_consent_record(store: PostgresConsentStore, test_user: str
 @pytest.mark.gdpr
 async def test_create_multiple_consent_types(store: PostgresConsentStore, test_user: str):
     """Test creating multiple consent types for same user"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create analytics consent
     analytics = ConsentRecord(
@@ -161,7 +161,7 @@ async def test_create_multiple_consent_types(store: PostgresConsentStore, test_u
 @pytest.mark.gdpr
 async def test_get_user_consents(store: PostgresConsentStore, test_user: str):
     """Test getting all consents for a user"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create consents
     for i, consent_type in enumerate(["analytics", "marketing", "third_party"]):
@@ -199,7 +199,7 @@ async def test_get_latest_consent(store: PostgresConsentStore, test_user: str):
     await store.create(old_consent)
 
     # Create newer consent
-    new_time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    new_time = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     new_consent = ConsentRecord(
         consent_id="test_new",
         user_id=test_user,
@@ -235,7 +235,7 @@ async def test_get_latest_consent_nonexistent_type(store: PostgresConsentStore, 
 @pytest.mark.gdpr
 async def test_delete_user_consents(store: PostgresConsentStore, test_user: str):
     """Test deleting all consents for a user"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create consents
     for consent_type in ["analytics", "marketing"]:
@@ -271,7 +271,7 @@ async def test_consents_deleted_when_user_deleted(
     test_user: str,
 ):
     """Test that consents are CASCADE deleted when user is deleted"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create consent
     record = ConsentRecord(
@@ -313,7 +313,7 @@ async def test_consent_withdrawal_creates_new_record(store: PostgresConsentStore
     await store.create(grant_record)
 
     # Withdraw consent (new record)
-    withdraw_time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    withdraw_time = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     withdraw_record = ConsentRecord(
         consent_id="test_withdraw",
         user_id=test_user,

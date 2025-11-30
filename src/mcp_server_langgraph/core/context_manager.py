@@ -329,9 +329,8 @@ Focus on high-signal information that maintains conversation context.
                     "determined",
                     "concluded",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["decisions"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["decisions"].append(msg_content[:200])
 
             # Requirements (obligations, constraints)
             if any(
@@ -346,9 +345,8 @@ Focus on high-signal information that maintains conversation context.
                     "essential",
                     "mandatory",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["requirements"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["requirements"].append(msg_content[:200])
 
             # Facts (statements of truth, data points)
             if any(
@@ -364,9 +362,8 @@ Focus on high-signal information that maintains conversation context.
                     "by default",
                     "currently",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["facts"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["facts"].append(msg_content[:200])
 
             # Action Items (tasks, TODOs)
             if any(
@@ -385,9 +382,8 @@ Focus on high-signal information that maintains conversation context.
                     "update",
                     "refactor",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["action_items"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["action_items"].append(msg_content[:200])
 
             # Issues (problems, bugs, errors)
             if any(
@@ -402,9 +398,8 @@ Focus on high-signal information that maintains conversation context.
                     "crash",
                     "exception",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["issues"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["issues"].append(msg_content[:200])
 
             # Preferences (likes, dislikes, choices)
             if any(
@@ -419,9 +414,8 @@ Focus on high-signal information that maintains conversation context.
                     "enjoy",
                     "rather",
                 ]
-            ):
-                if isinstance(msg_content, str):
-                    key_info["preferences"].append(msg_content[:200])
+            ) and isinstance(msg_content, str):
+                key_info["preferences"].append(msg_content[:200])
 
         return key_info
 

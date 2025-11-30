@@ -569,7 +569,7 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
                     )
 
             except Exception as e:
-                result_content = f"Error executing tool '{tool_name}': {str(e)}"
+                result_content = f"Error executing tool '{tool_name}': {e!s}"
                 logger.error(
                     f"Tool execution failed: {tool_name}",
                     extra={"tool": tool_name, "args": tool_args, "error": str(e)},
@@ -612,7 +612,8 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
             """Execute a single tool"""
             tool = get_tool_by_name(tool_name)
             if tool is None:
-                raise ValueError(f"Tool '{tool_name}' not found")
+                msg = f"Tool '{tool_name}' not found"
+                raise ValueError(msg)
 
             if hasattr(tool, "ainvoke"):
                 return await tool.ainvoke(arguments)
@@ -631,7 +632,7 @@ def _create_agent_graph_singleton(settings_override: Any | None = None) -> Any: 
                 tool_call_id = original_call.get("id") if original_call else result.invocation_id
 
                 if result.error:
-                    content = f"Error executing tool '{result.tool_name}': {str(result.error)}"
+                    content = f"Error executing tool '{result.tool_name}': {result.error!s}"
                 else:
                     content = str(result.result)
 

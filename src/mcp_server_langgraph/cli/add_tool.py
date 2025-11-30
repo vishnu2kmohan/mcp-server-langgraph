@@ -88,7 +88,8 @@ def generate_tool(name: str, description: str) -> None:
     tool_file = tools_dir / f"{name}_tool.py"
 
     if tool_file.exists():
-        raise FileExistsError(f"Tool file already exists: {tool_file}")
+        msg = f"Tool file already exists: {tool_file}"
+        raise FileExistsError(msg)
 
     # Generate class and function names
     class_name = "".join(word.capitalize() for word in name.split("_"))

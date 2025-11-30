@@ -17,10 +17,11 @@ Implementations can be backed by:
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+import contextlib
 
 # ============================================================================
 # Data Models
@@ -301,7 +302,7 @@ class InMemoryUserProfileStore(UserProfileStore):
             if hasattr(profile, key):
                 setattr(profile, key, value)
 
-        profile.last_updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        profile.last_updated = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         return True
 
     async def delete(self, user_id: str) -> bool:
@@ -337,9 +338,8 @@ class InMemoryConversationStore(ConversationStore):
         conversations = []
         for conv_id in self.user_conversations[user_id]:
             conv = self.conversations.get(conv_id)
-            if conv:
-                if archived is None or conv.archived == archived:
-                    conversations.append(conv)
+            if conv and (archived is None or conv.archived == archived):
+                conversations.append(conv)
 
         return conversations
 
@@ -358,10 +358,8 @@ class InMemoryConversationStore(ConversationStore):
         if conversation_id in self.conversations:
             conv = self.conversations.pop(conversation_id)
             if conv.user_id in self.user_conversations:
-                try:
+                with contextlib.suppress(ValueError):
                     self.user_conversations[conv.user_id].remove(conversation_id)
-                except ValueError:
-                    pass
             return True
         return False
 
@@ -390,7 +388,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 
     async def set(self, user_id: str, preferences: dict[str, Any]) -> bool:
         self.preferences[user_id] = UserPreferences(
-            user_id=user_id, preferences=preferences, updated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            user_id=user_id, preferences=preferences, updated_at=datetime.now(UTC).isoformat().replace("+00:00", "Z")
         )
         return True
 
@@ -401,7 +399,7 @@ class InMemoryPreferencesStore(PreferencesStore):
 
         prefs = self.preferences[user_id]
         prefs.preferences.update(updates)
-        prefs.updated_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        prefs.updated_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         return True
 
     async def delete(self, user_id: str) -> bool:

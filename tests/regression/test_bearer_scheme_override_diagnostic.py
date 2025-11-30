@@ -18,6 +18,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
+from datetime import UTC
 
 pytestmark = pytest.mark.regression
 
@@ -104,7 +105,7 @@ class TestBearerSchemeOverrideDiagnostic:
         This is required because previous tests may have cached stale router references.
         """
         import importlib
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
         from unittest.mock import AsyncMock
 
         from fastapi.security import HTTPAuthorizationCredentials
@@ -141,7 +142,7 @@ class TestBearerSchemeOverrideDiagnostic:
         }
 
         mock_api_key_manager = AsyncMock(spec=APIKeyManager)
-        FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
         mock_api_key_manager.create_api_key.return_value = {
             "key_id": "diagnostic_key",
             "api_key": "mcp_diagnostic_test_key",

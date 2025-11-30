@@ -13,7 +13,7 @@ import json
 import secrets
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -69,7 +69,8 @@ class SessionData(BaseModel):
     def validate_session_id(cls, v: str) -> str:
         """Validate session ID is properly formatted and secure"""
         if not v or len(v) < 32:
-            raise ValueError("Session ID must be at least 32 characters for security")
+            msg = "Session ID must be at least 32 characters for security"
+            raise ValueError(msg)
         return v
 
     @field_validator("user_id")
@@ -77,7 +78,8 @@ class SessionData(BaseModel):
     def validate_user_id(cls, v: str) -> str:
         """Validate user ID format"""
         if not v:
-            raise ValueError("User ID cannot be empty")
+            msg = "User ID cannot be empty"
+            raise ValueError(msg)
         return v
 
     @field_validator("created_at", "last_accessed", "expires_at")
@@ -91,7 +93,8 @@ class SessionData(BaseModel):
             datetime.fromisoformat(normalized)
             return normalized
         except (ValueError, TypeError):
-            raise ValueError(f"Timestamp must be in ISO format, got: {v}")
+            msg = f"Timestamp must be in ISO format, got: {v}"
+            raise ValueError(msg)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for backward compatibility"""
@@ -284,17 +287,16 @@ class InMemorySessionStore(SessionStore):
             span.set_attribute("user.id", user_id)
 
             # Check concurrent session limit
-            if user_id in self.user_sessions:
-                if len(self.user_sessions[user_id]) >= self.max_concurrent:
-                    # Remove oldest session
-                    oldest_session_id = self.user_sessions[user_id].pop(0)
-                    self.sessions.pop(oldest_session_id, None)
-                    logger.info(f"Removed oldest session for user {user_id} (max concurrent limit reached)")
+            if user_id in self.user_sessions and len(self.user_sessions[user_id]) >= self.max_concurrent:
+                # Remove oldest session
+                oldest_session_id = self.user_sessions[user_id].pop(0)
+                self.sessions.pop(oldest_session_id, None)
+                logger.info(f"Removed oldest session for user {user_id} (max concurrent limit reached)")
 
             # Generate session
             session_id = self._generate_session_id()
             ttl = ttl_seconds or self.default_ttl
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             session_data = SessionData(
                 session_id=session_id,
@@ -335,14 +337,14 @@ class InMemorySessionStore(SessionStore):
 
             # Check expiration
             expires_at = datetime.fromisoformat(session.expires_at)
-            if datetime.now(timezone.utc) > expires_at:
+            if datetime.now(UTC) > expires_at:
                 # Session expired
                 await self.delete(session_id)
                 return None
 
             # Update last accessed time (sliding window)
             if self.sliding_window:
-                session.last_accessed = datetime.now(timezone.utc).isoformat()
+                session.last_accessed = datetime.now(UTC).isoformat()
 
             return session
 
@@ -353,7 +355,7 @@ class InMemorySessionStore(SessionStore):
 
         session = self.sessions[session_id]
         session.metadata.update(metadata)
-        session.last_accessed = datetime.now(timezone.utc).isoformat()
+        session.last_accessed = datetime.now(UTC).isoformat()
 
         logger.info(f"Session metadata updated: {session_id}")
         return True
@@ -365,7 +367,7 @@ class InMemorySessionStore(SessionStore):
 
         session = self.sessions[session_id]
         ttl = ttl_seconds or self.default_ttl
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         session.last_accessed = now.isoformat()
         session.expires_at = (now + timedelta(seconds=ttl)).isoformat()
@@ -494,9 +496,8 @@ class RedisSessionStore(SessionStore):
             ttl_seconds: Alias for default_ttl_seconds (for backward compatibility)
         """
         if not REDIS_AVAILABLE:
-            raise ImportError(
-                "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
-            )
+            msg = "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
+            raise ImportError(msg)
 
         # Support both ttl_seconds and default_ttl_seconds for backward compatibility
         if ttl_seconds is not None:
@@ -554,7 +555,7 @@ class RedisSessionStore(SessionStore):
             # Generate session
             session_id = self._generate_session_id()
             ttl = ttl_seconds or self.default_ttl
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             session_data = {
                 "session_id": session_id,
@@ -617,7 +618,7 @@ class RedisSessionStore(SessionStore):
 
             # Update last accessed (sliding window)
             if self.sliding_window:
-                await self.redis.hset(session_key, "last_accessed", datetime.now(timezone.utc).isoformat())
+                await self.redis.hset(session_key, "last_accessed", datetime.now(UTC).isoformat())
 
             return session
 
@@ -636,7 +637,7 @@ class RedisSessionStore(SessionStore):
 
         # Update metadata on Pydantic model
         session.metadata.update(metadata)
-        session.last_accessed = datetime.now(timezone.utc).isoformat()
+        session.last_accessed = datetime.now(UTC).isoformat()
 
         # Persist to Redis
         await self.redis.hset(
@@ -655,7 +656,7 @@ class RedisSessionStore(SessionStore):
             return False
 
         ttl = ttl_seconds or self.default_ttl
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         new_expires_at = (now + timedelta(seconds=ttl)).isoformat()
 
         await self.redis.hset(session_key, mapping={"last_accessed": now.isoformat(), "expires_at": new_expires_at})
@@ -786,18 +787,19 @@ def create_session_store(backend: str = "memory", redis_url: str | None = None, 
 
     elif backend == "redis":
         if not redis_url:
-            raise ValueError("redis_url required for Redis backend")
+            msg = "redis_url required for Redis backend"
+            raise ValueError(msg)
 
         if not REDIS_AVAILABLE:
-            raise ImportError(
-                "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
-            )
+            msg = "Redis not available. Add 'redis[hiredis]>=5.0.0' to pyproject.toml dependencies, then run: uv sync"
+            raise ImportError(msg)
 
         logger.info("Creating RedisSessionStore")
         return RedisSessionStore(redis_url=redis_url, **kwargs)
 
     else:
-        raise ValueError(f"Unknown session backend: {backend}. Supported: 'memory', 'redis'")
+        msg = f"Unknown session backend: {backend}. Supported: 'memory', 'redis'"
+        raise ValueError(msg)
 
 
 # Global session store instance

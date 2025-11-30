@@ -8,7 +8,7 @@ See ADR-0034 for API key to JWT exchange pattern.
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock
 
 import pytest
@@ -31,7 +31,7 @@ def mock_api_key_manager():
 
     # Use deterministic timestamps instead of datetime.now()
     # This eliminates test flakiness and makes test data reproducible
-    FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    FIXED_TIME = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
 
     # Mock create_api_key
     manager.create_api_key.return_value = {

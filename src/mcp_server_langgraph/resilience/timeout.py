@@ -10,7 +10,6 @@ See ADR-0026 for design rationale.
 import asyncio
 import functools
 import logging
-import sys
 from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar
 
@@ -122,20 +121,14 @@ def with_timeout(
                 },
             ) as span:
                 try:
-                    # Use asyncio.timeout() for Python 3.11+, wait_for() for 3.10
-                    if sys.version_info >= (3, 11):
-                        async with asyncio.timeout(timeout_value):
-                            result = await func(*args, **kwargs)  # type: ignore[misc]
-                    else:
-                        result = await asyncio.wait_for(
-                            func(*args, **kwargs),
-                            timeout=timeout_value,
-                        )
+                    # Use asyncio.timeout() for Python 3.11+
+                    async with asyncio.timeout(timeout_value):
+                        result = await func(*args, **kwargs)  # type: ignore[misc]
 
                     span.set_attribute("timeout.exceeded", False)
                     return result  # type: ignore[no-any-return]
 
-                except asyncio.TimeoutError as e:
+                except TimeoutError as e:
                     # Timeout exceeded
                     span.set_attribute("timeout.exceeded", True)
 
@@ -174,7 +167,8 @@ def with_timeout(
         import asyncio as aio
 
         if not aio.iscoroutinefunction(func):
-            raise TypeError(f"@with_timeout can only be applied to async functions, got {func.__name__}")
+            msg = f"@with_timeout can only be applied to async functions, got {func.__name__}"
+            raise TypeError(msg)
 
         return async_wrapper  # type: ignore
 
@@ -207,11 +201,7 @@ class TimeoutContext:
 
     async def __aenter__(self) -> None:
         """Enter timeout context"""
-        if sys.version_info >= (3, 11):
-            self._context_manager = asyncio.timeout(self.timeout_value)  # type: ignore[assignment]
-        else:
-            # For Python 3.10, we'll handle timeout differently
-            self._start_time = asyncio.get_event_loop().time()
+        self._context_manager = asyncio.timeout(self.timeout_value)  # type: ignore[assignment]
 
         if self._context_manager:
             await self._context_manager.__aenter__()  # type: ignore[unreachable]
@@ -223,7 +213,7 @@ class TimeoutContext:
         if self._context_manager:
             try:  # type: ignore[unreachable]
                 await self._context_manager.__aexit__(exc_type, exc_val, exc_tb)
-            except asyncio.TimeoutError as e:
+            except TimeoutError as e:
                 # Convert to our custom exception
                 from mcp_server_langgraph.core.exceptions import TimeoutError as MCPTimeoutError
 

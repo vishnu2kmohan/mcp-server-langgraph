@@ -22,7 +22,7 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -237,8 +237,8 @@ def create_mock_jwt_token(user_id: str = "test-user", expiry_hours: int = 1) -> 
 
     payload = {
         "sub": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=expiry_hours),
-        "iat": datetime.now(timezone.utc),
+        "exp": datetime.now(UTC) + timedelta(hours=expiry_hours),
+        "iat": datetime.now(UTC),
     }
 
     # nosemgrep: python.jwt.security.jwt-hardcode.jwt-python-hardcoded-secret

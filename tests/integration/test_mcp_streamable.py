@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from tests.conftest import get_user_id
+from datetime import UTC
 
 pytestmark = pytest.mark.integration
 
@@ -632,7 +633,7 @@ class TestTokenRefresh:
 
     def test_refresh_with_expired_token(self, client):
         """Test refresh with expired token fails"""
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         import jwt
 
@@ -642,8 +643,8 @@ class TestTokenRefresh:
         expired_payload = {
             "sub": get_user_id("alice"),
             "username": "alice",
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),  # Expired 1 hour ago
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),  # Expired 1 hour ago
+            "iat": datetime.now(UTC) - timedelta(hours=2),
         }
 
         expired_token = jwt.encode(expired_payload, settings.jwt_secret_key, algorithm="HS256")
@@ -655,7 +656,7 @@ class TestTokenRefresh:
 
     def test_refresh_token_missing_username(self, client):
         """Test refresh with token missing username claim"""
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         import jwt
 
@@ -664,8 +665,8 @@ class TestTokenRefresh:
         # Create token without username
         invalid_payload = {
             "sub": get_user_id("alice"),
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
 
         invalid_token = jwt.encode(invalid_payload, settings.jwt_secret_key, algorithm="HS256")
@@ -677,7 +678,7 @@ class TestTokenRefresh:
 
     def test_refresh_token_wrong_secret(self, client):
         """Test refresh with token signed with wrong secret"""
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         import jwt
 
@@ -685,8 +686,8 @@ class TestTokenRefresh:
         wrong_secret_payload = {
             "sub": get_user_id("alice"),
             "username": "alice",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
 
         wrong_token = jwt.encode(wrong_secret_payload, "wrong-secret-key", algorithm="HS256")

@@ -13,7 +13,7 @@ Tests cover:
 
 import gc
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, patch
 
 import bcrypt
@@ -148,15 +148,15 @@ class TestAPIKeyCreation:
         assert result["created"] != "", "created timestamp must not be empty"
 
         # Verify it's a valid ISO format timestamp
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         try:
             created_dt = datetime.fromisoformat(result["created"])
             # Ensure timezone-aware comparison
             if created_dt.tzinfo is None:
-                created_dt = created_dt.replace(tzinfo=timezone.utc)
+                created_dt = created_dt.replace(tzinfo=UTC)
             # Should be recent (within last minute)
-            assert abs((datetime.now(timezone.utc) - created_dt).total_seconds()) < 60
+            assert abs((datetime.now(UTC) - created_dt).total_seconds()) < 60
         except ValueError:
             pytest.fail(f"created field must be valid ISO format timestamp, got: {result['created']}")
 
@@ -205,8 +205,8 @@ class TestAPIKeyCreation:
         expires_at = datetime.fromisoformat(call_args[f"apiKey_{key_id}_expiresAt"])
         # Ensure timezone-aware comparison
         if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        expected_expiry = datetime.now(timezone.utc) + timedelta(days=90)
+            expires_at = expires_at.replace(tzinfo=UTC)
+        expected_expiry = datetime.now(UTC) + timedelta(days=90)
         assert abs((expires_at - expected_expiry).total_seconds()) < 60  # Within 1 minute
 
 
@@ -235,7 +235,7 @@ class TestAPIKeyValidation:
                 "attributes": {
                     "apiKeys": [f"key:abc123:{key_hash}"],
                     "apiKey_abc123_name": "Production Key",
-                    "apiKey_abc123_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+                    "apiKey_abc123_expiresAt": (datetime.now(UTC) + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -280,7 +280,7 @@ class TestAPIKeyValidation:
                         "username": "alice",
                         "attributes": {
                             "apiKeys": ["key:old123:$2b$04$mockhash"],  # Mock hash
-                            "apiKey_old123_expiresAt": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),  # Expired
+                            "apiKey_old123_expiresAt": (datetime.now(UTC) - timedelta(days=1)).isoformat(),  # Expired
                         },
                     }
                 ],
@@ -310,7 +310,7 @@ class TestAPIKeyValidation:
                 "username": "alice",
                 "attributes": {
                     "apiKeys": [f"key:xyz:{key_hash}"],
-                    "apiKey_xyz_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+                    "apiKey_xyz_expiresAt": (datetime.now(UTC) + timedelta(days=365)).isoformat(),
                 },
             }
         ]
@@ -393,7 +393,7 @@ class TestAPIKeyListing:
         """Test listing API keys for a user"""
         # Arrange
         user_id = "user:frank"
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         mock_keycloak_client.get_user_attributes.return_value = {
             "apiKeys": [
@@ -461,7 +461,7 @@ class TestAPIKeyRotation:
         mock_keycloak_client.get_user_attributes.return_value = {
             "apiKeys": [f"key:old123:{old_hash}"],
             "apiKey_old123_name": "Production Key",
-            "apiKey_old123_created": datetime.now(timezone.utc).isoformat(),
+            "apiKey_old123_created": datetime.now(UTC).isoformat(),
         }
 
         # Act
@@ -561,8 +561,8 @@ class TestAPIKeyValidationPagination:
                     user["attributes"] = {
                         "apiKeys": [f"key:target_key:{key_hash}"],
                         "apiKey_target_key_name": "Target User Key",
-                        "apiKey_target_key_created": datetime.now(timezone.utc).isoformat(),
-                        "apiKey_target_key_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+                        "apiKey_target_key_created": datetime.now(UTC).isoformat(),
+                        "apiKey_target_key_expiresAt": (datetime.now(UTC) + timedelta(days=365)).isoformat(),
                     }
                 all_users.append(user)
 
@@ -648,8 +648,8 @@ class TestAPIKeyValidationPagination:
                     user["attributes"] = {
                         "apiKeys": [f"key:early_key:{key_hash}"],
                         "apiKey_early_key_name": "Early User Key",
-                        "apiKey_early_key_created": datetime.now(timezone.utc).isoformat(),
-                        "apiKey_early_key_expiresAt": (datetime.now(timezone.utc) + timedelta(days=365)).isoformat(),
+                        "apiKey_early_key_created": datetime.now(UTC).isoformat(),
+                        "apiKey_early_key_expiresAt": (datetime.now(UTC) + timedelta(days=365)).isoformat(),
                     }
                 all_users.append(user)
 

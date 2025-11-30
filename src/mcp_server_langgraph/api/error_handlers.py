@@ -47,7 +47,6 @@ def register_exception_handlers(app: FastAPI) -> None:
         # Log with full context
         logger.error(
             f"Exception: {exc.error_code}",
-            exc_info=True,
             extra={
                 "error_code": exc.error_code,
                 "status_code": exc.status_code,
@@ -104,7 +103,6 @@ def register_exception_handlers(app: FastAPI) -> None:
         # Log unexpected error
         logger.error(
             f"Unexpected exception: {type(exc).__name__}",
-            exc_info=True,
             extra={
                 "exception_type": type(exc).__name__,
                 "request_method": request.method,

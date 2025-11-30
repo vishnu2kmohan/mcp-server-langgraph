@@ -5,7 +5,7 @@ Scheduled background jobs for data retention policy enforcement.
 Runs daily at configured time (default: 3 AM UTC).
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -121,7 +121,7 @@ class CleanupScheduler:
         """
         logger.info(
             "Executing scheduled data retention cleanup",
-            extra={"timestamp": datetime.now(timezone.utc).isoformat(), "dry_run": self.dry_run},
+            extra={"timestamp": datetime.now(UTC).isoformat(), "dry_run": self.dry_run},
         )
 
         try:

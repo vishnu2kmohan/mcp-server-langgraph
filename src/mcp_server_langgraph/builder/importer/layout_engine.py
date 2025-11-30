@@ -84,7 +84,7 @@ class LayoutEngine:
         elif algorithm == "grid":
             return self._grid_layout(nodes)
         else:
-            raise ValueError(f"Unknown layout algorithm: {algorithm}")
+            raise ValueError(f"Unknown layout algorithm: {algorithm}")  # noqa: EM102, TRY003
 
     def _hierarchical_layout(
         self, nodes: list[dict[str, Any]], edges: list[dict[str, str]], entry_point: str | None

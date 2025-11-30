@@ -148,11 +148,9 @@ class ParallelToolExecutor:
                     duration_ms=duration_ms,
                 )
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 duration_ms = (time.time() - start_time) * 1000
-                timeout_error = asyncio.TimeoutError(
-                    f"Tool '{invocation.tool_name}' exceeded timeout of {self.task_timeout_seconds}s"
-                )
+                timeout_error = TimeoutError(f"Tool '{invocation.tool_name}' exceeded timeout of {self.task_timeout_seconds}s")
                 logger.warning(
                     f"Tool execution timeout: {invocation.tool_name}",
                     extra={"timeout_seconds": self.task_timeout_seconds, "duration_ms": duration_ms},
@@ -213,7 +211,8 @@ class ParallelToolExecutor:
 
         # Check for circular dependencies
         if len(sorted_order) != len(graph):
-            raise ValueError("Circular dependency detected in tool execution graph")
+            msg = "Circular dependency detected in tool execution graph"
+            raise ValueError(msg)
 
         return sorted_order
 

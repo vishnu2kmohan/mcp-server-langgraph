@@ -7,7 +7,7 @@ Tests GDPR Article 5(1)(e) - 90-day retention with auto-cleanup
 import gc
 import os
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import asyncpg
 import pytest
@@ -81,7 +81,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresConversationStore:
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
     """Create test user (worker-safe for pytest-xdist)"""
     user_id = get_user_id("conv_user")  # Worker-safe ID for parallel execution
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
         user_id=user_id,
         username="convuser",
@@ -103,7 +103,7 @@ async def test_user(profile_store: PostgresUserProfileStore) -> str:
 @pytest.mark.gdpr
 async def test_create_conversation(store: PostgresConversationStore, test_user: str):
     """Test creating a conversation"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_conv_123",
         user_id=test_user,
@@ -131,7 +131,7 @@ async def test_create_conversation(store: PostgresConversationStore, test_user: 
 @pytest.mark.gdpr
 async def test_create_conversation_with_empty_messages(store: PostgresConversationStore, test_user: str):
     """Test creating conversation with no messages yet"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_empty",
         user_id=test_user,
@@ -155,7 +155,7 @@ async def test_create_conversation_with_empty_messages(store: PostgresConversati
 @pytest.mark.gdpr
 async def test_get_conversation(store: PostgresConversationStore, test_user: str):
     """Test retrieving conversation"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_get",
         user_id=test_user,
@@ -192,7 +192,7 @@ async def test_get_nonexistent_conversation(store: PostgresConversationStore):
 @pytest.mark.gdpr
 async def test_list_user_conversations(store: PostgresConversationStore, test_user: str):
     """Test listing all conversations for a user"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create multiple conversations
     for i in range(3):
@@ -216,7 +216,7 @@ async def test_list_user_conversations(store: PostgresConversationStore, test_us
 @pytest.mark.gdpr
 async def test_list_archived_conversations(store: PostgresConversationStore, test_user: str):
     """Test listing only archived conversations"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create archived conversation
     archived = Conversation(
@@ -263,7 +263,7 @@ async def test_list_archived_conversations(store: PostgresConversationStore, tes
 @pytest.mark.gdpr
 async def test_update_conversation_title(store: PostgresConversationStore, test_user: str):
     """Test updating conversation title"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_update",
         user_id=test_user,
@@ -289,7 +289,7 @@ async def test_update_conversation_title(store: PostgresConversationStore, test_
 @pytest.mark.gdpr
 async def test_update_conversation_messages(store: PostgresConversationStore, test_user: str):
     """Test updating conversation messages"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_msg_update",
         user_id=test_user,
@@ -319,7 +319,7 @@ async def test_update_conversation_messages(store: PostgresConversationStore, te
 @pytest.mark.gdpr
 async def test_update_archive_conversation(store: PostgresConversationStore, test_user: str):
     """Test archiving a conversation"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_archive",
         user_id=test_user,
@@ -351,7 +351,7 @@ async def test_update_archive_conversation(store: PostgresConversationStore, tes
 @pytest.mark.gdpr
 async def test_delete_conversation(store: PostgresConversationStore, test_user: str):
     """Test deleting a single conversation"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id="test_delete",
         user_id=test_user,
@@ -376,7 +376,7 @@ async def test_delete_conversation(store: PostgresConversationStore, test_user: 
 @pytest.mark.gdpr
 async def test_delete_user_conversations(store: PostgresConversationStore, test_user: str):
     """Test deleting all conversations for a user (GDPR Article 17)"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create multiple conversations
     for i in range(3):
@@ -413,7 +413,7 @@ async def test_conversations_deleted_when_user_deleted(
     test_user: str,
 ):
     """Test that conversations are CASCADE deleted when user is deleted"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     # Create conversation
     conversation = Conversation(

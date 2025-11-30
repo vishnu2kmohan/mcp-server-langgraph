@@ -13,7 +13,7 @@ Tests cover:
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -120,7 +120,7 @@ class TestInMemorySessionStore:
         assert success is True
         session = await store.get(session_id)
         expires_at = datetime.fromisoformat(session.expires_at)
-        time_until_expiry = (expires_at - datetime.now(timezone.utc)).total_seconds()
+        time_until_expiry = (expires_at - datetime.now(UTC)).total_seconds()
         assert 55 < time_until_expiry < 65
 
     @pytest.mark.asyncio
@@ -300,9 +300,9 @@ class TestRedisSessionStore:
             "username": "paul",
             "roles": "user",
             "metadata": "{}",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
-            "last_accessed": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "last_accessed": datetime.now(UTC).isoformat(),
         }
         session = await store.get(session_id)
         assert session is not None
@@ -330,9 +330,9 @@ class TestRedisSessionStore:
             "username": "quinn",
             "roles": "user",
             "metadata": "{'ip': '10.0.0.1'}",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
-            "last_accessed": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+            "last_accessed": datetime.now(UTC).isoformat(),
         }
         success = await store.update(session_id, metadata={"ip": "10.0.0.2"})
         assert success is True
@@ -376,9 +376,9 @@ class TestRedisSessionStore:
                     "username": "tina",
                     "roles": "user",
                     "metadata": "{}",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
-                    "last_accessed": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                    "last_accessed": datetime.now(UTC).isoformat(),
                 }
             elif session2 in key:
                 return {
@@ -387,9 +387,9 @@ class TestRedisSessionStore:
                     "username": "tina",
                     "roles": "admin",
                     "metadata": "{}",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
-                    "last_accessed": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                    "last_accessed": datetime.now(UTC).isoformat(),
                 }
             return {}
 
@@ -423,9 +423,9 @@ class TestRedisSessionStore:
                 b"username": b"victor",
                 b"roles": b'["user"]',
                 b"metadata": b"{}",
-                b"created_at": datetime.now(timezone.utc).isoformat().encode(),
-                b"expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat().encode(),
-                b"last_accessed": datetime.now(timezone.utc).isoformat().encode(),
+                b"created_at": datetime.now(UTC).isoformat().encode(),
+                b"expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat().encode(),
+                b"last_accessed": datetime.now(UTC).isoformat().encode(),
             }
 
         mock_redis.hgetall.side_effect = mock_hgetall
@@ -559,11 +559,11 @@ class TestSessionEdgeCases:
         """
         Test that SessionData handles Zulu time (Z suffix) correctly
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from mcp_server_langgraph.auth.session import SessionData
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         timestamp_str = now.isoformat().replace("+00:00", "Z")
         session = SessionData(
             session_id="test-session-12345678901234567890",
@@ -583,14 +583,14 @@ class TestSessionEdgeCases:
         """
         Test get_inactive_sessions with many sessions (performance check)
         """
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
         from mcp_server_langgraph.auth.session import InMemorySessionStore
 
         store = InMemorySessionStore()
         for i in range(100):
             await store.create(f"user:user{i}", f"user{i}", ["user"])
-        inactive_threshold = datetime.now(timezone.utc) - timedelta(hours=1)
+        inactive_threshold = datetime.now(UTC) - timedelta(hours=1)
         inactive = await store.get_inactive_sessions(inactive_threshold)
         assert isinstance(inactive, list)
         assert len(inactive) == 0

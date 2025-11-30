@@ -47,10 +47,11 @@ def create_app(settings_override: Settings | None = None, skip_startup_validatio
     try:
         logger.debug("Observability initialized successfully")
     except RuntimeError as e:
-        raise RuntimeError(
+        msg = (
             "Observability initialization failed! Logger still raises RuntimeError. "
             f"Error: {e}. This is a critical bug - logging will fail throughout the app."
         )
+        raise RuntimeError(msg)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:

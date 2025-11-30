@@ -5,7 +5,7 @@ Implements automated data retention policies with configurable cleanup schedules
 Ensures compliance with GDPR data minimization and SOC 2 storage requirements.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from pathlib import Path
 from typing import Any
 
@@ -116,7 +116,7 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="user_sessions",
-                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                execution_timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
@@ -126,7 +126,7 @@ class DataRetentionService:
                 return result
 
             try:
-                cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
+                cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
                 logger.info(
                     f"Cleaning up sessions inactive since {cutoff_date.isoformat()}",
                     extra={"retention_days": retention_days, "dry_run": self.dry_run},
@@ -153,7 +153,7 @@ class DataRetentionService:
                 )
 
             except Exception as e:
-                error_msg = f"Session cleanup failed: {str(e)}"
+                error_msg = f"Session cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
                 span.record_exception(e)
@@ -173,12 +173,12 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="conversations",
-                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                execution_timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
             try:
-                cutoff_date = datetime.now(timezone.utc) - timedelta(days=archived_retention)
+                cutoff_date = datetime.now(UTC) - timedelta(days=archived_retention)
                 logger.info(
                     f"Cleaning up archived conversations older than {cutoff_date.isoformat()}",
                     extra={"retention_days": archived_retention, "dry_run": self.dry_run},
@@ -194,7 +194,7 @@ class DataRetentionService:
                 )
 
             except Exception as e:
-                error_msg = f"Conversation cleanup failed: {str(e)}"
+                error_msg = f"Conversation cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
@@ -215,12 +215,12 @@ class DataRetentionService:
 
             result = RetentionResult(
                 policy_name="audit_logs",
-                execution_timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                execution_timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 dry_run=self.dry_run,
             )
 
             try:
-                cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
+                cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
                 logger.info(
                     f"Archiving audit logs older than {cutoff_date.isoformat()}",
                     extra={"retention_days": retention_days, "dry_run": self.dry_run},
@@ -236,7 +236,7 @@ class DataRetentionService:
                 )
 
             except Exception as e:
-                error_msg = f"Audit log cleanup failed: {str(e)}"
+                error_msg = f"Audit log cleanup failed: {e!s}"
                 result.errors.append(error_msg)
                 logger.error(error_msg, exc_info=True)
 
@@ -456,7 +456,7 @@ class DataRetentionService:
         """Calculate next scheduled cleanup time"""
         # Calculate next run at 3 AM (schedule: 0 3 * * *)
         # Note: Full cron parsing could be added using croniter if needed
-        next_run = datetime.now(timezone.utc).replace(hour=3, minute=0, second=0, microsecond=0)
-        if next_run < datetime.now(timezone.utc):
+        next_run = datetime.now(UTC).replace(hour=3, minute=0, second=0, microsecond=0)
+        if next_run < datetime.now(UTC):
             next_run += timedelta(days=1)
         return next_run.isoformat().replace("+00:00", "Z")

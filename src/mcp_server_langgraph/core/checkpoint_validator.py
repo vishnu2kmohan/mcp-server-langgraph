@@ -65,27 +65,30 @@ class CheckpointConfigValidator:
             >>> validator.validate_redis_url("redis://:pass/word@localhost:6379/1")  # Raises error
         """
         if not url:
-            raise CheckpointValidationError(
+            msg = (
                 "Redis URL cannot be empty when checkpoint_backend='redis'. "
                 "Please set CHECKPOINT_REDIS_URL environment variable."
             )
+            raise CheckpointValidationError(msg)
 
         # Validate basic URL format
         if not url.startswith("redis://"):
-            raise CheckpointValidationError(
+            msg = (
                 f"Invalid Redis URL scheme.\n"
                 f"Expected: redis://...\n"
                 f"Got: {url[:20] if len(url) > 20 else url}...\n"
                 f"Valid format: redis://[user]:[password]@[host]:[port]/[database]"
             )
+            raise CheckpointValidationError(msg)
 
         # Check for obviously invalid formats
         if url == "redis://":
-            raise CheckpointValidationError(
+            msg = (
                 "Incomplete Redis URL: 'redis://'\n"
                 "Valid format: redis://[user]:[password]@[host]:[port]/[database]\n"
                 "Example: redis://localhost:6379/1"
             )
+            raise CheckpointValidationError(msg)
 
         # Extract and validate password encoding
         self._validate_password_encoding(url)
@@ -140,11 +143,12 @@ class CheckpointConfigValidator:
             raise
         except Exception as e:
             # Catch any parsing errors
-            raise CheckpointValidationError(
-                f"Failed to parse Redis URL: {str(e)}\n"
+            msg = (
+                f"Failed to parse Redis URL: {e!s}\n"
                 f"URL format should be: redis://[user]:[password]@[host]:[port]/[database]\n"
                 f"Ensure password is percent-encoded per RFC 3986."
             )
+            raise CheckpointValidationError(msg)
 
     def _find_unencoded_chars(self, password: str) -> set[str]:
         """Find unencoded special characters in password.
@@ -268,15 +272,14 @@ class CheckpointConfigValidator:
             # In production, actual connection test would be async
 
         except ImportError as e:
-            raise CheckpointValidationError(f"Redis client library not available: {e}\nInstall: pip install redis")
+            msg = f"Redis client library not available: {e}\nInstall: pip install redis"
+            raise CheckpointValidationError(msg)
         except ConnectionError as e:
-            raise CheckpointValidationError(
-                f"Failed to connect to Redis: {e}\nCheck that Redis is running and accessible at the specified URL."
-            )
+            msg = f"Failed to connect to Redis: {e}\nCheck that Redis is running and accessible at the specified URL."
+            raise CheckpointValidationError(msg)
         except Exception as e:
-            raise CheckpointValidationError(
-                f"Redis connection test failed: {e}\nVerify the Redis URL is correct and Redis is accessible."
-            )
+            msg = f"Redis connection test failed: {e}\nVerify the Redis URL is correct and Redis is accessible."
+            raise CheckpointValidationError(msg)
 
 
 def validate_checkpoint_config(settings: Any) -> None:

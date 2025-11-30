@@ -357,9 +357,12 @@ class TestGDPRStorageInitializationErrors:
                     async with lifespan:
                         pass
 
-                # Error should have been logged
+                # Error should have been logged (via error, exception, or critical)
                 assert (
                     any("GDPR" in str(call) or "storage" in str(call).lower() for call in mock_logger.error.call_args_list)
+                    or any(
+                        "GDPR" in str(call) or "storage" in str(call).lower() for call in mock_logger.exception.call_args_list
+                    )
                     or mock_logger.critical.called
                 )
 

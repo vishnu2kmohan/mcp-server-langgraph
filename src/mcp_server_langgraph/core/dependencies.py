@@ -125,13 +125,14 @@ def validate_production_auth_config(settings_obj: Settings) -> None:
 
     if not openfga_configured and allow_fallback:
         # SECURITY ERROR: Production with fallback enabled but no OpenFGA
-        raise RuntimeError(
+        msg = (
             "SECURITY ERROR: Production deployment requires OpenFGA authorization infrastructure. "
             f"OpenFGA is not configured (store_id: {settings_obj.openfga_store_id}, "
             f"model_id: {settings_obj.openfga_model_id}) but ALLOW_AUTH_FALLBACK=true. "
             "This configuration would allow degraded role-based authorization in production. "
             "Either: (1) Configure OpenFGA properly, or (2) Set ALLOW_AUTH_FALLBACK=false to fail-closed."
         )
+        raise RuntimeError(msg)
 
 
 def get_service_principal_manager(
@@ -231,12 +232,13 @@ def get_api_key_manager(
 
         # Validation: Ensure cache is actually enabled if requested (prevent regression)
         if settings.api_key_cache_enabled and settings.redis_url and not _api_key_manager.cache_enabled:
-            raise RuntimeError(
+            msg = (
                 "API key caching configuration error! "
                 f"settings.api_key_cache_enabled=True but APIKeyManager.cache_enabled=False. "
                 f"Redis client: {redis_client}. "
                 "This indicates Redis client was not properly wired."
             )
+            raise RuntimeError(msg)
 
     return _api_key_manager
 

@@ -119,9 +119,8 @@ def validate_docker_sandbox_security() -> tuple[bool, str]:
     warnings = []
 
     # Check if network allowlist is being used (not fully implemented)
-    if hasattr(settings, "sandbox_network_mode"):
-        if settings.sandbox_network_mode == "allowlist":
-            warnings.append("Network allowlist mode is not fully implemented - using unrestricted bridge network")
+    if hasattr(settings, "sandbox_network_mode") and settings.sandbox_network_mode == "allowlist":
+        warnings.append("Network allowlist mode is not fully implemented - using unrestricted bridge network")
 
     if warnings:
         return True, f"Docker sandbox warnings: {', '.join(warnings)}"
@@ -230,7 +229,6 @@ def _process_validation_results(checks: dict[str, tuple[bool, str]]) -> None:
 
 @router.get(
     "",
-    response_model=HealthCheckResult,
     status_code=status.HTTP_200_OK,
     summary="Health Check",
     description="Check the health status of all critical systems",

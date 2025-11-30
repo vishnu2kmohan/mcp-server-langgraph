@@ -7,7 +7,7 @@ Also provides validation endpoint for Kong API key→JWT exchange.
 See ADR-0034 for API key to JWT exchange pattern.
 """
 
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
@@ -16,6 +16,11 @@ from mcp_server_langgraph.auth.api_keys import APIKeyManager
 from mcp_server_langgraph.auth.keycloak import KeycloakClient
 from mcp_server_langgraph.auth.middleware import get_current_user
 from mcp_server_langgraph.core.dependencies import get_api_key_manager, get_keycloak_client
+
+# Type aliases for FastAPI dependencies (FAST002)
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+APIKeyManagerDep = Annotated[APIKeyManager, Depends(get_api_key_manager)]
+KeycloakClientDep = Annotated[KeycloakClient, Depends(get_keycloak_client)]
 
 router = APIRouter(
     prefix="/api/v1/api-keys",
@@ -70,11 +75,11 @@ class ValidateAPIKeyResponse(BaseModel):
 # User-Facing API Endpoints
 
 
-@router.post("/", response_model=CreateAPIKeyResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_api_key(
     request: CreateAPIKeyRequest,
-    current_user: dict[str, Any] = Depends(get_current_user),
-    api_key_manager: APIKeyManager = Depends(get_api_key_manager),
+    current_user: CurrentUser,
+    api_key_manager: APIKeyManagerDep,
 ) -> CreateAPIKeyResponse:
     """
     Create a new API key for the current user
@@ -114,10 +119,10 @@ async def create_api_key(
         )
 
 
-@router.get("/", response_model=list[APIKeyResponse])
+@router.get("/")
 async def list_api_keys(
-    current_user: dict[str, Any] = Depends(get_current_user),
-    api_key_manager: APIKeyManager = Depends(get_api_key_manager),
+    current_user: CurrentUser,
+    api_key_manager: APIKeyManagerDep,
 ) -> list[APIKeyResponse]:
     """
     List all API keys for the current user
@@ -139,11 +144,11 @@ async def list_api_keys(
     ]
 
 
-@router.post("/{key_id}/rotate", response_model=RotateAPIKeyResponse)
+@router.post("/{key_id}/rotate")
 async def rotate_api_key(
     key_id: str,
-    current_user: dict[str, Any] = Depends(get_current_user),
-    api_key_manager: APIKeyManager = Depends(get_api_key_manager),
+    current_user: CurrentUser,
+    api_key_manager: APIKeyManagerDep,
 ) -> RotateAPIKeyResponse:
     """
     Rotate an API key
@@ -174,8 +179,8 @@ async def rotate_api_key(
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_api_key(
     key_id: str,
-    current_user: dict[str, Any] = Depends(get_current_user),
-    api_key_manager: APIKeyManager = Depends(get_api_key_manager),
+    current_user: CurrentUser,
+    api_key_manager: APIKeyManagerDep,
 ) -> None:
     """
     Revoke an API key
@@ -194,11 +199,11 @@ async def revoke_api_key(
 # Internal Endpoint for Kong Plugin
 
 
-@router.post("/validate", response_model=ValidateAPIKeyResponse, include_in_schema=False)
+@router.post("/validate", include_in_schema=False)
 async def validate_api_key(
-    api_key: str | None = Header(None, alias="X-API-Key"),
-    api_key_manager: APIKeyManager = Depends(get_api_key_manager),
-    keycloak: KeycloakClient = Depends(get_keycloak_client),
+    api_key_manager: APIKeyManagerDep,
+    keycloak: KeycloakClientDep,
+    api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
 ) -> ValidateAPIKeyResponse:
     """
     Validate API key and return JWT (internal endpoint for Kong plugin)
@@ -241,5 +246,5 @@ async def validate_api_key(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to issue JWT: {str(e)}",
+            detail=f"Failed to issue JWT: {e!s}",
         )

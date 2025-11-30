@@ -10,7 +10,7 @@ Implements Anthropic's Just-in-Time context loading strategy:
 import asyncio
 import base64
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from functools import lru_cache
 from typing import Any
 
@@ -51,13 +51,15 @@ def _create_embeddings(
         try:
             from langchain_google_genai import GoogleGenerativeAIEmbeddings
         except ImportError:
-            raise ImportError(
+            msg = (
                 "langchain-google-genai is required for Google embeddings. "
                 "Add 'langchain-google-genai' to pyproject.toml dependencies, then run: uv sync"
             )
+            raise ImportError(msg)
 
         if not google_api_key:
-            raise ValueError("GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical.")
+            msg = "GOOGLE_API_KEY is required for Google embeddings. Set via environment variable or Infisical."
+            raise ValueError(msg)
 
         # Create Google embeddings with task type optimization
         from pydantic import SecretStr
@@ -105,13 +107,15 @@ def _create_embeddings(
             return embeddings
 
         except ImportError:
-            raise ImportError(
+            msg = (
                 "sentence-transformers is required for local embeddings. "
                 "Add 'sentence-transformers' to pyproject.toml dependencies, then run: uv sync"
             )
+            raise ImportError(msg)
 
     else:
-        raise ValueError(f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'")
+        msg = f"Unsupported embedding provider: {provider}. Supported providers: 'google', 'local'"
+        raise ValueError(msg)
 
 
 class ContextReference(BaseModel):
@@ -197,15 +201,17 @@ class DynamicContextLoader:
         self.cipher: Fernet | None = None
         if self.enable_encryption:
             if not settings.context_encryption_key:
-                raise ValueError(
+                msg = (
                     "CRITICAL: Context encryption enabled but no encryption key configured. "
                     "Set CONTEXT_ENCRYPTION_KEY environment variable or configure via Infisical."
                 )
+                raise ValueError(msg)
             # Fernet requires base64-encoded 32-byte key
             try:
                 self.cipher = Fernet(settings.context_encryption_key.encode())
             except Exception as e:
-                raise ValueError(f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()")
+                msg = f"Invalid encryption key format: {e}. Generate with: Fernet.generate_key()"
+                raise ValueError(msg)
 
         # Initialize Qdrant client
         self.client = QdrantClient(host=self.qdrant_url, port=self.qdrant_port)
@@ -273,11 +279,12 @@ class DynamicContextLoader:
             return decrypted_bytes.decode()
         except Exception as e:
             logger.error(f"Decryption failed: {e}", exc_info=True)
-            raise ValueError(f"Failed to decrypt content: {e}")
+            msg = f"Failed to decrypt content: {e}"
+            raise ValueError(msg)
 
     def _calculate_expiry_timestamp(self) -> float:
         """Calculate expiry timestamp based on retention policy."""
-        expiry_date = datetime.now(timezone.utc) + timedelta(days=self.retention_days)
+        expiry_date = datetime.now(UTC) + timedelta(days=self.retention_days)
         return expiry_date.timestamp()
 
     def _ensure_collection_exists(self) -> None:
@@ -328,7 +335,7 @@ class DynamicContextLoader:
                 stored_content = self._encrypt_content(content) if self.enable_encryption else content
 
                 # Calculate expiry timestamp for retention
-                created_at = datetime.now(timezone.utc).timestamp()
+                created_at = datetime.now(UTC).timestamp()
                 expires_at = self._calculate_expiry_timestamp()
 
                 # Create point with encryption and retention support
@@ -529,13 +536,15 @@ class DynamicContextLoader:
             results = self.client.retrieve(collection_name=self.collection_name, ids=[ref_id])
 
             if not results:
-                raise ValueError(f"Context not found: {ref_id}")
+                msg = f"Context not found: {ref_id}"
+                raise ValueError(msg)
 
             result = results[0]
             payload = result.payload
 
             if payload is None:
-                raise ValueError(f"Context payload is None: {ref_id}")
+                msg = f"Context payload is None: {ref_id}"
+                raise ValueError(msg)
 
             reference = ContextReference(
                 ref_id=payload["ref_id"],

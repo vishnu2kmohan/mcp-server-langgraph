@@ -178,7 +178,8 @@ def generate_agent(name: str, template: AgentTemplate = "basic", tools: list[str
         FileExistsError: If agent file already exists
     """
     if template not in AGENT_TEMPLATES:
-        raise ValueError(f"Invalid template: {template}")
+        msg = f"Invalid template: {template}"
+        raise ValueError(msg)
 
     # Create agents directory if it doesn't exist
     agents_dir = Path("src/agents")
@@ -188,7 +189,8 @@ def generate_agent(name: str, template: AgentTemplate = "basic", tools: list[str
     agent_file = agents_dir / f"{name}_agent.py"
 
     if agent_file.exists():
-        raise FileExistsError(f"Agent file already exists: {agent_file}")
+        msg = f"Agent file already exists: {agent_file}"
+        raise FileExistsError(msg)
 
     # Get template content
     template_content = AGENT_TEMPLATES[template]

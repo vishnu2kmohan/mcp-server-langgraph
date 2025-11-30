@@ -20,7 +20,7 @@ Example:
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from typing import Any, cast
 
@@ -267,7 +267,7 @@ class CostMetricsCollector:
                 import logging
 
                 logger = logging.getLogger(__name__)
-                logger.error(f"Failed to persist usage record to database: {e}")
+                logger.exception(f"Failed to persist usage record to database: {e}")
 
         # Update Prometheus metrics
         llm_token_usage.labels(
@@ -336,9 +336,8 @@ class CostMetricsCollector:
             >>> deleted = await collector.cleanup_old_records()
             >>> print(f"Deleted {deleted} old records")
         """
-        from datetime import timezone
 
-        cutoff_time = datetime.now(timezone.utc) - timedelta(days=self._retention_days)
+        cutoff_time = datetime.now(UTC) - timedelta(days=self._retention_days)
         deleted_count = 0
 
         # Clean up in-memory records
@@ -375,7 +374,7 @@ class CostMetricsCollector:
                 import logging
 
                 logger = logging.getLogger(__name__)
-                logger.error(f"Failed to cleanup database records: {e}")
+                logger.exception(f"Failed to cleanup database records: {e}")
 
         return deleted_count
 

@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from mcp_server_langgraph.llm.factory import create_verification_model
 from mcp_server_langgraph.observability.telemetry import logger, metrics, tracer
+import contextlib
 
 
 class VerificationCriterion(str, Enum):
@@ -153,7 +154,7 @@ class OutputVerifier:
                 return VerificationResult(
                     passed=True,  # Fail-open on verification errors
                     overall_score=0.5,
-                    feedback=f"Verification system unavailable. Response accepted by default. Error: {str(e)}",
+                    feedback=f"Verification system unavailable. Response accepted by default. Error: {e!s}",
                     requires_refinement=False,
                 )
 
@@ -281,10 +282,8 @@ FEEDBACK:
                 current_section = "scores"
             elif line.startswith("OVERALL:"):
                 current_section = "overall"
-                try:
+                with contextlib.suppress(ValueError, IndexError):
                     overall_score = float(line.split(":")[1].strip())
-                except (ValueError, IndexError):
-                    pass
             elif line.startswith("CRITICAL_ISSUES:"):
                 current_section = "critical"
             elif line.startswith("SUGGESTIONS:"):

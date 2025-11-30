@@ -24,7 +24,7 @@ Example:
 import asyncio
 import logging
 import smtplib
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from decimal import Decimal
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -244,7 +244,7 @@ class BudgetMonitor:
             ... )
         """
         if start_date is None:
-            start_date = datetime.now(timezone.utc)
+            start_date = datetime.now(UTC)
 
         budget = Budget(
             id=id,
@@ -286,7 +286,7 @@ class BudgetMonitor:
             return Decimal("0.00")
 
         # Calculate current period boundaries
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         period_start, period_end = self._calculate_period_boundaries(budget, now)
 
         # Get all records from cost collector (using "day" but we'll filter manually)
@@ -331,7 +331,7 @@ class BudgetMonitor:
         period_end = self._calculate_period_end(period_start, budget.period)
 
         # Calculate days remaining
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         days_remaining = (period_end - now).days
 
         # Project end-of-period spend
@@ -433,7 +433,7 @@ class BudgetMonitor:
         threshold: Decimal,
     ) -> BudgetAlert:
         """Create a budget alert."""
-        alert_id = f"alert_{budget.id}_{int(datetime.now(timezone.utc).timestamp())}"
+        alert_id = f"alert_{budget.id}_{int(datetime.now(UTC).timestamp())}"
 
         message = (
             f"Budget '{budget.name}' at {utilization * 100:.1f}% "
@@ -448,7 +448,7 @@ class BudgetMonitor:
             utilization=utilization,
             threshold=threshold,
             message=message,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         async with self._lock:
@@ -491,14 +491,14 @@ class BudgetMonitor:
             try:
                 await self._send_email_alert(level, message, budget_id, utilization)
             except Exception as e:
-                logger.error(f"Failed to send email alert: {e}")
+                logger.exception(f"Failed to send email alert: {e}")
 
         # 3. Send webhook notification (if configured)
         if self._webhook_url:
             try:
                 await self._send_webhook_alert(level, message, budget_id, utilization)
             except Exception as e:
-                logger.error(f"Failed to send webhook alert: {e}")
+                logger.exception(f"Failed to send webhook alert: {e}")
 
     async def _send_email_alert(self, level: str, message: str, budget_id: str, utilization: float) -> None:
         """Send email alert via SMTP."""
@@ -518,7 +518,7 @@ class BudgetMonitor:
             <p><strong>Budget ID:</strong> {budget_id}</p>
             <p><strong>Utilization:</strong> {utilization:.1f}%</p>
             <p><strong>Message:</strong> {message}</p>
-            <p><strong>Timestamp:</strong> {datetime.now(timezone.utc).isoformat()}</p>
+            <p><strong>Timestamp:</strong> {datetime.now(UTC).isoformat()}</p>
           </body>
         </html>
         """
@@ -530,7 +530,7 @@ Budget Alert [{level.upper()}]
 Budget ID: {budget_id}
 Utilization: {utilization:.1f}%
 Message: {message}
-Timestamp: {datetime.now(timezone.utc).isoformat()}
+Timestamp: {datetime.now(UTC).isoformat()}
         """
 
         # Create message
@@ -570,7 +570,7 @@ Timestamp: {datetime.now(timezone.utc).isoformat()}
             "budget_id": budget_id,
             "message": message,
             "utilization": utilization,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         async with httpx.AsyncClient() as client:

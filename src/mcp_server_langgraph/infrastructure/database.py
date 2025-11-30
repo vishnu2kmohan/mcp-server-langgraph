@@ -43,7 +43,7 @@ async def check_database_connectivity(postgres_url: str, timeout: float = 5.0) -
             conn = await asyncio.wait_for(asyncpg.connect(postgres_url), timeout=timeout)
             await conn.close()
             return True, "PostgreSQL database accessible"
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False, f"PostgreSQL connection timeout ({timeout}s)"
         except asyncpg.InvalidPasswordError as e:
             return False, f"PostgreSQL authentication failed: {e}"
@@ -110,7 +110,8 @@ async def create_connection_pool(
             command_timeout=command_timeout,
         )
         if pool is None:
-            raise RuntimeError("Failed to create connection pool")
+            msg = "Failed to create connection pool"
+            raise RuntimeError(msg)
         return pool
 
     # Create connection pool with retry logic

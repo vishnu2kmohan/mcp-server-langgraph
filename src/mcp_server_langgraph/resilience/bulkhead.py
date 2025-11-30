@@ -209,7 +209,8 @@ def with_bulkhead(
         import asyncio as aio
 
         if not aio.iscoroutinefunction(func):
-            raise TypeError(f"@with_bulkhead can only be applied to async functions, got {func.__name__}")
+            msg = f"@with_bulkhead can only be applied to async functions, got {func.__name__}"
+            raise TypeError(msg)
 
         return async_wrapper  # type: ignore
 

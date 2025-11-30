@@ -107,15 +107,14 @@ class GraphExtractor:
         """
         # Strategy 1: Find create_xxx functions
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                if node.name.startswith("create_"):
-                    # Extract name after create_ prefix
-                    name = node.name.replace("create_", "")
-                    # Remove _agent or _workflow suffix if present
-                    name = name.replace("_agent", "").replace("_workflow", "")
-                    # Skip generic names like "create_graph"
-                    if name and name not in ["graph", "agent", "workflow"]:
-                        return name
+            if isinstance(node, ast.FunctionDef) and node.name.startswith("create_"):
+                # Extract name after create_ prefix
+                name = node.name.replace("create_", "")
+                # Remove _agent or _workflow suffix if present
+                name = name.replace("_agent", "").replace("_workflow", "")
+                # Skip generic names like "create_graph"
+                if name and name not in ["graph", "agent", "workflow"]:
+                    return name
 
         # Strategy 2: Find xxx_agent variables
         assignments = self.parser.find_variable_assignments(tree)

@@ -10,7 +10,7 @@ Uses APScheduler for cron-based job scheduling.
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from pathlib import Path
 from typing import Any
 
@@ -184,7 +184,7 @@ class ComplianceScheduler:
         Collects evidence for all SOC 2 controls and generates summary.
         """
         with tracer.start_as_current_span("compliance.daily_check") as span:
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
 
             try:
                 logger.info("Starting daily compliance check")
@@ -244,7 +244,7 @@ class ComplianceScheduler:
 
                 await self._send_compliance_alert(
                     severity="critical",
-                    message=f"Daily compliance check failed: {str(e)}",
+                    message=f"Daily compliance check failed: {e!s}",
                     details={"error": str(e)},
                 )
 
@@ -258,7 +258,7 @@ class ComplianceScheduler:
         access review report for security team.
         """
         with tracer.start_as_current_span("compliance.weekly_access_review") as span:
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
             end_time = start_time
             start_of_period = start_time - timedelta(days=7)
 
@@ -351,7 +351,7 @@ class ComplianceScheduler:
 
                 await self._send_compliance_alert(
                     severity="high",
-                    message=f"Weekly access review failed: {str(e)}",
+                    message=f"Weekly access review failed: {e!s}",
                     details={"error": str(e)},
                 )
 
@@ -400,7 +400,7 @@ class ComplianceScheduler:
 
                 await self._send_compliance_alert(
                     severity="critical",
-                    message=f"Monthly compliance report failed: {str(e)}",
+                    message=f"Monthly compliance report failed: {e!s}",
                     details={"error": str(e)},
                 )
 

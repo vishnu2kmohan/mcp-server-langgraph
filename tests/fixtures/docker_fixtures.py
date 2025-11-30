@@ -330,4 +330,4 @@ def test_infrastructure(docker_services_available, docker_compose_file, test_inf
 
     # Return infrastructure info
     # NOTE: No cleanup needed - infrastructure is managed externally by make test-integration
-    yield {"ports": test_infrastructure_ports, "ready": True}
+    return {"ports": test_infrastructure_ports, "ready": True}

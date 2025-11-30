@@ -5,7 +5,7 @@ Uses mocking to avoid requiring live Keycloak instance.
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -226,8 +226,8 @@ class TestTokenValidator:
             "preferred_username": "alice",
             "email": "alice@acme.com",
             "aud": "test-client",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+            "iat": datetime.now(UTC),
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
@@ -249,8 +249,8 @@ class TestTokenValidator:
         payload = {
             "sub": "user-id-123",
             "aud": "test-client",
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})
@@ -275,7 +275,7 @@ class TestTokenValidator:
         """Test token with unknown kid triggers JWKS refresh"""
         private_pem, _ = rsa_keypair
         validator = TokenValidator(keycloak_config)
-        payload = {"sub": "user-id-123", "aud": "test-client", "exp": datetime.now(timezone.utc) + timedelta(hours=1)}
+        payload = {"sub": "user-id-123", "aud": "test-client", "exp": datetime.now(UTC) + timedelta(hours=1)}
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "unknown-kid"})
         with patch("httpx.AsyncClient") as mock_client:
@@ -618,7 +618,7 @@ class TestTokenValidatorErrorPaths:
             "sub": "user-id-123",
             "preferred_username": "alice",
             "aud": "test-client",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "exp": datetime.now(UTC) + timedelta(hours=1),
         }
         private_key = serialization.load_pem_private_key(private_pem, password=None)
         token = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "test-key-id"})

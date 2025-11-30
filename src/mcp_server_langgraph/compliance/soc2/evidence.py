@@ -12,7 +12,7 @@ Evidence Categories:
 - Privacy (P): Data subject rights, consent management
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -257,7 +257,7 @@ class EvidenceCollector:
 
     async def _collect_access_control_evidence(self) -> Evidence:
         """Collect access control evidence (CC6.1)"""
-        evidence_id = f"cc6_1_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"cc6_1_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         try:
             # Query session store for active sessions
@@ -319,7 +319,7 @@ class EvidenceCollector:
                 control_category=ControlCategory.CC6_1,
                 title="Access Control Verification",
                 description="Verification of logical and physical access controls",
-                collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 status=EvidenceStatus.SUCCESS if not findings else EvidenceStatus.PARTIAL,
                 data=data,
                 findings=findings,
@@ -334,15 +334,15 @@ class EvidenceCollector:
                 control_category=ControlCategory.CC6_1,
                 title="Access Control Verification",
                 description="Verification of logical and physical access controls",
-                collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 status=EvidenceStatus.FAILURE,
                 data={"error": str(e)},
-                findings=[f"Evidence collection failed: {str(e)}"],
+                findings=[f"Evidence collection failed: {e!s}"],
             )
 
     async def _collect_logical_access_evidence(self) -> Evidence:
         """Collect logical access evidence (CC6.2)"""
-        evidence_id = f"cc6_2_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"cc6_2_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "authentication_providers": ["InMemory", "Keycloak"],
@@ -358,14 +358,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC6_2,
             title="Logical Access Controls",
             description="System credentials and authentication mechanisms",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_audit_log_evidence(self) -> Evidence:
         """Collect audit log evidence (CC6.6)"""
-        evidence_id = f"cc6_6_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"cc6_6_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "logging_system": "OpenTelemetry",
@@ -389,14 +389,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC6_6,
             title="Audit Log Verification",
             description="System operations and audit trail",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_system_monitoring_evidence(self) -> Evidence:
         """Collect system monitoring evidence (CC7.2)"""
-        evidence_id = f"cc7_2_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"cc7_2_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "monitoring_system": "Prometheus + Grafana",
@@ -420,14 +420,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC7_2,
             title="System Monitoring",
             description="Continuous monitoring and alerting",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_change_management_evidence(self) -> Evidence:
         """Collect change management evidence (CC8.1)"""
-        evidence_id = f"cc8_1_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"cc8_1_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "version_control": "Git (GitHub)",
@@ -445,14 +445,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC8_1,
             title="Change Management",
             description="Software change management and deployment controls",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_sla_evidence(self) -> Evidence:
         """Collect SLA monitoring evidence (A1.2)"""
-        evidence_id = f"a1_2_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"a1_2_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         # Query Prometheus for actual uptime data
         uptime_percentage = 99.95  # Default
@@ -488,7 +488,7 @@ class EvidenceCollector:
             control_category=ControlCategory.A1_2,
             title="SLA Monitoring",
             description="System availability and SLA tracking",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS if not findings else EvidenceStatus.PARTIAL,
             data=data,
             findings=findings,
@@ -496,13 +496,13 @@ class EvidenceCollector:
 
     async def _collect_backup_evidence(self) -> Evidence:
         """Collect backup verification evidence"""
-        evidence_id = f"backup_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"backup_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         # Query backup system for last backup timestamp
         # Note: Requires external backup system (Velero, Kasten, cloud native)
         # Configure via BACKUP_SYSTEM_URL and BACKUP_SYSTEM_API_KEY
         # For production, integrate with your backup management platform
-        last_backup_time = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        last_backup_time = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
         data = {
             "backup_frequency": "Daily",
@@ -521,14 +521,14 @@ class EvidenceCollector:
             control_category=ControlCategory.A1_2,
             title="Backup Verification",
             description="Backup and disaster recovery controls",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_encryption_evidence(self) -> Evidence:
         """Collect encryption verification evidence"""
-        evidence_id = f"encryption_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"encryption_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "encryption_in_transit": "TLS 1.3",
@@ -544,14 +544,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC6_1,
             title="Encryption Verification",
             description="Data encryption controls",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_data_access_evidence(self) -> Evidence:
         """Collect data access logging evidence"""
-        evidence_id = f"data_access_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"data_access_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "access_logging_enabled": True,
@@ -580,7 +580,7 @@ class EvidenceCollector:
             control_category=ControlCategory.CC7_2,
             title="Data Access Logging",
             description="Confidential data access controls",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.PARTIAL if findings else EvidenceStatus.SUCCESS,
             data=data,
             findings=findings,
@@ -589,7 +589,7 @@ class EvidenceCollector:
 
     async def _collect_data_retention_evidence(self) -> Evidence:
         """Collect data retention evidence (PI1.4)"""
-        evidence_id = f"pi1_4_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"pi1_4_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "retention_policy_documented": True,
@@ -613,14 +613,14 @@ class EvidenceCollector:
             control_category=ControlCategory.PI1_4,
             title="Data Retention Policy",
             description="Automated data retention and cleanup",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_input_validation_evidence(self) -> Evidence:
         """Collect input validation evidence"""
-        evidence_id = f"input_validation_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"input_validation_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "validation_framework": "Pydantic",
@@ -640,14 +640,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC8_1,
             title="Input Validation",
             description="Data input validation and error handling",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_gdpr_evidence(self) -> Evidence:
         """Collect GDPR compliance evidence"""
-        evidence_id = f"gdpr_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"gdpr_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "data_subject_rights_implemented": True,
@@ -670,14 +670,14 @@ class EvidenceCollector:
             control_category=ControlCategory.CC6_6,
             title="GDPR Data Subject Rights",
             description="GDPR compliance implementation",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
 
     async def _collect_consent_evidence(self) -> Evidence:
         """Collect consent management evidence"""
-        evidence_id = f"consent_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        evidence_id = f"consent_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
         data = {
             "consent_management_implemented": True,
@@ -693,7 +693,7 @@ class EvidenceCollector:
             control_category=ControlCategory.CC6_6,
             title="Consent Management",
             description="User consent tracking and management",
-            collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            collected_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             status=EvidenceStatus.SUCCESS,
             data=data,
         )
@@ -720,7 +720,7 @@ class EvidenceCollector:
             evidence_items = await self.collect_all_evidence()
 
             # Calculate period
-            end_date = datetime.now(timezone.utc)
+            end_date = datetime.now(UTC)
             start_date = end_date - timedelta(days=period_days)
 
             # Calculate compliance metrics
@@ -740,9 +740,9 @@ class EvidenceCollector:
             }
 
             report = ComplianceReport(
-                report_id=f"soc2_{report_type}_{datetime.now(timezone.utc).strftime('%Y%m%d')}",
+                report_id=f"soc2_{report_type}_{datetime.now(UTC).strftime('%Y%m%d')}",
                 report_type=report_type,
-                generated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                generated_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 period_start=start_date.isoformat().replace("+00:00", "Z"),
                 period_end=end_date.isoformat().replace("+00:00", "Z"),
                 evidence_items=evidence_items,

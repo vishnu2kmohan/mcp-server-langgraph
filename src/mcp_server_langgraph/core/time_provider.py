@@ -117,7 +117,8 @@ class VirtualClock:
             ValueError: If duration is negative
         """
         if duration < 0:
-            raise ValueError("sleep duration must be non-negative")
+            msg = "sleep duration must be non-negative"
+            raise ValueError(msg)
         self._current_time += duration
 
     def monotonic(self) -> float:
@@ -135,7 +136,8 @@ class VirtualClock:
             ValueError: If duration is negative
         """
         if duration < 0:
-            raise ValueError("sleep duration must be non-negative")
+            msg = "sleep duration must be non-negative"
+            raise ValueError(msg)
 
         async with self._lock:
             self._current_time += duration

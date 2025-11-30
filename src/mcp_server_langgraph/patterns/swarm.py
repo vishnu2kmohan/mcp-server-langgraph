@@ -109,7 +109,7 @@ class Swarm:
                 return {"agent_results": updated_results}
             except Exception as e:
                 updated_results = state.agent_results.copy()
-                updated_results[agent_name] = f"Error: {str(e)}"
+                updated_results[agent_name] = f"Error: {e!s}"
                 return {"agent_results": updated_results}
 
         return agent_node
@@ -220,11 +220,11 @@ class Swarm:
         graph.add_node("aggregate", RunnableLambda(self._aggregate_results))
 
         # All agents run in parallel from start
-        for agent_name in self.agents.keys():
+        for agent_name in self.agents:
             graph.add_edge(START, agent_name)
 
         # All agents feed into aggregator
-        for agent_name in self.agents.keys():
+        for agent_name in self.agents:
             graph.add_edge(agent_name, "aggregate")
 
         # Aggregator is the end

@@ -27,7 +27,7 @@ import hashlib
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 from typing import Any
 
@@ -78,12 +78,12 @@ class Alert:
         """Generate timestamps and deduplication key if not provided. Ensures freezegun compatibility."""
         # Set timestamp if sentinel value (moved from default_factory for freezegun compatibility)
         if self.timestamp == datetime.min:
-            self.timestamp = datetime.now(timezone.utc)
+            self.timestamp = datetime.now(UTC)
 
         # Set alert_id if empty sentinel (moved from default_factory for freezegun compatibility)
         if not self.alert_id:
             # MD5 used for non-cryptographic ID generation only
-            self.alert_id = hashlib.md5(str(datetime.now(timezone.utc)).encode(), usedforsecurity=False).hexdigest()[:16]  # nosec B324
+            self.alert_id = hashlib.md5(str(datetime.now(UTC)).encode(), usedforsecurity=False).hexdigest()[:16]  # nosec B324
 
         # Generate dedupe_key if not provided
         if self.dedupe_key is None:
@@ -513,7 +513,7 @@ class AlertingService:
         self.alert_history.append(alert)
 
         # Update dedupe cache
-        self.dedupe_cache[alert.dedupe_key] = datetime.now(timezone.utc)  # type: ignore[index]
+        self.dedupe_cache[alert.dedupe_key] = datetime.now(UTC)  # type: ignore[index]
 
         # Send to all providers concurrently
         results = {}
@@ -545,7 +545,7 @@ class AlertingService:
         last_sent = self.dedupe_cache[alert.dedupe_key]
         window = timedelta(seconds=self.config.deduplication_window)
 
-        return datetime.now(timezone.utc) - last_sent < window
+        return datetime.now(UTC) - last_sent < window
 
     def get_alert_history(self, limit: int = 100) -> list[Alert]:
         """Get recent alert history"""

@@ -7,25 +7,25 @@ try:
     pass
 
     __all__ = [
-        "SLAMonitor",
+        "PRICING_TABLE",
+        "SLAMeasurement",
         "SLAMetric",
+        "SLAMonitor",
+        "SLAReport",
         "SLAStatus",
         "SLATarget",
-        "SLAMeasurement",
-        "SLAReport",
+        "calculate_cost",
         "get_sla_monitor",
         "set_sla_monitor",
-        "PRICING_TABLE",
-        "calculate_cost",
     ]
 except ImportError:
     __all__ = [
-        "SLAMonitor",
+        "SLAMeasurement",
         "SLAMetric",
+        "SLAMonitor",
+        "SLAReport",
         "SLAStatus",
         "SLATarget",
-        "SLAMeasurement",
-        "SLAReport",
         "get_sla_monitor",
         "set_sla_monitor",
     ]

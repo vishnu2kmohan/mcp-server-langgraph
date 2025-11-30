@@ -6,7 +6,7 @@ Required for HIPAA compliance when processing PHI.
 """
 
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 import jwt
@@ -88,7 +88,7 @@ class SessionTimeoutMiddleware(BaseHTTPMiddleware):
 
             # Parse last accessed time
             last_accessed = datetime.fromisoformat(session.last_accessed.replace("Z", "+00:00"))
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             inactive_seconds = (now - last_accessed).total_seconds()
 
             if inactive_seconds > self.timeout_seconds:

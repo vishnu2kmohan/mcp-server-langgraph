@@ -75,7 +75,7 @@ def keycloak_config() -> KeycloakConfig:
 async def keycloak_client(keycloak_config: KeycloakConfig) -> AsyncGenerator[KeycloakClient, None]:
     """Create Keycloak client for each test"""
     client = KeycloakClient(keycloak_config)
-    yield client
+    return client
 
 
 @pytest.fixture

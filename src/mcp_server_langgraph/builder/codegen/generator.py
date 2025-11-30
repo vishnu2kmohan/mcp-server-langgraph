@@ -70,11 +70,13 @@ def _validate_output_path(output_path: str) -> Path:
     # System directories are NEVER allowed (check first for fail-fast)
     forbidden_prefixes = ("/etc/", "/sys/", "/proc/", "/dev/", "/var/log/", "/root/")
     if any(path_str.startswith(prefix) for prefix in forbidden_prefixes):
-        raise ValueError("Output path cannot target system directories")
+        msg = "Output path cannot target system directories"
+        raise ValueError(msg)
 
     # Ensure .py extension
     if path.suffix != ".py":
-        raise ValueError("Output path must have .py extension")
+        msg = "Output path must have .py extension"
+        raise ValueError(msg)
 
     # Get allowed directories
     temp_dir = Path(tempfile.gettempdir()).resolve()
@@ -97,15 +99,17 @@ def _validate_output_path(output_path: str) -> Path:
 
     if not is_allowed:
         allowed_str = ", ".join(str(d) for d in allowed_dirs)
-        raise ValueError(
+        msg = (
             f"Invalid output path: must be within allowed directories ({allowed_str}). "
             f"Set BUILDER_OUTPUT_DIR environment variable to add custom directory."
         )
+        raise ValueError(msg)
 
     # Additional check for path traversal (defense-in-depth after resolution)
     # Note: resolve() already handles .., but this catches edge cases
     if ".." in output_path:
-        raise ValueError("Path traversal detected: '..' not allowed in output path")
+        msg = "Path traversal detected: '..' not allowed in output path"
+        raise ValueError(msg)
 
     return path
 
@@ -444,8 +448,8 @@ if __name__ == "__main__":
 
         # Find terminal nodes (nodes with no outgoing edges)
         terminal_nodes = []
-        all_sources = set(e.from_node for e in workflow.edges)
-        all_nodes = set(n.id for n in workflow.nodes)
+        all_sources = {e.from_node for e in workflow.edges}
+        all_nodes = {n.id for n in workflow.nodes}
         terminal_nodes = list(all_nodes - all_sources)
 
         if terminal_nodes:

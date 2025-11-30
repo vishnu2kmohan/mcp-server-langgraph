@@ -11,7 +11,7 @@ Supports:
 """
 
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from typing import Any
 
@@ -76,7 +76,7 @@ class InterruptHandler:
         Returns:
             True if should interrupt
         """
-        for interrupt_id, config in self.pending_interrupts.items():
+        for config in self.pending_interrupts.values():
             if config.node_name == node_name:
                 # Check condition if provided
                 if config.condition:
@@ -98,7 +98,7 @@ class InterruptHandler:
         """
         state["interrupted"] = True
         state["interrupt_node"] = node_name
-        state["interrupt_timestamp"] = datetime.now(timezone.utc).isoformat()
+        state["interrupt_timestamp"] = datetime.now(UTC).isoformat()
 
         # Add to history
         self.interrupt_history.append({"node": node_name, "state": state.copy(), "timestamp": state["interrupt_timestamp"]})
@@ -117,7 +117,7 @@ class InterruptHandler:
             Updated state
         """
         state["interrupted"] = False
-        state["resumed_at"] = datetime.now(timezone.utc).isoformat()
+        state["resumed_at"] = datetime.now(UTC).isoformat()
 
         return state
 

@@ -37,7 +37,7 @@ def tracer_provider(monkeypatch):
     provider.add_span_processor(SimpleSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
 
-    yield provider
+    return provider
 
 
 @pytest.fixture

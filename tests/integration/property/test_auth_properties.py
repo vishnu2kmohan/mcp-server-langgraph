@@ -5,7 +5,7 @@ Tests security-critical invariants using Hypothesis.
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, patch
 
 import jwt
@@ -194,8 +194,8 @@ class TestJWTProperties:
         expired_payload = {
             "sub": get_user_id(username),
             "username": username,
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
         }
 
         expired_token = jwt.encode(expired_payload, "test-secret", algorithm="HS256")
@@ -214,15 +214,15 @@ class TestJWTProperties:
         auth = AuthMiddleware(secret_key="test-secret")
         add_test_users(auth)  # Add test users after security fix
 
-        before_creation = datetime.now(timezone.utc)
+        before_creation = datetime.now(UTC)
         token = auth.create_token(username, expires_in=expiration)
-        after_creation = datetime.now(timezone.utc)
+        after_creation = datetime.now(UTC)
 
         result = run_async(auth.verify_token(token))
         assert result.valid is True
 
         # Property: Expiration should be approximately correct (allow 1 second tolerance for timing)
-        token_exp = datetime.fromtimestamp(result.payload["exp"], timezone.utc)
+        token_exp = datetime.fromtimestamp(result.payload["exp"], UTC)
         expected_min = before_creation + timedelta(seconds=expiration) - timedelta(seconds=1)
         expected_max = after_creation + timedelta(seconds=expiration) + timedelta(seconds=1)
 

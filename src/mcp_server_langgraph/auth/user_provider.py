@@ -8,7 +8,7 @@ Enables switching between different user management systems:
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import Any, TypedDict
 
 import jwt
@@ -309,7 +309,7 @@ class InMemoryUserProvider(UserProvider):
         # Check bcrypt availability if hashing requested
         if use_password_hashing and not BCRYPT_AVAILABLE:
             # SECURITY: Fail-closed pattern - refuse to start with insecure config
-            raise RuntimeError(
+            msg = (
                 "CRITICAL SECURITY ERROR: Password hashing requested (use_password_hashing=True) "
                 "but bcrypt library is not available. "
                 "This would result in INSECURE plaintext passwords. "
@@ -318,6 +318,7 @@ class InMemoryUserProvider(UserProvider):
                 "2. Or disable password hashing: USE_PASSWORD_HASHING=false (NOT recommended for production)\n"
                 "\nRefusing to start with insecure configuration."
             )
+            raise RuntimeError(msg)
 
         self.use_password_hashing = use_password_hashing and BCRYPT_AVAILABLE
 
@@ -356,10 +357,11 @@ class InMemoryUserProvider(UserProvider):
 
         # bcrypt 5.0+ enforces 72-byte password limit (raises ValueError instead of silent truncation)
         if len(password_bytes) > 72:
-            raise ValueError(
+            msg = (
                 f"Password exceeds bcrypt's 72-byte limit ({len(password_bytes)} bytes). "
                 "Consider hashing long passwords with SHA256 before bcrypt."
             )
+            raise ValueError(msg)
 
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password_bytes, salt)
@@ -602,12 +604,13 @@ class InMemoryUserProvider(UserProvider):
             JWT token string
         """
         if username not in self.users_db:
-            raise ValueError(f"User not found: {username}")
+            msg = f"User not found: {username}"
+            raise ValueError(msg)
 
         user = self.users_db[username]
 
         # Use timestamp with microseconds for unique jti to ensure each token is different
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         jti = f"{username}_{int(now.timestamp() * 1000000)}"  # Microsecond precision
 
         payload = {
@@ -861,10 +864,12 @@ def create_user_provider(
 
     elif provider_type == "keycloak":
         if not keycloak_config:
-            raise ValueError("keycloak_config required for KeycloakUserProvider")
+            msg = "keycloak_config required for KeycloakUserProvider"
+            raise ValueError(msg)
 
         logger.info("Creating KeycloakUserProvider (production mode)")
         return KeycloakUserProvider(config=keycloak_config, openfga_client=openfga_client)
 
     else:
-        raise ValueError(f"Unknown provider type: {provider_type}. Supported: 'inmemory', 'keycloak'")
+        msg = f"Unknown provider type: {provider_type}. Supported: 'inmemory', 'keycloak'"
+        raise ValueError(msg)

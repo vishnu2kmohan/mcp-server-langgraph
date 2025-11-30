@@ -16,7 +16,7 @@ def test_client() -> Generator[TestClient, None, None]:
     """Create a test client for the health check app"""
     from mcp_server_langgraph.health.checks import app
 
-    yield TestClient(app)
+    return TestClient(app)
 
 
 @pytest.mark.unit

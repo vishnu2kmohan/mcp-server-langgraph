@@ -9,6 +9,7 @@ import gc
 import pytest
 
 from mcp_server_langgraph.core.security import sanitize_header_value
+from datetime import UTC
 
 # Mark as unit test to ensure it runs in CI
 pytestmark = pytest.mark.unit
@@ -219,13 +220,13 @@ class TestIntegrationWithGDPREndpoint:
         """Test that GDPR export endpoint uses sanitized filenames"""
         # GIVEN: Malicious username from JWT token
         malicious_username = "alice\r\nX-Evil: injected"
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from mcp_server_langgraph.core.security import sanitize_header_value
 
         # WHEN: Creating export filename (simulating gdpr.py:208-209)
         safe_username = sanitize_header_value(malicious_username)
-        filename = f"user_data_{safe_username}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+        filename = f"user_data_{safe_username}_{datetime.now(UTC).strftime('%Y%m%d')}.json"
         header_value = f'attachment; filename="{filename}"'
 
         # THEN: Header should not allow injection

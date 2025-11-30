@@ -9,7 +9,7 @@ Tests cover OWASP A03:2021 - Injection attacks on database queries.
 """
 
 import gc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 import asyncpg
 import pytest
@@ -50,7 +50,7 @@ async def audit_store(db_pool_gdpr: asyncpg.Pool) -> PostgresAuditLogStore:
 @pytest.fixture
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
     """Create test user for security tests"""
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
         user_id="test_sec_user_alice",
         username="alice_sec",
@@ -79,7 +79,7 @@ async def test_conversation(
     test_name = request.node.name
     conversation_id = f"test_sec_conv_{test_name}_{id(request)}"
 
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     conversation = Conversation(
         conversation_id=conversation_id,
         user_id=test_user,
@@ -267,7 +267,7 @@ class TestConversationStoreSQLInjection:
         all use parameterized queries correctly.
         """
         malicious_string = "'; DROP TABLE conversations; --"
-        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
         # Update all allowlisted fields with potentially malicious content
         updates = {
@@ -325,7 +325,7 @@ class TestAuditLogStoreSQLInjection:
         Expected: Malicious user_id treated as literal string, returns empty results.
         """
         # Create legitimate audit log
-        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         legitimate_entry = AuditLogEntry(
             log_id="test_sec_log_001",
             user_id="test_sec_user_alice",
@@ -364,7 +364,7 @@ class TestAuditLogStoreSQLInjection:
         Expected: Type checking prevents string injection, datetime params are safe.
         """
         # Create audit logs at different times
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         past = now - timedelta(days=30)
 
         entry_past = AuditLogEntry(
@@ -418,7 +418,7 @@ class TestAuditLogStoreSQLInjection:
         Expected: Limit is safely parameterized, no SQL injection possible.
         """
         # Create multiple audit logs
-        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         for i in range(5):
             entry = AuditLogEntry(
                 log_id=f"test_sec_log_limit_{i}",
@@ -451,7 +451,7 @@ class TestAuditLogStoreSQLInjection:
         Validates that user_id, start_date, end_date, and limit all use
         parameterized queries correctly when used together.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Create audit logs for security test
         for i in range(10):
@@ -493,7 +493,7 @@ class TestAuditLogStoreSQLInjection:
         are treated as literal strings, not SQL syntax.
         """
         # Create audit log with user_id containing special chars
-        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         special_user_id = "test_sec_user_'; DROP TABLE audit_logs; --"
 
         entry = AuditLogEntry(

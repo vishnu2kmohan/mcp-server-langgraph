@@ -13,7 +13,7 @@ Note: Only required if processing Protected Health Information (PHI)
 
 import hashlib
 import hmac
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 from pydantic import BaseModel, Field
 
@@ -108,12 +108,13 @@ class HIPAAControls:
         # Validate integrity secret is configured (fail-closed security pattern)
         # HIPAA 164.312(c)(1) requires integrity controls for PHI
         if not integrity_secret:
-            raise ValueError(
+            msg = (
                 "CRITICAL: HIPAA integrity secret not configured. "
                 "Set HIPAA_INTEGRITY_SECRET environment variable or configure via Infisical. "
                 "HIPAA controls cannot be initialized without a secure secret key for data integrity. "
                 "(HIPAA 164.312(c)(1) - Integrity Controls)"
             )
+            raise ValueError(msg)
 
         self.integrity_secret = integrity_secret
 
@@ -167,10 +168,10 @@ class HIPAAControls:
             )
 
             # Generate grant ID
-            grant_id = f"emergency_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
+            grant_id = f"emergency_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}_{user_id.replace(':', '_')}"
 
             # Calculate expiration
-            granted_at = datetime.now(timezone.utc)
+            granted_at = datetime.now(UTC)
             expires_at = granted_at + timedelta(hours=duration_hours)
 
             # Create grant
@@ -253,7 +254,7 @@ class HIPAAControls:
                 return False
 
             grant.revoked = True
-            grant.revoked_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            grant.revoked_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
             logger.warning(
                 "HIPAA: Emergency access revoked",
@@ -277,7 +278,7 @@ class HIPAAControls:
         Returns:
             Active EmergencyAccessGrant or None
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for grant in self._emergency_grants.values():
             if grant.user_id == user_id and not grant.revoked:
@@ -324,7 +325,7 @@ class HIPAAControls:
             span.set_attribute("success", success)
 
             log_entry = PHIAuditLog(
-                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 user_id=user_id,
                 action=action,
                 phi_accessed=True,
@@ -393,7 +394,7 @@ class HIPAAControls:
             data_id=data_id,
             checksum=checksum,
             algorithm="HMAC-SHA256",
-            created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         )
 
     def verify_checksum(self, data: str, expected_checksum: str) -> bool:

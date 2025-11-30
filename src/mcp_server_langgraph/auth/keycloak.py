@@ -6,7 +6,7 @@ Supports multiple authentication flows, token verification, and role/group mappi
 to OpenFGA for fine-grained authorization.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import Any
 from urllib.parse import urlparse
 
@@ -75,14 +75,16 @@ class KeycloakConfig(BaseModel):
 
         # Validate scheme (SSRF mitigation - only allow http/https)
         if parsed.scheme not in ("http", "https"):
-            raise ValueError(
+            msg = (
                 f"Invalid URL scheme '{parsed.scheme}'. Only 'http' and 'https' are allowed. "
                 "This restriction prevents SSRF attacks via dangerous URL schemes."
             )
+            raise ValueError(msg)
 
         # Validate hostname exists
         if not parsed.netloc:
-            raise ValueError(f"Invalid URL '{v}': missing hostname. Expected format: http(s)://hostname[:port]")
+            msg = f"Invalid URL '{v}': missing hostname. Expected format: http(s)://hostname[:port]"
+            raise ValueError(msg)
 
         # Normalize URL (remove trailing slash for consistency)
         normalized = v.rstrip("/")
@@ -141,7 +143,7 @@ class TokenValidator:
         with tracer.start_as_current_span("keycloak.get_jwks"):
             # Check cache
             if not force_refresh and self._jwks_cache and self._jwks_cache_time:
-                if datetime.now(timezone.utc) - self._jwks_cache_time < self._cache_ttl:
+                if datetime.now(UTC) - self._jwks_cache_time < self._cache_ttl:
                     logger.debug("Using cached JWKS")
                     return self._jwks_cache
 
@@ -154,7 +156,7 @@ class TokenValidator:
 
                     # Cache the result
                     self._jwks_cache = jwks
-                    self._jwks_cache_time = datetime.now(timezone.utc)
+                    self._jwks_cache_time = datetime.now(UTC)
 
                     logger.info("JWKS fetched and cached", extra={"keys_count": len(jwks.get("keys", []))})
                     return jwks  # type: ignore[no-any-return]
@@ -185,7 +187,8 @@ class TokenValidator:
                 kid = unverified_header.get("kid")
 
                 if not kid:
-                    raise jwt.InvalidTokenError("Token missing 'kid' in header")
+                    msg = "Token missing 'kid' in header"
+                    raise jwt.InvalidTokenError(msg)
 
                 span.set_attribute("token.kid", kid)
 
@@ -210,7 +213,8 @@ class TokenValidator:
                             break
 
                 if not public_key:
-                    raise jwt.InvalidTokenError(f"Public key not found for kid: {kid}")
+                    msg = f"Public key not found for kid: {kid}"
+                    raise jwt.InvalidTokenError(msg)
 
                 # Verify and decode token
                 payload = jwt.decode(
@@ -418,7 +422,7 @@ class KeycloakClient:
         """
         # Check if we have a valid cached token
         if self._admin_token and self._admin_token_expiry:
-            if datetime.now(timezone.utc) < self._admin_token_expiry - timedelta(minutes=1):
+            if datetime.now(UTC) < self._admin_token_expiry - timedelta(minutes=1):
                 assert self._admin_token is not None  # Guaranteed by condition above
                 return self._admin_token
 
@@ -442,7 +446,7 @@ class KeycloakClient:
                     tokens = response.json()
                     self._admin_token = tokens["access_token"]
                     expires_in = tokens.get("expires_in", 300)  # Default 5 min
-                    self._admin_token_expiry = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+                    self._admin_token_expiry = datetime.now(UTC) + timedelta(seconds=expires_in)
 
                     logger.info("Admin token obtained")
                     assert self._admin_token is not None  # Just set on line above

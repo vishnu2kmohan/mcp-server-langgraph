@@ -23,16 +23,16 @@ except Exception:
 from mcp_server_langgraph.core.config import settings
 
 __all__ = [
-    "__version__",
-    "settings",
-    "agent_graph",
     "AgentState",
     "AuthMiddleware",
     "OpenFGAClient",
+    "__version__",
+    "agent_graph",
     "create_llm_from_config",
     "logger",
-    "tracer",
     "metrics",
+    "settings",
+    "tracer",
 ]
 
 
@@ -234,4 +234,5 @@ def __getattr__(name: str):  # type: ignore[no-untyped-def]  # noqa: C901
         return observability_module
 
     # Not found
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)

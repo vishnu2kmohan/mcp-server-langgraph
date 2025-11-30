@@ -104,7 +104,6 @@ class CircuitBreakerMetricsListener(pybreaker.CircuitBreakerListener):
 
         logger.warning(
             f"Circuit breaker failure: {self.name}",
-            exc_info=True,
             extra={
                 "service": self.name,
                 "failure_count": breaker.fail_counter,
@@ -232,7 +231,8 @@ def circuit_breaker(  # noqa: C901
                     # pybreaker will handle the state transitions
                     def _sync_wrapper() -> None:
                         # This won't work directly - we need a different approach
-                        raise RuntimeError("Should not be called directly")
+                        msg = "Should not be called directly"
+                        raise RuntimeError(msg)
 
                     # Call before_call to handle state transitions (OPEN -> HALF_OPEN after timeout)
                     try:

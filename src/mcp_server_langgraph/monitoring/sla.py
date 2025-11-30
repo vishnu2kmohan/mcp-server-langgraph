@@ -10,7 +10,7 @@ Implements Service Level Agreement monitoring for:
 SOC 2 A1.2 - System Availability Monitoring
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 from typing import Any
 
@@ -151,7 +151,8 @@ class SLAMonitor:
             uptime_target = next((t for t in self.sla_targets if t.metric == SLAMetric.UPTIME), None)
 
             if not uptime_target:
-                raise ValueError("No uptime SLA target configured")
+                msg = "No uptime SLA target configured"
+                raise ValueError(msg)
 
             # Calculate total time in period
             total_seconds = (end_time - start_time).total_seconds()
@@ -195,7 +196,7 @@ class SLAMonitor:
                 unit=uptime_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 period_start=start_time.isoformat().replace("+00:00", "Z"),
                 period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
@@ -237,7 +238,8 @@ class SLAMonitor:
             )
 
             if not rt_target:
-                raise ValueError("No response time SLA target configured")
+                msg = "No response time SLA target configured"
+                raise ValueError(msg)
 
             # Query Prometheus for actual response times
             try:
@@ -275,7 +277,7 @@ class SLAMonitor:
                 unit=rt_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 period_start=start_time.isoformat().replace("+00:00", "Z"),
                 period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
@@ -311,7 +313,8 @@ class SLAMonitor:
             error_target = next((t for t in self.sla_targets if t.metric == SLAMetric.ERROR_RATE), None)
 
             if not error_target:
-                raise ValueError("No error rate SLA target configured")
+                msg = "No error rate SLA target configured"
+                raise ValueError(msg)
 
             # Query Prometheus for actual error rate
             try:
@@ -347,7 +350,7 @@ class SLAMonitor:
                 unit=error_target.unit,
                 status=status,
                 compliance_percentage=compliance_percentage,
-                timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 period_start=start_time.isoformat().replace("+00:00", "Z"),
                 period_end=end_time.isoformat().replace("+00:00", "Z"),
                 breach_details=breach_details,
@@ -409,7 +412,7 @@ class SLAMonitor:
         with tracer.start_as_current_span("sla.generate_report") as span:
             span.set_attribute("period_days", period_days)
 
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
             start_time = end_time - timedelta(days=period_days)
 
             measurements = []
@@ -475,8 +478,8 @@ class SLAMonitor:
                 summary["error_rate_percentage"] = error_rate.measured_value
 
             report = SLAReport(
-                report_id=f"sla_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
-                generated_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                report_id=f"sla_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}",
+                generated_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 period_start=start_time.isoformat().replace("+00:00", "Z"),
                 period_end=end_time.isoformat().replace("+00:00", "Z"),
                 measurements=measurements,

@@ -7,7 +7,7 @@ Tests GDPR compliance for user preferences storage
 import gc
 import os
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import asyncpg
 import pytest
@@ -81,7 +81,7 @@ async def store(db_pool: asyncpg.Pool) -> PostgresPreferencesStore:
 async def test_user(profile_store: PostgresUserProfileStore) -> str:
     """Create test user and return user_id (worker-safe for pytest-xdist)"""
     user_id = get_user_id("pref_user")  # Worker-safe ID for parallel execution
-    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     profile = UserProfile(
         user_id=user_id,
         username="prefuser",

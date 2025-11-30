@@ -163,7 +163,8 @@ class PrometheusClient:
             data = response.json()
 
             if data.get("status") != "success":
-                raise ValueError(f"Prometheus query failed: {data.get('error', 'Unknown error')}")
+                msg = f"Prometheus query failed: {data.get('error', 'Unknown error')}"
+                raise ValueError(msg)
 
             return self._parse_query_result(data["data"]["result"])
 
@@ -207,12 +208,14 @@ class PrometheusClient:
                 response = await self.client.get(url, params=params)
                 response.raise_for_status()
             else:
-                raise ValueError("Prometheus client not initialized")
+                msg = "Prometheus client not initialized"
+                raise ValueError(msg)
 
             data = response.json()
 
             if data.get("status") != "success":
-                raise ValueError(f"Prometheus range query failed: {data.get('error', 'Unknown error')}")
+                msg = f"Prometheus range query failed: {data.get('error', 'Unknown error')}"
+                raise ValueError(msg)
 
             return self._parse_range_result(data["data"]["result"])
 
@@ -311,7 +314,8 @@ class PrometheusClient:
         elif timerange.endswith("m"):
             total_seconds = int(timerange[:-1]) * 60
         else:
-            raise ValueError(f"Unsupported timerange format: {timerange}")
+            msg = f"Unsupported timerange format: {timerange}"
+            raise ValueError(msg)
 
         downtime_seconds = total_seconds * (100 - uptime_pct) / 100
 
@@ -409,10 +413,7 @@ class PrometheusClient:
             if total_results and total_results[0].values:
                 total_rate_value = total_results[0].get_latest_value()  # type: ignore[assignment]
 
-            if total_rate_value > 0:
-                error_pct = (error_rate_value / total_rate_value) * 100
-            else:
-                error_pct = 0.0
+            error_pct = error_rate_value / total_rate_value * 100 if total_rate_value > 0 else 0.0
 
             logger.info(f"Error rate: {error_pct:.2f}% over {timerange}", extra={"service": service})
 

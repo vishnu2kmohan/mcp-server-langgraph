@@ -41,7 +41,8 @@ class FallbackStrategy:
         Returns:
             Fallback value
         """
-        raise NotImplementedError("Subclasses must implement get_fallback_value()")
+        msg = "Subclasses must implement get_fallback_value()"
+        raise NotImplementedError(msg)
 
 
 class DefaultValueFallback(FallbackStrategy):
@@ -104,10 +105,7 @@ class StaleDataFallback(FallbackStrategy):
         import time
 
         # Support both direct key (single arg) and generated key (multiple args/kwargs)
-        if len(args) == 1 and not kwargs and isinstance(args[0], str):
-            key = args[0]
-        else:
-            key = str(args) + str(kwargs)
+        key = args[0] if len(args) == 1 and not kwargs and isinstance(args[0], str) else str(args) + str(kwargs)
 
         if key in self._cache:
             value, timestamp = self._cache[key]
@@ -181,7 +179,8 @@ def with_fallback(  # noqa: C901
     """
     # Validate arguments
     if sum([fallback is not None, fallback_fn is not None, fallback_strategy is not None]) != 1:
-        raise ValueError("Exactly one of fallback, fallback_fn, or fallback_strategy must be provided")
+        msg = "Exactly one of fallback, fallback_fn, or fallback_strategy must be provided"
+        raise ValueError(msg)
 
     # Determine exception types to catch
     exception_types = fallback_on or (Exception,)

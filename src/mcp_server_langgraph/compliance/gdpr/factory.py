@@ -162,7 +162,9 @@ async def create_gdpr_storage(
     elif backend == "memory":
         return create_memory_storage()
     else:
-        raise ValueError(f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'.")
+        raise ValueError(  # noqa: TRY003
+            f"Invalid GDPR storage backend: {backend}. Must be 'postgres' or 'memory'."  # noqa: EM102
+        )
 
 
 # ============================================================================
@@ -232,7 +234,8 @@ def get_gdpr_storage() -> GDPRStorage:
         ...     profile = await storage.user_profiles.get("user:alice")
     """
     if _gdpr_storage is None:
-        raise RuntimeError("GDPR storage not initialized. Call initialize_gdpr_storage() during application startup.")
+        msg = "GDPR storage not initialized. Call initialize_gdpr_storage() during application startup."
+        raise RuntimeError(msg)
     return _gdpr_storage
 
 
